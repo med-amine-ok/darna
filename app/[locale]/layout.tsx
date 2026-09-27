@@ -56,13 +56,13 @@ export async function generateMetadata({
     description: descriptions[locale] || descriptions.en,
     icons: {
       icon: [
-        { url: "/assets/logo.png", type: "image/png" },
-        { url: "/assets/logo.png", sizes: "32x32", type: "image/png" },
-        { url: "/assets/logo.png", sizes: "16x16", type: "image/png" },
+        { url: "/favicon.ico?v=2", sizes: "any" },
+        { url: "/assets/logo.png?v=2", type: "image/png", sizes: "32x32" },
+        { url: "/assets/logo.png?v=2", type: "image/png", sizes: "16x16" },
       ],
-      shortcut: "/assets/logo.png",
+      shortcut: "/favicon.ico?v=2",
       apple: [
-        { url: "/assets/logo.png", sizes: "180x180", type: "image/png" }
+        { url: "/assets/logo.png?v=2", sizes: "180x180", type: "image/png" }
       ],
     },
     manifest: "/manifest.json",
@@ -100,9 +100,10 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={dir}>
       <head>
-        <link rel="icon" href="/assets/logo.png" type="image/png" sizes="any" />
-        <link rel="shortcut icon" href="/assets/logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/assets/logo.png" />
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+        <link rel="icon" href="/assets/logo.png?v=2" type="image/png" sizes="32x32" />
+        <link rel="shortcut icon" href="/favicon.ico?v=2" />
+        <link rel="apple-touch-icon" href="/assets/logo.png?v=2" />
       </head>
       <body className={font.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
