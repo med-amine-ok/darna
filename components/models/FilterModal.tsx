@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
+import Image from "next/image";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
@@ -201,7 +202,18 @@ export default function FilterModal() {
                     : "border-neutral-300 text-neutral-700 hover:border-neutral-900"
                 }`}
               >
-                {pt.label}
+                <span className="inline-flex items-center justify-center gap-1.5">
+                  {(pt.id === "house" || pt.id === "guesthouse") && (
+                    <Image
+                      src="/assets/house.png"
+                      alt="House"
+                      width={16}
+                      height={16}
+                      className="w-4 h-4 object-contain inline-block"
+                    />
+                  )}
+                  {pt.label}
+                </span>
               </button>
             );
           })}

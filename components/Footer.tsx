@@ -24,7 +24,7 @@ export default function Footer() {
 
   const toggleSection = (idx: number) => {
     setOpenSections((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
     );
   };
 
@@ -41,10 +41,7 @@ export default function Footer() {
     },
     {
       title: t("community"),
-      links: [
-        t("disasterRelief"),
-        t("antiDiscrimination"),
-      ],
+      links: [t("disasterRelief"), t("antiDiscrimination")],
     },
     {
       title: t("hosting"),
@@ -133,13 +130,21 @@ export default function Footer() {
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2">
               <span>{t("copyright")}</span>
               <span>·</span>
-              <span className="hover:underline cursor-pointer">{t("privacy")}</span>
+              <span className="hover:underline cursor-pointer">
+                {t("privacy")}
+              </span>
               <span>·</span>
-              <span className="hover:underline cursor-pointer">{t("terms")}</span>
+              <span className="hover:underline cursor-pointer">
+                {t("terms")}
+              </span>
               <span>·</span>
-              <span className="hover:underline cursor-pointer">{t("sitemap")}</span>
+              <span className="hover:underline cursor-pointer">
+                {t("sitemap")}
+              </span>
               <span>·</span>
-              <span className="hover:underline cursor-pointer">{t("companyDetails")}</span>
+              <span className="hover:underline cursor-pointer">
+                {t("companyDetails")}
+              </span>
             </div>
 
             <div className="flex items-center gap-4 font-semibold text-neutral-800">
@@ -147,7 +152,7 @@ export default function Footer() {
                 <MdLanguage size={16} />
                 <span className="uppercase">{locale}</span>
               </span>
-              <span>$ USD</span>
+              <span>$ DZD</span>
             </div>
           </div>
         </Container>

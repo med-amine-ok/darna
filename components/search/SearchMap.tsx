@@ -11,7 +11,7 @@ import { safeListing, SafeUser } from "@/types";
 import HeartButton from "../HeartButton";
 import "leaflet/dist/leaflet.css";
 
-// Helper component to update map view when center or bounds change
+// Smooth Map Controller for fluid flyTo animations between cities & bounds
 function MapController({
   center,
   zoom,
@@ -25,9 +25,17 @@ function MapController({
 
   useEffect(() => {
     if (bounds) {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+      map.flyToBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 14,
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
     } else if (center) {
-      map.setView(center, zoom || 11);
+      map.flyTo(center, zoom || 11, {
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
     }
   }, [map, center, zoom, bounds]);
 
@@ -61,6 +69,7 @@ export default function SearchMap({
   const t = useTranslations("common");
   const tSearch = useTranslations("search");
 
+  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
   const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState(0);
@@ -90,7 +99,7 @@ export default function SearchMap({
 
     if (validCoords.length === 0) {
       return {
-        defaultCenter: center || ([48.8566, 2.3522] as [number, number]),
+        defaultCenter: center || ([36.5986, 2.4417] as [number, number]), // Tipaza default
         bounds: undefined,
       };
     }
@@ -110,25 +119,25 @@ export default function SearchMap({
     };
   }, [listings, center]);
 
+  // Clean and responsive price badge icons
   const createPriceIcon = (price: number, isSelected: boolean, isHovered: boolean) => {
+    const active = isSelected || isHovered;
     return L.divIcon({
       className: "custom-price-pin !bg-transparent !border-none",
       html: `
         <button 
           type="button"
-          class="transition-all duration-150 transform cursor-pointer font-bold text-[12px] px-3 py-1 rounded-full shadow-md flex items-center justify-center whitespace-nowrap select-none ${
-            isSelected
-              ? "bg-accent text-white scale-110 shadow-xl ring-2 ring-accent z-50"
-              : isHovered
-              ? "bg-primary text-white scale-110 shadow-xl ring-2 ring-primary z-40"
-              : "bg-surface text-primary hover:scale-105 border border-tertiary shadow-sm"
+          class="transition-all duration-200 transform cursor-pointer font-bold text-[12px] px-3 py-1.5 rounded-full shadow-md flex items-center justify-center whitespace-nowrap select-none ${
+            active
+              ? "bg-neutral-900 text-white scale-110 shadow-2xl ring-2 ring-white z-50"
+              : "bg-white text-neutral-900 hover:scale-105 border border-neutral-300 hover:border-neutral-400 hover:shadow-lg"
           }"
         >
           $${price}
         </button>
       `,
-      iconSize: [54, 28],
-      iconAnchor: [27, 14],
+      iconSize: [60, 30],
+      iconAnchor: [30, 15],
     });
   };
 
@@ -180,17 +189,24 @@ export default function SearchMap({
       : Math.round(activeListing.price * 2 * 1.15)
     : 0;
 
+  // Google Maps tile endpoints
+  const googleRoadmapUrl = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+  const googleSatelliteUrl = "https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
+
   return (
     <div className={`relative overflow-hidden rounded-3xl ${className}`}>
       <MapContainer
         center={defaultCenter}
         zoom={zoom}
         scrollWheelZoom={true}
+        attributionControl={false}
         className="w-full h-full min-h-[400px] z-0"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          key={mapType}
+          url={mapType === "roadmap" ? googleRoadmapUrl : googleSatelliteUrl}
+          subdomains={["0", "1", "2", "3"]}
+          maxZoom={20}
         />
 
         <MapController center={defaultCenter} zoom={zoom} bounds={bounds} />
@@ -223,7 +239,35 @@ export default function SearchMap({
         })}
       </MapContainer>
 
-      {/* Floating Detail Card on Hover / Selection (Matching Screenshot 2) */}
+      {/* Google Maps Layer Switcher Pill */}
+      <div className="absolute top-4 end-4 z-[400] flex items-center bg-white/95 backdrop-blur-md p-1 rounded-2xl shadow-lg border border-neutral-200/90 text-xs font-semibold">
+        <button
+          type="button"
+          onClick={() => setMapType("roadmap")}
+          className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+            mapType === "roadmap"
+              ? "bg-neutral-900 text-white shadow-xs"
+              : "text-neutral-700 hover:bg-neutral-100"
+          }`}
+        >
+          <span>Map</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapType("satellite")}
+          className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+            mapType === "satellite"
+              ? "bg-neutral-900 text-white shadow-xs"
+              : "text-neutral-700 hover:bg-neutral-100"
+          }`}
+        >
+          <span>Satellite</span>
+        </button>
+      </div>
+
+
+
+      {/* Floating Detail Card on Hover / Selection */}
       {activeListing && (
         <div
           onMouseEnter={() => {
@@ -254,7 +298,7 @@ export default function SearchMap({
               priority
             />
 
-            {/* Top-Right: Heart Button and Close X Side by Side (from Screenshot 2) */}
+            {/* Top-Right: Heart Button and Close X */}
             <div
               className="absolute top-2.5 end-2.5 flex items-center gap-1.5 z-20"
               onClick={(e) => e.stopPropagation()}
@@ -274,7 +318,7 @@ export default function SearchMap({
               </button>
             </div>
 
-            {/* Left & Right Arrow Buttons (visible on hover) */}
+            {/* Left & Right Arrow Buttons */}
             {previewImages.length > 1 && (
               <>
                 <button
@@ -311,23 +355,31 @@ export default function SearchMap({
             )}
           </div>
 
-          {/* Card Bottom: Text and Pricing (from Screenshot 2) */}
+          {/* Card Bottom: Text and Pricing */}
           <div
             className="flex flex-col gap-0.5 cursor-pointer px-1 pt-1"
             onClick={() => router.push(`/listings/${activeListing.id}`)}
           >
-            <h3 className="font-bold text-sm sm:text-base text-primary leading-tight">
-              {activeListing.category ? `${activeListing.category} in ${activeListing.city || "Paris"}` : activeListing.title}
-            </h3>
-            <p className="text-xs text-primary/70 line-clamp-1">
+            <div className="flex items-center gap-1.5">
+              <img
+                src="/assets/location.png"
+                style={{ width: 14, height: 18 }}
+                className="object-contain flex-shrink-0"
+                alt=""
+              />
+              <h3 className="font-bold text-sm sm:text-base text-primary leading-tight truncate">
+                {activeListing.category ? `${activeListing.category} in ${activeListing.city || "Tipaza"}` : activeListing.title}
+              </h3>
+            </div>
+            <p className="text-xs text-primary/70 line-clamp-1 ms-5">
               {activeListing.title}
             </p>
-            <p className="text-xs text-primary/60">
+            <p className="text-xs text-primary/60 ms-5">
               Feb 19 – 21
             </p>
 
-            {/* Pricing Row with strikethrough (from Screenshot 2) */}
-            <div className="flex items-baseline gap-1 text-xs text-primary/70 pt-1">
+            {/* Pricing Row with strikethrough */}
+            <div className="flex items-baseline gap-1 text-xs text-primary/70 pt-1 ms-5">
               {originalPrice > twoNightsPrice && (
                 <span className="line-through text-primary/40 font-normal">
                   ${originalPrice}
@@ -339,8 +391,8 @@ export default function SearchMap({
               <span>for 2 nights</span>
             </div>
 
-            {/* Credit / Perk Tag (+$75 DARNA credit) */}
-            <div className="pt-1">
+            {/* Credit / Perk Tag */}
+            <div className="pt-1 ms-5">
               <span className="inline-flex items-center text-xs font-semibold text-secondary-700 bg-secondary-50 px-2 py-0.5 rounded-md">
                 +$75 DARNA credit
               </span>

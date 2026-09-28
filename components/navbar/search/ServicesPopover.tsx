@@ -45,7 +45,7 @@ export default function ServicesPopover({
   const t = useTranslations("nav");
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-neutral-200/80 p-5 w-[360px] sm:w-[460px] z-50">
+    <div className="bg-surface rounded-3xl shadow-xl border border-tertiary/60 p-5 w-[360px] sm:w-[460px] z-50">
       <div className="flex flex-wrap gap-2.5">
         {serviceItems.map((item) => {
           const isSelected = selectedService === item.name;
@@ -58,11 +58,11 @@ export default function ServicesPopover({
               onClick={() => onSelectService(item.name)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs sm:text-sm transition cursor-pointer ${
                 isSelected
-                  ? "border-2 border-neutral-900 bg-white font-semibold text-neutral-900 shadow-2xs"
-                  : "border border-neutral-200 hover:border-neutral-400 bg-white text-neutral-700 hover:text-neutral-900"
+                  ? "border-2 border-accent bg-accent/10 font-bold text-accent shadow-2xs"
+                  : "border border-tertiary/60 hover:border-accent/60 bg-surface text-primary hover:text-primary"
               }`}
             >
-              <Icon size={18} className={isSelected ? "text-neutral-900" : "text-neutral-600"} />
+              <Icon size={18} className={isSelected ? "text-accent" : "text-primary/70"} />
               <span>{t(item.labelKey as any)}</span>
             </button>
           );

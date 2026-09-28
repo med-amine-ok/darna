@@ -37,7 +37,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/90 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] h-16 px-4 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-tertiary/40 shadow-[0_-2px_12px_rgba(0,0,0,0.04)] h-16 px-4 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
     >
       {/* 1. Explore Tab */}
       <button

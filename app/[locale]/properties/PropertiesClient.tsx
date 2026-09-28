@@ -6,7 +6,7 @@ import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { MdOutlineHouse, MdClose, MdAdd } from "react-icons/md";
+import { MdClose, MdAdd } from "react-icons/md";
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import useRentModal from "@/hook/useRentModal";
@@ -65,8 +65,14 @@ export default function PropertiesClient({ listings, currentUser }: Props) {
 
         {localListings.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600 mb-4">
-              <MdOutlineHouse size={32} />
+            <div className="w-16 h-16 rounded-full bg-tertiary/20 flex items-center justify-center mb-4 p-3 border border-tertiary/40">
+              <Image
+                src="/assets/house.png"
+                alt="House"
+                width={36}
+                height={36}
+                className="w-9 h-9 object-contain"
+              />
             </div>
             <h3 className="text-xl font-bold text-neutral-900">{t("emptyTitle")}</h3>
             <p className="text-sm text-neutral-500 mt-1 max-w-md">{t("noPropertiesDesc")}</p>

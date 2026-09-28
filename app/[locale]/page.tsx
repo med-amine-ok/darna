@@ -122,7 +122,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <ListingCarouselSection
               title="Stays in Tipaza & Algeria"
               subtitle="Handpicked stays across the Mediterranean coast and oasis towns"
-              badge="✦ win DARNA"
+              badge="✦ Win DARNA"
               listings={algerianStays}
               currentUser={currentUser}
             />

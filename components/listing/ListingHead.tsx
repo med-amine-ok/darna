@@ -127,9 +127,16 @@ function ListingHead({
             <button
               type="button"
               onClick={() => scrollToSection("location-section")}
-              className="underline hover:text-neutral-900 cursor-pointer"
+              className="inline-flex items-center gap-1.5 underline hover:text-neutral-900 cursor-pointer"
             >
-              {location?.region ? `${location.region}, ` : ""}{location?.label}
+              <Image
+                src="/assets/location.png"
+                alt="Location"
+                width={13}
+                height={18}
+                className="object-contain inline-block flex-shrink-0"
+              />
+              <span>{location?.region ? `${location.region}, ` : ""}{location?.label}</span>
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import useCountries from "@/hook/useCountries";
 import Select from "react-select";
+import Image from "next/image";
 import Flag from "react-world-flags";
 import { tokens } from "@/lib/tokens";
 
@@ -33,9 +34,16 @@ function CountrySelect({ value, onChange }: Props) {
         value={value}
         onChange={(value) => onChange(value as CountrySelectValue)}
         formatOptionLabel={(option: any) => (
-          <div className="flex flex-row items-center gap-3">
-            <Flag code={option.value} className="w-5" />
-            <div>
+          <div className="flex flex-row items-center gap-2.5">
+            <Image
+              src="/assets/location.png"
+              alt=""
+              width={14}
+              height={20}
+              className="object-contain flex-shrink-0"
+            />
+            <Flag code={option.value} className="w-5 flex-shrink-0 rounded-2xs shadow-2xs" />
+            <div className="text-sm">
               {option.label},
               <span className="text-neutral-500 ms-1">{option.region}</span>
             </div>

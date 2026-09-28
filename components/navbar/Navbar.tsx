@@ -22,7 +22,12 @@ function Navbar({ currentUser }: Props) {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      const scrollY = Math.max(
+        window.scrollY || 0,
+        document.documentElement?.scrollTop || 0,
+        document.body?.scrollTop || 0
+      );
+      if (scrollY > 20) {
         setIsScrolled(true);
         setIsSearchExpanded(false);
       } else {
@@ -31,7 +36,11 @@ function Navbar({ currentUser }: Props) {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    document.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   // Hide consumer navbar on admin dashboard pages and become-a-host flow
@@ -46,7 +55,7 @@ function Navbar({ currentUser }: Props) {
     <header
       className={`${
         isLoginPage ? "hidden md:block border-b border-tertiary/40 bg-surface" : ""
-      } fixed top-0 inset-x-0 w-full z-30 transition-all duration-200 ${
+      } fixed top-0 inset-x-0 w-full z-40 transition-all duration-200 ${
         !isLoginPage && (
           isScrolled
             ? "bg-surface/95 backdrop-blur-md shadow-xs border-b border-tertiary/40"
@@ -65,10 +74,10 @@ function Navbar({ currentUser }: Props) {
               <Logo />
             </div>
 
-            {/* Center: Search pill (hidden on login page; shown when scrolled or on subpages) */}
+            {/* Center: Search pill (on subpages, render compact search; on home page, hero search morphs into this slot) */}
             {!isLoginPage && (
               <div className="flex-1 flex justify-center max-w-xl transition-all duration-200">
-                {showCompactSearch && !isSearchExpanded ? (
+                {!isHomePage && !isSearchExpanded ? (
                   <Search compact onExpand={() => setIsSearchExpanded(true)} />
                 ) : null}
               </div>
@@ -112,5 +121,6 @@ function Navbar({ currentUser }: Props) {
     </header>
   );
 }
+
 
 export default Navbar;

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
@@ -9,6 +10,8 @@ import { BiSearch } from "react-icons/bi";
 import { TbAdjustmentsHorizontal } from "react-icons/tb";
 import { MdClose } from "react-icons/md";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import useSearchModal from "@/hook/useSearchModal";
 
 import WherePopover, { DestinationItem } from "./search/WherePopover";
@@ -41,6 +44,9 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
   const isServicesMode = categoryParam === "Services";
 
   // State
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const [activePopover, setActivePopover] = useState<PopoverType>(null);
   const [destinationText, setDestinationText] = useState(
     searchParams?.get("destination") || searchParams?.get("locationValue") || ""
@@ -84,6 +90,35 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
       setSelectedService("Spa treatments");
     }
   }, [categoryParam, selectedService]);
+
+  // Track window scroll for hero transformation
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isHero) return;
+
+    const handleScroll = () => {
+      const scrollY = Math.max(
+        window.scrollY || 0,
+        document.documentElement?.scrollTop || 0,
+        document.body?.scrollTop || 0
+      );
+      if (scrollY > 55) {
+        setIsScrolled(true);
+        setActivePopover(null);
+      } else if (scrollY < 25) {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scroll", handleScroll);
+    };
+  }, [isHero]);
 
   // Labels
   const durationLabel = useMemo(() => {
@@ -201,17 +236,23 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
     return (
       <div
         onClick={searchModal.onOpen}
-        className="w-full min-h-[48px] bg-white border border-neutral-200/90 rounded-full py-2.5 px-4 flex items-center justify-between shadow-airbnb-card hover:shadow-airbnb transition cursor-pointer select-none touch-manipulation"
+        className="w-full min-h-[48px] bg-surface border border-tertiary/70 rounded-full py-2.5 px-4 flex items-center justify-between shadow-xs hover:shadow-sm transition cursor-pointer select-none touch-manipulation"
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="text-accent flex-shrink-0">
-            <BiSearch size={20} />
+          <div className="w-5 h-5 flex-shrink-0 relative">
+            <Image
+              src="/assets/house.png"
+              alt="DARNA"
+              width={20}
+              height={20}
+              className="w-5 h-5 object-contain"
+            />
           </div>
           <div className="flex flex-col text-start min-w-0">
-            <span className="text-xs sm:text-sm font-bold text-neutral-900 truncate">
+            <span className="text-xs sm:text-sm font-bold text-primary truncate">
               {destinationText || tCommon("anywhere")}
             </span>
-            <span className="text-[11px] sm:text-xs text-neutral-500 font-normal truncate">
+            <span className="text-[11px] sm:text-xs text-primary/60 font-normal truncate">
               {startDate && endDate
                 ? `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`
                 : tCommon("anyWeek")}{" "}
@@ -219,7 +260,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
             </span>
           </div>
         </div>
-        <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-neutral-200 rounded-full text-neutral-700 bg-neutral-50 hover:bg-neutral-100 transition ms-2">
+        <div className="flex-shrink-0 w-9 h-9 flex items-center justify-center border border-tertiary/60 rounded-full text-primary bg-tertiary/20 hover:bg-tertiary/30 transition ms-2">
           <TbAdjustmentsHorizontal size={16} />
         </div>
       </div>
@@ -230,23 +271,32 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
     return (
       <div
         onClick={onExpand || searchModal.onOpen}
-        className="border border-neutral-200/90 rounded-full py-2 ps-4 pe-2 flex items-center gap-3 shadow-airbnb-card hover:shadow-airbnb transition cursor-pointer bg-white text-sm select-none"
+        className="bg-surface border border-tertiary/70 rounded-full py-1.5 ps-3 pe-2 flex items-center gap-2.5 sm:gap-3 shadow-md hover:shadow-lg transition cursor-pointer select-none text-start text-xs sm:text-sm"
       >
-        <span className="font-semibold text-neutral-900 truncate max-w-[130px]">
+        <div className="w-5 h-5 flex-shrink-0 relative">
+          <Image
+            src="/assets/house.png"
+            alt="DARNA"
+            width={20}
+            height={20}
+            className="w-5 h-5 object-contain"
+          />
+        </div>
+        <span className="font-semibold text-primary truncate max-w-[110px]">
           {destinationText || tCommon("anywhere")}
         </span>
-        <span className="h-4 w-[1px] bg-neutral-200" />
-        <span className="font-semibold text-neutral-900 truncate max-w-[120px]">
+        <span className="h-4 w-[1px] bg-tertiary/60 flex-shrink-0" />
+        <span className="font-semibold text-primary truncate max-w-[110px]">
           {startDate && endDate
             ? `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`
-            : tCommon("anyWeek")}
+            : tCommon("anytime")}
         </span>
-        <span className="h-4 w-[1px] bg-neutral-200" />
-        <span className="font-normal text-neutral-500 truncate max-w-[120px]">
+        <span className="h-4 w-[1px] bg-tertiary/60 flex-shrink-0" />
+        <span className="font-normal text-primary/60 truncate max-w-[100px]">
           {guestCount > 1 ? `${guestCount} ${tCommon("guests")}` : tCommon("addGuests")}
         </span>
-        <div className="p-2 bg-accent hover:bg-accent-600 active:bg-accent-700 text-white rounded-full flex items-center justify-center transition shadow-2xs ms-1 flex-shrink-0">
-          <BiSearch size={13} className="stroke-[1]" />
+        <div className="w-8 h-8 rounded-full bg-accent hover:bg-accent-600 active:bg-accent-700 text-white flex items-center justify-center transition shadow-xs shadow-accent/20 flex-shrink-0 ms-1">
+          <BiSearch size={14} className="stroke-[1.5]" />
         </div>
       </div>
     );
@@ -254,9 +304,30 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
 
   return (
     <div className={`relative w-full ${isHero ? "max-w-4xl" : "max-w-4xl"} mx-auto text-start`} ref={searchContainerRef}>
-      {/* Outer Floating Search Pill */}
-      <div
-        className={`w-full bg-surface border border-tertiary/70 rounded-full transition-all duration-200 ${
+      {/* Hero Floating Search Bar */}
+      <motion.div
+        animate={
+          isHero && isScrolled
+            ? {
+                opacity: 0,
+                y: -60,
+                scale: 0.85,
+                pointerEvents: "none" as const,
+              }
+            : {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                pointerEvents: "auto" as const,
+              }
+        }
+        transition={{
+          type: "spring",
+          stiffness: 350,
+          damping: 28,
+          mass: 0.8,
+        }}
+        className={`w-full bg-surface border border-tertiary/70 rounded-full transition-shadow duration-200 ${
           isHero ? "p-2 sm:p-2.5 shadow-xl hover:shadow-2xl" : "p-1.5 sm:p-2 shadow-md hover:shadow-lg"
         } flex items-center justify-between text-start ${
           activePopover ? "bg-surface ring-2 ring-primary/20 shadow-xl" : ""
@@ -438,12 +509,61 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
             )}
           </div>
         )}
-      </div>
+      </motion.div>
+
+      {/* Portaled Docked Navbar Search Pill on Scroll */}
+      {isHero && mounted && typeof document !== "undefined" && createPortal(
+        <AnimatePresence>
+          {isScrolled && !searchModal.isOpen && (
+            <motion.div
+              key="navbar-docked-search-pill"
+              initial={{ opacity: 0, y: 35, scale: 1.15 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 30, scale: 1.15 }}
+              transition={{
+                type: "spring",
+                stiffness: 360,
+                damping: 28,
+                mass: 0.8,
+              }}
+              onClick={onExpand || searchModal.onOpen}
+              className="hidden md:flex fixed top-2.5 sm:top-3.5 inset-x-0 mx-auto z-50 max-w-[430px] w-full bg-surface/95 backdrop-blur-md border border-tertiary/70 rounded-full py-1.5 ps-3 pe-2 shadow-md hover:shadow-lg items-center justify-between cursor-pointer select-none text-start text-xs sm:text-sm"
+            >
+              <div className="w-5 h-5 flex-shrink-0 relative">
+                <Image
+                  src="/assets/house.png"
+                  alt="DARNA"
+                  width={20}
+                  height={20}
+                  className="w-5 h-5 object-contain"
+                />
+              </div>
+              <span className="font-semibold text-primary truncate max-w-[110px]">
+                {destinationText || tCommon("anywhere")}
+              </span>
+              <span className="h-4 w-[1px] bg-tertiary/60 flex-shrink-0" />
+              <span className="font-semibold text-primary truncate max-w-[110px]">
+                {startDate && endDate
+                  ? `${format(startDate, "MMM d")} - ${format(endDate, "MMM d")}`
+                  : tCommon("anytime")}
+              </span>
+              <span className="h-4 w-[1px] bg-tertiary/60 flex-shrink-0" />
+              <span className="font-normal text-primary/60 truncate max-w-[100px]">
+                {guestCount > 1 ? `${guestCount} ${tCommon("guests")}` : tCommon("addGuests")}
+              </span>
+              <div className="w-8 h-8 rounded-full bg-accent hover:bg-accent-600 active:bg-accent-700 text-white flex items-center justify-center transition shadow-xs shadow-accent/20 flex-shrink-0 ms-1">
+                <BiSearch size={14} className="stroke-[1.5]" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* --- FLOATING DROPDOWN POPOVERS --- */}
 
       {/* 1. Where Popover (Matching Image 1) */}
-      {activePopover === "where" && (
+      {!isScrolled && activePopover === "where" && (
         <div className="absolute top-full start-0 mt-3 z-50 animate-in fade-in zoom-in-95 duration-150">
           <WherePopover
             query={destinationText}
@@ -453,7 +573,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
       )}
 
       {/* 2. When Popover (Matching Image 2) */}
-      {activePopover === "when" && (
+      {!isScrolled && activePopover === "when" && (
         <div className="absolute top-full inset-x-0 mx-auto w-fit mt-3 z-50 animate-in fade-in zoom-in-95 duration-150">
           <WhenPopover
             startDate={startDate}
@@ -464,7 +584,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
       )}
 
       {/* 3. Services Popover (Matching Image 3) */}
-      {activePopover === "services" && (
+      {!isScrolled && activePopover === "services" && (
         <div className="absolute top-full end-0 mt-3 z-50 animate-in fade-in zoom-in-95 duration-150">
           <ServicesPopover
             selectedService={selectedService}
@@ -474,7 +594,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
       )}
 
       {/* 4. Who Popover */}
-      {activePopover === "who" && (
+      {!isScrolled && activePopover === "who" && (
         <div className="absolute top-full end-0 mt-3 z-50 animate-in fade-in zoom-in-95 duration-150">
           <WhoPopover
             guestCount={guestCount}
@@ -482,6 +602,6 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
           />
         </div>
       )}
-    </div>
+      </div>
   );
 }

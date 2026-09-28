@@ -72,7 +72,7 @@ function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title || "Dialog"}
-        className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none bg-neutral-900/60 backdrop-blur-xs transition-opacity"
+        className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-[60] outline-none focus:outline-none bg-neutral-900/60 backdrop-blur-xs transition-opacity"
       >
         <div className="relative w-full sm:w-11/12 md:w-4/5 lg:w-3/5 xl:max-w-2xl my-0 sm:my-6 mx-auto h-full sm:h-auto flex flex-col justify-end sm:justify-center">
           <div

@@ -134,7 +134,7 @@ function Categories({}: Props) {
         type="button"
         aria-label="Previous categories"
         onClick={() => handleScroll("left")}
-        className="hidden md:flex p-1.5 rounded-full border border-neutral-300 hover:border-neutral-900 bg-white text-neutral-700 shadow-2xs hover:shadow-xs transition flex-shrink-0"
+        className="hidden md:flex p-1.5 rounded-full border border-tertiary/70 hover:border-primary bg-surface text-primary shadow-2xs hover:shadow-xs transition flex-shrink-0"
       >
         <MdChevronLeft size={18} className="rtl:rotate-180" />
       </button>
@@ -159,7 +159,7 @@ function Categories({}: Props) {
         type="button"
         aria-label="Next categories"
         onClick={() => handleScroll("right")}
-        className="hidden md:flex p-1.5 rounded-full border border-neutral-300 hover:border-neutral-900 bg-white text-neutral-700 shadow-2xs hover:shadow-xs transition flex-shrink-0"
+        className="hidden md:flex p-1.5 rounded-full border border-tertiary/70 hover:border-primary bg-surface text-primary shadow-2xs hover:shadow-xs transition flex-shrink-0"
       >
         <MdChevronRight size={18} className="rtl:rotate-180" />
       </button>
@@ -168,7 +168,7 @@ function Categories({}: Props) {
       <button
         type="button"
         onClick={filterModal.onOpen}
-        className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 min-h-[44px] rounded-xl border border-neutral-300 text-xs sm:text-sm font-semibold text-neutral-800 hover:border-neutral-900 transition flex-shrink-0 shadow-2xs hover:shadow-xs cursor-pointer bg-white touch-manipulation"
+        className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 min-h-[44px] rounded-xl border border-tertiary/70 text-xs sm:text-sm font-semibold text-primary hover:border-primary hover:bg-tertiary/20 transition flex-shrink-0 shadow-2xs hover:shadow-xs cursor-pointer bg-surface touch-manipulation"
       >
         <TbAdjustmentsHorizontal size={16} />
         <span>{tCommon("filters")}</span>

@@ -2,6 +2,7 @@
   "common": {
     "airbnb": "DARNA",
     "anywhere": "Anywhere",
+    "anytime": "Anytime",
     "anyWeek": "Any Week",
     "addGuests": "Add Guests",
     "search": "Search",
@@ -43,7 +44,7 @@
   },
   "homeHero": {
     "title": "وين دارنا ؟",
-    "sublinePrefix": "win DARNA in",
+    "sublinePrefix": "Win DARNA in",
     "subtitle": "Plan your next stay in Algeria & beyond.",
     "tabHomes": "Homes",
     "tabExperiences": "Experiences",

@@ -74,12 +74,15 @@ export default function LanguageSwitcher() {
 
     // Set cookie for persistence
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+    document.documentElement.dir = newLocale === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = newLocale;
 
     startTransition(() => {
       // Re-apply query parameters if any
       const queryString = searchParams?.toString();
       const targetUrl = queryString ? `${pathname}?${queryString}` : pathname;
-      router.replace(targetUrl, { locale: newLocale });
+      router.replace(targetUrl);
+      router.refresh();
       setIsOpen(false);
     });
   };
@@ -92,18 +95,18 @@ export default function LanguageSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Change language and region"
-        className="flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] p-2 rounded-full hover:bg-neutral-100 transition cursor-pointer text-neutral-700 text-sm font-medium border border-transparent hover:border-neutral-200 touch-manipulation"
+        className="flex items-center justify-center gap-1.5 min-h-[44px] min-w-[44px] p-2 rounded-full hover:bg-tertiary/20 transition cursor-pointer text-primary text-sm font-medium border border-transparent hover:border-tertiary/40 touch-manipulation"
       >
-        <TbWorld size={18} className="text-neutral-600" />
+        <TbWorld size={18} className="text-primary/70" />
         <span className="hidden lg:inline uppercase text-xs font-semibold tracking-wider">
           {activeLang.code}
         </span>
       </button>
 
       {isOpen && (
-        <div className="absolute end-0 top-12 z-50 w-72 bg-white rounded-2xl shadow-xl border border-neutral-100 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-          <div className="px-3 py-2 border-b border-neutral-100">
-            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+        <div className="absolute end-0 top-12 z-50 w-72 bg-surface rounded-2xl shadow-xl border border-tertiary/40 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-3 py-2 border-b border-tertiary/30">
+            <p className="text-xs font-semibold text-primary/50 uppercase tracking-wider">
               Language & Region
             </p>
           </div>
@@ -118,7 +121,7 @@ export default function LanguageSwitcher() {
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-start transition cursor-pointer ${
                     isSelected
                       ? "bg-accent/10 text-accent font-semibold"
-                      : "hover:bg-neutral-50 text-neutral-800"
+                      : "hover:bg-tertiary/15 text-primary"
                   }`}
                 >
                   <div className="flex items-center gap-3">

@@ -127,8 +127,15 @@ export default function FeaturedListingRowCard({
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 leading-tight group-hover:text-black">
             {listing.title}
           </h2>
-          <p className="text-sm font-medium text-neutral-600 mt-1">
-            {listing.subtitle || `${listing.category} in ${listing.city || "Paris"}`}
+          <p className="text-sm font-medium text-neutral-600 mt-1 flex items-center gap-1.5">
+            <Image
+              src="/assets/location.png"
+              alt=""
+              width={13}
+              height={18}
+              className="object-contain inline-block flex-shrink-0"
+            />
+            <span>{listing.subtitle || `${listing.category} in ${listing.city || "Paris"}`}</span>
           </p>
           <p className="text-sm text-neutral-500 mt-1">
             {listing.roomCount || 1} bedroom · {listing.roomCount || 1} bed ·{" "}

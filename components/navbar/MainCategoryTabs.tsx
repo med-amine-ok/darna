@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
+import Image from "next/image";
 import { useRouter, usePathname } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
@@ -36,32 +37,15 @@ const GlobeIcon = () => (
 );
 
 const HomesIcon = () => (
-  <svg
-    viewBox="0 0 32 32"
-    width="24"
-    height="24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="transition-transform group-hover:scale-110"
-  >
-    <path
-      d="M6 15L16 6L26 15V26C26 26.5523 25.5523 27 25 27H7C6.44772 27 6 26.5523 6 26V15Z"
-      fill="#D97706"
-      stroke="#92400E"
-      strokeWidth="1.5"
+  <div className="w-6 h-6 flex items-center justify-center transition-transform group-hover:scale-110">
+    <Image
+      src="/assets/house.png"
+      alt="Homes"
+      width={24}
+      height={24}
+      className="w-6 h-6 object-contain"
     />
-    <path
-      d="M4 16L16 5L28 16"
-      stroke="#B45309"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <rect x="12" y="18" width="8" height="9" fill="#78350F" rx="1" />
-    <circle cx="2" cy="22" r="3" fill="#15803D" />
-    <circle cx="30" cy="22" r="3" fill="#15803D" />
-    <path d="M21 9V6H24V11.5" fill="#B45309" />
-  </svg>
+  </div>
 );
 
 const ExperiencesIcon = () => (

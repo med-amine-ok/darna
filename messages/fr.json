@@ -2,6 +2,7 @@
   "common": {
     "airbnb": "DARNA",
     "anywhere": "N'importe où",
+    "anytime": "N'importe quand",
     "anyWeek": "Une semaine",
     "addGuests": "Ajouter des voyageurs",
     "search": "Rechercher",
@@ -43,7 +44,7 @@
   },
   "homeHero": {
     "title": "وين دارنا ؟",
-    "sublinePrefix": "win DARNA à",
+    "sublinePrefix": "Win DARNA à",
     "subtitle": "Prépare ton prochain séjour en Algérie.",
     "tabHomes": "Logements",
     "tabExperiences": "Expériences",

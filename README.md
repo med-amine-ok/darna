@@ -2,9 +2,9 @@
 
   <img src="public/assets/logo-horizontal.png" alt="DARNA Logo" width="340" />
 
-  # DARNA · دارنا
-  
-  **Authentic Vacation Rentals & Stay Experiences Tailored for Algeria and Beyond**
+# DARNA · دارنا
+
+**Authentic Vacation Rentals & Stay Experiences Tailored for Algeria and Beyond**
 
   <p align="center">
     A modern, bilingual, full-stack rental platform built with Next.js 14 App Router, TypeScript, and an Earthy Minimal design system. Featuring cultural heritage landmarks, interactive Leaflet maps, real-time messaging, comprehensive admin analytics, and native Arabic RTL support.
@@ -34,11 +34,12 @@
 
 ## 🌟 Overview
 
-**DARNA** (دارنا — *"Our Home"*) is a purpose-crafted hospitality and vacation rental ecosystem designed to showcase Algeria's diverse regions—from coastal Mediterranean villas in Tipaza and Algiers, to the dramatic cliffs of Constantine, and Saharan desert retreats in Taghit and Djanet.
+**DARNA** (دارنا — _"Our Home"_) is a purpose-crafted hospitality and vacation rental ecosystem designed to showcase Algeria's diverse regions—from coastal Mediterranean villas in Tipaza and Algiers, to the dramatic cliffs of Constantine, and Saharan desert retreats in Taghit and Djanet.
 
 DARNA replaces standard generic booking templates with a culturally rooted, performant, and accessible experience:
+
 - **Bilingual & RTL-First**: Effortless switching between **Arabic (العربية)** with native Right-to-Left (RTL) orientation, **French (Français)**, and **English**.
-- **Algerian Identity**: Dynamic localized hero *"وين دارنا ؟"* with animated destination prompts and an architectural vector outline celebrating iconic Algerian monuments (Maqam Echahid, Djamaa el Djazaïr, Sidi M'Cid Suspension Bridge, Tipaza Roman Ruins, Casbah, and Sahara dunes).
+- **Algerian Identity**: Dynamic localized hero _"وين دارنا ؟"_ with animated destination prompts and an architectural vector outline celebrating iconic Algerian monuments (Maqam Echahid, Djamaa el Djazaïr, Sidi M'Cid Suspension Bridge, Tipaza Roman Ruins, Casbah, and Sahara dunes).
 - **Earthy Minimal Aesthetics**: A custom palette inspired by Mediterranean pine, desert sands, terracotta clay, and warm limestone.
 - **Full Operational Suite**: Guest booking, Host property management, real-time messaging, and an enterprise Admin dashboard with interactive SVG performance analytics.
 
@@ -47,6 +48,7 @@ DARNA replaces standard generic booking templates with a culturally rooted, perf
 ## ✨ Key Features
 
 ### 🏡 Guest Experience
+
 - **Interactive Multi-Param Search**: Search by destination (Algerian wilayas & international cities), flexible date ranges, and guest capacities. Left-aligned inputs with intuitive pill filters.
 - **Dynamic Category Browsing**: Discover listings categorized by environment: Beachfront, Traditional Dar & Riads, Mountain Lodges, Desert Camps, Historic Casbahs, and Luxury Villas.
 - **Interactive Map Exploration**: Integrated Leaflet maps with custom geo-markers, coordinates preview, and smooth pan-to-listing navigation.
@@ -54,20 +56,23 @@ DARNA replaces standard generic booking templates with a culturally rooted, perf
 - **Detailed Listing Showcase**: High-resolution image galleries, host profiles, included amenities, dynamic pricing calculators, and guest reviews.
 
 ### 💬 Real-Time Messaging Center
+
 - **Dedicated Chat Workspace**: Split-view responsive messaging with an independent user/conversation list and focused thread view.
 - **Conversation Tracking**: Unread counts, timestamps, user avatars, and instant message dispatch.
 
 ### 🛠️ Host Suite ("DARNA your home")
+
 - **Step-by-Step Creation Wizard**: Guided 6-step onboarding flow for listing properties:
   1. **Category**: Choose the property style (Villa, Dar, Camp, etc.)
   2. **Location**: Interactive map placement with wilaya / city selection
   3. **Capacity**: Guest, bedroom, and bathroom counters
   4. **Photos**: Upload and manage property images
   5. **Description**: Listing title, tagline, and details
-  6. **Pricing**: Set transparent nightly pricing (DZD / USD / EUR)
+  6. **Pricing**: Set transparent nightly pricing (DZD / DZD / EUR)
 - **Reservation Management**: Track upcoming, active, and completed guest reservations.
 
 ### 📊 Admin Control Center
+
 - **Executive KPIs**: Real-time cards tracking Gross Revenue, Total Bookings, Active Listings, and Verified Host counts with percentage trends.
 - **Interactive SVG Analytics**: Custom vector Area trend charts (Revenue vs Bookings) and Donut distribution charts (Property breakdown by category) built without heavy third-party charting libraries.
 - **Content & Entity Moderation**:
@@ -82,19 +87,20 @@ DARNA replaces standard generic booking templates with a culturally rooted, perf
 
 DARNA uses a curated **Earthy Minimal** palette replacing harsh primary colors with warm, grounding Mediterranean and North African tones:
 
-| Token | Hex | Name | Role & UI Usage |
-|---|---|---|---|
-| `primary` | `#2E3A2F` | Deep Charcoal Green | Headers, active tabs, primary action buttons, dark mode accents |
-| `secondary` | `#6B7F5B` | Sage Green | Badges, success states, subtle icons, secondary buttons |
-| `tertiary` | `#D9C9B2` | Warm Sand / Beige | Dividers, subtle borders, card background highlights |
-| `accent` | `#C96F4F` | Terracotta Clay | Badges, call-to-actions, price tags, special highlight accents |
-| `background` | `#F8F6EE` | Warm Off-White | Application base canvas, modal backgrounds, container backdrops |
+| Token        | Hex       | Name                | Role & UI Usage                                                 |
+| ------------ | --------- | ------------------- | --------------------------------------------------------------- |
+| `primary`    | `#2E3A2F` | Deep Charcoal Green | Headers, active tabs, primary action buttons, dark mode accents |
+| `secondary`  | `#6B7F5B` | Sage Green          | Badges, success states, subtle icons, secondary buttons         |
+| `tertiary`   | `#D9C9B2` | Warm Sand / Beige   | Dividers, subtle borders, card background highlights            |
+| `accent`     | `#C96F4F` | Terracotta Clay     | Badges, call-to-actions, price tags, special highlight accents  |
+| `background` | `#F8F6EE` | Warm Off-White      | Application base canvas, modal backgrounds, container backdrops |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - **Node.js**: v18.17.0 or higher
 - **npm**, **yarn**, or **pnpm**
 - **Git**
@@ -102,18 +108,21 @@ DARNA uses a curated **Earthy Minimal** palette replacing harsh primary colors w
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/med-amine-ok/darna.git
    cd darna
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables:**
    Create a `.env` file in the root directory:
+
    ```env
    # Authentication
    NEXTAUTH_SECRET="your-super-secret-key-change-in-production"
@@ -125,6 +134,7 @@ DARNA uses a curated **Earthy Minimal** palette replacing harsh primary colors w
    ```
 
 4. **Run the Development Server:**
+
    ```bash
    npm run dev
    ```
@@ -138,11 +148,11 @@ DARNA uses a curated **Earthy Minimal** palette replacing harsh primary colors w
 
 For testing and evaluation, pre-configured accounts with mock authentication support are available:
 
-| Role | Email | Password | Permissions & Views |
-|---|---|---|---|
-| **Admin** | `alex.morgan@darna.com` | `password123` | Full access to `/admin` dashboard, KPIs, performance charts, entity moderation |
-| **Host** | `sophia.chen@darna.com` | `password123` | Property listing creation, reservation manager, host dashboard |
-| **Guest** | `marcus.vance@darna.com` | `password123` | Browsing, wishlists, booking checkout flow, messaging |
+| Role      | Email                    | Password      | Permissions & Views                                                            |
+| --------- | ------------------------ | ------------- | ------------------------------------------------------------------------------ |
+| **Admin** | `alex.morgan@darna.com`  | `password123` | Full access to `/admin` dashboard, KPIs, performance charts, entity moderation |
+| **Host**  | `sophia.chen@darna.com`  | `password123` | Property listing creation, reservation manager, host dashboard                 |
+| **Guest** | `marcus.vance@darna.com` | `password123` | Browsing, wishlists, booking checkout flow, messaging                          |
 
 ---
 

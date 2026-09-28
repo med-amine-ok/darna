@@ -2,6 +2,7 @@
   "common": {
     "airbnb": "DARNA",
     "anywhere": "أي مكان",
+    "anytime": "أي وقت",
     "anyWeek": "أي أسبوع",
     "addGuests": "إضافة ضيوف",
     "search": "بحث",
@@ -43,7 +44,7 @@
   },
   "homeHero": {
     "title": "وين دارنا ؟",
-    "sublinePrefix": "win DARNA في",
+    "sublinePrefix": "Win DARNA في",
     "subtitle": "حضّر لإقامتك القادمة في الجزائر بكل سهولة.",
     "tabHomes": "المنازل",
     "tabExperiences": "التجارب",

@@ -42,7 +42,7 @@
 html,
 body,
 :root {
-  height: 100%;
+  min-height: 100%;
 }
 
 html {
@@ -97,4 +97,20 @@ body {
 .rdrDayHovered,
 .rdrDayInPreview {
   border-color: #C96F4F !important;
+}
+
+/* Hide all map watermarks and attributions completely */
+.leaflet-control-attribution,
+.leaflet-attribution-flag {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure custom map location pins have clean contained sizing */
+.darna-location-pin {
+  width: 36px !important;
+  height: 52px !important;
+  object-fit: contain !important;
 }

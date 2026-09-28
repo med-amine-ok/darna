@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
@@ -297,7 +298,18 @@ export default function SearchResultsClient({
                           active ? "bg-neutral-100 text-neutral-900 font-bold" : "hover:bg-neutral-50 text-neutral-700"
                         }`}
                       >
-                        <span className="capitalize">{pt}</span>
+                        <span className="capitalize flex items-center gap-2">
+                          {(pt === "house" || pt === "guesthouse") && (
+                            <Image
+                              src="/assets/house.png"
+                              alt="House"
+                              width={16}
+                              height={16}
+                              className="w-4 h-4 object-contain inline-block"
+                            />
+                          )}
+                          {pt}
+                        </span>
                         {active && <MdCheck size={16} className="text-neutral-900" />}
                       </button>
                     );
@@ -468,7 +480,13 @@ export default function SearchResultsClient({
           ) : (
             <>
               <span>{tSearch("showMap")}</span>
-              <TbMap size={18} />
+              <Image
+                src="/assets/location.png"
+                alt=""
+                width={14}
+                height={20}
+                className="object-contain inline-block"
+              />
             </>
           )}
         </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { MdOutlinePlace } from "react-icons/md";
+import Image from "next/image";
 
 export interface DestinationItem {
   id: string;
@@ -57,10 +57,10 @@ export default function WherePopover({ query, onSelect }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-neutral-200/80 p-3 w-80 sm:w-96 max-h-[380px] overflow-y-auto z-50">
+    <div className="bg-surface rounded-3xl shadow-xl border border-tertiary/60 p-3 w-80 sm:w-96 max-h-[380px] overflow-y-auto z-50">
       <div className="space-y-1">
         {filtered.length === 0 ? (
-          <div className="p-4 text-center text-xs text-neutral-400">
+          <div className="p-4 text-center text-xs text-primary/50">
             No destinations found matching &quot;{query}&quot;
           </div>
         ) : (
@@ -68,13 +68,19 @@ export default function WherePopover({ query, onSelect }: Props) {
             <button
               key={item.id}
               onClick={() => onSelect(item)}
-              className="w-full flex items-center gap-3.5 p-2.5 rounded-2xl hover:bg-neutral-100/80 transition text-start cursor-pointer group"
+              className="w-full flex items-center gap-3.5 p-2.5 rounded-2xl hover:bg-tertiary/20 transition text-start cursor-pointer group"
             >
               {/* Location Pin Icon in rounded box */}
-              <div className="w-10 h-10 rounded-xl bg-neutral-100 group-hover:bg-white flex items-center justify-center flex-shrink-0 transition border border-transparent group-hover:border-neutral-200 shadow-2xs">
-                <MdOutlinePlace size={20} className="text-neutral-700" />
+              <div className="w-10 h-10 rounded-xl bg-tertiary/20 group-hover:bg-surface flex items-center justify-center flex-shrink-0 transition border border-transparent group-hover:border-tertiary/40 shadow-2xs">
+                <Image
+                  src="/assets/location.png"
+                  alt="Location"
+                  width={20}
+                  height={28}
+                  className="object-contain"
+                />
               </div>
-              <div className="text-sm font-medium text-neutral-700 truncate">
+              <div className="text-sm font-medium text-primary truncate">
                 {highlightMatch(item.fullLabel, query)}
               </div>
             </button>

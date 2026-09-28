@@ -6,6 +6,7 @@ import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
 import { MdHome, MdOutlineLightbulb, MdDirectionsCar } from "react-icons/md";
+import Image from "next/image";
 import AlgerianSkyline from "./AlgerianSkyline";
 import Search from "../navbar/Search";
 
@@ -28,7 +29,7 @@ export default function HomeHero() {
 
   const currentCategory = searchParams?.get("category") || "Homes";
 
-  // City rotation for "win DARNA à Tipaza."
+  // City rotation for "Win DARNA à Tipaza."
   const [cityIndex, setCityIndex] = useState(0);
   const [isFading, setIsFading] = useState(false);
 
@@ -59,7 +60,7 @@ export default function HomeHero() {
         url: "/",
         query: updatedQuery,
       },
-      { skipNull: true }
+      { skipNull: true },
     );
 
     startTransition(() => {
@@ -86,9 +87,9 @@ export default function HomeHero() {
   ];
 
   return (
-    <section className="relative w-full bg-background pt-20 sm:pt-24 pb-8 sm:pb-12 overflow-hidden flex flex-col items-center justify-center text-center">
+    <section className="relative w-full bg-background pt-20 sm:pt-24 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center">
       {/* Ambient warm radial glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(201,111,79,0.10),rgba(248,246,238,0))] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-10%,rgba(201,111,79,0.10),rgba(248,246,238,0))] pointer-events-none overflow-hidden" />
 
       {/* Hero Content Container */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 flex flex-col items-center">
@@ -97,7 +98,7 @@ export default function HomeHero() {
           {t("title")}
         </h1>
 
-        {/* Dynamic Punchy Subline: win DARNA à Tipaza. */}
+        {/* Dynamic Punchy Subline: Win DARNA à Tipaza. */}
         <div className="text-xl sm:text-3xl md:text-4xl font-extrabold text-primary flex items-center justify-center gap-2 mt-3 sm:mt-4 select-none">
           <span className="text-accent inline-block animate-pulse">✦</span>
           <span>{t("sublinePrefix")}</span>
@@ -105,7 +106,11 @@ export default function HomeHero() {
             className={`text-accent font-black transition-opacity duration-200 cursor-pointer hover:underline ${
               isFading ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"
             }`}
-            onClick={() => router.push(`/search?destination=${encodeURIComponent(FEATURED_CITIES[cityIndex])}`)}
+            onClick={() =>
+              router.push(
+                `/search?destination=${encodeURIComponent(FEATURED_CITIES[cityIndex])}`,
+              )
+            }
           >
             {FEATURED_CITIES[cityIndex]}.
           </span>
@@ -121,7 +126,8 @@ export default function HomeHero() {
           {tabs.map((tab) => {
             const isSelected =
               currentCategory === tab.id ||
-              (tab.id === "Homes" && (!searchParams?.get("category") || currentCategory === "all"));
+              (tab.id === "Homes" &&
+                (!searchParams?.get("category") || currentCategory === "all"));
             const Icon = tab.icon;
 
             return (
@@ -135,7 +141,20 @@ export default function HomeHero() {
                     : "text-primary/70 hover:text-primary hover:bg-tertiary/20"
                 }`}
               >
-                <Icon size={18} className={isSelected ? "text-primary" : "text-primary/70"} />
+                {tab.id === "Homes" ? (
+                  <Image
+                    src="/assets/house.png"
+                    alt="Homes"
+                    width={18}
+                    height={18}
+                    className="w-[18px] h-[18px] object-contain flex-shrink-0"
+                  />
+                ) : (
+                  <Icon
+                    size={18}
+                    className={isSelected ? "text-primary" : "text-primary/70"}
+                  />
+                )}
                 <span>{tab.label}</span>
               </button>
             );
@@ -143,13 +162,15 @@ export default function HomeHero() {
         </div>
 
         {/* Wide Floating Search Bar with Terracotta CTA Button */}
-        <div className="w-full max-w-4xl mt-5 sm:mt-6 z-20 text-start">
+        <div className="w-full max-w-4xl mt-5 sm:mt-6 z-20 text-start min-h-[66px] sm:min-h-[72px]">
           <Search isHero />
         </div>
       </div>
 
       {/* Algerian Architectural Outline Landmarks across bottom */}
-      <AlgerianSkyline className="absolute bottom-0 inset-x-0 h-36 sm:h-44 md:h-48 pointer-events-none z-0" />
+      <div className="absolute bottom-0 inset-x-0 h-52 sm:h-64 md:h-80 lg:h-96 pointer-events-none z-0 overflow-hidden">
+        <AlgerianSkyline className="w-full h-full" />
+      </div>
     </section>
   );
 }

@@ -56,9 +56,9 @@ function CategoryBox({ icon: Icon, label, selected }: Props) {
   return (
     <div
       onClick={handleClick}
-      className={`flex flex-col items-center justify-center gap-2 p-3 border-b-2 hover:text-neutral-800 transition cursor-pointer whitespace-nowrap ${
-        selected ? "border-b-neutral-800" : "border-transparent"
-      } ${selected ? "text-neutral-800 font-semibold" : "text-neutral-500"}`}
+      className={`flex flex-col items-center justify-center gap-2 p-3 border-b-2 hover:text-primary transition cursor-pointer whitespace-nowrap ${
+        selected ? "border-b-accent text-accent font-semibold" : "border-transparent text-primary/60 hover:text-primary"
+      }`}
     >
       <Icon size={26} />
       <div className="font-medium text-xs">{displayLabel}</div>

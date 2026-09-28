@@ -10,6 +10,7 @@ import {
   HostInfo,
 } from "@/types";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import React, { useState, useMemo } from "react";
 import { IconType } from "react-icons";
 import { useTranslations } from "next-intl";
@@ -271,7 +272,13 @@ export default function ListingInfo({
           <div key={idx} className="flex items-start gap-4">
             <div className="text-neutral-800 pt-0.5 flex-shrink-0">
               {hl.icon === "location" ? (
-                <MdOutlineLocationOn size={24} />
+                <Image
+                  src="/assets/location.png"
+                  alt="Location"
+                  width={22}
+                  height={30}
+                  className="object-contain"
+                />
               ) : hl.icon === "cancel" ? (
                 <MdOutlineCalendarToday size={22} />
               ) : (

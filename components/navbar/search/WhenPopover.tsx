@@ -66,19 +66,19 @@ export default function WhenPopover({
   const weekDayInitials = ["S", "M", "T", "W", "T", "F", "S"];
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-neutral-200/80 p-6 z-50 flex flex-col md:flex-row gap-6">
+    <div className="bg-surface rounded-3xl shadow-xl border border-tertiary/60 p-6 z-50 flex flex-col md:flex-row gap-6">
       {/* Left Column: Quick Presets matching Image 2 */}
       <div className="flex md:flex-col gap-3 w-full md:w-44 flex-shrink-0">
         {/* Today Card */}
         <button
           type="button"
           onClick={() => handleSelectPreset(today, today)}
-          className="flex-1 p-4 rounded-2xl border border-neutral-200 hover:border-neutral-900 transition text-start hover:shadow-2xs cursor-pointer bg-white"
+          className="flex-1 p-4 rounded-2xl border border-tertiary/60 hover:border-accent transition text-start hover:shadow-2xs cursor-pointer bg-surface"
         >
-          <div className="font-bold text-neutral-900 text-sm">
+          <div className="font-bold text-primary text-sm">
             {t("today")}
           </div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="text-xs text-primary/60 mt-1">
             {format(today, "MMM d")}
           </div>
         </button>
@@ -87,12 +87,12 @@ export default function WhenPopover({
         <button
           type="button"
           onClick={() => handleSelectPreset(tomorrow, tomorrow)}
-          className="flex-1 p-4 rounded-2xl border border-neutral-200 hover:border-neutral-900 transition text-start hover:shadow-2xs cursor-pointer bg-white"
+          className="flex-1 p-4 rounded-2xl border border-tertiary/60 hover:border-accent transition text-start hover:shadow-2xs cursor-pointer bg-surface"
         >
-          <div className="font-bold text-neutral-900 text-sm">
+          <div className="font-bold text-primary text-sm">
             {t("tomorrow")}
           </div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="text-xs text-primary/60 mt-1">
             {format(tomorrow, "MMM d")}
           </div>
         </button>
@@ -101,12 +101,12 @@ export default function WhenPopover({
         <button
           type="button"
           onClick={() => handleSelectPreset(weekendStart, weekendEnd)}
-          className="flex-1 p-4 rounded-2xl border border-neutral-200 hover:border-neutral-900 transition text-start hover:shadow-2xs cursor-pointer bg-white"
+          className="flex-1 p-4 rounded-2xl border border-tertiary/60 hover:border-accent transition text-start hover:shadow-2xs cursor-pointer bg-surface"
         >
-          <div className="font-bold text-neutral-900 text-sm">
+          <div className="font-bold text-primary text-sm">
             {t("thisWeekend")}
           </div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="text-xs text-primary/60 mt-1">
             {format(weekendStart, "MMM d")} – {format(weekendEnd, "d")}
           </div>
         </button>
@@ -119,24 +119,24 @@ export default function WhenPopover({
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="p-1 rounded-full text-neutral-600 hover:bg-neutral-100 transition"
+            className="p-1 rounded-full text-primary/70 hover:bg-tertiary/20 transition"
           >
             <MdChevronLeft size={20} className="rtl:rotate-180" />
           </button>
-          <h3 className="font-bold text-sm text-neutral-900">
+          <h3 className="font-bold text-sm text-primary">
             {format(currentMonth, "MMMM yyyy")}
           </h3>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="p-1 rounded-full text-neutral-600 hover:bg-neutral-100 transition"
+            className="p-1 rounded-full text-primary/70 hover:bg-tertiary/20 transition"
           >
             <MdChevronRight size={20} className="rtl:rotate-180" />
           </button>
         </div>
 
         {/* Weekday Initials */}
-        <div className="grid grid-cols-7 text-center text-xs font-semibold text-neutral-400 mb-2">
+        <div className="grid grid-cols-7 text-center text-xs font-semibold text-primary/50 mb-2">
           {weekDayInitials.map((initial, i) => (
             <div key={i} className="py-1">
               {initial}
@@ -166,12 +166,12 @@ export default function WhenPopover({
                 onClick={() => handleDateClick(day)}
                 className={`h-9 w-9 mx-auto rounded-full flex items-center justify-center font-medium transition cursor-pointer text-xs ${
                   isStart || isEnd
-                    ? "bg-neutral-900 text-white font-bold"
+                    ? "bg-accent text-white font-bold shadow-xs"
                     : inRange
-                    ? "bg-neutral-100 text-neutral-900"
+                    ? "bg-accent/15 text-accent font-semibold"
                     : isToday
-                    ? "border border-neutral-900 text-neutral-900"
-                    : "text-neutral-700 hover:bg-neutral-100"
+                    ? "border border-accent text-accent font-semibold"
+                    : "text-primary hover:bg-tertiary/20"
                 }`}
               >
                 {format(day, "d")}

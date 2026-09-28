@@ -50,7 +50,7 @@ function UserMenu({ currentUser }: Props) {
     <div className="relative">
       <div className="flex flex-row items-center gap-3">
         <div
-          className="hidden md:block text-sm font-semibold py-2.5 px-4 rounded-full hover:bg-neutral-100 transition cursor-pointer text-neutral-800"
+          className="hidden md:block text-sm font-semibold py-2.5 px-4 rounded-full hover:bg-tertiary/20 text-primary transition cursor-pointer"
           onClick={onRent}
         >
           {t("becomeAHost")}
@@ -59,7 +59,7 @@ function UserMenu({ currentUser }: Props) {
           type="button"
           aria-label="User menu"
           onClick={toggleOpen}
-          className="min-h-[44px] min-w-[44px] p-2.5 md:py-1 md:px-2 border border-neutral-300 flex flex-row items-center justify-center gap-3 rounded-full cursor-pointer hover:shadow-airbnb transition touch-manipulation bg-white text-neutral-700"
+          className="min-h-[44px] min-w-[44px] p-2.5 md:py-1 md:px-2 border border-tertiary/70 flex flex-row items-center justify-center gap-3 rounded-full cursor-pointer hover:shadow-md transition touch-manipulation bg-surface text-primary"
         >
           <AiOutlineMenu size={16} />
           <div className="hidden md:block">
@@ -68,7 +68,7 @@ function UserMenu({ currentUser }: Props) {
             ) : currentUser ? (
               <Avatar src={null} userName={currentUser.name} />
             ) : (
-              <div className="w-[30px] h-[30px] rounded-full bg-neutral-600 flex items-center justify-center text-white overflow-hidden">
+              <div className="w-[30px] h-[30px] rounded-full bg-primary flex items-center justify-center text-white overflow-hidden">
                 <svg
                   viewBox="0 0 32 32"
                   aria-hidden="true"
@@ -84,7 +84,7 @@ function UserMenu({ currentUser }: Props) {
         </button>
       </div>
       {isOpen && (
-        <div className="absolute rounded-xl shadow-md w-[45vw] md:w-60 bg-white overflow-hidden end-0 top-12 text-sm z-50 border border-neutral-100">
+        <div className="absolute rounded-2xl shadow-xl w-[45vw] md:w-60 bg-surface overflow-hidden end-0 top-12 text-sm z-50 border border-tertiary/40">
           <div className="flex flex-col cursor-pointer py-1">
             {currentUser ? (
               <>
