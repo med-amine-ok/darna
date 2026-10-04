@@ -15,6 +15,22 @@ export interface User {
   role?: UserRole;
   phone?: string;
   location?: string;
+  bio?: string;
+  languages?: string[];
+  interests?: string[];
+  occupation?: string;
+  identityVerified?: boolean;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  notificationPreferences?: {
+    email: boolean;
+    sms: boolean;
+    push: boolean;
+    marketing: boolean;
+  };
 }
 
 export interface ListingHighlight {

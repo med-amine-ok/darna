@@ -10,8 +10,24 @@ export const mockCurrentUser: SafeUser = {
   updatedAt: "2024-05-20T14:30:00.000Z",
   favoriteIds: ["listing-1", "listing-3", "listing-7", "listing-11"],
   role: "admin",
-  phone: "+1 (555) 234-5678",
-  location: "San Francisco, USA",
+  phone: "+213 550 12 34 56",
+  location: "Hydra, Algiers, Algeria",
+  bio: "Passionate heritage architect & North African wanderer. Traveling across Algerian coastal villas, Casbah riads, and tranquil Saharan desert oases.",
+  languages: ["Arabic (العربية)", "French (Français)", "English", "Tamazight (Berber)"],
+  interests: ["Historical Architecture", "Casbah Wanderings", "Sahara Caravans", "Mediterranean Cuisine", "Desert Stargazing", "Artisanal Crafts"],
+  occupation: "Heritage Architect & Travel Writer",
+  identityVerified: true,
+  emergencyContact: {
+    name: "Yasmine Morgan",
+    phone: "+213 552 98 76 54",
+    relationship: "Sister",
+  },
+  notificationPreferences: {
+    email: true,
+    sms: true,
+    push: true,
+    marketing: false,
+  },
 };
 
 export const initialMockUsers: SafeUser[] = [

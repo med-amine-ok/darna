@@ -152,7 +152,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
           if (!currentUser) {
             router.push("/login");
           } else {
-            router.push("/trips");
+            router.push("/profile");
           }
         }}
         className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 touch-manipulation transition-all cursor-pointer ${

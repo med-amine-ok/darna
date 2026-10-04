@@ -20,6 +20,7 @@ import {
   MdOutlinePersonAdd,
 } from "react-icons/md";
 import { useTranslations } from "next-intl";
+import { BiUserCircle } from "react-icons/bi";
 import Avatar from "../Avatar";
 import MenuItem from "./MenuItem";
 
@@ -115,6 +116,11 @@ function UserMenu({ currentUser }: Props) {
           <div className="flex flex-col cursor-pointer py-2.5">
             {currentUser ? (
               <>
+                <MenuItem
+                  onClick={() => handleNavigate("/profile")}
+                  label={t("profile")}
+                  icon={<BiUserCircle size={21} />}
+                />
                 <MenuItem
                   onClick={() => handleNavigate("/trips")}
                   label={t("myTrips")}
