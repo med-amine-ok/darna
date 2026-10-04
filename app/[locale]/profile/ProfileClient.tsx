@@ -260,12 +260,12 @@ export default function ProfileClient({
                 </div>
 
                 {/* Progress Track */}
-                <div className="w-full h-2.5 rounded-full bg-neutral-100 overflow-hidden">
+                {/* <div className="w-full h-2.5 rounded-full bg-neutral-100 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-accent to-secondary transition-all duration-500"
                     style={{ width: `${completionData.score}%` }}
                   />
-                </div>
+                </div> */}
 
                 {/* Missing Items Chips */}
                 {completionData.missing.length > 0 && (
