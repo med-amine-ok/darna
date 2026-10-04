@@ -191,7 +191,11 @@ export default function SearchResultsClient({
   };
 
   // Header copy
-  const cityName = searchParams?.get("destination") || searchParams?.get("locationValue") || "";
+  const cityName =
+    searchParams?.get("destination") ||
+    searchParams?.get("locationValue") ||
+    featuredListing?.city ||
+    "";
   const displayTitle =
     title ||
     (cityName
@@ -419,7 +423,7 @@ export default function SearchResultsClient({
                 <div className="space-y-4">
                   {featuredListing && (
                     <h2 className="text-lg font-bold text-neutral-900">
-                      Other suggestions in {cityName || "Paris"}
+                      Other suggestions in {cityName || featuredListing?.city || "Algeria"}
                     </h2>
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8">

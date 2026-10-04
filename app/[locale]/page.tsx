@@ -95,14 +95,20 @@ export default async function Home({ searchParams }: HomeProps) {
               </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
-              {tabListings.map((list) => (
-                <ListingCard
-                  key={list.id}
-                  data={list}
-                  currentUser={currentUser}
-                  customHref={`/listings/${list.id}`}
-                />
-              ))}
+              {tabListings.map((list) => {
+                const targetHref =
+                  list.type === "Vehicles" || list.category === "Vehicles"
+                    ? `/vehicles?selectedId=${list.id}`
+                    : `/search?selectedId=${list.id}${list.city ? `&destination=${encodeURIComponent(list.city)}` : ""}`;
+                return (
+                  <ListingCard
+                    key={list.id}
+                    data={list}
+                    currentUser={currentUser}
+                    customHref={targetHref}
+                  />
+                );
+              })}
             </div>
           </div>
         </Container>
@@ -146,6 +152,7 @@ export default async function Home({ searchParams }: HomeProps) {
               badge="✦ Win DARNA"
               listings={algerianStays}
               currentUser={currentUser}
+              viewMoreHref="/search?destination=Tipaza"
             />
           )}
 
@@ -157,6 +164,7 @@ export default async function Home({ searchParams }: HomeProps) {
               badge="✦ Win DARNA Vehicles"
               listings={vehicleListings}
               currentUser={currentUser}
+              viewMoreHref="/vehicles"
             />
           )}
 
@@ -167,6 +175,7 @@ export default async function Home({ searchParams }: HomeProps) {
               parisHomes.length > 0 ? parisHomes : allListings.slice(0, 7)
             }
             currentUser={currentUser}
+            viewMoreHref="/search?destination=Paris"
           />
 
           {/* Section 3: Great hotels for your next trip (from Screenshot) */}
@@ -178,6 +187,7 @@ export default async function Home({ searchParams }: HomeProps) {
               hotelListings.length > 0 ? hotelListings : allListings.slice(3, 8)
             }
             currentUser={currentUser}
+            viewMoreHref="/search?category=Lux"
           />
 
           {/* Section 4: Unique stays & extraordinary experiences */}
@@ -189,6 +199,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 : allListings.slice(0, 5)
             }
             currentUser={currentUser}
+            viewMoreHref="/search?category=Experiences"
           />
         </div>
       </Container>

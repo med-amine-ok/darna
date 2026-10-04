@@ -17,15 +17,22 @@ function MapController({
   center,
   zoom,
   bounds,
+  selectedCoords,
 }: {
   center?: [number, number];
   zoom?: number;
   bounds?: L.LatLngBoundsExpression;
+  selectedCoords?: [number, number];
 }) {
   const map = useMap();
 
   useEffect(() => {
-    if (bounds) {
+    if (selectedCoords) {
+      map.flyTo(selectedCoords, 13, {
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
+    } else if (bounds) {
       map.flyToBounds(bounds, {
         padding: [50, 50],
         maxZoom: 14,
@@ -38,7 +45,7 @@ function MapController({
         easeLinearity: 0.25,
       });
     }
-  }, [map, center, zoom, bounds]);
+  }, [map, center, zoom, bounds, selectedCoords]);
 
   return null;
 }
@@ -119,6 +126,16 @@ export default function SearchMap({
       bounds: leafletBounds,
     };
   }, [listings, center]);
+
+  const selectedCoords = useMemo(() => {
+    if (activeSelectedId) {
+      const match = listings.find((l) => l.id === activeSelectedId);
+      if (match?.coordinates && match.coordinates.length === 2) {
+        return match.coordinates as [number, number];
+      }
+    }
+    return undefined;
+  }, [activeSelectedId, listings]);
 
   // Clean and responsive price badge icons
   const createPriceIcon = (price: number, isSelected: boolean, isHovered: boolean) => {
@@ -213,7 +230,7 @@ export default function SearchMap({
           maxZoom={20}
         />
 
-        <MapController center={defaultCenter} zoom={zoom} bounds={bounds} />
+        <MapController center={defaultCenter} zoom={zoom} bounds={bounds} selectedCoords={selectedCoords} />
 
         {listings.map((listing) => {
           if (!listing.coordinates || listing.coordinates.length < 2) return null;

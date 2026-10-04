@@ -16,11 +16,13 @@ function MapController({
   center,
   zoom,
   bounds,
+  selectedCoords,
   onMapClick,
 }: {
   center?: [number, number];
   zoom?: number;
   bounds?: L.LatLngBoundsExpression;
+  selectedCoords?: [number, number];
   onMapClick?: () => void;
 }) {
   const map = useMap();
@@ -32,7 +34,12 @@ function MapController({
   });
 
   useEffect(() => {
-    if (bounds) {
+    if (selectedCoords) {
+      map.flyTo(selectedCoords, 12, {
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
+    } else if (bounds) {
       map.flyToBounds(bounds, {
         padding: [60, 60],
         maxZoom: 13,
@@ -45,7 +52,7 @@ function MapController({
         easeLinearity: 0.25,
       });
     }
-  }, [map, center, zoom, bounds]);
+  }, [map, center, zoom, bounds, selectedCoords]);
 
   return null;
 }
@@ -151,6 +158,16 @@ export default function VehiclesMap({
       bounds: leafletBounds,
     };
   }, [vehicles, center]);
+
+  const selectedCoords = useMemo(() => {
+    if (activeSelectedId) {
+      const match = vehicles.find((v) => v.id === activeSelectedId);
+      if (match?.coordinates && match.coordinates.length === 2) {
+        return match.coordinates as [number, number];
+      }
+    }
+    return undefined;
+  }, [activeSelectedId, vehicles]);
 
   // Custom marker icon with /assets/car.png
   const createVehicleMarkerIcon = (
@@ -293,7 +310,7 @@ export default function VehiclesMap({
           maxZoom={20}
         />
 
-        <MapController center={center} zoom={zoom} bounds={bounds} onMapClick={handleClosePopup} />
+        <MapController center={center} zoom={zoom} bounds={bounds} selectedCoords={selectedCoords} onMapClick={handleClosePopup} />
 
         {vehicles.map((v) => {
           if (!v.coordinates || v.coordinates.length !== 2) return null;

@@ -11,17 +11,45 @@ import PriceDisplay from "../common/PriceDisplay";
 interface Props {
   listing: safeListing;
   currentUser?: SafeUser | null;
+  customHref?: string;
+  onClick?: () => void;
 }
 
-export default function ListingCarouselCard({ listing, currentUser }: Props) {
+export default function ListingCarouselCard({
+  listing,
+  currentUser,
+  customHref,
+  onClick,
+}: Props) {
   const router = useRouter();
   const t = useTranslations("nav");
   const twoNightsPrice = listing.price * 2;
   const rating = listing.rating ? listing.rating.toFixed(2).replace(/\.00$/, ".0") : "4.95";
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+      return;
+    }
+    if (customHref) {
+      router.push(customHref);
+      return;
+    }
+    if (listing.type === "Vehicles" || listing.category === "Vehicles") {
+      router.push(`/vehicles?selectedId=${listing.id}`);
+    } else {
+      const destinationParam = listing.city
+        ? `&destination=${encodeURIComponent(listing.city)}`
+        : listing.locationValue
+        ? `&locationValue=${encodeURIComponent(listing.locationValue)}`
+        : "";
+      router.push(`/search?selectedId=${listing.id}${destinationParam}`);
+    }
+  };
+
   return (
     <div
-      onClick={() => router.push(`/listings/${listing.id}`)}
+      onClick={handleClick}
       className="flex-shrink-0 w-64 sm:w-72 cursor-pointer group select-none"
     >
       {/* Image Container with Guest Favorite badge and Heart */}

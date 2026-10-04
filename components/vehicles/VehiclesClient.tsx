@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "@/navigation";
+import { useSearchParams } from "next/navigation";
 import { safeListing, SafeUser } from "@/types";
 import VehicleCard from "./VehicleCard";
 import Container from "../Container";
@@ -62,7 +63,10 @@ type Props = {
 
 export default function VehiclesClient({ listings, currentUser }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const tCommon = useTranslations("common");
+
+  const selectedIdFromUrl = searchParams?.get("selectedId");
 
   // Filters state
   const [selectedCity, setSelectedCity] = useState<string>("all");
@@ -76,8 +80,29 @@ export default function VehiclesClient({ listings, currentUser }: Props) {
 
   // Map & card synchronization
   const [hoveredVehicleId, setHoveredVehicleId] = useState<string | null>(null);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
+    selectedIdFromUrl || null
+  );
   const [showMobileMap, setShowMobileMap] = useState(false);
+
+  useEffect(() => {
+    if (selectedIdFromUrl) {
+      setSelectedVehicleId(selectedIdFromUrl);
+      const match = listings.find((v) => v.id === selectedIdFromUrl);
+      if (
+        match?.city &&
+        selectedCity !== "all" &&
+        match.city.toLowerCase() !== selectedCity.toLowerCase()
+      ) {
+        setSelectedCity("all");
+      }
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`vehicle-card-${selectedIdFromUrl}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedIdFromUrl, listings]);
 
   // Filter listings
   const filteredVehicles = useMemo(() => {

@@ -6,12 +6,15 @@ import ListingCarouselCard from "./ListingCarouselCard";
 import { MdChevronLeft, MdChevronRight, MdArrowForward } from "react-icons/md";
 import { IoPricetag } from "react-icons/io5";
 
+import { useRouter } from "@/navigation";
+
 interface Props {
   title: string;
   subtitle?: string;
   badge?: string;
   listings: safeListing[];
   currentUser?: SafeUser | null;
+  viewMoreHref?: string;
 }
 
 export default function ListingCarouselSection({
@@ -20,7 +23,9 @@ export default function ListingCarouselSection({
   badge,
   listings,
   currentUser,
+  viewMoreHref,
 }: Props) {
+  const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -55,7 +60,14 @@ export default function ListingCarouselSection({
       {/* Header Row */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 group cursor-pointer">
+          <div
+            onClick={() => {
+              if (viewMoreHref) {
+                router.push(viewMoreHref);
+              }
+            }}
+            className="flex items-center gap-2 group cursor-pointer"
+          >
             <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">
               {title}
             </h2>
