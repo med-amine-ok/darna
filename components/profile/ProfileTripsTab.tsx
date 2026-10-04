@@ -221,7 +221,6 @@ export default function ProfileTripsTab({ reservations }: ProfileTripsTabProps) 
                       <div className="text-end">
                         <PriceDisplay
                           price={res.totalPrice}
-                          currency="DZD"
                           className="text-base font-black text-primary"
                         />
                       </div>

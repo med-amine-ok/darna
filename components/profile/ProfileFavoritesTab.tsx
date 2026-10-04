@@ -103,7 +103,6 @@ export default function ProfileFavoritesTab({
                 <div>
                   <PriceDisplay
                     price={listing.price}
-                    currency="DZD"
                     className="text-sm font-extrabold text-primary"
                   />
                   <span className="text-[10px] text-neutral-400"> / night</span>
