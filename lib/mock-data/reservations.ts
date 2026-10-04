@@ -2,7 +2,7 @@ import { SafeReservation } from "@/types";
 import { initialMockListings } from "./listings";
 import { initialMockUsers } from "./users";
 
-export const initialMockReservations: SafeReservation[] = [
+const rawMockReservations: SafeReservation[] = [
   // --- Trips booked by user-1 (Logged-in User as Guest) ---
   // 1. Upcoming Trip (Confirmed)
   {
@@ -174,3 +174,8 @@ export const initialMockReservations: SafeReservation[] = [
     user: initialMockUsers.find((u) => u.id === "user-6"),
   },
 ];
+
+export const initialMockReservations: SafeReservation[] = rawMockReservations.map((r) => ({
+  ...r,
+  totalPrice: r.totalPrice < 10000 ? Math.round(r.totalPrice * 15) : r.totalPrice,
+}));

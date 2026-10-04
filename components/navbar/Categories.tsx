@@ -15,12 +15,17 @@ import {
   GiWindmill,
 } from "react-icons/gi";
 import { IoDiamond } from "react-icons/io5";
-import { MdOutlineVilla } from "react-icons/md";
+import { MdOutlineVilla, MdDirectionsCar } from "react-icons/md";
 import { TbBeach, TbMountain, TbPool } from "react-icons/tb";
 import CategoryBox from "../CategoryBox";
 import Container from "../Container";
 
 export const categories = [
+  {
+    label: "Vehicles",
+    icon: MdDirectionsCar,
+    description: "Rent 4x4s, SUVs, and city vehicles in Algeria!",
+  },
   {
     label: "Beach",
     icon: TbBeach,

@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { MdClose, MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { safeListing, SafeUser } from "@/types";
 import HeartButton from "../HeartButton";
+import PriceDisplay from "../common/PriceDisplay";
 import "leaflet/dist/leaflet.css";
 
 // Smooth Map Controller for fluid flyTo animations between cities & bounds
@@ -122,22 +123,25 @@ export default function SearchMap({
   // Clean and responsive price badge icons
   const createPriceIcon = (price: number, isSelected: boolean, isHovered: boolean) => {
     const active = isSelected || isHovered;
+    const formattedDzd = price >= 1000 ? `${Math.round(price / 1000)}k DZD` : `${price} DZD`;
+    const eurVal = Math.round(price / 152.47);
     return L.divIcon({
       className: "custom-price-pin !bg-transparent !border-none",
       html: `
         <button 
           type="button"
-          class="transition-all duration-200 transform cursor-pointer font-bold text-[12px] px-3 py-1.5 rounded-full shadow-md flex items-center justify-center whitespace-nowrap select-none ${
+          class="transition-all duration-200 transform cursor-pointer font-bold text-[11px] px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 justify-center whitespace-nowrap select-none ${
             active
               ? "bg-neutral-900 text-white scale-110 shadow-2xl ring-2 ring-white z-50"
               : "bg-white text-neutral-900 hover:scale-105 border border-neutral-300 hover:border-neutral-400 hover:shadow-lg"
           }"
         >
-          $${price}
+          <span>${formattedDzd}</span>
+          <span class="text-[9.5px] font-normal ${active ? "text-neutral-300" : "text-neutral-500"}">(~€${eurVal})</span>
         </button>
       `,
-      iconSize: [60, 30],
-      iconAnchor: [30, 15],
+      iconSize: [85, 30],
+      iconAnchor: [42, 15],
     });
   };
 
@@ -379,22 +383,19 @@ export default function SearchMap({
             </p>
 
             {/* Pricing Row with strikethrough */}
-            <div className="flex items-baseline gap-1 text-xs text-primary/70 pt-1 ms-5">
-              {originalPrice > twoNightsPrice && (
-                <span className="line-through text-primary/40 font-normal">
-                  ${originalPrice}
-                </span>
-              )}
-              <span className="font-bold text-primary text-sm">
-                ${twoNightsPrice}
-              </span>
-              <span>for 2 nights</span>
+            <div className="pt-1 ms-5">
+              <PriceDisplay
+                price={twoNightsPrice}
+                originalPrice={originalPrice > twoNightsPrice ? originalPrice : undefined}
+                period="for 2 nights"
+                priceClassName="font-bold text-primary text-sm"
+              />
             </div>
 
             {/* Credit / Perk Tag */}
             <div className="pt-1 ms-5">
               <span className="inline-flex items-center text-xs font-semibold text-secondary-700 bg-secondary-50 px-2 py-0.5 rounded-md">
-                +$75 DARNA credit
+                +10,000 DZD DARNA credit
               </span>
             </div>
           </div>

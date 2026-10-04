@@ -102,11 +102,21 @@ const ServicesIcon = () => (
   </svg>
 );
 
+const VehiclesIcon = () => (
+  <Image
+    src="/assets/car.png"
+    alt="Vehicles"
+    width={28}
+    height={28}
+    className="w-7 h-7 object-contain transition-transform group-hover:scale-110"
+  />
+);
+
 export const mainTabs = [
   { id: "all", labelKey: "tabAll", icon: GlobeIcon },
   { id: "Homes", labelKey: "tabHomes", icon: HomesIcon },
   { id: "Experiences", labelKey: "tabExperiences", icon: ExperiencesIcon },
-  { id: "Services", labelKey: "tabServices", icon: ServicesIcon },
+  { id: "Vehicles", labelKey: "tabVehicles", icon: VehiclesIcon },
 ];
 
 export default function MainCategoryTabs() {
@@ -115,10 +125,15 @@ export default function MainCategoryTabs() {
   const params = useSearchParams();
   const t = useTranslations("nav");
 
-  const currentCategory = params?.get("category") || "all";
+  const currentCategory = pathname === "/vehicles" ? "Vehicles" : (params?.get("category") || "all");
 
   const handleSelectTab = useCallback(
     (tabId: string) => {
+      if (tabId === "Vehicles") {
+        router.push("/vehicles");
+        return;
+      }
+
       let currentQuery = {};
       if (params) {
         currentQuery = qs.parse(params.toString());

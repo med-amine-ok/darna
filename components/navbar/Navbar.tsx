@@ -58,10 +58,10 @@ function Navbar({ currentUser }: Props) {
       } fixed top-0 inset-x-0 w-full z-40 transition-all duration-200 ${
         !isLoginPage && (
           isScrolled
-            ? "bg-surface/95 backdrop-blur-md shadow-xs border-b border-tertiary/40"
+            ? "bg-transparent backdrop-blur-md shadow-xs border-b border-tertiary/40"
             : isHomePage
-            ? "bg-background/90 backdrop-blur-md border-b border-transparent"
-            : "bg-surface/95 backdrop-blur-md border-b border-tertiary/20"
+            ? "bg-background/900 backdrop-blur-md border-b border-transparent"
+            : "bg-surface/950 backdrop-blur-md border-b border-tertiary/20"
         )
       }`}
     >

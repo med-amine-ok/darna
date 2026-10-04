@@ -74,13 +74,17 @@ export default function SearchResultsClient({
 
   // Close dropdown on click outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setActiveDropdown(null);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   // Quick filter states from URL
@@ -215,21 +219,21 @@ export default function SearchResultsClient({
                 }`}
               >
                 {currentMinPrice || currentMaxPrice
-                  ? `$${currentMinPrice || "0"} - $${currentMaxPrice || "500+"}`
+                  ? `${currentMinPrice || "0"} DZD - ${currentMaxPrice || "50,000+"} DZD`
                   : tSearch("price")}
               </button>
 
               {activeDropdown === "price" && (
-                <div className="absolute top-full mt-2 start-0 z-30 w-72 bg-white rounded-2xl shadow-xl border border-neutral-200 p-4 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 start-0 z-30 w-80 bg-white rounded-2xl shadow-xl border border-neutral-200 p-4 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-150">
                   <div className="text-sm font-bold text-neutral-900">{tFilters("priceRange")}</div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="border border-neutral-300 rounded-xl p-2.5">
                       <span className="block text-[10px] font-bold text-neutral-400 uppercase">{tFilters("minimum")}</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-500 font-semibold">$</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-neutral-500 font-bold">DZD</span>
                         <input
                           type="number"
-                          placeholder="0"
+                          placeholder="5000"
                           value={tempMinPrice}
                           onChange={(e) => setTempMinPrice(e.target.value)}
                           className="w-full text-sm font-semibold outline-none"
@@ -238,11 +242,11 @@ export default function SearchResultsClient({
                     </div>
                     <div className="border border-neutral-300 rounded-xl p-2.5">
                       <span className="block text-[10px] font-bold text-neutral-400 uppercase">{tFilters("maximum")}</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-neutral-500 font-semibold">$</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-neutral-500 font-bold">DZD</span>
                         <input
                           type="number"
-                          placeholder="500+"
+                          placeholder="50000+"
                           value={tempMaxPrice}
                           onChange={(e) => setTempMaxPrice(e.target.value)}
                           className="w-full text-sm font-semibold outline-none"

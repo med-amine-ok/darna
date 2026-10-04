@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Range } from "react-date-range";
 import { format, differenceInCalendarDays } from "date-fns";
 import Calendar from "../inputs/Calendar";
 import { useTranslations } from "next-intl";
 import { MdStar, MdFlag, MdClose } from "react-icons/md";
 import { toast } from "react-toastify";
+import Image from "next/image";
+import { useCurrency } from "@/hook/useCurrency";
+import PriceDisplay from "../common/PriceDisplay";
 
 type Props = {
   price: number;
@@ -18,6 +21,8 @@ type Props = {
   disabledDates: Date[];
   rating?: number;
   reviewCount?: number;
+  isVehicle?: boolean;
+  className?: string;
 };
 
 function ListingReservation({
@@ -30,14 +35,36 @@ function ListingReservation({
   disabledDates,
   rating = 4.92,
   reviewCount = 28,
+  isVehicle = false,
+  className = "",
 }: Props) {
   const t = useTranslations("listing");
   const tCommon = useTranslations("common");
+  const { formatDzd, formatEur, convertToEur } = useCurrency();
   const [showCalendar, setShowCalendar] = useState(false);
   const [guestCount, setGuestCount] = useState(1);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("inaccurate");
   const [isReportSubmitting, setIsReportSubmitting] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Close calendar popup when clicking anywhere outside on the screen
+  useEffect(() => {
+    if (!showCalendar) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setShowCalendar(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showCalendar]);
 
   const nights = useMemo(() => {
     if (dateRange.startDate && dateRange.endDate) {
@@ -48,7 +75,7 @@ function ListingReservation({
   }, [dateRange.startDate, dateRange.endDate]);
 
   const nightlySubtotal = price * nights;
-  const cleaningFee = 45;
+  const cleaningFee = Math.round(price * 0.22) || 4500;
   const serviceFee = Math.round(nightlySubtotal * 0.12);
   const calculatedTotal = nightlySubtotal + cleaningFee + serviceFee;
 
@@ -70,14 +97,28 @@ function ListingReservation({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-neutral-200/90 p-6 shadow-airbnb-card hover:shadow-airbnb transition-all flex flex-col gap-5">
+    <div className={`bg-white rounded-2xl border border-neutral-200/90 p-6 shadow-airbnb-card hover:shadow-airbnb transition-all flex flex-col gap-5 ${className}`}>
       {/* Header: Price & Rating */}
-      <div className="flex items-baseline justify-between">
-        <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-neutral-900">${price}</span>
-          <span className="text-neutral-500 font-normal text-sm">
-            / {tCommon("night")}
-          </span>
+      <div className="flex items-baseline justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <PriceDisplay
+            price={price}
+            period={`/ ${isVehicle ? tCommon("day") : tCommon("night")}`}
+            priceClassName="text-2xl font-bold text-neutral-900"
+            eurClassName="text-xs text-neutral-500 font-normal"
+          />
+          {isVehicle && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-tertiary/30 border border-tertiary/60 text-xs font-bold text-primary">
+              <Image
+                src="/assets/car.png"
+                alt="Vehicle"
+                width={22}
+                height={22}
+                className="w-5 h-5 object-contain"
+              />
+              <span>Daily Rental</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1 text-sm font-semibold text-neutral-800">
           <MdStar className="text-neutral-900" size={15} />
@@ -89,79 +130,81 @@ function ListingReservation({
         </div>
       </div>
 
-      {/* Segmented Inputs Box (Check-in, Checkout, Guests) */}
-      <div className="border border-neutral-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-neutral-900 transition">
-        {/* Top: Dates */}
-        <div
-          onClick={() => setShowCalendar((prev) => !prev)}
-          className="grid grid-cols-2 divide-x divide-neutral-300 rtl:divide-x-reverse border-b border-neutral-300 cursor-pointer hover:bg-neutral-50/80 transition"
-        >
-          <div className="p-2.5">
-            <span className="block text-[10px] font-extrabold uppercase text-neutral-800 tracking-wider">
-              {tCommon("date")}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-neutral-900 truncate block">
-              {startDateFormatted}
-            </span>
-          </div>
-          <div className="p-2.5">
-            <span className="block text-[10px] font-extrabold uppercase text-neutral-800 tracking-wider">
-              {tCommon("date")}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-neutral-900 truncate block">
-              {endDateFormatted}
-            </span>
-          </div>
-        </div>
-
-        {/* Bottom: Guests */}
-        <div className="p-2.5 flex items-center justify-between hover:bg-neutral-50/80 transition">
-          <div>
-            <span className="block text-[10px] font-extrabold uppercase text-neutral-800 tracking-wider">
-              {tCommon("guests").toUpperCase()}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-neutral-900">
-              {t("guestCount", { count: guestCount })}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={guestCount <= 1}
-              onClick={() => setGuestCount((c) => Math.max(1, c - 1))}
-              className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-sm font-bold text-neutral-700 hover:border-neutral-900 disabled:opacity-30 disabled:hover:border-neutral-300 transition cursor-pointer"
-            >
-              -
-            </button>
-            <span className="text-xs font-semibold">{guestCount}</span>
-            <button
-              type="button"
-              onClick={() => setGuestCount((c) => Math.min(10, c + 1))}
-              className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-sm font-bold text-neutral-700 hover:border-neutral-900 transition cursor-pointer"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Expandable Calendar Dropdown */}
-      {showCalendar && (
-        <div className="pt-2 border-t border-neutral-100 flex flex-col items-center">
-          <Calendar
-            value={dateRange}
-            disabledDates={disabledDates}
-            onChange={(value) => onChangeDate(value.selection)}
-          />
-          <button
-            type="button"
-            onClick={() => setShowCalendar(false)}
-            className="mt-2 text-xs font-semibold underline text-neutral-700 hover:text-neutral-900 cursor-pointer"
+      {/* Segmented Inputs Box (Check-in / Pick-up, Checkout / Return, Guests) */}
+      <div ref={calendarRef} className="relative">
+        <div className="border border-neutral-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-neutral-900 transition">
+          {/* Top: Dates */}
+          <div
+            onClick={() => setShowCalendar((prev) => !prev)}
+            className="grid grid-cols-2 divide-x divide-neutral-300 rtl:divide-x-reverse border-b border-neutral-300 cursor-pointer hover:bg-neutral-50/80 transition"
           >
-            {tCommon("close")}
-          </button>
+            <div className="p-2.5">
+              <span className="block text-[10px] font-extrabold uppercase text-neutral-800 tracking-wider">
+                {isVehicle ? "PICK-UP" : tCommon("date")}
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-neutral-900 truncate block">
+                {startDateFormatted}
+              </span>
+            </div>
+            <div className="p-2.5">
+              <span className="block text-[10px] font-extrabold uppercase text-neutral-800 tracking-wider">
+                {isVehicle ? "RETURN" : tCommon("date")}
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-neutral-900 truncate block">
+                {endDateFormatted}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom: Guests / Passengers */}
+          <div className="p-2.5 flex items-center justify-between hover:bg-neutral-50/80 transition">
+            <div>
+              <span className="block text-[10px] font-extrabold uppercase text-neutral-800 tracking-wider">
+                {isVehicle ? "DRIVER & PASSENGERS" : tCommon("guests").toUpperCase()}
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-neutral-900">
+                {isVehicle ? `${guestCount} passenger${guestCount > 1 ? "s" : ""}` : t("guestCount", { count: guestCount })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={guestCount <= 1}
+                onClick={() => setGuestCount((c) => Math.max(1, c - 1))}
+                className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-sm font-bold text-neutral-700 hover:border-neutral-900 disabled:opacity-30 disabled:hover:border-neutral-300 transition cursor-pointer"
+              >
+                -
+              </button>
+              <span className="text-xs font-semibold">{guestCount}</span>
+              <button
+                type="button"
+                onClick={() => setGuestCount((c) => Math.min(10, c + 1))}
+                className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-sm font-bold text-neutral-700 hover:border-neutral-900 transition cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Expandable Calendar Dropdown */}
+        {showCalendar && (
+          <div className="pt-2 border-t border-neutral-100 flex flex-col items-center">
+            <Calendar
+              value={dateRange}
+              disabledDates={disabledDates}
+              onChange={(value) => onChangeDate(value.selection)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowCalendar(false)}
+              className="mt-2 text-xs font-semibold underline text-neutral-700 hover:text-neutral-900 cursor-pointer"
+            >
+              {tCommon("close")}
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Full-Width Primary Reserve CTA */}
       <button
@@ -169,7 +212,7 @@ function ListingReservation({
         onClick={onSubmit}
         className="w-full bg-accent hover:bg-accent-600 active:bg-accent-700 active:scale-[0.99] text-white py-3.5 px-4 rounded-xl font-bold text-base shadow-sm hover:shadow-md transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
-        {t("reserve")}
+        {isVehicle ? "Reserve Vehicle" : t("reserve")}
       </button>
 
       <p className="text-center text-xs text-neutral-500 font-medium">
@@ -178,24 +221,36 @@ function ListingReservation({
 
       {/* Price Breakdown Appearing Below Button */}
       <div className="flex flex-col gap-2.5 pt-2 text-sm text-neutral-700 border-t border-neutral-200">
-        <div className="flex justify-between">
+        <div className="flex justify-between items-baseline">
           <span className="underline">
-            ${price} x {nights} {nights === 1 ? tCommon("night") : `${tCommon("night")}s`}
+            {formatDzd(price)} x {nights} {nights === 1 ? (isVehicle ? tCommon("day") : tCommon("night")) : (isVehicle ? `${tCommon("day")}s` : `${tCommon("night")}s`)}
           </span>
-          <span>${nightlySubtotal}</span>
+          <div className="flex items-baseline gap-1">
+            <span className="font-semibold text-neutral-900">{formatDzd(nightlySubtotal)}</span>
+            <span className="text-xs text-neutral-500 font-normal">({formatEur(convertToEur(nightlySubtotal))})</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="underline">{t("cleaningFee")}</span>
-          <span>${cleaningFee}</span>
+        <div className="flex justify-between items-baseline">
+          <span className="underline">{isVehicle ? "Vehicle preparation & inspection" : t("cleaningFee")}</span>
+          <div className="flex items-baseline gap-1">
+            <span className="font-semibold text-neutral-900">{formatDzd(cleaningFee)}</span>
+            <span className="text-xs text-neutral-500 font-normal">({formatEur(convertToEur(cleaningFee))})</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="underline">{t("serviceFee")}</span>
-          <span>${serviceFee}</span>
+        <div className="flex justify-between items-baseline">
+          <span className="underline">{isVehicle ? "Comprehensive insurance & roadside assist" : t("serviceFee")}</span>
+          <div className="flex items-baseline gap-1">
+            <span className="font-semibold text-neutral-900">{formatDzd(serviceFee)}</span>
+            <span className="text-xs text-neutral-500 font-normal">({formatEur(convertToEur(serviceFee))})</span>
+          </div>
         </div>
 
-        <div className="border-t border-neutral-200 pt-3 mt-1 flex justify-between font-bold text-base text-neutral-900">
+        <div className="border-t border-neutral-200 pt-3 mt-1 flex justify-between items-baseline font-bold text-base text-neutral-900">
           <span>{tCommon("total")}</span>
-          <span>${calculatedTotal}</span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-bold text-neutral-950">{formatDzd(calculatedTotal)}</span>
+            <span className="text-xs text-neutral-500 font-normal">({formatEur(convertToEur(calculatedTotal))})</span>
+          </div>
         </div>
       </div>
 
@@ -213,8 +268,14 @@ function ListingReservation({
 
       {/* Report Listing Modal */}
       {isReportModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+        <div
+          onClick={() => setIsReportModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 cursor-default"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
               <h3 className="font-bold text-base text-neutral-900">{t("reportModalTitle")}</h3>
               <button

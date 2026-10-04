@@ -42,6 +42,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
   // Read current URL params
   const categoryParam = searchParams?.get("category") || "all";
   const isServicesMode = categoryParam === "Services";
+  const isVehiclesMode = categoryParam === "Vehicles";
 
   // State
   const [mounted, setMounted] = useState(false);
@@ -72,7 +73,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
 
   // Close popovers on click outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (
         searchContainerRef.current &&
         !searchContainerRef.current.contains(event.target as Node)
@@ -81,7 +82,11 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   // Update selectedService when categoryParam changes
@@ -130,10 +135,10 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
 
   const guestLabel = useMemo(() => {
     if (guestCount > 1) {
-      return `${guestCount} ${tCommon("guests")}`;
+      return `${guestCount} ${isVehiclesMode ? "passengers" : tCommon("guests")}`;
     }
-    return t("addGuests");
-  }, [guestCount, t, tCommon]);
+    return isVehiclesMode ? "Add passengers" : t("addGuests");
+  }, [guestCount, isVehiclesMode, t, tCommon]);
 
   // Actions
   const handleSelectDestination = (item: DestinationItem) => {
@@ -219,6 +224,8 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
     if (isServicesMode && selectedService) {
       updatedQuery.service = selectedService;
       updatedQuery.category = "Services";
+    } else if (isVehiclesMode) {
+      updatedQuery.category = "Vehicles";
     }
 
     const url = qs.stringifyUrl(
@@ -303,7 +310,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
   }
 
   return (
-    <div className={`relative w-full ${isHero ? "max-w-4xl" : "max-w-4xl"} mx-auto text-start`} ref={searchContainerRef}>
+    <div className={`relative z-50 w-full ${isHero ? "max-w-4xl" : "max-w-4xl"} mx-auto text-start`} ref={searchContainerRef}>
       {/* Hero Floating Search Bar */}
       <motion.div
         animate={
@@ -327,13 +334,11 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
           damping: 28,
           mass: 0.8,
         }}
-        className={`w-full bg-surface border border-tertiary/70 rounded-full transition-shadow duration-200 ${
-          isHero ? "p-2 sm:p-2.5 shadow-xl hover:shadow-2xl" : "p-1.5 sm:p-2 shadow-md hover:shadow-lg"
-        } flex items-center justify-between text-start ${
-          activePopover ? "bg-surface ring-2 ring-primary/20 shadow-xl" : ""
-        }`}
+        className={`w-full bg-transparent ${
+          isHero ? "p-2 sm:p-2.5" : "p-1.5 sm:p-2"
+        } flex items-center justify-between text-start`}
       >
-        {/* --- 1. WHERE SECTION (Matching Image 1) --- */}
+        {/* --- 1. WHERE SECTION --- */}
         <div
           onClick={() => {
             setActivePopover("where");
@@ -341,7 +346,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
           }}
           className={`flex-1 px-4 sm:px-6 py-2 rounded-full transition-all cursor-pointer relative flex items-center text-start ${
             activePopover === "where"
-              ? "bg-surface shadow-md ring-1 ring-tertiary"
+              ? "bg-surface shadow-md"
               : "hover:bg-tertiary/20"
           }`}
         >
@@ -361,7 +366,11 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
                   setDestinationText(e.target.value);
                   if (activePopover !== "where") setActivePopover("where");
                 }}
-                placeholder={t("searchDestinations")}
+                placeholder={
+                  isVehiclesMode
+                    ? "Pick-up city (Alger, Oran, Taghit...)"
+                    : t("searchDestinations")
+                }
                 className="w-full text-xs sm:text-sm font-medium text-primary placeholder-primary/40 bg-transparent outline-none truncate text-start text-left rtl:text-right"
               />
               {destinationText && (
@@ -386,7 +395,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
           onClick={() => setActivePopover("when")}
           className={`flex-1 px-4 sm:px-6 py-2 rounded-full transition-all cursor-pointer relative text-start ${
             activePopover === "when"
-              ? "bg-surface shadow-md ring-1 ring-tertiary"
+              ? "bg-surface shadow-md"
               : "hover:bg-tertiary/20"
           }`}
         >
@@ -424,7 +433,7 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
             onClick={() => setActivePopover("services")}
             className={`flex-1 ps-4 sm:ps-6 pe-2 py-2 rounded-full transition-all cursor-pointer flex items-center justify-between relative text-start ${
               activePopover === "services"
-                ? "bg-surface shadow-md ring-1 ring-tertiary"
+                ? "bg-surface shadow-md"
                 : "hover:bg-tertiary/20"
             }`}
           >
@@ -469,13 +478,13 @@ export default function Search({ compact, mobile, onExpand, isHero }: SearchProp
             onClick={() => setActivePopover("who")}
             className={`flex-1 ps-4 sm:ps-6 pe-2 py-2 rounded-full transition-all cursor-pointer flex items-center justify-between relative text-start ${
               activePopover === "who"
-                ? "bg-surface shadow-md ring-1 ring-tertiary"
+                ? "bg-surface shadow-md"
                 : "hover:bg-tertiary/20"
             }`}
           >
             <div className="min-w-0 flex-1 text-start">
               <div className="text-[11px] font-bold text-primary uppercase tracking-wider text-start text-left rtl:text-right">
-                {t("who")}
+                {isVehiclesMode ? "Passengers" : t("who")}
               </div>
               <div
                 className={`text-xs sm:text-sm font-medium truncate text-start text-left rtl:text-right ${

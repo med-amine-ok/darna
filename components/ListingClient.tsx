@@ -15,6 +15,7 @@ import ListingHead from "./listing/ListingHead";
 import ListingInfo from "./listing/ListingInfo";
 import ListingReservation from "./listing/ListingReservation";
 import ListingCard from "./listing/ListingCard";
+import PriceDisplay from "./common/PriceDisplay";
 import { categories } from "./navbar/Categories";
 
 import { format } from "date-fns";
@@ -114,6 +115,8 @@ function ListingClient({
     return categories.find((item) => item.label === listing.category);
   }, [listing.category]);
 
+  const isVehicle = listing.type === "Vehicles" || listing.category === "Vehicles";
+
   return (
     <Container>
       <div className="max-w-7xl mx-auto pb-20 lg:pb-12">
@@ -157,8 +160,8 @@ function ListingClient({
             </div>
 
             {/* Right Column: Desktop Sticky Booking Widget (40% on desktop) */}
-            <div className="hidden lg:block lg:col-span-5">
-              <div className="sticky top-28 self-start">
+            <div className="hidden lg:block lg:col-span-5 relative">
+              <div className="sticky top-24 z-20">
                 <ListingReservation
                   price={listing.price}
                   totalPrice={totalPrice}
@@ -169,6 +172,7 @@ function ListingClient({
                   disabledDates={disableDates}
                   rating={listing.rating}
                   reviewCount={listing.reviewCount}
+                  isVehicle={isVehicle}
                 />
               </div>
             </div>
@@ -193,10 +197,11 @@ function ListingClient({
       {/* Mobile Sticky Bottom Reserve Bar */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-neutral-200/90 py-3 px-4 sm:px-6 flex items-center justify-between z-30 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <div className="flex flex-col">
-          <div className="flex items-baseline gap-1">
-            <span className="text-base sm:text-lg font-bold text-neutral-900">${listing.price}</span>
-            <span className="text-xs text-neutral-500 font-normal">/ {tCommon("night")}</span>
-          </div>
+          <PriceDisplay
+            price={listing.price}
+            period={`/ ${isVehicle ? tCommon("day") : tCommon("night")}`}
+            priceClassName="text-base sm:text-lg font-bold text-neutral-900"
+          />
           <button
             type="button"
             onClick={() => setIsMobileReserveModalOpen(true)}
@@ -220,16 +225,24 @@ function ListingClient({
           }}
           className="bg-accent hover:bg-accent-600 active:bg-accent-700 text-white py-3 px-7 rounded-xl font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer touch-manipulation"
         >
-          {t("reserve")}
+          {isVehicle ? "Reserve Vehicle" : t("reserve")}
         </button>
       </div>
 
       {/* Mobile Reservation Modal Sheet */}
       {isMobileReserveModalOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-neutral-900/60 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl max-h-[85dvh] overflow-y-auto p-4 sm:p-6 shadow-2xl">
+        <div
+          onClick={() => setIsMobileReserveModalOpen(false)}
+          className="lg:hidden fixed inset-0 z-50 bg-neutral-900/60 backdrop-blur-xs flex flex-col justify-end cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-t-3xl max-h-[85dvh] overflow-y-auto p-4 sm:p-6 shadow-2xl cursor-default"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-neutral-200 mb-4">
-              <h3 className="font-bold text-lg text-neutral-900">{t("selectDatesGuests")}</h3>
+              <h3 className="font-bold text-lg text-neutral-900">
+                {isVehicle ? "Select Pick-up & Return Dates" : t("selectDatesGuests")}
+              </h3>
               <button
                 type="button"
                 aria-label="Close reservation modal"
@@ -247,6 +260,7 @@ function ListingClient({
               onSubmit={onCreateReservation}
               disabled={isLoading}
               disabledDates={disableDates}
+              isVehicle={isVehicle}
             />
           </div>
         </div>

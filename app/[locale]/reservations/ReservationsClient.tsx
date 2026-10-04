@@ -11,6 +11,7 @@ import { MdOutlineBookOnline, MdClose, MdCheckCircle, MdPending, MdCancel } from
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import Avatar from "@/components/Avatar";
+import PriceDisplay from "@/components/common/PriceDisplay";
 import { SafeReservation, SafeUser } from "@/types";
 
 type Props = {
@@ -258,9 +259,10 @@ export default function ReservationsClient({ reservations, currentUser }: Props)
                     {/* Host Payout */}
                     <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
                       <span className="text-xs font-semibold text-neutral-500">{t("payout")}</span>
-                      <span className="text-sm font-extrabold text-neutral-900">
-                        ${res.totalPrice}
-                      </span>
+                      <PriceDisplay
+                        price={res.totalPrice}
+                        priceClassName="text-sm font-extrabold text-neutral-900"
+                      />
                     </div>
 
                     {/* Actions */}
@@ -292,8 +294,14 @@ export default function ReservationsClient({ reservations, currentUser }: Props)
 
         {/* Cancellation Confirmation Modal */}
         {selectedForCancel && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+          <div
+            onClick={() => setSelectedForCancel(null)}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 cursor-default"
+            >
               <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
                 <h3 className="font-bold text-base text-neutral-900">{t("cancelModalTitle")}</h3>
                 <button

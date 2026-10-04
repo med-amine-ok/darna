@@ -12,6 +12,8 @@ import Counter from "@/components/inputs/Counter";
 import Logo from "@/components/navbar/Logo";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useCurrency } from "@/hook/useCurrency";
+import PriceDisplay from "../common/PriceDisplay";
 import {
   MdOutlineWifi,
   MdOutlineKitchen,
@@ -126,6 +128,7 @@ export default function BecomeAHostClient({ currentUser: _currentUser }: Props) 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showExitModal, setShowExitModal] = useState<boolean>(false);
   const [createdListingId, setCreatedListingId] = useState<string | null>(null);
+  const { rate, formatDzd, formatEur, convertToEur } = useCurrency();
 
   // Form states
   const [category, setCategory] = useState<string>("Modern");
@@ -154,7 +157,7 @@ export default function BecomeAHostClient({ currentUser: _currentUser }: Props) 
   const [description, setDescription] = useState<string>(
     "Experience Paris from this stunning, sun-drenched loft featuring panoramic rooftop views, designer finishes, and modern luxury amenities."
   );
-  const [price, setPrice] = useState<number>(185);
+  const [price, setPrice] = useState<number>(18000);
 
   // Step Validation
   const canAdvance = useMemo(() => {
@@ -715,36 +718,56 @@ export default function BecomeAHostClient({ currentUser: _currentUser }: Props) 
                     {t("pricePerNight")}
                   </label>
                   <div className="relative flex items-center">
-                    <span className="absolute start-4 text-2xl font-bold text-neutral-400">$</span>
+                    <span className="absolute start-3.5 text-xs font-bold text-neutral-500 bg-neutral-200/80 px-2 py-1 rounded">
+                      DZD
+                    </span>
                     <input
                       type="number"
-                      min={10}
-                      max={10000}
+                      min={1000}
+                      max={1000000}
+                      step={500}
                       value={price}
                       onChange={(e) => setPrice(Math.max(1, parseInt(e.target.value, 10) || 0))}
-                      className="w-full ps-10 pe-4 py-3.5 rounded-xl border-2 border-neutral-300 focus:border-neutral-900 focus:outline-none text-2xl font-bold text-neutral-900 bg-white"
+                      className="w-full ps-16 pe-4 py-3.5 rounded-xl border-2 border-neutral-300 focus:border-neutral-900 focus:outline-none text-2xl font-bold text-neutral-900 bg-white"
                     />
                   </div>
+                  <p className="text-xs text-neutral-500 mt-2 font-medium">
+                    ≈ {formatEur(convertToEur(price))} per night at current market exchange rate (1 EUR = {rate} DZD)
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-2 pt-3 border-t border-neutral-200 text-sm">
-                  <div className="flex justify-between text-neutral-600">
+                  <div className="flex justify-between items-baseline text-neutral-600">
                     <span>Base guest price</span>
-                    <span className="font-semibold text-neutral-900">${price}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-semibold text-neutral-900">{formatDzd(price)}</span>
+                      <span className="text-xs text-neutral-500 font-normal">({formatEur(convertToEur(price))})</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-neutral-600">
+                  <div className="flex justify-between items-baseline text-neutral-600">
                     <span>Estimated guest fee (~14%)</span>
-                    <span>${Math.round(price * 0.14)}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span>{formatDzd(Math.round(price * 0.14))}</span>
+                      <span className="text-xs text-neutral-500 font-normal">({formatEur(convertToEur(Math.round(price * 0.14)))})</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-neutral-600">
+                  <div className="flex justify-between items-baseline text-neutral-600">
                     <span>Total guest sees</span>
-                    <span className="font-semibold text-neutral-900">
-                      ${price + Math.round(price * 0.14)}
-                    </span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-semibold text-neutral-900">
+                        {formatDzd(price + Math.round(price * 0.14))}
+                      </span>
+                      <span className="text-xs text-neutral-500 font-normal">
+                        ({formatEur(convertToEur(price + Math.round(price * 0.14)))})
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-neutral-200 font-semibold text-neutral-900">
+                  <div className="flex justify-between items-baseline pt-2 border-t border-neutral-200 font-semibold text-neutral-900">
                     <span>You earn (~97%)</span>
-                    <span className="text-emerald-700">${Math.round(price * 0.97)}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-emerald-700">{formatDzd(Math.round(price * 0.97))}</span>
+                      <span className="text-xs text-emerald-600 font-normal">({formatEur(convertToEur(Math.round(price * 0.97)))})</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -782,9 +805,12 @@ export default function BecomeAHostClient({ currentUser: _currentUser }: Props) 
                       {guestCount} {tCommon("guests")} · {roomCount} {t("bedrooms")} · {bathroomCount}{" "}
                       {t("bathrooms")}
                     </p>
-                    <div className="mt-2 pt-2 border-t border-neutral-100 flex items-baseline gap-1">
-                      <span className="text-base font-bold text-neutral-950">${price}</span>
-                      <span className="text-xs text-neutral-500">/ {tCommon("night")}</span>
+                    <div className="mt-2 pt-2 border-t border-neutral-100">
+                      <PriceDisplay
+                        price={price}
+                        period={`/ ${tCommon("night")}`}
+                        priceClassName="text-base font-bold text-neutral-950"
+                      />
                     </div>
                   </div>
                 </div>
@@ -816,9 +842,13 @@ export default function BecomeAHostClient({ currentUser: _currentUser }: Props) 
                 <p className="text-xs text-neutral-500">
                   {city}, {location?.label}
                 </p>
-                <p className="text-xs font-bold text-neutral-900 mt-1">
-                  ${price} <span className="font-normal text-neutral-500">/ {tCommon("night")}</span>
-                </p>
+                <div className="mt-1">
+                  <PriceDisplay
+                    price={price}
+                    period={`/ ${tCommon("night")}`}
+                    priceClassName="text-xs font-bold text-neutral-900"
+                  />
+                </div>
               </div>
             </div>
 
@@ -895,9 +925,13 @@ export default function BecomeAHostClient({ currentUser: _currentUser }: Props) 
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowExitModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm cursor-pointer"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 border border-tertiary animate-in fade-in zoom-in-95 duration-150">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col gap-4 border border-tertiary animate-in fade-in zoom-in-95 duration-150 cursor-default"
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-primary">{t("exitModalTitle")}</h3>
               <button

@@ -4,6 +4,7 @@ import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
 import React, { useCallback } from "react";
+import Image from "next/image";
 import { IconType } from "react-icons";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +20,11 @@ function CategoryBox({ icon: Icon, label, selected }: Props) {
   const t = useTranslations("categories");
 
   const handleClick = useCallback(() => {
+    if (label === "Vehicles") {
+      router.push("/vehicles");
+      return;
+    }
+
     let currentQuery = {};
 
     if (params) {
@@ -60,7 +66,19 @@ function CategoryBox({ icon: Icon, label, selected }: Props) {
         selected ? "border-b-accent text-accent font-semibold" : "border-transparent text-primary/60 hover:text-primary"
       }`}
     >
-      <Icon size={26} />
+      {label === "Vehicles" ? (
+        <Image
+          src="/assets/car.png"
+          alt="Vehicles"
+          width={30}
+          height={30}
+          className={`w-[30px] h-[30px] object-contain ${
+            selected ? "brightness-0 invert" : ""
+          }`}
+        />
+      ) : (
+        <Icon size={26} />
+      )}
       <div className="font-medium text-xs">{displayLabel}</div>
     </div>
   );

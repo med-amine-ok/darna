@@ -10,6 +10,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import Button from "../Button";
 import HeartButton from "../HeartButton";
+import PriceDisplay from "../common/PriceDisplay";
 
 type Props = {
   data: safeListing;
@@ -213,8 +214,22 @@ function ListingCard({
             <HeartButton listingId={data.id} currentUser={currentUser} />
           </div>
 
+          {/* Vehicle Badge */}
+          {(data.type === "Vehicles" || data.category === "Vehicles") && (
+            <div className="absolute top-2.5 start-2.5 z-10 bg-white/95 backdrop-blur-xs text-neutral-900 text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5 border border-neutral-200">
+              <Image
+                src="/assets/car.png"
+                alt="Car"
+                width={20}
+                height={20}
+                className="w-5 h-5 object-contain inline-block"
+              />
+              <span>{data.city || "Algeria"}</span>
+            </div>
+          )}
+
           {/* Guest Favorite Badge */}
-          {data.isGuestFavorite && (
+          {data.isGuestFavorite && !(data.type === "Vehicles" || data.category === "Vehicles") && (
             <div className="absolute top-2.5 start-2.5 z-10 bg-white/95 backdrop-blur-xs text-neutral-900 text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
               {tListing("guestFavorite")}
             </div>
@@ -264,7 +279,9 @@ function ListingCard({
           {/* Row 1: Title/Location + Star Rating */}
           <div className="flex items-center justify-between gap-1 text-[15px] font-semibold text-neutral-900">
             <span className="truncate">
-              {location?.region ? `${location.region}, ` : ""}{location?.label || data.title}
+              {data.type === "Vehicles" || data.category === "Vehicles"
+                ? `${data.title} · ${data.city || "Algeria"}`
+                : `${location?.region ? `${location.region}, ` : ""}${location?.label || data.title}`}
             </span>
             <span className="flex items-center gap-1 font-semibold flex-shrink-0 ms-1 text-sm text-neutral-900">
               <span className="text-xs">★</span>
@@ -275,24 +292,28 @@ function ListingCard({
             </span>
           </div>
 
-          {/* Row 2: Subtitle (Property type or dates) */}
+          {/* Row 2: Subtitle (Property type, vehicle specs, or dates) */}
           <div className="font-normal text-neutral-500 text-xs sm:text-sm truncate">
-            {reservationDate || data.subtitle || `${categoryLabel} · ${data.roomCount} ${data.roomCount === 1 ? t("room") : t("rooms")}`}
+            {reservationDate ||
+              data.subtitle ||
+              (data.type === "Vehicles" || data.category === "Vehicles"
+                ? `${data.guestCount} seats · Automatic`
+                : `${categoryLabel} · ${data.roomCount} ${data.roomCount === 1 ? t("room") : t("rooms")}`)}
           </div>
 
           {/* Row 3: Price */}
-          <div className="flex items-baseline gap-1.5 text-sm text-neutral-900 pt-0.5">
-            {data.originalPrice && (
-              <span className="line-through text-neutral-400 text-xs font-normal">
-                ${data.originalPrice}
-              </span>
-            )}
-            <span className="font-bold">${price}</span>
-            {!reservation && (
-              <span className="font-normal text-neutral-500 text-xs sm:text-sm">
-                / {t("night")}
-              </span>
-            )}
+          <div className="pt-0.5">
+            <PriceDisplay
+              price={price}
+              originalPrice={data.originalPrice}
+              period={
+                !reservation
+                  ? data.type === "Vehicles" || data.category === "Vehicles"
+                    ? `/ ${t("day") || "day"}`
+                    : `/ ${t("night")}`
+                  : undefined
+              }
+            />
           </div>
         </div>
 

@@ -76,7 +76,7 @@ export interface Listing {
   instantBook?: boolean;
   freeCancellation?: boolean;
   cancellationPolicy?: "flexible" | "moderate" | "strict";
-  type?: "Homes" | "Experiences" | "Services";
+  type?: "Homes" | "Experiences" | "Services" | "Vehicles";
   service?: string;
   coordinates?: [number, number];
   highlights?: ListingHighlight[];

@@ -17,6 +17,7 @@ import ImageUpload from "../inputs/ImageUpload";
 import Input from "../inputs/Input";
 import { categories } from "../navbar/Categories";
 import Modal from "./Modal";
+import { useCurrency } from "@/hook/useCurrency";
 
 type Props = {};
 
@@ -57,18 +58,20 @@ function RentModal({}: Props) {
       roomCount: 1,
       bathroomCount: 1,
       imageSrc: "",
-      price: 1,
+      price: 15000,
       title: "",
       description: "",
     },
   });
 
+  const { rate, formatEur, convertToEur } = useCurrency();
   const category = watch("category");
   const location = watch("location");
   const guestCount = watch("guestCount");
   const roomCount = watch("roomCount");
   const bathroomCount = watch("bathroomCount");
   const imageSrc = watch("imageSrc");
+  const price = watch("price");
 
   const setCustomValue = (id: string, value: any) => {
     setValue(id, value, {
@@ -262,6 +265,14 @@ function RentModal({}: Props) {
           errors={errors}
           required
         />
+        {price > 0 && (
+          <div className="flex items-center justify-between p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 text-sm">
+            <span className="text-neutral-600 font-medium">Estimated in Euros:</span>
+            <span className="font-bold text-neutral-900">
+              {formatEur(convertToEur(price))} <span className="text-xs text-neutral-400 font-normal">(1 EUR = {rate} DZD)</span>
+            </span>
+          </div>
+        )}
       </div>
     );
   }

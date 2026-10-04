@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { usePathname, useRouter, Link } from "@/navigation";
+import { usePathname, Link } from "@/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import Image from "next/image";
 import Logo from "../navbar/Logo";
 import {
   MdDashboard,
@@ -37,6 +36,7 @@ export default function AdminSidebar() {
   const tNav = useTranslations("nav");
   const locale = useLocale();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const isRtl = locale === "ar";
 
   const isActive = (path: string) => {
     if (path === "/admin") {
@@ -45,13 +45,17 @@ export default function AdminSidebar() {
     return pathname.startsWith(path);
   };
 
+  const closedTransform = isRtl
+    ? "translate-x-full md:translate-x-0"
+    : "-translate-x-full md:translate-x-0";
+
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-surface border-b border-tertiary sticky top-0 z-40">
+      <div className="md:hidden flex items-center justify-between p-4 bg-surface border-b border-tertiary sticky top-0 z-40 shadow-xs">
         <Link href="/admin" className="flex items-center gap-2">
           <Logo variant="horizontal" width={100} height={28} interactive={false} />
-          <span className="text-xs font-bold uppercase tracking-wider bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20">
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20">
             {t("roleAdmin")}
           </span>
         </Link>
@@ -71,31 +75,38 @@ export default function AdminSidebar() {
       {isMobileOpen && (
         <div
           onClick={() => setIsMobileOpen(false)}
-          className="md:hidden fixed inset-0 bg-primary/40 z-40 backdrop-blur-xs"
+          className="md:hidden fixed inset-0 bg-primary/40 z-40 backdrop-blur-xs transition-opacity"
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Fixed Sidebar Container */}
       <aside
-        className={`fixed md:sticky top-0 inset-y-0 start-0 z-50 w-64 bg-surface border-e border-tertiary flex flex-col justify-between h-screen transition-transform duration-200 ease-in-out ${
-          isMobileOpen
-            ? "translate-x-0"
-            : "-translate-x-full md:translate-x-0 rtl:translate-x-full md:rtl:translate-x-0"
+        className={`fixed top-0 inset-y-0 start-0 z-50 w-64 bg-surface border-e border-tertiary/60 flex flex-col justify-between h-screen shrink-0 transition-transform duration-200 ease-in-out shadow-sm ${
+          isMobileOpen ? "translate-x-0" : closedTransform
         }`}
       >
         {/* Brand & Platform Header */}
-        <div>
-          <div className="p-6 border-b border-tertiary/40 flex items-center justify-between">
-            <Link href="/admin" className="flex items-center gap-3">
-              <Logo variant="horizontal" width={115} height={32} interactive={false} />
-              <span className="text-xs font-bold uppercase tracking-wider bg-accent/10 text-accent px-2.5 py-1 rounded-full border border-accent/20">
+        <div className="flex flex-col min-h-0 flex-1">
+          <div className="p-5 border-b border-tertiary/40 flex items-center justify-between shrink-0">
+            <Link href="/admin" className="flex items-center gap-2.5">
+              <Logo variant="horizontal" width={110} height={30} interactive={false} />
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-accent/10 text-accent px-2.5 py-0.5 rounded-full border border-accent/20">
                 {t("roleAdmin")}
               </span>
             </Link>
+
+            {/* Mobile Close Button inside Drawer Header */}
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="md:hidden p-1.5 rounded-lg text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer"
+              aria-label="Close navigation sidebar"
+            >
+              <MdClose size={20} />
+            </button>
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1.5">
+          <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto min-h-0">
             <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
               {t("management")}
             </div>
@@ -107,12 +118,15 @@ export default function AdminSidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsMobileOpen(false)}
-                  className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 ${
+                  className={`relative flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 ${
                     active
-                      ? "bg-accent/10 text-accent font-semibold shadow-xs"
-                      : "text-neutral-600 hover:text-primary hover:bg-neutral-50"
+                      ? "bg-accent/10 text-accent font-semibold shadow-2xs"
+                      : "text-neutral-600 hover:text-primary hover:bg-neutral-100/80"
                   }`}
                 >
+                  {active && (
+                    <span className="absolute start-0 top-2 bottom-2 w-1 bg-accent rounded-full" />
+                  )}
                   <Icon
                     size={20}
                     className={active ? "text-accent" : "text-neutral-400"}
@@ -125,19 +139,19 @@ export default function AdminSidebar() {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-tertiary/40 space-y-3">
+        <div className="p-4 border-t border-tertiary/40 space-y-3 shrink-0 bg-surface">
           <div className="flex items-center justify-between px-2">
             <span className="text-xs text-primary/60 font-medium">{tNav("language")}:</span>
-            <LanguageSwitcher />
+            <LanguageSwitcher dropUp={true} />
           </div>
 
           <Link
             href="/"
-            className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl border border-tertiary text-primary text-sm font-semibold hover:bg-tertiary/20 hover:border-tertiary transition shadow-2xs"
+            className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl border border-tertiary/80 text-primary text-sm font-semibold hover:bg-tertiary/20 hover:border-tertiary transition shadow-2xs group"
           >
             <MdOutlineArrowBack
               size={18}
-              className="rtl:rotate-180 transition-transform"
+              className="rtl:rotate-180 transition-transform group-hover:-translate-x-0.5 rtl:group-hover:translate-x-0.5"
             />
             <span>{t("backToDarna")}</span>
           </Link>

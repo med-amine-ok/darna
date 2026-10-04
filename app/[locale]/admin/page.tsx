@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
   const kpis = [
     {
       label: t("totalRevenue"),
-      value: `$${stats.totalRevenue.toLocaleString()}`,
+      value: `${stats.totalRevenue.toLocaleString()} DZD`,
       change: `+${stats.revenueChangeMonth}%`,
       icon: MdAttachMoney,
       color: "bg-accent/10 text-accent border-accent/20",
@@ -177,8 +177,11 @@ export default async function AdminDashboardPage() {
                       {new Date(res.startDate).toLocaleDateString()} -{" "}
                       {new Date(res.endDate).toLocaleDateString()}
                     </td>
-                    <td className="py-3 px-2 font-bold text-neutral-900">
-                      ${res.totalPrice}
+                    <td className="py-3 px-2 font-bold text-neutral-900 whitespace-nowrap">
+                      {res.totalPrice.toLocaleString()} DZD{" "}
+                      <span className="text-xs text-neutral-500 font-normal">
+                        (~€{Math.round(res.totalPrice / 152.47)})
+                      </span>
                     </td>
                     <td className="py-3 px-2">
                       <span className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">

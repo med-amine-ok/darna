@@ -122,8 +122,11 @@ export default function AdminBookingsClient({ initialReservations }: Props) {
                       {new Date(res.startDate).toLocaleDateString()} -{" "}
                       {new Date(res.endDate).toLocaleDateString()}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-primary">
-                      ${res.totalPrice}
+                    <td className="py-3.5 px-4 font-bold text-primary whitespace-nowrap">
+                      {res.totalPrice.toLocaleString()} DZD{" "}
+                      <span className="text-xs text-neutral-500 font-normal">
+                        (~€{Math.round(res.totalPrice / 152.47)})
+                      </span>
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="inline-block px-2.5 py-1 text-[11px] font-semibold rounded-full bg-status-success/15 text-status-success border border-status-success/20">

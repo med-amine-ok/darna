@@ -11,6 +11,7 @@ import { MdOutlineLuggage, MdClose, MdCheckCircle, MdCancel, MdHistory } from "r
 import Container from "@/components/Container";
 import Heading from "@/components/Heading";
 import Avatar from "@/components/Avatar";
+import PriceDisplay from "@/components/common/PriceDisplay";
 import { SafeReservation, SafeUser } from "@/types";
 
 type Props = {
@@ -254,7 +255,10 @@ export default function TripsClient({ reservations, currentUser }: Props) {
                     <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
                       <div className="flex flex-col">
                         <span className="text-[11px] text-neutral-500">{tCommon("total")}</span>
-                        <span className="text-sm font-bold text-neutral-900">${res.totalPrice}</span>
+                        <PriceDisplay
+                          price={res.totalPrice}
+                          priceClassName="text-sm font-bold text-neutral-900"
+                        />
                       </div>
                       {res.listing.user && (
                         <div className="flex items-center gap-2">
@@ -292,8 +296,14 @@ export default function TripsClient({ reservations, currentUser }: Props) {
 
         {/* Cancellation Confirmation Modal */}
         {selectedForCancel && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+          <div
+            onClick={() => setSelectedForCancel(null)}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 cursor-default"
+            >
               <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
                 <h3 className="font-bold text-base text-neutral-900">{t("cancelModalTitle")}</h3>
                 <button
@@ -312,7 +322,10 @@ export default function TripsClient({ reservations, currentUser }: Props) {
 
                 <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-between text-sm mt-1">
                   <span className="text-neutral-700 font-medium">{t("refundAmount")}</span>
-                  <span className="font-bold text-emerald-700">${selectedForCancel.totalPrice}</span>
+                  <PriceDisplay
+                    price={selectedForCancel.totalPrice}
+                    priceClassName="font-bold text-emerald-700"
+                  />
                 </div>
               </div>
 

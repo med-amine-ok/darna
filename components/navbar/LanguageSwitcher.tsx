@@ -43,7 +43,11 @@ const languages: LanguageOption[] = [
   },
 ];
 
-export default function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  dropUp?: boolean;
+}
+
+export default function LanguageSwitcher({ dropUp = false }: LanguageSwitcherProps) {
   const currentLocale = useLocale() as "en" | "fr" | "ar";
   const router = useRouter();
   const pathname = usePathname();
@@ -54,7 +58,7 @@ export default function LanguageSwitcher() {
 
   // Close dropdown on outside click
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
@@ -63,7 +67,11 @@ export default function LanguageSwitcher() {
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const handleSelectLanguage = (newLocale: "en" | "fr" | "ar") => {
@@ -104,7 +112,11 @@ export default function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute end-0 top-12 z-50 w-72 bg-surface rounded-2xl shadow-xl border border-tertiary/40 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div
+          className={`absolute end-0 ${
+            dropUp ? "bottom-full mb-2" : "top-12"
+          } z-50 w-72 bg-surface rounded-2xl shadow-xl border border-tertiary/40 p-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
+        >
           <div className="px-3 py-2 border-b border-tertiary/30">
             <p className="text-xs font-semibold text-primary/50 uppercase tracking-wider">
               Language & Region

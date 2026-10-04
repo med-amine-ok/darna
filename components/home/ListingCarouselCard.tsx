@@ -6,6 +6,7 @@ import { useRouter } from "@/navigation";
 import { safeListing, SafeUser } from "@/types";
 import HeartButton from "../HeartButton";
 import { useTranslations } from "next-intl";
+import PriceDisplay from "../common/PriceDisplay";
 
 interface Props {
   listing: safeListing;
@@ -20,13 +21,7 @@ export default function ListingCarouselCard({ listing, currentUser }: Props) {
 
   return (
     <div
-      onClick={() =>
-        router.push(
-          `/search?destination=${encodeURIComponent(
-            listing.city || "Paris"
-          )}&selectedId=${listing.id}`
-        )
-      }
+      onClick={() => router.push(`/listings/${listing.id}`)}
       className="flex-shrink-0 w-64 sm:w-72 cursor-pointer group select-none"
     >
       {/* Image Container with Guest Favorite badge and Heart */}
@@ -57,10 +52,14 @@ export default function ListingCarouselCard({ listing, currentUser }: Props) {
         <h3 className="font-semibold text-sm sm:text-base text-neutral-900 truncate">
           {listing.title}
         </h3>
-        <p className="text-xs sm:text-sm text-neutral-600 font-medium">
-          <span className="font-bold text-neutral-900">${twoNightsPrice}</span> for 2 nights ·{" "}
-          <span className="text-neutral-800">★ {rating}</span>
-        </p>
+        <div className="text-xs sm:text-sm text-neutral-600 font-medium flex items-center justify-between">
+          <PriceDisplay
+            price={twoNightsPrice}
+            period={listing.type === "Vehicles" ? "for 2 days" : "for 2 nights"}
+            priceClassName="font-bold text-neutral-900"
+          />
+          <span className="text-neutral-800 font-semibold ms-2 flex-shrink-0">★ {rating}</span>
+        </div>
       </div>
     </div>
   );

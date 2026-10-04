@@ -85,6 +85,40 @@ const amenityIcons: Record<string, IconType> = {
   "Hot tub": MdOutlineHotTub,
   TV: MdOutlineTv,
   Patio: MdOutlineDeck,
+  "4x4 / AWD": MdOutlineDirectionsCar,
+  "Heavy Duty 4WD": MdOutlineDirectionsCar,
+  "GPS Navigation": MdOutlineLocationOn,
+  "Bluetooth & USB": MdOutlineWifi,
+  "Bluetooth Audio": MdOutlineWifi,
+  "Bluetooth": MdOutlineWifi,
+  "Unlimited Saharan KM": MdOutlineDirectionsCar,
+  "Sand Recovery Gear": MdOutlineDirectionsCar,
+  "Spare Wheel Kit": MdOutlineDirectionsCar,
+  "Extra Spare Tire": MdOutlineDirectionsCar,
+  "Leather Seats": IoBedOutline,
+  Sunroof: MdOutlineDeck,
+  "Panoramic Sunroof": MdOutlineDeck,
+  "Full Insurance": MdOutlineSecurity,
+  "Chauffeur Available": MdOutlineDirectionsCar,
+  "Apple CarPlay & Android Auto": MdOutlineWifi,
+  "Apple CarPlay": MdOutlineWifi,
+  AWD: MdOutlineDirectionsCar,
+  "Cruise Control": MdOutlineAccessTime,
+  "Rear Camera": MdOutlineSecurity,
+  "Child Seat Available": MdOutlinePets,
+  "Tow Hitch": MdOutlineDirectionsCar,
+  "Tow Bar": MdOutlineDirectionsCar,
+  "Digital Cockpit": MdOutlineWorkOutline,
+  "Parking Sensors": MdOutlineSecurity,
+  "Eco Mode": MdOutlineAcUnit,
+  "High-output A/C": MdOutlineAcUnit,
+  "Roof Rails": MdOutlineDirectionsCar,
+  "Touchscreen Navigation": MdOutlineLocationOn,
+  "USB-C Ports": MdOutlineWifi,
+  "Isofix Child Anchors": MdOutlineSecurity,
+  "Snorkel & Winch": MdOutlineDirectionsCar,
+  "Dual Fuel Tank": MdOutlineDirectionsCar,
+  "Satellite GPS Tracker": MdOutlineLocationOn,
 };
 
 export default function ListingInfo({
@@ -242,11 +276,11 @@ export default function ListingInfo({
             {t("hostedBy", { name: user?.name || "Host" })}
           </h2>
           <div className="flex items-center gap-2 font-normal text-neutral-500 text-sm">
-            <span>{t("guestCount", { count: guestCount })}</span>
+            <span>{category?.label === "Vehicles" ? `${guestCount} seats` : t("guestCount", { count: guestCount })}</span>
             <span>·</span>
-            <span>{t("roomCount", { count: roomCount })}</span>
+            <span>{category?.label === "Vehicles" ? `${roomCount} doors / bags` : t("roomCount", { count: roomCount })}</span>
             <span>·</span>
-            <span>{t("bathroomCount", { count: bathroomCount })}</span>
+            <span>{category?.label === "Vehicles" ? "Full Insurance" : t("bathroomCount", { count: bathroomCount })}</span>
           </div>
           {(isSuperhost || isGuestFavorite) && (
             <div className="flex items-center gap-2 mt-2">
@@ -279,7 +313,15 @@ export default function ListingInfo({
                   height={30}
                   className="object-contain"
                 />
-              ) : hl.icon === "cancel" ? (
+              ) : hl.icon === "car" ? (
+                <Image
+                  src="/assets/car.png"
+                  alt="Vehicle"
+                  width={26}
+                  height={26}
+                  className="w-[26px] h-[26px] object-contain"
+                />
+              ) : hl.icon === "cancel" || hl.icon === "calendar" ? (
                 <MdOutlineCalendarToday size={22} />
               ) : (
                 <MdOutlineVpnKey size={22} />
@@ -539,8 +581,14 @@ export default function ListingInfo({
 
       {/* Full Amenities Modal */}
       {isAmenitiesModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+        <div
+          onClick={() => setIsAmenitiesModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 cursor-default"
+          >
             <div className="sticky top-0 bg-white pb-4 border-b border-neutral-200 flex items-center justify-between z-10">
               <h3 className="font-bold text-lg text-neutral-900">{t("amenitiesTitle")}</h3>
               <button
@@ -569,8 +617,14 @@ export default function ListingInfo({
 
       {/* Full Reviews Modal */}
       {isReviewsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+        <div
+          onClick={() => setIsReviewsModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 cursor-default"
+          >
             <div className="sticky top-0 bg-white pb-4 border-b border-neutral-200 flex items-center justify-between z-10">
               <div className="flex items-center gap-2">
                 <MdStar size={22} className="text-neutral-900" />

@@ -7,6 +7,7 @@ import { safeListing, SafeUser } from "@/types";
 import HeartButton from "../HeartButton";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useTranslations } from "next-intl";
+import PriceDisplay from "../common/PriceDisplay";
 
 interface Props {
   listing: safeListing;
@@ -148,10 +149,11 @@ export default function FeaturedListingRowCard({
         {/* Price & Rating Row (Matching Screenshot 1) */}
         <div className="pt-4 mt-2 sm:mt-0 flex items-baseline justify-between border-t sm:border-t-0 border-neutral-100">
           <div className="text-sm sm:text-base text-neutral-900 font-medium">
-            <span className="font-bold underline text-neutral-900 text-base sm:text-lg">
-              ${twoNightsPrice}
-            </span>{" "}
-            for 2 nights
+            <PriceDisplay
+              price={twoNightsPrice}
+              period="for 2 nights"
+              priceClassName="font-bold underline text-neutral-900 text-base sm:text-lg"
+            />
           </div>
           <div className="text-sm font-semibold text-neutral-900 flex items-center gap-1">
             <span>★</span>

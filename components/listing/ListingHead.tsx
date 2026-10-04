@@ -307,9 +307,15 @@ function ListingHead({
 
       {/* Full-Screen Lightbox Modal */}
       {isPhotoModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/95 text-white flex flex-col justify-between overflow-hidden animate-in fade-in duration-200">
+        <div
+          onClick={() => setIsPhotoModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/95 text-white flex flex-col justify-between overflow-hidden animate-in fade-in duration-200 cursor-pointer"
+        >
           {/* Top Bar */}
-          <div className="px-6 py-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/80 to-transparent">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="px-6 py-4 flex items-center justify-between z-10 bg-gradient-to-b from-black/80 to-transparent cursor-default"
+          >
             <button
               type="button"
               aria-label="Close photos modal"
@@ -330,9 +336,12 @@ function ListingHead({
             </button>
           </div>
 
-          {/* Main Active Photo */}
+          {/* Main Active Photo Area */}
           <div className="relative flex-1 w-full max-w-5xl mx-auto flex items-center justify-center p-4">
-            <div className="relative w-full h-full max-h-[75vh]">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full h-full max-h-[75vh] cursor-default"
+            >
               <Image
                 src={galleryImages[activePhotoIndex]}
                 alt={`${title} photo ${activePhotoIndex + 1}`}
@@ -346,7 +355,10 @@ function ListingHead({
             <button
               type="button"
               aria-label="Previous"
-              onClick={() => setActivePhotoIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActivePhotoIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+              }}
               className="absolute start-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
             >
               <MdChevronLeft size={28} className="rtl:rotate-180" />
@@ -354,7 +366,10 @@ function ListingHead({
             <button
               type="button"
               aria-label="Next"
-              onClick={() => setActivePhotoIndex((prev) => (prev + 1) % galleryImages.length)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActivePhotoIndex((prev) => (prev + 1) % galleryImages.length);
+              }}
               className="absolute end-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
             >
               <MdChevronRight size={28} className="rtl:rotate-180" />
@@ -362,7 +377,10 @@ function ListingHead({
           </div>
 
           {/* Bottom Thumbnails Strip */}
-          <div className="p-4 bg-gradient-to-t from-black/80 to-transparent overflow-x-auto no-scrollbar flex items-center justify-center gap-2">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="p-4 bg-gradient-to-t from-black/80 to-transparent overflow-x-auto no-scrollbar flex items-center justify-center gap-2 cursor-default"
+          >
             {galleryImages.map((img, idx) => (
               <button
                 key={idx}

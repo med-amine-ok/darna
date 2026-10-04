@@ -139,13 +139,13 @@ export default function FilterModal() {
             <label className="block text-[11px] font-bold text-neutral-500 uppercase">
               {t("minimum")}
             </label>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-neutral-500 font-semibold">$</span>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-xs text-neutral-500 font-bold">DZD</span>
               <input
                 type="number"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                placeholder="50"
+                placeholder="5000"
                 className="w-full font-medium text-neutral-900 outline-none text-base"
               />
             </div>
@@ -154,13 +154,13 @@ export default function FilterModal() {
             <label className="block text-[11px] font-bold text-neutral-500 uppercase">
               {t("maximum")}
             </label>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-neutral-500 font-semibold">$</span>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-xs text-neutral-500 font-bold">DZD</span>
               <input
                 type="number"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                placeholder="500+"
+                placeholder="50000+"
                 className="w-full font-medium text-neutral-900 outline-none text-base"
               />
             </div>

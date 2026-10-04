@@ -47,7 +47,7 @@ export default function ConversationListHeader({
 
   // Click outside handlers
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
         setIsCategoryMenuOpen(false);
       }
@@ -56,7 +56,11 @@ export default function ConversationListHeader({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const categories: { key: ConversationCategory; label: string }[] = [

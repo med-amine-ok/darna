@@ -154,8 +154,14 @@ export default function PropertiesClient({ listings, currentUser }: Props) {
 
         {/* Delete Confirmation Modal */}
         {selectedForDelete && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+          <div
+            onClick={() => setSelectedForDelete(null)}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 cursor-default"
+            >
               <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
                 <h3 className="font-bold text-base text-neutral-900">{t("deleteModalTitle")}</h3>
                 <button

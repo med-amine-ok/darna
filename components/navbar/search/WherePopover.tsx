@@ -57,7 +57,7 @@ export default function WherePopover({ query, onSelect }: Props) {
   };
 
   return (
-    <div className="bg-surface rounded-3xl shadow-xl border border-tertiary/60 p-3 w-80 sm:w-96 max-h-[380px] overflow-y-auto z-50">
+    <div className="bg-surface rounded-3xl shadow-2xl border border-tertiary/60 p-3 w-80 sm:w-96 max-w-[calc(100vw-32px)] max-h-[380px] overflow-y-auto z-50">
       <div className="space-y-1">
         {filtered.length === 0 ? (
           <div className="p-4 text-center text-xs text-primary/50">

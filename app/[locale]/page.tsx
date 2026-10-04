@@ -41,11 +41,15 @@ export default async function Home({ searchParams }: HomeProps) {
   if (hasSpecificSearch) {
     const searchResults = await getListings(searchParams);
 
-    const resultTitle = searchParams.service
-      ? `Services: ${searchParams.service}`
-      : searchParams.destination
-        ? `Stays in ${searchParams.destination}`
-        : undefined;
+    const resultTitle = searchParams.category === "Vehicles"
+      ? searchParams.destination
+        ? `Vehicles for rent in ${searchParams.destination}`
+        : "Vehicles for rent in Algeria"
+      : searchParams.service
+        ? `Services: ${searchParams.service}`
+        : searchParams.destination
+          ? `Stays in ${searchParams.destination}`
+          : undefined;
 
     return (
       <ClientOnly>
@@ -58,11 +62,24 @@ export default async function Home({ searchParams }: HomeProps) {
     );
   }
 
-  // If specific tab selected (Homes, Experiences, Services)
+  // If specific tab selected (Homes, Experiences, Vehicles)
   if (selectedCategory && selectedCategory !== "all") {
+    const isVehicles =
+      selectedCategory === "Vehicles" || selectedCategory === "Services";
     const tabListings = allListings.filter(
-      (l) => l.type === selectedCategory || l.category === selectedCategory,
+      (l) =>
+        l.type === selectedCategory ||
+        l.category === selectedCategory ||
+        (isVehicles && (l.type === "Vehicles" || l.category === "Vehicles")),
     );
+
+    const categoryTitle = isVehicles
+      ? "Vehicles & 4x4 Rentals in Algeria"
+      : selectedCategory;
+
+    const categorySubtitle = isVehicles
+      ? "Rent SUVs, desert 4WDs, and luxury cars across Algeria with DARNA"
+      : `Showing top rated ${selectedCategory.toLowerCase()} with DARNA`;
 
     return (
       <ClientOnly>
@@ -71,10 +88,10 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="pb-16 pt-6 space-y-6">
             <div>
               <h1 className="text-2xl font-bold text-primary">
-                {selectedCategory}
+                {categoryTitle}
               </h1>
               <p className="text-sm text-primary/70">
-                Showing top rated {selectedCategory.toLowerCase()} with DARNA
+                {categorySubtitle}
               </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
@@ -83,9 +100,7 @@ export default async function Home({ searchParams }: HomeProps) {
                   key={list.id}
                   data={list}
                   currentUser={currentUser}
-                  customHref={`/search?destination=${encodeURIComponent(
-                    list.city || "Tipaza"
-                  )}&selectedId=${list.id}`}
+                  customHref={`/listings/${list.id}`}
                 />
               ))}
             </div>
@@ -97,7 +112,13 @@ export default async function Home({ searchParams }: HomeProps) {
 
   // --- Default Home Page matching Screenshot Layout ---
   const algerianStays = allListings.filter(
-    (l) => l.locationValue === "DZ" || l.city === "Tipaza" || l.city === "Alger" || l.city === "Oran"
+    (l) =>
+      l.type !== "Vehicles" &&
+      l.category !== "Vehicles" &&
+      (l.locationValue === "DZ" || l.city === "Tipaza" || l.city === "Alger" || l.city === "Oran")
+  );
+  const vehicleListings = allListings.filter(
+    (l) => l.type === "Vehicles" || l.category === "Vehicles",
   );
   const parisHomes = allListings.filter(
     (l) => l.city === "Paris" && (l.type === "Homes" || !l.type),
@@ -124,6 +145,17 @@ export default async function Home({ searchParams }: HomeProps) {
               subtitle="Handpicked stays across the Mediterranean coast and oasis towns"
               badge="✦ Win DARNA"
               listings={algerianStays}
+              currentUser={currentUser}
+            />
+          )}
+
+          {/* Section: Vehicles & 4x4 rentals across Algeria */}
+          {vehicleListings.length > 0 && (
+            <ListingCarouselSection
+              title="Vehicles & 4x4 Rentals in Algeria"
+              subtitle="Rent SUVs, desert 4WDs, and luxury cars in Algiers, Oran, Taghit & beyond"
+              badge="✦ Win DARNA Vehicles"
+              listings={vehicleListings}
               currentUser={currentUser}
             />
           )}
