@@ -7,6 +7,28 @@ import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } 
 import { Bell, Check, Calendar, MessageSquare, Tag, ShieldCheck, ArrowRight, X } from "lucide-react";
 import { toast } from "react-toastify";
 
+function formatNotificationTime(dateStr?: string) {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function NotificationsDropdown() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -181,7 +203,7 @@ export default function NotificationsDropdown() {
                         {notif.title}
                       </p>
                       <span className="text-[10px] text-neutral-400 whitespace-nowrap shrink-0">
-                        {notif.timestamp}
+                        {formatNotificationTime(notif.createdAt || notif.timestamp)}
                       </span>
                     </div>
 

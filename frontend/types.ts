@@ -281,5 +281,6 @@ export interface Notification {
   link?: string;
   read: boolean;
   createdAt: string;
+  timestamp?: string;
 }
 
