@@ -36,13 +36,53 @@ export default function LoginModal() {
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
-    // Simulate auth latency
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Welcome back to DARNA!");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Login failed");
+      }
+
+      const result = await res.json();
+      const userName = result.user?.name || "Traveler";
+      toast.success(`Welcome back, ${userName}!`);
       loginModal.onClose();
-      router.refresh();
-    }, 600);
+      window.location.reload();
+    } catch {
+      toast.error("Invalid credentials. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: `guest.${provider.toLowerCase()}@darna.dz`,
+          name: `${provider} Traveler`,
+        }),
+      });
+      if (res.ok) {
+        toast.success(`Connected via ${provider}!`);
+        loginModal.onClose();
+        window.location.reload();
+      }
+    } catch {
+      toast.error(`Could not sign in with ${provider}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggle = useCallback(() => {
@@ -87,19 +127,13 @@ export default function LoginModal() {
         outline
         label="Continue with Google"
         icon={FcGoogle}
-        onClick={() => {
-          toast.info("Google OAuth provider connected");
-          loginModal.onClose();
-        }}
+        onClick={() => handleOAuthLogin("Google")}
       />
       <Button
         outline
         label="Continue with GitHub"
         icon={AiFillGithub}
-        onClick={() => {
-          toast.info("GitHub OAuth provider connected");
-          loginModal.onClose();
-        }}
+        onClick={() => handleOAuthLogin("GitHub")}
       />
       <div className="text-neutral-500 text-center mt-3 font-normal text-sm">
         <div>

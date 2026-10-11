@@ -7,6 +7,7 @@ import { useRouter } from "@/navigation";
 import { createListing } from "@/lib/data/listings";
 import { createOrganization } from "@/lib/data/organizations";
 import { getCurrentUser, updateUserHostStatus } from "@/lib/data/auth";
+import { useLoginModal } from "@/hook/useLoginModal";
 import Counter from "@/components/inputs/Counter";
 import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
@@ -53,6 +54,7 @@ export default function BecomeHostFlow({
   initialHostType = null,
 }: BecomeHostFlowProps) {
   const router = useRouter();
+  const loginModal = useLoginModal();
 
   // Mode: "fork" (host type selection), "individual" (12 steps), "agency" (5 steps)
   const [currentStep, setCurrentStep] = useState<number>(() => {
@@ -234,9 +236,15 @@ export default function BecomeHostFlow({
     setIsSubmitting(true);
     try {
       const user = await getCurrentUser();
-      const hostId = user?.id || "usr_yacine";
+      if (!user) {
+        toast.info("Please log in to publish your listing.");
+        loginModal.onOpen();
+        setIsSubmitting(false);
+        return;
+      }
+      const hostId = user.id;
 
-      const newListing = await createListing({
+      const listingPayload = {
         title,
         description,
         price,
@@ -254,11 +262,27 @@ export default function BecomeHostFlow({
         latlng,
         instantBook,
         cancellationPolicy,
-        ownerType: "individual",
+        ownerType: "individual" as const,
         hostUserId: hostId,
+      };
+
+      // 1. Post to server route handler so server store and cookies are updated
+      const res = await fetch("/api/host/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hostType: "individual",
+          userId: hostId,
+          listing: listingPayload,
+        }),
       });
 
-      // Crucial: hostType: "individual" is only granted upon successful listing publishing
+      if (!res.ok) {
+        throw new Error("Server failed to save listing");
+      }
+
+      // 2. Also keep client in-memory stores in sync
+      await createListing(listingPayload);
       await updateUserHostStatus(hostId, { hostType: "individual" });
 
       if (typeof window !== "undefined") {
@@ -266,13 +290,14 @@ export default function BecomeHostFlow({
         localStorage.setItem("darna_mode", "host");
         document.cookie = `darna_user_id=${hostId}; path=/; max-age=31536000`;
         document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
+        document.cookie = "darna_mode=host; path=/; max-age=31536000";
       }
 
       toast.success("Congratulations! Your listing is now live on DARNA.");
-      router.push("/host");
+      // Full page reload/redirect so Server Components re-evaluate with the new cookies
+      window.location.href = "/host";
     } catch {
       toast.error("Failed to publish listing. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -285,10 +310,16 @@ export default function BecomeHostFlow({
     setIsSubmitting(true);
     try {
       const user = await getCurrentUser();
-      const hostId = user?.id || "usr_yacine";
+      if (!user) {
+        toast.info("Please log in to register an agency.");
+        loginModal.onOpen();
+        setIsSubmitting(false);
+        return;
+      }
+      const hostId = user.id;
 
       const validInvites = teamInvites.filter((inv) => inv.email.trim());
-      const org = await createOrganization({
+      const agencyPayload = {
         name: businessName,
         businessRegistrationNumber: regNumber,
         businessType,
@@ -298,27 +329,49 @@ export default function BecomeHostFlow({
         ownerUserId: hostId,
         teamSizeEstimate: teamSize,
         invitedMembers: validInvites,
+      };
+
+      // 1. Post to server route handler
+      const res = await fetch("/api/host/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hostType: "agency",
+          userId: hostId,
+          agency: agencyPayload,
+        }),
       });
 
-      // Crucial: hostType: "agency" is only granted upon successful agency registration
+      if (!res.ok) {
+        throw new Error("Server failed to register agency");
+      }
+
+      const data = await res.json();
+      const orgId = data.organization?.id;
+
+      // 2. Also keep client in-memory stores in sync
+      const org = await createOrganization(agencyPayload);
       await updateUserHostStatus(hostId, {
         hostType: "agency",
-        organizationId: org.id,
+        organizationId: orgId || org.id,
       });
 
       if (typeof window !== "undefined") {
         localStorage.removeItem("darna_host_draft");
         localStorage.setItem("darna_mode", "host");
-        localStorage.setItem("darna_agency_id", org.id);
+        if (orgId || org.id) {
+          localStorage.setItem("darna_agency_id", orgId || org.id);
+          document.cookie = `darna_agency_id=${orgId || org.id}; path=/; max-age=31536000`;
+        }
         document.cookie = `darna_user_id=${hostId}; path=/; max-age=31536000`;
         document.cookie = "darna_host_type=agency; path=/; max-age=31536000";
+        document.cookie = "darna_mode=host; path=/; max-age=31536000";
       }
 
       toast.success("Agency registered! Welcome to your host workspace.");
-      router.push("/host");
+      window.location.href = "/host";
     } catch {
       toast.error("Failed to register agency.");
-    } finally {
       setIsSubmitting(false);
     }
   };

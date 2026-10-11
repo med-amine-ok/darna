@@ -35,12 +35,54 @@ export default function RegisterModal() {
 
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Account created successfully! Please log in.");
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Registration failed");
+      }
+
+      const result = await res.json();
+      const userName = result.user?.name || data.name || "Traveler";
+      toast.success(`Account created! Welcome to DARNA, ${userName}!`);
       registerModal.onClose();
-      loginModal.onOpen();
-    }, 600);
+      window.location.reload();
+    } catch {
+      toast.error("Could not create account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOAuthRegister = async (provider: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${provider} Traveler`,
+          email: `traveler.${provider.toLowerCase()}@darna.dz`,
+        }),
+      });
+      if (res.ok) {
+        toast.success(`Account registered via ${provider}!`);
+        registerModal.onClose();
+        window.location.reload();
+      }
+    } catch {
+      toast.error(`Could not sign up with ${provider}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggle = useCallback(() => {
@@ -93,19 +135,13 @@ export default function RegisterModal() {
         outline
         label="Continue with Google"
         icon={FcGoogle}
-        onClick={() => {
-          toast.info("Google OAuth provider connected");
-          registerModal.onClose();
-        }}
+        onClick={() => handleOAuthRegister("Google")}
       />
       <Button
         outline
         label="Continue with GitHub"
         icon={AiFillGithub}
-        onClick={() => {
-          toast.info("GitHub OAuth provider connected");
-          registerModal.onClose();
-        }}
+        onClick={() => handleOAuthRegister("GitHub")}
       />
       <div className="text-neutral-500 text-center mt-3 font-normal text-sm">
         <div>

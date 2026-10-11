@@ -18,22 +18,29 @@ export default async function HostLayout({
   const locale = params?.locale || "en";
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
+  const cookieHostType = cookieStore.get("darna_host_type")?.value;
+  const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
   const currentUser = await getCurrentUser(cookieUserId);
 
   // 1. Not authenticated -> Redirect to login
   if (!currentUser) {
-    redirect(`/${locale}/login`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/host`);
     return null;
   }
 
-  // 2. hostType is unset / null -> Redirect to host-type selection screen (Step 0 / Step 2)
-  if (!currentUser.hostType) {
+  const effectiveHostType = (currentUser.hostType || cookieHostType) as "individual" | "agency" | undefined;
+
+  // 2. hostType is unset / null -> Redirect to host-type selection screen (Step 0)
+  if (!effectiveHostType) {
     redirect(`/${locale}/become-a-host`);
     return null;
   }
 
+  // Ensure currentUser reflects effective host type
+  currentUser.hostType = effectiveHostType;
+
   // 3. Individual Host Guard: User must have at least one completed/published listing
-  if (currentUser.hostType === "individual") {
+  if (effectiveHostType === "individual") {
     const userListings = await getHostListings(currentUser.id);
     if (!userListings || userListings.length === 0) {
       redirect(`/${locale}/become-a-host/1`);
@@ -42,26 +49,32 @@ export default async function HostLayout({
   }
 
   // 4. Agency Host Guard: User must have a completed, registered Organization record with verification status
-  if (currentUser.hostType === "agency") {
-    let organization = currentUser.organizationId
-      ? await getOrganizationById(currentUser.organizationId)
-      : null;
-
+  let organization = null;
+  if (effectiveHostType === "agency") {
+    if (currentUser.organizationId) {
+      organization = await getOrganizationById(currentUser.organizationId);
+    }
+    if (!organization && cookieAgencyId) {
+      organization = await getOrganizationById(cookieAgencyId);
+      if (organization) {
+        currentUser.organizationId = organization.id;
+      }
+    }
     if (!organization) {
       const allOrgs = await getOrganizations();
       organization = allOrgs.find((o) => o.ownerUserId === currentUser.id) || null;
+      if (organization) {
+        currentUser.organizationId = organization.id;
+      }
     }
 
     if (!organization || !organization.verificationStatus) {
       redirect(`/${locale}/become-a-host/agency`);
       return null;
     }
+  } else if (currentUser.organizationId) {
+    organization = await getOrganizationById(currentUser.organizationId);
   }
-
-  // Relevant flow is genuinely complete -> Render Host workspace layout
-  const organization = currentUser.organizationId
-    ? await getOrganizationById(currentUser.organizationId)
-    : null;
 
   return (
     <div className="min-h-screen bg-bg-light/40 flex flex-col">

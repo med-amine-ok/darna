@@ -31,26 +31,30 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    let targetUserId = "usr_yacine";
-    if (email.toLowerCase().includes("amina")) {
-      targetUserId = "usr_amina";
-      document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
-    } else if (email.toLowerCase().includes("karim")) {
-      targetUserId = "usr_karim";
-      document.cookie = "darna_host_type=agency; path=/; max-age=31536000";
-    } else {
-      document.cookie = "darna_host_type=; path=/; max-age=0";
-    }
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    document.cookie = `darna_user_id=${targetUserId}; path=/; max-age=31536000`;
-    await switchUser(targetUserId);
+      if (!res.ok) throw new Error("Login failed");
+      const data = await res.json();
 
-    setTimeout(() => {
-      setIsLoading(false);
+      let targetUserId = data.user?.id || "usr_yacine";
+      document.cookie = `darna_user_id=${targetUserId}; path=/; max-age=31536000`;
+      await switchUser(targetUserId);
+
       toast.success("Welcome back to DARNA!");
-      router.refresh();
-      router.push("/");
-    }, 400);
+      const callback =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("callbackUrl") || "/"
+          : "/";
+      window.location.href = callback;
+    } catch {
+      toast.error("Could not sign in. Please verify your credentials.");
+      setIsLoading(false);
+    }
   };
 
   const handleQuickDemo = async (demoEmail: string) => {
@@ -58,31 +62,45 @@ export default function LoginPage() {
     setPassword("darna2026pass");
     setIsLoading(true);
 
-    const isTraveler = demoEmail.includes("yacine");
-    const targetUserId = isTraveler ? "usr_yacine" : "usr_amina";
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: demoEmail }),
+      });
 
-    document.cookie = `darna_user_id=${targetUserId}; path=/; max-age=31536000`;
+      if (!res.ok) throw new Error("Demo login failed");
+      const data = await res.json();
+      const user = data.user;
+      const isTraveler = demoEmail.includes("yacine");
 
-    if (isTraveler) {
-      document.cookie = "darna_host_type=; path=/; max-age=0";
-      // Ensure genuine fresh guest state
-      await resetUserToGuest("usr_yacine");
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("darna_host_draft");
-        localStorage.setItem("darna_mode", "traveler");
+      if (isTraveler) {
+        document.cookie = "darna_host_type=; path=/; max-age=0";
+        await resetUserToGuest("usr_yacine");
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("darna_host_draft");
+          localStorage.setItem("darna_mode", "traveler");
+        }
+      } else {
+        document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
+        if (typeof window !== "undefined") {
+          localStorage.setItem("darna_mode", "host");
+        }
       }
-    } else {
-      document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
-    }
 
-    await switchUser(targetUserId);
-
-    setTimeout(() => {
+      await switchUser(user.id);
+      toast.success(
+        `Logged in as ${isTraveler ? "Traveler (Yacine Cherif - Guest)" : "Host (Amina Benali)"}`
+      );
+      const callback =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("callbackUrl") || "/"
+          : "/";
+      window.location.href = callback;
+    } catch {
+      toast.error("Demo login error.");
       setIsLoading(false);
-      toast.success(`Logged in as ${isTraveler ? "Traveler (Yacine Cherif - Guest)" : "Host (Amina Benali)"}`);
-      router.refresh();
-      router.push("/");
-    }, 400);
+    }
   };
 
   return (

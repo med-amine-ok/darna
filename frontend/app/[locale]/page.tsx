@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/data/auth";
 import { getListings, getFeaturedListings } from "@/lib/data/listings";
 import { getVehicles } from "@/lib/data/vehicles";
@@ -20,7 +21,9 @@ interface HomePageProps {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const currentUser = await getCurrentUser();
+  const cookieStore = cookies();
+  const cookieUserId = cookieStore.get("darna_user_id")?.value;
+  const currentUser = await getCurrentUser(cookieUserId);
 
   // If a specific category chip is active
   const categoryFilter = searchParams?.category;

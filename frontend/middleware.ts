@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { locales, defaultLocale } from "./i18n";
 import { NextRequest, NextResponse } from "next/server";
-import { mockUsers, currentUserMock } from "./lib/mock-data/users";
+import { mockUsers } from "./lib/mock-data/users";
 import { mockListings } from "./lib/mock-data/listings";
 import { mockOrganizations } from "./lib/mock-data/organizations";
 
@@ -14,31 +14,55 @@ const intlMiddleware = createMiddleware({
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Match /host, /en/host, /fr/host, /ar/host, and any subroutes like /en/host/listings
-  const hostMatch = pathname.match(/^\/(en|fr|ar)?\/?host(\/.*)?$/);
+  // Extract locale from pathname (e.g. /en/... or /fr/...)
+  const localeMatch = pathname.match(/^\/(en|fr|ar)(\/.*)?$/);
+  const locale = localeMatch?.[1] || defaultLocale;
+  const pathWithoutLocale = localeMatch ? localeMatch[2] || "/" : pathname;
 
-  if (hostMatch) {
-    const locale = hostMatch[1] || defaultLocale;
-    const cookieUserId = request.cookies.get("darna_user_id")?.value;
-    const cookieHostType = request.cookies.get("darna_host_type")?.value;
+  const cookieUserId = request.cookies.get("darna_user_id")?.value;
+  const cookieHostType = request.cookies.get("darna_host_type")?.value;
 
-    // Determine current user
-    const user = (cookieUserId ? mockUsers.find((u) => u.id === cookieUserId) : null) || currentUserMock;
+  // 1. Protected routes requiring any authenticated user
+  const isProtectedUserRoute =
+    pathWithoutLocale.startsWith("/become-a-host") ||
+    pathWithoutLocale.startsWith("/trips") ||
+    pathWithoutLocale.startsWith("/favorites") ||
+    pathWithoutLocale.startsWith("/profile") ||
+    pathWithoutLocale.startsWith("/settings") ||
+    pathWithoutLocale.startsWith("/reservations") ||
+    pathWithoutLocale.startsWith("/properties");
 
-    // Check effective hostType: cookie override or user data
-    const effectiveHostType = cookieHostType || user.hostType;
+  if (isProtectedUserRoute && !cookieUserId) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}/login`;
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
+  }
 
-    // 1. hostType is unset / null -> Redirect to host-type selection screen
+  // 2. Protected Host routes (/host and subroutes)
+  if (pathWithoutLocale.startsWith("/host")) {
+    // If not authenticated -> redirect to login
+    if (!cookieUserId) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}/login`;
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    const user = mockUsers.find((u) => u.id === cookieUserId);
+    const effectiveHostType = cookieHostType || user?.hostType;
+
+    // If authenticated guest without hostType -> redirect to become-a-host onboarding
     if (!effectiveHostType) {
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}/become-a-host`;
       return NextResponse.redirect(url);
     }
 
-    // 2. Individual host: must have completed/published at least one listing
+    // Individual host guard
     if (effectiveHostType === "individual") {
       const hasListings =
-        cookieHostType === "individual" || mockListings.some((l) => l.hostUserId === user.id);
+        cookieHostType === "individual" || mockListings.some((l) => l.hostUserId === cookieUserId);
       if (!hasListings) {
         const url = request.nextUrl.clone();
         url.pathname = `/${locale}/become-a-host/1`;
@@ -46,10 +70,10 @@ export default function middleware(request: NextRequest) {
       }
     }
 
-    // 3. Agency host: must have completed organization record
+    // Agency host guard
     if (effectiveHostType === "agency") {
       const org = mockOrganizations.find(
-        (o) => o.id === user.organizationId || o.ownerUserId === user.id
+        (o) => o.id === user?.organizationId || o.ownerUserId === cookieUserId
       );
       const isVerifiedOrg =
         cookieHostType === "agency" || (org && Boolean(org.verificationStatus));
@@ -60,8 +84,8 @@ export default function middleware(request: NextRequest) {
       }
     }
 
-    // 4. Agency specific subroutes: /host/agency/*
-    if (pathname.includes("/host/agency") && effectiveHostType !== "agency") {
+    // Agency specific subroutes
+    if (pathWithoutLocale.startsWith("/host/agency") && effectiveHostType !== "agency") {
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}/host`;
       return NextResponse.redirect(url);

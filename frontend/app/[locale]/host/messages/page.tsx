@@ -1,9 +1,14 @@
+import { cookies } from "next/headers";
 import { getConversations, getMessages } from "@/lib/data/conversations";
 import { getCurrentUser } from "@/lib/data/auth";
 import MessagesClient from "@/components/messages/MessagesClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function HostMessagesPage() {
-  const currentUser = await getCurrentUser();
+  const cookieStore = cookies();
+  const cookieUserId = cookieStore.get("darna_user_id")?.value;
+  const currentUser = await getCurrentUser(cookieUserId);
   const hostId = currentUser?.id || "usr_amina";
 
   const conversations = await getConversations(hostId);

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getListingById, getListings } from "@/lib/data/listings";
 import { getCurrentUser, getUserById } from "@/lib/data/auth";
 import { getReviewsByListingId } from "@/lib/data/reviews";
@@ -18,7 +19,9 @@ export default async function ListingPage({ params }: ListingPageProps) {
     notFound();
   }
 
-  const currentUser = await getCurrentUser();
+  const cookieStore = cookies();
+  const cookieUserId = cookieStore.get("darna_user_id")?.value;
+  const currentUser = await getCurrentUser(cookieUserId);
   const host = listing.hostUserId ? await getUserById(listing.hostUserId) : null;
   const reviews = await getReviewsByListingId(listing.id);
 

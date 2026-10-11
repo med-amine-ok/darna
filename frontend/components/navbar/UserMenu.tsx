@@ -27,6 +27,10 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
 
   const handleHostAction = () => {
     setIsOpen(false);
+    if (!currentUser) {
+      loginModal.onOpen();
+      return;
+    }
     if (isHost) {
       try {
         localStorage.setItem("darna_mode", "host");
@@ -48,6 +52,22 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
         } catch (e) {}
       }
       router.push(target);
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    if (typeof window !== "undefined") {
+      document.cookie = "darna_user_id=; path=/; max-age=0";
+      document.cookie = "darna_host_type=; path=/; max-age=0";
+      document.cookie = "darna_mode=; path=/; max-age=0";
+      document.cookie = "darna_agency_id=; path=/; max-age=0";
+      localStorage.removeItem("darna_mode");
+      localStorage.removeItem("darna_host_draft");
+      window.location.href = "/";
     }
   };
 
@@ -175,10 +195,7 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
                 />
                 <hr className="my-1 border-tertiary/30" />
                 <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/login");
-                  }}
+                  onClick={handleLogout}
                   label="Log out"
                 />
               </>
@@ -203,7 +220,7 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
                 <MenuItem
                   onClick={() => {
                     setIsOpen(false);
-                    router.push("/become-a-host");
+                    loginModal.onOpen();
                   }}
                   label="Become a host"
                 />

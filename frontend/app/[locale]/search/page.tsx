@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/data/auth";
 import { getListings } from "@/lib/data/listings";
 import { SearchParams } from "@/types";
@@ -14,7 +15,9 @@ interface SearchPageProps {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const currentUser = await getCurrentUser();
+  const cookieStore = cookies();
+  const cookieUserId = cookieStore.get("darna_user_id")?.value;
+  const currentUser = await getCurrentUser(cookieUserId);
 
   // Load listings matching search parameters
   let listings = await getListings(searchParams);
