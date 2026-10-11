@@ -11,6 +11,7 @@ import {
   HiOutlineBan,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AdminPromotionsClientProps {
   initialCoupons: Coupon[];
@@ -19,6 +20,8 @@ interface AdminPromotionsClientProps {
 export default function AdminPromotionsClient({ initialCoupons }: AdminPromotionsClientProps) {
   const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [couponToDelete, setCouponToDelete] = useState<string | null>(null);
+  const [isDeletingCoupon, setIsDeletingCoupon] = useState(false);
 
   // Form state
   const [code, setCode] = useState("");
@@ -49,16 +52,24 @@ export default function AdminPromotionsClient({ initialCoupons }: AdminPromotion
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this promotion code?")) return;
+  const handleDelete = (id: string) => {
+    setCouponToDelete(id);
+  };
+
+  const executeDeleteCoupon = async () => {
+    if (!couponToDelete) return;
+    setIsDeletingCoupon(true);
     try {
-      const success = await deleteCoupon(id);
+      const success = await deleteCoupon(couponToDelete);
       if (success) {
-        setCoupons((prev) => prev.filter((c) => c.id !== id));
+        setCoupons((prev) => prev.filter((c) => c.id !== couponToDelete));
         toast.success("Coupon code deleted.");
       }
     } catch {
       toast.error("Failed to delete coupon.");
+    } finally {
+      setIsDeletingCoupon(false);
+      setCouponToDelete(null);
     }
   };
 
@@ -303,6 +314,19 @@ export default function AdminPromotionsClient({ initialCoupons }: AdminPromotion
           </div>
         </div>
       )}
+
+      {/* Delete Coupon Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!couponToDelete}
+        variant="destructive"
+        title="Delete Promotion Code"
+        message="Are you sure you want to delete this coupon? It will be immediately revoked and guests will no longer be able to apply it at checkout."
+        confirmLabel="Delete coupon"
+        cancelLabel="Keep coupon"
+        isLoading={isDeletingCoupon}
+        onConfirm={executeDeleteCoupon}
+        onCancel={() => setCouponToDelete(null)}
+      />
     </div>
   );
 }

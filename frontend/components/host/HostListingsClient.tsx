@@ -22,6 +22,7 @@ import {
   HiOutlineSwitchHorizontal,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface HostListingsClientProps {
   initialListings: Listing[];
@@ -48,6 +49,7 @@ export default function HostListingsClient({
 
   // Delete modal state
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter listings
   const filteredListings = useMemo(() => {
@@ -122,6 +124,7 @@ export default function HostListingsClient({
 
   // Delete listing
   const handleDelete = async (id: string) => {
+    setIsDeleting(true);
     try {
       const success = await deleteListing(id);
       if (success) {
@@ -131,6 +134,8 @@ export default function HostListingsClient({
       }
     } catch {
       toast.error("Failed to delete listing.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -612,36 +617,20 @@ export default function HostListingsClient({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deletingId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-tertiary shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95">
-            <h3 className="font-serif text-lg font-bold text-primary mb-2">
-              Confirm Delete Listing
-            </h3>
-            <p className="text-xs sm:text-sm text-neutral-600 mb-6">
-              Are you sure you want to delete this listing from DARNA? This action is irreversible
-              and will unpublish the listing from guest searches.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setDeletingId(null)}
-                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(deletingId)}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-2xs"
-              >
-                Confirm Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        variant="destructive"
+        title="Delete Listing"
+        message="Are you sure you want to delete this listing from DARNA? This action is permanent and will remove the property and its booking history from the platform."
+        confirmLabel="Delete listing"
+        cancelLabel="Keep listing"
+        isLoading={isDeleting}
+        onConfirm={() => {
+          if (deletingId) handleDelete(deletingId);
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 }

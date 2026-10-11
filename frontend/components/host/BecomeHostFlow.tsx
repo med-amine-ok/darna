@@ -11,6 +11,7 @@ import { useLoginModal } from "@/hook/useLoginModal";
 import Counter from "@/components/inputs/Counter";
 import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 import {
   HiOutlineHome,
   HiOutlineOfficeBuilding,
@@ -124,6 +125,7 @@ export default function BecomeHostFlow({
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -172,7 +174,15 @@ export default function BecomeHostFlow({
     }
   }, [initialStep]);
 
-  const handleSaveAndExit = () => {
+  const handleHeaderExitClick = () => {
+    if (currentStep > 0 || isAgencyFlow) {
+      setIsExitDialogOpen(true);
+    } else {
+      router.push("/");
+    }
+  };
+
+  const handleExecuteSaveAndExit = () => {
     if (typeof window !== "undefined") {
       const draft = {
         hostType,
@@ -208,6 +218,16 @@ export default function BecomeHostFlow({
       };
       localStorage.setItem("darna_host_draft", JSON.stringify(draft));
       toast.info("Progress saved as draft in your browser.");
+      setIsExitDialogOpen(false);
+      router.push("/");
+    }
+  };
+
+  const handleExecuteDiscard = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("darna_host_draft");
+      toast.info("Unsaved changes discarded.");
+      setIsExitDialogOpen(false);
       router.push("/");
     }
   };
@@ -445,7 +465,7 @@ export default function BecomeHostFlow({
 
         <button
           type="button"
-          onClick={handleSaveAndExit}
+          onClick={handleHeaderExitClick}
           className="px-4 py-1.5 rounded-full border border-tertiary text-xs sm:text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition"
         >
           Save & Exit
@@ -1664,6 +1684,21 @@ export default function BecomeHostFlow({
           ) : null}
         </div>
       </footer>
+
+      {/* Discard / Save & Exit 3-Button Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={isExitDialogOpen}
+        variant="discard"
+        title="Leave Listing Setup?"
+        message="You have unsaved changes in your listing registration. You can save your progress as a draft to resume later, or discard your current inputs."
+        cancelLabel="Keep editing"
+        discardLabel="Discard changes"
+        saveAndExitLabel="Save & exit"
+        onCancel={() => setIsExitDialogOpen(false)}
+        onDiscard={handleExecuteDiscard}
+        onSaveAndExit={handleExecuteSaveAndExit}
+        onConfirm={handleExecuteSaveAndExit}
+      />
     </div>
   );
 }

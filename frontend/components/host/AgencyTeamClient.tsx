@@ -21,6 +21,7 @@ import {
   HiOutlineArrowLeft,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AgencyTeamClientProps {
   organization: Organization;
@@ -39,6 +40,8 @@ export default function AgencyTeamClient({
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState<"admin" | "manager">("manager");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<Membership | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   // Stats
   const activeCount = members.filter((m) => m.status === "active").length;
@@ -91,23 +94,28 @@ export default function AgencyTeamClient({
   };
 
   // Remove member
-  const handleRemove = async (member: Membership) => {
+  const handleRemove = (member: Membership) => {
     if (member.role === "owner") {
       toast.error("The organization owner cannot be removed.");
       return;
     }
-    if (!confirm(`Are you sure you want to remove ${member.name || member.email} from ${organization.name}?`)) {
-      return;
-    }
+    setMemberToRemove(member);
+  };
 
+  const executeRemoveMember = async () => {
+    if (!memberToRemove) return;
+    setIsRemoving(true);
     try {
-      const success = await removeOrganizationMember(member.id);
+      const success = await removeOrganizationMember(memberToRemove.id);
       if (success) {
-        setMembers((prev) => prev.filter((m) => m.id !== member.id));
+        setMembers((prev) => prev.filter((m) => m.id !== memberToRemove.id));
         toast.success("Team member access revoked.");
       }
     } catch {
       toast.error("Failed to remove member.");
+    } finally {
+      setIsRemoving(false);
+      setMemberToRemove(null);
     }
   };
 
@@ -463,6 +471,23 @@ export default function AgencyTeamClient({
           </div>
         </div>
       )}
+
+      {/* Revoke Member Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!memberToRemove}
+        variant="destructive"
+        title="Revoke Team Access"
+        message={
+          memberToRemove
+            ? `Are you sure you want to remove ${memberToRemove.name || memberToRemove.email} from ${organization.name}? They will immediately lose access to your agency dashboard, fleet calendar, and bookings.`
+            : ""
+        }
+        confirmLabel="Remove member"
+        cancelLabel="Keep member"
+        isLoading={isRemoving}
+        onConfirm={executeRemoveMember}
+        onCancel={() => setMemberToRemove(null)}
+      />
     </div>
   );
 }

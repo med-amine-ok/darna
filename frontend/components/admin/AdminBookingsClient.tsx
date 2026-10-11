@@ -19,6 +19,7 @@ import {
   HiOutlineCheck,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AdminBookingsClientProps {
   initialReservations: Reservation[];
@@ -29,6 +30,8 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Reservation | null>(null);
+  const [forceCancellingId, setForceCancellingId] = useState<string | null>(null);
+  const [isForceCancelling, setIsForceCancelling] = useState(false);
 
   // Admin notes state
   const [adminNote, setAdminNote] = useState("");
@@ -53,22 +56,30 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
   }, [reservations, statusFilter, searchQuery]);
 
   // Actions
-  const handleForceCancel = async (id: string) => {
-    if (!confirm("Are you sure you want to administratively force-cancel this reservation?")) return;
+  const handleForceCancel = (id: string) => {
+    setForceCancellingId(id);
+  };
+
+  const executeForceCancel = async () => {
+    if (!forceCancellingId) return;
+    setIsForceCancelling(true);
     try {
-      const success = await cancelReservation(id);
+      const success = await cancelReservation(forceCancellingId);
       if (success) {
         setReservations((prev) =>
-          prev.map((r) => (r.id === id ? { ...r, status: "cancelled", paymentStatus: "refunded" } : r))
+          prev.map((r) => (r.id === forceCancellingId ? { ...r, status: "cancelled", paymentStatus: "refunded" } : r))
         );
-        logAdminAction("FORCE_CANCEL_BOOKING", "booking", id, `Admin force-cancelled reservation ${id}`);
+        logAdminAction("FORCE_CANCEL_BOOKING", "booking", forceCancellingId, `Admin force-cancelled reservation ${forceCancellingId}`);
         toast.info("Booking cancelled and refund queued.");
-        if (selectedBooking?.id === id) {
+        if (selectedBooking?.id === forceCancellingId) {
           setSelectedBooking((prev) => (prev ? { ...prev, status: "cancelled", paymentStatus: "refunded" } : null));
         }
       }
     } catch {
       toast.error("Failed to cancel booking.");
+    } finally {
+      setIsForceCancelling(false);
+      setForceCancellingId(null);
     }
   };
 
@@ -329,6 +340,20 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
           </div>
         </div>
       )}
+
+      {/* Force-Cancel Booking Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!forceCancellingId}
+        variant="destructive"
+        title="Force-Cancel Reservation"
+        message="Are you sure you want to administratively force-cancel this reservation? Both host and traveler will be immediately notified, and a full DZD refund will be triggered."
+        callout="Admin override action: Host cancellation penalty policies will be bypassed."
+        confirmLabel="Force-cancel booking"
+        cancelLabel="Keep booking"
+        isLoading={isForceCancelling}
+        onConfirm={executeForceCancel}
+        onCancel={() => setForceCancellingId(null)}
+      />
     </div>
   );
 }

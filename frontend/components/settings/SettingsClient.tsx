@@ -20,6 +20,7 @@ import {
   HiOutlineCheck,
 } from "react-icons/hi";
 import { BiPlus, BiTrash } from "react-icons/bi";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface SettingsClientProps {
   currentUser?: User | null;
@@ -31,6 +32,11 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
   const currentLocale = useLocale();
 
   const [activeSection, setActiveSection] = useState<string>("personal");
+
+  // Destructive confirmation dialog states
+  const [isLogoutSessionOpen, setIsLogoutSessionOpen] = useState(false);
+  const [isDeactivateAccountOpen, setIsDeactivateAccountOpen] = useState(false);
+  const [cardToRemove, setCardToRemove] = useState<string | null>(null);
 
   // Personal Information State
   const [legalName, setLegalName] = useState(currentUser?.name || "Amina Benali");
@@ -514,7 +520,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => toast.info("Device session revoked.")}
+                    onClick={() => setIsLogoutSessionOpen(true)}
                     className="text-rose-600 hover:underline font-semibold"
                   >
                     Log out
@@ -531,7 +537,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
               </div>
               <button
                 type="button"
-                onClick={() => toast.warn("Account deactivation modal simulated.")}
+                onClick={() => setIsDeactivateAccountOpen(true)}
                 className="px-4 py-2 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold hover:bg-rose-50 transition"
               >
                 Deactivate
@@ -740,7 +746,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => toast.info("Card removed.")}
+                    onClick={() => setCardToRemove("Algérie Poste Edahabia (•••• 8890)")}
                     className="text-neutral-400 hover:text-rose-600 transition"
                   >
                     <BiTrash size={16} />
@@ -1057,6 +1063,55 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
           </div>
         )}
       </div>
+
+      {/* Revoke Session Dialog */}
+      <ConfirmDialog
+        isOpen={isLogoutSessionOpen}
+        variant="destructive"
+        title="Revoke Device Session"
+        message="Are you sure you want to sign out of this device (iPhone 15 · Oran)? You will need to log in again on that device."
+        confirmLabel="Log out device"
+        cancelLabel="Keep signed in"
+        onConfirm={() => {
+          setIsLogoutSessionOpen(false);
+          toast.success("Device session revoked successfully.");
+        }}
+        onCancel={() => setIsLogoutSessionOpen(false)}
+      />
+
+      {/* Deactivate Account Dialog */}
+      <ConfirmDialog
+        isOpen={isDeactivateAccountOpen}
+        variant="destructive"
+        title="Deactivate Account"
+        message="Are you sure you want to deactivate your DARNA account? Your profile, reviews, and active listings will be temporarily hidden until you sign in again."
+        confirmLabel="Deactivate account"
+        cancelLabel="Keep account active"
+        onConfirm={() => {
+          setIsDeactivateAccountOpen(false);
+          toast.info("Your account has been deactivated.");
+        }}
+        onCancel={() => setIsDeactivateAccountOpen(false)}
+      />
+
+      {/* Remove Card Dialog */}
+      <ConfirmDialog
+        isOpen={!!cardToRemove}
+        variant="destructive"
+        title="Remove Payment Card"
+        message={
+          cardToRemove
+            ? `Are you sure you want to remove ${cardToRemove} from your DARNA account? You will need to re-enter your payment credentials for subsequent bookings.`
+            : ""
+        }
+        confirmLabel="Remove card"
+        cancelLabel="Keep card"
+        onConfirm={() => {
+          setCardToRemove(null);
+          toast.success("Payment card removed from account.");
+        }}
+        onCancel={() => setCardToRemove(null)}
+      />
     </div>
   );
 }

@@ -60,14 +60,48 @@ export default function HostCalendarClient({
   reservations,
   currentUser,
 }: HostCalendarClientProps) {
+  const safeListings: Listing[] = useMemo(() => {
+    if (hostListings && hostListings.length > 0) return hostListings;
+    return [
+      {
+        id: "lst_tipaza_villa",
+        title: "Algerian Coastal Villa",
+        description: "Luxurious coastal villa overlooking Tipaza ruins and the sea.",
+        city: "Tipaza",
+        price: 18500,
+        category: "home" as const,
+        type: "Villa",
+        ownerType: "individual" as const,
+        hostUserId: currentUser?.id || "usr_amina",
+        imageSrc: ["/assets/hero.jpg"],
+        createdAt: new Date().toISOString(),
+        locationValue: "Tipaza",
+        country: "Algeria",
+        latlng: [36.7538, 3.0588] as [number, number],
+        guestCount: 4,
+        bedroomCount: 2,
+        roomCount: 3,
+        bathroomCount: 2,
+        amenities: ["wifi", "air_conditioning"],
+        houseRules: ["No smoking"],
+        cancellationPolicy: "flexible" as const,
+        instantBook: true,
+        rating: 5.0,
+        reviewCount: 0,
+        bookingsCount: 0,
+        status: "active" as const,
+      },
+    ];
+  }, [hostListings, currentUser]);
+
   const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 9, 7)); // Oct 7, 2026
   const [view, setView] = useState<CalendarView>("month");
   const [selectedListingId, setSelectedListingId] = useState<string>("all");
 
   // Blocked dates state: mapping "listingId_YYYY-MM-DD" -> true
   const [blockedDates, setBlockedDates] = useState<Record<string, boolean>>({
-    [`${hostListings[0]?.id || "lst_tipaza_villa"}_2026-10-18`]: true,
-    [`${hostListings[0]?.id || "lst_tipaza_villa"}_2026-10-19`]: true,
+    [`${safeListings[0]?.id || "lst_tipaza_villa"}_2026-10-18`]: true,
+    [`${safeListings[0]?.id || "lst_tipaza_villa"}_2026-10-19`]: true,
   });
 
   // Per-date price override state: mapping "listingId_YYYY-MM-DD" -> number
@@ -80,16 +114,18 @@ export default function HostCalendarClient({
   // Map listing colors
   const listingColorMap = useMemo(() => {
     const map: Record<string, typeof LISTING_COLORS[0]> = {};
-    hostListings.forEach((l, idx) => {
-      map[l.id] = LISTING_COLORS[idx % LISTING_COLORS.length];
+    safeListings.forEach((l, idx) => {
+      if (l?.id) {
+        map[l.id] = LISTING_COLORS[idx % LISTING_COLORS.length];
+      }
     });
     return map;
-  }, [hostListings]);
+  }, [safeListings]);
 
   // Active listing if single selected
   const activeListing = useMemo(() => {
-    return hostListings.find((l) => l.id === selectedListingId) || hostListings[0];
-  }, [hostListings, selectedListingId]);
+    return safeListings.find((l) => l.id === selectedListingId) || safeListings[0];
+  }, [safeListings, selectedListingId]);
 
   // Navigate forward/back
   const handlePrev = () => {
@@ -122,21 +158,23 @@ export default function HostCalendarClient({
   };
 
   // Check if a day is blocked for active listing
-  const isDayBlocked = (date: Date, listingId: string) => {
+  const isDayBlocked = (date: Date, listingId?: string) => {
+    if (!listingId) return false;
     const key = `${listingId}_${format(date, "yyyy-MM-dd")}`;
     return !!blockedDates[key];
   };
 
   // Get price for a day
-  const getDayPrice = (date: Date, listing: Listing) => {
+  const getDayPrice = (date: Date, listing?: Listing) => {
+    if (!listing) return 15000;
     const key = `${listing.id}_${format(date, "yyyy-MM-dd")}`;
     if (priceOverrides[key]) return priceOverrides[key];
-    return listing.price;
+    return listing.price || 15000;
   };
 
   // Toggle blocked status for day
   const handleToggleBlock = (date: Date) => {
-    const targetListingId = selectedListingId === "all" ? (hostListings[0]?.id || "") : selectedListingId;
+    const targetListingId = selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId;
     if (!targetListingId) return;
     const key = `${targetListingId}_${format(date, "yyyy-MM-dd")}`;
     const nextState = !blockedDates[key];
@@ -149,7 +187,7 @@ export default function HostCalendarClient({
 
   // Save price override
   const handleSavePriceOverride = (date: Date) => {
-    const targetListingId = selectedListingId === "all" ? (hostListings[0]?.id || "") : selectedListingId;
+    const targetListingId = selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId;
     if (!targetListingId) return;
     const parsed = parseInt(overridePriceInput, 10);
     const key = `${targetListingId}_${format(date, "yyyy-MM-dd")}`;
@@ -173,7 +211,7 @@ export default function HostCalendarClient({
   // Open day detail
   const handleDayClick = (date: Date) => {
     setActiveDay(date);
-    const targetListingId = selectedListingId === "all" ? (hostListings[0]?.id || "") : selectedListingId;
+    const targetListingId = selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId;
     const key = `${targetListingId}_${format(date, "yyyy-MM-dd")}`;
     if (priceOverrides[key]) {
       setOverridePriceInput(priceOverrides[key].toString());
@@ -270,8 +308,8 @@ export default function HostCalendarClient({
             onChange={(e) => setSelectedListingId(e.target.value)}
             className="px-3 py-1.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary focus:outline-none focus:border-primary flex-1 lg:flex-none lg:w-56"
           >
-            <option value="all">All Properties ({hostListings.length})</option>
-            {hostListings.map((l) => (
+            <option value="all">All Properties ({safeListings.length})</option>
+            {safeListings.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.title} ({l.city})
               </option>
@@ -280,15 +318,15 @@ export default function HostCalendarClient({
 
           {/* Listing Color Chips */}
           <div className="hidden sm:flex items-center gap-2 ms-2">
-            {hostListings.slice(0, 3).map((l) => {
-              const color = listingColorMap[l.id];
+            {safeListings.slice(0, 3).map((l) => {
+              const color = listingColorMap[l.id] || LISTING_COLORS[0];
               return (
                 <div
                   key={l.id}
                   className="flex items-center gap-1 text-[11px] font-semibold text-neutral-600 bg-neutral-50 px-2 py-1 rounded-lg border border-tertiary/40"
                 >
                   <span className={`w-2 h-2 rounded-full ${color.bg}`} />
-                  <span className="truncate max-w-[100px]">{l.title.split(" ")[0]}</span>
+                  <span className="truncate max-w-[100px]">{(l.title || "Villa").split(" ")[0]}</span>
                 </div>
               );
             })}
@@ -323,10 +361,10 @@ export default function HostCalendarClient({
                 const dayBookings = getBookingsForDay(day);
                 const isBlocked = isDayBlocked(
                   day,
-                  selectedListingId === "all" ? (hostListings[0]?.id || "") : selectedListingId
+                  selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
                 );
                 const price = getDayPrice(day, activeListing);
-                const isCustomPrice = !!priceOverrides[`${activeListing.id}_${format(day, "yyyy-MM-dd")}`];
+                const isCustomPrice = !!priceOverrides[`${activeListing?.id || safeListings[0]?.id}_${format(day, "yyyy-MM-dd")}`];
 
                 return (
                   <div
@@ -443,7 +481,7 @@ export default function HostCalendarClient({
 
             {/* Week Listings Rows */}
             <div className="divide-y divide-tertiary/40">
-              {hostListings.map((listing) => {
+              {safeListings.map((listing) => {
                 const color = listingColorMap[listing.id] || LISTING_COLORS[0];
                 const weekStart = startOfWeek(currentDate);
                 const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -622,7 +660,7 @@ export default function HostCalendarClient({
                     const bCount = getBookingsForDay(d).length;
                     const isBlocked = isDayBlocked(
                       d,
-                      selectedListingId === "all" ? (hostListings[0]?.id || "") : selectedListingId
+                      selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
                     );
 
                     return (
@@ -682,7 +720,7 @@ export default function HostCalendarClient({
                 Property
               </label>
               <div className="text-xs font-bold text-primary bg-neutral-50 p-2.5 rounded-xl border border-tertiary/60 truncate">
-                {activeListing.title} ({activeListing.city})
+                {activeListing?.title || "Property"} ({activeListing?.city || "Algeria"})
               </div>
             </div>
 
@@ -691,7 +729,7 @@ export default function HostCalendarClient({
               <div>
                 <span className="block text-xs font-bold text-primary">Availability</span>
                 <span className="text-xs text-neutral-500">
-                  {isDayBlocked(activeDay, activeListing.id)
+                  {isDayBlocked(activeDay, activeListing?.id || safeListings[0]?.id)
                     ? "Blocked from traveler searches"
                     : "Available for Instant Booking"}
                 </span>
@@ -700,12 +738,12 @@ export default function HostCalendarClient({
                 type="button"
                 onClick={() => handleToggleBlock(activeDay)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                  isDayBlocked(activeDay, activeListing.id)
+                  isDayBlocked(activeDay, activeListing?.id || safeListings[0]?.id)
                     ? "bg-emerald-600 text-white"
                     : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
                 }`}
               >
-                {isDayBlocked(activeDay, activeListing.id) ? (
+                {isDayBlocked(activeDay, activeListing?.id || safeListings[0]?.id) ? (
                   <>
                     <HiOutlineLockOpen size={15} />
                     <span>Unblock</span>
@@ -725,7 +763,7 @@ export default function HostCalendarClient({
                 Per-Date Price Override (DZD)
               </span>
               <p className="text-[11px] text-neutral-500 mb-3">
-                Default rate: {activeListing.price.toLocaleString()} DZD / night. Leave blank to reset.
+                Default rate: {(activeListing?.price || 15000).toLocaleString()} DZD / night. Leave blank to reset.
               </p>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -733,7 +771,7 @@ export default function HostCalendarClient({
                     type="number"
                     value={overridePriceInput}
                     onChange={(e) => setOverridePriceInput(e.target.value)}
-                    placeholder={activeListing.price.toString()}
+                    placeholder={(activeListing?.price || 15000).toString()}
                     className="w-full px-3 py-2 bg-white border border-tertiary/80 rounded-xl text-xs font-mono font-bold text-primary focus:outline-none focus:border-primary"
                   />
                   <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400">

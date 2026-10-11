@@ -279,11 +279,11 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
       {/* Cancel Confirmation Modal */}
       <ConfirmDialog
         isOpen={!!cancellingRes}
-        title="Cancel Reservation?"
-        variant="danger"
+        title="Cancel Reservation"
+        variant="destructive"
         isLoading={isProcessing}
-        confirmLabel={isProcessing ? "Cancelling..." : "Confirm Cancellation"}
-        cancelLabel="Keep Reservation"
+        confirmLabel="Cancel reservation"
+        cancelLabel="Keep reservation"
         onConfirm={handleCancel}
         onCancel={() => setCancellingRes(null)}
         message={

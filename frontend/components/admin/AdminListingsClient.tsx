@@ -21,6 +21,7 @@ import {
   HiOutlineX,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AdminListingsClientProps {
   initialListings: Listing[];
@@ -42,6 +43,12 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
+
+  // Dialog states
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [suspendingListing, setSuspendingListing] = useState<Listing | null>(null);
+  const [isSuspending, setIsSuspending] = useState(false);
 
   // Filtering & Sorting
   const filteredListings = useMemo(() => {
@@ -115,8 +122,16 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
     }
   };
 
-  const handleToggleSuspend = async (listing: Listing) => {
-    const nextStatus = listing.status === "suspended" ? "active" : "suspended";
+  const handleToggleSuspend = (listing: Listing) => {
+    if (listing.status === "suspended") {
+      executeToggleSuspend(listing, "active");
+    } else {
+      setSuspendingListing(listing);
+    }
+  };
+
+  const executeToggleSuspend = async (listing: Listing, nextStatus: "active" | "suspended") => {
+    setIsSuspending(true);
     try {
       const updated = await updateListing(listing.id, { status: nextStatus as any });
       if (updated) {
@@ -133,20 +148,31 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
       }
     } catch {
       toast.error("Failed to change status.");
+    } finally {
+      setIsSuspending(false);
+      setSuspendingListing(null);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this listing?")) return;
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const executeDelete = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
     try {
-      const success = await deleteListing(id);
+      const success = await deleteListing(deletingId);
       if (success) {
-        setListings((prev) => prev.filter((l) => l.id !== id));
-        logAdminAction("DELETE_LISTING", "listing", id, `Deleted listing ID ${id}`);
-        toast.success("Listing deleted from platform.");
+        setListings((prev) => prev.filter((l) => l.id !== deletingId));
+        logAdminAction("DELETE_LISTING", "listing", deletingId, `Deleted listing ID ${deletingId}`);
+        toast.success("Listing permanently deleted from DARNA.");
       }
     } catch {
       toast.error("Failed to delete listing.");
+    } finally {
+      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
@@ -465,6 +491,38 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
           </div>
         </div>
       </div>
+
+      {/* Delete Listing Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!deletingId}
+        variant="destructive"
+        title="Permanently Delete Listing"
+        message="This will permanently delete this listing and remove it from search results and fleet operations. This action cannot be undone."
+        confirmLabel="Delete listing"
+        cancelLabel="Keep listing"
+        isLoading={isDeleting}
+        onConfirm={executeDelete}
+        onCancel={() => setDeletingId(null)}
+      />
+
+      {/* Suspend Listing Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!suspendingListing}
+        variant="destructive"
+        title="Suspend Listing"
+        message={
+          suspendingListing
+            ? `Are you sure you want to suspend "${suspendingListing.title}"? The property will be removed from marketplace search and travelers won't be able to book it until reactivated.`
+            : ""
+        }
+        confirmLabel="Suspend listing"
+        cancelLabel="Keep active"
+        isLoading={isSuspending}
+        onConfirm={() => {
+          if (suspendingListing) executeToggleSuspend(suspendingListing, "suspended");
+        }}
+        onCancel={() => setSuspendingListing(null)}
+      />
     </div>
   );
 }

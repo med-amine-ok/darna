@@ -210,10 +210,10 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
       {/* Delete Confirmation Modal */}
       <ConfirmDialog
         isOpen={!!deletingId}
-        title="Delete Listing?"
-        variant="danger"
-        confirmLabel="Confirm Delete"
-        cancelLabel="Keep Listing"
+        title="Delete Listing"
+        variant="destructive"
+        confirmLabel="Delete listing"
+        cancelLabel="Keep listing"
         onConfirm={confirmDelete}
         onCancel={() => setDeletingId(null)}
         message="Are you sure you want to permanently delete this listing? This action cannot be undone and will cancel any future reservations."

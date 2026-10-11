@@ -18,6 +18,7 @@ import {
 } from "react-icons/hi";
 import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AdminUsersClientProps {
   initialUsers: User[];
@@ -43,6 +44,7 @@ export default function AdminUsersClient({
     usr_karim: ["Trade Register RC verified and cross-checked against CNRC directory."],
   });
   const [newNote, setNewNote] = useState("");
+  const [suspendingUser, setSuspendingUser] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
@@ -70,15 +72,26 @@ export default function AdminUsersClient({
   };
 
   const handleToggleSuspend = (userId: string, userName: string) => {
-    const next = !suspendedUsers[userId];
-    setSuspendedUsers((prev) => ({ ...prev, [userId]: next }));
+    const isCurrentlySuspended = !!suspendedUsers[userId];
+    if (isCurrentlySuspended) {
+      // Reactivate directly
+      executeToggleSuspend(userId, userName, false);
+    } else {
+      // Prompt confirmation before suspending
+      setSuspendingUser({ id: userId, name: userName });
+    }
+  };
+
+  const executeToggleSuspend = (userId: string, userName: string, suspend: boolean) => {
+    setSuspendedUsers((prev) => ({ ...prev, [userId]: suspend }));
     logAdminAction(
-      next ? "SUSPEND_USER" : "REACTIVATE_USER",
+      suspend ? "SUSPEND_USER" : "REACTIVATE_USER",
       "user",
       userId,
-      `${next ? "Suspended" : "Reactivated"} user account ${userName}`
+      `${suspend ? "Suspended" : "Reactivated"} user account ${userName}`
     );
-    toast.info(next ? `${userName} has been suspended.` : `${userName} reactivated.`);
+    toast.info(suspend ? `${userName} has been suspended.` : `${userName} reactivated.`);
+    setSuspendingUser(null);
   };
 
   const handleAddNote = (userId: string) => {
@@ -321,6 +334,24 @@ export default function AdminUsersClient({
           </div>
         </div>
       )}
+
+      {/* Suspend User Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!suspendingUser}
+        variant="destructive"
+        title="Suspend User Account"
+        message={
+          suspendingUser
+            ? `Are you sure you want to suspend ${suspendingUser.name}'s account? This will immediately revoke their active sessions and prevent them from booking or hosting on DARNA.`
+            : ""
+        }
+        confirmLabel="Suspend account"
+        cancelLabel="Keep active"
+        onConfirm={() => {
+          if (suspendingUser) executeToggleSuspend(suspendingUser.id, suspendingUser.name, true);
+        }}
+        onCancel={() => setSuspendingUser(null)}
+      />
     </div>
   );
 }

@@ -83,13 +83,6 @@ export default function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
     }
-
-    // Agency specific subroutes
-    if (pathWithoutLocale.startsWith("/host/agency") && effectiveHostType !== "agency") {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${locale}/host`;
-      return NextResponse.redirect(url);
-    }
   }
 
   return intlMiddleware(request);

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "@/navigation";
+import { Link, usePathname, useRouter } from "@/navigation";
 import { User, Organization } from "@/types";
 import Avatar from "@/components/Avatar";
 import LanguageSwitcher from "@/components/navbar/LanguageSwitcher";
@@ -25,7 +24,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const isAgency = currentUser?.hostType === "agency" || organization;
+  const isAgency = currentUser?.hostType === "agency" || Boolean(organization);
 
   const navLinks = [
     { href: "/host", label: "Today", exact: true },
@@ -33,12 +32,8 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
     { href: "/host/calendar", label: "Calendar" },
     { href: "/host/listings", label: "Listings" },
     { href: "/host/messages", label: "Messages" },
-    ...(isAgency
-      ? [
-          { href: "/host/agency/team", label: "Team" },
-          { href: "/host/agency/settings", label: "Agency" },
-        ]
-      : []),
+    { href: "/host/agency/team", label: "Team" },
+    { href: "/host/agency/settings", label: "Agency" },
   ];
 
   useEffect(() => {

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "@/navigation";
+import { Link, usePathname } from "@/navigation";
 import {
   Home,
   CalendarCheck,

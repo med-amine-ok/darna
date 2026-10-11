@@ -114,3 +114,356 @@ input:focus, textarea:focus, select:focus {
   min-height: 44px;
   min-width: 44px;
 }
+
+/* Restrained badge shake animation for destructive dialog icon */
+@keyframes badge-shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-6deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+  60% {
+    transform: rotate(-3deg);
+  }
+  80% {
+    transform: rotate(2deg);
+  }
+}
+.animate-badge-shake {
+  animation: badge-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ==========================================================================
+   DARNA Premium Toast Notification System
+   Earthy Minimal palette, multi-layer shadows, variant-coded badges & indicators
+   ========================================================================== */
+
+/* Toast Container Viewport Anchors */
+.Toastify__toast-container {
+  z-index: 99999 !important;
+  box-sizing: border-box !important;
+}
+
+.Toastify__toast-container--bottom-left {
+  bottom: 1.5rem !important;
+  left: 1.5rem !important;
+  width: 400px !important;
+  max-width: calc(100vw - 3rem) !important;
+}
+
+.Toastify__toast-container--bottom-right {
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+  width: 400px !important;
+  max-width: calc(100vw - 3rem) !important;
+}
+
+@media only screen and (max-width: 640px) {
+  .Toastify__toast-container {
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+}
+
+/* Base Toast Card */
+.Toastify__toast,
+.darna-toast {
+  position: relative !important;
+  min-height: 62px !important;
+  margin-bottom: 0.75rem !important;
+  padding: 14px 16px 14px 20px !important;
+  border-radius: 1rem !important; /* rounded-2xl */
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(217, 201, 178, 0.75) !important;
+  box-shadow: 0 4px 14px -2px rgba(46, 58, 47, 0.08), 0 16px 36px -4px rgba(46, 58, 47, 0.14), 0 0 0 1px rgba(217, 201, 178, 0.45) !important;
+  overflow: hidden !important;
+  font-family: inherit !important;
+  color: #2E3A2F !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: default !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+  direction: ltr !important;
+}
+
+[dir="rtl"] .Toastify__toast,
+[dir="rtl"] .darna-toast,
+.Toastify__toast--rtl,
+.darna-toast--rtl {
+  direction: rtl !important;
+  padding: 14px 20px 14px 16px !important;
+}
+
+.Toastify__toast:hover,
+.darna-toast:hover {
+  box-shadow: 0 6px 18px -2px rgba(46, 58, 47, 0.10), 0 20px 44px -4px rgba(46, 58, 47, 0.18), 0 0 0 1px rgba(217, 201, 178, 0.6) !important;
+}
+
+/* Subtle Architectural DARNA Arch Motif Watermark */
+.Toastify__toast::after,
+.darna-toast::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 28px;
+  width: 48px;
+  height: 48px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Cpath d='M24 8 C16 8 10 14 10 24 L10 40 L38 40 L38 24 C38 14 32 8 24 8 Z' stroke='%232E3A2F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M24 16 C20 16 16 20 16 26 L16 40 L32 40 L32 26 C32 20 28 16 24 16 Z' stroke='%232E3A2F' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 1;
+}
+
+[dir="rtl"] .Toastify__toast::after,
+[dir="rtl"] .darna-toast::after,
+.Toastify__toast--rtl::after,
+.darna-toast--rtl::after {
+  right: auto;
+  left: 28px;
+}
+
+/* Leading Edge Vertical Indicator Bar */
+.Toastify__toast::before,
+.darna-toast::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  left: 0;
+  border-radius: 0 9999px 9999px 0;
+  transition: background-color 0.2s ease;
+  z-index: 3;
+}
+
+[dir="rtl"] .Toastify__toast::before,
+[dir="rtl"] .darna-toast::before,
+.Toastify__toast--rtl::before,
+.darna-toast--rtl::before {
+  left: auto;
+  right: 0;
+  border-radius: 9999px 0 0 9999px;
+}
+
+/* Variant Colored Indicators */
+.Toastify__toast--success::before,
+.darna-toast--success::before {
+  background-color: #6B7F5B !important; /* Sage green / Secondary */
+}
+
+.Toastify__toast--error::before,
+.darna-toast--error::before {
+  background-color: #C94A4A !important; /* Brick red / Destructive */
+}
+
+.Toastify__toast--info::before,
+.darna-toast--info::before {
+  background-color: #B09875 !important; /* Warm camel tan / Tertiary */
+}
+
+.Toastify__toast--warning::before,
+.darna-toast--warning::before {
+  background-color: #D9822B !important; /* Warm amber / Status amber */
+}
+
+.Toastify__toast--default::before,
+.darna-toast--default::before {
+  background-color: #C96F4F !important; /* Terracotta / Accent */
+}
+
+/* Toast Body Layout */
+.Toastify__toast-body,
+.darna-toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  z-index: 2 !important;
+  font-family: inherit !important;
+}
+
+.Toastify__toast-body > div:last-child {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: #2E3A2F !important;
+  letter-spacing: -0.01em !important;
+  word-break: break-word !important;
+}
+
+/* Hide default react-toastify raw icons if not replaced */
+.Toastify__toast-icon {
+  margin: 0 !important;
+  width: auto !important;
+  display: flex !important;
+}
+
+/* Shrinking Bottom Progress Indicator */
+.Toastify__progress-bar,
+.darna-toast-progress {
+  position: absolute !important;
+  height: 3px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  transform-origin: left !important;
+  opacity: 0.95 !important;
+  z-index: 4 !important;
+}
+
+[dir="rtl"] .Toastify__progress-bar,
+[dir="rtl"] .darna-toast-progress,
+.Toastify__progress-bar--rtl,
+.darna-toast--rtl .Toastify__progress-bar {
+  transform-origin: right !important;
+}
+
+.Toastify__progress-bar--success,
+.darna-toast-progress--success {
+  background: #6B7F5B !important;
+}
+
+.Toastify__progress-bar--error,
+.darna-toast-progress--error {
+  background: #C94A4A !important;
+}
+
+.Toastify__progress-bar--info,
+.darna-toast-progress--info {
+  background: #B09875 !important;
+}
+
+.Toastify__progress-bar--warning,
+.darna-toast-progress--warning {
+  background: #D9822B !important;
+}
+
+.Toastify__progress-bar--default,
+.darna-toast-progress--default {
+  background: #C96F4F !important;
+}
+
+/* Subtle Track Behind Progress Bar */
+.Toastify__progress-bar::before,
+.darna-toast-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(217, 201, 178, 0.3) !important;
+  z-index: -1;
+}
+
+/* Close Button */
+.Toastify__close-button {
+  color: #8C8275 !important;
+  opacity: 0.7 !important;
+  align-self: center !important;
+  transition: opacity 0.15s ease, color 0.15s ease !important;
+  margin-inline-start: 8px !important;
+  margin-inline-end: 2px !important;
+  z-index: 3 !important;
+}
+
+.Toastify__close-button:hover,
+.Toastify__close-button:focus {
+  opacity: 1 !important;
+  color: #2E3A2F !important;
+}
+
+/* Confident Motion Animations with Spring Overshoot */
+@keyframes darnaToastInLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-28px, 14px, 0) scale(0.94);
+  }
+  70% {
+    transform: translate3d(3px, -2px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes darnaToastInRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(28px, 14px, 0) scale(0.94);
+  }
+  70% {
+    transform: translate3d(-3px, -2px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes darnaToastMobileIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.94);
+  }
+  70% {
+    transform: translate3d(0, -3px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes darnaToastOut {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.93);
+  }
+}
+
+.darna-toast-enter {
+  animation-duration: 250ms !important;
+  animation-fill-mode: both !important;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.darna-toast-enter--bottom-left {
+  animation-name: darnaToastInLeft !important;
+}
+
+.darna-toast-enter--bottom-right {
+  animation-name: darnaToastInRight !important;
+}
+
+.darna-toast-exit {
+  animation-name: darnaToastOut !important;
+  animation-duration: 180ms !important;
+  animation-fill-mode: both !important;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
+}
+
+@media only screen and (max-width: 640px) {
+  .darna-toast-enter--bottom-left,
+  .darna-toast-enter--bottom-right {
+    animation-name: darnaToastMobileIn !important;
+  }
+}
+

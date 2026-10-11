@@ -22,6 +22,7 @@ import {
 } from "react-icons/hi";
 import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface HostBookingsClientProps {
   initialReservations: Reservation[];
@@ -43,6 +44,7 @@ export default function HostBookingsClient({
   const [selectedListingId, setSelectedListingId] = useState<string>("all");
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const todayStr = new Date().toISOString().split("T")[0];
@@ -121,8 +123,7 @@ export default function HostBookingsClient({
     }
   };
 
-  const handleDecline = async (id: string) => {
-    if (!confirm("Are you sure you want to decline this reservation request?")) return;
+  const executeDecline = async (id: string) => {
     setActionLoading(id);
     try {
       const updated = await updateReservationStatus(id, "cancelled");
@@ -134,7 +135,12 @@ export default function HostBookingsClient({
       toast.error("Failed to decline reservation.");
     } finally {
       setActionLoading(null);
+      setDecliningId(null);
     }
+  };
+
+  const handleDecline = (id: string) => {
+    setDecliningId(id);
   };
 
   const handleCancel = async (id: string) => {
@@ -638,44 +644,36 @@ export default function HostBookingsClient({
         </div>
       )}
 
+      {/* Decline Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={!!decliningId}
+        variant="destructive"
+        title="Decline Booking Request"
+        message="Are you sure you want to decline this booking request? The guest will be notified immediately and no charge will be captured."
+        confirmLabel="Decline request"
+        cancelLabel="Keep request"
+        isLoading={actionLoading === decliningId}
+        onConfirm={() => {
+          if (decliningId) executeDecline(decliningId);
+        }}
+        onCancel={() => setDecliningId(null)}
+      />
+
       {/* Cancel Confirmation Modal */}
-      {cancellingId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-tertiary shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95">
-            <h3 className="font-serif text-lg font-bold text-primary mb-2">
-              Confirm Host Cancellation
-            </h3>
-            <p className="text-xs sm:text-sm text-neutral-600 mb-4">
-              Cancelling a confirmed reservation will notify the guest immediately and issue an
-              automatic SATIM Edahabia/CIB refund. Frequent cancellations can affect your Superhost
-              standing on DARNA.
-            </p>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex items-start gap-2 mb-6">
-              <HiOutlineInformationCircle size={18} className="shrink-0 text-amber-600 mt-0.5" />
-              <span>
-                DARNA host policy guarantees a full refund to the guest if the host cancels.
-              </span>
-            </div>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setCancellingId(null)}
-                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition"
-              >
-                Keep Reservation
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCancel(cancellingId)}
-                disabled={actionLoading === cancellingId}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-2xs disabled:opacity-50"
-              >
-                Confirm Cancellation
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={!!cancellingId}
+        variant="destructive"
+        title="Confirm Host Cancellation"
+        message="Cancelling a confirmed reservation will notify the guest immediately and issue an automatic SATIM Edahabia/CIB refund. Frequent cancellations can affect your Superhost standing on DARNA."
+        callout="DARNA host policy guarantees a full refund to the guest if the host cancels."
+        confirmLabel="Cancel booking"
+        cancelLabel="Keep reservation"
+        isLoading={actionLoading === cancellingId}
+        onConfirm={() => {
+          if (cancellingId) handleCancel(cancellingId);
+        }}
+        onCancel={() => setCancellingId(null)}
+      />
     </div>
   );
 }

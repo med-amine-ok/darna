@@ -7,6 +7,7 @@ import { useRouter } from "@/navigation";
 import { Reservation } from "@/types";
 import { updateReservationStatus } from "@/lib/data/reservations";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 import {
   HiOutlineCalendar,
   HiOutlineUserGroup,
@@ -29,6 +30,7 @@ export default function ReservationsClient({
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
 
   // Filter reservations
   const filtered = reservations.filter((r) => {
@@ -268,7 +270,7 @@ export default function ReservationsClient({
                         <button
                           type="button"
                           disabled={isProcessing === res.id}
-                          onClick={() => handleStatusChange(res.id, "cancelled")}
+                          onClick={() => setDecliningId(res.id)}
                           className="px-3.5 py-2 bg-white border border-rose-300 text-rose-700 rounded-xl text-xs font-semibold hover:bg-rose-50 transition flex items-center gap-1 disabled:opacity-50"
                         >
                           <HiOutlineX size={15} />
@@ -292,6 +294,24 @@ export default function ReservationsClient({
           })}
         </div>
       )}
+
+      {/* Decline Booking Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!decliningId}
+        variant="destructive"
+        title="Decline Booking Request"
+        message="Are you sure you want to decline this reservation request? The guest will be informed immediately and their temporary hold will be released."
+        confirmLabel="Decline request"
+        cancelLabel="Keep request"
+        isLoading={isProcessing === decliningId}
+        onConfirm={async () => {
+          if (decliningId) {
+            await handleStatusChange(decliningId, "cancelled");
+            setDecliningId(null);
+          }
+        }}
+        onCancel={() => setDecliningId(null)}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   HiOutlineExclamation,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AdminReviewsClientProps {
   initialReviews: AdminReview[];
@@ -20,6 +21,8 @@ interface AdminReviewsClientProps {
 export default function AdminReviewsClient({ initialReviews }: AdminReviewsClientProps) {
   const [reviews, setReviews] = useState<AdminReview[]>(initialReviews);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [reviewToRemove, setReviewToRemove] = useState<AdminReview | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const filtered = reviews.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
@@ -35,6 +38,23 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
       }
     } catch {
       toast.error("Failed to moderate review.");
+    }
+  };
+
+  const executeRemoveReview = async () => {
+    if (!reviewToRemove) return;
+    setIsRemoving(true);
+    try {
+      const updated = await updateReviewStatus(reviewToRemove.id, "removed");
+      if (updated) {
+        setReviews((prev) => prev.map((r) => (r.id === reviewToRemove.id ? { ...r, status: "removed" } : r)));
+        toast.info("Review removed from public marketplace.");
+      }
+    } catch {
+      toast.error("Failed to remove review.");
+    } finally {
+      setIsRemoving(false);
+      setReviewToRemove(null);
     }
   };
 
@@ -162,7 +182,7 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                       {rev.status !== "removed" && (
                         <button
                           type="button"
-                          onClick={() => handleUpdateStatus(rev.id, "removed")}
+                          onClick={() => setReviewToRemove(rev)}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition"
                           title="Remove from public view"
                         >
@@ -177,6 +197,23 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
           </table>
         </div>
       </div>
+
+      {/* Remove Review Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!reviewToRemove}
+        variant="destructive"
+        title="Remove Traveler Review"
+        message={
+          reviewToRemove
+            ? `Are you sure you want to remove the review by ${reviewToRemove.authorName} ("${reviewToRemove.listingTitle}")? It will no longer be visible on public listing pages or count towards the host's overall rating.`
+            : ""
+        }
+        confirmLabel="Remove review"
+        cancelLabel="Keep review"
+        isLoading={isRemoving}
+        onConfirm={executeRemoveReview}
+        onCancel={() => setReviewToRemove(null)}
+      />
     </div>
   );
 }

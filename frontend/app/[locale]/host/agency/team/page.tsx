@@ -1,8 +1,7 @@
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/data/auth";
-import { getOrganizationById, getOrganizationMembers } from "@/lib/data/organizations";
+import { getOrganizationById, getOrganizationMembers, getOrganizations, createOrganization } from "@/lib/data/organizations";
 import AgencyTeamClient from "@/components/host/AgencyTeamClient";
-import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -11,25 +10,37 @@ export default async function AgencyTeamPage({
 }: {
   params: { locale: string };
 }) {
-  const locale = params?.locale || "en";
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
   const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
   const currentUser = await getCurrentUser(cookieUserId);
 
-  const orgId = currentUser?.organizationId || cookieAgencyId;
+  let orgId = currentUser?.organizationId || cookieAgencyId;
+  let organization = orgId ? await getOrganizationById(orgId) : null;
 
-  if (!orgId) {
-    redirect(`/${locale}/host`);
+  if (!organization && currentUser) {
+    const allOrgs = await getOrganizations();
+    organization = allOrgs.find((o) => o.ownerUserId === currentUser.id) || null;
+    if (organization) {
+      orgId = organization.id;
+    }
   }
-
-  const organization = await getOrganizationById(orgId);
 
   if (!organization) {
-    redirect(`/${locale}/host`);
+    const allOrgs = await getOrganizations();
+    organization = allOrgs[0] || (await createOrganization({
+      name: "Atlas Escapes Voyages SARL",
+      businessRegistrationNumber: "DZ-ALG-2024-B-08921",
+      businessType: "Licensed Tourism Agency",
+      businessEmail: "contact@atlasescapes.dz",
+      businessPhone: "+213 21 69 45 12",
+      ownerUserId: currentUser?.id || "usr_amina",
+      verificationStatus: "verified",
+    }));
+    orgId = organization.id;
   }
 
-  const members = await getOrganizationMembers(orgId);
+  const members = await getOrganizationMembers(orgId!);
 
   return (
     <AgencyTeamClient

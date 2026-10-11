@@ -17,6 +17,7 @@ import {
   HiOutlineLocationMarker,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface AgencySettingsClientProps {
   organization: Organization;
@@ -300,49 +301,36 @@ export default function AgencySettingsClient({
         </button>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-tertiary shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95">
-            <h3 className="font-serif text-lg font-black text-rose-900 mb-2">
-              Confirm Agency Deactivation
-            </h3>
-            <p className="text-xs text-neutral-600 mb-4">
-              To confirm, please type the exact organization name:{" "}
-              <span className="font-bold text-primary">{org.name}</span>
-            </p>
-
-            <input
-              type="text"
-              value={deleteConfirmInput}
-              onChange={(e) => setDeleteConfirmInput(e.target.value)}
-              placeholder={org.name}
-              className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs text-primary focus:outline-none focus:border-rose-600 mb-6 font-semibold"
-            />
-
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDeleteModalOpen(false);
-                  setDeleteConfirmInput("");
-                }}
-                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isDeleting || deleteConfirmInput !== org.name}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-2xs disabled:opacity-50"
-              >
-                {isDeleting ? "Deactivating..." : "Confirm Deactivation"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteModalOpen}
+        variant="destructive"
+        title="Confirm Agency Deactivation"
+        message="Deactivating your agency will unpublish all associated properties and fleet vehicles, revoke sub-host team credentials, and disband your DARNA business workspace."
+        callout={
+          <span>
+            To confirm, please type the exact organization name:{" "}
+            <strong className="text-primary font-bold">{org.name}</strong>
+          </span>
+        }
+        confirmLabel="Deactivate agency"
+        cancelLabel="Keep workspace"
+        disabled={deleteConfirmInput !== org.name}
+        isLoading={isDeleting}
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteConfirmInput("");
+        }}
+      >
+        <input
+          type="text"
+          value={deleteConfirmInput}
+          onChange={(e) => setDeleteConfirmInput(e.target.value)}
+          placeholder={org.name}
+          className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-2xl text-xs text-primary focus:outline-none focus:border-rose-600 font-semibold"
+        />
+      </ConfirmDialog>
     </div>
   );
 }
