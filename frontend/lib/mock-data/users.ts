@@ -92,4 +92,4 @@ export const mockUsers: User[] = [
   },
 ];
 
-export const currentUserMock = mockUsers[0]; // Default authenticated mock user
+export const currentUserMock = mockUsers[2]; // Default authenticated mock user (Yacine Cherif - guest, hostType: null)

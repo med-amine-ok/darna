@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Container from "@/components/Container";
 import FooterColumn from "@/components/FooterColumn";
 import { useTranslations, useLocale } from "next-intl";
-import { usePathname } from "@/navigation";
+import { usePathname, Link } from "@/navigation";
 import { MdExpandMore, MdLanguage } from "react-icons/md";
 
 export default function Footer() {
@@ -42,11 +42,11 @@ export default function Footer() {
     {
       title: "Hosting & Partners",
       links: [
-        { label: "DARNA your home" },
-        { label: "List your 4x4 or car" },
-        { label: "Host a Sahara experience" },
-        { label: "Hosting resources" },
-        { label: "Community forum" },
+        { label: "DARNA your home", href: "/become-a-host" },
+        { label: "List your 4x4 or car", href: "/become-a-host" },
+        { label: "Host a Sahara experience", href: "/become-a-host" },
+        { label: "Hosting resources", href: "/become-a-host" },
+        { label: "Community forum", href: "/become-a-host" },
       ],
     },
     {
@@ -108,9 +108,18 @@ export default function Footer() {
                   <ul className="pt-2 pb-2 space-y-2.5 text-sm ps-1 animate-in fade-in duration-150">
                     {section.links.map((link, linkIdx) => (
                       <li key={linkIdx}>
-                        <span className="hover:underline cursor-pointer text-neutral-600 hover:text-primary block py-0.5">
-                          {link.label}
-                        </span>
+                        {"href" in link && link.href ? (
+                          <Link
+                            href={link.href as string}
+                            className="hover:underline cursor-pointer text-neutral-600 hover:text-primary block py-0.5"
+                          >
+                            {link.label}
+                          </Link>
+                        ) : (
+                          <span className="hover:underline cursor-pointer text-neutral-600 hover:text-primary block py-0.5">
+                            {link.label}
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "@/navigation";
 import { createListing } from "@/lib/data/listings";
 import { createOrganization } from "@/lib/data/organizations";
+import { getCurrentUser, updateUserHostStatus } from "@/lib/data/auth";
 import Counter from "@/components/inputs/Counter";
 import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
@@ -130,29 +131,82 @@ export default function BecomeHostFlow({
         try {
           const draft = JSON.parse(saved);
           if (draft.title) setTitle(draft.title);
+          if (draft.description) setDescription(draft.description);
           if (draft.price) setPrice(draft.price);
           if (draft.wilaya) setWilaya(draft.wilaya);
-          if (draft.photos) setPhotos(draft.photos);
+          if (draft.city) setCity(draft.city);
+          if (draft.address) setAddress(draft.address);
+          if (draft.photos && draft.photos.length > 0) setPhotos(draft.photos);
+          if (draft.category) setCategory(draft.category);
+          if (draft.vertical) setVertical(draft.vertical);
+          if (draft.placement) setPlacement(draft.placement);
+          if (draft.guestCount) setGuestCount(draft.guestCount);
+          if (draft.bedroomCount) setBedroomCount(draft.bedroomCount);
+          if (draft.bedsCount) setBedsCount(draft.bedsCount);
+          if (draft.bathroomCount) setBathroomCount(draft.bathroomCount);
+          if (draft.selectedAmenities) setSelectedAmenities(draft.selectedAmenities);
+          if (draft.latlng) setLatlng(draft.latlng);
+          if (typeof draft.instantBook === "boolean") setInstantBook(draft.instantBook);
+          if (draft.cancellationPolicy) setCancellationPolicy(draft.cancellationPolicy);
+          // Agency fields
+          if (draft.businessName) setBusinessName(draft.businessName);
+          if (draft.businessType) setBusinessType(draft.businessType);
+          if (draft.regNumber) setRegNumber(draft.regNumber);
+          if (draft.businessEmail) setBusinessEmail(draft.businessEmail);
+          if (draft.businessPhone) setBusinessPhone(draft.businessPhone);
+          if (draft.headquarters) setHeadquarters(draft.headquarters);
+          if (draft.teamSize) setTeamSize(draft.teamSize);
+          if (draft.teamInvites) setTeamInvites(draft.teamInvites);
+
+          // Restore flow state if not overridden by explicit URL step
+          if (initialStep === "0" || !initialStep) {
+            if (draft.hostType) setHostType(draft.hostType);
+            if (typeof draft.isAgencyFlow === "boolean") setIsAgencyFlow(draft.isAgencyFlow);
+            if (draft.agencyStep) setAgencyStep(draft.agencyStep);
+            if (draft.currentStep && draft.currentStep > 0) setCurrentStep(draft.currentStep);
+          }
         } catch {}
       }
     }
-  }, []);
+  }, [initialStep]);
 
   const handleSaveAndExit = () => {
     if (typeof window !== "undefined") {
       const draft = {
+        hostType,
+        isAgencyFlow,
+        currentStep: isAgencyFlow ? 0 : currentStep,
+        agencyStep,
+        category,
+        vertical,
+        placement,
+        wilaya,
+        city,
+        address,
+        latlng,
+        guestCount,
+        bedroomCount,
+        bedsCount,
+        bathroomCount,
+        selectedAmenities,
+        photos,
         title,
         description,
         price,
-        wilaya,
-        city,
-        photos,
-        category,
-        vertical,
+        instantBook,
+        cancellationPolicy,
+        businessName,
+        businessType,
+        regNumber,
+        businessEmail,
+        businessPhone,
+        headquarters,
+        teamSize,
+        teamInvites,
       };
       localStorage.setItem("darna_host_draft", JSON.stringify(draft));
       toast.info("Progress saved as draft in your browser.");
-      router.push("/properties");
+      router.push("/");
     }
   };
 
@@ -179,6 +233,9 @@ export default function BecomeHostFlow({
     }
     setIsSubmitting(true);
     try {
+      const user = await getCurrentUser();
+      const hostId = user?.id || "usr_yacine";
+
       const newListing = await createListing({
         title,
         description,
@@ -198,11 +255,17 @@ export default function BecomeHostFlow({
         instantBook,
         cancellationPolicy,
         ownerType: "individual",
+        hostUserId: hostId,
       });
+
+      // Crucial: hostType: "individual" is only granted upon successful listing publishing
+      await updateUserHostStatus(hostId, { hostType: "individual" });
 
       if (typeof window !== "undefined") {
         localStorage.removeItem("darna_host_draft");
         localStorage.setItem("darna_mode", "host");
+        document.cookie = `darna_user_id=${hostId}; path=/; max-age=31536000`;
+        document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
       }
 
       toast.success("Congratulations! Your listing is now live on DARNA.");
@@ -221,6 +284,9 @@ export default function BecomeHostFlow({
     }
     setIsSubmitting(true);
     try {
+      const user = await getCurrentUser();
+      const hostId = user?.id || "usr_yacine";
+
       const validInvites = teamInvites.filter((inv) => inv.email.trim());
       const org = await createOrganization({
         name: businessName,
@@ -229,14 +295,23 @@ export default function BecomeHostFlow({
         businessEmail,
         businessPhone,
         address: headquarters,
-        ownerUserId: "usr_amina",
+        ownerUserId: hostId,
         teamSizeEstimate: teamSize,
         invitedMembers: validInvites,
       });
 
+      // Crucial: hostType: "agency" is only granted upon successful agency registration
+      await updateUserHostStatus(hostId, {
+        hostType: "agency",
+        organizationId: org.id,
+      });
+
       if (typeof window !== "undefined") {
+        localStorage.removeItem("darna_host_draft");
         localStorage.setItem("darna_mode", "host");
         localStorage.setItem("darna_agency_id", org.id);
+        document.cookie = `darna_user_id=${hostId}; path=/; max-age=31536000`;
+        document.cookie = "darna_host_type=agency; path=/; max-age=31536000";
       }
 
       toast.success("Agency registered! Welcome to your host workspace.");

@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { locales, Locale } from "@/i18n";
 import { getCurrentUser } from "@/lib/data/auth";
+import { cookies } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,7 +42,9 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
-  const currentUser = await getCurrentUser();
+  const cookieStore = cookies();
+  const cookieUserId = cookieStore.get("darna_user_id")?.value;
+  const currentUser = await getCurrentUser(cookieUserId);
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (

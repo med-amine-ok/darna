@@ -11,6 +11,7 @@ import { MdOutlineSmartphone } from "react-icons/md";
 import { BiLockAlt, BiEnvelope, BiArrowBack } from "react-icons/bi";
 import Link from "next/link";
 import Image from "next/image";
+import { switchUser, resetUserToGuest } from "@/lib/data/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Please enter both email and password");
@@ -30,20 +31,56 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
+    let targetUserId = "usr_yacine";
+    if (email.toLowerCase().includes("amina")) {
+      targetUserId = "usr_amina";
+      document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
+    } else if (email.toLowerCase().includes("karim")) {
+      targetUserId = "usr_karim";
+      document.cookie = "darna_host_type=agency; path=/; max-age=31536000";
+    } else {
+      document.cookie = "darna_host_type=; path=/; max-age=0";
+    }
+
+    document.cookie = `darna_user_id=${targetUserId}; path=/; max-age=31536000`;
+    await switchUser(targetUserId);
+
     setTimeout(() => {
       setIsLoading(false);
       toast.success("Welcome back to DARNA!");
+      router.refresh();
       router.push("/");
-    }, 600);
+    }, 400);
   };
 
-  const handleQuickDemo = (demoEmail: string) => {
+  const handleQuickDemo = async (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword("darna2026pass");
     setIsLoading(true);
+
+    const isTraveler = demoEmail.includes("yacine");
+    const targetUserId = isTraveler ? "usr_yacine" : "usr_amina";
+
+    document.cookie = `darna_user_id=${targetUserId}; path=/; max-age=31536000`;
+
+    if (isTraveler) {
+      document.cookie = "darna_host_type=; path=/; max-age=0";
+      // Ensure genuine fresh guest state
+      await resetUserToGuest("usr_yacine");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("darna_host_draft");
+        localStorage.setItem("darna_mode", "traveler");
+      }
+    } else {
+      document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
+    }
+
+    await switchUser(targetUserId);
+
     setTimeout(() => {
       setIsLoading(false);
-      toast.success("Logged in with demo credentials!");
+      toast.success(`Logged in as ${isTraveler ? "Traveler (Yacine Cherif - Guest)" : "Host (Amina Benali)"}`);
+      router.refresh();
       router.push("/");
     }, 400);
   };

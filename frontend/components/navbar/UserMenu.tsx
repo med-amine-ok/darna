@@ -23,7 +23,33 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
   const registerModal = useRegisterModal();
   const tNav = useTranslations("nav");
 
-  const isHost = currentUser?.role === "host" || Boolean(currentUser?.hostType);
+  const isHost = Boolean(currentUser?.hostType);
+
+  const handleHostAction = () => {
+    setIsOpen(false);
+    if (isHost) {
+      try {
+        localStorage.setItem("darna_mode", "host");
+      } catch (e) {}
+      router.push("/host");
+    } else {
+      let target = "/become-a-host";
+      if (typeof window !== "undefined") {
+        try {
+          const saved = localStorage.getItem("darna_host_draft");
+          if (saved) {
+            const draft = JSON.parse(saved);
+            if (draft.isAgencyFlow) {
+              target = "/become-a-host/agency";
+            } else if (draft.currentStep && draft.currentStep > 0) {
+              target = `/become-a-host/${draft.currentStep}`;
+            }
+          }
+        } catch (e) {}
+      }
+      router.push(target);
+    }
+  };
 
   const toggleOpen = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -45,16 +71,7 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
         {/* Become a Host or Switch to Hosting */}
         <button
           type="button"
-          onClick={() => {
-            if (isHost) {
-              try {
-                localStorage.setItem("darna_mode", "host");
-              } catch (e) {}
-              router.push("/host");
-            } else {
-              router.push("/become-a-host");
-            }
-          }}
+          onClick={handleHostAction}
           className="hidden md:block text-xs sm:text-sm font-semibold py-2 px-3.5 rounded-full hover:bg-black/5 transition cursor-pointer text-primary select-none btn-press"
         >
           {isHost ? "Switch to hosting" : tNav("becomeHost") || "Become a host"}
@@ -83,17 +100,7 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
             {currentUser ? (
               <>
                 <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    if (isHost) {
-                      try {
-                        localStorage.setItem("darna_mode", "host");
-                      } catch (e) {}
-                      router.push("/host");
-                    } else {
-                      router.push("/become-a-host");
-                    }
-                  }}
+                  onClick={handleHostAction}
                   label={isHost ? "Switch to hosting" : "Become a host"}
                   bold
                 />
@@ -119,20 +126,24 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
                   }}
                   label="Wishlist"
                 />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/reservations");
-                  }}
-                  label="Host reservations"
-                />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/properties");
-                  }}
-                  label="Manage properties"
-                />
+                {isHost && (
+                  <>
+                    <MenuItem
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push("/reservations");
+                      }}
+                      label="Host reservations"
+                    />
+                    <MenuItem
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push("/properties");
+                      }}
+                      label="Manage properties"
+                    />
+                  </>
+                )}
                 <MenuItem
                   onClick={() => {
                     setIsOpen(false);

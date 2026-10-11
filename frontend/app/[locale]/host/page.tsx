@@ -5,6 +5,8 @@ import { getListings } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
 import HostTodayClient from "@/components/host/HostTodayClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function HostTodayPage() {
   const currentUser = await getCurrentUser();
   const organization = currentUser?.organizationId
@@ -13,7 +15,7 @@ export default async function HostTodayPage() {
 
   const reservations = await getReservations();
   const listings = await getListings();
-  const reviews = await getReviewsByUserId("usr_amina");
+  const reviews = currentUser ? await getReviewsByUserId(currentUser.id) : [];
 
   return (
     <HostTodayClient

@@ -1,6 +1,5 @@
-"use client";
-
 import React from "react";
+import { Link } from "@/navigation";
 
 interface FooterColumnProps {
   title: string;
@@ -14,12 +13,21 @@ export default function FooterColumn({ title, links }: FooterColumnProps) {
       <ul className="space-y-2.5 text-sm">
         {links.map((link, idx) => (
           <li key={idx}>
-            <span
-              onClick={link.onClick}
-              className="text-neutral-600 hover:text-primary hover:underline cursor-pointer transition select-none"
-            >
-              {link.label}
-            </span>
+            {link.href ? (
+              <Link
+                href={link.href}
+                className="text-neutral-600 hover:text-primary hover:underline transition select-none block py-0.5"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <span
+                onClick={link.onClick}
+                className="text-neutral-600 hover:text-primary hover:underline cursor-pointer transition select-none block py-0.5"
+              >
+                {link.label}
+              </span>
+            )}
           </li>
         ))}
       </ul>
