@@ -2,7 +2,11 @@
 import { Listing, ListingVertical, SearchParams } from "@/types";
 import { mockListings } from "@/lib/mock-data/listings";
 
-let listingsStore: Listing[] = [...mockListings];
+const g = globalThis as unknown as { __darna_listings__?: Listing[] };
+if (!g.__darna_listings__) {
+  g.__darna_listings__ = [...mockListings];
+}
+let listingsStore: Listing[] = g.__darna_listings__;
 
 export async function getListings(params?: SearchParams): Promise<Listing[]> {
   // Simulate realistic network latency for skeletons/loading states
@@ -97,6 +101,10 @@ export async function createListing(data: Partial<Listing>): Promise<Listing> {
   };
 
   listingsStore = [newListing, ...listingsStore];
+  g.__darna_listings__ = listingsStore;
+  if (!mockListings.some((l) => l.id === newListing.id)) {
+    mockListings.unshift(newListing);
+  }
   return newListing;
 }
 

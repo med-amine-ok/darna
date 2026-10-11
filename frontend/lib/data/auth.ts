@@ -2,7 +2,11 @@
 import { User, HostType } from "@/types";
 import { mockUsers } from "@/lib/mock-data/users";
 
-let usersStore: User[] = mockUsers.map((u) => ({ ...u }));
+const g = globalThis as unknown as { __darna_users__?: User[] };
+if (!g.__darna_users__) {
+  g.__darna_users__ = mockUsers.map((u) => ({ ...u }));
+}
+let usersStore: User[] = g.__darna_users__;
 
 export async function getCurrentUser(userIdOverride?: string): Promise<User | null> {
   // Simulate network latency
@@ -105,6 +109,17 @@ export async function updateUserHostStatus(
   if (data.organizationId) {
     user.organizationId = data.organizationId;
   }
+  g.__darna_users__ = usersStore;
+
+  const mockUser = mockUsers.find((u) => u.id === userId);
+  if (mockUser) {
+    mockUser.role = "host";
+    mockUser.hostType = data.hostType;
+    if (data.organizationId) {
+      mockUser.organizationId = data.organizationId;
+    }
+  }
+
   return { ...user };
 }
 
@@ -122,5 +137,11 @@ export async function resetUserToGuest(userId: string = "usr_yacine"): Promise<v
     user.role = "guest";
     user.hostType = null;
     user.organizationId = null;
+  }
+  const mockUser = mockUsers.find((u) => u.id === userId);
+  if (mockUser) {
+    mockUser.role = "guest";
+    mockUser.hostType = null;
+    mockUser.organizationId = null;
   }
 }

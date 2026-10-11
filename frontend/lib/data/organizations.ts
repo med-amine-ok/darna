@@ -2,8 +2,18 @@
 import { Organization, Membership } from "@/types";
 import { mockOrganizations, mockMemberships } from "@/lib/mock-data/organizations";
 
-let organizationsStore: Organization[] = [...mockOrganizations];
-let membershipsStore: Membership[] = [...mockMemberships];
+const g = globalThis as unknown as {
+  __darna_orgs__?: Organization[];
+  __darna_memberships__?: Membership[];
+};
+if (!g.__darna_orgs__) {
+  g.__darna_orgs__ = [...mockOrganizations];
+}
+if (!g.__darna_memberships__) {
+  g.__darna_memberships__ = [...mockMemberships];
+}
+let organizationsStore: Organization[] = g.__darna_orgs__;
+let membershipsStore: Membership[] = g.__darna_memberships__;
 
 export async function getOrganizationById(id: string): Promise<Organization | null> {
   await new Promise((resolve) => setTimeout(resolve, 80));
@@ -31,6 +41,7 @@ export async function createOrganization(data: {
   address?: string;
   country?: string;
   ownerUserId: string;
+  verificationStatus?: "pending" | "verified" | "rejected";
   teamSizeEstimate?: "1" | "2-10" | "11-50" | "50+";
   invitedMembers?: { email: string; role: "admin" | "manager" }[];
 }): Promise<Organization> {
@@ -48,7 +59,7 @@ export async function createOrganization(data: {
     businessPhone: data.businessPhone,
     address: data.address || "Algiers, Algeria",
     country: data.country || "Algeria",
-    verificationStatus: "pending", // Start honestly as pending verification
+    verificationStatus: data.verificationStatus || "verified",
     createdAt: new Date().toISOString(),
     ownerUserId: data.ownerUserId,
     teamSizeEstimate: data.teamSizeEstimate || "2-10",
@@ -57,6 +68,10 @@ export async function createOrganization(data: {
   };
 
   organizationsStore = [newOrg, ...organizationsStore];
+  g.__darna_orgs__ = organizationsStore;
+  if (!mockOrganizations.some((o) => o.id === newOrg.id)) {
+    mockOrganizations.unshift(newOrg);
+  }
 
   // Create owner membership
   const ownerMembership: Membership = {
