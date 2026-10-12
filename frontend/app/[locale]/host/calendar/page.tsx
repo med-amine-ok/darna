@@ -10,10 +10,14 @@ export default async function HostCalendarPage() {
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
   const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
+  const cookieHostType = cookieStore.get("darna_host_type")?.value;
   const currentUser = await getCurrentUser(cookieUserId);
 
+  const effectiveHostType = currentUser?.hostType || cookieHostType;
+  const isAgency = effectiveHostType === "agency";
+
   const hostId = currentUser?.id || "usr_amina";
-  const orgId = currentUser?.organizationId || cookieAgencyId;
+  const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : undefined;
 
   let [userListings, reservations] = await Promise.all([
     getHostListings(orgId || hostId),

@@ -24,17 +24,28 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const isAgency = currentUser?.hostType === "agency" || Boolean(organization);
+  const isAgency = currentUser?.hostType === "agency";
 
-  const navLinks = [
+  interface HostNavLink {
+    href: string;
+    label: string;
+    exact?: boolean;
+  }
+
+  const baseNavLinks: HostNavLink[] = [
     { href: "/host", label: "Today", exact: true },
     { href: "/host/bookings", label: "Bookings" },
     { href: "/host/calendar", label: "Calendar" },
     { href: "/host/listings", label: "Listings" },
     { href: "/host/messages", label: "Messages" },
+  ];
+
+  const agencyNavLinks: HostNavLink[] = [
     { href: "/host/agency/team", label: "Team" },
     { href: "/host/agency/settings", label: "Agency" },
   ];
+
+  const navLinks = isAgency ? [...baseNavLinks, ...agencyNavLinks] : baseNavLinks;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -71,7 +82,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
           </Link>
 
           {/* Agency Badge if agency host */}
-          {organization && (
+          {isAgency && organization && (
             <div className="hidden lg:flex items-center gap-2 ps-3 border-s border-tertiary/50">
               <div className="relative w-6 h-6 rounded-md overflow-hidden bg-neutral-100">
                 <Image

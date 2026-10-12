@@ -10,10 +10,14 @@ export default async function HostBookingsPage() {
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
   const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
+  const cookieHostType = cookieStore.get("darna_host_type")?.value;
   const currentUser = await getCurrentUser(cookieUserId);
 
+  const effectiveHostType = currentUser?.hostType || cookieHostType;
+  const isAgency = effectiveHostType === "agency";
+
   const hostId = currentUser?.id || "usr_amina";
-  const orgId = currentUser?.organizationId || cookieAgencyId;
+  const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : undefined;
 
   const [reservations, hostListings] = await Promise.all([
     getReservations({ hostId, organizationId: orgId }),

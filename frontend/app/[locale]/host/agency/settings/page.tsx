@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/data/auth";
 import { getOrganizationById, getOrganizations, createOrganization } from "@/lib/data/organizations";
 import AgencySettingsClient from "@/components/host/AgencySettingsClient";
@@ -10,10 +11,23 @@ export default async function AgencySettingsPage({
 }: {
   params: { locale: string };
 }) {
+  const locale = params?.locale || "en";
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
   const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
+  const cookieHostType = cookieStore.get("darna_host_type")?.value;
   const currentUser = await getCurrentUser(cookieUserId);
+
+  if (!currentUser) {
+    redirect(`/${locale}/login?callbackUrl=/${locale}/host`);
+  }
+
+  const effectiveHostType = currentUser.hostType || cookieHostType;
+
+  // Solo hosts do not have an agency settings page; redirect to their host settings
+  if (effectiveHostType !== "agency") {
+    redirect(`/${locale}/host/settings`);
+  }
 
   let orgId = currentUser?.organizationId || cookieAgencyId;
   let organization = orgId ? await getOrganizationById(orgId) : null;

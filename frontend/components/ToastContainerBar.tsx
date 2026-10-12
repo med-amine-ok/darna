@@ -134,13 +134,6 @@ export function DarnaToastCloseButton({
   );
 }
 
-/**
- * Primary DARNA Toast Notification Container
- * Designed to elevate system feedback into the Earthy Minimal design system:
- * - Desktop: bottom-left (LTR) / bottom-right (RTL) anchor with 400px fixed width
- * - Mobile: responsive bottom-center with safe-area insets
- * - Auto-dismiss: 4.2s shrinking progress indicator with hover-pause
- */
 export default function ToastContainerBar() {
   const params = useParams();
   const locale = (params?.locale as string) || "en";

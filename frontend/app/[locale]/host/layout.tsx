@@ -104,8 +104,6 @@ export default async function HostLayout({
         return null;
       }
     }
-  } else if (currentUser.organizationId) {
-    organization = await getOrganizationById(currentUser.organizationId);
   }
 
   return (

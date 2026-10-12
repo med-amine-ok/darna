@@ -9,12 +9,16 @@ export default async function HostListingsPage() {
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
   const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
+  const cookieHostType = cookieStore.get("darna_host_type")?.value;
   const currentUser = await getCurrentUser(cookieUserId);
 
-  const orgId = currentUser?.organizationId || cookieAgencyId;
-  const hostId = currentUser?.id || "usr_amina";
+  const effectiveHostType = currentUser?.hostType || cookieHostType;
+  const isAgency = effectiveHostType === "agency";
 
-  const listings = await getHostListings(orgId || hostId);
+  const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : null;
+  const hostId = (isAgency && orgId) ? orgId : (currentUser?.id || "usr_amina");
+
+  const listings = await getHostListings(hostId);
 
   return (
     <HostListingsClient
