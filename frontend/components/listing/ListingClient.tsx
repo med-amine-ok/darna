@@ -23,7 +23,7 @@ export default function ListingClient({
   currentUser,
 }: ListingClientProps) {
   return (
-    <div className="py-6 sm:py-8">
+    <div className="pt-6 sm:pt-8 pb-28 lg:pb-8">
       <Container className="space-y-8">
         {/* Top Header & Bento Gallery */}
         <ListingHead listing={listing} currentUser={currentUser} />

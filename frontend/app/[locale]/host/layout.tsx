@@ -3,8 +3,7 @@ import { getOrganizationById, getOrganizations, createOrganization } from "@/lib
 import { getHostListings, createListing } from "@/lib/data/listings";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import HostNavbar from "@/components/host/HostNavbar";
-import HostBottomNav from "@/components/host/HostBottomNav";
+import HostLayoutShell from "@/components/host/HostLayoutShell";
 
 export const dynamic = "force-dynamic";
 
@@ -122,10 +121,12 @@ export default async function HostLayout({
   }
 
   return (
-    <div className="min-h-screen bg-bg-light/40 flex flex-col">
-      <HostNavbar currentUser={currentUser} organization={organization} />
-      <div className="flex-1 pb-20 md:pb-12">{children}</div>
-      <HostBottomNav hostType={effectiveHostType} />
-    </div>
+    <HostLayoutShell
+      currentUser={currentUser}
+      organization={organization}
+      hostType={effectiveHostType}
+    >
+      {children}
+    </HostLayoutShell>
   );
 }

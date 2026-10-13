@@ -87,6 +87,13 @@ body {
   scrollbar-width: none !important;
 }
 
+/* Full-screen Messaging App Mobile Optimization */
+@media (max-width: 767px) {
+  body.mobile-thread-open header {
+    display: none !important;
+  }
+}
+
 /* Focus styles */
 *:focus-visible {
   outline: 2px solid #C96F4F;

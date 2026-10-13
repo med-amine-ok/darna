@@ -19,7 +19,7 @@ type PopoverType = "where" | "when" | "who" | null;
 
 interface SearchProps {
   isHero?: boolean;
-  scrollProgress?: number; // 0 (hero top) to 1 (docked in navbar)
+  scrollProgress?: number; 
 }
 
 export default function Search({
@@ -167,7 +167,7 @@ export default function Search({
       <div
         className={`
           relative mx-auto rounded-full transition-all duration-150
-          bg-transparent backdrop-blur-md 
+          bg-white backdrop-blur-md 
           ${activePopover ? "shadow-darna-dropdown ring-2 ring-accent/30" : "shadow-darna-sm hover:shadow-darna"}
           ${progress >= 0.7 ? "cursor-pointer" : ""}
         `}
@@ -217,12 +217,12 @@ export default function Search({
               }
             `}
           >
-            <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full  flex items-center justify-center shrink-0">
               <Image
                 src="/assets/location.png"
                 alt="Where"
-                width={16}
-                height={16}
+                width={20}
+                height={20}
                 className="object-contain shrink-0"
               />
             </div>

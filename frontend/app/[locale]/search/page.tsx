@@ -24,7 +24,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // Load listings matching search parameters
   let [listings, trips] = await Promise.all([
     getListings(searchParams),
-    getTrips({ destination: searchParams.destination }),
+    getTrips({
+      destination: searchParams.destination,
+      maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
+    }),
   ]);
 
   // Filter by instantBook if specified

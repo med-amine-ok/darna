@@ -173,8 +173,8 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
             <tbody className="divide-y divide-tertiary/40">
               {filtered.map((res) => (
                 <tr key={res.id} className="hover:bg-neutral-50/60 transition">
-                  <td className="py-3.5 px-4 font-mono font-bold text-neutral-500">{res.id}</td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-3.5 px-4 font-mono font-bold text-neutral-500 whitespace-nowrap">{res.id}</td>
+                  <td className="py-3.5 px-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div className="relative w-7 h-7 rounded-full overflow-hidden bg-neutral-200 shrink-0">
                         <Image src={res.user?.image || "/assets/avatar.png"} alt="Guest" fill className="object-cover" />
@@ -185,16 +185,16 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
                   <td className="py-3.5 px-4 font-semibold text-neutral-700 truncate max-w-[180px]">
                     {res.listing?.title}
                   </td>
-                  <td className="py-3.5 px-4 text-neutral-500">
+                  <td className="py-3.5 px-4 text-neutral-500 whitespace-nowrap">
                     {res.startDate} → {res.endDate}
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-primary text-end">
+                  <td className="py-3.5 px-4 font-mono font-bold text-primary text-end whitespace-nowrap">
                     {res.totalPrice.toLocaleString()} DZD
                   </td>
-                  <td className="py-3.5 px-4 text-neutral-600">
+                  <td className="py-3.5 px-4 text-neutral-600 whitespace-nowrap">
                     {res.paymentMethod || "CIB / Edahabia"}
                   </td>
-                  <td className="py-3.5 px-4 text-center">
+                  <td className="py-3.5 px-4 text-center whitespace-nowrap">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         res.status === "confirmed"
@@ -209,7 +209,7 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
                       {res.status}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-end">
+                  <td className="py-3.5 px-4 text-end whitespace-nowrap">
                     <button
                       type="button"
                       onClick={() => setSelectedBooking(res)}

@@ -1,5 +1,5 @@
 import { Trip } from "@/types";
-import { mockTrips } from "@/lib/mock-data/trips";
+import { mockTrips, getTripCoordinates } from "@/lib/mock-data/trips";
 import { getOrganizationById } from "@/lib/data/organizations";
 
 let tripsState: Trip[] = [...mockTrips];
@@ -76,6 +76,7 @@ export async function createTrip(
 ): Promise<Trip> {
   const newTrip: Trip = {
     ...data,
+    latlng: data.latlng || getTripCoordinates(data),
     id: `trip_${Date.now()}`,
     slug: data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
     createdAt: new Date().toISOString(),

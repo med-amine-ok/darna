@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "@/navigation";
+import { Link, useRouter, usePathname } from "@/navigation";
 import { Conversation, Message, User } from "@/types";
 import Avatar from "@/components/Avatar";
 import { sendMessage, markConversationAsRead } from "@/lib/data/conversations";
@@ -34,6 +33,8 @@ export default function MessagesClient({
   currentUser,
 }: MessagesClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isHostMode = pathname?.includes("/host");
   const currentUserId = currentUser?.id || "usr_yacine";
 
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
@@ -60,6 +61,22 @@ export default function MessagesClient({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeId]);
+
+  // Sync mobile-thread-open class on body to hide website header on mobile phones inside threads
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (mobileShowThread) {
+        document.body.classList.add("mobile-thread-open");
+      } else {
+        document.body.classList.remove("mobile-thread-open");
+      }
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("mobile-thread-open");
+      }
+    };
+  }, [mobileShowThread]);
 
   // Handle select conversation
   const handleSelectConversation = (conv: Conversation) => {
@@ -160,9 +177,19 @@ export default function MessagesClient({
         {/* Header Row 1: Title + Action Icons */}
         <div className="p-4 sm:p-5 border-b border-tertiary/40 shrink-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary font-serif">
-              Messages
-            </h1>
+            <div className="flex items-center gap-2">
+              <Link
+                href={isHostMode ? "/host" : "/"}
+                className="md:hidden p-1.5 -ms-1 rounded-full hover:bg-neutral-100 text-neutral-600 transition btn-press"
+                title={isHostMode ? "Back to Host Dashboard" : "Back to Home"}
+                aria-label="Back"
+              >
+                <ChevronLeft size={22} />
+              </Link>
+              <h1 className="text-xl sm:text-2xl font-bold text-primary font-serif">
+                Messages
+              </h1>
+            </div>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"

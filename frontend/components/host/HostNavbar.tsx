@@ -97,9 +97,15 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
     return pathname?.startsWith(href);
   };
 
+  const isMessagesPage = pathname?.startsWith("/host/messages");
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-tertiary/60 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <div
+        className={`${
+          isMessagesPage ? "w-full px-4 sm:px-6" : "max-w-7xl mx-auto px-4 sm:px-8"
+        } py-2.5 sm:py-3 flex items-center justify-between gap-2`}
+      >
         {/* Left: Brand + Interactive Org Badge */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           <Link
@@ -116,7 +122,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
               className="h-6 sm:h-7 w-auto object-contain"
             />
             <span className="px-2 py-0.5 bg-primary text-white rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
-              Host
+               {orgSettingsLabel}
             </span>
           </Link>
 
@@ -129,20 +135,10 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                 className="flex items-center gap-2 ps-3 pe-2 py-1 rounded-xl border-s border-tertiary/50 hover:bg-neutral-50 transition cursor-pointer select-none"
                 title={`${organization.name} organization details`}
               >
-                <div className="relative w-6 h-6 rounded-md overflow-hidden bg-neutral-100 shrink-0 border border-tertiary/40">
-                  <Image
-                    src={organization.logo || "/assets/logo-vertical.png"}
-                    alt={organization.name}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
                 <span className="text-xs font-semibold text-primary truncate max-w-[140px]">
                   {organization.name}
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-tertiary/40 text-neutral-600">
-                  {orgSettingsLabel}
-                </span>
+                
                 <ChevronDown
                   size={14}
                   className={`text-neutral-400 transition-transform ${
@@ -153,7 +149,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
 
               {/* Org Dropdown Menu */}
               {orgMenuOpen && (
-                <div className="absolute start-3 top-10 w-64 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-2 z-50 text-xs text-neutral-700 animate-in fade-in">
+                <div className="absolute start-3 top-10 w-64 max-w-[calc(100vw-24px)] bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-2 z-50 text-xs text-neutral-700 animate-in fade-in">
                   <div className="px-4 py-2 border-b border-tertiary/40">
                     <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider block">
                       Organization Workspace
@@ -368,7 +364,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
             </button>
 
             {userMenuOpen && (
-              <div className="absolute end-0 top-12 w-60 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-2 z-50 text-xs text-neutral-700 animate-in fade-in">
+              <div className="absolute end-0 top-12 w-60 max-w-[calc(100vw-24px)] bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-2 z-50 text-xs text-neutral-700 animate-in fade-in">
                 <div className="px-4 py-2 border-b border-tertiary/40">
                   <div className="font-bold text-primary text-sm truncate">
                     {currentUser?.name || "Host"}

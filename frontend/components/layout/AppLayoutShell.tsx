@@ -25,12 +25,20 @@ export default function AppLayoutShell({
   const isMessages = normalizedPath === "/messages" || normalizedPath.startsWith("/messages/");
   const isHome = normalizedPath === "/" || normalizedPath === "";
 
+  const isHostMessages =
+    normalizedPath === "/host/messages" || normalizedPath.startsWith("/host/messages/");
+
   // 1. Admin mode handles its own layout (AdminSidebar + AdminHeader)
   if (isAdmin) {
     return <div className="min-h-[100dvh] flex flex-col">{children}</div>;
   }
 
-  // 2. Host mode handles its own layout (HostNavbar + HostBottomNav)
+  // 2. Host Messages handles its own full-viewport app layout (HostLayoutShell)
+  if (isHostMessages) {
+    return <div className="h-[100dvh] flex flex-col overflow-hidden bg-white">{children}</div>;
+  }
+
+  // 3. General Host mode handles its own layout (HostNavbar + HostBottomNav)
   if (isHost) {
     return <div className="min-h-[100dvh] flex flex-col">{children}</div>;
   }

@@ -194,7 +194,7 @@ export default function ReservationsClient({
                 className="bg-white rounded-2xl border border-tertiary p-5 hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
                 {/* Left: Thumbnail & Info */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
                   <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 bg-neutral-100">
                     <Image
                       src={coverImage}
@@ -203,8 +203,8 @@ export default function ReservationsClient({
                       className="object-cover"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[11px] font-mono font-semibold text-neutral-400 uppercase">
                         #{res.id}
                       </span>

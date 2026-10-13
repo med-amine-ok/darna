@@ -136,14 +136,14 @@ export default function HomeHero({
           </p>
         </div>
 
-        {/* 2. Category Switcher Pill (Homes / Experiences / Vehicles) - Positioned UNDER the texts */}
-        <div className="inline-flex items-center p-1 sm:p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-tertiary/70 shadow-sm gap-1 mt-7 sm:mt-9 z-20">
+        {/* 2. Category Switcher Pill (Homes / Experiences / Vehicles / Trips) - Positioned UNDER the texts */}
+        <div className="inline-flex items-center p-1 sm:p-1.5 rounded-full bg-white/95 backdrop-blur-md border border-tertiary/70 shadow-sm gap-1 mt-7 sm:mt-9 z-20 max-w-full overflow-x-auto no-scrollbar">
           {/* Homes (Mapped to real brand asset house.png) */}
           <button
             type="button"
             onClick={() => setActiveVertical("home")}
             className={`
-              flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
+              shrink-0 flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
               ${
                 activeVertical === "home"
                   ? "bg-primary text-white shadow-sm"
@@ -168,7 +168,7 @@ export default function HomeHero({
             type="button"
             onClick={() => setActiveVertical("experience")}
             className={`
-              flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
+              shrink-0 flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
               ${
                 activeVertical === "experience"
                   ? "bg-primary text-white shadow-sm"
@@ -193,7 +193,7 @@ export default function HomeHero({
             type="button"
             onClick={() => setActiveVertical("vehicle")}
             className={`
-              flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
+              shrink-0 flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
               ${
                 activeVertical === "vehicle"
                   ? "bg-primary text-white shadow-sm"
@@ -218,7 +218,7 @@ export default function HomeHero({
             type="button"
             onClick={() => setActiveVertical("trip")}
             className={`
-              flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
+              shrink-0 flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
               ${
                 activeVertical === "trip"
                   ? "bg-primary text-white shadow-sm"

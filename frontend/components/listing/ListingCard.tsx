@@ -218,7 +218,7 @@ export default function ListingCard({
 
           {/* Guest Favorite Badge */}
           {data.isGuestFavorite && (
-            <div className="absolute top-2 start-2 z-10 bg-white/95 backdrop-blur-xs text-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+            <div className="absolute top-2 start-2 z-10 bg-white/95 backdrop-blur-xs text-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm max-w-[calc(100%-48px)] truncate">
               {tNav("guestFavorite") || "Guest favorite"}
             </div>
           )}

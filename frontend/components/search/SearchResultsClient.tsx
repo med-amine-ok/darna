@@ -9,6 +9,7 @@ import qs from "query-string";
 import { useTranslations } from "next-intl";
 import { TbAdjustmentsHorizontal, TbMap, TbList } from "react-icons/tb";
 import { Listing, User, ListingVertical, Trip } from "@/types";
+import { getTripCoordinates } from "@/lib/mock-data/trips";
 import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
 import EmptyState from "@/components/EmptyState";
@@ -50,7 +51,11 @@ export default function SearchResultsClient({
   const tCommon = useTranslations("common");
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const initialSelectedId = searchParams?.get("selectedId") || searchParams?.get("listingId") || null;
+  const initialSelectedId =
+    searchParams?.get("selectedId") ||
+    searchParams?.get("listingId") ||
+    searchParams?.get("tripId") ||
+    null;
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [showMobileMap, setShowMobileMap] = useState(false);
   const [searchAsMoveMap, setSearchAsMoveMap] = useState(true);
@@ -63,7 +68,11 @@ export default function SearchResultsClient({
 
   // Sync selectedId if searchParams change
   React.useEffect(() => {
-    const sId = searchParams?.get("selectedId") || searchParams?.get("listingId") || null;
+    const sId =
+      searchParams?.get("selectedId") ||
+      searchParams?.get("listingId") ||
+      searchParams?.get("tripId") ||
+      null;
     if (sId) {
       setSelectedId(sId);
     }
@@ -92,6 +101,31 @@ export default function SearchResultsClient({
     if (!target) return list;
     return [target, ...list.filter((l) => l.id !== selectedId)];
   }, [listings, selectedId, searchAsMoveMap, mapBounds]);
+
+  // Dynamically filter agency trips within the visible map area
+  const displayTrips = useMemo(() => {
+    let list = trips;
+
+    if (searchAsMoveMap && mapBounds) {
+      const inBounds = trips.filter((t) => {
+        const coords = t.latlng || getTripCoordinates(t);
+        if (!coords || coords.length !== 2) return false;
+        const [lat, lng] = coords;
+        return (
+          lat >= mapBounds.south &&
+          lat <= mapBounds.north &&
+          lng >= mapBounds.west &&
+          lng <= mapBounds.east
+        );
+      });
+      list = inBounds;
+    }
+
+    if (!selectedId) return list;
+    const target = list.find((t) => t.id === selectedId);
+    if (!target) return list;
+    return [target, ...list.filter((t) => t.id !== selectedId)];
+  }, [trips, selectedId, searchAsMoveMap, mapBounds]);
 
   // Quick filter parameters from query
   const currentVertical = (searchParams?.get("vertical") as ListingVertical) || activeVertical;
@@ -283,12 +317,20 @@ export default function SearchResultsClient({
             <div className="flex items-center justify-between border-b border-tertiary/40 pb-3">
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-primary">
-                  {destination
+                  {currentVertical === "trip"
+                    ? destination
+                      ? `Agency circuits & expeditions in ${destination}, Algeria`
+                      : "Agency circuits & multi-day expeditions in Algeria"
+                    : destination
                     ? `Stays & rentals in ${destination}, Algeria`
                     : "All stays, vehicles & experiences in Algeria"}
                 </h1>
                 <p className="text-xs text-neutral-500 mt-0.5">
-                  {mapBounds && searchAsMoveMap && displayListings.length !== listings.length
+                  {currentVertical === "trip"
+                    ? mapBounds && searchAsMoveMap && displayTrips.length !== trips.length
+                      ? `${displayTrips.length} agency circuit${displayTrips.length === 1 ? "" : "s"} visible in map area (${trips.length} total)`
+                      : `${trips.length} verified agency circuit${trips.length === 1 ? "" : "s"} available`
+                    : mapBounds && searchAsMoveMap && displayListings.length !== listings.length
                     ? `${displayListings.length} listing${displayListings.length === 1 ? "" : "s"} visible in map area (${listings.length} total)`
                     : `Over ${listings.length} verified listings available`}
                 </p>
@@ -311,7 +353,9 @@ export default function SearchResultsClient({
               <div className="flex items-center justify-between px-3 py-1.5 bg-accent/10 border border-accent/30 rounded-xl text-xs text-primary">
                 <span className="font-semibold text-accent flex items-center gap-1.5">
                   <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  Focused property selected & pinned on map
+                  {currentVertical === "trip"
+                    ? "Focused circuit selected & pinned on map"
+                    : "Focused property selected & pinned on map"}
                 </span>
                 <button
                   type="button"
@@ -325,16 +369,21 @@ export default function SearchResultsClient({
 
             {/* Empty State or Listing Cards Grid */}
             {currentVertical === "trip" ? (
-              trips.length === 0 ? (
+              displayTrips.length === 0 ? (
                 <EmptyState
-                  title="No agency circuits found"
-                  subtitle="Try selecting another destination or clear filters to view all trips."
+                  title="No agency circuits found in this map area"
+                  subtitle="Zoom out or pan across Algeria to discover expeditions in the Sahara, M'zab, and coast."
                   showReset
                 />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {trips.map((trip) => (
-                    <TripCard key={trip.id} trip={trip} />
+                  {displayTrips.map((trip) => (
+                    <TripCard
+                      key={trip.id}
+                      trip={trip}
+                      onHover={(id) => setHoveredId(id)}
+                      isHovered={hoveredId === trip.id || selectedId === trip.id}
+                    />
                   ))}
                 </div>
               )
@@ -367,6 +416,8 @@ export default function SearchResultsClient({
           >
             <SearchMap
               listings={listings}
+              trips={trips}
+              currentVertical={currentVertical}
               currentUser={currentUser}
               selectedListingId={selectedId}
               hoveredListingId={hoveredId}

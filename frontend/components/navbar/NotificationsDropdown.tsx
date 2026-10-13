@@ -145,7 +145,7 @@ export default function NotificationsDropdown() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute end-0 top-full mt-2.5 w-80 sm:w-96 bg-white/95 backdrop-blur-xl border border-tertiary/80 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute end-0 top-full mt-2.5 w-80 sm:w-96 max-w-[calc(100vw-24px)] bg-white/95 backdrop-blur-xl border border-tertiary/80 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-tertiary/40 bg-white/60">
             <div className="flex items-center gap-2">

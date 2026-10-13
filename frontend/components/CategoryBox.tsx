@@ -24,6 +24,11 @@ export default function CategoryBox({
   const params = useSearchParams();
 
   const handleClick = useCallback(() => {
+    if (label === "Trips & Circuits") {
+      router.push("/search?vertical=trip");
+      return;
+    }
+
     let currentQuery = {};
     if (params) {
       currentQuery = qs.parse(params.toString());

@@ -194,12 +194,12 @@ export default function AdminUsersClient({
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4 text-neutral-600">
+                    <td className="py-3.5 px-4 text-neutral-600 whitespace-nowrap">
                       <div>{user.email}</div>
                       <div className="font-mono text-[11px] text-neutral-400">{user.phone || "—"}</div>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <select
                         value={user.role}
                         onChange={(e) => handleRoleChange(user.id, e.target.value as any)}
@@ -211,11 +211,11 @@ export default function AdminUsersClient({
                       </select>
                     </td>
 
-                    <td className="py-3.5 px-4 capitalize text-neutral-600 font-medium">
+                    <td className="py-3.5 px-4 capitalize text-neutral-600 font-medium whitespace-nowrap">
                       {user.hostType || "—"}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       {user.isIdentityVerified ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[11px]">
                           <FaCheckCircle className="text-secondary" /> Verified
@@ -225,7 +225,7 @@ export default function AdminUsersClient({
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           isSuspended
@@ -237,7 +237,7 @@ export default function AdminUsersClient({
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-end">
+                    <td className="py-3.5 px-4 text-end whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"

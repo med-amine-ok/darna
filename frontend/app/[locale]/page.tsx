@@ -71,11 +71,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <HomeHero />
 
       {/* 3. Horizontal Scrollable Category Tabs Bar */}
-      <div className="sticky top-0 z-30 bg-darnaBg/95 backdrop-blur-md border-b border-tertiary/50 shadow-2xs">
+      {/* <div className="sticky top-0 z-30 bg-darnaBg/95 backdrop-blur-md border-b border-tertiary/50 shadow-2xs">
         <Container>
           <MainCategoryTabs />
         </Container>
-      </div>
+      </div> */}
 
       {/* 4. Main Feed Section */}
       <Container className="py-8 space-y-12">
@@ -102,7 +102,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {agencyTrips.map((trip) => (
-                  <TripCard key={trip.id} trip={trip} />
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    customHref={`/search?vertical=trip&selectedId=${trip.id}`}
+                  />
                 ))}
               </div>
             )}
@@ -187,7 +191,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {agencyTrips.map((trip) => (
-                  <TripCard key={trip.id} trip={trip} />
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    customHref={`/search?vertical=trip&selectedId=${trip.id}`}
+                  />
                 ))}
               </div>
             </div>

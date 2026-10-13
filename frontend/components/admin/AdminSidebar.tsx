@@ -194,27 +194,6 @@ export default function AdminSidebar({
           </button>
         </div>
 
-        {/* Live Admin Status Indicator */}
-        {!collapsed ? (
-          <div className="mx-4 my-3 px-3 py-2 bg-[#2E3A2F] rounded-xl border border-[#3A493B] flex items-center gap-2 text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <div className="truncate">
-              <span className="block font-bold text-neutral-200">System Live</span>
-              <span className="text-[10px] text-neutral-400">SATIM & CCP Operational</span>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="my-2.5 flex justify-center cursor-default"
-            title="System Live • SATIM & CCP Operational"
-          >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-            </span>
-          </div>
-        )}
-
         {/* Navigation List with Darna custom scrollbar / slider */}
         <div
           className={`flex-1 overflow-y-auto space-y-4 darna-admin-scrollbar ${

@@ -2,12 +2,23 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Link, useRouter } from "@/navigation";
 import { Trip, User, Organization } from "@/types";
+import { getTripCoordinates } from "@/lib/mock-data/trips";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Container from "@/components/Container";
 import { createReservation } from "@/lib/data/reservations";
 import { toast } from "react-toastify";
+
+const Map = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[280px] bg-tertiary/20 animate-pulse rounded-2xl flex items-center justify-center text-primary/60 text-xs font-semibold">
+      Loading expedition location map...
+    </div>
+  ),
+});
 import {
   Compass,
   Calendar,
@@ -116,7 +127,7 @@ export default function TripDetailClient({
   );
 
   return (
-    <div className="bg-darnaBg min-h-screen py-6 sm:py-8">
+    <div className="bg-darnaBg min-h-screen pt-6 sm:pt-8 pb-28 lg:pb-8">
       <Container className="space-y-8 max-w-7xl">
         {/* Top Breadcrumb & Actions */}
         <div className="flex items-center justify-between gap-4">
@@ -436,6 +447,16 @@ export default function TripDetailClient({
                   </p>
                 </div>
               </div>
+
+              {/* Interactive Meeting Point Map */}
+              <div className="rounded-2xl overflow-hidden border border-tertiary/70 shadow-sm h-[280px]">
+                <Map
+                  center={trip.latlng || getTripCoordinates(trip)}
+                  locationValue={trip.city || trip.locationValue}
+                  zoom={10}
+                  className="w-full h-full"
+                />
+              </div>
             </div>
 
             {/* Cancellation Policy */}
@@ -480,29 +501,7 @@ export default function TripDetailClient({
                 </div>
               </div>
 
-              {/* Approval Mode Badge */}
-              <div
-                className={`p-3 rounded-2xl border text-xs flex items-center gap-2.5 ${
-                  agencyApprovalMode === "instant"
-                    ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
-                    : "bg-amber-50/70 border-amber-200 text-amber-900"
-                }`}
-              >
-                {agencyApprovalMode === "instant" ? (
-                  <>
-                  </>
-                ) : (
-                  <>
-                    <Clock size={16} className="text-amber-600 shrink-0" />
-                    <div>
-                      <span className="font-bold block">Host Review (24h Window)</span>
-                      <span className="text-[11px] text-amber-700">
-                        Agency reviews and confirms within 24 hours.
-                      </span>
-                    </div>
-                  </>
-                )}
-              </div>
+
 
               {/* Departure Date Selector */}
               <div className="space-y-2">

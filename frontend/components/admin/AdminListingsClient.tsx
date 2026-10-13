@@ -374,12 +374,12 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                   </td>
 
                   {/* Category */}
-                  <td className="py-3 px-3 capitalize font-semibold text-neutral-600">
+                  <td className="py-3 px-3 capitalize font-semibold text-neutral-600 whitespace-nowrap">
                     {listing.category}
                   </td>
 
                   {/* Status */}
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 whitespace-nowrap">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         listing.status === "active"
@@ -394,22 +394,22 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                   </td>
 
                   {/* Nightly Price */}
-                  <td className="py-3 px-3 font-mono font-bold text-primary text-end">
+                  <td className="py-3 px-3 font-mono font-bold text-primary text-end whitespace-nowrap">
                     {listing.price.toLocaleString()} DZD
                   </td>
 
                   {/* Bookings */}
-                  <td className="py-3 px-3 text-center font-semibold text-neutral-700">
+                  <td className="py-3 px-3 text-center font-semibold text-neutral-700 whitespace-nowrap">
                     {listing.bookingsCount || 12}
                   </td>
 
                   {/* Rating */}
-                  <td className="py-3 px-3 text-center font-bold text-neutral-700">
+                  <td className="py-3 px-3 text-center font-bold text-neutral-700 whitespace-nowrap">
                     ★ {listing.rating || "5.0"}
                   </td>
 
                   {/* Row Actions: Primary View + Kebab Overflow (Section 4 UX Audit) */}
-                  <td className="py-3 px-3 text-end relative">
+                  <td className="py-3 px-3 text-end relative whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       {/* Primary Inspect / View Action */}
                       <Link

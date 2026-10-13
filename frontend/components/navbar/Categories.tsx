@@ -133,7 +133,7 @@ export default function Categories() {
       {/* Categories Scroll Container - 100% Horizontally Centered on Desktop */}
       <div
         ref={scrollContainerRef}
-        className="w-full flex flex-row items-center justify-start md:justify-center overflow-x-auto no-scrollbar scroll-smooth py-1 px-4 md:px-32"
+        className="flex-1 md:w-full min-w-0 flex flex-row items-center justify-start md:justify-center overflow-x-auto no-scrollbar scroll-smooth py-1 px-4 md:px-36"
       >
         <div className="flex flex-row items-center justify-center gap-6 sm:gap-8 shrink-0">
           {categories.map((item, index) => (
@@ -148,13 +148,13 @@ export default function Categories() {
         </div>
       </div>
 
-      {/* Right Scroll Arrow (Shown only when content overflows to the right) */}
+      {/* Right Scroll Arrow (Shown only when content overflows to the right) - Positioned safely before Filters */}
       {canScrollRight && (
         <button
           type="button"
           aria-label="Next categories"
           onClick={() => handleScroll("right")}
-          className="hidden md:flex absolute end-28 top-1/2 -translate-y-1/2 p-2 rounded-full border border-tertiary/70 hover:border-primary bg-white text-primary shadow-xs hover:shadow-sm transition z-20 cursor-pointer"
+          className="hidden md:flex absolute end-36 top-1/2 -translate-y-1/2 p-2 rounded-full border border-tertiary/70 hover:border-primary bg-white text-primary shadow-xs hover:shadow-sm transition z-20 cursor-pointer"
         >
           <MdChevronRight size={18} className="rtl:rotate-180" />
         </button>

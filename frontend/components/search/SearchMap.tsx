@@ -8,7 +8,9 @@ import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { MdClose, MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { AiFillStar } from "react-icons/ai";
-import { Listing, User } from "@/types";
+import { Compass, Calendar, Users, CheckCircle, MapPin } from "lucide-react";
+import { Listing, User, Trip, ListingVertical } from "@/types";
+import { getTripCoordinates } from "@/lib/mock-data/trips";
 import HeartButton from "@/components/HeartButton";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import "leaflet/dist/leaflet.css";
@@ -99,7 +101,9 @@ function MapController({
 }
 
 interface SearchMapProps {
-  listings: Listing[];
+  listings?: Listing[];
+  trips?: Trip[];
+  currentVertical?: ListingVertical | "all" | string;
   currentUser?: User | null;
   selectedListingId?: string | null;
   hoveredListingId?: string | null;
@@ -112,7 +116,9 @@ interface SearchMapProps {
 }
 
 export default function SearchMap({
-  listings,
+  listings = [],
+  trips = [],
+  currentVertical,
   currentUser,
   selectedListingId,
   hoveredListingId,
@@ -131,11 +137,20 @@ export default function SearchMap({
   const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState(0);
 
-  // Preview card visibility strictly tied to HOVER state
-  const [hoveredCardListingId, setHoveredCardListingId] = useState<string | null>(null);
+  // Preview card visibility tied to hover and selected item
+  const [hoveredCardListingId, setHoveredCardListingId] = useState<string | null>(
+    selectedListingId || null
+  );
   const [isCardHovered, setIsCardHovered] = useState(false);
   const isCardHoveredRef = useRef(false);
   const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync with selectedListingId on initial open or param change
+  useEffect(() => {
+    if (selectedListingId) {
+      setHoveredCardListingId(selectedListingId);
+    }
+  }, [selectedListingId]);
 
   // Mouse drag & touch swipe state for images
   const [dragOffset, setDragOffset] = useState(0);
@@ -169,16 +184,28 @@ export default function SearchMap({
   const activeHoveredId =
     hoveredCardListingId || (isCardHovered ? hoveredCardListingId : null);
 
-  // The floating card ONLY appears on hover (disappears when not hovering)
-  const activeListing = useMemo(() => {
+  // Determine which items to display on the map
+  const showListings = currentVertical !== "trip";
+  const showTrips = currentVertical === "trip" || currentVertical === "all" || !currentVertical;
+
+  // Find active item (Listing or Trip) for floating preview card
+  const activeItem = useMemo(() => {
     if (!activeHoveredId) return null;
-    return listings.find((l) => l.id === activeHoveredId) || null;
-  }, [listings, activeHoveredId]);
+    const matchedListing = listings.find((l) => l.id === activeHoveredId);
+    if (matchedListing) {
+      return { type: "listing" as const, data: matchedListing };
+    }
+    const matchedTrip = trips.find((t) => t.id === activeHoveredId);
+    if (matchedTrip) {
+      return { type: "trip" as const, data: matchedTrip };
+    }
+    return null;
+  }, [listings, trips, activeHoveredId]);
 
   useEffect(() => {
     setPreviewImageIndex(0);
     setDragOffset(0);
-  }, [activeListing?.id]);
+  }, [activeItem?.data.id]);
 
   // Pointer drag swiping handlers
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -235,11 +262,26 @@ export default function SearchMap({
   };
 
   const { defaultCenter, bounds } = useMemo(() => {
-    const validCoords = listings
-      .filter((l) => l.latlng && l.latlng.length === 2)
-      .map((l) => l.latlng as [number, number]);
+    const coords: [number, number][] = [];
 
-    if (validCoords.length === 0) {
+    if (showListings) {
+      listings.forEach((l) => {
+        if (l.latlng && l.latlng.length === 2 && !isNaN(l.latlng[0]) && !isNaN(l.latlng[1])) {
+          coords.push(l.latlng as [number, number]);
+        }
+      });
+    }
+
+    if (showTrips) {
+      trips.forEach((t) => {
+        const c = t.latlng || getTripCoordinates(t);
+        if (c && c.length === 2 && !isNaN(c[0]) && !isNaN(c[1])) {
+          coords.push(c as [number, number]);
+        }
+      });
+    }
+
+    if (coords.length === 0) {
       return {
         defaultCenter: center || ([36.5897, 2.4475] as [number, number]),
         bounds: undefined,
@@ -250,11 +292,11 @@ export default function SearchMap({
       return { defaultCenter: center, bounds: undefined };
     }
 
-    if (validCoords.length === 1) {
-      return { defaultCenter: validCoords[0], bounds: undefined };
+    if (coords.length === 1) {
+      return { defaultCenter: coords[0], bounds: undefined };
     }
 
-    const leafletBounds = L.latLngBounds(validCoords.map((c) => [c[0], c[1]]));
+    const leafletBounds = L.latLngBounds(coords.map((c) => [c[0], c[1]]));
     return {
       defaultCenter: [
         leafletBounds.getCenter().lat,
@@ -262,27 +304,39 @@ export default function SearchMap({
       ] as [number, number],
       bounds: leafletBounds,
     };
-  }, [listings, center]);
+  }, [listings, trips, showListings, showTrips, center]);
 
   const selectedCoords = useMemo(() => {
     if (activeSelectedId) {
-      const match = listings.find((l) => l.id === activeSelectedId);
-      if (match?.latlng && match.latlng.length === 2) {
-        return match.latlng as [number, number];
+      const matchListing = listings.find((l) => l.id === activeSelectedId);
+      if (matchListing?.latlng && matchListing.latlng.length === 2) {
+        return matchListing.latlng as [number, number];
+      }
+      const matchTrip = trips.find((t) => t.id === activeSelectedId);
+      if (matchTrip) {
+        const c = matchTrip.latlng || getTripCoordinates(matchTrip);
+        if (c && c.length === 2) return c as [number, number];
       }
     }
     return undefined;
-  }, [activeSelectedId, listings]);
+  }, [activeSelectedId, listings, trips]);
 
   const createPriceIcon = (
     price: number,
     isSelected: boolean,
-    isHovered: boolean
+    isHovered: boolean,
+    isTrip: boolean = false
   ) => {
     const active = isSelected || isHovered;
     const formattedDzd =
       price >= 1000 ? `${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}k DZD` : `${price} DZD`;
     const eurVal = Math.round(price / 152.47);
+
+    const tripBadge = isTrip
+      ? `<svg class="w-3.5 h-3.5 ${
+          active ? "text-[#D9C9B2]" : "text-[#6B7F5B]"
+        } shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>`
+      : "";
 
     return L.divIcon({
       className: "custom-price-pin !bg-transparent !border-none",
@@ -296,14 +350,15 @@ export default function SearchMap({
           }"
           style="transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;"
         >
+          ${tripBadge}
           <span>${formattedDzd}</span>
           <span class="text-[9.5px] font-normal ${
             active ? "text-neutral-300" : "text-neutral-500"
           }">(~€${eurVal})</span>
         </button>
       `,
-      iconSize: [95, 34],
-      iconAnchor: [47, 17],
+      iconSize: [isTrip ? 112 : 98, 34],
+      iconAnchor: [isTrip ? 56 : 49, 17],
     });
   };
 
@@ -311,11 +366,17 @@ export default function SearchMap({
   const googleSatelliteUrl = "https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
 
   const previewImages = useMemo(() => {
-    if (!activeListing) return [];
-    return Array.isArray(activeListing.imageSrc)
-      ? activeListing.imageSrc
-      : [activeListing.imageSrc];
-  }, [activeListing]);
+    if (!activeItem) return [];
+    if (activeItem.type === "listing") {
+      return Array.isArray(activeItem.data.imageSrc)
+        ? activeItem.data.imageSrc
+        : [activeItem.data.imageSrc];
+    } else {
+      const t = activeItem.data;
+      const arr = [t.coverPhoto, ...(t.gallery || [])].filter(Boolean);
+      return arr.length > 0 ? arr : ["/assets/template.jpeg"];
+    }
+  }, [activeItem]);
 
   return (
     <div className={`relative ${className} group overflow-hidden`}>
@@ -341,51 +402,94 @@ export default function SearchMap({
           maxZoom={20}
         />
 
-        {/* Price Bubble Pins */}
-        {listings.map((listing) => {
-          if (!listing.latlng || listing.latlng.length !== 2) return null;
-          const isSelected = listing.id === activeSelectedId;
-          const isHovered = listing.id === activeHoveredId;
+        {/* 1. Listing Price Bubble Pins */}
+        {showListings &&
+          listings.map((listing) => {
+            if (!listing.latlng || listing.latlng.length !== 2) return null;
+            const isSelected = listing.id === activeSelectedId;
+            const isHovered = listing.id === activeHoveredId;
 
-          return (
-            <Marker
-              key={listing.id}
-              position={listing.latlng as L.LatLngExpression}
-              icon={createPriceIcon(listing.price, isSelected, isHovered)}
-              zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 1}
-              eventHandlers={{
-                click: () => {
-                  router.push(`/listings/${listing.id}`);
-                },
-                mouseover: () => {
-                  if (leaveTimerRef.current) {
-                    clearTimeout(leaveTimerRef.current);
-                    leaveTimerRef.current = null;
-                  }
-                  setHoveredCardListingId(listing.id);
-                  if (onHoverListing) onHoverListing(listing.id);
-                  else setInternalHoveredId(listing.id);
-                },
-                mouseout: () => {
-                  if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-                  leaveTimerRef.current = setTimeout(() => {
-                    if (!isCardHoveredRef.current) {
-                      setHoveredCardListingId(null);
-                      if (onHoverListing) onHoverListing(null);
-                      else setInternalHoveredId(null);
+            return (
+              <Marker
+                key={listing.id}
+                position={listing.latlng as L.LatLngExpression}
+                icon={createPriceIcon(listing.price, isSelected, isHovered, false)}
+                zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 1}
+                eventHandlers={{
+                  click: () => {
+                    router.push(`/listings/${listing.id}`);
+                  },
+                  mouseover: () => {
+                    if (leaveTimerRef.current) {
+                      clearTimeout(leaveTimerRef.current);
+                      leaveTimerRef.current = null;
                     }
-                  }, 250);
-                },
-              }}
-            />
-          );
-        })}
+                    setHoveredCardListingId(listing.id);
+                    if (onHoverListing) onHoverListing(listing.id);
+                    else setInternalHoveredId(listing.id);
+                  },
+                  mouseout: () => {
+                    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+                    leaveTimerRef.current = setTimeout(() => {
+                      if (!isCardHoveredRef.current) {
+                        setHoveredCardListingId(null);
+                        if (onHoverListing) onHoverListing(null);
+                        else setInternalHoveredId(null);
+                      }
+                    }, 250);
+                  },
+                }}
+              />
+            );
+          })}
+
+        {/* 2. Agency Trip Price Bubble Pins */}
+        {showTrips &&
+          trips.map((trip) => {
+            const coords = trip.latlng || getTripCoordinates(trip);
+            if (!coords || coords.length !== 2) return null;
+            const isSelected = trip.id === activeSelectedId;
+            const isHovered = trip.id === activeHoveredId;
+
+            return (
+              <Marker
+                key={trip.id}
+                position={coords as L.LatLngExpression}
+                icon={createPriceIcon(trip.pricePerPerson, isSelected, isHovered, true)}
+                zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 2}
+                eventHandlers={{
+                  click: () => {
+                    router.push(`/trips/${trip.id}`);
+                  },
+                  mouseover: () => {
+                    if (leaveTimerRef.current) {
+                      clearTimeout(leaveTimerRef.current);
+                      leaveTimerRef.current = null;
+                    }
+                    setHoveredCardListingId(trip.id);
+                    if (onHoverListing) onHoverListing(trip.id);
+                    else setInternalHoveredId(trip.id);
+                  },
+                  mouseout: () => {
+                    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+                    leaveTimerRef.current = setTimeout(() => {
+                      if (!isCardHoveredRef.current) {
+                        setHoveredCardListingId(null);
+                        if (onHoverListing) onHoverListing(null);
+                        else setInternalHoveredId(null);
+                      }
+                    }, 250);
+                  },
+                }}
+              />
+            );
+          })}
       </MapContainer>
 
-      {/* Floating Preview Card - ONLY appears when hovered */}
-      {activeListing && (
+      {/* Floating Preview Card - Appears on hover */}
+      {activeItem && (
         <div
-          className="absolute bottom-5 inset-x-4 sm:inset-x-auto sm:start-5 z-[500] sm:w-80 bg-white rounded-2xl shadow-2xl border border-tertiary/70 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 select-none"
+          className="absolute bottom-5 inset-x-4 sm:inset-x-auto sm:start-5 z-[500] sm:w-84 bg-white rounded-2xl shadow-2xl border border-tertiary/70 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 select-none"
           onMouseEnter={() => {
             if (leaveTimerRef.current) {
               clearTimeout(leaveTimerRef.current);
@@ -408,7 +512,11 @@ export default function SearchMap({
               hasDraggedRef.current = false;
               return;
             }
-            router.push(`/listings/${activeListing.id}`);
+            if (activeItem.type === "listing") {
+              router.push(`/listings/${activeItem.data.id}`);
+            } else {
+              router.push(`/trips/${activeItem.data.id}`);
+            }
           }}
         >
           {/* Card Image with Mouse Drag & Touch Swipe Slider */}
@@ -431,7 +539,7 @@ export default function SearchMap({
             >
               <Image
                 src={previewImages[previewImageIndex] || "/assets/template.jpeg"}
-                alt={activeListing.title}
+                alt={activeItem.data.title}
                 fill
                 draggable={false}
                 className="object-cover pointer-events-none select-none group-hover/card:scale-105 transition-transform duration-300"
@@ -455,10 +563,29 @@ export default function SearchMap({
               <MdClose size={16} />
             </button>
 
-            {/* Heart Favorite Button */}
-            <div className="absolute top-2.5 end-2.5 z-20">
-              <HeartButton listingId={activeListing.id} currentUser={currentUser} />
-            </div>
+            {/* Favorite or Type Badge */}
+            {activeItem.type === "listing" ? (
+              <div className="absolute top-2.5 end-2.5 z-20">
+                <HeartButton listingId={activeItem.data.id} currentUser={currentUser} />
+              </div>
+            ) : (
+              <div className="absolute top-2.5 end-2.5 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                <Calendar size={11} className="text-secondary" />
+                <span>
+                  {activeItem.data.durationDays}D / {Math.max(1, activeItem.data.durationDays - 1)}N
+                </span>
+              </div>
+            )}
+
+            {/* Agency Badge on Trip Image */}
+            {activeItem.type === "trip" && (
+              <div className="absolute bottom-2.5 start-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold max-w-[80%] truncate">
+                <CheckCircle size={12} className="text-emerald-400 shrink-0" />
+                <span className="truncate">
+                  {activeItem.data.organization?.name || "Verified Agency"}
+                </span>
+              </div>
+            )}
 
             {/* Prev/Next arrows for preview card */}
             {previewImages.length > 1 && (
@@ -509,41 +636,76 @@ export default function SearchMap({
 
           {/* Details */}
           <div className="p-3.5 space-y-1 cursor-pointer">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="font-bold text-sm text-primary truncate flex items-center gap-1">
-                <Image
-                  src="/assets/location.png"
-                  alt="Location"
-                  width={13}
-                  height={13}
-                  className="object-contain shrink-0"
-                />
-                <span className="truncate">{activeListing.city ? `${activeListing.city}, Algeria` : activeListing.title}</span>
-              </h4>
-              <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
-                <AiFillStar size={13} className="text-accent" />
-                <span>{activeListing.rating?.toFixed(2) || "4.95"}</span>
-              </span>
-            </div>
+            {activeItem.type === "listing" ? (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="font-bold text-sm text-primary truncate flex items-center gap-1">
+                    <Image
+                      src="/assets/location.png"
+                      alt="Location"
+                      width={13}
+                      height={13}
+                      className="object-contain shrink-0"
+                    />
+                    <span className="truncate">
+                      {activeItem.data.city ? `${activeItem.data.city}, Algeria` : activeItem.data.title}
+                    </span>
+                  </h4>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
+                    <AiFillStar size={13} className="text-accent" />
+                    <span>{activeItem.data.rating?.toFixed(2) || "4.95"}</span>
+                  </span>
+                </div>
 
-            <p className="text-xs text-neutral-500 font-normal truncate">
-              {activeListing.title}
-            </p>
+                <p className="text-xs text-neutral-500 font-normal truncate">
+                  {activeItem.data.title}
+                </p>
 
-            <div className="pt-1">
-              <PriceDisplay
-                price={activeListing.price}
-                originalPrice={activeListing.originalPrice}
-                period={
-                  activeListing.category === "vehicle"
-                    ? "/ day"
-                    : activeListing.category === "experience"
-                    ? "/ person"
-                    : "/ night"
-                }
-                priceClassName="font-bold text-sm text-primary"
-              />
-            </div>
+                <div className="pt-1">
+                  <PriceDisplay
+                    price={activeItem.data.price}
+                    originalPrice={activeItem.data.originalPrice}
+                    period={
+                      activeItem.data.category === "vehicle"
+                        ? "/ day"
+                        : activeItem.data.category === "experience"
+                        ? "/ person"
+                        : "/ night"
+                    }
+                    priceClassName="font-bold text-sm text-primary"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="font-bold text-sm text-primary truncate flex items-center gap-1">
+                    <Compass size={14} className="text-secondary shrink-0" />
+                    <span className="truncate">{activeItem.data.city}, Algeria</span>
+                  </h4>
+                  <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
+                    <AiFillStar size={13} className="text-amber-500 fill-amber-500" />
+                    <span>{activeItem.data.rating?.toFixed(2) || "4.98"}</span>
+                  </span>
+                </div>
+
+                <p className="text-xs font-medium text-primary line-clamp-1">
+                  {activeItem.data.title}
+                </p>
+
+                <div className="pt-1 flex items-baseline justify-between gap-2">
+                  <PriceDisplay
+                    price={activeItem.data.pricePerPerson}
+                    period="/ person"
+                    priceClassName="font-bold text-sm text-primary"
+                  />
+                  <span className="text-[10px] text-neutral-500 font-medium flex items-center gap-1">
+                    <Users size={11} />
+                    <span>Max {activeItem.data.maxGroupSize}</span>
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

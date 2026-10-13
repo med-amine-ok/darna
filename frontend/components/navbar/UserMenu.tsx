@@ -115,7 +115,7 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
       </div>
 
       {isOpen && (
-        <div className="absolute rounded-2xl shadow-darna-dropdown w-[48vw] md:w-60 bg-white overflow-hidden end-0 top-12 text-sm border border-tertiary/60 z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute rounded-2xl shadow-darna-dropdown w-64 max-w-[calc(100vw-24px)] bg-white overflow-hidden end-0 top-12 text-sm border border-tertiary/60 z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex flex-col cursor-pointer">
             {currentUser ? (
               <>

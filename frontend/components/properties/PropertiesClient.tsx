@@ -134,16 +134,14 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute top-3 start-3">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-primary">
+                    <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 pointer-events-none">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-primary truncate max-w-[45%]">
                         {item.category}
                       </span>
-                    </div>
-                    <div className="absolute top-3 end-3">
                       <button
                         type="button"
                         onClick={() => toggleStatus(item.id)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition shadow-xs ${
+                        className={`pointer-events-auto px-3 py-1 rounded-full text-xs font-bold transition shadow-xs shrink-0 cursor-pointer ${
                           isActive
                             ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
                             : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"

@@ -19,7 +19,7 @@ export default function WhoPopover({
   onApply,
 }: WhoPopoverProps) {
   return (
-    <div className="bg-white rounded-3xl shadow-2xl border border-tertiary/70 p-5 w-72 sm:w-80 z-50">
+    <div className="bg-white rounded-3xl shadow-2xl border border-tertiary/70 p-5 w-72 sm:w-80 max-w-[calc(100vw-32px)] z-50">
       <div className="mb-2">
         <Counter
           title={title}

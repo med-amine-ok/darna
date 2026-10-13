@@ -206,6 +206,7 @@ export interface Trip {
   meetingPoint: string;
   city: string;
   locationValue: string;
+  latlng?: [number, number];
   cancellationPolicy: "flexible" | "moderate" | "strict";
   organizationId: string; // Must belong to an Agency
   status: "active" | "draft";

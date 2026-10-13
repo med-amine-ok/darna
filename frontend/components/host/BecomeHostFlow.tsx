@@ -967,9 +967,7 @@ export default function BecomeHostFlow({
         {/* ======================================================== */}
         {currentStep === 1 && !isAgencyFlow && (
           <div className="space-y-8 max-w-xl mx-auto text-center animate-in fade-in">
-            <div className="w-20 h-20 bg-tertiary/30 text-primary rounded-full flex items-center justify-center mx-auto mb-2">
-              <HiOutlineSparkles size={36} className="text-accent" />
-            </div>
+            
             <div>
               <span className="text-xs uppercase tracking-wider text-secondary font-bold">
                 Overview

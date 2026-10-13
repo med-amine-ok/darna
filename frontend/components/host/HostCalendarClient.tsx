@@ -364,116 +364,120 @@ export default function HostCalendarClient({
       {/* VIEW: MONTH GRID */}
       {view === "month" && (
         <div className="bg-white rounded-3xl border border-tertiary/70 shadow-2xs overflow-hidden">
-          {/* Day Headers (Sun - Sat) */}
-          <div className="grid grid-cols-7 border-b border-tertiary/60 bg-neutral-50 text-center py-2.5 text-xs font-bold text-neutral-500">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName) => (
-              <div key={dayName} className="capitalize">
-                {dayName}
+          <div className="overflow-x-auto">
+            <div className="min-w-[320px] sm:min-w-0">
+              {/* Day Headers (Sun - Sat) */}
+              <div className="grid grid-cols-7 border-b border-tertiary/60 bg-neutral-50 text-center py-2.5 text-xs font-bold text-neutral-500">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName) => (
+                  <div key={dayName} className="capitalize">
+                    {dayName}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Month Matrix */}
-          <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-tertiary/40">
-            {(() => {
-              const monthStart = startOfMonth(currentDate);
-              const monthEnd = endOfMonth(monthStart);
-              const startDate = startOfWeek(monthStart);
-              const endDate = endOfWeek(monthEnd);
-              const days = eachDayOfInterval({ start: startDate, end: endDate });
+              {/* Month Matrix */}
+              <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-tertiary/40">
+                {(() => {
+                  const monthStart = startOfMonth(currentDate);
+                  const monthEnd = endOfMonth(monthStart);
+                  const startDate = startOfWeek(monthStart);
+                  const endDate = endOfWeek(monthEnd);
+                  const days = eachDayOfInterval({ start: startDate, end: endDate });
 
-              return days.map((day) => {
-                const isCurrentMonth = isSameMonth(day, monthStart);
-                const isToday = isSameDay(day, new Date(2026, 9, 7));
-                const dayBookings = getBookingsForDay(day);
-                const isBlocked = isDayBlocked(
-                  day,
-                  selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
-                );
-                const price = getDayPrice(day, activeListing);
-                const isCustomPrice = !!priceOverrides[`${activeListing?.id || safeListings[0]?.id}_${format(day, "yyyy-MM-dd")}`];
+                  return days.map((day) => {
+                    const isCurrentMonth = isSameMonth(day, monthStart);
+                    const isToday = isSameDay(day, new Date(2026, 9, 7));
+                    const dayBookings = getBookingsForDay(day);
+                    const isBlocked = isDayBlocked(
+                      day,
+                      selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
+                    );
+                    const price = getDayPrice(day, activeListing);
+                    const isCustomPrice = !!priceOverrides[`${activeListing?.id || safeListings[0]?.id}_${format(day, "yyyy-MM-dd")}`];
 
-                return (
-                  <div
-                    key={day.toISOString()}
-                    onClick={() => handleDayClick(day)}
-                    className={`min-h-[105px] sm:min-h-[120px] p-2 transition cursor-pointer flex flex-col justify-between ${
-                      !isCurrentMonth
-                        ? "bg-neutral-50/60 opacity-40"
-                        : isBlocked
-                        ? "bg-neutral-100/80"
-                        : "hover:bg-primary/5"
-                    }`}
-                  >
-                    {/* Top: Day Number + Price */}
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-xs sm:text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full ${
-                          isToday
-                            ? "bg-primary text-white"
-                            : "text-neutral-700"
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        onClick={() => handleDayClick(day)}
+                        className={`min-h-[90px] sm:min-h-[120px] p-1.5 sm:p-2 transition cursor-pointer flex flex-col justify-between ${
+                          !isCurrentMonth
+                            ? "bg-neutral-50/60 opacity-40"
+                            : isBlocked
+                            ? "bg-neutral-100/80"
+                            : "hover:bg-primary/5"
                         }`}
                       >
-                        {format(day, "d")}
-                      </span>
-
-                      {/* Nightly Price Badge */}
-                      {isCurrentMonth && !isBlocked && (
-                        <span
-                          className={`text-[10px] sm:text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
-                            isCustomPrice
-                              ? "bg-accent/15 text-accent border border-accent/30"
-                              : "text-neutral-500"
-                          }`}
-                        >
-                          {price.toLocaleString()} DA
-                        </span>
-                      )}
-
-                      {/* Blocked icon */}
-                      {isBlocked && (
-                        <span className="text-neutral-400" title="Blocked">
-                          <HiOutlineLockClosed size={14} />
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Middle: Booking indicators / pills */}
-                    <div className="space-y-1 my-1">
-                      {dayBookings.slice(0, 2).map((b) => {
-                        const color = listingColorMap[b.listingId] || LISTING_COLORS[0];
-                        return (
-                          <div
-                            key={b.id}
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md truncate ${color.light} ${color.text} border ${color.border}/30 flex items-center gap-1`}
-                            title={`${b.user?.name || "Guest"} - ${b.listing?.title}`}
+                        {/* Top: Day Number + Price (stacked cleanly on mobile, side-by-side on desktop) */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 min-w-0">
+                          <span
+                            className={`text-xs sm:text-sm font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shrink-0 ${
+                              isToday
+                                ? "bg-primary text-white"
+                                : "text-neutral-700"
+                            }`}
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full ${color.bg} shrink-0`} />
-                            <span className="truncate">{b.user?.name || "Guest"}</span>
-                          </div>
-                        );
-                      })}
-                      {dayBookings.length > 2 && (
-                        <span className="text-[9px] font-bold text-neutral-400 block ps-1">
-                          +{dayBookings.length - 2} more
-                        </span>
-                      )}
-                    </div>
+                            {format(day, "d")}
+                          </span>
 
-                    {/* Bottom: Blocked / Available status label */}
-                    <div className="text-[10px] font-medium text-neutral-400">
-                      {isBlocked ? (
-                        <span className="text-neutral-400 font-semibold">Blocked</span>
-                      ) : dayBookings.length > 0 ? (
-                        <span className="text-secondary font-bold">Booked</span>
-                      ) : (
-                        <span className="text-emerald-600 font-medium opacity-70">Available</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              });
-            })()}
+                          {/* Nightly Price Badge */}
+                          {isCurrentMonth && !isBlocked && (
+                            <span
+                              className={`text-[9px] sm:text-[11px] font-mono font-bold px-1 py-0.2 sm:px-1.5 sm:py-0.5 rounded-md truncate max-w-full ${
+                                isCustomPrice
+                                  ? "bg-accent/15 text-accent border border-accent/30"
+                                  : "text-neutral-500"
+                              }`}
+                            >
+                              {price.toLocaleString()} DA
+                            </span>
+                          )}
+
+                          {/* Blocked icon */}
+                          {isBlocked && (
+                            <span className="text-neutral-400 shrink-0" title="Blocked">
+                              <HiOutlineLockClosed size={14} />
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Middle: Booking indicators / pills */}
+                        <div className="space-y-1 my-1 min-w-0">
+                          {dayBookings.slice(0, 2).map((b) => {
+                            const color = listingColorMap[b.listingId] || LISTING_COLORS[0];
+                            return (
+                              <div
+                                key={b.id}
+                                className={`text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-md truncate ${color.light} ${color.text} border ${color.border}/30 flex items-center gap-1 min-w-0`}
+                                title={`${b.user?.name || "Guest"} - ${b.listing?.title}`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${color.bg} shrink-0`} />
+                                <span className="truncate">{b.user?.name || "Guest"}</span>
+                              </div>
+                            );
+                          })}
+                          {dayBookings.length > 2 && (
+                            <span className="text-[9px] font-bold text-neutral-400 block ps-1">
+                              +{dayBookings.length - 2} more
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Bottom: Blocked / Available status label */}
+                        <div className="text-[10px] font-medium text-neutral-400">
+                          {isBlocked ? (
+                            <span className="text-neutral-400 font-semibold">Blocked</span>
+                          ) : dayBookings.length > 0 ? (
+                            <span className="text-secondary font-bold">Booked</span>
+                          ) : (
+                            <span className="text-emerald-600 font-medium opacity-70">Available</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
           </div>
         </div>
       )}

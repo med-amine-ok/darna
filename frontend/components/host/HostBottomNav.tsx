@@ -65,6 +65,11 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
     pathname === "/host/settings" ||
     (!isIndividual && pathname?.startsWith("/host/messages"));
 
+  // Hide bottom navigation on host messages (full-screen messaging app)
+  if (pathname?.includes("/host/messages")) {
+    return null;
+  }
+
   return (
     <>
       {/* Mobile Slide-Up "More" Sheet */}
