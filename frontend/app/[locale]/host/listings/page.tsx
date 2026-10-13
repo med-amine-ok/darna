@@ -20,10 +20,14 @@ export default async function HostListingsPage() {
 
   const listings = await getHostListings(hostId);
 
+  const userForClient = currentUser
+    ? { ...currentUser, hostType: (effectiveHostType || "individual") as any }
+    : ({ id: hostId, hostType: (effectiveHostType || "individual") as any, name: "Host", email: "" } as any);
+
   return (
     <HostListingsClient
       initialListings={listings}
-      currentUser={currentUser}
+      currentUser={userForClient}
     />
   );
 }

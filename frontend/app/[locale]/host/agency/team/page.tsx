@@ -24,9 +24,9 @@ export default async function AgencyTeamPage({
 
   const effectiveHostType = currentUser.hostType || cookieHostType;
 
-  // Solo hosts do not have an agency or team page
-  if (effectiveHostType !== "agency") {
-    redirect(`/${locale}/host`);
+  // Solo hosts do not have an organization or team page
+  if (effectiveHostType === "individual") {
+    redirect(`/${locale}/host/listings`);
   }
 
   let orgId = currentUser?.organizationId || cookieAgencyId;

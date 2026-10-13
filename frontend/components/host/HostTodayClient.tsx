@@ -22,6 +22,8 @@ import {
 } from "react-icons/hi";
 import { BiDoorOpen, BiCheckCircle } from "react-icons/bi";
 
+import HostWalletWidget from "@/components/host/HostWalletWidget";
+
 interface HostTodayClientProps {
   currentUser?: User | null;
   organization?: Organization | null;
@@ -104,6 +106,13 @@ export default function HostTodayClient({
           </Link>
         </div>
       </div>
+
+      {/* Host Prepaid Wallet & Solvency Widget */}
+      <HostWalletWidget
+        ownerId={organization?.id || currentUser?.id || "usr_amina"}
+        ownerType={organization ? "organization" : "user"}
+        hostType={organization?.businessCategory || currentUser?.hostType || "individual"}
+      />
 
       {/* KPI Cards Banner */}
       <div className="space-y-3">

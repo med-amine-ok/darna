@@ -12,6 +12,9 @@ import Counter from "@/components/inputs/Counter";
 import { toast } from "react-toastify";
 import dynamic from "next/dynamic";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import { getOnboardingSteps } from "@/lib/data/onboarding-config";
+import { OnboardingStepConfig } from "@/types";
+import DynamicStepFields from "./DynamicStepFields";
 import {
   HiOutlineHome,
   HiOutlineOfficeBuilding,
@@ -30,6 +33,8 @@ import {
   HiOutlinePlus,
   HiOutlineWifi,
   HiOutlineSun,
+  HiOutlineStar,
+  HiOutlineClock,
 } from "react-icons/hi";
 import {
   BiCar,
@@ -40,6 +45,7 @@ import {
   BiWater,
   BiCoffee,
   BiCheckCircle,
+  BiBuildings,
 } from "react-icons/bi";
 
 // Dynamically import Map to prevent SSR errors
@@ -47,7 +53,7 @@ const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
 interface BecomeHostFlowProps {
   initialStep?: string;
-  initialHostType?: "individual" | "agency" | null;
+  initialHostType?: "individual" | "agency" | "hotel" | "hostel" | null;
 }
 
 export default function BecomeHostFlow({
@@ -57,18 +63,60 @@ export default function BecomeHostFlow({
   const router = useRouter();
   const loginModal = useLoginModal();
 
-  // Mode: "fork" (host type selection), "individual" (12 steps), "agency" (5 steps)
+  // Mode: "none" (host type selection), "individual" (12 steps), "agency" (5 steps), "hotel" (7 steps), "hostel" (7 steps)
   const [currentStep, setCurrentStep] = useState<number>(() => {
     const parsed = parseInt(initialStep, 10);
     return isNaN(parsed) ? 0 : parsed;
   });
 
-  const [hostType, setHostType] = useState<"individual" | "agency" | null>(
+  const [hostType, setHostType] = useState<"individual" | "agency" | "hotel" | "hostel" | null>(
     initialHostType
   );
-  const [isAgencyFlow, setIsAgencyFlow] = useState<boolean>(
-    initialStep === "agency"
-  );
+  const [activeFlow, setActiveFlow] = useState<"none" | "individual" | "agency" | "hotel" | "hostel">(() => {
+    if (initialStep === "agency") return "agency";
+    if (initialStep === "hotel") return "hotel";
+    if (initialStep === "hostel") return "hostel";
+    const parsed = parseInt(initialStep, 10);
+    if (!isNaN(parsed) && parsed > 0) return "individual";
+    return "none";
+  });
+
+  const isAgencyFlow = activeFlow === "agency";
+  const isHotelFlow = activeFlow === "hotel";
+  const isHostelFlow = activeFlow === "hostel";
+
+  // Dynamic Onboarding Config State (Section 7)
+  const [configuredSteps, setConfiguredSteps] = useState<OnboardingStepConfig[]>([]);
+  const [customFieldsData, setCustomFieldsData] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const currentHostType =
+      hostType ||
+      (isHotelFlow
+        ? "hotel"
+        : isHostelFlow
+        ? "hostel"
+        : isAgencyFlow
+        ? "agency"
+        : "individual");
+    setConfiguredSteps(getOnboardingSteps(currentHostType));
+  }, [hostType, activeFlow, isAgencyFlow, isHotelFlow, isHostelFlow]);
+
+  const renderDynamicFieldsForStep = (stepId: string) => {
+    const stepCfg = configuredSteps.find((s) => s.id === stepId);
+    if (!stepCfg) return null;
+    const extraFields = stepCfg.fields.filter((f) => !f.isCore);
+    if (extraFields.length === 0) return null;
+    return (
+      <DynamicStepFields
+        fields={extraFields}
+        values={customFieldsData}
+        onChange={(fieldId, val) =>
+          setCustomFieldsData((prev) => ({ ...prev, [fieldId]: val }))
+        }
+      />
+    );
+  };
 
   // Individual Listing Form State
   const [category, setCategory] = useState<string>("Villa");
@@ -124,6 +172,62 @@ export default function BecomeHostFlow({
     { email: "", role: "manager" },
   ]);
 
+  // Hotel Registration Form State (Section 2)
+  const [hotelStep, setHotelStep] = useState<number>(1);
+  const [hotelName, setHotelName] = useState<string>("El Djazair Grand Palace Hotel");
+  const [hotelStarRating, setHotelStarRating] = useState<number>(5);
+  const [hotelTotalRooms, setHotelTotalRooms] = useState<number>(48);
+  const [checkInTime, setCheckInTime] = useState<string>("15:00");
+  const [checkOutTime, setCheckOutTime] = useState<string>("12:00");
+  const [hotelAmenities, setHotelAmenities] = useState<string[]>([
+    "breakfast",
+    "pool",
+    "spa",
+    "wifi",
+    "valet",
+    "conference",
+    "reception_24_7",
+    "shuttle",
+  ]);
+  const [hotelRegNumber, setHotelRegNumber] = useState<string>("DZ-ALG-2023-B-04192");
+  const [hotelTaxId, setHotelTaxId] = useState<string>("002316098765432");
+  const [hotelAddress, setHotelAddress] = useState<string>("24 Avenue Souidani Boujemaa, Algiers");
+  const [hotelCity, setHotelCity] = useState<string>("Algiers");
+  const [hotelPhone, setHotelPhone] = useState<string>("+213 21 69 21 21");
+  const [hotelEmail, setHotelEmail] = useState<string>("reservations@hoteldjazair.dz");
+  const [hotelBookingMode, setHotelBookingMode] = useState<"instant" | "request">("instant");
+  const [hotelTeamInvites, setHotelTeamInvites] = useState<{ email: string; role: "admin" | "manager" }[]>([
+    { email: "", role: "manager" },
+  ]);
+
+  // Hostel Registration Form State (Section 2)
+  const [hostelStep, setHostelStep] = useState<number>(1);
+  const [hostelName, setHostelName] = useState<string>("Casbah Heritage Backpacker Hostel");
+  const [hostelCity, setHostelCity] = useState<string>("Algiers");
+  const [hostelAddress, setHostelAddress] = useState<string>("12 Rue Sidi Ramdane, Casbah, Algiers");
+  const [hostelDormBeds, setHostelDormBeds] = useState<number>(24);
+  const [hostelPrivateRooms, setHostelPrivateRooms] = useState<number>(4);
+  const [hostelTotalBeds, setHostelTotalBeds] = useState<number>(28);
+  const [hostelFacilities, setHostelFacilities] = useState<string[]>([
+    "lockers",
+    "shared_kitchen",
+    "rooftop",
+    "coworking",
+    "wifi",
+    "luggage_storage",
+    "breakfast",
+  ]);
+  const [curfewPolicy, setCurfewPolicy] = useState<string>("No curfew · 24h keycard access");
+  const [agePolicy, setAgePolicy] = useState<string>("All ages welcome (min 18 in dorms)");
+  const [hostelRegNumber, setHostelRegNumber] = useState<string>("DZ-ALG-2024-B-07114");
+  const [hostelTaxId, setHostelTaxId] = useState<string>("002416098877112");
+  const [hostelEmail, setHostelEmail] = useState<string>("hello@casbahhostel.dz");
+  const [hostelPhone, setHostelPhone] = useState<string>("+213 21 73 88 19");
+  const [hostelBookingMode, setHostelBookingMode] = useState<"instant" | "request">("instant");
+  const [hostelTeamInvites, setHostelTeamInvites] = useState<{ email: string; role: "admin" | "manager" }[]>([
+    { email: "", role: "manager" },
+  ]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
 
@@ -165,9 +269,16 @@ export default function BecomeHostFlow({
           // Restore flow state if not overridden by explicit URL step
           if (initialStep === "0" || !initialStep) {
             if (draft.hostType) setHostType(draft.hostType);
-            if (typeof draft.isAgencyFlow === "boolean") setIsAgencyFlow(draft.isAgencyFlow);
+            if (draft.activeFlow) {
+              setActiveFlow(draft.activeFlow);
+            } else if (draft.isAgencyFlow) {
+              setActiveFlow("agency");
+            }
             if (draft.agencyStep) setAgencyStep(draft.agencyStep);
+            if (draft.hotelStep) setHotelStep(draft.hotelStep);
+            if (draft.hostelStep) setHostelStep(draft.hostelStep);
             if (draft.currentStep && draft.currentStep > 0) setCurrentStep(draft.currentStep);
+            if (draft.customFieldsData) setCustomFieldsData(draft.customFieldsData);
           }
         } catch {}
       }
@@ -175,7 +286,7 @@ export default function BecomeHostFlow({
   }, [initialStep]);
 
   const handleHeaderExitClick = () => {
-    if (currentStep > 0 || isAgencyFlow) {
+    if (currentStep > 0 || isAgencyFlow || isHotelFlow || isHostelFlow) {
       setIsExitDialogOpen(true);
     } else {
       router.push("/");
@@ -186,9 +297,14 @@ export default function BecomeHostFlow({
     if (typeof window !== "undefined") {
       const draft = {
         hostType,
+        activeFlow,
         isAgencyFlow,
-        currentStep: isAgencyFlow ? 0 : currentStep,
+        isHotelFlow,
+        isHostelFlow,
+        currentStep: activeFlow !== "individual" ? 0 : currentStep,
         agencyStep,
+        hotelStep,
+        hostelStep,
         category,
         vertical,
         placement,
@@ -215,6 +331,36 @@ export default function BecomeHostFlow({
         headquarters,
         teamSize,
         teamInvites,
+        hotelName,
+        hotelStarRating,
+        hotelTotalRooms,
+        checkInTime,
+        checkOutTime,
+        hotelAmenities,
+        hotelRegNumber,
+        hotelTaxId,
+        hotelAddress,
+        hotelCity,
+        hotelPhone,
+        hotelEmail,
+        hotelBookingMode,
+        hotelTeamInvites,
+        hostelName,
+        hostelCity,
+        hostelAddress,
+        hostelDormBeds,
+        hostelPrivateRooms,
+        hostelTotalBeds,
+        hostelFacilities,
+        curfewPolicy,
+        agePolicy,
+        hostelRegNumber,
+        hostelTaxId,
+        hostelEmail,
+        hostelPhone,
+        hostelBookingMode,
+        hostelTeamInvites,
+        customFieldsData,
       };
       localStorage.setItem("darna_host_draft", JSON.stringify(draft));
       toast.info("Progress saved as draft in your browser.");
@@ -286,9 +432,11 @@ export default function BecomeHostFlow({
         amenities: selectedAmenities,
         latlng,
         instantBook,
+        bookingApprovalMode: (instantBook ? "instant" : "request") as "instant" | "request",
         cancellationPolicy,
         ownerType: "individual" as const,
         hostUserId: hostId,
+        customFields: customFieldsData,
       };
 
       // 1. Post to server route handler so server store and cookies are updated
@@ -308,7 +456,10 @@ export default function BecomeHostFlow({
 
       // 2. Also keep client in-memory stores in sync
       await createListing(listingPayload);
-      await updateUserHostStatus(hostId, { hostType: "individual" });
+      await updateUserHostStatus(hostId, {
+        hostType: "individual",
+        bookingApprovalMode: instantBook ? "instant" : "request",
+      });
 
       if (typeof window !== "undefined") {
         localStorage.removeItem("darna_host_draft");
@@ -351,6 +502,7 @@ export default function BecomeHostFlow({
         ownerUserId: hostId,
         teamSizeEstimate: teamSize,
         invitedMembers: validInvites,
+        customFields: customFieldsData,
       };
 
       // 1. Post to server route handler
@@ -401,6 +553,167 @@ export default function BecomeHostFlow({
     }
   };
 
+  const handleRegisterHotel = async () => {
+    setIsSubmitting(true);
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        toast.info("Please log in to register a hotel.");
+        loginModal.onOpen();
+        setIsSubmitting(false);
+        return;
+      }
+      const hostId = user.id;
+      const validInvites = hotelTeamInvites.filter((inv) => inv.email.trim());
+      const hotelPayload = {
+        name: hotelName.trim() || "El Djazair Grand Palace Hotel",
+        businessRegistrationNumber: hotelRegNumber.trim() || "DZ-ALG-2023-B-04192",
+        businessType: "Hotel & Resort",
+        businessEmail: hotelEmail.trim() || "reservations@hoteldjazair.dz",
+        businessPhone: hotelPhone.trim() || "+213 21 69 21 21",
+        address: hotelAddress.trim() || "24 Avenue Souidani Boujemaa, Algiers",
+        ownerUserId: hostId,
+        teamSizeEstimate: "11-50" as const,
+        invitedMembers: validInvites,
+        hotelStarRating,
+        totalRoomCount: hotelTotalRooms,
+        checkInTime,
+        checkOutTime,
+        hotelAmenities,
+        bookingApprovalMode: hotelBookingMode,
+        customFields: customFieldsData,
+      };
+
+      let orgId = `org_${Date.now()}`;
+      try {
+        const res = await fetch("/api/host/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hostType: "hotel",
+            userId: hostId,
+            agency: hotelPayload,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.organization?.id) orgId = data.organization.id;
+        }
+      } catch (e) {
+        console.error("API error", e);
+      }
+
+      const org = await createOrganization({
+        ...hotelPayload,
+        businessCategory: "hotel",
+        verificationStatus: "verified",
+      });
+      const finalOrgId = orgId || org.id;
+      await updateUserHostStatus(hostId, {
+        hostType: "hotel",
+        organizationId: finalOrgId,
+      });
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("darna_host_draft");
+        localStorage.setItem("darna_mode", "host");
+        localStorage.setItem("darna_agency_id", finalOrgId);
+        document.cookie = `darna_agency_id=${finalOrgId}; path=/; max-age=31536000; SameSite=Lax`;
+        document.cookie = `darna_user_id=${hostId}; path=/; max-age=31536000; SameSite=Lax`;
+        document.cookie = "darna_host_type=hotel; path=/; max-age=31536000; SameSite=Lax";
+        document.cookie = "darna_mode=host; path=/; max-age=31536000; SameSite=Lax";
+      }
+
+      toast.success("Hotel workspace registered! Welcome to DARNA.");
+      const currentLocale = typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en";
+      const localePrefix = ["en", "fr", "ar"].includes(currentLocale) ? `/${currentLocale}` : "/en";
+      window.location.href = `${localePrefix}/host`;
+    } catch {
+      toast.error("Failed to register hotel workspace.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRegisterHostel = async () => {
+    setIsSubmitting(true);
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        toast.info("Please log in to register a hostel.");
+        loginModal.onOpen();
+        setIsSubmitting(false);
+        return;
+      }
+      const hostId = user.id;
+      const validInvites = hostelTeamInvites.filter((inv) => inv.email.trim());
+      const hostelPayload = {
+        name: hostelName.trim() || "Casbah Heritage Backpacker Hostel",
+        businessRegistrationNumber: hostelRegNumber.trim() || "DZ-ALG-2024-B-07114",
+        businessType: "Hostel & Backpacker Accommodation",
+        businessEmail: hostelEmail.trim() || "hello@casbahhostel.dz",
+        businessPhone: hostelPhone.trim() || "+213 21 73 88 19",
+        address: hostelAddress.trim() || "12 Rue Sidi Ramdane, Casbah, Algiers",
+        ownerUserId: hostId,
+        teamSizeEstimate: "2-10" as const,
+        invitedMembers: validInvites,
+        totalRoomCount: hostelTotalBeds,
+        hostelFacilities,
+        curfewPolicy,
+        agePolicy,
+        bookingApprovalMode: hostelBookingMode,
+        customFields: customFieldsData,
+      };
+
+      let orgId = `org_${Date.now()}`;
+      try {
+        const res = await fetch("/api/host/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hostType: "hostel",
+            userId: hostId,
+            agency: hostelPayload,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.organization?.id) orgId = data.organization.id;
+        }
+      } catch (e) {
+        console.error("API error", e);
+      }
+
+      const org = await createOrganization({
+        ...hostelPayload,
+        businessCategory: "hostel",
+        verificationStatus: "verified",
+      });
+      const finalOrgId = orgId || org.id;
+      await updateUserHostStatus(hostId, {
+        hostType: "hostel",
+        organizationId: finalOrgId,
+      });
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("darna_host_draft");
+        localStorage.setItem("darna_mode", "host");
+        localStorage.setItem("darna_agency_id", finalOrgId);
+        document.cookie = `darna_agency_id=${finalOrgId}; path=/; max-age=31536000; SameSite=Lax`;
+        document.cookie = `darna_user_id=${hostId}; path=/; max-age=31536000; SameSite=Lax`;
+        document.cookie = "darna_host_type=hostel; path=/; max-age=31536000; SameSite=Lax";
+        document.cookie = "darna_mode=host; path=/; max-age=31536000; SameSite=Lax";
+      }
+
+      toast.success("Hostel workspace registered! Welcome to DARNA.");
+      const currentLocale = typeof window !== "undefined" ? window.location.pathname.split("/")[1] : "en";
+      const localePrefix = ["en", "fr", "ar"].includes(currentLocale) ? `/${currentLocale}` : "/en";
+      window.location.href = `${localePrefix}/host`;
+    } catch {
+      toast.error("Failed to register hostel workspace.");
+      setIsSubmitting(false);
+    }
+  };
+
   const wilayasAlgeria = [
     { name: "Algiers", latlng: [36.7538, 3.0588] as [number, number] },
     { name: "Oran", latlng: [35.6987, -0.6349] as [number, number] },
@@ -436,12 +749,24 @@ export default function BecomeHostFlow({
     { id: "sahara_fireplace", label: "Sahara Campfire & Fireplace", icon: HiOutlineSun },
   ];
 
-  // Calculate Progress Percentage
-  const progressPercent = isAgencyFlow
-    ? Math.round((agencyStep / 5) * 100)
-    : currentStep === 0
-    ? 0
-    : Math.round((currentStep / 12) * 100);
+  // Calculate Progress Percentage dynamically from configured active steps
+  const activeStepsCount = Math.max(
+    configuredSteps.filter((s) => s.isActive).length,
+    1
+  );
+
+  const currentStepNumber = isHotelFlow
+    ? hotelStep
+    : isHostelFlow
+    ? hostelStep
+    : isAgencyFlow
+    ? agencyStep
+    : currentStep;
+
+  const progressPercent =
+    currentStep === 0 && !isAgencyFlow && !isHotelFlow && !isHostelFlow
+      ? 0
+      : Math.min(100, Math.round((currentStepNumber / activeStepsCount) * 100));
 
   return (
     <div className="min-h-screen bg-bg-light/40 flex flex-col justify-between">
@@ -459,7 +784,13 @@ export default function BecomeHostFlow({
             />
           </Link>
           <span className="hidden sm:inline-block px-2.5 py-0.5 bg-tertiary/30 text-primary text-xs font-bold rounded-full">
-            {isAgencyFlow ? "Agency Registration" : "Become a Host"}
+            {isHotelFlow
+              ? "Hotel Registration"
+              : isHostelFlow
+              ? "Hostel Registration"
+              : isAgencyFlow
+              ? "Agency Registration"
+              : "Become a Host"}
           </span>
         </div>
 
@@ -483,77 +814,147 @@ export default function BecomeHostFlow({
       {/* Main Form Content Area */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-8 pb-32 sm:pb-40 flex flex-col justify-center">
         {/* ======================================================== */}
-        {/* STEP 0: HOST-TYPE FORK (Individual vs Agency)             */}
+        {/* STEP 0: 4-WAY HOST-TYPE SELECTION (Section 2)            */}
         {/* ======================================================== */}
-        {currentStep === 0 && !isAgencyFlow && (
+        {currentStep === 0 && !isAgencyFlow && !isHotelFlow && !isHostelFlow && (
           <div className="space-y-8 animate-in fade-in">
-            <div className="text-center max-w-lg mx-auto space-y-2">
+            <div className="text-center max-w-xl mx-auto space-y-2">
               <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                Step 1 of 2 · Account Type
+                Step 1 of 2 · Partner Account Type
               </span>
               <h1 className="text-2xl sm:text-4xl font-bold text-primary font-serif">
                 How do you plan to host on DARNA?
               </h1>
               <p className="text-xs sm:text-sm text-neutral-500">
-                Choose the hosting model that best reflects your Algerian properties or fleet.
+                Choose the hosting model that best reflects your Algerian properties, fleet, or hospitality establishment.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4">
-              {/* Individual Card */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-4xl mx-auto pt-2">
+              {/* 1. Individual Card */}
               <div
                 id="choose-individual-card"
                 onClick={() => {
                   setHostType("individual");
+                  setActiveFlow("individual");
                   setCurrentStep(1);
                 }}
-                className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-tertiary hover:border-primary hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
+                className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-tertiary hover:border-primary hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
               >
                 <div className="space-y-4">
-                  <div className="w-14 h-14 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                    <HiOutlineUser size={28} />
+                  <div className="flex items-center justify-between">
+                    <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
+                      <HiOutlineUser size={26} />
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">
+                      Solo Host
+                    </span>
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-primary">Individual Host</h3>
                     <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
-                      You are an individual hosting your private villa, Casbah apartment, Sahara tent, or personal 4x4.
+                      You are an individual hosting your private villa, Casbah apartment, Sahara tent, or personal 4x4. Dedicated lightweight workspace.
                     </p>
                   </div>
                 </div>
-                <div className="pt-6 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
+                <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
                   <span>Continue as Individual</span>
                   <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
                 </div>
               </div>
 
-              {/* Agency Card */}
+              {/* 2. Agency Card */}
               <div
                 id="choose-agency-card"
                 onClick={() => {
                   setHostType("agency");
-                  setIsAgencyFlow(true);
+                  setActiveFlow("agency");
                   setAgencyStep(1);
                 }}
-                className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-tertiary hover:border-primary hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
+                className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-tertiary hover:border-primary hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
               >
                 <div className="space-y-4">
-                  <div className="w-14 h-14 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                    <HiOutlineOfficeBuilding size={28} />
+                  <div className="flex items-center justify-between">
+                    <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
+                      <BiCompass size={26} />
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">
+                      Agency Fleet
+                    </span>
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-primary">Tourism Agency / Fleet</h3>
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">
-                        Business
-                      </span>
-                    </div>
+                    <h3 className="text-lg font-bold text-primary">Tourism Agency / Fleet</h3>
                     <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
-                      You are a licensed Algerian travel agency, car rental fleet, or hotel manager with multiple properties and staff.
+                      Licensed Algerian travel agency, excursions operator, or car rental fleet with staff, multi-day tours, and fleet management.
                     </p>
                   </div>
                 </div>
-                <div className="pt-6 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
+                <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
                   <span>Register Agency Workspace</span>
+                  <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
+                </div>
+              </div>
+
+              {/* 3. Hotel Card */}
+              <div
+                id="choose-hotel-card"
+                onClick={() => {
+                  setHostType("hotel");
+                  setActiveFlow("hotel");
+                  setHotelStep(1);
+                }}
+                className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-tertiary hover:border-primary hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
+                      <HiOutlineOfficeBuilding size={26} />
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-[10px] font-bold">
+                      Hotel & Resort
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-primary">Hotel & Resort</h3>
+                    <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
+                      Multi-room boutique hotel, heritage palace, or luxury resort. Manage multiple room types, front desk check-in, and high-volume calendar.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
+                  <span>Register Hotel Property</span>
+                  <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
+                </div>
+              </div>
+
+              {/* 4. Hostel Card */}
+              <div
+                id="choose-hostel-card"
+                onClick={() => {
+                  setHostType("hostel");
+                  setActiveFlow("hostel");
+                  setHostelStep(1);
+                }}
+                className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-tertiary hover:border-primary hover:shadow-lg transition cursor-pointer flex flex-col justify-between group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
+                      <BiBed size={26} />
+                    </div>
+                    <span className="px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-[10px] font-bold">
+                      Hostel & Beds
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-primary">Hostel & Community</h3>
+                    <p className="text-xs text-neutral-500 mt-1.5 leading-relaxed">
+                      Shared dorm rooms, per-bed booking, private rooms, communal kitchen, lockers, and social backpacker atmosphere.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
+                  <span>Register Hostel Property</span>
                   <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
                 </div>
               </div>
@@ -686,6 +1087,7 @@ export default function BecomeHostFlow({
                 );
               })}
             </div>
+            {renderDynamicFieldsForStep("category_vertical")}
           </div>
         )}
 
@@ -744,6 +1146,7 @@ export default function BecomeHostFlow({
                 </div>
               ))}
             </div>
+            {renderDynamicFieldsForStep("placement")}
           </div>
         )}
 
@@ -816,6 +1219,7 @@ export default function BecomeHostFlow({
             <div className="rounded-2xl overflow-hidden border border-tertiary shadow-xs h-56 relative">
               <Map center={latlng} />
             </div>
+            {renderDynamicFieldsForStep("location")}
           </div>
         )}
 
@@ -872,6 +1276,7 @@ export default function BecomeHostFlow({
             <div className="p-3 bg-tertiary/20 rounded-2xl border border-tertiary/50 text-center text-xs font-semibold text-primary">
               Summary: {guestCount} guests · {bedroomCount} bedrooms · {bedsCount} beds · {bathroomCount} bathrooms
             </div>
+            {renderDynamicFieldsForStep("capacity")}
           </div>
         )}
 
@@ -917,6 +1322,7 @@ export default function BecomeHostFlow({
                 );
               })}
             </div>
+            {renderDynamicFieldsForStep("amenities")}
           </div>
         )}
 
@@ -1001,6 +1407,7 @@ export default function BecomeHostFlow({
                 ))}
               </div>
             </div>
+            {renderDynamicFieldsForStep("photos")}
           </div>
         )}
 
@@ -1082,6 +1489,7 @@ export default function BecomeHostFlow({
                 <span>Mention parking, terrace, views, or nearby markets</span>
               </div>
             </div>
+            {renderDynamicFieldsForStep("title_description")}
           </div>
         )}
 
@@ -1138,6 +1546,7 @@ export default function BecomeHostFlow({
                 </div>
               </div>
             </div>
+            {renderDynamicFieldsForStep("pricing")}
           </div>
         )}
 
@@ -1199,6 +1608,8 @@ export default function BecomeHostFlow({
                   ))}
                 </div>
               </div>
+              {renderDynamicFieldsForStep("approval_mode")}
+              {renderDynamicFieldsForStep("policies")}
             </div>
           </div>
         )}
@@ -1567,7 +1978,7 @@ export default function BecomeHostFlow({
                       type="button"
                       disabled={isSubmitting}
                       onClick={handleRegisterAgency}
-                      className="w-full py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/95 transition shadow-sm disabled:opacity-50"
+                      className="w-full py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/95 transition shadow-sm disabled:opacity-50 cursor-pointer"
                     >
                       {isSubmitting ? "Registering agency..." : "Register Agency Workspace"}
                     </button>
@@ -1577,13 +1988,1000 @@ export default function BecomeHostFlow({
             )}
           </div>
         )}
+
+        {/* ======================================================== */}
+        {/* HOTEL REGISTRATION FLOW (Steps H1 - H7)                   */}
+        {/* ======================================================== */}
+        {isHotelFlow && (
+          <div className="space-y-6 animate-in fade-in max-w-xl mx-auto">
+            {/* Step H1: Hotel Name & Star Rating */}
+            {hotelStep === 1 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 1 of 7 · Property Identity
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Tell us about your Hotel or Resort
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Enter the official property name and verified Algerian hotel classification.
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Hotel / Resort Name
+                    </label>
+                    <input
+                      type="text"
+                      value={hotelName}
+                      onChange={(e) => setHotelName(e.target.value)}
+                      placeholder="e.g. El Djazair Grand Palace Hotel"
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs sm:text-sm text-primary focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Star Rating Classification
+                    </label>
+                    <div className="grid grid-cols-5 gap-2 pt-1">
+                      {[1, 2, 3, 4, 5].map((stars) => (
+                        <button
+                          key={stars}
+                          type="button"
+                          onClick={() => setHotelStarRating(stars)}
+                          className={`py-3 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition ${
+                            hotelStarRating === stars
+                              ? "border-primary bg-primary text-white shadow-xs"
+                              : "border-tertiary/70 bg-neutral-50 text-neutral-700 hover:bg-neutral-100"
+                          }`}
+                        >
+                          <div className="flex items-center text-accent">
+                            {Array.from({ length: stars }).map((_, i) => (
+                              <HiOutlineStar key={i} size={13} className="fill-accent text-accent" />
+                            ))}
+                          </div>
+                          <span className="text-[11px] font-bold">
+                            {stars} Star{stars > 1 ? "s" : ""}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step H2: Scale & Operational Times */}
+            {hotelStep === 2 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 2 of 7 · Scale & Times
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Room Capacity & Check-in Timings
+                  </h2>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-tertiary/50">
+                    <div>
+                      <div className="text-xs font-bold text-primary">Total Guest Rooms</div>
+                      <div className="text-[11px] text-neutral-500">
+                        Across all room types (Suites, Deluxe, Standard)
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setHotelTotalRooms((prev) => Math.max(1, prev - 5))}
+                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
+                      >
+                        -
+                      </button>
+                      <span className="w-10 text-center font-bold font-mono text-primary text-sm">
+                        {hotelTotalRooms}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setHotelTotalRooms((prev) => prev + 5)}
+                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Standard Check-in Time
+                      </label>
+                      <input
+                        type="text"
+                        value={checkInTime}
+                        onChange={(e) => setCheckInTime(e.target.value)}
+                        placeholder="15:00"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Standard Check-out Time
+                      </label>
+                      <input
+                        type="text"
+                        value={checkOutTime}
+                        onChange={(e) => setCheckOutTime(e.target.value)}
+                        placeholder="12:00"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step H3: Hotel Amenities */}
+            {hotelStep === 3 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 3 of 7 · Facilities
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Hotel Amenities & Guest Services
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  {[
+                    { id: "breakfast", label: "Breakfast Buffet" },
+                    { id: "pool", label: "Swimming Pool" },
+                    { id: "spa", label: "Spa & Traditional Hammam" },
+                    { id: "wifi", label: "High-Speed WiFi" },
+                    { id: "valet", label: "Valet Parking" },
+                    { id: "conference", label: "Conference Halls" },
+                    { id: "reception_24_7", label: "24/7 Front Desk" },
+                    { id: "shuttle", label: "Airport Shuttle" },
+                  ].map((amenity) => {
+                    const isSelected = hotelAmenities.includes(amenity.id);
+                    return (
+                      <button
+                        key={amenity.id}
+                        type="button"
+                        onClick={() => {
+                          setHotelAmenities((prev) =>
+                            isSelected ? prev.filter((a) => a !== amenity.id) : [...prev, amenity.id]
+                          );
+                        }}
+                        className={`p-3 rounded-2xl border-2 text-start flex items-center justify-between text-xs font-bold transition ${
+                          isSelected
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-tertiary/70 bg-neutral-50 text-neutral-600 hover:border-neutral-400"
+                        }`}
+                      >
+                        <span>{amenity.label}</span>
+                        {isSelected && <HiOutlineCheck size={16} className="text-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step H4: Commercial Registration */}
+            {hotelStep === 4 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 4 of 7 · Legal & Contact
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Commercial Registration & Address
+                  </h2>
+                </div>
+
+                <div className="space-y-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Commercial Register (DZ-RC)
+                      </label>
+                      <input
+                        type="text"
+                        value={hotelRegNumber}
+                        onChange={(e) => setHotelRegNumber(e.target.value)}
+                        placeholder="DZ-ALG-2023-B-04192"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Fiscal ID (NIF)
+                      </label>
+                      <input
+                        type="text"
+                        value={hotelTaxId}
+                        onChange={(e) => setHotelTaxId(e.target.value)}
+                        placeholder="002316098765432"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Street Address & Wilaya
+                    </label>
+                    <input
+                      type="text"
+                      value={hotelAddress}
+                      onChange={(e) => setHotelAddress(e.target.value)}
+                      placeholder="24 Avenue Souidani Boujemaa, Algiers"
+                      className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Reservations Email
+                      </label>
+                      <input
+                        type="email"
+                        value={hotelEmail}
+                        onChange={(e) => setHotelEmail(e.target.value)}
+                        placeholder="reservations@hoteldjazair.dz"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Reception Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={hotelPhone}
+                        onChange={(e) => setHotelPhone(e.target.value)}
+                        placeholder="+213 21 69 21 21"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step H5: Booking Approval Mode */}
+            {hotelStep === 5 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 5 of 7 · Reservation Policy
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    How do you want to accept bookings?
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div
+                    onClick={() => setHotelBookingMode("instant")}
+                    className={`p-6 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                      hotelBookingMode === "instant"
+                        ? "border-primary bg-white shadow-md ring-2 ring-primary/20"
+                        : "border-tertiary/70 bg-white hover:border-neutral-400"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">⚡</span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
+                          Recommended
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-primary text-sm">Instant Booking</h4>
+                      <p className="text-xs text-neutral-500 leading-relaxed">
+                        Guests can reserve available rooms immediately without waiting for host confirmation. Recommended for hotels.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => setHotelBookingMode("request")}
+                    className={`p-6 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                      hotelBookingMode === "request"
+                        ? "border-primary bg-white shadow-md ring-2 ring-primary/20"
+                        : "border-tertiary/70 bg-white hover:border-neutral-400"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">📩</span>
+                        <span className="px-2 py-0.5 bg-neutral-100 text-neutral-700 text-[10px] font-bold rounded-full">
+                          Manual Review
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-primary text-sm">Request to Book</h4>
+                      <p className="text-xs text-neutral-500 leading-relaxed">
+                        Every reservation request requires manual confirmation by front desk within 24 hours before confirmation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step H6: Team Invites */}
+            {hotelStep === 6 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 6 of 7 · Front Desk Staff
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Invite Reception & Reservation Staff
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Optional. You can add front desk operators and managers at any time.
+                  </p>
+                </div>
+
+                <div className="space-y-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  {hotelTeamInvites.map((inv, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={inv.email}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setHotelTeamInvites((prev) =>
+                            prev.map((item, idx) => (idx === i ? { ...item, email: val } : item))
+                          );
+                        }}
+                        placeholder="reception@hoteldjazair.dz"
+                        className="flex-1 px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                      <select
+                        value={inv.role}
+                        onChange={(e) => {
+                          const role = e.target.value as "admin" | "manager";
+                          setHotelTeamInvites((prev) =>
+                            prev.map((item, idx) => (idx === i ? { ...item, role } : item))
+                          );
+                        }}
+                        className="px-2.5 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      >
+                        <option value="manager">Receptionist / Manager</option>
+                        <option value="admin">Hotel General Manager</option>
+                      </select>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHotelTeamInvites((prev) => [...prev, { email: "", role: "manager" }])
+                    }
+                    className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline pt-1"
+                  >
+                    <HiOutlinePlus size={15} />
+                    <span>Add another team member</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step H7: Review & Confirm Hotel */}
+            {hotelStep === 7 && (
+              <div className="space-y-4">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 7 of 7 · Final Confirmation
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Review and register Hotel Property
+                  </h2>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-tertiary shadow-xs space-y-3 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Property Name:</span>
+                    <span className="font-bold text-primary">{hotelName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Classification:</span>
+                    <span className="text-accent font-bold">{"★".repeat(hotelStarRating)} ({hotelStarRating} Stars)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Total Rooms:</span>
+                    <span className="font-mono font-bold text-primary">{hotelTotalRooms} Rooms</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Commercial Register:</span>
+                    <span className="font-mono font-bold text-primary">{hotelRegNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Booking Mode:</span>
+                    <span className="capitalize font-bold text-emerald-700">{hotelBookingMode} booking</span>
+                  </div>
+
+                  <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200 text-blue-900 mt-2">
+                    <div className="font-bold flex items-center gap-1">
+                      <HiOutlineShieldCheck size={16} />
+                      <span>Hotel Onboarding Completed</span>
+                    </div>
+                    <div className="text-[11px] mt-0.5">
+                      Your Hotel workspace will be activated immediately. You can define room types and nightly tariffs from your host extranet.
+                    </div>
+                  </div>
+
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={handleRegisterHotel}
+                      className="w-full py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/95 transition shadow-sm disabled:opacity-50 cursor-pointer"
+                    >
+                      {isSubmitting ? "Registering hotel..." : "Register Hotel Property Workspace"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* HOSTEL REGISTRATION FLOW (Steps B1 - B7)                  */}
+        {/* ======================================================== */}
+        {isHostelFlow && (
+          <div className="space-y-6 animate-in fade-in max-w-xl mx-auto">
+            {/* Step B1: Hostel Name & Address */}
+            {hostelStep === 1 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 1 of 7 · Property Identity
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Tell us about your Hostel
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Enter your backpacker hostel name and location in Algeria.
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Hostel Name
+                    </label>
+                    <input
+                      type="text"
+                      value={hostelName}
+                      onChange={(e) => setHostelName(e.target.value)}
+                      placeholder="e.g. Casbah Heritage Backpacker Hostel"
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs sm:text-sm text-primary focus:outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Street Address & City
+                    </label>
+                    <input
+                      type="text"
+                      value={hostelAddress}
+                      onChange={(e) => setHostelAddress(e.target.value)}
+                      placeholder="12 Rue Sidi Ramdane, Casbah, Algiers"
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs sm:text-sm text-primary focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B2: Bed & Room Mix */}
+            {hostelStep === 2 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 2 of 7 · Bed Inventory
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Dorm Beds & Private Rooms
+                  </h2>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-tertiary/50">
+                    <div>
+                      <div className="text-xs font-bold text-primary">Dormitory Beds</div>
+                      <div className="text-[11px] text-neutral-500">
+                        Bookable individually per bed in shared rooms
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.max(0, hostelDormBeds - 4);
+                          setHostelDormBeds(next);
+                          setHostelTotalBeds(next + hostelPrivateRooms);
+                        }}
+                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
+                      >
+                        -
+                      </button>
+                      <span className="w-10 text-center font-bold font-mono text-primary text-sm">
+                        {hostelDormBeds}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = hostelDormBeds + 4;
+                          setHostelDormBeds(next);
+                          setHostelTotalBeds(next + hostelPrivateRooms);
+                        }}
+                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
+                      <div className="text-xs font-bold text-primary">Private Rooms</div>
+                      <div className="text-[11px] text-neutral-500">
+                        Private rooms booked as single units
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.max(0, hostelPrivateRooms - 1);
+                          setHostelPrivateRooms(next);
+                          setHostelTotalBeds(hostelDormBeds + next);
+                        }}
+                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
+                      >
+                        -
+                      </button>
+                      <span className="w-10 text-center font-bold font-mono text-primary text-sm">
+                        {hostelPrivateRooms}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = hostelPrivateRooms + 1;
+                          setHostelPrivateRooms(next);
+                          setHostelTotalBeds(hostelDormBeds + next);
+                        }}
+                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B3: Facilities & House Rules */}
+            {hostelStep === 3 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 3 of 7 · Facilities & Rules
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Shared Facilities & House Rules
+                  </h2>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { id: "lockers", label: "Personal Lockers" },
+                      { id: "shared_kitchen", label: "Communal Kitchen" },
+                      { id: "rooftop", label: "Rooftop Social Patio" },
+                      { id: "coworking", label: "Co-working Zone" },
+                      { id: "luggage_storage", label: "Free Luggage Hold" },
+                      { id: "breakfast", label: "Hostel Breakfast" },
+                    ].map((facility) => {
+                      const isSelected = hostelFacilities.includes(facility.id);
+                      return (
+                        <button
+                          key={facility.id}
+                          type="button"
+                          onClick={() => {
+                            setHostelFacilities((prev) =>
+                              isSelected ? prev.filter((f) => f !== facility.id) : [...prev, facility.id]
+                            );
+                          }}
+                          className={`p-3 rounded-2xl border-2 text-start flex items-center justify-between text-xs font-bold transition ${
+                            isSelected
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-tertiary/70 bg-neutral-50 text-neutral-600 hover:border-neutral-400"
+                          }`}
+                        >
+                          <span>{facility.label}</span>
+                          {isSelected && <HiOutlineCheck size={16} className="text-primary shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Curfew Policy
+                      </label>
+                      <input
+                        type="text"
+                        value={curfewPolicy}
+                        onChange={(e) => setCurfewPolicy(e.target.value)}
+                        placeholder="No curfew · 24h keycard access"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Age Policy
+                      </label>
+                      <input
+                        type="text"
+                        value={agePolicy}
+                        onChange={(e) => setAgePolicy(e.target.value)}
+                        placeholder="18-35 only in dorms"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B4: Commercial Registration */}
+            {hostelStep === 4 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 4 of 7 · Legal & Contact
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Legal Registration & Reception Contact
+                  </h2>
+                </div>
+
+                <div className="space-y-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Commercial Register (DZ-RC)
+                      </label>
+                      <input
+                        type="text"
+                        value={hostelRegNumber}
+                        onChange={(e) => setHostelRegNumber(e.target.value)}
+                        placeholder="DZ-ALG-2024-B-07114"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Tax ID (NIF)
+                      </label>
+                      <input
+                        type="text"
+                        value={hostelTaxId}
+                        onChange={(e) => setHostelTaxId(e.target.value)}
+                        placeholder="002416098877112"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Hostel Email
+                      </label>
+                      <input
+                        type="email"
+                        value={hostelEmail}
+                        onChange={(e) => setHostelEmail(e.target.value)}
+                        placeholder="hello@casbahhostel.dz"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Hostel Phone / WhatsApp
+                      </label>
+                      <input
+                        type="tel"
+                        value={hostelPhone}
+                        onChange={(e) => setHostelPhone(e.target.value)}
+                        placeholder="+213 21 73 88 19"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B5: Booking Approval Mode */}
+            {hostelStep === 5 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 5 of 7 · Reservation Policy
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    How do you want to accept bookings?
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div
+                    onClick={() => setHostelBookingMode("instant")}
+                    className={`p-6 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                      hostelBookingMode === "instant"
+                        ? "border-primary bg-white shadow-md ring-2 ring-primary/20"
+                        : "border-tertiary/70 bg-white hover:border-neutral-400"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">⚡</span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
+                          Recommended
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-primary text-sm">Instant Bed Booking</h4>
+                      <p className="text-xs text-neutral-500 leading-relaxed">
+                        Backpackers can book immediately and receive hostel access instantly. Keeps hostel occupancy high.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => setHostelBookingMode("request")}
+                    className={`p-6 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between ${
+                      hostelBookingMode === "request"
+                        ? "border-primary bg-white shadow-md ring-2 ring-primary/20"
+                        : "border-tertiary/70 bg-white hover:border-neutral-400"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl">📩</span>
+                        <span className="px-2 py-0.5 bg-neutral-100 text-neutral-700 text-[10px] font-bold rounded-full">
+                          Manual Review
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-primary text-sm">Request to Book</h4>
+                      <p className="text-xs text-neutral-500 leading-relaxed">
+                        Hostel desk reviews each traveler request before accepting reservation within 24 hours.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B6: Team Invites */}
+            {hostelStep === 6 && (
+              <div className="space-y-5">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 6 of 7 · Community Team
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Invite Hostel Crew & Volunteers
+                  </h2>
+                </div>
+
+                <div className="space-y-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  {hostelTeamInvites.map((inv, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={inv.email}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setHostelTeamInvites((prev) =>
+                            prev.map((item, idx) => (idx === i ? { ...item, email: val } : item))
+                          );
+                        }}
+                        placeholder="crew@casbahhostel.dz"
+                        className="flex-1 px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                      <select
+                        value={inv.role}
+                        onChange={(e) => {
+                          const role = e.target.value as "admin" | "manager";
+                          setHostelTeamInvites((prev) =>
+                            prev.map((item, idx) => (idx === i ? { ...item, role } : item))
+                          );
+                        }}
+                        className="px-2.5 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      >
+                        <option value="manager">Desk Crew / Volunteer</option>
+                        <option value="admin">Hostel Manager</option>
+                      </select>
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHostelTeamInvites((prev) => [...prev, { email: "", role: "manager" }])
+                    }
+                    className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline pt-1"
+                  >
+                    <HiOutlinePlus size={15} />
+                    <span>Add another crew member</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step B7: Review & Confirm Hostel */}
+            {hostelStep === 7 && (
+              <div className="space-y-4">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 7 of 7 · Final Confirmation
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Review and register Hostel Property
+                  </h2>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-tertiary shadow-xs space-y-3 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Hostel Name:</span>
+                    <span className="font-bold text-primary">{hostelName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Total Beds:</span>
+                    <span className="font-mono font-bold text-primary">{hostelTotalBeds} Beds ({hostelDormBeds} dorm, {hostelPrivateRooms} private)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Location:</span>
+                    <span className="text-primary">{hostelAddress}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Commercial Register:</span>
+                    <span className="font-mono font-bold text-primary">{hostelRegNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Booking Mode:</span>
+                    <span className="capitalize font-bold text-emerald-700">{hostelBookingMode} booking</span>
+                  </div>
+
+                  <div className="p-3 bg-purple-50 rounded-2xl border border-purple-200 text-purple-900 mt-2">
+                    <div className="font-bold flex items-center gap-1">
+                      <HiOutlineShieldCheck size={16} />
+                      <span>Hostel Community Profile Ready</span>
+                    </div>
+                    <div className="text-[11px] mt-0.5">
+                      Your hostel workspace will be active immediately. You can manage per-bed tariffs, dorm room allocations, and guest arrivals.
+                    </div>
+                  </div>
+
+                  <div className="pt-3">
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={handleRegisterHostel}
+                      className="w-full py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/95 transition shadow-sm disabled:opacity-50 cursor-pointer"
+                    >
+                      {isSubmitting ? "Registering hostel..." : "Register Hostel Workspace"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dynamic Custom Step Renderer (for admin-created custom steps) */}
+        {configuredSteps.map((customStep, customIdx) => {
+          if (!customStep.id.startsWith("custom_step_") || !customStep.isActive) return null;
+          const isCustomActive = currentStepNumber === customIdx + 1;
+          if (!isCustomActive) return null;
+
+          return (
+            <div key={customStep.id} className="space-y-6 max-w-xl mx-auto animate-in fade-in">
+              <div className="text-center space-y-1">
+                <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                  Step {customIdx + 1} of {activeStepsCount}
+                </span>
+                <h2 className="text-2xl font-bold text-primary font-serif">
+                  {customStep.title.en}
+                </h2>
+                {customStep.description && (
+                  <p className="text-xs text-neutral-500">{customStep.description.en}</p>
+                )}
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                <DynamicStepFields
+                  fields={customStep.fields}
+                  values={customFieldsData}
+                  onChange={(fieldId, val) =>
+                    setCustomFieldsData((prev) => ({ ...prev, [fieldId]: val }))
+                  }
+                />
+              </div>
+            </div>
+          );
+        })}
       </main>
 
       {/* Bottom Sticky Navigation Bar */}
       <footer className="sticky bottom-0 z-30 bg-white/95 backdrop-blur-md border-t border-tertiary/60 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         {/* Back Button */}
         <div>
-          {isAgencyFlow ? (
+          {isHotelFlow ? (
+            hotelStep > 1 ? (
+              <button
+                type="button"
+                onClick={() => setHotelStep((prev) => prev - 1)}
+                className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
+              >
+                <HiOutlineChevronLeft size={16} />
+                <span>Back</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveFlow("none");
+                  setCurrentStep(0);
+                }}
+                className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
+              >
+                <HiOutlineChevronLeft size={16} />
+                <span>Choose account type</span>
+              </button>
+            )
+          ) : isHostelFlow ? (
+            hostelStep > 1 ? (
+              <button
+                type="button"
+                onClick={() => setHostelStep((prev) => prev - 1)}
+                className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
+              >
+                <HiOutlineChevronLeft size={16} />
+                <span>Back</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveFlow("none");
+                  setCurrentStep(0);
+                }}
+                className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
+              >
+                <HiOutlineChevronLeft size={16} />
+                <span>Choose account type</span>
+              </button>
+            )
+          ) : isAgencyFlow ? (
             agencyStep > 1 ? (
               <button
                 type="button"
@@ -1597,7 +2995,7 @@ export default function BecomeHostFlow({
               <button
                 type="button"
                 onClick={() => {
-                  setIsAgencyFlow(false);
+                  setActiveFlow("none");
                   setCurrentStep(0);
                 }}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
@@ -1620,16 +3018,68 @@ export default function BecomeHostFlow({
 
         {/* Step Indicator */}
         <div className="text-xs font-semibold text-neutral-400">
-          {isAgencyFlow
-            ? `Step ${agencyStep} of 5`
-            : currentStep > 0
-            ? `Step ${currentStep} of 12`
-            : "Select host mode"}
+          {currentStep === 0 && !isAgencyFlow && !isHotelFlow && !isHostelFlow
+            ? "Select host mode"
+            : `Step ${currentStepNumber} of ${activeStepsCount}`}
         </div>
 
         {/* Next / Action Button */}
         <div>
-          {isAgencyFlow ? (
+          {isHotelFlow ? (
+            hotelStep < 7 ? (
+              <button
+                type="button"
+                id="hotel-next-btn"
+                onClick={() => {
+                  if (hotelStep === 1 && !hotelName.trim()) {
+                    toast.error("Please enter your hotel name.");
+                    return;
+                  }
+                  setHotelStep((prev) => prev + 1);
+                }}
+                className="px-6 py-2 bg-primary text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-primary/95 transition shadow-xs cursor-pointer"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="button"
+                id="hotel-register-footer-btn"
+                disabled={isSubmitting}
+                onClick={handleRegisterHotel}
+                className="px-6 py-2.5 bg-primary text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-primary/95 transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              >
+                {isSubmitting ? "Registering hotel..." : "Register Hotel Property"}
+              </button>
+            )
+          ) : isHostelFlow ? (
+            hostelStep < 7 ? (
+              <button
+                type="button"
+                id="hostel-next-btn"
+                onClick={() => {
+                  if (hostelStep === 1 && !hostelName.trim()) {
+                    toast.error("Please enter your hostel name.");
+                    return;
+                  }
+                  setHostelStep((prev) => prev + 1);
+                }}
+                className="px-6 py-2 bg-primary text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-primary/95 transition shadow-xs cursor-pointer"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="button"
+                id="hostel-register-footer-btn"
+                disabled={isSubmitting}
+                onClick={handleRegisterHostel}
+                className="px-6 py-2.5 bg-primary text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-primary/95 transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-2"
+              >
+                {isSubmitting ? "Registering hostel..." : "Register Hostel Workspace"}
+              </button>
+            )
+          ) : isAgencyFlow ? (
             agencyStep < 5 ? (
               <button
                 type="button"

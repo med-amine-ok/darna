@@ -10,12 +10,16 @@ interface CalendarProps {
   value: Range;
   onChange: (value: RangeKeyDict) => void;
   disabledDates?: Date[];
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 export default function Calendar({
   value,
   onChange,
   disabledDates,
+  minDate,
+  maxDate,
 }: CalendarProps) {
   return (
     <div className="darna-calendar-wrapper">
@@ -26,7 +30,8 @@ export default function Calendar({
         onChange={onChange}
         direction="vertical"
         showDateDisplay={false}
-        minDate={new Date()}
+        minDate={minDate || new Date()}
+        maxDate={maxDate}
         disabledDates={disabledDates}
       />
     </div>

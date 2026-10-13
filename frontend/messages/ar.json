@@ -50,6 +50,7 @@
     "tabHomes": "المنازل",
     "tabExperiences": "التجارب",
     "tabVehicles": "مركبات",
+    "tabTrips": "الرحلات",
     "search": "بحث"
   },
   "nav": {
@@ -65,6 +66,7 @@
     "tabExperiences": "التجارب",
     "tabServices": "الخدمات",
     "tabVehicles": "مركبات",
+    "tabTrips": "الرحلات",
     "where": "أين",
     "searchDestinations": "ابحث عن وجهات",
     "when": "متى",
@@ -165,9 +167,13 @@
     "clearAllFilters": "مسح جميع عوامل التصفية",
     "showMap": "عرض الخريطة",
     "hideMap": "إخفاء الخريطة",
-    "forNights": "لمدة {count, plural, =1 {ليلة واحدة} =2 {ليلتين} few {# ليالٍ} many {# ليلة} other {# ليلة}}"
+    "forNights": "لمدة {count, plural, =1 {ليلة واحدة} =2 {ليلتين} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+    "partialAvailabilityBadge": "متاح من {range} ضمن تواريخك"
   },
   "listing": {
+    "partialAvailabilityNoticeTitle": "تنبيه التوفر الجزئي",
+    "partialAvailabilityNotice": "كانت تواريخ بحثك {searched}، ولكن هذا المكان متاح فقط من {available} خلال تلك الفترة. تم تعديل التقويم تلقائياً وفقاً للتواريخ المتاحة.",
+    "outsideAvailabilityError": "التواريخ المحددة خارج نطاق التوفر المتاح لهذا الإعلان ({range}).",
     "hostedBy": "المضيف: {name}",
     "hostSince": "مضيف منذ {year}",
     "guestCount": "{count, plural, =1 {ضيف واحد} =2 {ضيفان} few {# ضيوف} many {# ضيفاً} other {# ضيف}}",
@@ -1059,5 +1065,44 @@
     "contactAgency": "التواصل مع الوكالة",
     "allStays": "جميع أماكن الإقامة",
     "team": "فريق الضيافة والإدارة"
+  },
+  "adminOnboarding": {
+    "title": "محرر مسار انضمام المضيفين",
+    "subtitle": "تكوين ديناميكي لتسلسل الخطوات وحقول النماذج المطلوبة لكل نوع من أنواع المضيفين الأربعة.",
+    "addStep": "إضافة خطوة جديدة",
+    "resetDefaults": "استعادة الإعدادات الافتراضية",
+    "saveChanges": "حفظ التغييرات",
+    "livePreview": "معاينة حية للمسار",
+    "individualTab": "مضيف فردي (منفرد)",
+    "agencyTab": "وكالة سياحة وأسفار",
+    "hotelTab": "فندق ومنتجع",
+    "hostelTab": "نزل شباب للرحالة",
+    "activeSteps": "خطوات مفعلة",
+    "coreStep": "خطوة أساسية",
+    "addField": "إضافة حقل",
+    "saveStep": "حفظ الخطوة",
+    "saveField": "حفظ الحقل"
+  },
+  "adminWallets": {
+    "title": "محافظ المضيفين وسجل الحسابات",
+    "subtitle": "إيداعات مسبقة الدفع بدون إنترنت، سجل حركات غير قابل للتعديل واقتطاع تلقائي لعمولة الحجوزات.",
+    "hostDeposits": "إجمالي ودائع المضيفين",
+    "commissionDeducted": "العمولات المستقطعة",
+    "activeWallets": "المحافظ النشطة",
+    "negativeBalances": "الأرصدة السالبة",
+    "rechargeBalance": "شحن الرصيد",
+    "viewLedger": "عرض سجل الحركات",
+    "solvent": "رصيد إيجابي مالي",
+    "negativeActionNeeded": "رصيد سالب / إجراء مطلوب",
+    "confirmCredit": "تأكيد شحن الرصيد",
+    "depositAmount": "مبلغ الإيداع (دج)"
+  },
+  "hostWallet": {
+    "title": "محفظة ورصيد المضيف مسبقة الدفع",
+    "currentBalance": "الرصيد الإيداعي الحالي",
+    "applicableCommission": "نسبة العمولة المطبقة",
+    "rechargeProcess": "آلية الشحن المالي",
+    "statementHistory": "كشف الحساب والسجل",
+    "negativeNotice": "إجراء مطلوب: رصيد المضيف سالب"
   }
 }

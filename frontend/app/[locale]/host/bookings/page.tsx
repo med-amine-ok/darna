@@ -24,11 +24,15 @@ export default async function HostBookingsPage() {
     getHostListings(orgId || hostId),
   ]);
 
+  const userForClient = currentUser
+    ? { ...currentUser, hostType: (effectiveHostType || "individual") as any }
+    : ({ id: hostId, hostType: (effectiveHostType || "individual") as any, name: "Host", email: "" } as any);
+
   return (
     <HostBookingsClient
       initialReservations={reservations}
       hostListings={hostListings}
-      currentUser={currentUser}
+      currentUser={userForClient}
     />
   );
 }

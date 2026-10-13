@@ -8,12 +8,14 @@ import { useSearchParams } from "next/navigation";
 import qs from "query-string";
 import { useTranslations } from "next-intl";
 import { TbAdjustmentsHorizontal, TbMap, TbList } from "react-icons/tb";
-import { Listing, User, ListingVertical } from "@/types";
+import { Listing, User, ListingVertical, Trip } from "@/types";
 import ListingCard from "@/components/listing/ListingCard";
+import TripCard from "@/components/trips/TripCard";
 import EmptyState from "@/components/EmptyState";
 import { useFilterModal } from "@/hook/useFilterModal";
 import { useSearchModal } from "@/hook/useSearchModal";
 import { BiSearch } from "react-icons/bi";
+import { Compass } from "lucide-react";
 
 // Dynamically import Leaflet map with ssr: false
 const SearchMap = dynamic(() => import("./SearchMap"), {
@@ -27,6 +29,7 @@ const SearchMap = dynamic(() => import("./SearchMap"), {
 
 interface SearchResultsClientProps {
   listings: Listing[];
+  trips?: Trip[];
   currentUser?: User | null;
   destination?: string;
   activeVertical?: ListingVertical;
@@ -34,6 +37,7 @@ interface SearchResultsClientProps {
 
 export default function SearchResultsClient({
   listings,
+  trips = [],
   currentUser,
   destination,
   activeVertical,
@@ -132,6 +136,7 @@ export default function SearchResultsClient({
     { id: "home", label: "Homes", imgSrc: "/assets/house.png" },
     { id: "vehicle", label: "Vehicles 4x4", imgSrc: "/assets/car.png" },
     { id: "experience", label: "Experiences", imgSrc: "/assets/location.png" },
+    { id: "trip", label: "Agency Circuits", isCompass: true },
   ];
 
   return (
@@ -184,6 +189,11 @@ export default function SearchResultsClient({
                           width={14}
                           height={14}
                           className={`object-contain ${isActive ? "brightness-0 invert" : ""}`}
+                        />
+                      ) : (tab as any).isCompass ? (
+                        <Compass
+                          size={13}
+                          className={isActive ? "text-white" : "text-secondary"}
                         />
                       ) : (
                         <span className="me-0.5">{tab.icon}</span>
@@ -314,7 +324,21 @@ export default function SearchResultsClient({
             )}
 
             {/* Empty State or Listing Cards Grid */}
-            {displayListings.length === 0 ? (
+            {currentVertical === "trip" ? (
+              trips.length === 0 ? (
+                <EmptyState
+                  title="No agency circuits found"
+                  subtitle="Try selecting another destination or clear filters to view all trips."
+                  showReset
+                />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {trips.map((trip) => (
+                    <TripCard key={trip.id} trip={trip} />
+                  ))}
+                </div>
+              )
+            ) : displayListings.length === 0 ? (
               <EmptyState
                 title="No listings in this map area"
                 subtitle="Zoom out or pan across the map to discover listings across Algeria."

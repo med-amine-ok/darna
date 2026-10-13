@@ -98,6 +98,15 @@ export default function Search({
       whoPlaceholder: "Number of participants",
       whoSubtitle: "Attendees count",
     },
+    trip: {
+      whereTitle: "Circuit / Region",
+      wherePlaceholder: "Sahara, Atlas, Coast...",
+      whenTitle: "Trip Dates",
+      whenPlaceholder: "Departure dates",
+      whoTitle: "Travelers",
+      whoPlaceholder: "Number of participants",
+      whoSubtitle: "All ages welcome",
+    },
   }[activeVertical || "home"];
 
   const formattedDates =

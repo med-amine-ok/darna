@@ -119,35 +119,72 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
           <div className="flex flex-col cursor-pointer">
             {currentUser ? (
               <>
-                <MenuItem
-                  onClick={handleHostAction}
-                  label={isHost ? "Switch to hosting" : "Become a host"}
-                  bold
-                />
-                <hr className="my-1 border-tertiary/30" />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/profile");
-                  }}
-                  label="Profile & Passport"
-                />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/trips");
-                  }}
-                  label="Trips"
-                />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/favorites");
-                  }}
-                  label="Wishlist"
-                />
+                {/* 1. Mode Switcher Banner */}
+                <div className="p-1.5 pb-2 border-b border-tertiary/40">
+                  <button
+                    type="button"
+                    onClick={handleHostAction}
+                    className="w-full text-start px-3 py-2 bg-primary/5 hover:bg-primary/10 rounded-xl font-bold text-primary transition flex items-center justify-between text-xs btn-press"
+                  >
+                    <span>{isHost ? "Switch to hosting" : "Become a host"}</span>
+                    <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary text-white font-black">
+                      {isHost ? "Host Mode" : "Start"}
+                    </span>
+                  </button>
+                </div>
+
+                {/* 2. Travel & Activity */}
+                <div className="py-1">
+                  <div className="px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                    Travel & Activity
+                  </div>
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/trips");
+                    }}
+                    label="Trips & Bookings"
+                  />
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/favorites");
+                    }}
+                    label="Wishlist"
+                  />
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/messages");
+                    }}
+                    label="Messages"
+                  />
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/notifications");
+                    }}
+                    label="Notifications"
+                  />
+                </div>
+
+                {/* 3. Host Workspace Quick Access */}
                 {isHost && (
-                  <>
+                  <div className="py-1 border-t border-tertiary/30">
+                    <div className="px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-secondary">
+                      Hosting Tools
+                    </div>
+                    <MenuItem
+                      onClick={() => {
+                        setIsOpen(false);
+                        try {
+                          localStorage.setItem("darna_mode", "host");
+                        } catch (e) {}
+                        router.push("/host");
+                      }}
+                      label="Host Workspace"
+                      bold
+                    />
                     <MenuItem
                       onClick={() => {
                         setIsOpen(false);
@@ -162,37 +199,37 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
                       }}
                       label="Manage properties"
                     />
-                  </>
+                  </div>
                 )}
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/messages");
-                  }}
-                  label="Messages"
-                />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/notifications");
-                  }}
-                  label="Notifications"
-                />
-                <hr className="my-1 border-tertiary/30" />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/settings");
-                  }}
-                  label="Account settings"
-                />
-                <MenuItem
-                  onClick={() => {
-                    setIsOpen(false);
-                    router.push("/help");
-                  }}
-                  label="Help Center"
-                />
+
+                {/* 4. Account & Support */}
+                <div className="py-1 border-t border-tertiary/30">
+                  <div className="px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                    Account & Support
+                  </div>
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/profile");
+                    }}
+                    label="Profile & Passport"
+                  />
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/settings");
+                    }}
+                    label="Account settings"
+                  />
+                  <MenuItem
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push("/help");
+                    }}
+                    label="Help Center"
+                  />
+                </div>
+
                 <hr className="my-1 border-tertiary/30" />
                 <MenuItem
                   onClick={handleLogout}

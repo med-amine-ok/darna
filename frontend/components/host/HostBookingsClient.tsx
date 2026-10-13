@@ -19,10 +19,15 @@ import {
   HiOutlineCash,
   HiOutlineInformationCircle,
   HiOutlineEye,
+  HiOutlineClock,
+  HiOutlineBan,
 } from "react-icons/hi";
 import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import Calendar from "@/components/inputs/Calendar";
+import { Range } from "react-date-range";
+import { format, addDays } from "date-fns";
 
 interface HostBookingsClientProps {
   initialReservations: Reservation[];
@@ -45,13 +50,63 @@ export default function HostBookingsClient({
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [declineReasonOption, setDeclineReasonOption] = useState<string>("dates_unavailable");
+  const [customDeclineReason, setCustomDeclineReason] = useState<string>("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Solo Host Mini-Calendar State (Section 4)
+  const isIndividual = currentUser?.hostType === "individual" || !currentUser?.hostType;
+  const [showMiniCalendar, setShowMiniCalendar] = useState<boolean>(isIndividual);
+  const [calendarRange, setCalendarRange] = useState<Range>({
+    startDate: new Date(),
+    endDate: addDays(new Date(), 2),
+    key: "selection",
+  });
+  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+
+  const handleBlockSelectedDates = () => {
+    if (!calendarRange.startDate || !calendarRange.endDate) return;
+    const newBlocked: Date[] = [];
+    let cur = new Date(calendarRange.startDate);
+    while (cur <= calendarRange.endDate) {
+      newBlocked.push(new Date(cur));
+      cur = addDays(cur, 1);
+    }
+    setBlockedDates((prev) => [...prev, ...newBlocked]);
+    toast.success("Dates blocked on your calendar! New inquiries will be prevented.");
+  };
+
+  const handleUnblockSelectedDates = () => {
+    if (!calendarRange.startDate || !calendarRange.endDate) return;
+    const start = calendarRange.startDate.getTime();
+    const end = calendarRange.endDate.getTime();
+    setBlockedDates((prev) =>
+      prev.filter((d) => d.getTime() < start || d.getTime() > end)
+    );
+    toast.info("Dates unblocked and opened for booking.");
+  };
 
   const todayStr = new Date().toISOString().split("T")[0];
 
+  // Helper to compute remaining 24h approval time
+  const getRemainingTime = (res: Reservation) => {
+    const expiresAt = res.expiresAt
+      ? new Date(res.expiresAt).getTime()
+      : new Date(res.createdAt).getTime() + 24 * 60 * 60 * 1000;
+    const diff = expiresAt - Date.now();
+    if (diff <= 0) return { expired: true, text: "Expired (auto-declined)", urgent: false };
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return {
+      expired: false,
+      urgent: hours < 4,
+      text: `${hours}h ${minutes}m left to respond`,
+    };
+  };
+
   // Helper to categorize reservation
   const getReservationCategory = (res: Reservation): TabType => {
-    if (res.status === "cancelled") return "cancelled";
+    if (res.status === "cancelled" || res.status === "declined") return "cancelled";
     if (res.status === "pending") return "pending";
     if (res.status === "completed") return "past";
     if (res.endDate < todayStr) return "past";
@@ -125,17 +180,33 @@ export default function HostBookingsClient({
 
   const executeDecline = async (id: string) => {
     setActionLoading(id);
+    const reasonText =
+      declineReasonOption === "other"
+        ? customDeclineReason.trim() || "Declined by host"
+        : declineReasonOption === "dates_unavailable"
+        ? "Dates no longer available"
+        : declineReasonOption === "maintenance"
+        ? "Property maintenance scheduled"
+        : "Guest count / policy requirements mismatch";
+
     try {
-      const updated = await updateReservationStatus(id, "cancelled");
+      const updated = await updateReservationStatus(id, "declined", { declineReason: reasonText });
       if (updated) {
-        setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: "cancelled" } : r)));
-        toast.info("Reservation request declined.");
+        setReservations((prev) =>
+          prev.map((r) =>
+            r.id === id
+              ? { ...r, status: "declined", declineReason: reasonText, paymentStatus: "refunded" }
+              : r
+          )
+        );
+        toast.info("Reservation request declined. Dates are now open.");
       }
     } catch {
       toast.error("Failed to decline reservation.");
     } finally {
       setActionLoading(null);
       setDecliningId(null);
+      setCustomDeclineReason("");
     }
   };
 
@@ -173,12 +244,25 @@ export default function HostBookingsClient({
             Host Reservations
           </h1>
           <p className="text-sm text-neutral-600 mt-1">
-            Manage incoming booking requests, guest check-ins, and DZD net payouts across your fleet.
+            {isIndividual
+              ? "Manage your incoming booking requests, guest check-ins, and earnings."
+              : "Manage incoming booking requests, guest check-ins, and DZD net payouts across your fleet."}
           </p>
         </div>
 
-        {/* Quick summary stats */}
+        {/* Quick summary stats & Solo calendar toggle */}
         <div className="flex items-center gap-3">
+          {isIndividual && (
+            <button
+              type="button"
+              onClick={() => setShowMiniCalendar(!showMiniCalendar)}
+              className="px-4 py-2.5 rounded-2xl border border-tertiary bg-white hover:bg-neutral-50 text-xs font-bold text-primary flex items-center gap-2 shadow-2xs transition btn-press cursor-pointer"
+            >
+              <HiOutlineCalendar size={16} className="text-secondary" />
+              <span>{showMiniCalendar ? "Hide Calendar" : "Quick Calendar"}</span>
+            </button>
+          )}
+
           <div className="bg-white border border-tertiary/70 rounded-2xl px-4 py-2.5 shadow-2xs text-center">
             <span className="block text-xs font-bold text-neutral-500 uppercase tracking-wider">
               Total Stays
@@ -193,6 +277,85 @@ export default function HostBookingsClient({
           </div>
         </div>
       </div>
+
+      {/* Embedded Mini-Calendar for Solo Host (Section 4) */}
+      {showMiniCalendar && (
+        <div className="mb-6 p-6 bg-white rounded-3xl border border-tertiary/70 shadow-2xs animate-in fade-in space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-tertiary/40 pb-4">
+            <div>
+              <h3 className="font-serif text-base sm:text-lg font-bold text-primary flex items-center gap-2">
+                <HiOutlineCalendar className="text-secondary" />
+                <span>Solo Host Mini-Calendar & Date Availability</span>
+              </h3>
+              <p className="text-xs text-neutral-500">
+                Quick view of your occupied dates and one-click date blocking.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-neutral-600 font-medium">Confirmed Stays</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span className="text-neutral-600 font-medium">Pending Requests</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-neutral-800" />
+                <span className="text-neutral-600 font-medium">Blocked</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Calendar Widget */}
+            <div className="lg:col-span-2">
+              <Calendar
+                value={calendarRange}
+                onChange={(val) => setCalendarRange(val.selection)}
+                disabledDates={blockedDates}
+              />
+            </div>
+
+            {/* Date Block Actions */}
+            <div className="bg-neutral-50 rounded-2xl p-5 border border-tertiary/60 space-y-4 text-xs">
+              <div>
+                <span className="font-bold text-xs text-neutral-400 uppercase tracking-wider block">
+                  Selected Range
+                </span>
+                <span className="text-sm font-bold text-primary block mt-0.5">
+                  {calendarRange.startDate && calendarRange.endDate
+                    ? `${format(calendarRange.startDate, "MMM d, yyyy")} – ${format(calendarRange.endDate, "MMM d, yyyy")}`
+                    : "Select dates on the calendar"}
+                </span>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-tertiary/40">
+                <button
+                  type="button"
+                  onClick={handleBlockSelectedDates}
+                  className="w-full py-2.5 px-3 bg-neutral-800 hover:bg-black text-white rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-2xs cursor-pointer btn-press"
+                >
+                  <HiOutlineBan size={15} />
+                  <span>Block These Dates</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUnblockSelectedDates}
+                  className="w-full py-2.5 px-3 bg-white hover:bg-neutral-100 text-primary border border-tertiary/80 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-2xs cursor-pointer btn-press"
+                >
+                  <HiOutlineCheckCircle size={15} className="text-emerald-600" />
+                  <span>Unblock Dates</span>
+                </button>
+              </div>
+
+              <div className="pt-2 text-[11px] text-neutral-500 leading-relaxed">
+                Blocked dates are instantly removed from search results so guests cannot book those nights.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-tertiary/60 overflow-x-auto pb-1 mb-6 scrollbar-none">
@@ -317,6 +480,7 @@ export default function HostBookingsClient({
             const listing = res.listing;
             const cat = getReservationCategory(res);
             const netPayout = Math.round(res.totalPrice * 0.97); // 3% DARNA platform commission
+            const timer = getRemainingTime(res);
 
             return (
               <div
@@ -346,10 +510,24 @@ export default function HostBookingsClient({
                       </span>
                       {/* Status Badges */}
                       {res.status === "pending" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-                          Pending Host Confirmation
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                            Pending Host Confirmation
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border flex items-center gap-1 ${
+                              timer.expired
+                                ? "bg-neutral-100 text-neutral-500 border-neutral-300"
+                                : timer.urgent
+                                ? "bg-rose-100 text-rose-800 border-rose-300 animate-pulse"
+                                : "bg-amber-50 text-amber-800 border-amber-200"
+                            }`}
+                          >
+                            <HiOutlineClock size={12} />
+                            {timer.text}
+                          </span>
+                        </div>
                       )}
                       {res.status === "confirmed" && cat === "current" && (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
@@ -364,6 +542,11 @@ export default function HostBookingsClient({
                       {res.status === "completed" && (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-neutral-100 text-neutral-700 border border-neutral-300">
                           Completed
+                        </span>
+                      )}
+                      {res.status === "declined" && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                          Declined by Host {res.declineReason ? `· ${res.declineReason}` : ""}
                         </span>
                       )}
                       {res.status === "cancelled" && (
@@ -409,6 +592,21 @@ export default function HostBookingsClient({
                         })}
                       </span>
                     </div>
+
+                    {/* Guest note if provided */}
+                    {res.guestMessage && (
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-neutral-50/80 border border-tertiary/70 text-xs text-neutral-700 flex items-start gap-2">
+                        <HiOutlineChatAlt2 className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                            Note from guest
+                          </span>
+                          <p className="italic text-neutral-600 leading-snug">
+                            &ldquo;{res.guestMessage}&rdquo;
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -442,24 +640,32 @@ export default function HostBookingsClient({
                 <div className="flex items-center gap-2 shrink-0">
                   {res.status === "pending" ? (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => handleAccept(res.id)}
-                        disabled={actionLoading === res.id}
-                        className="px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
-                      >
-                        <HiOutlineCheckCircle size={16} />
-                        <span>Accept</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDecline(res.id)}
-                        disabled={actionLoading === res.id}
-                        className="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold hover:bg-rose-100 transition flex items-center gap-1.5 disabled:opacity-50"
-                      >
-                        <HiOutlineXCircle size={16} />
-                        <span>Decline</span>
-                      </button>
+                      {timer.expired ? (
+                        <span className="px-3 py-1.5 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-500 text-xs font-bold">
+                          Request Expired
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleAccept(res.id)}
+                            disabled={actionLoading === res.id}
+                            className="px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+                          >
+                            <HiOutlineCheckCircle size={16} />
+                            <span>Accept</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDecline(res.id)}
+                            disabled={actionLoading === res.id}
+                            className="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold hover:bg-rose-100 transition flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            <HiOutlineXCircle size={16} />
+                            <span>Decline</span>
+                          </button>
+                        </>
+                      )}
                     </>
                   ) : (
                     <>
@@ -644,20 +850,62 @@ export default function HostBookingsClient({
         </div>
       )}
 
-      {/* Decline Confirmation Modal */}
+      {/* Decline Confirmation Modal with Reason */}
       <ConfirmDialog
         isOpen={!!decliningId}
         variant="destructive"
         title="Decline Booking Request"
-        message="Are you sure you want to decline this booking request? The guest will be notified immediately and no charge will be captured."
+        message="Please select a reason for declining. The guest will receive an immediate notification, and no fee will be charged."
         confirmLabel="Decline request"
         cancelLabel="Keep request"
         isLoading={actionLoading === decliningId}
         onConfirm={() => {
           if (decliningId) executeDecline(decliningId);
         }}
-        onCancel={() => setDecliningId(null)}
-      />
+        onCancel={() => {
+          setDecliningId(null);
+          setCustomDeclineReason("");
+        }}
+      >
+        <div className="space-y-3 mt-3 pt-3 border-t border-tertiary/50 text-xs">
+          <label className="font-bold text-neutral-700 block">
+            Reason for declining (shared with guest):
+          </label>
+          <div className="space-y-2">
+            {[
+              { id: "dates_unavailable", label: "Dates no longer available (booked elsewhere)" },
+              { id: "maintenance", label: "Property maintenance or repairs scheduled" },
+              { id: "policy_mismatch", label: "Guest count, house rules, or duration mismatch" },
+              { id: "other", label: "Other specific reason" },
+            ].map((opt) => (
+              <label
+                key={opt.id}
+                className="flex items-center gap-2 p-2 rounded-xl bg-neutral-50 hover:bg-neutral-100/70 border border-tertiary/60 cursor-pointer transition"
+              >
+                <input
+                  type="radio"
+                  name="decline-reason"
+                  value={opt.id}
+                  checked={declineReasonOption === opt.id}
+                  onChange={(e) => setDeclineReasonOption(e.target.value)}
+                  className="text-primary focus:ring-primary"
+                />
+                <span className="text-neutral-700 font-medium">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {declineReasonOption === "other" && (
+            <textarea
+              rows={2}
+              value={customDeclineReason}
+              onChange={(e) => setCustomDeclineReason(e.target.value)}
+              placeholder="State reason briefly for the guest..."
+              className="w-full text-xs p-2.5 rounded-xl border border-tertiary/70 bg-white focus:outline-none focus:border-primary transition resize-none placeholder:text-neutral-400 mt-2"
+            />
+          )}
+        </div>
+      </ConfirmDialog>
 
       {/* Cancel Confirmation Modal */}
       <ConfirmDialog

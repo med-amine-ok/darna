@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
           maxAge: 31536000,
           sameSite: "lax",
         });
+      } else {
+        res.cookies.delete("darna_agency_id");
       }
     } else {
       res.cookies.set("darna_mode", "traveler", {

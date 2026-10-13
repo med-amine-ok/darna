@@ -191,8 +191,17 @@ let categoriesStore: AdminCategory[] = [
   { id: "cat_culinary", nameEn: "Culinary & Crafts", nameFr: "Ateliers Culinaires", nameAr: "ورشات الطهي والحرف", vertical: "experience", iconName: "BiCoffee", listingCount: 6, isActive: true },
 ];
 
+import { getCommissionRates, saveCommissionRates } from "@/lib/data/wallet";
+import { HostTypeCommissionRates } from "@/types";
+
 let platformSettings = {
-  hostCommissionPercent: 3.0,
+  hostCommissionPercent: 12.0, // Legacy fallback
+  hostCommissionRates: {
+    individual: 12.0,
+    agency: 15.0,
+    hotel: 18.0,
+    hostel: 10.0,
+  } as HostTypeCommissionRates,
   guestServiceFeePercent: 7.0,
   supportedCurrencies: ["DZD", "EUR", "USD"],
   primaryCurrency: "DZD",
@@ -387,15 +396,261 @@ export async function toggleCategoryStatus(id: string): Promise<AdminCategory | 
 
 export async function getPlatformSettings() {
   await new Promise((resolve) => setTimeout(resolve, 50));
-  return { ...platformSettings };
+  const rates = getCommissionRates();
+  return {
+    ...platformSettings,
+    hostCommissionRates: rates,
+  };
 }
 
 export async function updatePlatformSettings(updates: Partial<typeof platformSettings>) {
   await new Promise((resolve) => setTimeout(resolve, 70));
+  if (updates.hostCommissionRates) {
+    saveCommissionRates(updates.hostCommissionRates);
+  }
   platformSettings = {
     ...platformSettings,
     ...updates,
+    hostCommissionRates: getCommissionRates(),
   };
-  logAdminAction("UPDATE_SETTINGS", "setting", "platform_config", "Updated platform commission and locale configuration");
+  logAdminAction(
+    "UPDATE_SETTINGS",
+    "setting",
+    "platform_config",
+    "Updated platform per-host-type commission rates and platform configuration"
+  );
   return { ...platformSettings };
 }
+
+export interface DetailedAnalytics {
+  hostTypeMetrics: {
+    individual: {
+      name: string;
+      revenue: number;
+      bookings: number;
+      activeProperties: number;
+      avgBookingValue: number;
+      commissionRate: number;
+      commissionEarned: number;
+      growthRate: string;
+      superhostRatio: string;
+      instantBookRatio: string;
+    };
+    agency: {
+      name: string;
+      revenue: number;
+      bookings: number;
+      activeProperties: number;
+      avgBookingValue: number;
+      commissionRate: number;
+      commissionEarned: number;
+      growthRate: string;
+      avgGroupSize: number;
+      tripsBooked: number;
+    };
+    hotel: {
+      name: string;
+      revenue: number;
+      bookings: number;
+      activeProperties: number;
+      avgBookingValue: number;
+      commissionRate: number;
+      commissionEarned: number;
+      growthRate: string;
+      roomOccupancyRate: number;
+      avgNightlyRate: number;
+    };
+    hostel: {
+      name: string;
+      revenue: number;
+      bookings: number;
+      activeProperties: number;
+      avgBookingValue: number;
+      commissionRate: number;
+      commissionEarned: number;
+      growthRate: string;
+      bedOccupancyRate: number;
+      avgBedRate: number;
+    };
+  };
+  verticalMetrics: {
+    home: { name: string; revenue: number; bookings: number; activeListings: number; avgBookingValue: number; growthRate: string };
+    vehicle: { name: string; revenue: number; bookings: number; activeListings: number; avgBookingValue: number; growthRate: string };
+    experience: { name: string; revenue: number; bookings: number; activeListings: number; avgBookingValue: number; growthRate: string };
+    trip: { name: string; revenue: number; bookings: number; activeListings: number; avgBookingValue: number; growthRate: string };
+  };
+  crossTabMatrix: {
+    hostType: "individual" | "agency" | "hotel" | "hostel";
+    hostTypeName: string;
+    home: { revenue: number; bookings: number } | null;
+    vehicle: { revenue: number; bookings: number } | null;
+    experience: { revenue: number; bookings: number } | null;
+    trip: { revenue: number; bookings: number } | null;
+  }[];
+  comparativeCharts: {
+    revenueByHostType: Array<{ name: string; typeKey: string; revenue: number; bookings: number; commission: number; fill: string }>;
+    monthlyHostTypeTrend: Array<{ month: string; individual: number; agency: number; hotel: number; hostel: number }>;
+  };
+  financialMetrics: {
+    totalCommissionEarned: number;
+    avgPlatformTakeRate: number;
+    totalDepositsHeld: number;
+    solvencyBreakdown: { healthy: number; lowDeposit: number; negative: number };
+    paymentChannels: Array<{ channel: string; volume: number; share: string }>;
+  };
+}
+
+export async function getAdminAnalyticsDetailed(period: string = "30d"): Promise<DetailedAnalytics> {
+  await new Promise((resolve) => setTimeout(resolve, 90));
+
+  const rates = getCommissionRates();
+
+  return {
+    hostTypeMetrics: {
+      individual: {
+        name: "Individual Hosts",
+        revenue: 1840000,
+        bookings: 24,
+        activeProperties: 14,
+        avgBookingValue: 76666,
+        commissionRate: rates.individual,
+        commissionEarned: Math.round(1840000 * (rates.individual / 100)),
+        growthRate: "+16.4%",
+        superhostRatio: "64%",
+        instantBookRatio: "78%",
+      },
+      agency: {
+        name: "Tourism Agencies",
+        revenue: 4060000,
+        bookings: 40,
+        activeProperties: 8,
+        avgBookingValue: 101500,
+        commissionRate: rates.agency,
+        commissionEarned: Math.round(4060000 * (rates.agency / 100)),
+        growthRate: "+32.8%",
+        avgGroupSize: 4.8,
+        tripsBooked: 14,
+      },
+      hotel: {
+        name: "Hotels & Palaces",
+        revenue: 3200000,
+        bookings: 36,
+        activeProperties: 3,
+        avgBookingValue: 88888,
+        commissionRate: rates.hotel,
+        commissionEarned: Math.round(3200000 * (rates.hotel / 100)),
+        growthRate: "+12.0%",
+        roomOccupancyRate: 82.4,
+        avgNightlyRate: 24500,
+      },
+      hostel: {
+        name: "Youth Hostels",
+        revenue: 540000,
+        bookings: 42,
+        activeProperties: 2,
+        avgBookingValue: 12857,
+        commissionRate: rates.hostel,
+        commissionEarned: Math.round(540000 * (rates.hostel / 100)),
+        growthRate: "+24.5%",
+        bedOccupancyRate: 76.8,
+        avgBedRate: 3200,
+      },
+    },
+    verticalMetrics: {
+      home: {
+        name: "Homes & Stays",
+        revenue: 5280000,
+        bookings: 78,
+        activeListings: 19,
+        avgBookingValue: 67692,
+        growthRate: "+14.2%",
+      },
+      trip: {
+        name: "Agency Expeditions",
+        revenue: 2150000,
+        bookings: 14,
+        activeListings: 6,
+        avgBookingValue: 153571,
+        growthRate: "+45.0%",
+      },
+      vehicle: {
+        name: "4x4 Overlanders",
+        revenue: 1240000,
+        bookings: 22,
+        activeListings: 9,
+        avgBookingValue: 56363,
+        growthRate: "+18.8%",
+      },
+      experience: {
+        name: "Cultural Guides",
+        revenue: 970000,
+        bookings: 28,
+        activeListings: 8,
+        avgBookingValue: 34642,
+        growthRate: "+21.4%",
+      },
+    },
+    crossTabMatrix: [
+      {
+        hostType: "individual",
+        hostTypeName: "Individual Hosts",
+        home: { revenue: 1420000, bookings: 18 },
+        vehicle: { revenue: 280000, bookings: 4 },
+        experience: { revenue: 140000, bookings: 2 },
+        trip: null, // Trips only ever belong to Agency (structural constraint)
+      },
+      {
+        hostType: "agency",
+        hostTypeName: "Tourism Agencies",
+        home: { revenue: 300000, bookings: 2 },
+        vehicle: { revenue: 960000, bookings: 18 },
+        experience: { revenue: 650000, bookings: 8 },
+        trip: { revenue: 2150000, bookings: 12 },
+      },
+      {
+        hostType: "hotel",
+        hostTypeName: "Hotels & Palaces",
+        home: { revenue: 3200000, bookings: 36 },
+        vehicle: null, // Hotels only produce room inventory (structural constraint)
+        experience: null,
+        trip: null,
+      },
+      {
+        hostType: "hostel",
+        hostTypeName: "Youth Hostels",
+        home: { revenue: 540000, bookings: 42 },
+        vehicle: null,
+        experience: null,
+        trip: null,
+      },
+    ],
+    comparativeCharts: {
+      revenueByHostType: [
+        { name: "Individual", typeKey: "individual", revenue: 1840000, bookings: 24, commission: 220800, fill: "#6B7F5B" },
+        { name: "Agencies", typeKey: "agency", revenue: 4060000, bookings: 40, commission: 609000, fill: "#C96F4F" },
+        { name: "Hotels", typeKey: "hotel", revenue: 3200000, bookings: 36, commission: 576000, fill: "#2E3A2F" },
+        { name: "Hostels", typeKey: "hostel", revenue: 540000, bookings: 42, commission: 54000, fill: "#D9C9B2" },
+      ],
+      monthlyHostTypeTrend: [
+        { month: "May", individual: 310000, agency: 580000, hotel: 480000, hostel: 80000 },
+        { month: "Jun", individual: 420000, agency: 890000, hotel: 720000, hostel: 120000 },
+        { month: "Jul", individual: 680000, agency: 1420000, hotel: 1100000, hostel: 190000 },
+        { month: "Aug", individual: 820000, agency: 1650000, hotel: 1350000, hostel: 240000 },
+        { month: "Sep", individual: 540000, agency: 1150000, hotel: 980000, hostel: 160000 },
+        { month: "Oct", individual: 480000, agency: 960000, hotel: 840000, hostel: 140000 },
+      ],
+    },
+    financialMetrics: {
+      totalCommissionEarned: 1459800,
+      avgPlatformTakeRate: 15.1,
+      totalDepositsHeld: 527000,
+      solvencyBreakdown: { healthy: 4, lowDeposit: 1, negative: 1 },
+      paymentChannels: [
+        { channel: "Algérie Poste CCP Transfers", volume: 680000, share: "46.5%" },
+        { channel: "BaridiMob Instant Deposits", volume: 490000, share: "33.6%" },
+        { channel: "BNA / BEA Bank Wires", volume: 290000, share: "19.9%" },
+      ],
+    },
+  };
+}
+

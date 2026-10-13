@@ -1,5 +1,5 @@
 export type UserRole = "guest" | "host" | "admin";
-export type HostType = "individual" | "agency";
+export type HostType = "individual" | "agency" | "hotel" | "hostel";
 
 export interface User {
   id: string;
@@ -9,6 +9,7 @@ export interface User {
   role: UserRole;
   hostType?: HostType | null;
   organizationId?: string | null;
+  bookingApprovalMode?: "instant" | "request";
   createdAt: string;
   emailVerified?: string | null;
   favoriteIds: string[];
@@ -22,7 +23,7 @@ export interface User {
   responseTime?: string;
 }
 
-export type ListingVertical = "home" | "experience" | "vehicle";
+export type ListingVertical = "home" | "experience" | "vehicle" | "trip";
 export type ListingOwnerType = "individual" | "organization";
 export type ListingStatus = "active" | "pending" | "suspended" | "draft";
 
@@ -60,6 +61,26 @@ export interface Review {
   };
 }
 
+export type BookingUnit = "room" | "bed";
+
+export interface RoomType {
+  id: string;
+  propertyListingId: string;
+  name: string;
+  description?: string;
+  price: number; // nightly price per room or per bed
+  basePrice?: number;
+  bookingUnit: BookingUnit;
+  totalInventory: number;
+  inventoryCount?: number;
+  availableInventory?: number;
+  capacity: number; // max guests
+  bedsDescription?: string;
+  amenities: string[];
+  imageSrc: string[];
+  isAvailable?: boolean;
+}
+
 export interface Listing {
   id: string;
   title: string;
@@ -88,6 +109,17 @@ export interface Listing {
   rating?: number;
   reviewCount?: number;
   bookingsCount?: number;
+
+  // Availability & Overlap Matching
+  availableFrom?: string;
+  availableTo?: string;
+  matchedAvailability?: MatchedAvailability;
+
+  // Hotel & Hostel Property Sub-structure (Section 2)
+  businessCategory?: "agency" | "hotel" | "hostel";
+  hotelStarRating?: number;
+  roomTypes?: RoomType[];
+  bookingApprovalMode?: "instant" | "request";
 
   // Homes-specific fields
   guestCount?: number;
@@ -118,7 +150,7 @@ export interface Listing {
   experienceLanguages?: string[];
 }
 
-export type ReservationStatus = "confirmed" | "pending" | "cancelled" | "completed";
+export type ReservationStatus = "confirmed" | "pending" | "cancelled" | "completed" | "declined" | "expired";
 
 export interface Reservation {
   id: string;
@@ -136,8 +168,52 @@ export interface Reservation {
   createdAt: string;
   paymentMethod?: string;
   paymentStatus?: "paid" | "pending" | "refunded";
+  approvalMode?: "instant" | "request";
+  expiresAt?: string;
+  guestMessage?: string;
+  declineReason?: string;
+  respondedAt?: string;
+  selectedRoomTypeId?: string;
+  tripId?: string;
   listing?: Listing;
+  trip?: Trip;
   user?: User;
+}
+
+export interface TripItineraryDay {
+  day: number;
+  title: string;
+  description: string;
+  activities?: string[];
+  meals?: string;
+  accommodation?: string;
+}
+
+export interface Trip {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  coverPhoto: string;
+  gallery: string[];
+  itinerary: TripItineraryDay[];
+  durationDays: number;
+  maxGroupSize: number;
+  minGroupSize?: number;
+  pricePerPerson: number; // in DZD
+  inclusions: string[];
+  exclusions: string[];
+  meetingPoint: string;
+  city: string;
+  locationValue: string;
+  cancellationPolicy: "flexible" | "moderate" | "strict";
+  organizationId: string; // Must belong to an Agency
+  status: "active" | "draft";
+  rating?: number;
+  reviewsCount?: number;
+  departureDates?: string[];
+  createdAt: string;
+  organization?: Organization;
 }
 
 export type OrganizationVerificationStatus = "pending" | "verified" | "rejected";
@@ -145,6 +221,7 @@ export type OrganizationVerificationStatus = "pending" | "verified" | "rejected"
 export interface Organization {
   id: string;
   name: string;
+  businessCategory: "agency" | "hotel" | "hostel";
   logo?: string | null;
   description?: string;
   businessRegistrationNumber: string;
@@ -159,6 +236,17 @@ export interface Organization {
   teamSizeEstimate?: "1" | "2-10" | "11-50" | "50+";
   rating?: number;
   reviewCount?: number;
+
+  // Hotel & Hostel operational settings (Section 2 & 3)
+  hotelStarRating?: number;
+  totalRoomCount?: number;
+  checkInTime?: string;
+  checkOutTime?: string;
+  hotelAmenities?: string[];
+  hostelFacilities?: string[];
+  curfewPolicy?: string;
+  agePolicy?: string;
+  bookingApprovalMode?: "instant" | "request";
 }
 
 export type MembershipRole = "owner" | "admin" | "manager";
@@ -214,10 +302,22 @@ export interface DateAvailabilityOverride {
   note?: string;
 }
 
+export interface MatchedAvailability {
+  isPartial: boolean;
+  searchedStart: string;
+  searchedEnd: string;
+  overlapStart: string;
+  overlapEnd: string;
+  listingAvailableFrom: string;
+  listingAvailableTo: string;
+}
+
 export interface SearchParams {
   destination?: string;
   checkIn?: string;
   checkOut?: string;
+  startDate?: string;
+  endDate?: string;
   guests?: number;
   vertical?: ListingVertical;
   category?: string;
@@ -284,3 +384,107 @@ export interface Notification {
   timestamp?: string;
 }
 
+export type OnboardingFieldType =
+  | "text"
+  | "number"
+  | "textarea"
+  | "select"
+  | "multi-select"
+  | "image-upload"
+  | "toggle";
+
+export interface OnboardingFieldOption {
+  value: string;
+  label: {
+    en: string;
+    fr: string;
+    ar: string;
+  };
+}
+
+export interface OnboardingFieldConfig {
+  id: string;
+  label: {
+    en: string;
+    fr: string;
+    ar: string;
+  };
+  placeholder?: {
+    en?: string;
+    fr?: string;
+    ar?: string;
+  };
+  helpText?: {
+    en?: string;
+    fr?: string;
+    ar?: string;
+  };
+  type: OnboardingFieldType;
+  required: boolean;
+  options?: OnboardingFieldOption[];
+  defaultValue?: any;
+  order: number;
+  isCore?: boolean;
+}
+
+export interface OnboardingStepConfig {
+  id: string;
+  stepNumber: number;
+  title: {
+    en: string;
+    fr: string;
+    ar: string;
+  };
+  description?: {
+    en?: string;
+    fr?: string;
+    ar?: string;
+  };
+  isActive: boolean;
+  isCore?: boolean;
+  fields: OnboardingFieldConfig[];
+}
+
+export interface HostTypeOnboardingConfig {
+  hostType: HostType;
+  steps: OnboardingStepConfig[];
+  updatedAt?: string;
+}
+
+export type TransactionType =
+  | "recharge"
+  | "commission_deduction"
+  | "payout"
+  | "adjustment";
+
+export interface Transaction {
+  id: string;
+  walletId: string;
+  type: TransactionType;
+  amount: number; // positive for credits (recharge), negative for debits (commission deduction)
+  currency: "DZD";
+  relatedBookingId?: string | null;
+  adminUserId?: string | null;
+  note?: string;
+  timestamp: string;
+}
+
+export interface Wallet {
+  id: string;
+  ownerType: "user" | "organization";
+  ownerId: string; // userId or organizationId
+  ownerName: string;
+  hostType: HostType;
+  currency: "DZD";
+  balance: number; // calculated from sum of transaction amounts
+  transactions: Transaction[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HostTypeCommissionRates {
+  individual: number; // percentage (e.g. 12.0)
+  agency: number;     // percentage (e.g. 15.0)
+  hotel: number;      // percentage (e.g. 18.0)
+  hostel: number;     // percentage (e.g. 10.0)
+}

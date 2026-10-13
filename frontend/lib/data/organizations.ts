@@ -32,6 +32,7 @@ export async function getOrganizationMembers(organizationId: string): Promise<Me
 
 export async function createOrganization(data: {
   name: string;
+  businessCategory?: "agency" | "hotel" | "hostel";
   logo?: string;
   description?: string;
   businessRegistrationNumber: string;
@@ -43,6 +44,15 @@ export async function createOrganization(data: {
   ownerUserId: string;
   verificationStatus?: "pending" | "verified" | "rejected";
   teamSizeEstimate?: "1" | "2-10" | "11-50" | "50+";
+  hotelStarRating?: number;
+  totalRoomCount?: number;
+  checkInTime?: string;
+  checkOutTime?: string;
+  hotelAmenities?: string[];
+  hostelFacilities?: string[];
+  curfewPolicy?: string;
+  agePolicy?: string;
+  bookingApprovalMode?: "instant" | "request";
   invitedMembers?: { email: string; role: "admin" | "manager" }[];
 }): Promise<Organization> {
   await new Promise((resolve) => setTimeout(resolve, 120));
@@ -51,10 +61,11 @@ export async function createOrganization(data: {
   const newOrg: Organization = {
     id: orgId,
     name: data.name,
+    businessCategory: data.businessCategory || "agency",
     logo: data.logo || "/assets/logo-vertical.png",
     description: data.description || "",
     businessRegistrationNumber: data.businessRegistrationNumber,
-    businessType: data.businessType || "Licensed Tourism Agency",
+    businessType: data.businessType || (data.businessCategory === "hotel" ? "Commercial Luxury Hotel" : data.businessCategory === "hostel" ? "Youth & Backpacker Hostel" : "Licensed Tourism Agency"),
     businessEmail: data.businessEmail,
     businessPhone: data.businessPhone,
     address: data.address || "Algiers, Algeria",
@@ -63,6 +74,15 @@ export async function createOrganization(data: {
     createdAt: new Date().toISOString(),
     ownerUserId: data.ownerUserId,
     teamSizeEstimate: data.teamSizeEstimate || "2-10",
+    hotelStarRating: data.hotelStarRating,
+    totalRoomCount: data.totalRoomCount,
+    checkInTime: data.checkInTime || (data.businessCategory === "hotel" ? "14:00" : "13:00"),
+    checkOutTime: data.checkOutTime || (data.businessCategory === "hotel" ? "12:00" : "11:00"),
+    hotelAmenities: data.hotelAmenities || [],
+    hostelFacilities: data.hostelFacilities || [],
+    curfewPolicy: data.curfewPolicy,
+    agePolicy: data.agePolicy,
+    bookingApprovalMode: data.bookingApprovalMode || "instant",
     rating: 5.0,
     reviewCount: 0,
   };

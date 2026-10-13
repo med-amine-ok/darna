@@ -50,6 +50,7 @@
     "tabHomes": "Logements",
     "tabExperiences": "Expériences",
     "tabVehicles": "Véhicule",
+    "tabTrips": "Circuits",
     "search": "Rechercher"
   },
   "nav": {
@@ -62,6 +63,7 @@
     "tabExperiences": "Expériences",
     "tabServices": "Services",
     "tabVehicles": "Véhicules",
+    "tabTrips": "Circuits",
     "where": "Où",
     "searchDestinations": "Rechercher des destinations",
     "when": "Quand",
@@ -159,9 +161,13 @@
     "clearAllFilters": "Effacer tous les filtres",
     "showMap": "Afficher la carte",
     "hideMap": "Masquer la carte",
-    "forNights": "pour {count, plural, =1 {1 nuit} other {# nuits}}"
+    "forNights": "pour {count, plural, =1 {1 nuit} other {# nuits}}",
+    "partialAvailabilityBadge": "Disponible du {range} dans vos dates"
   },
   "listing": {
+    "partialAvailabilityNoticeTitle": "Disponibilité partielle",
+    "partialAvailabilityNotice": "Vos dates recherchées étaient {searched}, mais ce logement n'est disponible que du {available} dans cet intervalle. Le calendrier a été ajusté en conséquence.",
+    "outsideAvailabilityError": "Les dates sélectionnées doivent être comprises dans la période disponible ({range}).",
     "hostedBy": "Hébergé par {name}",
     "hostSince": "Hôte depuis {year}",
     "guestCount": "{count, plural, =1 {1 voyageur} other {# voyageurs}}",
@@ -867,5 +873,44 @@
     "contactAgency": "Contacter l'agence",
     "allStays": "Tous les hébergements",
     "team": "Équipe d'accueil & gestion"
+  },
+  "adminOnboarding": {
+    "title": "Configurateur de Parcours d'Intégration",
+    "subtitle": "Configurez dynamiquement la séquence des étapes et des champs requis pour chacun des 4 types d'hôtes.",
+    "addStep": "Ajouter une étape",
+    "resetDefaults": "Rétablir valeurs par défaut",
+    "saveChanges": "Enregistrer les modifications",
+    "livePreview": "Aperçu en direct",
+    "individualTab": "Individuel (Solo)",
+    "agencyTab": "Agence & Circuits",
+    "hotelTab": "Hôtel & Complexe",
+    "hostelTab": "Auberge de Jeunesse",
+    "activeSteps": "étapes actives",
+    "coreStep": "Étape Principale",
+    "addField": "Ajouter un champ",
+    "saveStep": "Enregistrer l'étape",
+    "saveField": "Enregistrer le champ"
+  },
+  "adminWallets": {
+    "title": "Portefeuilles Hôtes & Grand Livre",
+    "subtitle": "Dépôts prépayés hors ligne, grand livre de transactions immuable et déductions automatiques des commissions.",
+    "hostDeposits": "Dépôts Hôtes Détenus",
+    "commissionDeducted": "Commissions Déduites",
+    "activeWallets": "Portefeuilles Actifs",
+    "negativeBalances": "Soldes Négatifs",
+    "rechargeBalance": "Recharger le Solde",
+    "viewLedger": "Voir le Grand Livre",
+    "solvent": "Solvable",
+    "negativeActionNeeded": "Négatif / Action Requise",
+    "confirmCredit": "Confirmer le Crédit",
+    "depositAmount": "Montant du Dépôt (DZD)"
+  },
+  "hostWallet": {
+    "title": "Portefeuille Prépayé Hôte & Solde",
+    "currentBalance": "Solde Actuel du Dépôt",
+    "applicableCommission": "Commission Applicable",
+    "rechargeProcess": "Processus de Recharge",
+    "statementHistory": "Relevé & Historique",
+    "negativeNotice": "Action Requise : Solde Hôte Négatif"
   }
 }

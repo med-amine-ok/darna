@@ -15,9 +15,12 @@ import {
   HiOutlineMail,
   HiOutlinePhone,
   HiOutlineLocationMarker,
+  HiOutlineLightningBolt,
+  HiOutlineClock,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import HostWalletWidget from "@/components/host/HostWalletWidget";
 
 interface AgencySettingsClientProps {
   organization: Organization;
@@ -37,6 +40,9 @@ export default function AgencySettingsClient({
   const [description, setDescription] = useState(org.description || "");
   const [rcNumber, setRcNumber] = useState(org.businessRegistrationNumber);
   const [teamSize, setTeamSize] = useState(org.teamSizeEstimate || "2-10");
+  const [bookingApprovalMode, setBookingApprovalMode] = useState<"instant" | "request">(
+    org.bookingApprovalMode || "instant"
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   // Danger zone
@@ -56,6 +62,7 @@ export default function AgencySettingsClient({
         description,
         businessRegistrationNumber: rcNumber,
         teamSizeEstimate: teamSize as any,
+        bookingApprovalMode,
       });
       if (updated) {
         setOrg(updated);
@@ -150,6 +157,14 @@ export default function AgencySettingsClient({
           </div>
         </div>
       </div>
+
+      {/* Host Prepaid Wallet & Solvency Widget */}
+      <HostWalletWidget
+        ownerId={org.id}
+        ownerType="organization"
+        hostType={org.businessCategory}
+        className="mb-8"
+      />
 
       {/* Edit Form */}
       <form onSubmit={handleSave} className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-6 mb-8">
@@ -262,6 +277,66 @@ export default function AgencySettingsClient({
             onChange={(e) => setDescription(e.target.value)}
             className="w-full p-3 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary focus:outline-none focus:border-primary leading-relaxed"
           />
+        </div>
+
+        {/* Default Booking Approval Mode */}
+        <div className="space-y-2 pt-2 border-t border-tertiary/40">
+          <label className="text-xs font-bold text-neutral-700 block">
+            Agency Booking Policy (Approval Mode)
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setBookingApprovalMode("instant")}
+              className={`p-3.5 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${
+                bookingApprovalMode === "instant"
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
+              }`}
+            >
+              <div
+                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                  bookingApprovalMode === "instant"
+                    ? "bg-primary text-white"
+                    : "bg-neutral-200 text-neutral-600"
+                }`}
+              >
+                <HiOutlineLightningBolt size={16} />
+              </div>
+              <div>
+                <span className="font-bold text-xs text-primary block">Instant Booking</span>
+                <span className="text-[10px] text-neutral-500 leading-snug block">
+                  Fleet & stays confirm instantly without manual review.
+                </span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setBookingApprovalMode("request")}
+              className={`p-3.5 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${
+                bookingApprovalMode === "request"
+                  ? "border-primary bg-primary/5 ring-1 ring-primary"
+                  : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
+              }`}
+            >
+              <div
+                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                  bookingApprovalMode === "request"
+                    ? "bg-amber-600 text-white"
+                    : "bg-neutral-200 text-neutral-600"
+                }`}
+              >
+                <HiOutlineClock size={16} />
+              </div>
+              <div>
+                <span className="font-bold text-xs text-primary block">Agency Review (24h)</span>
+                <span className="text-[10px] text-neutral-500 leading-snug block">
+                  Staff reviews license & deposit credentials before accepting.
+                </span>
+              </div>
+            </button>
+          </div>
         </div>
 
         <div className="flex justify-end pt-4 border-t border-tertiary/40">

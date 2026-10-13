@@ -5,6 +5,8 @@ import { SearchParams } from "@/types";
 import Navbar from "@/components/navbar/Navbar";
 import SearchResultsClient from "@/components/search/SearchResultsClient";
 
+import { getTrips } from "@/lib/data/trips";
+
 interface SearchPageProps {
   searchParams: SearchParams & {
     instantBook?: string;
@@ -20,7 +22,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const currentUser = await getCurrentUser(cookieUserId);
 
   // Load listings matching search parameters
-  let listings = await getListings(searchParams);
+  let [listings, trips] = await Promise.all([
+    getListings(searchParams),
+    getTrips({ destination: searchParams.destination }),
+  ]);
 
   // Filter by instantBook if specified
   if (searchParams.instantBook === "true") {
@@ -53,6 +58,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Two-Column Search Results Client */}
       <SearchResultsClient
         listings={listings}
+        trips={trips}
         currentUser={currentUser}
         destination={searchParams.destination}
         activeVertical={searchParams.vertical}

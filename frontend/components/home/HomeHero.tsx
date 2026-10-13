@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { MdDirectionsCar } from "react-icons/md";
 import { useVertical } from "@/hook/useVertical";
 import { useSearchModal } from "@/hook/useSearchModal";
+import { Compass } from "lucide-react";
 
 export interface PromoData {
   prefix: string;
@@ -210,6 +211,28 @@ export default function HomeHero({
               }`}
             />
             <span>{tHero("tabVehicles") || "Vehicles"}</span>
+          </button>
+
+          {/* Trips / Circuits (Exclusive agency vertical) */}
+          <button
+            type="button"
+            onClick={() => setActiveVertical("trip")}
+            className={`
+              flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
+              ${
+                activeVertical === "trip"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-primary hover:bg-neutral-100/70"
+              }
+            `}
+          >
+            <Compass
+              size={18}
+              className={`transition-all ${
+                activeVertical === "trip" ? "text-white" : "text-secondary"
+              }`}
+            />
+            <span>{tHero("tabTrips") || "Trips"}</span>
           </button>
         </div>
       </div>

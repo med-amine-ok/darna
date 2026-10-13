@@ -50,6 +50,7 @@
     "tabHomes": "Homes",
     "tabExperiences": "Experiences",
     "tabVehicles": "Vehicles",
+    "tabTrips": "Trips",
     "search": "Search"
   },
   "nav": {
@@ -65,6 +66,7 @@
     "tabExperiences": "Experiences",
     "tabServices": "Services",
     "tabVehicles": "Vehicles",
+    "tabTrips": "Trips",
     "where": "Where",
     "searchDestinations": "Search destinations",
     "when": "When",
@@ -165,9 +167,13 @@
     "clearAllFilters": "Clear all filters",
     "showMap": "Show map",
     "hideMap": "Hide map",
-    "forNights": "for {count, plural, =1 {1 night} other {# nights}}"
+    "forNights": "for {count, plural, =1 {1 night} other {# nights}}",
+    "partialAvailabilityBadge": "Available {range} within your dates"
   },
   "listing": {
+    "partialAvailabilityNoticeTitle": "Partial Availability Notice",
+    "partialAvailabilityNotice": "Your searched dates were {searched}, but this stay is only available {available} within that window. The calendar has been automatically set to the available dates.",
+    "outsideAvailabilityError": "Selected dates are outside this listing's availability window ({range}).",
     "hostedBy": "Hosted by {name}",
     "hostSince": "Host since {year}",
     "guestCount": "{count, plural, =1 {1 guest} other {# guests}}",
@@ -1059,5 +1065,44 @@
     "contactAgency": "Contact Agency",
     "allStays": "All Stays",
     "team": "Hospitality & Management Team"
+  },
+  "adminOnboarding": {
+    "title": "Onboarding Flow Builder",
+    "subtitle": "Dynamically configure the sequence of steps and form fields required for each of the 4 host types.",
+    "addStep": "Add New Step",
+    "resetDefaults": "Reset Defaults",
+    "saveChanges": "Save Changes",
+    "livePreview": "Live Preview",
+    "individualTab": "Individual (Solo)",
+    "agencyTab": "Agency & Tours",
+    "hotelTab": "Hotel & Resort",
+    "hostelTab": "Hostel & Backpacker",
+    "activeSteps": "active steps",
+    "coreStep": "Core Step",
+    "addField": "Add Field",
+    "saveStep": "Save Step",
+    "saveField": "Save Field"
+  },
+  "adminWallets": {
+    "title": "Host Wallets & Financial Ledger",
+    "subtitle": "Offline prepaid deposits, append-only transaction ledger, and automatic booking commission deductions.",
+    "hostDeposits": "Host Deposits Held",
+    "commissionDeducted": "Commission Deducted",
+    "activeWallets": "Active Host Wallets",
+    "negativeBalances": "Negative Balances",
+    "rechargeBalance": "Recharge Balance",
+    "viewLedger": "View Ledger",
+    "solvent": "Solvent",
+    "negativeActionNeeded": "Negative / Action Needed",
+    "confirmCredit": "Confirm Credit",
+    "depositAmount": "Deposit Amount (DZD)"
+  },
+  "hostWallet": {
+    "title": "Host Prepaid Wallet & Balance",
+    "currentBalance": "Current Deposit Balance",
+    "applicableCommission": "Applicable Commission",
+    "rechargeProcess": "Recharge Process",
+    "statementHistory": "Statement & History",
+    "negativeNotice": "Action Required: Negative Host Balance"
   }
 }

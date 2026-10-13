@@ -6,9 +6,16 @@ import { getHostListings } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
 import HostTodayClient from "@/components/host/HostTodayClient";
 
+import { redirect } from "next/navigation";
+
 export const dynamic = "force-dynamic";
 
-export default async function HostTodayPage() {
+export default async function HostTodayPage({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  const locale = params?.locale || "en";
   const cookieStore = cookies();
   const cookieUserId = cookieStore.get("darna_user_id")?.value;
   const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
@@ -16,6 +23,11 @@ export default async function HostTodayPage() {
   const currentUser = await getCurrentUser(cookieUserId);
 
   const effectiveHostType = currentUser?.hostType || cookieHostType;
+
+  // Solo hosts use simplified 2-page interface centered on Listings & Bookings
+  if (effectiveHostType === "individual") {
+    redirect(`/${locale}/host/listings`);
+  }
   const isAgency = effectiveHostType === "agency";
 
   const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : null;

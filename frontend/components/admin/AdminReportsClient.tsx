@@ -11,7 +11,9 @@ import {
 import { toast } from "react-toastify";
 
 export default function AdminReportsClient() {
-  const [reportType, setReportType] = useState<"financial" | "occupancy" | "inventory" | "payments">("financial");
+  const [reportType, setReportType] = useState<
+    "financial" | "occupancy" | "inventory" | "payments" | "host_types" | "cross_tab"
+  >("financial");
   const [dateRange, setDateRange] = useState("2026_q3");
 
   // Generate and download genuine CSV file
@@ -21,13 +23,27 @@ export default function AdminReportsClient() {
 
     if (reportType === "financial") {
       csvContent =
-        "Month,Gross_Volume_DZD,Host_Payout_DZD,DARNA_Host_Fee_3pct,DARNA_Guest_Fee_7pct,Platform_Net_Revenue_DZD\n" +
-        "May 2026,840000,756000,25200,58800,84000\n" +
-        "Jun 2026,1450000,1305000,43500,101500,145000\n" +
-        "Jul 2026,2180000,1962000,65400,152600,218000\n" +
-        "Aug 2026,2750000,2475000,82500,192500,275000\n" +
-        "Sep 2026,1920000,1728000,57600,134400,192000\n" +
-        "Oct 2026,1680000,1512000,50400,117600,168000\n";
+        "Month,Gross_Volume_DZD,Host_Payout_DZD,Platform_Commission_DZD,Guest_Service_Fee_DZD,Net_Take_DZD\n" +
+        "May 2026,840000,756000,100800,58800,159600\n" +
+        "Jun 2026,1450000,1305000,174000,101500,275500\n" +
+        "Jul 2026,2180000,1962000,261600,152600,414200\n" +
+        "Aug 2026,2750000,2475000,330000,192500,522500\n" +
+        "Sep 2026,1920000,1728000,230400,134400,364800\n" +
+        "Oct 2026,1680000,1512000,201600,117600,319200\n";
+    } else if (reportType === "host_types") {
+      csvContent =
+        "Host_Type,Active_Fleet,Bookings_Count,Gross_Volume_DZD,Commission_Rate,Platform_Commission_Earned_DZD\n" +
+        "Individual (Solo),14,24,1840000,12.0%,220800\n" +
+        "Tourism Agency,8,40,4060000,15.0%,609000\n" +
+        "Hotel & Resort,3,36,3200000,18.0%,576000\n" +
+        "Youth Hostel,2,42,540000,10.0%,54000\n";
+    } else if (reportType === "cross_tab") {
+      csvContent =
+        "Host_Type,Homes_and_Stays_DZD,Vehicles_4x4_DZD,Cultural_Experiences_DZD,Agency_Trips_DZD\n" +
+        "Individual (Solo),1420000,280000,140000,N/A\n" +
+        "Tourism Agency,300000,960000,650000,2150000\n" +
+        "Hotel & Resort,3200000,N/A,N/A,N/A\n" +
+        "Youth Hostel,540000,N/A,N/A,N/A\n";
     } else if (reportType === "occupancy") {
       csvContent =
         "Wilaya,Total_Listings,Booked_Nights,Occupancy_Rate,Avg_Nightly_Price_DZD\n" +
@@ -99,6 +115,8 @@ export default function AdminReportsClient() {
             className="w-full md:w-64 px-3 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary focus:outline-none"
           >
             <option value="financial">Financial Gross Volume & Fees</option>
+            <option value="host_types">Host Type Performance & Take Rates</option>
+            <option value="cross_tab">Host Type × Vertical Matrix</option>
             <option value="occupancy">Wilaya Occupancy & Demand</option>
             <option value="inventory">Fleet & Category Inventory</option>
             <option value="payments">SATIM & CCP Settlement Channels</option>
@@ -125,7 +143,7 @@ export default function AdminReportsClient() {
         <div className="flex items-center justify-between pb-3 border-b border-tertiary/60">
           <div>
             <h3 className="font-serif text-lg font-bold text-primary capitalize">
-              On-Screen Summary: {reportType}
+              On-Screen Summary: {reportType.replace("_", " ")}
             </h3>
             <p className="text-xs text-neutral-500">
               Live preview reflecting active platform ledger records
@@ -171,6 +189,72 @@ export default function AdminReportsClient() {
           </div>
         )}
 
+        {reportType === "host_types" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-start text-xs font-semibold">
+              <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-500 font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-2.5 px-3 text-start">Host Type</th>
+                  <th className="py-2.5 px-3 text-center">Active Fleet</th>
+                  <th className="py-2.5 px-3 text-center">Bookings</th>
+                  <th className="py-2.5 px-3 text-end">Gross Volume</th>
+                  <th className="py-2.5 px-3 text-center">Commission Rate</th>
+                  <th className="py-2.5 px-3 text-end">Platform Earned</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-tertiary/40">
+                {[
+                  { t: "Individual (Solo)", f: 14, b: 24, g: 1840000, r: "12.0%", e: 220800 },
+                  { t: "Tourism Agency", f: 8, b: 40, g: 4060000, r: "15.0%", e: 609000 },
+                  { t: "Hotel & Resort", f: 3, b: 36, g: 3200000, r: "18.0%", e: 576000 },
+                  { t: "Youth Hostel", f: 2, b: 42, g: 540000, r: "10.0%", e: 54000 },
+                ].map((row) => (
+                  <tr key={row.t} className="hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-3 text-primary font-bold">{row.t}</td>
+                    <td className="py-2.5 px-3 text-center font-mono">{row.f}</td>
+                    <td className="py-2.5 px-3 text-center font-mono">{row.b}</td>
+                    <td className="py-2.5 px-3 font-mono text-end">{row.g.toLocaleString()} DZD</td>
+                    <td className="py-2.5 px-3 text-center font-bold text-accent">{row.r}</td>
+                    <td className="py-2.5 px-3 font-mono font-bold text-primary text-end">{row.e.toLocaleString()} DZD</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {reportType === "cross_tab" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-start text-xs font-semibold">
+              <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-500 font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-2.5 px-3 text-start">Host Type</th>
+                  <th className="py-2.5 px-3 text-end">Homes & Stays</th>
+                  <th className="py-2.5 px-3 text-end">4x4 Vehicles</th>
+                  <th className="py-2.5 px-3 text-end">Cultural Experiences</th>
+                  <th className="py-2.5 px-3 text-end">Agency Trips</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-tertiary/40">
+                {[
+                  { t: "Individual (Solo)", stays: "1,420,000 DZD", vehicles: "280,000 DZD", exp: "140,000 DZD", trips: "—" },
+                  { t: "Tourism Agency", stays: "300,000 DZD", vehicles: "960,000 DZD", exp: "650,000 DZD", trips: "2,150,000 DZD" },
+                  { t: "Hotel & Resort", stays: "3,200,000 DZD", vehicles: "—", exp: "—", trips: "—" },
+                  { t: "Youth Hostel", stays: "540,000 DZD", vehicles: "—", exp: "—", trips: "—" },
+                ].map((row) => (
+                  <tr key={row.t} className="hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-3 text-primary font-bold">{row.t}</td>
+                    <td className="py-2.5 px-3 font-mono text-end">{row.stays}</td>
+                    <td className={`py-2.5 px-3 font-mono text-end ${row.vehicles === "—" ? "text-neutral-300" : "text-neutral-700"}`}>{row.vehicles}</td>
+                    <td className={`py-2.5 px-3 font-mono text-end ${row.exp === "—" ? "text-neutral-300" : "text-neutral-700"}`}>{row.exp}</td>
+                    <td className={`py-2.5 px-3 font-mono text-end ${row.trips === "—" ? "text-neutral-300 italic" : "text-primary font-bold"}`}>{row.trips}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {reportType === "occupancy" && (
           <div className="overflow-x-auto">
             <table className="w-full text-start text-xs font-semibold">
@@ -196,6 +280,38 @@ export default function AdminReportsClient() {
                     <td className="py-2.5 px-3 text-center">{row.n}</td>
                     <td className="py-2.5 px-3 text-center text-emerald-700 font-bold">{row.occ}</td>
                     <td className="py-2.5 px-3 font-mono text-end">{row.rate.toLocaleString()} DZD</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {reportType === "inventory" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-start text-xs font-semibold">
+              <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-500 font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-2.5 px-3 text-start">Category / Fleet</th>
+                  <th className="py-2.5 px-3 text-center">Active Listings</th>
+                  <th className="py-2.5 px-3 text-center">New This Month</th>
+                  <th className="py-2.5 px-3 text-center">Guest Rating</th>
+                  <th className="py-2.5 px-3 text-end">Instant Book</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-tertiary/40">
+                {[
+                  { c: "Coastal Villas", a: 14, n: 2, r: "★ 4.94", ib: "85%" },
+                  { c: "Casbah Riads", a: 8, n: 1, r: "★ 4.91", ib: "75%" },
+                  { c: "Sahara Expeditions", a: 12, n: 3, r: "★ 4.98", ib: "90%" },
+                  { c: "4x4 Overlanders", a: 9, n: 2, r: "★ 4.89", ib: "80%" },
+                ].map((row) => (
+                  <tr key={row.c} className="hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-3 text-primary font-bold">{row.c}</td>
+                    <td className="py-2.5 px-3 text-center font-mono">{row.a}</td>
+                    <td className="py-2.5 px-3 text-center text-neutral-600 font-mono">+{row.n}</td>
+                    <td className="py-2.5 px-3 text-center text-amber-600 font-bold">{row.r}</td>
+                    <td className="py-2.5 px-3 text-end font-bold text-accent">{row.ib}</td>
                   </tr>
                 ))}
               </tbody>

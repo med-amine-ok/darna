@@ -10,6 +10,7 @@ import {
   HiOutlineTrash,
   HiOutlineEye,
   HiOutlineExclamation,
+  HiOutlineDotsVertical,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
@@ -21,6 +22,7 @@ interface AdminReviewsClientProps {
 export default function AdminReviewsClient({ initialReviews }: AdminReviewsClientProps) {
   const [reviews, setReviews] = useState<AdminReview[]>(initialReviews);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
   const [reviewToRemove, setReviewToRemove] = useState<AdminReview | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
 
@@ -156,39 +158,61 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                   </td>
 
                   <td className="py-3.5 px-4 text-end">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1.5">
                       {rev.status !== "published" && (
                         <button
                           type="button"
                           onClick={() => handleUpdateStatus(rev.id, "published")}
-                          className="p-1.5 hover:bg-emerald-50 text-emerald-700 rounded-lg transition"
+                          className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center gap-1"
                           title="Approve & Publish"
                         >
-                          <HiOutlineCheckCircle size={16} />
+                          <HiOutlineCheckCircle size={14} />
+                          <span>Publish</span>
                         </button>
                       )}
 
-                      {rev.status !== "flagged" && (
+                      <div className="relative">
                         <button
                           type="button"
-                          onClick={() => handleUpdateStatus(rev.id, "flagged")}
-                          className="p-1.5 hover:bg-amber-50 text-amber-700 rounded-lg transition"
-                          title="Flag Review"
+                          onClick={() => setOpenKebabId(openKebabId === rev.id ? null : rev.id)}
+                          className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-600 transition"
+                          title="More actions"
                         >
-                          <HiOutlineFlag size={16} />
+                          <HiOutlineDotsVertical size={16} />
                         </button>
-                      )}
 
-                      {rev.status !== "removed" && (
-                        <button
-                          type="button"
-                          onClick={() => setReviewToRemove(rev)}
-                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition"
-                          title="Remove from public view"
-                        >
-                          <HiOutlineTrash size={16} />
-                        </button>
-                      )}
+                        {openKebabId === rev.id && (
+                          <div className="absolute end-0 top-8 w-44 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in">
+                            {rev.status !== "flagged" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  handleUpdateStatus(rev.id, "flagged");
+                                }}
+                                className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold text-amber-700"
+                              >
+                                <HiOutlineFlag size={14} />
+                                <span>Flag Review</span>
+                              </button>
+                            )}
+
+                            {rev.status !== "removed" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  setReviewToRemove(rev);
+                                }}
+                                className="w-full text-start px-3.5 py-2 hover:bg-rose-50 flex items-center gap-2 font-semibold text-rose-600"
+                              >
+                                <HiOutlineTrash size={14} />
+                                <span>Remove Review</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>

@@ -3,12 +3,13 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "@/navigation";
+import { useSearchParams } from "next/navigation";
 import { Listing, Reservation, User } from "@/types";
 import HeartButton from "@/components/HeartButton";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Button from "@/components/Button";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, CalendarDays } from "lucide-react";
 
 interface ListingCardProps {
   data: Listing;
@@ -39,8 +40,10 @@ export default function ListingCard({
 }: ListingCardProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const tNav = useTranslations("nav");
+  const tSearch = useTranslations("search");
 
   const images = useMemo(() => {
     if (Array.isArray(data.imageSrc)) {
@@ -130,8 +133,11 @@ export default function ListingCard({
     if (reservation) {
       return reservation.totalPrice;
     }
+    if (data.roomTypes && data.roomTypes.length > 0) {
+      return Math.min(...data.roomTypes.map((r) => r.basePrice ?? r.price ?? data.price));
+    }
     return data.price;
-  }, [reservation, data.price]);
+  }, [reservation, data.price, data.roomTypes]);
 
   const rating = useMemo(() => {
     if (data.rating) {
@@ -173,13 +179,15 @@ export default function ListingCard({
         } else if (customHref) {
           router.push(customHref);
         } else if (pathname?.includes("/search")) {
-          // On search split-map view, clicking the item redirects to its full detail page
-          router.push(`/listings/${data.id}`);
+          // On search split-map view, clicking the item redirects to its full detail page preserving search query
+          const q = searchParams?.toString();
+          router.push(`/listings/${data.id}${q ? `?${q}` : ""}`);
         } else {
           // On homepage or other views, clicking the item redirects to the split map view
           const destParam = data.city ? `&destination=${encodeURIComponent(data.city)}` : "";
           const vertParam = data.category ? `&vertical=${data.category}` : "";
-          router.push(`/search?selectedId=${data.id}${destParam}${vertParam}`);
+          const q = searchParams?.toString();
+          router.push(`/search?selectedId=${data.id}${destParam}${vertParam}${q ? `&${q}` : ""}`);
         }
       }}
       className="col-span-1 cursor-pointer group select-none transition-all duration-200 card-hover-lift"
@@ -254,6 +262,18 @@ export default function ListingCard({
           )}
         </div>
 
+        {/* Partial Availability Badge (Section 6) */}
+        {data.matchedAvailability?.isPartial && (
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50/90 text-amber-800 border border-amber-200/80 text-[10px] font-semibold w-fit my-0.5">
+            <CalendarDays size={11} className="text-amber-700 shrink-0" />
+            <span className="truncate">
+              {tSearch("partialAvailabilityBadge", {
+                range: `${new Date(data.matchedAvailability.overlapStart).toLocaleDateString(locale, { month: "short", day: "numeric" })} – ${new Date(data.matchedAvailability.overlapEnd).toLocaleDateString(locale, { month: "short", day: "numeric" })}`,
+              })}
+            </span>
+          </div>
+        )}
+
         {/* Text Details */}
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-1 text-xs sm:text-sm font-semibold text-primary">
@@ -280,7 +300,15 @@ export default function ListingCard({
 
           <div className="font-normal text-neutral-500 text-[11px] sm:text-xs truncate flex items-center gap-1">
             {reservationDate ||
-              (data.category === "vehicle" ? (
+              (data.roomTypes && data.roomTypes.length > 0 ? (
+                <>
+                  <span className="capitalize font-semibold text-secondary">
+                    {data.businessCategory === "hostel" ? "Hostel" : "Hotel"}
+                  </span>
+                  <span>·</span>
+                  <span>{data.roomTypes.length} unit types</span>
+                </>
+              ) : data.category === "vehicle" ? (
                 <>
                   <Image
                     src="/assets/car.png"
@@ -302,7 +330,15 @@ export default function ListingCard({
             <PriceDisplay
               price={price}
               originalPrice={data.originalPrice}
-              period={!reservation ? periodLabel : undefined}
+              period={
+                !reservation
+                  ? data.roomTypes && data.roomTypes.length > 0
+                    ? data.roomTypes.some((r) => r.bookingUnit === "bed")
+                      ? "from / bed"
+                      : "from / night"
+                    : periodLabel
+                  : undefined
+              }
             />
           </div>
         </div>

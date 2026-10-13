@@ -46,6 +46,35 @@ body {
   background: #B09875;
 }
 
+/* DARNA Admin Sidebar Custom Scrollbar (Slider) */
+.darna-admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3A493B transparent;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-thumb {
+  background: #3A493B;
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6B7F5B;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #C96F4F;
+}
+
 /* Hide scrollbar / slider utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;

@@ -19,6 +19,8 @@ import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineX,
+  HiOutlineDotsVertical,
+  HiOutlineExternalLink,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
@@ -38,6 +40,9 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
 
   // Selected for bulk actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Kebab overflow menu tracking
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   // Detail / Edit Drawer
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -403,56 +408,74 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                     ★ {listing.rating || "5.0"}
                   </td>
 
-                  {/* Actions */}
-                  <td className="py-3 px-3 text-end">
-                    <div className="flex items-center justify-end gap-1">
-                      {/* Feature toggle */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleFeature(listing)}
-                        className={`p-1.5 rounded-lg transition ${
-                          listing.featured
-                            ? "bg-amber-100 text-amber-700"
-                            : "hover:bg-neutral-100 text-neutral-400"
-                        }`}
-                        title="Toggle Featured on homepage"
-                      >
-                        <HiOutlineSparkles size={16} />
-                      </button>
-
-                      {/* Suspend toggle */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSuspend(listing)}
-                        className={`p-1.5 rounded-lg transition ${
-                          listing.status === "suspended"
-                            ? "bg-rose-100 text-rose-700"
-                            : "hover:bg-neutral-100 text-neutral-600"
-                        }`}
-                        title={listing.status === "suspended" ? "Reactivate listing" : "Suspend listing"}
-                      >
-                        <HiOutlineBan size={16} />
-                      </button>
-
-                      {/* View */}
+                  {/* Row Actions: Primary View + Kebab Overflow (Section 4 UX Audit) */}
+                  <td className="py-3 px-3 text-end relative">
+                    <div className="flex items-center justify-end gap-1.5">
+                      {/* Primary Inspect / View Action */}
                       <Link
                         href={`/listings/${listing.id}`}
                         target="_blank"
-                        className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-600"
-                        title="View public page"
+                        className="px-2.5 py-1 rounded-lg border border-tertiary/80 hover:bg-neutral-100 text-primary text-xs font-semibold flex items-center gap-1 transition"
+                        title="View public page in new tab"
                       >
-                        <HiOutlineEye size={16} />
+                        <HiOutlineEye size={14} />
+                        <span>View</span>
                       </Link>
 
-                      {/* Delete */}
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(listing.id)}
-                        className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-600"
-                        title="Delete listing"
-                      >
-                        <HiOutlineTrash size={16} />
-                      </button>
+                      {/* Kebab Dropdown Menu */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenKebabId(openKebabId === listing.id ? null : listing.id)}
+                          className="p-1.5 rounded-lg border border-tertiary/70 hover:bg-neutral-100 text-neutral-600 transition"
+                          title="More actions"
+                          aria-label="More actions"
+                        >
+                          <HiOutlineDotsVertical size={15} />
+                        </button>
+
+                        {openKebabId === listing.id && (
+                          <div className="absolute end-0 top-8 w-48 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenKebabId(null);
+                                handleToggleFeature(listing);
+                              }}
+                              className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                            >
+                              <HiOutlineSparkles size={14} className={listing.featured ? "text-amber-500" : "text-neutral-400"} />
+                              <span>{listing.featured ? "Remove Featured" : "Mark as Featured"}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenKebabId(null);
+                                handleToggleSuspend(listing);
+                              }}
+                              className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                            >
+                              <HiOutlineBan size={14} className={listing.status === "suspended" ? "text-emerald-600" : "text-rose-600"} />
+                              <span>{listing.status === "suspended" ? "Reactivate Listing" : "Suspend Listing"}</span>
+                            </button>
+
+                            <hr className="my-1 border-tertiary/30" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenKebabId(null);
+                                handleDelete(listing.id);
+                              }}
+                              className="w-full text-start px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold"
+                            >
+                              <HiOutlineTrash size={14} />
+                              <span>Delete Listing</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>

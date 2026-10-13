@@ -20,9 +20,12 @@ import {
   HiOutlineStar,
   HiOutlineCheckCircle,
   HiOutlineSwitchHorizontal,
+  HiOutlineDotsVertical,
 } from "react-icons/hi";
+import { BiBed } from "react-icons/bi";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import HostWalletWidget from "@/components/host/HostWalletWidget";
 
 interface HostListingsClientProps {
   initialListings: Listing[];
@@ -36,6 +39,7 @@ export default function HostListingsClient({
   const router = useRouter();
   const [listings, setListings] = useState<Listing[]>(initialListings);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [openCardMenuId, setOpenCardMenuId] = useState<string | null>(null);
   const [selectedVertical, setSelectedVertical] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +50,11 @@ export default function HostListingsClient({
   const [editInstantBook, setEditInstantBook] = useState<boolean>(true);
   const [editTitle, setEditTitle] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Manage Room Types modal state (Section 2)
+  const [managingRoomTypesListing, setManagingRoomTypesListing] = useState<Listing | null>(null);
+  const [tempRoomTypes, setTempRoomTypes] = useState<NonNullable<Listing["roomTypes"]>>([]);
+  const [isSavingRoomTypes, setIsSavingRoomTypes] = useState(false);
 
   // Delete modal state
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -122,6 +131,30 @@ export default function HostListingsClient({
     }
   };
 
+  const handleOpenManageRoomTypes = (listing: Listing) => {
+    setManagingRoomTypesListing(listing);
+    setTempRoomTypes(listing.roomTypes ? JSON.parse(JSON.stringify(listing.roomTypes)) : []);
+  };
+
+  const handleSaveRoomTypes = async () => {
+    if (!managingRoomTypesListing) return;
+    setIsSavingRoomTypes(true);
+    try {
+      await updateListing(managingRoomTypesListing.id, { roomTypes: tempRoomTypes });
+      setListings((prev) =>
+        prev.map((l) =>
+          l.id === managingRoomTypesListing.id ? { ...l, roomTypes: tempRoomTypes } : l
+        )
+      );
+      toast.success("Room types & inventory updated successfully!");
+      setManagingRoomTypesListing(null);
+    } catch {
+      toast.error("Failed to update room types.");
+    } finally {
+      setIsSavingRoomTypes(false);
+    }
+  };
+
   // Delete listing
   const handleDelete = async (id: string) => {
     setIsDeleting(true);
@@ -140,6 +173,7 @@ export default function HostListingsClient({
   };
 
   // Stats
+  const isIndividual = currentUser?.hostType === "individual";
   const activeCount = listings.filter((l) => l.status === "active").length;
   const draftCount = listings.filter((l) => l.status !== "active").length;
 
@@ -149,29 +183,53 @@ export default function HostListingsClient({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">
-            Host Properties & Fleet
+            {isIndividual ? "My Listings" : "Host Properties & Fleet"}
           </h1>
           <p className="text-sm text-neutral-600 mt-1">
-            Manage your listings, adjust nightly rates in DZD, and control calendar booking availability.
+            {isIndividual
+              ? "Manage your homes, nightly pricing, and calendar booking availability."
+              : "Manage your listings, adjust nightly rates in DZD, and control calendar booking availability."}
           </p>
         </div>
 
-        {/* Create Listing CTA */}
-        <button
-          type="button"
-          onClick={() => router.push("/become-a-host/1")}
-          className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm self-start md:self-auto"
-        >
-          <HiOutlinePlus size={18} className="text-tertiary" />
-          <span>Create New Listing</span>
-        </button>
+        {/* Action CTAs */}
+        <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
+          {currentUser?.hostType === "agency" && (
+            <button
+              type="button"
+              onClick={() => router.push("/host/agency/trips/new")}
+              className="px-4 py-2.5 bg-secondary/15 hover:bg-secondary/25 text-secondary rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer btn-press"
+            >
+              <HiOutlinePlus size={16} />
+              <span>+ Add a Trip</span>
+            </button>
+          )}
+
+          {/* Create Listing CTA */}
+          <button
+            type="button"
+            onClick={() => router.push("/become-a-host/1")}
+            className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm cursor-pointer btn-press"
+          >
+            <HiOutlinePlus size={18} className="text-tertiary" />
+            <span>{isIndividual ? "Add New Listing" : "Create New Listing"}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Host Balance & Solvency Widget */}
+      <HostWalletWidget
+        ownerId={currentUser?.organizationId || currentUser?.id || "usr_amina"}
+        ownerType={currentUser?.organizationId ? "organization" : "user"}
+        hostType={currentUser?.hostType || "individual"}
+        className="mb-6"
+      />
 
       {/* KPI Stats Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
           <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">
-            Total Fleet
+            {isIndividual ? "Total Listings" : "Total Fleet"}
           </span>
           <span className="text-2xl font-black text-primary">{listings.length}</span>
         </div>
@@ -357,11 +415,27 @@ export default function HostListingsClient({
                     {listing.title}
                   </h3>
 
+                  {listing.roomTypes && listing.roomTypes.length > 0 && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/30 flex items-center gap-1">
+                        <BiBed size={12} />
+                        <span>
+                          {listing.roomTypes.length} {listing.businessCategory === "hostel" ? "Units / Dorms" : "Room Types"}
+                        </span>
+                      </span>
+                      <span className="text-[11px] text-neutral-500">
+                        {listing.roomTypes.reduce((acc, r) => acc + (r.inventoryCount ?? r.totalInventory ?? 0), 0)} total {listing.businessCategory === "hostel" ? "beds" : "rooms"}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-baseline gap-1 mb-4">
                     <span className="text-lg font-black font-mono text-primary">
                       {listing.price.toLocaleString()} DZD
                     </span>
-                    <span className="text-xs text-neutral-500">/ night</span>
+                    <span className="text-xs text-neutral-500">
+                      {listing.roomTypes && listing.roomTypes.some((r) => r.bookingUnit === "bed") ? "/ bed" : "/ night"}
+                    </span>
                     {listing.instantBook && (
                       <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                         ⚡ Instant Book
@@ -370,55 +444,95 @@ export default function HostListingsClient({
                   </div>
                 </div>
 
-                {/* Actions Grid */}
+                {/* Actions: Primary Edit & Calendar + Kebab Overflow (Section 4 UX Audit) */}
                 <div className="border-t border-tertiary/50 pt-4 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(listing)}
-                      className="p-2 rounded-xl border border-tertiary/70 hover:bg-neutral-50 text-neutral-700 transition"
-                      title={listing.status === "active" ? "Pause listing" : "Activate listing"}
-                    >
-                      <HiOutlineSwitchHorizontal size={16} />
-                    </button>
-
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(listing)}
-                      className="p-2 rounded-xl border border-tertiary/70 hover:bg-neutral-50 text-neutral-700 transition"
+                      className="px-3 py-1.5 rounded-xl border border-tertiary/80 hover:bg-neutral-50 text-neutral-700 transition flex items-center gap-1.5 text-xs font-bold"
                       title="Quick edit rate & details"
                     >
-                      <HiOutlinePencilAlt size={16} />
+                      <HiOutlinePencilAlt size={15} />
+                      <span>Edit</span>
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setDeletingId(listing.id)}
-                      className="p-2 rounded-xl border border-tertiary/70 hover:bg-rose-50 text-rose-600 transition"
-                      title="Delete listing"
-                    >
-                      <HiOutlineTrash size={16} />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => router.push(`/host/calendar`)}
-                      className="px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition flex items-center gap-1.5"
+                      title="Open calendar"
                     >
-                      <HiOutlineCalendar size={14} className="text-secondary" />
+                      <HiOutlineCalendar size={15} className="text-secondary" />
                       <span>Calendar</span>
                     </button>
+                  </div>
 
-                    <Link
-                      href={`/listings/${listing.id}`}
-                      target="_blank"
-                      className="p-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition"
-                      title="View public listing page"
+                  {/* Kebab Dropdown Menu */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setOpenCardMenuId(openCardMenuId === listing.id ? null : listing.id)}
+                      className="p-1.5 rounded-xl border border-tertiary/70 hover:bg-neutral-100 text-neutral-600 transition"
+                      title="More actions"
+                      aria-label="More actions"
                     >
-                      <HiOutlineEye size={16} />
-                    </Link>
+                      <HiOutlineDotsVertical size={16} />
+                    </button>
+
+                    {openCardMenuId === listing.id && (
+                      <div className="absolute end-0 bottom-full mb-2 w-52 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOpenCardMenuId(null);
+                            handleToggleStatus(listing);
+                          }}
+                          className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                        >
+                          <HiOutlineSwitchHorizontal size={15} className="text-secondary" />
+                          <span>{listing.status === "active" ? "Pause Listing" : "Activate Listing"}</span>
+                        </button>
+
+                        {listing.roomTypes && listing.roomTypes.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenCardMenuId(null);
+                              handleOpenManageRoomTypes(listing);
+                            }}
+                            className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                          >
+                            <BiBed size={15} className="text-secondary" />
+                            <span>Manage Room Types</span>
+                          </button>
+                        )}
+
+                        <Link
+                          href={`/listings/${listing.id}`}
+                          target="_blank"
+                          onClick={() => setOpenCardMenuId(null)}
+                          className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                        >
+                          <HiOutlineEye size={15} className="text-secondary" />
+                          <span>View Public Page</span>
+                        </Link>
+
+                        <hr className="my-1 border-tertiary/30" />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOpenCardMenuId(null);
+                            setDeletingId(listing.id);
+                          }}
+                          className="w-full text-start px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold"
+                        >
+                          <HiOutlineTrash size={15} />
+                          <span>Delete Listing</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -507,22 +621,52 @@ export default function HostListingsClient({
                         >
                           <HiOutlineCalendar size={16} />
                         </button>
-                        <Link
-                          href={`/listings/${listing.id}`}
-                          target="_blank"
-                          className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-700"
-                          title="View"
-                        >
-                          <HiOutlineEye size={16} />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingId(listing.id)}
-                          className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-600"
-                          title="Delete"
-                        >
-                          <HiOutlineTrash size={16} />
-                        </button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenCardMenuId(openCardMenuId === `tbl-${listing.id}` ? null : `tbl-${listing.id}`)}
+                            className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-600"
+                            title="More actions"
+                          >
+                            <HiOutlineDotsVertical size={16} />
+                          </button>
+                          {openCardMenuId === `tbl-${listing.id}` && (
+                            <div className="absolute end-0 top-8 w-44 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in">
+                              <Link
+                                href={`/listings/${listing.id}`}
+                                target="_blank"
+                                onClick={() => setOpenCardMenuId(null)}
+                                className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                              >
+                                <HiOutlineEye size={14} className="text-secondary" />
+                                <span>View Public</span>
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenCardMenuId(null);
+                                  handleToggleStatus(listing);
+                                }}
+                                className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
+                              >
+                                <HiOutlineSwitchHorizontal size={14} className="text-secondary" />
+                                <span>{listing.status === "active" ? "Pause" : "Activate"}</span>
+                              </button>
+                              <hr className="my-1 border-tertiary/30" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenCardMenuId(null);
+                                  setDeletingId(listing.id);
+                                }}
+                                className="w-full text-start px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold"
+                              >
+                                <HiOutlineTrash size={14} />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -611,6 +755,108 @@ export default function HostListingsClient({
                 className="px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition shadow-2xs disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Room Types Modal (Section 2: Hotel & Hostel) */}
+      {managingRoomTypesListing && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 border border-tertiary shadow-xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-tertiary/60 pb-3">
+              <div>
+                <h3 className="font-serif font-bold text-lg text-primary flex items-center gap-2">
+                  <BiBed size={22} className="text-secondary" />
+                  <span>Manage Room Types & Inventory</span>
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {managingRoomTypesListing.title} · {managingRoomTypesListing.businessCategory === "hostel" ? "Hostel" : "Hotel"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setManagingRoomTypesListing(null)}
+                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {tempRoomTypes.map((rt, index) => (
+                <div
+                  key={rt.id || index}
+                  className="p-4 rounded-2xl bg-neutral-50/70 border border-tertiary/80 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-xs sm:text-sm text-primary flex items-center gap-2">
+                        <span>{rt.name}</span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-secondary/15 text-secondary">
+                          {rt.bookingUnit === "bed" ? "Per Bed" : "Per Room"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-neutral-500 mt-0.5">
+                        {rt.bedsDescription || `Capacity: ${rt.capacity} guests`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                        Base Nightly Rate (DZD)
+                      </label>
+                      <input
+                        type="number"
+                        value={rt.basePrice ?? rt.price}
+                        onChange={(e) => {
+                          const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                          setTempRoomTypes((prev) =>
+                            prev.map((item, idx) => (idx === index ? { ...item, basePrice: val, price: val } : item))
+                          );
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-tertiary/80 rounded-xl text-xs font-mono font-bold text-primary focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-neutral-600 mb-1">
+                        Available {rt.bookingUnit === "bed" ? "Beds" : "Rooms"} Inventory
+                      </label>
+                      <input
+                        type="number"
+                        value={rt.inventoryCount ?? rt.totalInventory}
+                        onChange={(e) => {
+                          const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                          setTempRoomTypes((prev) =>
+                            prev.map((item, idx) => (idx === index ? { ...item, inventoryCount: val, totalInventory: val } : item))
+                          );
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-tertiary/80 rounded-xl text-xs font-mono font-bold text-primary focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-tertiary/50">
+              <button
+                type="button"
+                onClick={() => setManagingRoomTypesListing(null)}
+                className="px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRoomTypes}
+                disabled={isSavingRoomTypes}
+                className="px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition shadow-2xs disabled:opacity-50"
+              >
+                {isSavingRoomTypes ? "Saving..." : "Save Inventory & Tariffs"}
               </button>
             </div>
           </div>

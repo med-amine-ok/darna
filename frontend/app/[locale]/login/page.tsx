@@ -83,6 +83,7 @@ export default function LoginPage() {
         }
       } else {
         document.cookie = "darna_host_type=individual; path=/; max-age=31536000";
+        document.cookie = "darna_agency_id=; path=/; max-age=0";
         if (typeof window !== "undefined") {
           localStorage.setItem("darna_mode", "host");
         }

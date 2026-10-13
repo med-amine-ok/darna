@@ -84,7 +84,7 @@ export async function authenticateUser(email: string, name?: string): Promise<Us
 
 export async function updateUserHostStatus(
   userId: string,
-  data: { hostType: HostType; organizationId?: string }
+  data: { hostType?: HostType; organizationId?: string; bookingApprovalMode?: "instant" | "request" }
 ): Promise<User | null> {
   await new Promise((resolve) => setTimeout(resolve, 40));
   let user = usersStore.find((u) => u.id === userId);
@@ -95,7 +95,8 @@ export async function updateUserHostStatus(
       email: `${userId}@darna.dz`,
       image: "/assets/avatar.png",
       role: "host",
-      hostType: data.hostType,
+      hostType: data.hostType || "individual",
+      bookingApprovalMode: data.bookingApprovalMode,
       createdAt: new Date().toISOString(),
       favoriteIds: [],
       isIdentityVerified: true,
@@ -103,7 +104,8 @@ export async function updateUserHostStatus(
     usersStore.push(user);
   } else {
     user.role = "host";
-    user.hostType = data.hostType;
+    if (data.hostType) user.hostType = data.hostType;
+    if (data.bookingApprovalMode) user.bookingApprovalMode = data.bookingApprovalMode;
   }
 
   if (data.organizationId) {
@@ -114,7 +116,8 @@ export async function updateUserHostStatus(
   const mockUser = mockUsers.find((u) => u.id === userId);
   if (mockUser) {
     mockUser.role = "host";
-    mockUser.hostType = data.hostType;
+    if (data.hostType) mockUser.hostType = data.hostType;
+    if (data.bookingApprovalMode) mockUser.bookingApprovalMode = data.bookingApprovalMode;
     if (data.organizationId) {
       mockUser.organizationId = data.organizationId;
     }

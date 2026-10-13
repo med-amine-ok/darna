@@ -15,6 +15,7 @@ import { TbAdjustmentsHorizontal } from "react-icons/tb";
 import CategoryBox from "@/components/CategoryBox";
 import { useFilterModal } from "@/hook/useFilterModal";
 import { useTranslations } from "next-intl";
+import { BiCompass } from "react-icons/bi";
 
 export const categories = [
   {
@@ -61,6 +62,11 @@ export const categories = [
     label: "Vehicles 4x4",
     imgSrc: "/assets/car.png",
     description: "All-terrain vehicles and road trip cruisers.",
+  },
+  {
+    label: "Trips & Circuits",
+    icon: BiCompass,
+    description: "Multi-day packaged trips organized by licensed Algerian travel agencies.",
   },
 ];
 

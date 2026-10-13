@@ -13,8 +13,11 @@ import {
   HiOutlineDownload,
   HiOutlineShieldCheck,
   HiOutlineUserGroup,
+  HiOutlineClock,
+  HiOutlineLightningBolt,
 } from "react-icons/hi";
 import { toast } from "react-toastify";
+import { updateUserHostStatus } from "@/lib/data/auth";
 
 interface HostSettingsClientProps {
   currentUser?: User | null;
@@ -46,7 +49,9 @@ export default function HostSettingsClient({
   ]);
 
   // Booking default settings
-  const [instantBookDefault, setInstantBookDefault] = useState(true);
+  const [approvalMode, setApprovalMode] = useState<"instant" | "request">(
+    currentUser?.bookingApprovalMode || "instant"
+  );
   const [advanceNotice, setAdvanceNotice] = useState("1_day");
   const [prepTime, setPrepTime] = useState("none");
   const [checkInTime, setCheckInTime] = useState("15:00");
@@ -96,8 +101,13 @@ export default function HostSettingsClient({
     toast.info("Default payout account updated.");
   };
 
-  const handleSaveDefaults = () => {
-    toast.success("Default booking parameters saved for all new listings!");
+  const handleSaveDefaults = async () => {
+    if (currentUser?.id) {
+      await updateUserHostStatus(currentUser.id, {
+        bookingApprovalMode: approvalMode,
+      });
+    }
+    toast.success("Default booking parameters and approval mode saved!");
   };
 
   return (
@@ -331,20 +341,68 @@ export default function HostSettingsClient({
           </div>
 
           <div className="space-y-4">
-            {/* Instant Book Toggle */}
-            <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-2xl border border-tertiary/60">
-              <div>
-                <span className="block font-bold text-sm text-primary">Instant Book Default</span>
-                <span className="text-xs text-neutral-500">
-                  Allows guests who meet requirements to book automatically without waiting for host review.
-                </span>
+            {/* Booking Approval Mode 2-Card Selector */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-neutral-700 block">
+                Default Booking Approval Mode
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setApprovalMode("instant")}
+                  className={`p-4 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${
+                    approvalMode === "instant"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      approvalMode === "instant"
+                        ? "bg-primary text-white"
+                        : "bg-neutral-200 text-neutral-600"
+                    }`}
+                  >
+                    <HiOutlineLightningBolt size={18} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm text-primary block">
+                      Instant Confirmation
+                    </span>
+                    <span className="text-[11px] text-neutral-500 leading-snug block mt-0.5">
+                      Guests book automatically without host review. Maximum conversion and instant bookings.
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setApprovalMode("request")}
+                  className={`p-4 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${
+                    approvalMode === "request"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      approvalMode === "request"
+                        ? "bg-amber-600 text-white"
+                        : "bg-neutral-200 text-neutral-600"
+                    }`}
+                  >
+                    <HiOutlineClock size={18} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm text-primary block">
+                      Host Review (24h Window)
+                    </span>
+                    <span className="text-[11px] text-neutral-500 leading-snug block mt-0.5">
+                      You review guest profile and message before confirming. 24h response time required.
+                    </span>
+                  </div>
+                </button>
               </div>
-              <input
-                type="checkbox"
-                checked={instantBookDefault}
-                onChange={(e) => setInstantBookDefault(e.target.checked)}
-                className="w-5 h-5 text-primary rounded focus:ring-primary"
-              />
             </div>
 
             {/* Advance Notice */}

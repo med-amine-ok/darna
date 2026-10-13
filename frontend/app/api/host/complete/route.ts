@@ -42,31 +42,32 @@ export async function POST(request: NextRequest) {
       return res;
     }
 
-    if (hostType === "agency" && agency) {
-      // 1. Create organization in server organizations store
+    if ((hostType === "agency" || hostType === "hotel" || hostType === "hostel") && agency) {
+      // 1. Create organization in server organizations store with specific businessCategory
       const createdOrg = await createOrganization({
         ...agency,
+        businessCategory: hostType,
         ownerUserId: targetUserId,
       });
 
       // Mark verified so it passes all route and middleware guards
       createdOrg.verificationStatus = "verified";
 
-      // 2. Grant agency host status to user
+      // 2. Grant host status to user
       await updateUserHostStatus(targetUserId, {
-        hostType: "agency",
+        hostType,
         organizationId: createdOrg.id,
       });
 
       const res = NextResponse.json({
         success: true,
-        hostType: "agency",
+        hostType,
         organization: createdOrg,
       });
 
       // 3. Set cookies on response
       res.cookies.set("darna_user_id", targetUserId, { path: "/", maxAge: 31536000 });
-      res.cookies.set("darna_host_type", "agency", { path: "/", maxAge: 31536000 });
+      res.cookies.set("darna_host_type", hostType, { path: "/", maxAge: 31536000 });
       res.cookies.set("darna_agency_id", createdOrg.id, { path: "/", maxAge: 31536000 });
       res.cookies.set("darna_mode", "host", { path: "/", maxAge: 31536000 });
 

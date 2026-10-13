@@ -24,8 +24,8 @@ export default async function AgencySettingsPage({
 
   const effectiveHostType = currentUser.hostType || cookieHostType;
 
-  // Solo hosts do not have an agency settings page; redirect to their host settings
-  if (effectiveHostType !== "agency") {
+  // Solo hosts do not have an agency settings page; redirect to their personal host settings
+  if (effectiveHostType === "individual") {
     redirect(`/${locale}/host/settings`);
   }
 

@@ -19,6 +19,10 @@ import {
 import { FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import { getWallets } from "@/lib/data/wallet";
+import { Wallet } from "@/types";
+import Link from "next/link";
+import { HiOutlineCreditCard } from "react-icons/hi";
 
 interface AdminUsersClientProps {
   initialUsers: User[];
@@ -35,6 +39,11 @@ export default function AdminUsersClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+
+  React.useEffect(() => {
+    getWallets().then(setWallets).catch(console.error);
+  }, []);
 
   // Suspended state tracking
   const [suspendedUsers, setSuspendedUsers] = useState<Record<string, boolean>>({});
@@ -303,6 +312,80 @@ export default function AdminUsersClient({
                 <span className="text-primary font-semibold">{new Date(selectedUser.createdAt).toLocaleDateString("fr-DZ")}</span>
               </div>
             </div>
+
+            {/* Host Financial Snapshot if user is a host */}
+            {(() => {
+              const userWallet = wallets.find(
+                (w) => w.ownerId === selectedUser.id || (selectedUser.organizationId && w.ownerId === selectedUser.organizationId)
+              );
+              if (!userWallet) return null;
+
+              const isNegative = userWallet.balance < 0;
+
+              return (
+                <div className="mb-6 p-4 rounded-2xl bg-neutral-50/90 border border-tertiary/70 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <HiOutlineCreditCard className="text-primary" size={18} />
+                      <span className="font-bold text-xs text-primary">Prepaid Host Wallet & Solvency</span>
+                    </div>
+                    <Link
+                      href="/admin/wallets"
+                      className="text-[11px] text-primary font-bold hover:underline flex items-center gap-1"
+                    >
+                      <span>Manage in Wallets &rarr;</span>
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-tertiary/60">
+                    <div>
+                      <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">
+                        Current Deposit Balance
+                      </span>
+                      <span className={`text-base font-serif font-black ${isNegative ? "text-rose-700" : "text-primary"}`}>
+                        {userWallet.balance < 0 ? "-" : ""}
+                        {Math.abs(userWallet.balance).toLocaleString("fr-DZ")} DZD
+                      </span>
+                    </div>
+
+                    <div>
+                      {isNegative ? (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">
+                          ⚠️ Negative Balance
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          ✓ Solvent
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {isNegative && (
+                    <p className="text-[11px] text-rose-700 bg-rose-50 p-2.5 rounded-xl border border-rose-200">
+                      Commission deductions have exceeded this host's prepaid deposit. Listing booking privileges are subject to suspension until an offline recharge is confirmed.
+                    </p>
+                  )}
+
+                  {/* Recent 2 transactions preview */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">
+                      Recent Activity
+                    </span>
+                    {userWallet.transactions.slice(0, 2).map((tx) => (
+                      <div key={tx.id} className="flex items-center justify-between text-[11px] py-1 border-b border-tertiary/30 last:border-none">
+                        <span className="text-neutral-600 truncate max-w-[280px]">
+                          {tx.type === "recharge" ? "Deposit Recharge" : "Commission"} • {tx.note || tx.id}
+                        </span>
+                        <span className={`font-mono font-bold shrink-0 ${tx.amount > 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                          {tx.amount > 0 ? "+" : ""}{tx.amount.toLocaleString("fr-DZ")} DZD
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* User Notes */}
             <div className="mb-4">

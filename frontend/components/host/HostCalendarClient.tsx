@@ -36,6 +36,7 @@ import {
   HiOutlineClock,
   HiOutlineUser,
 } from "react-icons/hi";
+import { BiBed } from "react-icons/bi";
 import { toast } from "react-toastify";
 
 type CalendarView = "month" | "week" | "day" | "year";
@@ -97,6 +98,7 @@ export default function HostCalendarClient({
   const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 9, 7)); // Oct 7, 2026
   const [view, setView] = useState<CalendarView>("month");
   const [selectedListingId, setSelectedListingId] = useState<string>("all");
+  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>("all");
 
   // Blocked dates state: mapping "listingId_YYYY-MM-DD" -> true
   const [blockedDates, setBlockedDates] = useState<Record<string, boolean>>({
@@ -305,7 +307,10 @@ export default function HostCalendarClient({
           <select
             id="calendar-property-select"
             value={selectedListingId}
-            onChange={(e) => setSelectedListingId(e.target.value)}
+            onChange={(e) => {
+              setSelectedListingId(e.target.value);
+              setSelectedRoomTypeId("all");
+            }}
             className="px-3 py-1.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary focus:outline-none focus:border-primary flex-1 lg:flex-none lg:w-56"
           >
             <option value="all">All Properties ({safeListings.length})</option>
@@ -315,6 +320,28 @@ export default function HostCalendarClient({
               </option>
             ))}
           </select>
+
+          {/* Room Type Sub-filter (Section 2) */}
+          {activeListing?.roomTypes && activeListing.roomTypes.length > 0 && (
+            <div className="flex items-center gap-1.5 ms-1">
+              <label htmlFor="calendar-room-select" className="text-xs font-bold text-neutral-500 flex items-center gap-1">
+                <BiBed size={14} className="text-secondary" /> Unit:
+              </label>
+              <select
+                id="calendar-room-select"
+                value={selectedRoomTypeId}
+                onChange={(e) => setSelectedRoomTypeId(e.target.value)}
+                className="px-3 py-1.5 bg-neutral-50 border border-secondary/60 rounded-xl text-xs font-semibold text-primary focus:outline-none focus:border-primary"
+              >
+                <option value="all">All Units ({activeListing.roomTypes.length})</option>
+                {activeListing.roomTypes.map((rt) => (
+                  <option key={rt.id} value={rt.id}>
+                    {rt.name} ({rt.bookingUnit === "bed" ? `${rt.inventoryCount || rt.totalInventory} beds` : `${rt.inventoryCount || rt.totalInventory} rooms`})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Listing Color Chips */}
           <div className="hidden sm:flex items-center gap-2 ms-2">

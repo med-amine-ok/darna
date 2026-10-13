@@ -3,19 +3,23 @@ import { getCurrentUser } from "@/lib/data/auth";
 import { getListings, getFeaturedListings } from "@/lib/data/listings";
 import { getVehicles } from "@/lib/data/vehicles";
 import { getExperiences } from "@/lib/data/experiences";
+import { getTrips } from "@/lib/data/trips";
 
 import Navbar from "@/components/navbar/Navbar";
 import HomeHero from "@/components/home/HomeHero";
 import MainCategoryTabs from "@/components/navbar/MainCategoryTabs";
 import ListingCarouselSection from "@/components/home/ListingCarouselSection";
 import ListingCard from "@/components/listing/ListingCard";
+import TripCard from "@/components/trips/TripCard";
 import Container from "@/components/Container";
 import EmptyState from "@/components/EmptyState";
+import { Link } from "@/navigation";
+import { Compass } from "lucide-react";
 
 interface HomePageProps {
   searchParams: {
     category?: string;
-    vertical?: "home" | "experience" | "vehicle";
+    vertical?: "home" | "experience" | "vehicle" | "trip";
     destination?: string;
   };
 }
@@ -37,6 +41,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const vehicleListings = await getVehicles();
   const experienceListings = await getExperiences();
   const featuredListings = await getFeaturedListings();
+  const agencyTrips = await getTrips({ destination: searchParams?.destination });
 
   // Filtered listings if category selected
   const filteredListings = categoryFilter
@@ -58,6 +63,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       )
     : [];
 
+  const isTripVertical = categoryFilter === "Trips & Circuits" || searchParams?.vertical === "trip";
+
   return (
     <main className="relative min-h-[100dvh] flex flex-col bg-darnaBg overflow-x-hidden">
       {/* Authentic Algerian Hero Section */}
@@ -72,7 +79,35 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {/* 4. Main Feed Section */}
       <Container className="py-8 space-y-12">
-        {categoryFilter ? (
+        {isTripVertical ? (
+          /* Trips vertical grid view */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+                  Curated Agency Trips & Circuits
+                </h1>
+                <p className="text-sm text-neutral-500 mt-1">
+                  Showing {agencyTrips.length} multi-day guided expeditions by verified Algerian travel agencies
+                </p>
+              </div>
+            </div>
+
+            {agencyTrips.length === 0 ? (
+              <EmptyState
+                title="No agency trips found"
+                subtitle="Try selecting another destination or clear filters."
+                showReset
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {agencyTrips.map((trip) => (
+                  <TripCard key={trip.id} trip={trip} />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : categoryFilter ? (
           /* When category filtered: Grid View */
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -127,7 +162,37 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               viewMoreHref="/search?vertical=experience"
             />
 
-            {/* Section 3: All-Terrain Vehicles & 4x4s */}
+            {/* Section 3: Agency-Curated Multi-Day Trips & Circuits (Section 5) */}
+            <div className="space-y-6 pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-tertiary/60 pb-4">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider mb-2">
+                    <Compass size={14} />
+                    <span>Exclusive Agency Expeditions</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-serif font-black text-primary">
+                    Agency-Curated Multi-Day Trips & Circuits
+                  </h2>
+                  <p className="text-xs sm:text-sm text-neutral-600 mt-1">
+                    Licensed Algerian tourism agencies organizing guided all-inclusive circuits across the Sahara, Atlas, and Mediterranean coast.
+                  </p>
+                </div>
+                <Link
+                  href="/search?vertical=trip"
+                  className="text-xs font-bold text-primary hover:text-secondary flex items-center gap-1 underline underline-offset-4"
+                >
+                  Browse all circuits →
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {agencyTrips.map((trip) => (
+                  <TripCard key={trip.id} trip={trip} />
+                ))}
+              </div>
+            </div>
+
+            {/* Section 4: All-Terrain Vehicles & 4x4s */}
             <ListingCarouselSection
               title="Explore vehicles for your Algerian road trip"
               subtitle="Dune-ready Toyota 4x4s, rugged mountain crossovers, and city hatchbacks"
@@ -137,7 +202,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               viewMoreHref="/search?vertical=vehicle"
             />
 
-            {/* Section 4: Available This Weekend */}
+            {/* Section 5: Available This Weekend */}
             <ListingCarouselSection
               title="Available this weekend across Algeria"
               subtitle="Instant book stays with five-star verified local hosts"

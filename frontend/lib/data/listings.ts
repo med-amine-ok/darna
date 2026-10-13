@@ -44,6 +44,61 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
     );
   }
 
+  // Date range overlap matching logic (Section 6)
+  const rawSearchStart = params.startDate || params.checkIn;
+  const rawSearchEnd = params.endDate || params.checkOut;
+
+  if (rawSearchStart && rawSearchEnd) {
+    const sStart = new Date(rawSearchStart);
+    const sEnd = new Date(rawSearchEnd);
+
+    if (!isNaN(sStart.getTime()) && !isNaN(sEnd.getTime()) && sStart < sEnd) {
+      results = results
+        .map((item) => {
+          if (item.availableFrom && item.availableTo) {
+            const lStart = new Date(item.availableFrom);
+            const lEnd = new Date(item.availableTo);
+
+            if (!isNaN(lStart.getTime()) && !isNaN(lEnd.getTime())) {
+              // Calculate overlap window: [overlapStart, overlapEnd]
+              const overlapStartTime = Math.max(lStart.getTime(), sStart.getTime());
+              const overlapEndTime = Math.min(lEnd.getTime(), sEnd.getTime());
+
+              // Valid overlap exists if start < end
+              if (overlapStartTime < overlapEndTime) {
+                const overlapStart = new Date(overlapStartTime);
+                const overlapEnd = new Date(overlapEndTime);
+
+                // Is it a partial overlap? (listing does not cover full searched interval)
+                const isPartial =
+                  lStart.getTime() > sStart.getTime() || lEnd.getTime() < sEnd.getTime();
+
+                return {
+                  ...item,
+                  matchedAvailability: {
+                    isPartial,
+                    overlapStart: overlapStart.toISOString().split("T")[0],
+                    overlapEnd: overlapEnd.toISOString().split("T")[0],
+                    listingAvailableFrom: item.availableFrom,
+                    listingAvailableTo: item.availableTo,
+                    searchedStart: rawSearchStart,
+                    searchedEnd: rawSearchEnd,
+                  },
+                };
+              } else {
+                // Zero overlap: completely outside the listing's availability window
+                return null;
+              }
+            }
+          }
+
+          // If listing does not specify fixed bounds, it has full standard availability
+          return item;
+        })
+        .filter((item): item is Listing => item !== null);
+    }
+  }
+
   return results;
 }
 

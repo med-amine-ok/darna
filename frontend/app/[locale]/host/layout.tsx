@@ -28,7 +28,12 @@ export default async function HostLayout({
     return null;
   }
 
-  const effectiveHostType = (currentUser.hostType || cookieHostType) as "individual" | "agency" | undefined;
+  const effectiveHostType = (currentUser.hostType || cookieHostType) as
+    | "individual"
+    | "agency"
+    | "hotel"
+    | "hostel"
+    | undefined;
 
   // 2. hostType is unset / null -> Redirect to host-type selection screen (Step 0)
   if (!effectiveHostType) {
@@ -67,9 +72,13 @@ export default async function HostLayout({
     }
   }
 
-  // 4. Agency Host Guard: User must have a completed, registered Organization record with verification status
+  // 4. Organization Host Guard (Agency, Hotel, Hostel): User must have a completed Organization record
   let organization = null;
-  if (effectiveHostType === "agency") {
+  if (
+    effectiveHostType === "agency" ||
+    effectiveHostType === "hotel" ||
+    effectiveHostType === "hostel"
+  ) {
     if (currentUser.organizationId) {
       organization = await getOrganizationById(currentUser.organizationId);
     }
@@ -88,19 +97,25 @@ export default async function HostLayout({
     }
 
     if (!organization || !organization.verificationStatus) {
-      if (cookieHostType === "agency") {
+      if (cookieHostType === effectiveHostType) {
+        const defaultName =
+          effectiveHostType === "hotel"
+            ? "El Djazaïr Heritage Palace Hotel"
+            : effectiveHostType === "hostel"
+            ? "Casbah Medina Nomad Hostel"
+            : "Atlas Escapes Voyages SARL";
         organization = await createOrganization({
-          name: "Atlas Escapes Voyages SARL",
-          businessRegistrationNumber: "DZ-ALG-2024-B-08921",
-          businessType: "Licensed Tourism Agency",
-          businessEmail: "contact@atlasescapes.dz",
+          name: defaultName,
+          businessCategory: effectiveHostType,
+          businessRegistrationNumber: `DZ-ALG-2024-B-${Date.now().toString().slice(-5)}`,
+          businessEmail: "contact@darna-hospitality.dz",
           businessPhone: "+213 21 69 45 12",
           ownerUserId: currentUser.id,
         });
         organization.verificationStatus = "verified";
         currentUser.organizationId = organization.id;
       } else {
-        redirect(`/${locale}/become-a-host/agency`);
+        redirect(`/${locale}/become-a-host/${effectiveHostType}`);
         return null;
       }
     }
@@ -110,7 +125,7 @@ export default async function HostLayout({
     <div className="min-h-screen bg-bg-light/40 flex flex-col">
       <HostNavbar currentUser={currentUser} organization={organization} />
       <div className="flex-1 pb-20 md:pb-12">{children}</div>
-      <HostBottomNav />
+      <HostBottomNav hostType={effectiveHostType} />
     </div>
   );
 }
