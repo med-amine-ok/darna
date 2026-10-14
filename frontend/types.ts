@@ -23,7 +23,7 @@ export interface User {
   responseTime?: string;
 }
 
-export type ListingVertical = "home" | "experience" | "vehicle" | "trip";
+export type ListingVertical = "home" | "hotel" | "experience" | "vehicle" | "trip";
 export type ListingOwnerType = "individual" | "organization";
 export type ListingStatus = "active" | "pending" | "suspended" | "draft";
 

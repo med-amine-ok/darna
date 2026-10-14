@@ -1432,6 +1432,40 @@ export const CategoryHouseIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
 );
 
 /**
+ * 59b. Category: Hotel & Hostel
+ * Grand Moorish hospitality hotel & hostel facade with arched entrance, multi-story windows, and terracotta rosette
+ */
+export const CategoryHotelIcon: React.FC<IconProps> = ({ size = 24, strokeWidth = 1.8, className = "", ...props }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth={strokeWidth} />
+    <path
+      d="M4 21V6C4 5.4 4.4 5 5 5H19C19.6 5 20 5.4 20 6V21"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    />
+    <path
+      d="M10 21V15.5C10 14.4 10.9 13.5 12 13.5C13.1 13.5 14 14.4 14 15.5V21"
+      stroke="#6B7F5B"
+      strokeWidth="1.5"
+    />
+    <rect x="6.5" y="7.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+    <rect x="14.5" y="7.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+    <rect x="6.5" y="12.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+    <rect x="14.5" y="12.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
+    <circle cx="12" cy="7.5" r="1.1" fill="#C96F4F" />
+  </svg>
+);
+
+/**
  * 60. Brand Trash / Delete Icon
  * Artisan waste container
  */

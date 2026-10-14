@@ -21,7 +21,25 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
   if (!params) return results;
 
   if (params.vertical) {
-    results = results.filter((item) => item.category === params.vertical);
+    if (params.vertical === "hotel") {
+      results = results.filter(
+        (item) =>
+          item.businessCategory === "hotel" ||
+          item.businessCategory === "hostel" ||
+          item.category === "hotel" ||
+          item.type?.toLowerCase().includes("hotel") ||
+          item.type?.toLowerCase().includes("hostel")
+      );
+    } else if (params.vertical === "home") {
+      results = results.filter(
+        (item) =>
+          item.category === "home" &&
+          item.businessCategory !== "hotel" &&
+          item.businessCategory !== "hostel"
+      );
+    } else {
+      results = results.filter((item) => item.category === params.vertical);
+    }
   }
 
   if (params.category) {

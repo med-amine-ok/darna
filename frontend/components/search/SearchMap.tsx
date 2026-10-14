@@ -452,31 +452,32 @@ export default function SearchMap({
   const clusters = useMemo<MapCluster[]>(() => {
     const result: MapCluster[] = [];
 
-    activeMapItems.forEach((item) => {
+    for (const item of activeMapItems) {
       // Find closest existing cluster within 10 km
       let closestCluster: MapCluster | null = null;
       let minDistance = CLUSTER_RANGE_KM;
 
-      result.forEach((c) => {
+      for (const c of result) {
         const dist = getDistanceKm(c.center, item.coords);
         if (dist <= minDistance) {
           minDistance = dist;
           closestCluster = c;
         }
-      });
+      }
 
-      if (closestCluster) {
-        closestCluster.items.push(item);
-        closestCluster.count = closestCluster.items.length;
-        closestCluster.minPrice = Math.min(closestCluster.minPrice, item.price);
-        if (item.type === "trip") closestCluster.hasTrips = true;
-        if (item.type === "listing") closestCluster.hasListings = true;
+      if (closestCluster !== null) {
+        const target: MapCluster = closestCluster;
+        target.items.push(item);
+        target.count = target.items.length;
+        target.minPrice = Math.min(target.minPrice, item.price);
+        if (item.type === "trip") target.hasTrips = true;
+        if (item.type === "listing") target.hasListings = true;
         // Recalculate geographic centroid for the cluster badge
-        const sumLat = closestCluster.items.reduce((acc, curr) => acc + curr.coords[0], 0);
-        const sumLng = closestCluster.items.reduce((acc, curr) => acc + curr.coords[1], 0);
-        closestCluster.center = [
-          sumLat / closestCluster.items.length,
-          sumLng / closestCluster.items.length,
+        const sumLat = target.items.reduce((acc, curr) => acc + curr.coords[0], 0);
+        const sumLng = target.items.reduce((acc, curr) => acc + curr.coords[1], 0);
+        target.center = [
+          sumLat / target.items.length,
+          sumLng / target.items.length,
         ];
       } else {
         result.push({
@@ -489,7 +490,7 @@ export default function SearchMap({
           hasListings: item.type === "listing",
         });
       }
-    });
+    }
 
     return result;
   }, [activeMapItems]);
@@ -636,7 +637,6 @@ export default function SearchMap({
             );
           })
         ) : (
-          // When zoomed out (country/regional view): group properties within 10 km into count buttons
           clusters.map((cluster) => {
             // A: Single-item pin
             if (cluster.count === 1) {

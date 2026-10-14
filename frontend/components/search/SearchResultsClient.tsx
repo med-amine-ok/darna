@@ -22,6 +22,7 @@ import {
   BrandMapIcon,
   BrandListIcon,
   CategoryHouseIcon,
+  CategoryHotelIcon,
   CategoryVehicleIcon,
   BrandPinIcon,
 } from "@/components/icons";
@@ -176,6 +177,7 @@ export default function SearchResultsClient({
   const verticalTabs = [
     { id: "all", label: "All Stays & Rentals", icon: PremiumStarIcon },
     { id: "home", label: "Homes", icon: CategoryHouseIcon },
+    { id: "hotel", label: "Hotels / Hostels", icon: CategoryHotelIcon },
     { id: "vehicle", label: "Vehicles 4x4", icon: CategoryVehicleIcon },
     { id: "experience", label: "Experiences", icon: BrandPinIcon },
     { id: "trip", label: "Agency Circuits", icon: BrandCompassIcon },
@@ -247,20 +249,7 @@ export default function SearchResultsClient({
 
             {/* Right: Quick Filters + Filters Modal Button */}
             <div className="flex items-center gap-2 flex-shrink-0 overflow-x-auto no-scrollbar">
-              {/* Instant Book toggle pill */}
-              <button
-                type="button"
-                onClick={() =>
-                  updateQuery({ instantBook: instantBookFilter ? undefined : "true" })
-                }
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                  instantBookFilter
-                    ? "border-primary bg-primary text-white"
-                    : "border-tertiary/80 bg-white text-neutral-700 hover:border-primary"
-                }`}
-              >
-                Instant Book
-              </button>
+              
 
               {/* Guest Favorites toggle pill */}
               <button
@@ -278,24 +267,6 @@ export default function SearchResultsClient({
               >
                 Guest Favorites
               </button>
-
-              {/* Under 15,000 DZD pill */}
-              <button
-                type="button"
-                onClick={() =>
-                  updateQuery({
-                    maxPrice: maxPriceFilter === "15000" ? undefined : "15000",
-                  })
-                }
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                  maxPriceFilter === "15000"
-                    ? "border-primary bg-primary text-white"
-                    : "border-tertiary/80 bg-white text-neutral-700 hover:border-primary"
-                }`}
-              >
-                Under 15k DZD
-              </button>
-
               {/* Extended Filters Button */}
               <button
                 type="button"
@@ -327,6 +298,10 @@ export default function SearchResultsClient({
                     ? destination
                       ? `Agency circuits & expeditions in ${destination}, Algeria`
                       : "Agency circuits & multi-day expeditions in Algeria"
+                    : currentVertical === "hotel"
+                    ? destination
+                      ? `Hotels & hostels in ${destination}, Algeria`
+                      : "Hotels & hostels in Algeria"
                     : destination
                     ? `Stays & rentals in ${destination}, Algeria`
                     : "All stays, vehicles & experiences in Algeria"}

@@ -80,6 +80,15 @@ export default function Search({
       whoPlaceholder: "Add guests",
       whoSubtitle: "Ages 13 or above",
     },
+    hotel: {
+      whereTitle: "Destination",
+      wherePlaceholder: "City, hotel or hostel name",
+      whenTitle: "Check-in / out",
+      whenPlaceholder: "Add dates",
+      whoTitle: "Rooms & Guests",
+      whoPlaceholder: "Add rooms & guests",
+      whoSubtitle: "Rooms, adults & children",
+    },
     vehicle: {
       whereTitle: "Pickup",
       wherePlaceholder: "Airport or city location",

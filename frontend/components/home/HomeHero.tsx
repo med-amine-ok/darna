@@ -11,6 +11,7 @@ import {
   BrandCompassIcon,
   BrandPinIcon,
   CategoryHouseIcon,
+  CategoryHotelIcon,
   CategoryVehicleIcon,
 } from "@/components/icons";
 
@@ -157,6 +158,28 @@ export default function HomeHero({
               }`}
             />
             <span>{tHero("tabHomes") || "Homes"}</span>
+          </button>
+
+          {/* Hotels & Hostels */}
+          <button
+            type="button"
+            onClick={() => setActiveVertical("hotel")}
+            className={`
+              shrink-0 flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer select-none
+              ${
+                activeVertical === "hotel"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-primary hover:bg-neutral-100/70"
+              }
+            `}
+          >
+            <CategoryHotelIcon
+              size={18}
+              className={`transition-all ${
+                activeVertical === "hotel" ? "text-white" : "text-secondary"
+              }`}
+            />
+            <span>{tHero("tabHotels") || "Hotels / Hostels"}</span>
           </button>
 
           {/* Experiences (Mapped to real brand asset location.png) */}
