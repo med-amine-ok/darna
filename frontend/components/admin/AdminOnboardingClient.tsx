@@ -11,25 +11,21 @@ import {
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import {
-  HiOutlineUser,
-  HiOutlineOfficeBuilding,
-  HiOutlinePlus,
-  HiOutlineTrash,
-  HiOutlineChevronUp,
-  HiOutlineChevronDown,
-  HiOutlineChevronRight,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlinePencil,
-  HiOutlineLockClosed,
-  HiOutlineRefresh,
-  HiOutlineEye,
-  HiOutlineInformationCircle,
-  HiOutlineShieldCheck,
-  HiOutlineDocumentText,
-  HiOutlineTag,
-} from "react-icons/hi";
-import { BiBuildings, BiBed, BiCheckCircle } from "react-icons/bi";
+  BrandUserIcon,
+  BrandBuildingIcon,
+  BrandBedIcon,
+  BrandPlusIcon,
+  BrandTrashIcon,
+  BrandChevronUpIcon,
+  BrandChevronDownIcon,
+  BrandChevronRightIcon,
+  BrandCheckIcon,
+  BrandCrossIcon,
+  BrandEditIcon,
+  BrandLockIcon,
+  BrandRefreshIcon,
+  BrandEyeIcon,
+} from "@/components/icons";
 
 export default function AdminOnboardingClient() {
   const [selectedHostType, setSelectedHostType] = useState<HostType>("individual");
@@ -83,10 +79,10 @@ export default function AdminOnboardingClient() {
 
   // Host Type Tab Meta
   const hostTypeTabs: { type: HostType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { type: "individual", label: "Individual (Solo)", icon: HiOutlineUser },
-    { type: "agency", label: "Agency & Tours", icon: HiOutlineOfficeBuilding },
-    { type: "hotel", label: "Hotel & Resort", icon: BiBuildings },
-    { type: "hostel", label: "Hostel & Backpacker", icon: BiBed },
+    { type: "individual", label: "Individual (Solo)", icon: BrandUserIcon },
+    { type: "agency", label: "Agency & Tours", icon: BrandBuildingIcon },
+    { type: "hotel", label: "Hotel & Resort", icon: BrandBuildingIcon },
+    { type: "hostel", label: "Hostel & Backpacker", icon: BrandBedIcon },
   ];
 
   // Reorder Steps
@@ -430,7 +426,7 @@ export default function AdminOnboardingClient() {
             onClick={() => setIsPreviewOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 border border-tertiary/80 rounded-xl text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition"
           >
-            <HiOutlineEye className="w-4 h-4 text-neutral-500" />
+            <BrandEyeIcon className="w-4 h-4 text-neutral-500" />
             Live Preview
           </button>
 
@@ -439,7 +435,7 @@ export default function AdminOnboardingClient() {
             onClick={() => setIsResetDialogOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 border border-tertiary/80 rounded-xl text-xs font-semibold text-neutral-600 hover:bg-neutral-50 transition"
           >
-            <HiOutlineRefresh className="w-4 h-4" />
+            <BrandRefreshIcon className="w-4 h-4" />
             Reset Defaults
           </button>
 
@@ -453,7 +449,7 @@ export default function AdminOnboardingClient() {
                 : "bg-neutral-300 cursor-not-allowed"
             }`}
           >
-            <HiOutlineCheck className="w-4 h-4" />
+            <BrandCheckIcon className="w-4 h-4" />
             Save Changes {isDirty && "•"}
           </button>
         </div>
@@ -514,7 +510,7 @@ export default function AdminOnboardingClient() {
           onClick={handleOpenAddStep}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition text-xs shadow-xs"
         >
-          <HiOutlinePlus className="w-3.5 h-3.5" />
+          <BrandPlusIcon className="w-3.5 h-3.5" />
           Add New Step
         </button>
       </div>
@@ -552,7 +548,7 @@ export default function AdminOnboardingClient() {
                       </h3>
                       {step.isCore && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold rounded-full">
-                          <HiOutlineLockClosed className="w-3 h-3" />
+                          <BrandLockIcon className="w-3 h-3" />
                           Core Step
                         </span>
                       )}
@@ -584,7 +580,7 @@ export default function AdminOnboardingClient() {
                       className="p-1.5 text-neutral-600 hover:text-neutral-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white rounded transition"
                       title="Move Step Up"
                     >
-                      <HiOutlineChevronUp className="w-4 h-4" />
+                      <BrandChevronUpIcon className="w-4 h-4" />
                     </button>
                     <button
                       type="button"
@@ -593,7 +589,7 @@ export default function AdminOnboardingClient() {
                       className="p-1.5 text-neutral-600 hover:text-neutral-900 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white rounded transition"
                       title="Move Step Down"
                     >
-                      <HiOutlineChevronDown className="w-4 h-4" />
+                      <BrandChevronDownIcon className="w-4 h-4" />
                     </button>
                   </div>
 
@@ -617,7 +613,7 @@ export default function AdminOnboardingClient() {
                     className="p-1.5 text-neutral-500 hover:text-primary hover:bg-neutral-100 rounded-lg transition"
                     title="Edit Step Details"
                   >
-                    <HiOutlinePencil className="w-4 h-4" />
+                    <BrandEditIcon className="w-4 h-4" />
                   </button>
 
                   {/* Delete Step */}
@@ -627,7 +623,7 @@ export default function AdminOnboardingClient() {
                     className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                     title="Remove Step"
                   >
-                    <HiOutlineTrash className="w-4 h-4" />
+                    <BrandTrashIcon className="w-4 h-4" />
                   </button>
 
                   {/* Expand / Collapse Button */}
@@ -637,8 +633,8 @@ export default function AdminOnboardingClient() {
                     className="p-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition ml-1"
                     title={isExpanded ? "Collapse Fields" : "Expand Fields"}
                   >
-                    <HiOutlineChevronRight
-                      className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                    <BrandChevronRightIcon
+                      className={`w-4 h-4 transition-transform rtl:rotate-180 ${isExpanded ? "rotate-90 rtl:rotate-90" : ""}`}
                     />
                   </button>
                 </div>
@@ -659,7 +655,7 @@ export default function AdminOnboardingClient() {
                       onClick={() => handleOpenAddField(step.id)}
                       className="flex items-center gap-1 px-3 py-1 bg-white border border-tertiary text-neutral-700 text-xs font-bold rounded-lg hover:border-primary hover:text-primary transition shadow-2xs"
                     >
-                      <HiOutlinePlus className="w-3.5 h-3.5 text-primary" />
+                      <BrandPlusIcon className="w-3.5 h-3.5 text-primary" />
                       Add Field
                     </button>
                   </div>
@@ -727,7 +723,7 @@ export default function AdminOnboardingClient() {
                                 className="p-1 text-neutral-400 hover:text-neutral-800 disabled:opacity-20"
                                 title="Move Field Up"
                               >
-                                <HiOutlineChevronUp className="w-3.5 h-3.5" />
+                                <BrandChevronUpIcon className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
@@ -736,7 +732,7 @@ export default function AdminOnboardingClient() {
                                 className="p-1 text-neutral-400 hover:text-neutral-800 disabled:opacity-20"
                                 title="Move Field Down"
                               >
-                                <HiOutlineChevronDown className="w-3.5 h-3.5" />
+                                <BrandChevronDownIcon className="w-3.5 h-3.5" />
                               </button>
 
                               <button
@@ -745,7 +741,7 @@ export default function AdminOnboardingClient() {
                                 className="p-1 text-neutral-400 hover:text-primary rounded transition"
                                 title="Edit Field"
                               >
-                                <HiOutlinePencil className="w-3.5 h-3.5" />
+                                <BrandEditIcon className="w-3.5 h-3.5" />
                               </button>
 
                               <button
@@ -754,7 +750,7 @@ export default function AdminOnboardingClient() {
                                 className="p-1 text-neutral-400 hover:text-rose-600 rounded transition"
                                 title="Delete Field"
                               >
-                                <HiOutlineTrash className="w-3.5 h-3.5" />
+                                <BrandTrashIcon className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -782,7 +778,7 @@ export default function AdminOnboardingClient() {
                 onClick={() => setIsStepModalOpen(false)}
                 className="p-1.5 text-neutral-400 hover:text-neutral-900 rounded-lg"
               >
-                <HiOutlineX className="w-5 h-5" />
+                <BrandCrossIcon className="w-5 h-5" />
               </button>
             </div>
 
@@ -888,7 +884,7 @@ export default function AdminOnboardingClient() {
                 onClick={() => setIsFieldModalOpen(false)}
                 className="p-1.5 text-neutral-400 hover:text-neutral-900 rounded-lg"
               >
-                <HiOutlineX className="w-5 h-5" />
+                <BrandCrossIcon className="w-5 h-5" />
               </button>
             </div>
 
@@ -1034,7 +1030,7 @@ export default function AdminOnboardingClient() {
                 onClick={() => setIsPreviewOpen(false)}
                 className="p-1.5 text-neutral-400 hover:text-neutral-900 rounded-lg"
               >
-                <HiOutlineX className="w-5 h-5" />
+                <BrandCrossIcon className="w-5 h-5" />
               </button>
             </div>
 
@@ -1105,7 +1101,7 @@ export default function AdminOnboardingClient() {
         title="Remove Onboarding Step?"
         message={
           deleteStepTarget?.isCore
-            ? `⚠️ WARNING: '${deleteStepTarget?.title[localePreview]}' is marked as a CORE ONBOARDING STEP. Removing it will exclude these mandatory fields from the host registration wizard, which could prevent listings or organizations from completing. Are you sure you wish to proceed?`
+            ? `WARNING: '${deleteStepTarget?.title[localePreview]}' is marked as a CORE ONBOARDING STEP. Removing it will exclude these mandatory fields from the host registration wizard, which could prevent listings or organizations from completing. Are you sure you wish to proceed?`
             : `Are you sure you want to remove '${deleteStepTarget?.title[localePreview]}' from the ${selectedHostType} onboarding flow?`
         }
         confirmLabel="Remove Step"

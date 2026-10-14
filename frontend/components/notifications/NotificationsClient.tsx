@@ -7,13 +7,12 @@ import { Notification } from "@/types";
 import { markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/data/notifications";
 import { toast } from "react-toastify";
 import {
-  HiOutlineBell,
-  HiOutlineCheckCircle,
-  HiOutlineChatAlt2,
-  HiOutlineTag,
-  HiOutlineShieldCheck,
-  HiOutlineCalendar,
-} from "react-icons/hi";
+  BrandBellIcon,
+  BrandCalendarIcon,
+  BrandMessageIcon,
+  BrandTagIcon,
+  BrandShieldIcon,
+} from "@/components/icons";
 
 interface NotificationsClientProps {
   initialNotifications: Notification[];
@@ -50,15 +49,15 @@ export default function NotificationsClient({
   const getIcon = (type: string) => {
     switch (type) {
       case "booking":
-        return <HiOutlineCalendar size={20} className="text-emerald-700" />;
+        return <BrandCalendarIcon size={20} className="text-emerald-700" />;
       case "message":
-        return <HiOutlineChatAlt2 size={20} className="text-secondary" />;
+        return <BrandMessageIcon size={20} className="text-secondary" />;
       case "price":
-        return <HiOutlineTag size={20} className="text-accent" />;
+        return <BrandTagIcon size={20} className="text-accent" />;
       case "system":
-        return <HiOutlineShieldCheck size={20} className="text-primary" />;
+        return <BrandShieldIcon size={20} className="text-primary" />;
       default:
-        return <HiOutlineBell size={20} className="text-neutral-500" />;
+        return <BrandBellIcon size={20} className="text-neutral-500" />;
     }
   };
 
@@ -90,7 +89,7 @@ export default function NotificationsClient({
 
       {notifications.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-tertiary text-center shadow-xs">
-          <HiOutlineBell size={36} className="text-tertiary mx-auto mb-3" />
+          <BrandBellIcon size={36} className="text-tertiary mx-auto mb-3" />
           <h3 className="text-base font-bold text-primary">No notifications</h3>
           <p className="text-xs text-neutral-500 mt-1">
             When you receive booking confirmations, host messages, or price alerts, they will appear here.

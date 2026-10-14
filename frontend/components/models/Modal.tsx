@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { BrandCloseIcon } from "@/components/icons";
 import Button from "@/components/Button";
 
 interface ModalProps {
@@ -92,7 +92,7 @@ export default function Modal({
                 className="w-9 h-9 flex items-center justify-center border-0 hover:bg-neutral-100 rounded-full transition absolute start-4 text-neutral-600 hover:text-primary cursor-pointer touch-manipulation btn-press z-10"
                 onClick={handleClose}
               >
-                <X size={18} strokeWidth={2.2} />
+                <BrandCloseIcon size={18} strokeWidth={2.2} />
               </button>
               <div className="text-base sm:text-lg font-bold text-primary px-10 text-center truncate max-w-full">{title}</div>
             </div>

@@ -3,17 +3,16 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { AdminReview, updateReviewStatus } from "@/lib/data/admin";
-import {
-  HiOutlineStar,
-  HiOutlineCheckCircle,
-  HiOutlineFlag,
-  HiOutlineTrash,
-  HiOutlineEye,
-  HiOutlineExclamation,
-  HiOutlineDotsVertical,
-} from "react-icons/hi";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import {
+  BrandCheckCircleIcon,
+  BrandFlagIcon,
+  BrandTrashIcon,
+  BrandExclamationIcon,
+  BrandMoreIcon,
+  BrandStarIcon,
+} from "@/components/icons";
 
 interface AdminReviewsClientProps {
   initialReviews: AdminReview[];
@@ -127,8 +126,8 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                   </td>
 
                   <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1 font-bold text-amber-600">
-                      <span>★</span>
+                    <div className="flex items-center gap-1 font-bold text-neutral-800">
+                      <BrandStarIcon size={13} className="text-accent fill-accent" />
                       <span>{rev.rating}.0</span>
                     </div>
                   </td>
@@ -137,7 +136,7 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                     <p className="line-clamp-2 leading-relaxed">{rev.comment}</p>
                     {rev.flagReason && (
                       <div className="mt-1 text-[10px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 flex items-center gap-1">
-                        <HiOutlineExclamation size={12} />
+                        <BrandExclamationIcon size={12} />
                         <span>{rev.flagReason}</span>
                       </div>
                     )}
@@ -166,7 +165,7 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                           className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center gap-1"
                           title="Approve & Publish"
                         >
-                          <HiOutlineCheckCircle size={14} />
+                          <BrandCheckCircleIcon size={14} />
                           <span>Publish</span>
                         </button>
                       )}
@@ -178,7 +177,7 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                           className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-600 transition"
                           title="More actions"
                         >
-                          <HiOutlineDotsVertical size={16} />
+                          <BrandMoreIcon size={16} />
                         </button>
 
                         {openKebabId === rev.id && (
@@ -192,7 +191,7 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                                 }}
                                 className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold text-amber-700"
                               >
-                                <HiOutlineFlag size={14} />
+                                <BrandFlagIcon size={14} />
                                 <span>Flag Review</span>
                               </button>
                             )}
@@ -206,7 +205,7 @@ export default function AdminReviewsClient({ initialReviews }: AdminReviewsClien
                                 }}
                                 className="w-full text-start px-3.5 py-2 hover:bg-rose-50 flex items-center gap-2 font-semibold text-rose-600"
                               >
-                                <HiOutlineTrash size={14} />
+                                <BrandTrashIcon size={14} />
                                 <span>Remove Review</span>
                               </button>
                             )}

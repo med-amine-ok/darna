@@ -4,18 +4,17 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { User, Organization } from "@/types";
 import {
-  HiOutlineCreditCard,
-  HiOutlineOfficeBuilding,
-  HiOutlineAdjustments,
-  HiOutlineBell,
-  HiOutlineCheckCircle,
-  HiOutlinePlus,
-  HiOutlineDownload,
-  HiOutlineShieldCheck,
-  HiOutlineUserGroup,
-  HiOutlineClock,
-  HiOutlineLightningBolt,
-} from "react-icons/hi";
+  BrandCreditCardIcon,
+  BrandBuildingIcon,
+  BrandAdjustmentsIcon,
+  BrandBellIcon,
+  BrandPlusIcon,
+  BrandShieldIcon,
+  BrandUsersIcon,
+  BrandClockIcon,
+  BrandLightningIcon,
+  BrandCrossIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import { updateUserHostStatus } from "@/lib/data/auth";
 
@@ -125,10 +124,10 @@ export default function HostSettingsClient({
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-tertiary/60 overflow-x-auto pb-1 mb-8 scrollbar-none">
         {[
-          { id: "payouts", label: "Payout Accounts & History", icon: HiOutlineCreditCard },
-          { id: "identity", label: "Host Type & Legal Status", icon: HiOutlineOfficeBuilding },
-          { id: "defaults", label: "Booking Defaults", icon: HiOutlineAdjustments },
-          { id: "notifications", label: "Guest Communication", icon: HiOutlineBell },
+          { id: "payouts", label: "Payout Accounts & History", icon: BrandCreditCardIcon },
+          { id: "identity", label: "Host Type & Legal Status", icon: BrandBuildingIcon },
+          { id: "defaults", label: "Booking Defaults", icon: BrandAdjustmentsIcon },
+          { id: "notifications", label: "Guest Communication", icon: BrandBellIcon },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -169,7 +168,7 @@ export default function HostSettingsClient({
                 onClick={() => setIsAddPayoutOpen(true)}
                 className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 shadow-2xs self-start sm:self-auto"
               >
-                <HiOutlinePlus size={16} />
+                <BrandPlusIcon size={16} />
                 <span>Add Payout Method</span>
               </button>
             </div>
@@ -279,7 +278,7 @@ export default function HostSettingsClient({
           <div className="bg-neutral-50 rounded-2xl p-5 border border-tertiary/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center">
-                {organization ? <HiOutlineOfficeBuilding size={24} /> : <HiOutlineShieldCheck size={24} />}
+                {organization ? <BrandBuildingIcon size={24} /> : <BrandShieldIcon size={24} />}
               </div>
               <div>
                 <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
@@ -301,7 +300,7 @@ export default function HostSettingsClient({
                 href="/host/agency/team"
                 className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 self-start sm:self-auto"
               >
-                <HiOutlineUserGroup size={16} />
+                <BrandUsersIcon size={16} />
                 <span>Manage Agency Team</span>
               </Link>
             ) : (
@@ -363,7 +362,7 @@ export default function HostSettingsClient({
                         : "bg-neutral-200 text-neutral-600"
                     }`}
                   >
-                    <HiOutlineLightningBolt size={18} />
+                    <BrandLightningIcon size={18} />
                   </div>
                   <div>
                     <span className="font-bold text-sm text-primary block">
@@ -391,7 +390,7 @@ export default function HostSettingsClient({
                         : "bg-neutral-200 text-neutral-600"
                     }`}
                   >
-                    <HiOutlineClock size={18} />
+                    <BrandClockIcon size={18} />
                   </div>
                   <div>
                     <span className="font-bold text-sm text-primary block">
@@ -572,9 +571,10 @@ export default function HostSettingsClient({
               <button
                 type="button"
                 onClick={() => setIsAddPayoutOpen(false)}
-                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
+                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center transition"
+                aria-label="Close modal"
               >
-                ✕
+                <BrandCrossIcon size={16} />
               </button>
             </div>
 

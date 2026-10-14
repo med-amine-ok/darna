@@ -3,18 +3,18 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import {
-  HiOutlineSearch,
-  HiOutlineCalendar,
-  HiOutlineUserCircle,
-  HiOutlineCreditCard,
-  HiOutlineShieldCheck,
-  HiOutlineHome,
-  HiOutlineChevronDown,
-  HiOutlineThumbUp,
-  HiOutlineThumbDown,
-  HiOutlineMail,
-  HiOutlinePhone,
-} from "react-icons/hi";
+  BrandSearchIcon,
+  BrandCalendarIcon,
+  BrandUserIcon,
+  BrandCreditCardIcon,
+  BrandShieldIcon,
+  BrandHomeIcon,
+  BrandChevronDownIcon,
+  BrandThumbUpIcon,
+  BrandThumbDownIcon,
+  BrandMailIcon,
+  BrandPhoneIcon,
+} from "@/components/icons";
 
 export default function HelpClient() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,12 +30,12 @@ export default function HelpClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories = [
-    { id: "all", label: "All Topics", icon: HiOutlineSearch },
-    { id: "booking", label: "Booking & reservations", icon: HiOutlineCalendar },
-    { id: "account", label: "Account & verification", icon: HiOutlineUserCircle },
-    { id: "payments", label: "Payments & refunds", icon: HiOutlineCreditCard },
-    { id: "safety", label: "Trust & safety in Algeria", icon: HiOutlineShieldCheck },
-    { id: "hosting", label: "Hosting on DARNA", icon: HiOutlineHome },
+    { id: "all", label: "All Topics", icon: BrandSearchIcon },
+    { id: "booking", label: "Booking & reservations", icon: BrandCalendarIcon },
+    { id: "account", label: "Account & verification", icon: BrandUserIcon },
+    { id: "payments", label: "Payments & refunds", icon: BrandCreditCardIcon },
+    { id: "safety", label: "Trust & safety in Algeria", icon: BrandShieldIcon },
+    { id: "hosting", label: "Hosting on DARNA", icon: BrandHomeIcon },
   ];
 
   const articles = [
@@ -134,7 +134,7 @@ export default function HelpClient() {
 
           {/* Search Box */}
           <div className="relative pt-4 max-w-lg mx-auto">
-            <HiOutlineSearch
+            <BrandSearchIcon
               size={20}
               className="absolute start-4.5 top-[27px] text-neutral-400"
             />
@@ -217,7 +217,7 @@ export default function HelpClient() {
                         </p>
                       )}
                     </div>
-                    <HiOutlineChevronDown
+                    <BrandChevronDownIcon
                       size={20}
                       className={`text-neutral-400 transition-transform shrink-0 ${
                         isExpanded ? "rotate-180 text-primary" : ""
@@ -244,7 +244,7 @@ export default function HelpClient() {
                                 : "border-tertiary hover:bg-neutral-50 text-neutral-600"
                             }`}
                           >
-                            <HiOutlineThumbUp size={15} />
+                            <BrandThumbUpIcon size={15} />
                             <span>Yes</span>
                           </button>
                           <button
@@ -256,7 +256,7 @@ export default function HelpClient() {
                                 : "border-tertiary hover:bg-neutral-50 text-neutral-600"
                             }`}
                           >
-                            <HiOutlineThumbDown size={15} />
+                            <BrandThumbDownIcon size={15} />
                             <span>No</span>
                           </button>
                         </div>
@@ -362,7 +362,7 @@ export default function HelpClient() {
             </h4>
             <div className="space-y-3 text-xs text-neutral-700">
               <div className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-tertiary/60">
-                <HiOutlinePhone size={20} className="text-secondary shrink-0 mt-0.5" />
+                <BrandPhoneIcon size={20} className="text-secondary shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-primary">Algerian Hotline</div>
                   <div className="text-neutral-500 mt-0.5">+213 21 00 00 00</div>
@@ -371,7 +371,7 @@ export default function HelpClient() {
               </div>
 
               <div className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-tertiary/60">
-                <HiOutlineMail size={20} className="text-secondary shrink-0 mt-0.5" />
+                <BrandMailIcon size={20} className="text-secondary shrink-0 mt-0.5" />
                 <div>
                   <div className="font-bold text-primary">Email Support</div>
                   <div className="text-neutral-500 mt-0.5">support@darna.dz</div>

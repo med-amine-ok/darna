@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import {
   AreaChart,
   Area,
@@ -15,31 +14,21 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import {
-  HiOutlineCash,
-  HiOutlineCalendar,
-  HiOutlineHome,
-  HiOutlineUsers,
-  HiOutlineTrendingUp,
-  HiOutlineExclamationCircle,
-  HiOutlineBadgeCheck,
-  HiOutlineEye,
-  HiOutlineArrowRight,
-  HiOutlineSparkles,
-  HiOutlineViewGrid,
-  HiOutlineChartBar,
-  HiOutlineTag,
-  HiOutlineCreditCard,
-  HiOutlineTable,
-  HiOutlineCheckCircle,
-  HiOutlineInformationCircle,
-  HiOutlineOfficeBuilding,
-} from "react-icons/hi";
+  BrandChartIcon,
+  BrandUsersIcon,
+  BrandTagIcon,
+  BrandDocumentTextIcon,
+  BrandCreditCardIcon,
+  BrandTrendingUpIcon,
+  BrandCashIcon,
+  BrandCalendarIcon,
+  BrandBuildingIcon,
+  BrandAlertCircleIcon,
+} from "@/components/icons";
 import { DetailedAnalytics } from "@/lib/data/admin";
-import PriceDisplay from "@/components/common/PriceDisplay";
 
 interface AdminDashboardClientProps {
   kpis: {
@@ -131,11 +120,11 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
       {/* Primary Dimensional Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/60 no-scrollbar">
         {[
-          { id: "overview", label: "Executive Overview", icon: HiOutlineChartBar },
-          { id: "by_host_type", label: "By Host Type (4-Way)", icon: HiOutlineUsers },
-          { id: "by_vertical", label: "By Vertical (Trips, Stays, 4x4)", icon: HiOutlineTag },
-          { id: "cross_tab", label: "Cross-Tab Matrix (Heatmap)", icon: HiOutlineTable },
-          { id: "financial", label: "Fiscal & Commission Ledger", icon: HiOutlineCreditCard },
+          { id: "overview", label: "Executive Overview", icon: BrandChartIcon },
+          { id: "by_host_type", label: "By Host Type (4-Way)", icon: BrandUsersIcon },
+          { id: "by_vertical", label: "By Vertical (Trips, Stays, 4x4)", icon: BrandTagIcon },
+          { id: "cross_tab", label: "Cross-Tab Matrix (Heatmap)", icon: BrandDocumentTextIcon },
+          { id: "financial", label: "Fiscal & Commission Ledger", icon: BrandCreditCardIcon },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -178,7 +167,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                 {currentRevenue.toLocaleString("fr-DZ")} DZD
               </div>
               <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-2">
-                <HiOutlineTrendingUp className="text-secondary" />
+                <BrandTrendingUpIcon className="text-secondary" />
                 <span>+18.2% vs previous period</span>
               </div>
             </div>
@@ -197,7 +186,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                 {currentVolume.toLocaleString("fr-DZ")} DZD
               </div>
               <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-2">
-                <HiOutlineCash className="text-secondary" />
+                <BrandCashIcon className="text-secondary" />
                 <span>Avg Booking: {kpis.avgBookingValueDzd.toLocaleString("fr-DZ")} DZD</span>
               </div>
             </div>
@@ -216,7 +205,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                 {currentBookings} <span className="text-xs font-sans text-neutral-500 font-semibold">Stays & Trips</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-2">
-                <HiOutlineCalendar className="text-secondary" />
+                <BrandCalendarIcon className="text-secondary" />
                 <span>Occupancy Rate: {kpis.occupancyRatePercent}%</span>
               </div>
             </div>
@@ -235,7 +224,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                 {(finMetrics?.totalCommissionEarned || 1459800).toLocaleString("fr-DZ")} DZD
               </div>
               <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-2">
-                <HiOutlineCreditCard className="text-emerald-700" />
+                <BrandCreditCardIcon className="text-emerald-700" />
                 <span>Avg 15.1% across 4 host types</span>
               </div>
             </div>
@@ -278,7 +267,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
-                      formatter={(val: number) => [`${val.toLocaleString("fr-DZ")} DZD`, "Revenue"]}
+                      formatter={(val: any) => [`${Number(val || 0).toLocaleString("fr-DZ")} DZD`, "Revenue"]}
                       contentStyle={{ backgroundColor: "#2E3A2F", borderRadius: "12px", color: "#fff", border: "none" }}
                       itemStyle={{ color: "#F8F6EE" }}
                     />
@@ -360,7 +349,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                   <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#2E3A2F", borderRadius: "10px", color: "#fff" }}
-                    formatter={(val: number) => [`${val} Bookings`, "Volume"]}
+                    formatter={(val: any) => [`${val} Bookings`, "Volume"]}
                   />
                   <Bar dataKey="bookings" fill="#2E3A2F" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -573,8 +562,8 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
-                      formatter={(val: number, name: string) => [
-                        name === "revenue" ? `${val.toLocaleString("fr-DZ")} DZD` : val,
+                      formatter={(val: any, name: any) => [
+                        name === "revenue" ? `${Number(val || 0).toLocaleString("fr-DZ")} DZD` : val,
                         name === "revenue" ? "Gross Revenue" : "Bookings",
                       ]}
                       contentStyle={{ backgroundColor: "#2E3A2F", borderRadius: "12px", color: "#fff", border: "none" }}
@@ -736,7 +725,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                     <tr key={row.hostType} className="hover:bg-neutral-50/50">
                       <td className="py-4 px-4 font-bold text-primary whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <HiOutlineOfficeBuilding className="text-secondary" size={16} />
+                          <BrandBuildingIcon className="text-secondary" size={16} />
                           <span>{row.hostTypeName}</span>
                         </div>
                       </td>
@@ -823,7 +812,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
 
             {/* Matrix Guidance Note */}
             <div className="p-3 bg-neutral-50 rounded-2xl border border-tertiary/40 flex items-start gap-2.5 text-xs text-neutral-600">
-              <HiOutlineInformationCircle size={16} className="text-secondary shrink-0 mt-0.5" />
+              <BrandAlertCircleIcon size={16} className="text-secondary shrink-0 mt-0.5" />
               <p className="text-[11px] leading-relaxed">
                 <strong>Structural Sparseness Rule:</strong> The &quot;—&quot; cells indicate intentionally disallowed combinations per Algerian tourism regulatory compliance (e.g. Commercial Hotels cannot list multi-day desert overland expeditions; only CNRC/Ministry licensed Tourism Agencies can publish packaged Trips).
               </p>
@@ -835,7 +824,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
             <div className="p-4 bg-white rounded-3xl border border-primary/20 shadow-lg flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-bold">
-                  <HiOutlineTable size={20} />
+                  <BrandDocumentTextIcon size={20} />
                 </div>
                 <div>
                   <h4 className="font-serif font-bold text-sm text-primary">
@@ -919,7 +908,7 @@ export default function AdminDashboardClient({ kpis, charts, detailed }: AdminDa
                 href="/admin/wallets"
                 className="px-3.5 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 shadow-2xs"
               >
-                <HiOutlineCreditCard size={15} />
+                <BrandCreditCardIcon size={15} />
                 <span>Open Host Wallets</span>
               </Link>
             </div>

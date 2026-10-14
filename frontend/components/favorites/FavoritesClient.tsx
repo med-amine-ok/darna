@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Listing, User, ListingVertical } from "@/types";
 import ListingCard from "@/components/listing/ListingCard";
-import { HiOutlineHeart, HiOutlineSparkles } from "react-icons/hi";
+import { BrandHeartIcon } from "@/components/icons";
 
 interface FavoritesClientProps {
   initialListings: Listing[];
@@ -94,8 +94,8 @@ export default function FavoritesClient({
       {/* Grid or Empty State */}
       {filteredListings.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-lg mx-auto my-8 shadow-xs">
-          <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-100">
-            <HiOutlineHeart size={32} />
+          <div className="w-16 h-16 bg-accent/10 text-accent rounded-full flex items-center justify-center mx-auto mb-4 border border-accent/20">
+            <BrandHeartIcon size={32} />
           </div>
           <h3 className="text-lg font-bold text-primary mb-1">
             {savedListings.length === 0

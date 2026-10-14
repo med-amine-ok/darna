@@ -5,8 +5,7 @@ import { useLoginModal } from "@/hook/useLoginModal";
 import { useRegisterModal } from "@/hook/useRegisterModal";
 import { useRouter } from "@/navigation";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { AiFillGithub } from "react-icons/ai";
-import { FcGoogle } from "react-icons/fc";
+import { BrandGoogleIcon, BrandGithubIcon } from "@/components/icons";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 
@@ -126,13 +125,13 @@ export default function LoginModal() {
       <Button
         outline
         label="Continue with Google"
-        icon={FcGoogle}
+        icon={BrandGoogleIcon}
         onClick={() => handleOAuthLogin("Google")}
       />
       <Button
         outline
         label="Continue with GitHub"
-        icon={AiFillGithub}
+        icon={BrandGithubIcon}
         onClick={() => handleOAuthLogin("GitHub")}
       />
       <div className="text-neutral-500 text-center mt-3 font-normal text-sm">

@@ -6,7 +6,6 @@ import Logo from "./Logo";
 import LanguageSwitcher from "./LanguageSwitcher";
 import UserMenu from "./UserMenu";
 import { User } from "@/types";
-import { Search as SearchIcon, Bell } from "lucide-react";
 import { useSearchModal } from "@/hook/useSearchModal";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -14,6 +13,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Search from "./Search";
 import NotificationsDropdown from "./NotificationsDropdown";
+import { BrandPinIcon } from "@/components/icons";
 
 interface NavbarProps {
   currentUser?: User | null;
@@ -112,12 +112,10 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
                       : "scale(1)",
                   }}
                 >
-                  <Image
-                    src="/assets/location.png"
-                    alt="Location"
-                    width={13}
-                    height={13}
-                    className="object-contain shrink-0"
+                  <BrandPinIcon
+                    size={14}
+                    strokeWidth={2}
+                    className="text-accent shrink-0"
                   />
                   <span className="truncate">
                     {destination || "Anywhere in Algeria"}

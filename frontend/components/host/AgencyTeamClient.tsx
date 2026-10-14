@@ -10,16 +10,17 @@ import {
   removeOrganizationMember,
 } from "@/lib/data/organizations";
 import {
-  HiOutlineUserGroup,
-  HiOutlineUserAdd,
-  HiOutlineMail,
-  HiOutlineShieldCheck,
-  HiOutlineTrash,
-  HiOutlineRefresh,
-  HiOutlineBadgeCheck,
-  HiOutlineClock,
-  HiOutlineArrowLeft,
-} from "react-icons/hi";
+  BrandUsersIcon,
+  BrandUserAddIcon,
+  BrandMailIcon,
+  BrandShieldIcon,
+  BrandTrashIcon,
+  BrandRefreshIcon,
+  BrandBadgeCheckIcon,
+  BrandClockIcon,
+  BrandArrowLeftIcon,
+  BrandCrossIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 
@@ -132,7 +133,7 @@ export default function AgencyTeamClient({
           href="/host"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-primary transition"
         >
-          <HiOutlineArrowLeft size={16} />
+          <BrandArrowLeftIcon size={16} className="rtl:rotate-180" />
           <span>Back to Host Overview</span>
         </Link>
       </div>
@@ -155,7 +156,7 @@ export default function AgencyTeamClient({
               </h1>
               {organization.verificationStatus === "verified" ? (
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                  <HiOutlineBadgeCheck size={14} />
+                  <BrandBadgeCheckIcon size={14} />
                   Verified Algerian Tourism Agency
                 </span>
               ) : (
@@ -178,7 +179,7 @@ export default function AgencyTeamClient({
           onClick={() => setIsInviteOpen(true)}
           className="px-5 py-2.5 bg-primary text-white rounded-2xl text-xs sm:text-sm font-bold hover:bg-primary/95 transition flex items-center gap-2 shadow-2xs self-start md:self-auto"
         >
-          <HiOutlineUserAdd size={18} className="text-tertiary" />
+          <BrandUserAddIcon size={18} className="text-tertiary" />
           <span>Invite Team Member</span>
         </button>
       </div>
@@ -291,7 +292,7 @@ export default function AgencyTeamClient({
                       </span>
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1 w-fit">
-                        <HiOutlineClock size={12} />
+                        <BrandClockIcon size={12} />
                         Pending Invite
                       </span>
                     )}
@@ -322,7 +323,7 @@ export default function AgencyTeamClient({
                           className="px-2.5 py-1 border border-tertiary/80 hover:bg-neutral-100 text-neutral-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition"
                           title="Resend invitation"
                         >
-                          <HiOutlineRefresh size={13} />
+                          <BrandRefreshIcon size={13} />
                           <span>Resend</span>
                         </button>
                       )}
@@ -334,7 +335,7 @@ export default function AgencyTeamClient({
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition"
                           title="Revoke access"
                         >
-                          <HiOutlineTrash size={16} />
+                          <BrandTrashIcon size={16} />
                         </button>
                       )}
                     </div>
@@ -384,9 +385,9 @@ export default function AgencyTeamClient({
               <button
                 type="button"
                 onClick={() => setIsInviteOpen(false)}
-                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
+                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center transition"
               >
-                ✕
+                <BrandCrossIcon size={14} />
               </button>
             </div>
 

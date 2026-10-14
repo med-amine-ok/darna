@@ -8,15 +8,14 @@ import { Reservation } from "@/types";
 import { cancelReservation } from "@/lib/data/reservations";
 import { toast } from "react-toastify";
 import {
-  HiOutlineCalendar,
-  HiOutlineLocationMarker,
-  HiOutlineUserGroup,
-  HiOutlineReceiptTax,
-  HiOutlineChatAlt2,
-  HiOutlineXCircle,
-  HiOutlineCheckCircle,
-} from "react-icons/hi";
-import { BiFile } from "react-icons/bi";
+  BrandCalendarIcon,
+  BrandPinIcon,
+  BrandUsersIcon,
+  BrandReceiptIcon,
+  BrandMessageIcon,
+  BrandCloseIcon,
+  BrandCheckIcon,
+} from "@/components/icons";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 interface TripsClientProps {
@@ -71,7 +70,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
       case "confirmed":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <HiOutlineCheckCircle size={14} /> Confirmed
+            <BrandCheckIcon size={14} /> Confirmed
           </span>
         );
       case "pending":
@@ -89,7 +88,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
       case "cancelled":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
-            <HiOutlineXCircle size={14} /> Cancelled
+            <BrandCloseIcon size={14} /> Cancelled
           </span>
         );
       default:
@@ -141,7 +140,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
       {filteredReservations.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-lg mx-auto shadow-sm my-8">
           <div className="w-16 h-16 bg-tertiary/30 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <HiOutlineCalendar size={32} />
+            <BrandCalendarIcon size={32} />
           </div>
           <h3 className="text-lg font-bold text-primary mb-1">
             No {activeTab} trips found
@@ -198,7 +197,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                         </Link>
                       </h3>
                       <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-1">
-                        <HiOutlineLocationMarker size={15} className="text-secondary shrink-0" />
+                        <BrandPinIcon size={15} className="text-secondary shrink-0" />
                         <span>
                           {listing?.city || "Algiers"}, {listing?.country || "Algeria"}
                         </span>
@@ -216,7 +215,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                       <div>
                         <div className="text-neutral-500 font-medium">Guests</div>
                         <div className="font-semibold text-primary mt-0.5 flex items-center gap-1">
-                          <HiOutlineUserGroup size={14} className="text-neutral-400" />
+                          <BrandUsersIcon size={14} className="text-neutral-400" />
                           <span>{res.guestsCount} travelers</span>
                         </div>
                       </div>
@@ -247,7 +246,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                       onClick={() => router.push(`/messages`)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-tertiary rounded-xl font-semibold text-neutral-700 hover:bg-neutral-50 transition"
                     >
-                      <HiOutlineChatAlt2 size={15} className="text-secondary" />
+                      <BrandMessageIcon size={15} className="text-secondary" />
                       <span>Message Host</span>
                     </button>
                     <button
@@ -255,7 +254,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                       onClick={() => setSelectedReceipt(res)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-tertiary rounded-xl font-semibold text-neutral-700 hover:bg-neutral-50 transition"
                     >
-                      <HiOutlineReceiptTax size={15} className="text-secondary" />
+                      <BrandReceiptIcon size={15} className="text-secondary" />
                       <span>Receipt</span>
                     </button>
                   </div>
@@ -382,7 +381,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                 }}
                 className="px-4 py-2 bg-primary text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-primary/95 transition flex items-center gap-1.5"
               >
-                <BiFile size={16} />
+                <BrandReceiptIcon size={16} />
                 <span>Download PDF Facture</span>
               </button>
               <button

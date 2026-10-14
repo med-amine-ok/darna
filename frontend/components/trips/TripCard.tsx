@@ -6,14 +6,13 @@ import { Link } from "@/navigation";
 import { Trip } from "@/types";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import {
-  Compass,
-  Calendar,
-  Users,
-  MapPin,
-  Star,
-  CheckCircle,
-  ArrowRight,
-} from "lucide-react";
+  BrandCalendarIcon,
+  BrandStarIcon,
+  BrandShieldIcon,
+  BrandUsersIcon,
+  BrandPinIcon,
+  BrandChevronRightIcon,
+} from "@/components/icons";
 
 interface TripCardProps {
   trip: Trip;
@@ -56,7 +55,7 @@ export default function TripCard({
         {/* Top Badges */}
         <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 min-w-0 pointer-events-none">
           <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[11px] font-bold text-primary flex items-center gap-1.5 shadow-xs shrink-0 truncate max-w-[65%]">
-            <Calendar size={13} className="text-secondary shrink-0" />
+            <BrandCalendarIcon size={13} className="text-secondary shrink-0" />
             <span className="truncate">
               {trip.durationDays} Days / {nights} Nights
             </span>
@@ -64,7 +63,7 @@ export default function TripCard({
 
           {trip.rating ? (
             <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-bold text-white flex items-center gap-1 shrink-0">
-              <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" />
+              <BrandStarIcon size={12} className="text-accent fill-accent shrink-0" />
               <span>{trip.rating.toFixed(2)}</span>
             </span>
           ) : (
@@ -77,11 +76,11 @@ export default function TripCard({
         {/* Bottom Image Overlay: Agency Tag */}
         <div className="absolute bottom-3 start-3 end-3 flex items-center justify-between gap-2 min-w-0 text-white text-xs">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/50 backdrop-blur-md min-w-0 flex-1">
-            <CheckCircle size={13} className="text-emerald-400 shrink-0" />
+            <BrandShieldIcon size={13} className="text-emerald-400 shrink-0" />
             <span className="font-semibold truncate">{agencyName}</span>
           </div>
           <span className="px-2 py-0.5 rounded-lg bg-white/20 backdrop-blur-md text-[11px] font-medium flex items-center gap-1 shrink-0">
-            <Users size={12} className="shrink-0" />
+            <BrandUsersIcon size={12} className="shrink-0" />
             <span>Max {trip.maxGroupSize}</span>
           </span>
         </div>
@@ -92,7 +91,7 @@ export default function TripCard({
         <div>
           {/* Location */}
           <div className="flex items-center gap-1 text-xs font-semibold text-secondary uppercase tracking-wider mb-1.5">
-            <MapPin size={13} />
+            <BrandPinIcon size={13} strokeWidth={2} />
             <span>{trip.city}, Algeria</span>
           </div>
 
@@ -123,7 +122,7 @@ export default function TripCard({
 
           <div className="flex items-center gap-1 text-xs font-bold text-primary group-hover:text-secondary group-hover:translate-x-1 transition-all">
             <span>Details</span>
-            <ArrowRight size={14} />
+            <BrandChevronRightIcon size={14} strokeWidth={2} />
           </div>
         </div>
       </div>

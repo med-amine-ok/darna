@@ -6,20 +6,19 @@ import { useLocale } from "next-intl";
 import { User } from "@/types";
 import { toast } from "react-toastify";
 import {
-  HiOutlineUser,
-  HiOutlineShieldCheck,
-  HiOutlineLockClosed,
-  HiOutlineEye,
-  HiOutlineBell,
-  HiOutlineDocumentText,
-  HiOutlineCreditCard,
-  HiOutlineGlobe,
-  HiOutlineKey,
-  HiOutlineBriefcase,
-  HiOutlineAdjustments,
-  HiOutlineCheck,
-} from "react-icons/hi";
-import { BiPlus, BiTrash } from "react-icons/bi";
+  BrandUserIcon,
+  BrandShieldIcon,
+  BrandEyeIcon,
+  BrandBellIcon,
+  BrandReceiptIcon,
+  BrandCreditCardIcon,
+  BrandGlobeIcon,
+  BrandKeyIcon,
+  BrandBriefcaseIcon,
+  BrandFilterIcon,
+  BrandPlusIcon,
+  BrandTrashIcon,
+} from "@/components/icons";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 
 interface SettingsClientProps {
@@ -87,15 +86,15 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
   };
 
   const navItems = [
-    { id: "personal", label: "Personal information", icon: HiOutlineUser },
-    { id: "security", label: "Login & security", icon: HiOutlineShieldCheck },
-    { id: "privacy", label: "Privacy & sharing", icon: HiOutlineEye },
-    { id: "notifications", label: "Notifications", icon: HiOutlineBell },
-    { id: "taxes", label: "Taxes & invoices", icon: HiOutlineDocumentText },
-    { id: "payments", label: "Payments & payouts", icon: HiOutlineCreditCard },
-    { id: "languages", label: "Languages & currency", icon: HiOutlineGlobe },
-    { id: "booking_permissions", label: "Booking permissions", icon: HiOutlineKey, badge: "New" },
-    { id: "travel_for_work", label: "Travel for work", icon: HiOutlineBriefcase },
+    { id: "personal", label: "Personal information", icon: BrandUserIcon },
+    { id: "security", label: "Login & security", icon: BrandShieldIcon },
+    { id: "privacy", label: "Privacy & sharing", icon: BrandEyeIcon },
+    { id: "notifications", label: "Notifications", icon: BrandBellIcon },
+    { id: "taxes", label: "Taxes & invoices", icon: BrandReceiptIcon },
+    { id: "payments", label: "Payments & payouts", icon: BrandCreditCardIcon },
+    { id: "languages", label: "Languages & currency", icon: BrandGlobeIcon },
+    { id: "booking_permissions", label: "Booking permissions", icon: BrandKeyIcon, badge: "New" },
+    { id: "travel_for_work", label: "Travel for work", icon: BrandBriefcaseIcon },
   ];
 
   const maskEmail = (val: string) => {
@@ -172,7 +171,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <HiOutlineAdjustments
+              <BrandFilterIcon
                 size={17}
                 className={activeSection === "pro_hosting" ? "text-white" : "text-secondary"}
               />
@@ -356,7 +355,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
                   <div>
                     <div className="text-xs font-semibold text-neutral-500">Identity verification</div>
                     <div className="text-sm font-semibold text-emerald-700 mt-0.5 flex items-center gap-1.5">
-                      <HiOutlineShieldCheck size={16} />
+                      <BrandShieldIcon size={16} />
                       <span>Verified with Algerian Biometric National ID</span>
                     </div>
                   </div>
@@ -715,7 +714,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
                   onClick={() => toast.info("Add payment card modal.")}
                   className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline"
                 >
-                  <BiPlus size={16} />
+                  <BrandPlusIcon size={16} />
                   <span>Add method</span>
                 </button>
               </div>
@@ -749,7 +748,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
                     onClick={() => setCardToRemove("Algérie Poste Edahabia (•••• 8890)")}
                     className="text-neutral-400 hover:text-rose-600 transition"
                   >
-                    <BiTrash size={16} />
+                    <BrandTrashIcon size={16} />
                   </button>
                 </div>
               </div>

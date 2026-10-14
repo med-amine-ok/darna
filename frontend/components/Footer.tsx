@@ -5,7 +5,7 @@ import Container from "@/components/Container";
 import FooterColumn from "@/components/FooterColumn";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, Link } from "@/navigation";
-import { MdExpandMore, MdLanguage } from "react-icons/md";
+import { BrandChevronDownIcon, BrandGlobeIcon } from "@/components/icons";
 
 export default function Footer() {
   const tNav = useTranslations("nav");
@@ -97,7 +97,7 @@ export default function Footer() {
                   className="w-full min-h-[44px] flex items-center justify-between font-bold text-primary text-sm py-2 cursor-pointer touch-manipulation select-none"
                 >
                   <span>{section.title}</span>
-                  <MdExpandMore
+                  <BrandChevronDownIcon
                     size={20}
                     className={`text-neutral-500 transition-transform duration-200 ${
                       isOpen ? "rotate-180" : ""
@@ -145,7 +145,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-5 font-semibold text-primary">
             <span className="flex items-center gap-1.5 hover:underline cursor-pointer">
-              <MdLanguage size={16} />
+              <BrandGlobeIcon size={16} />
               <span className="uppercase">{locale}</span>
             </span>
             <span className="flex items-center gap-1">

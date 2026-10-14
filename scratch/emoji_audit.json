@@ -1,0 +1,278 @@
+﻿[
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/app/[locale]/page.tsx",
+        "Line":  163,
+        "Emojis":  "✦",
+        "Content":  "badge=\"✦ Top rated experiences in the Algerian Sahara\""
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminBookingsClient.tsx",
+        "Line":  243,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminListingsClient.tsx",
+        "Line":  408,
+        "Emojis":  "★",
+        "Content":  "★ {listing.rating || \"5.0\"}"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminOnboardingClient.tsx",
+        "Line":  1108,
+        "Emojis":  "⚠",
+        "Content":  "? `⚠️ WARNING: \u0027${deleteStepTarget?.title[localePreview]}\u0027 is marked as a CORE ONBOARDING STEP. Removing it will exclude these mandatory fields from the host registration wizard, which could prevent listings or organizations from completing. Are you sure you wish to proceed?`"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminReportsClient.tsx",
+        "Line":  304,
+        "Emojis":  "★",
+        "Content":  "{ c: \"Coastal Villas\", a: 14, n: 2, r: \"★ 4.94\", ib: \"85%\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminReportsClient.tsx",
+        "Line":  305,
+        "Emojis":  "★",
+        "Content":  "{ c: \"Casbah Riads\", a: 8, n: 1, r: \"★ 4.91\", ib: \"75%\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminReportsClient.tsx",
+        "Line":  306,
+        "Emojis":  "★",
+        "Content":  "{ c: \"Sahara Expeditions\", a: 12, n: 3, r: \"★ 4.98\", ib: \"90%\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminReportsClient.tsx",
+        "Line":  307,
+        "Emojis":  "★",
+        "Content":  "{ c: \"4x4 Overlanders\", a: 9, n: 2, r: \"★ 4.89\", ib: \"80%\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminReviewsClient.tsx",
+        "Line":  131,
+        "Emojis":  "★",
+        "Content":  "\u003cspan\u003e★\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminUsersClient.tsx",
+        "Line":  292,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminUsersClient.tsx",
+        "Line":  354,
+        "Emojis":  "⚠",
+        "Content":  "⚠️ Negative Balance"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/admin/AdminUsersClient.tsx",
+        "Line":  358,
+        "Emojis":  "✓",
+        "Content":  "✓ Solvent"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/agency/AgencyProfileClient.tsx",
+        "Line":  127,
+        "Emojis":  "★",
+        "Content":  "\u003cspan\u003e★ {organization.rating || 4.9}\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/home/HomeHero.tsx",
+        "Line":  118,
+        "Emojis":  "✦",
+        "Content":  "\u003cspan className=\"text-accent inline-block text-lg sm:text-2xl\"\u003e✦\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/AgencyTeamClient.tsx",
+        "Line":  389,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/BecomeHostFlow.tsx",
+        "Line":  2281,
+        "Emojis":  "⚡",
+        "Content":  "\u003cspan className=\"text-2xl\"\u003e⚡\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/BecomeHostFlow.tsx",
+        "Line":  2303,
+        "Emojis":  "📩",
+        "Content":  "\u003cspan className=\"text-2xl\"\u003e📩\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/BecomeHostFlow.tsx",
+        "Line":  2397,
+        "Emojis":  "★",
+        "Content":  "\u003cspan className=\"text-accent font-bold\"\u003e{\"★\".repeat(hotelStarRating)} ({hotelStarRating} Stars)\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/BecomeHostFlow.tsx",
+        "Line":  2744,
+        "Emojis":  "⚡",
+        "Content":  "\u003cspan className=\"text-2xl\"\u003e⚡\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/BecomeHostFlow.tsx",
+        "Line":  2766,
+        "Emojis":  "📩",
+        "Content":  "\u003cspan className=\"text-2xl\"\u003e📩\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/DynamicStepFields.tsx",
+        "Line":  128,
+        "Emojis":  "✓",
+        "Content":  "{isSelected ? \"✓ \" : \"+ \"}"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostBookingsClient.tsx",
+        "Line":  422,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostBookingsClient.tsx",
+        "Line":  727,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostCalendarClient.tsx",
+        "Line":  744,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostListingsClient.tsx",
+        "Line":  410,
+        "Emojis":  "★",
+        "Content":  "★ {listing.rating || \"5.0\"} ({listing.reviewCount || 0})"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostListingsClient.tsx",
+        "Line":  441,
+        "Emojis":  "⚡",
+        "Content":  "⚡ Instant Book"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostListingsClient.tsx",
+        "Line":  604,
+        "Emojis":  "★",
+        "Content":  "★ {listing.rating || \"5.0\"}"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostListingsClient.tsx",
+        "Line":  693,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostListingsClient.tsx",
+        "Line":  783,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostSettingsClient.tsx",
+        "Line":  577,
+        "Emojis":  "✕",
+        "Content":  "✕"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostTodayClient.tsx",
+        "Line":  85,
+        "Emojis":  "👋",
+        "Content":  "Marhaban, {displayName}! 👋"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/host/HostWalletWidget.tsx",
+        "Line":  132,
+        "Emojis":  "⚠ ✓",
+        "Content":  "{isNegative ? \"⚠️ Deposit Deficit\" : \"✓ Active \u0026 Solvent\"}"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/listing/ListingHead.tsx",
+        "Line":  65,
+        "Emojis":  "🏆",
+        "Content":  "🏆 Guest favorite"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/listing/ListingReservation.tsx",
+        "Line":  218,
+        "Emojis":  "★",
+        "Content":  "★ {listing.rating?.toFixed(2) || \"4.95\"} ({listing.reviewCount || 34})"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/messages/MessagesClient.tsx",
+        "Line":  458,
+        "Emojis":  "👋",
+        "Content":  "\u003cspan className=\"text-3xl\"\u003e👋\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  80,
+        "Emojis":  "🏛",
+        "Content":  "{ id: \"algiers\", name: \"Casbah of Algiers\", region: \"North Coast\", unlocked: true, icon: \"🏛️\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  81,
+        "Emojis":  "🌊",
+        "Content":  "{ id: \"tipaza\", name: \"Tipaza Roman Coast\", region: \"North Coast\", unlocked: true, icon: \"🌊\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  82,
+        "Emojis":  "🏰",
+        "Content":  "{ id: \"oran\", name: \"Oran El Bahia\", region: \"West Coast\", unlocked: true, icon: \"🏰\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  83,
+        "Emojis":  "🌉",
+        "Content":  "{ id: \"constantine\", name: \"Constantine Bridges\", region: \"East Rock\", unlocked: true, icon: \"🌉\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  84,
+        "Emojis":  "🌴",
+        "Content":  "{ id: \"taghit\", name: \"Taghit Golden Oasis\", region: \"Saoura Desert\", unlocked: true, icon: \"🌴\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  85,
+        "Emojis":  "🏜",
+        "Content":  "{ id: \"djanet\", name: \"Tassili n\u0027Ajjer Plateau\", region: \"Deep Sahara\", unlocked: true, icon: \"🏜️\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/profile/UserProfileClient.tsx",
+        "Line":  179,
+        "Emojis":  "★",
+        "Content":  "\u003cdiv className=\"text-lg font-bold text-primary\"\u003e★ 4.96\u003c/div\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/search/SearchResultsClient.tsx",
+        "Line":  169,
+        "Emojis":  "✦",
+        "Content":  "{ id: \"all\", label: \"All Stays \u0026 Rentals\", icon: \"✦\" },"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/trips/TripDetailClient.tsx",
+        "Line":  262,
+        "Emojis":  "★",
+        "Content":  "\u003cspan\u003e★ 4.94 Agency Rating\u003c/span\u003e"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/trips/TripDetailClient.tsx",
+        "Line":  363,
+        "Emojis":  "✦",
+        "Content":  "✦ {act}"
+    },
+    {
+        "File":  "C:/Users/OASIS/Documents/darna/frontend/components/trips/TripDetailClient.tsx",
+        "Line":  425,
+        "Emojis":  "✕",
+        "Content":  "\u003cspan className=\"text-rose-500 font-bold shrink-0\"\u003e✕\u003c/span\u003e"
+    }
+]

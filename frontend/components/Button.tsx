@@ -1,14 +1,12 @@
 "use client";
 
-import { IconType } from "react-icons";
-
 interface ButtonProps {
   label: string;
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   outline?: boolean;
   small?: boolean;
-  icon?: IconType | React.ComponentType<{ size?: number; className?: string }>;
+  icon?: React.ComponentType<{ size?: number | string; className?: string; strokeWidth?: number }>;
   type?: "button" | "submit" | "reset";
   className?: string;
   variant?: "primary" | "secondary" | "danger" | "ghost";

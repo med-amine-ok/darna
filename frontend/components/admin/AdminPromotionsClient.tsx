@@ -3,13 +3,10 @@
 import React, { useState } from "react";
 import { Coupon, createAdminCoupon, toggleCouponStatus, deleteCoupon } from "@/lib/data/admin";
 import {
-  HiOutlineTicket,
-  HiOutlinePlus,
-  HiOutlineTrash,
-  HiOutlineRefresh,
-  HiOutlineCheckCircle,
-  HiOutlineBan,
-} from "react-icons/hi";
+  BrandPlusIcon,
+  BrandTrashIcon,
+  BrandRefreshIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 
@@ -122,7 +119,7 @@ export default function AdminPromotionsClient({ initialCoupons }: AdminPromotion
           }}
           className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 shadow-2xs self-start md:self-auto"
         >
-          <HiOutlinePlus size={16} />
+          <BrandPlusIcon size={16} />
           <span>New Promo Code</span>
         </button>
       </div>
@@ -194,7 +191,7 @@ export default function AdminPromotionsClient({ initialCoupons }: AdminPromotion
                         className="p-1 hover:bg-rose-50 text-rose-600 rounded-lg"
                         title="Delete code"
                       >
-                        <HiOutlineTrash size={15} />
+                        <BrandTrashIcon size={15} />
                       </button>
                     </div>
                   </td>
@@ -222,7 +219,7 @@ export default function AdminPromotionsClient({ initialCoupons }: AdminPromotion
                     onClick={generateRandomCode}
                     className="text-xs text-secondary hover:text-primary font-bold flex items-center gap-1"
                   >
-                    <HiOutlineRefresh size={12} /> Generate
+                    <BrandRefreshIcon size={12} /> Generate
                   </button>
                 </div>
                 <input

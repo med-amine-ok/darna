@@ -8,18 +8,17 @@ import ListingCard from "@/components/listing/ListingCard";
 import Avatar from "@/components/Avatar";
 import { toast } from "react-toastify";
 import {
-  HiOutlineShieldCheck,
-  HiOutlineBadgeCheck,
-  HiOutlineCheck,
-  HiOutlineSparkles,
-  HiOutlinePencilAlt,
-  HiOutlineShare,
-  HiOutlineStar,
-  HiOutlineGlobeAlt,
-  HiOutlineTranslate,
-  HiOutlineLocationMarker,
-} from "react-icons/hi";
-import { BiHeart, BiCamera } from "react-icons/bi";
+  PremiumStarIcon,
+  BrandStarIcon,
+  BrandShareIcon,
+  BrandShieldIcon,
+  BrandCheckIcon,
+  BrandGlobeIcon,
+  BrandEditIcon,
+  BrandCameraIcon,
+  BrandPinIcon,
+  passportStampIcons,
+} from "@/components/icons";
 
 interface UserProfileClientProps {
   user: User;
@@ -77,12 +76,12 @@ export default function UserProfileClient({
   };
 
   const passportStamps = [
-    { id: "algiers", name: "Casbah of Algiers", region: "North Coast", unlocked: true, icon: "🏛️" },
-    { id: "tipaza", name: "Tipaza Roman Coast", region: "North Coast", unlocked: true, icon: "🌊" },
-    { id: "oran", name: "Oran El Bahia", region: "West Coast", unlocked: true, icon: "🏰" },
-    { id: "constantine", name: "Constantine Bridges", region: "East Rock", unlocked: true, icon: "🌉" },
-    { id: "taghit", name: "Taghit Golden Oasis", region: "Saoura Desert", unlocked: true, icon: "🌴" },
-    { id: "djanet", name: "Tassili n'Ajjer Plateau", region: "Deep Sahara", unlocked: true, icon: "🏜️" },
+    { id: "algiers", name: "Casbah of Algiers", region: "North Coast", unlocked: true },
+    { id: "tipaza", name: "Tipaza Roman Coast", region: "North Coast", unlocked: true },
+    { id: "oran", name: "Oran El Bahia", region: "West Coast", unlocked: true },
+    { id: "constantine", name: "Constantine Bridges", region: "East Rock", unlocked: true },
+    { id: "taghit", name: "Taghit Golden Oasis", region: "Saoura Desert", unlocked: true },
+    { id: "djanet", name: "Tassili n'Ajjer Plateau", region: "Deep Sahara", unlocked: true },
   ];
 
   return (
@@ -106,7 +105,7 @@ export default function UserProfileClient({
             onClick={handleShare}
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-tertiary rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition shadow-xs"
           >
-            <HiOutlineShare size={16} />
+            <BrandShareIcon size={16} />
             <span>Share</span>
           </button>
           {isOwner && (
@@ -115,7 +114,7 @@ export default function UserProfileClient({
               onClick={() => setActiveTab(activeTab === "edit" ? "overview" : "edit")}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-xs"
             >
-              <HiOutlinePencilAlt size={16} />
+              <BrandEditIcon size={16} />
               <span>{activeTab === "edit" ? "View Profile" : "Edit Profile"}</span>
             </button>
           )}
@@ -135,7 +134,7 @@ export default function UserProfileClient({
                   className="absolute bottom-1 end-1 p-2 bg-primary text-white rounded-full shadow-md hover:bg-primary/90 transition"
                   title="Change photo"
                 >
-                  <BiCamera size={16} />
+                  <BrandCameraIcon size={16} />
                 </button>
               )}
             </div>
@@ -151,15 +150,15 @@ export default function UserProfileClient({
                 Confirmed Information
               </div>
               <div className="flex items-center gap-2 text-xs text-neutral-700">
-                <HiOutlineBadgeCheck size={16} className="text-emerald-700 shrink-0" />
+                <BrandShieldIcon size={16} className="text-emerald-700 shrink-0" />
                 <span>Identity verified with Algerian ID</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-neutral-700">
-                <HiOutlineCheck size={16} className="text-emerald-700 shrink-0" />
+                <BrandCheckIcon size={16} className="text-emerald-700 shrink-0" />
                 <span>Email address confirmed</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-neutral-700">
-                <HiOutlineCheck size={16} className="text-emerald-700 shrink-0" />
+                <BrandCheckIcon size={16} className="text-emerald-700 shrink-0" />
                 <span>Phone number verified</span>
               </div>
             </div>
@@ -176,7 +175,10 @@ export default function UserProfileClient({
                   <div className="text-[11px] text-neutral-500">Response rate</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-primary">★ 4.96</div>
+                  <div className="text-lg font-bold text-primary flex items-center gap-1">
+                    <BrandStarIcon size={16} className="text-accent" />
+                    <span>4.96</span>
+                  </div>
                   <div className="text-[11px] text-neutral-500">Rating</div>
                 </div>
               </div>
@@ -187,15 +189,15 @@ export default function UserProfileClient({
           <div className="bg-white rounded-3xl p-6 border border-tertiary shadow-sm space-y-3.5 text-xs text-neutral-700">
             <h3 className="font-bold text-primary text-sm">Profile Details</h3>
             <div className="flex items-center gap-2">
-              <HiOutlineLocationMarker size={16} className="text-secondary shrink-0" />
+              <BrandPinIcon size={16} className="text-secondary shrink-0" />
               <span>Lives in: <strong>{user.address || "Algiers, Algeria"}</strong></span>
             </div>
             <div className="flex items-center gap-2">
-              <HiOutlineTranslate size={16} className="text-secondary shrink-0" />
+              <BrandGlobeIcon size={16} className="text-secondary shrink-0" />
               <span>Languages: <strong>{(user.languages || ["Arabic", "French"]).join(", ")}</strong></span>
             </div>
             <div className="flex items-center gap-2">
-              <HiOutlineGlobeAlt size={16} className="text-secondary shrink-0" />
+              <BrandGlobeIcon size={16} className="text-secondary shrink-0" />
               <span>Wilayas visited: <strong>14 of 58</strong></span>
             </div>
           </div>
@@ -246,7 +248,7 @@ export default function UserProfileClient({
                   <div>
                     <h3 className="text-lg font-bold text-primary font-serif flex items-center gap-2">
                       <span>DARNA Algerian Explorer Passport</span>
-                      <HiOutlineSparkles className="text-accent" />
+                      <PremiumStarIcon size={18} className="text-accent" />
                     </h3>
                     <p className="text-xs text-neutral-500 mt-0.5">
                       Cultural wilaya stamps earned by booking stays and journeys across Algeria
@@ -258,16 +260,21 @@ export default function UserProfileClient({
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pt-2">
-                  {passportStamps.map((stamp) => (
-                    <div
-                      key={stamp.id}
-                      className="p-3.5 bg-neutral-50 rounded-2xl border border-tertiary/60 flex flex-col items-center text-center hover:bg-tertiary/20 transition"
-                    >
-                      <span className="text-3xl mb-1">{stamp.icon}</span>
-                      <div className="text-xs font-bold text-primary">{stamp.name}</div>
-                      <div className="text-[10px] text-neutral-400 mt-0.5">{stamp.region}</div>
-                    </div>
-                  ))}
+                  {passportStamps.map((stamp) => {
+                    const StampIcon = passportStampIcons[stamp.id];
+                    return (
+                      <div
+                        key={stamp.id}
+                        className="p-3.5 bg-neutral-50 rounded-2xl border border-tertiary/60 flex flex-col items-center text-center hover:bg-tertiary/20 transition group"
+                      >
+                        <div className="w-12 h-12 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-105">
+                          {StampIcon && <StampIcon size={44} className="drop-shadow-xs" />}
+                        </div>
+                        <div className="text-xs font-bold text-primary">{stamp.name}</div>
+                        <div className="text-[10px] text-neutral-400 mt-0.5">{stamp.region}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -323,7 +330,7 @@ export default function UserProfileClient({
                           </div>
                         </div>
                         <div className="flex items-center gap-1 text-xs font-bold text-primary">
-                          <HiOutlineStar size={14} className="text-amber-500 fill-amber-500" />
+                          <BrandStarIcon size={14} className="text-amber-500 fill-amber-500" />
                           <span>{rev.rating}.0</span>
                         </div>
                       </div>

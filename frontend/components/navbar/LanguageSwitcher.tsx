@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
-import { Globe } from "lucide-react";
+import { BrandGlobeIcon } from "@/components/icons";
 import { locales, Locale } from "@/i18n";
 
 const LOCALE_LABELS: Record<Locale, { label: string; code: string; dir: string }> = {
@@ -45,7 +45,7 @@ export default function LanguageSwitcher() {
         className="flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-black/5 transition text-xs sm:text-sm font-semibold text-primary cursor-pointer select-none btn-press"
         aria-label="Language selector"
       >
-        <Globe size={16} className="text-primary/80" />
+        <BrandGlobeIcon size={16} className="text-primary/80" />
         <span className="uppercase tracking-wider">{currentLocale}</span>
       </button>
 

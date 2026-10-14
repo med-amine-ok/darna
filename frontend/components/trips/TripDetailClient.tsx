@@ -10,6 +10,27 @@ import PriceDisplay from "@/components/common/PriceDisplay";
 import Container from "@/components/Container";
 import { createReservation } from "@/lib/data/reservations";
 import { toast } from "react-toastify";
+import {
+  BrandStarIcon,
+  PremiumStarIcon,
+  BrandCompassIcon,
+  BrandCalendarIcon,
+  BrandUsersIcon,
+  BrandBuildingIcon,
+  BrandShareIcon,
+  BrandHeartIcon,
+  BrandShieldIcon,
+  BrandPinIcon,
+  BrandCheckIcon,
+  BrandCloseIcon,
+  BrandClockIcon,
+  BrandChevronDownIcon,
+  BrandChevronUpIcon,
+  BrandChevronLeftIcon,
+  BrandAlertCircleIcon,
+  BrandKitchenIcon,
+  BrandBedIcon,
+} from "@/components/icons";
 
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
@@ -19,29 +40,6 @@ const Map = dynamic(() => import("@/components/Map"), {
     </div>
   ),
 });
-import {
-  Compass,
-  Calendar,
-  Users,
-  MapPin,
-  Star,
-  Check,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ShieldCheck,
-  Building2,
-  ChevronDown,
-  ChevronUp,
-  ArrowLeft,
-  Sparkles,
-  Share2,
-  Heart,
-  Luggage,
-  Utensils,
-  Moon,
-  Info,
-} from "lucide-react";
 
 interface TripDetailClientProps {
   trip: Trip;
@@ -135,7 +133,7 @@ export default function TripDetailClient({
             href="/"
             className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
           >
-            <ArrowLeft size={16} />
+            <BrandChevronLeftIcon size={16} strokeWidth={2.2} />
             <span>Back to All Circuits</span>
           </Link>
 
@@ -146,7 +144,7 @@ export default function TripDetailClient({
               className="p-2 rounded-xl bg-white border border-tertiary/70 text-neutral-600 hover:text-primary transition shadow-2xs cursor-pointer"
               title="Share circuit"
             >
-              <Share2 size={16} />
+              <BrandShareIcon size={16} />
             </button>
             <button
               type="button"
@@ -154,7 +152,7 @@ export default function TripDetailClient({
               className="p-2 rounded-xl bg-white border border-tertiary/70 text-neutral-600 hover:text-rose-500 transition shadow-2xs cursor-pointer"
               title="Save to favorites"
             >
-              <Heart size={16} />
+              <BrandHeartIcon size={16} />
             </button>
           </div>
         </div>
@@ -163,19 +161,19 @@ export default function TripDetailClient({
         <div className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full bg-secondary/15 text-secondary text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Compass size={13} />
+              <BrandCompassIcon size={13} />
               <span>Agency Curated Expedition</span>
             </span>
 
             <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center gap-1.5">
-              <Calendar size={13} />
+              <BrandCalendarIcon size={13} />
               <span>
                 {trip.durationDays} Days / {nights} Nights
               </span>
             </span>
 
             <span className="px-3 py-1 rounded-full bg-neutral-100 text-neutral-700 text-xs font-semibold flex items-center gap-1.5">
-              <Users size={13} />
+              <BrandUsersIcon size={13} />
               <span>
                 Group: {trip.minGroupSize || 2}–{trip.maxGroupSize} travelers
               </span>
@@ -188,20 +186,20 @@ export default function TripDetailClient({
 
           <div className="flex items-center gap-4 text-xs sm:text-sm text-neutral-600 flex-wrap pt-1">
             <div className="flex items-center gap-1 font-semibold text-primary">
-              <MapPin size={16} className="text-secondary" />
+              <BrandPinIcon size={16} strokeWidth={2} className="text-secondary shrink-0" />
               <span>{trip.city}, Algeria</span>
             </div>
 
             {trip.rating && (
               <div className="flex items-center gap-1">
-                <Star size={15} className="text-amber-500 fill-amber-500" />
+                <BrandStarIcon size={15} className="text-accent fill-accent" />
                 <span className="font-bold text-primary">{trip.rating.toFixed(2)}</span>
                 <span className="text-neutral-400">({trip.reviewsCount || 0} reviews)</span>
               </div>
             )}
 
             <div className="flex items-center gap-1.5 text-neutral-500">
-              <Building2 size={15} className="text-neutral-400" />
+              <BrandBuildingIcon size={15} className="text-neutral-400" />
               <span>Organized by </span>
               <strong className="text-primary font-semibold">
                 {agency?.name || "Atlas Escapes Tourism SARL"}
@@ -245,21 +243,24 @@ export default function TripDetailClient({
             <div className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-7 shadow-2xs flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary font-black text-xl shrink-0">
-                  <Compass size={28} />
+                  <BrandCompassIcon size={28} />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-serif text-lg font-bold text-primary">
                       {agency?.name || "Atlas Escapes Tourism SARL"}
                     </h3>
-                    <CheckCircle size={16} className="text-emerald-600 fill-emerald-100" />
+                    <BrandShieldIcon size={16} className="text-emerald-600" />
                   </div>
                   <p className="text-xs text-neutral-500 mt-0.5">
                     Licensed Algerian Tourism Operator · License #
                     {agency?.businessRegistrationNumber || "DZ-ALG-2021-B-89412"}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-neutral-600 mt-2 font-medium">
-                    <span>★ 4.94 Agency Rating</span>
+                    <span className="inline-flex items-center gap-1">
+                      <BrandStarIcon size={12} className="text-accent" />
+                      <span>4.94 Agency Rating</span>
+                    </span>
                     <span>·</span>
                     <span>100% Certified Local Guides</span>
                   </div>
@@ -338,7 +339,7 @@ export default function TripDetailClient({
                         </div>
 
                         <div className="text-neutral-400">
-                          {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                          {isExpanded ? <BrandChevronUpIcon size={18} strokeWidth={2} /> : <BrandChevronDownIcon size={18} strokeWidth={2} />}
                         </div>
                       </button>
 
@@ -358,9 +359,10 @@ export default function TripDetailClient({
                                 {dayItem.activities.map((act, i) => (
                                   <span
                                     key={i}
-                                    className="px-2.5 py-1 rounded-lg bg-white border border-tertiary/70 text-xs font-medium text-neutral-700 shadow-2xs"
+                                    className="px-2.5 py-1 rounded-lg bg-white border border-tertiary/70 text-xs font-medium text-neutral-700 shadow-2xs inline-flex items-center gap-1.5"
                                   >
-                                    ✦ {act}
+                                    <PremiumStarIcon size={11} className="text-accent shrink-0" />
+                                    <span>{act}</span>
                                   </span>
                                 ))}
                               </div>
@@ -371,13 +373,13 @@ export default function TripDetailClient({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-tertiary/40 text-xs">
                             {dayItem.meals && (
                               <div className="flex items-center gap-2 text-neutral-600">
-                                <Utensils size={15} className="text-secondary shrink-0" />
+                                <BrandKitchenIcon size={15} className="text-secondary shrink-0" />
                                 <span>{dayItem.meals}</span>
                               </div>
                             )}
                             {dayItem.accommodation && (
                               <div className="flex items-center gap-2 text-neutral-600">
-                                <Moon size={15} className="text-secondary shrink-0" />
+                                <BrandBedIcon size={15} className="text-secondary shrink-0" />
                                 <span>{dayItem.accommodation}</span>
                               </div>
                             )}
@@ -400,13 +402,13 @@ export default function TripDetailClient({
                 {/* Inclusions */}
                 <div className="p-6 bg-emerald-50/40 rounded-3xl border border-emerald-200/80 space-y-3">
                   <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <CheckCircle size={15} className="text-emerald-600" />
+                    <BrandCheckIcon size={15} strokeWidth={2.5} className="text-emerald-600" />
                     <span>Included in this Expedition</span>
                   </span>
                   <ul className="space-y-2.5 text-xs text-neutral-700">
                     {trip.inclusions?.map((inc, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <Check size={14} className="text-emerald-600 shrink-0 mt-0.5" />
+                        <BrandCheckIcon size={14} strokeWidth={2.5} className="text-emerald-600 shrink-0 mt-0.5" />
                         <span className="leading-snug">{inc}</span>
                       </li>
                     ))}
@@ -416,13 +418,13 @@ export default function TripDetailClient({
                 {/* Exclusions */}
                 <div className="p-6 bg-rose-50/40 rounded-3xl border border-rose-200/80 space-y-3">
                   <span className="text-xs font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <XCircle size={15} className="text-rose-600" />
+                    <BrandCloseIcon size={15} strokeWidth={2.2} className="text-rose-600" />
                     <span>Not Included</span>
                   </span>
                   <ul className="space-y-2.5 text-xs text-neutral-700">
                     {trip.exclusions?.map((exc, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="text-rose-500 font-bold shrink-0">✕</span>
+                        <BrandCloseIcon size={14} strokeWidth={2.2} className="text-rose-500 shrink-0 mt-0.5" />
                         <span className="leading-snug">{exc}</span>
                       </li>
                     ))}
@@ -437,7 +439,7 @@ export default function TripDetailClient({
                 Meeting Point & Arrival
               </h2>
               <div className="p-5 bg-white rounded-2xl border border-tertiary/70 shadow-2xs flex items-start gap-3 text-xs sm:text-sm">
-                <MapPin size={20} className="text-secondary shrink-0 mt-0.5" />
+                <BrandPinIcon size={20} strokeWidth={2} className="text-secondary shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-primary block">
                     {trip.meetingPoint}
@@ -612,7 +614,7 @@ export default function TripDetailClient({
                 disabled={isBooking}
                 className="w-full py-3.5 px-4 bg-primary hover:bg-primary/95 text-white rounded-2xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-md cursor-pointer btn-press disabled:opacity-60"
               >
-                <Compass size={17} className="text-tertiary" />
+                <BrandCompassIcon size={17} strokeWidth={2} className="text-tertiary" />
                 <span>
                   {isBooking
                     ? "Processing..."

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Astrolabe / navigation dial outer ring -->
+  <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.75"/>
+  <!-- Cardinal direction ticks -->
+  <line x1="12" y1="2.5" x2="12" y2="4.5" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="12" y1="19.5" x2="12" y2="21.5" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="2.5" y1="12" x2="4.5" y2="12" stroke="currentColor" stroke-width="1.5"/>
+  <line x1="19.5" y1="12" x2="21.5" y2="12" stroke="currentColor" stroke-width="1.5"/>
+  <!-- Moorish 4-pointed star compass needle: North pointed facet in terracotta -->
+  <polygon points="12,5.5 14,12 12,10.5" fill="#C96F4F" stroke="#C96F4F" stroke-width="0.5"/>
+  <polygon points="12,5.5 10,12 12,10.5" fill="none" stroke="currentColor" stroke-width="1"/>
+  <!-- South pointed facet -->
+  <polygon points="12,18.5 14,12 12,13.5" fill="none" stroke="currentColor" stroke-width="1"/>
+  <polygon points="12,18.5 10,12 12,13.5" fill="#6B7F5B" stroke="#6B7F5B" stroke-width="0.5"/>
+  <!-- Center pivot ring -->
+  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+</svg>

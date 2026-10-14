@@ -7,7 +7,11 @@ import { Listing, User } from "@/types";
 import HeartButton from "@/components/HeartButton";
 import { useTranslations } from "next-intl";
 import PriceDisplay from "@/components/common/PriceDisplay";
-import { AiFillStar } from "react-icons/ai";
+import {
+  BrandStarIcon,
+  BrandPinIcon,
+  CategoryVehicleIcon,
+} from "@/components/icons";
 
 interface ListingCarouselCardProps {
   listing: Listing;
@@ -40,12 +44,18 @@ export default function ListingCarouselCard({
     router.push(`/search?selectedId=${listing.id}${destParam}${vertParam}`);
   };
 
-  const periodLabel =
-    listing.category === "vehicle"
-      ? "/ day"
-      : listing.category === "experience"
-      ? "/ person"
-      : "/ night";
+  const hasRoomTypes = Boolean(listing.roomTypes && listing.roomTypes.length > 0);
+  const isHostel = listing.businessCategory === "hostel" || listing.roomTypes?.some((r) => r.bookingUnit === "bed");
+
+  const periodLabel = hasRoomTypes
+    ? isHostel
+      ? "from / bed"
+      : "from / night"
+    : listing.category === "vehicle"
+    ? "/ day"
+    : listing.category === "experience"
+    ? "/ person"
+    : "/ night";
 
   const displayImage = Array.isArray(listing.imageSrc)
     ? listing.imageSrc[0]
@@ -83,32 +93,40 @@ export default function ListingCarouselCard({
       <div className="space-y-0.5">
         <div className="flex items-center justify-between gap-1.5">
           <h3 className="font-semibold text-xs sm:text-sm text-primary truncate flex items-center gap-1">
-            <Image
-              src="/assets/location.png"
-              alt="Location"
-              width={13}
-              height={13}
-              className="object-contain shrink-0"
+            <BrandPinIcon
+              size={13}
+              strokeWidth={1.8}
+              className="shrink-0 text-accent"
             />
             <span className="truncate">{listing.city ? `${listing.city}, Algeria` : listing.title}</span>
           </h3>
           <span className="flex items-center gap-0.5 text-xs font-semibold text-neutral-800 flex-shrink-0">
-            <AiFillStar size={13} className="text-accent" />
+            <BrandStarIcon size={13} className="text-accent" />
             <span>{rating}</span>
           </span>
         </div>
 
         <p className="text-[11px] text-neutral-500 font-normal truncate flex items-center gap-1">
-          {listing.category === "vehicle" && (
-            <Image
-              src="/assets/car.png"
-              alt="Vehicle"
-              width={13}
-              height={13}
-              className="object-contain shrink-0"
-            />
+          {hasRoomTypes ? (
+            <>
+              <span className="font-semibold text-secondary">
+                {isHostel ? "Hostel" : "Hotel"}
+              </span>
+              <span>·</span>
+              <span>{listing.roomTypes?.length} room types</span>
+            </>
+          ) : listing.category === "vehicle" ? (
+            <>
+              <CategoryVehicleIcon
+                size={13}
+                strokeWidth={1.8}
+                className="shrink-0 text-accent"
+              />
+              <span className="truncate">{listing.title}</span>
+            </>
+          ) : (
+            <span className="truncate">{listing.title}</span>
           )}
-          <span className="truncate">{listing.title}</span>
         </p>
 
         <div className="pt-0.5">

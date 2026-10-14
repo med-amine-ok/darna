@@ -9,13 +9,11 @@ import {
 } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  Check,
-  AlertCircle,
-  AlertTriangle,
-  Info,
-  X,
-  Loader2,
-} from "lucide-react";
+  BrandCheckIcon,
+  BrandAlertCircleIcon,
+  BrandCloseIcon,
+  BrandSpinnerIcon,
+} from "@/components/icons";
 import { useParams } from "next/navigation";
 
 // Re-export toast for unified design system imports
@@ -53,7 +51,7 @@ export function DarnaToastIcon({
         aria-hidden="true"
       >
         <div className="w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center shadow-xs">
-          <Loader2 size={12} strokeWidth={2.8} className="animate-spin" />
+          <BrandSpinnerIcon size={12} strokeWidth={2.5} />
         </div>
       </div>
     );
@@ -67,7 +65,7 @@ export function DarnaToastIcon({
           aria-hidden="true"
         >
           <div className="w-5 h-5 rounded-full bg-secondary text-white flex items-center justify-center shadow-xs">
-            <Check size={12} strokeWidth={3} />
+            <BrandCheckIcon size={12} strokeWidth={3} />
           </div>
         </div>
       );
@@ -79,7 +77,7 @@ export function DarnaToastIcon({
           aria-hidden="true"
         >
           <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xs">
-            <AlertCircle size={13} strokeWidth={2.8} />
+            <BrandAlertCircleIcon size={13} strokeWidth={2.5} />
           </div>
         </div>
       );
@@ -91,7 +89,7 @@ export function DarnaToastIcon({
           aria-hidden="true"
         >
           <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-xs">
-            <AlertTriangle size={12} strokeWidth={2.8} />
+            <BrandAlertCircleIcon size={12} strokeWidth={2.5} />
           </div>
         </div>
       );
@@ -104,7 +102,7 @@ export function DarnaToastIcon({
           aria-hidden="true"
         >
           <div className="w-5 h-5 rounded-full bg-tertiary-300 text-primary flex items-center justify-center shadow-xs">
-            <Info size={13} strokeWidth={2.6} className="text-primary" />
+            <BrandAlertCircleIcon size={13} strokeWidth={2.5} className="text-primary" />
           </div>
         </div>
       );
@@ -129,7 +127,7 @@ export function DarnaToastCloseButton({
       aria-label={ariaLabel || "Close notification"}
       className="shrink-0 w-7 h-7 -me-1 ms-2 rounded-full flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-tertiary/25 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
-      <X size={15} strokeWidth={2.2} />
+      <BrandCloseIcon size={15} strokeWidth={2.2} />
     </button>
   );
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "@/navigation";
 import LanguageSwitcher from "@/components/navbar/LanguageSwitcher";
 import Avatar from "@/components/Avatar";
-import { HiOutlineMenu, HiOutlineBell, HiOutlineShieldCheck } from "react-icons/hi";
+import { BrandMenuIcon, BrandBellIcon, BrandShieldIcon } from "@/components/icons";
 
 interface AdminHeaderProps {
   onMobileMenuToggle: () => void;
@@ -38,7 +38,7 @@ export default function AdminHeader({ onMobileMenuToggle }: AdminHeaderProps) {
           className="md:hidden p-2 rounded-xl border border-tertiary/70 text-neutral-700 hover:bg-neutral-100 transition"
           aria-label="Open Admin Menu"
         >
-          <HiOutlineMenu size={20} />
+          <BrandMenuIcon size={20} />
         </button>
 
         {/* Breadcrumb */}
@@ -63,7 +63,7 @@ export default function AdminHeader({ onMobileMenuToggle }: AdminHeaderProps) {
           className="relative p-2 rounded-full hover:bg-neutral-100 text-primary transition"
           title="Recent Audit Logs"
         >
-          <HiOutlineBell size={20} />
+          <BrandBellIcon size={20} />
           <span className="absolute top-1.5 end-1.5 w-2 h-2 bg-emerald-500 rounded-full" />
         </Link>
 
@@ -75,7 +75,7 @@ export default function AdminHeader({ onMobileMenuToggle }: AdminHeaderProps) {
               Administrator
             </span>
             <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-0.5">
-              <HiOutlineShieldCheck size={12} /> Super Admin
+              <BrandShieldIcon size={12} /> Super Admin
             </span>
           </div>
         </div>

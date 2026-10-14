@@ -8,16 +8,15 @@ import ListingCard from "@/components/listing/ListingCard";
 import Avatar from "@/components/Avatar";
 import { toast } from "react-toastify";
 import {
-  HiOutlineOfficeBuilding,
-  HiOutlineShieldCheck,
-  HiOutlineClock,
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineLocationMarker,
-  HiOutlineStar,
-  HiOutlineUserGroup,
-  HiOutlinePlus,
-} from "react-icons/hi";
+  BrandClockIcon,
+  BrandShieldIcon,
+  BrandPinIcon,
+  BrandPlusIcon,
+  BrandUsersIcon,
+  BrandMailIcon,
+  BrandPhoneIcon,
+  BrandStarIcon,
+} from "@/components/icons";
 
 interface AgencyProfileClientProps {
   organization: Organization;
@@ -54,11 +53,11 @@ export default function AgencyProfileClient({
                 </h1>
                 {isPending ? (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold border border-amber-200">
-                    <HiOutlineClock size={14} /> Pending Verification
+                    <BrandClockIcon size={14} /> Pending Verification
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">
-                    <HiOutlineShieldCheck size={14} /> Verified Agency
+                    <BrandShieldIcon size={14} /> Verified Agency
                   </span>
                 )}
               </div>
@@ -69,7 +68,7 @@ export default function AgencyProfileClient({
                 <span className="font-mono text-neutral-400">{organization.businessRegistrationNumber}</span>
                 <span>·</span>
                 <span className="flex items-center gap-1">
-                  <HiOutlineLocationMarker size={14} className="text-secondary" />
+                  <BrandPinIcon size={14} className="text-secondary" />
                   {organization.address}
                 </span>
               </div>
@@ -81,7 +80,7 @@ export default function AgencyProfileClient({
               href="/become-a-host/1"
               className="px-4 py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-xs flex items-center gap-1.5"
             >
-              <HiOutlinePlus size={16} />
+              <BrandPlusIcon size={16} />
               <span>Add Listing to Fleet</span>
             </Link>
           </div>
@@ -90,7 +89,7 @@ export default function AgencyProfileClient({
         {/* Verification Alert if Pending */}
         {isPending && (
           <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
-            <HiOutlineClock size={18} className="shrink-0 mt-0.5 text-amber-700" />
+            <BrandClockIcon size={18} className="shrink-0 mt-0.5 text-amber-700" />
             <div>
               <div className="font-bold">Compliance Review in Progress</div>
               <div className="text-amber-800 mt-0.5">
@@ -123,8 +122,9 @@ export default function AgencyProfileClient({
           </div>
           <div>
             <div className="text-xs text-neutral-400 font-medium">Agency Rating</div>
-            <div className="text-2xl font-bold text-primary font-serif mt-0.5 flex items-center gap-1">
-              <span>★ {organization.rating || 4.9}</span>
+            <div className="text-2xl font-bold text-primary font-serif mt-0.5 flex items-center gap-1.5">
+              <BrandStarIcon size={20} className="text-accent fill-accent" />
+              <span>{organization.rating || 4.9}</span>
             </div>
           </div>
           <div>
@@ -143,7 +143,7 @@ export default function AgencyProfileClient({
           <div className="bg-white rounded-3xl p-6 border border-tertiary shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-primary text-base font-serif flex items-center gap-2">
-                <HiOutlineUserGroup size={18} className="text-secondary" />
+                <BrandUsersIcon size={18} className="text-secondary" />
                 <span>Hospitality Team</span>
               </h3>
               <span className="text-xs text-neutral-400 font-medium">{members.length} members</span>
@@ -169,9 +169,10 @@ export default function AgencyProfileClient({
             <button
               type="button"
               onClick={() => toast.info("Invite teammate modal opened.")}
-              className="w-full py-2 bg-neutral-50 hover:bg-neutral-100 border border-tertiary/70 rounded-xl text-xs font-semibold text-neutral-700 transition"
+              className="w-full py-2 bg-neutral-50 hover:bg-neutral-100 border border-tertiary/70 rounded-xl text-xs font-semibold text-neutral-700 transition flex items-center justify-center gap-1.5"
             >
-              + Invite Teammate
+              <BrandPlusIcon size={14} />
+              <span>Invite Teammate</span>
             </button>
           </div>
 
@@ -179,15 +180,15 @@ export default function AgencyProfileClient({
           <div className="bg-white rounded-3xl p-6 border border-tertiary shadow-sm space-y-3.5 text-xs text-neutral-700">
             <h3 className="font-bold text-primary text-base font-serif">Contact Information</h3>
             <div className="flex items-center gap-2.5">
-              <HiOutlineMail size={16} className="text-secondary shrink-0" />
+              <BrandMailIcon size={16} className="text-secondary shrink-0" />
               <span>{organization.businessEmail}</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <HiOutlinePhone size={16} className="text-secondary shrink-0" />
+              <BrandPhoneIcon size={16} className="text-secondary shrink-0" />
               <span>{organization.businessPhone}</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <HiOutlineLocationMarker size={16} className="text-secondary shrink-0" />
+              <BrandPinIcon size={16} className="text-secondary shrink-0" />
               <span>{organization.address}</span>
             </div>
           </div>

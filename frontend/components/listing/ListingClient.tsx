@@ -6,6 +6,7 @@ import Container from "@/components/Container";
 import ListingHead from "./ListingHead";
 import ListingInfo from "./ListingInfo";
 import ListingReservation from "./ListingReservation";
+import HotelHostelDetailClient from "./HotelHostelDetailClient";
 
 interface ListingClientProps {
   listing: Listing;
@@ -22,6 +23,25 @@ export default function ListingClient({
   similarListings = [],
   currentUser,
 }: ListingClientProps) {
+  const isHotelOrHostel =
+    listing.businessCategory === "hotel" ||
+    listing.businessCategory === "hostel" ||
+    listing.type?.toLowerCase().includes("hotel") ||
+    listing.type?.toLowerCase().includes("hostel") ||
+    (listing.roomTypes && listing.roomTypes.length > 0);
+
+  if (isHotelOrHostel) {
+    return (
+      <HotelHostelDetailClient
+        listing={listing}
+        host={host}
+        reviews={reviews}
+        similarListings={similarListings}
+        currentUser={currentUser}
+      />
+    );
+  }
+
   return (
     <div className="pt-6 sm:pt-8 pb-28 lg:pb-8">
       <Container className="space-y-8">

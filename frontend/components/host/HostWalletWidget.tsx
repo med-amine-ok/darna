@@ -5,15 +5,15 @@ import { Wallet, Transaction, HostType } from "@/types";
 import { getWalletByOwner, getRateForHostType } from "@/lib/data/wallet";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import {
-  HiOutlineCreditCard,
-  HiOutlineExclamation,
-  HiOutlineDocumentText,
-  HiOutlineArrowUp,
-  HiOutlineArrowDown,
-  HiOutlineX,
-  HiOutlineInformationCircle,
-  HiOutlineShieldCheck,
-} from "react-icons/hi";
+  BrandAlertCircleIcon,
+  BrandReceiptIcon,
+  BrandCloseIcon,
+  BrandChevronUpIcon,
+  BrandChevronDownIcon,
+  BrandShieldIcon,
+  WalletWarningIcon,
+  WalletSolventIcon,
+} from "@/components/icons";
 
 interface HostWalletWidgetProps {
   ownerId?: string;
@@ -58,7 +58,7 @@ export default function HostWalletWidget({
       {isNegative && (
         <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-3xl flex flex-col sm:flex-row items-start gap-4 text-rose-950 shadow-sm animate-in fade-in">
           <div className="p-2 rounded-2xl bg-rose-100 text-rose-700 shrink-0">
-            <HiOutlineExclamation size={26} />
+            <BrandAlertCircleIcon size={26} />
           </div>
           <div className="text-xs space-y-1.5 flex-1">
             <div className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export default function HostWalletWidget({
             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shrink-0 ${
               isNegative ? "bg-rose-100 text-rose-700" : "bg-primary text-white"
             }`}>
-              <HiOutlineCreditCard size={20} />
+              <BrandReceiptIcon size={20} />
             </div>
             <div>
               <h3 className="font-serif text-lg font-bold text-primary">
@@ -112,7 +112,7 @@ export default function HostWalletWidget({
               onClick={() => setIsLedgerOpen(true)}
               className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-primary rounded-xl text-xs font-bold transition flex items-center gap-1.5"
             >
-              <HiOutlineDocumentText size={15} />
+              <BrandReceiptIcon size={15} />
               <span>Statement & History</span>
             </button>
           </div>
@@ -128,8 +128,18 @@ export default function HostWalletWidget({
               {wallet.balance < 0 ? "-" : ""}
               {Math.abs(wallet.balance).toLocaleString("fr-DZ")} DZD
             </div>
-            <span className={`text-[11px] font-semibold block ${isNegative ? "text-rose-600 font-bold" : "text-emerald-700"}`}>
-              {isNegative ? "⚠️ Deposit Deficit" : "✓ Active & Solvent"}
+            <span className={`text-[11px] font-semibold flex items-center gap-1 mt-0.5 ${isNegative ? "text-rose-600 font-bold" : "text-emerald-700"}`}>
+              {isNegative ? (
+                <>
+                  <WalletWarningIcon size={13} className="text-rose-600 shrink-0" />
+                  <span>Deposit Deficit</span>
+                </>
+              ) : (
+                <>
+                  <WalletSolventIcon size={13} className="text-emerald-700 shrink-0" />
+                  <span>Active & Solvent</span>
+                </>
+              )}
             </span>
           </div>
 
@@ -160,7 +170,7 @@ export default function HostWalletWidget({
 
         {/* Note banner */}
         <div className="p-3 bg-neutral-50/60 rounded-xl border border-tertiary/40 flex items-start gap-2.5 text-xs text-neutral-600">
-          <HiOutlineInformationCircle size={16} className="text-secondary shrink-0 mt-0.5" />
+          <BrandAlertCircleIcon size={16} className="text-secondary shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed">
             <strong>How DARNA Host Balance Works:</strong> In compliance with Algerian banking practices, commission is deducted from your offline deposit rather than direct automated guest payouts. To recharge your balance, submit a transfer via BaridiMob or CCP and send the receipt to support.
           </p>
@@ -174,7 +184,7 @@ export default function HostWalletWidget({
             <div className="flex items-center justify-between pb-4 border-b border-tertiary/60">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-bold">
-                  <HiOutlineDocumentText size={20} />
+                  <BrandReceiptIcon size={20} />
                 </div>
                 <div>
                   <h3 className="font-serif text-lg font-black text-primary">
@@ -190,7 +200,7 @@ export default function HostWalletWidget({
                 onClick={() => setIsLedgerOpen(false)}
                 className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 flex items-center justify-center"
               >
-                <HiOutlineX size={16} />
+                <BrandCloseIcon size={16} />
               </button>
             </div>
 
@@ -258,11 +268,11 @@ export default function HostWalletWidget({
                           <td className="py-2.5 px-3 whitespace-nowrap">
                             {tx.type === "recharge" ? (
                               <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                                <HiOutlineArrowUp size={12} /> Deposit
+                                <BrandChevronUpIcon size={12} /> Deposit
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-rose-700 font-bold">
-                                <HiOutlineArrowDown size={12} /> Commission
+                                <BrandChevronDownIcon size={12} /> Commission
                               </span>
                             )}
                           </td>

@@ -7,7 +7,6 @@ import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
 import { useTranslations } from "next-intl";
-import { TbAdjustmentsHorizontal, TbMap, TbList } from "react-icons/tb";
 import { Listing, User, ListingVertical, Trip } from "@/types";
 import { getTripCoordinates } from "@/lib/mock-data/trips";
 import ListingCard from "@/components/listing/ListingCard";
@@ -15,8 +14,17 @@ import TripCard from "@/components/trips/TripCard";
 import EmptyState from "@/components/EmptyState";
 import { useFilterModal } from "@/hook/useFilterModal";
 import { useSearchModal } from "@/hook/useSearchModal";
-import { BiSearch } from "react-icons/bi";
-import { Compass } from "lucide-react";
+import {
+  PremiumStarIcon,
+  BrandSearchIcon,
+  BrandFilterIcon,
+  BrandCompassIcon,
+  BrandMapIcon,
+  BrandListIcon,
+  CategoryHouseIcon,
+  CategoryVehicleIcon,
+  BrandPinIcon,
+} from "@/components/icons";
 
 // Dynamically import Leaflet map with ssr: false
 const SearchMap = dynamic(() => import("./SearchMap"), {
@@ -166,11 +174,11 @@ export default function SearchResultsClient({
   );
 
   const verticalTabs = [
-    { id: "all", label: "All Stays & Rentals", icon: "✦" },
-    { id: "home", label: "Homes", imgSrc: "/assets/house.png" },
-    { id: "vehicle", label: "Vehicles 4x4", imgSrc: "/assets/car.png" },
-    { id: "experience", label: "Experiences", imgSrc: "/assets/location.png" },
-    { id: "trip", label: "Agency Circuits", isCompass: true },
+    { id: "all", label: "All Stays & Rentals", icon: PremiumStarIcon },
+    { id: "home", label: "Homes", icon: CategoryHouseIcon },
+    { id: "vehicle", label: "Vehicles 4x4", icon: CategoryVehicleIcon },
+    { id: "experience", label: "Experiences", icon: BrandPinIcon },
+    { id: "trip", label: "Agency Circuits", icon: BrandCompassIcon },
   ];
 
   return (
@@ -187,7 +195,7 @@ export default function SearchResultsClient({
                 onClick={searchModal.onOpen}
                 className="flex items-center gap-2 py-1.5 px-3.5 rounded-full border border-tertiary bg-white hover:border-primary text-xs sm:text-sm font-semibold text-primary shadow-xs hover:shadow-sm transition cursor-pointer flex-shrink-0"
               >
-                <BiSearch size={15} className="text-accent" />
+                <BrandSearchIcon size={15} className="text-accent" />
                 <span className="truncate max-w-[140px] sm:max-w-[200px]">
                   {destination || "Algeria"}
                 </span>
@@ -201,6 +209,7 @@ export default function SearchResultsClient({
                   const isActive =
                     (tab.id === "all" && !currentVertical) ||
                     currentVertical === tab.id;
+                  const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
@@ -216,22 +225,19 @@ export default function SearchResultsClient({
                           : "text-neutral-600 hover:text-primary hover:bg-neutral-200/60"
                       }`}
                     >
-                      {tab.imgSrc ? (
-                        <Image
-                          src={tab.imgSrc}
-                          alt={tab.label}
-                          width={14}
-                          height={14}
-                          className={`object-contain ${isActive ? "brightness-0 invert" : ""}`}
-                        />
-                      ) : (tab as any).isCompass ? (
-                        <Compass
-                          size={13}
-                          className={isActive ? "text-white" : "text-secondary"}
-                        />
-                      ) : (
-                        <span className="me-0.5">{tab.icon}</span>
-                      )}
+                      <Icon
+                        size={14}
+                        strokeWidth={1.8}
+                        className={
+                          isActive
+                            ? "text-white"
+                            : tab.id === "all"
+                            ? "text-accent"
+                            : tab.id === "trip"
+                            ? "text-secondary"
+                            : "text-neutral-600"
+                        }
+                      />
                       <span>{tab.label}</span>
                     </button>
                   );
@@ -296,7 +302,7 @@ export default function SearchResultsClient({
                 onClick={filterModal.onOpen}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-tertiary/80 text-xs font-bold text-primary hover:border-primary bg-white shadow-xs transition cursor-pointer"
               >
-                <TbAdjustmentsHorizontal size={15} />
+                <BrandFilterIcon size={15} />
                 <span>Filters</span>
               </button>
             </div>
@@ -438,12 +444,12 @@ export default function SearchResultsClient({
         >
           {showMobileMap ? (
             <>
-              <TbList size={18} />
+              <BrandListIcon size={18} />
               <span>Show list</span>
             </>
           ) : (
             <>
-              <TbMap size={18} />
+              <BrandMapIcon size={18} />
               <span>Show map</span>
             </>
           )}

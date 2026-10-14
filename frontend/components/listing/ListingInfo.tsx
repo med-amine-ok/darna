@@ -5,22 +5,22 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Listing, User, Review } from "@/types";
 import Avatar from "@/components/Avatar";
-import { AiFillStar } from "react-icons/ai";
 import {
-  IoBedOutline,
-  IoWifiOutline,
-  IoCarSportOutline,
-  IoSnowOutline,
-  IoRestaurantOutline,
-  IoShieldCheckmarkOutline,
-  IoFlameOutline,
-  IoWaterOutline,
-  IoTimeOutline,
-  IoKeyOutline,
-  IoMedalOutline,
-  IoClose,
-} from "react-icons/io5";
-import { MdOutlineCleaningServices, MdOutlinePool } from "react-icons/md";
+  BrandStarIcon,
+  GuestFavoriteIcon,
+  BrandDoorIcon,
+  BrandShieldIcon,
+  BrandBedIcon,
+  BrandCloseIcon,
+  BrandPinIcon,
+  CategoryPoolIcon,
+  CategoryVehicleIcon,
+  BrandWifiIcon,
+  BrandSnowIcon,
+  BrandKitchenIcon,
+  BrandFlameIcon,
+  BrandWaterIcon,
+} from "@/components/icons";
 import { useRouter } from "@/navigation";
 import ListingCarouselCard from "@/components/home/ListingCarouselCard";
 
@@ -67,16 +67,16 @@ export default function ListingInfo({
   ];
 
   const amenityIcons: Record<string, { label: string; icon: any }> = {
-    wifi: { label: "High-speed Wi-Fi", icon: IoWifiOutline },
-    pool: { label: "Private Swimming Pool", icon: MdOutlinePool },
-    kitchen: { label: "Fully Equipped Kitchen", icon: IoRestaurantOutline },
-    parking: { label: "Free Private Parking", icon: IoCarSportOutline },
-    air_conditioning: { label: "Climate Control AC", icon: IoSnowOutline },
-    sea_view: { label: "Mediterranean Sea View", icon: IoWaterOutline },
-    fireplace: { label: "Traditional Fireplace", icon: IoFlameOutline },
-    courtyard: { label: "Private Andalusian Courtyard", icon: IoBedOutline },
-    heating: { label: "Central Heating", icon: IoFlameOutline },
-    mountain_view: { label: "Panoramic Mountain View", icon: IoWaterOutline },
+    wifi: { label: "High-speed Wi-Fi", icon: BrandWifiIcon },
+    pool: { label: "Private Swimming Pool", icon: CategoryPoolIcon },
+    kitchen: { label: "Fully Equipped Kitchen", icon: BrandKitchenIcon },
+    parking: { label: "Free Private Parking", icon: CategoryVehicleIcon },
+    air_conditioning: { label: "Climate Control AC", icon: BrandSnowIcon },
+    sea_view: { label: "Mediterranean Sea View", icon: BrandWaterIcon },
+    fireplace: { label: "Traditional Fireplace", icon: BrandFlameIcon },
+    courtyard: { label: "Private Andalusian Courtyard", icon: BrandDoorIcon },
+    heating: { label: "Central Heating", icon: BrandFlameIcon },
+    mountain_view: { label: "Panoramic Mountain View", icon: BrandWaterIcon },
   };
 
   return (
@@ -134,7 +134,7 @@ export default function ListingInfo({
         {listing.isGuestFavorite && (
           <div className="flex items-start gap-4">
             <div className="p-2.5 rounded-xl bg-tertiary/30 text-accent flex-shrink-0">
-              <IoMedalOutline size={24} />
+              <GuestFavoriteIcon size={24} />
             </div>
             <div>
               <h3 className="font-bold text-sm sm:text-base">Guest favorite</h3>
@@ -147,7 +147,7 @@ export default function ListingInfo({
 
         <div className="flex items-start gap-4">
           <div className="p-2.5 rounded-xl bg-tertiary/30 text-primary flex-shrink-0">
-            <IoKeyOutline size={24} />
+            <BrandDoorIcon size={24} strokeWidth={1.8} />
           </div>
           <div>
             <h3 className="font-bold text-sm sm:text-base">Seamless check-in</h3>
@@ -159,7 +159,7 @@ export default function ListingInfo({
 
         <div className="flex items-start gap-4">
           <div className="p-2.5 rounded-xl bg-tertiary/30 text-primary flex-shrink-0">
-            <IoShieldCheckmarkOutline size={24} />
+            <BrandShieldIcon size={24} strokeWidth={1.8} />
           </div>
           <div>
             <h3 className="font-bold text-sm sm:text-base">Free cancellation</h3>
@@ -195,7 +195,7 @@ export default function ListingInfo({
                 key={idx}
                 className="p-4 rounded-2xl border border-tertiary/70 space-y-2 bg-white"
               >
-                <IoBedOutline size={24} className="text-primary" />
+                <BrandBedIcon size={24} strokeWidth={1.8} className="text-primary" />
                 <h4 className="font-bold text-sm">Bedroom {idx + 1}</h4>
                 <p className="text-xs text-neutral-500">1 Queen bed · Linens provided</p>
               </div>
@@ -213,7 +213,7 @@ export default function ListingInfo({
           {allAmenities.slice(0, 8).map((amenityKey) => {
             const item = amenityIcons[amenityKey] || {
               label: amenityKey.replace(/_/g, " "),
-              icon: IoShieldCheckmarkOutline,
+              icon: BrandShieldIcon,
             };
             const IconComp = item.icon;
             return (
@@ -260,7 +260,7 @@ export default function ListingInfo({
       {/* 7. Reviews Section */}
       <div id="reviews" className="border-b border-tertiary/50 pb-8 space-y-6">
         <div className="flex items-center gap-3">
-          <AiFillStar size={26} className="text-accent" />
+          <BrandStarIcon size={26} className="text-accent" />
           <h3 className="text-xl sm:text-2xl font-bold">
             {listing.rating?.toFixed(2) || "4.95"} · {reviews.length || 34} reviews
           </h3>
@@ -312,12 +312,10 @@ export default function ListingInfo({
       <div className="border-b border-tertiary/50 pb-8 space-y-4">
         <h3 className="text-lg sm:text-xl font-bold">Where you'll be</h3>
         <p className="text-xs sm:text-sm text-neutral-600 flex items-center">
-          <Image
-            src="/assets/location.png"
-            alt="Location"
-            width={16}
-            height={16}
-            className="inline-block me-1.5 shrink-0 object-contain"
+          <BrandPinIcon
+            size={16}
+            strokeWidth={1.8}
+            className="inline-block me-1.5 shrink-0 text-accent"
           />
           <span>{listing.city ? `${listing.city}, Algeria` : "Algeria"} — Exact location provided after confirmed booking.</span>
         </p>
@@ -377,13 +375,13 @@ export default function ListingInfo({
                 onClick={() => setIsAmenitiesModalOpen(false)}
                 className="p-1 rounded-full hover:bg-neutral-100"
               >
-                <IoClose size={20} />
+                <BrandCloseIcon size={20} strokeWidth={2} />
               </button>
             </div>
             <div className="space-y-3 divide-y divide-neutral-100">
               {allAmenities.map((am) => (
                 <div key={am} className="pt-2 flex items-center gap-3 text-sm text-neutral-800">
-                  <IoShieldCheckmarkOutline size={18} className="text-accent" />
+                  <BrandShieldIcon size={18} strokeWidth={1.8} className="text-accent" />
                   <span className="capitalize">{am.replace(/_/g, " ")}</span>
                 </div>
               ))}

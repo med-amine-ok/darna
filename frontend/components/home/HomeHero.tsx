@@ -4,10 +4,15 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
-import { MdDirectionsCar } from "react-icons/md";
 import { useVertical } from "@/hook/useVertical";
 import { useSearchModal } from "@/hook/useSearchModal";
-import { Compass } from "lucide-react";
+import {
+  PremiumStarIcon,
+  BrandCompassIcon,
+  BrandPinIcon,
+  CategoryHouseIcon,
+  CategoryVehicleIcon,
+} from "@/components/icons";
 
 export interface PromoData {
   prefix: string;
@@ -87,13 +92,7 @@ export default function HomeHero({
           >
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
-                <Image
-                  src="/assets/location.png"
-                  alt="Where"
-                  width={16}
-                  height={16}
-                  className="object-contain"
-                />
+                <BrandPinIcon size={16} className="text-secondary" />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-primary">Where to?</span>
@@ -115,7 +114,7 @@ export default function HomeHero({
 
           {/* Data-Driven Promotional Line */}
           <div className="flex items-center justify-center gap-2 text-base sm:text-xl md:text-2xl font-bold text-primary mt-1.5 select-none">
-            <span className="text-accent inline-block text-lg sm:text-2xl">✦</span>
+            <PremiumStarIcon size={22} className="text-accent inline-block shrink-0" />
             <span>{tHero("sublinePrefix") || promoData.prefix}</span>
             <button
               type="button"
@@ -151,13 +150,10 @@ export default function HomeHero({
               }
             `}
           >
-            <Image
-              src="/assets/house.png"
-              alt="Homes"
-              width={18}
-              height={18}
-              className={`object-contain transition-all ${
-                activeVertical === "home" ? "brightness-0 invert" : ""
+            <CategoryHouseIcon
+              size={18}
+              className={`transition-all ${
+                activeVertical === "home" ? "text-white" : "text-secondary"
               }`}
             />
             <span>{tHero("tabHomes") || "Homes"}</span>
@@ -176,13 +172,10 @@ export default function HomeHero({
               }
             `}
           >
-            <Image
-              src="/assets/location.png"
-              alt="Experiences"
-              width={18}
-              height={18}
-              className={`object-contain transition-all ${
-                activeVertical === "experience" ? "brightness-0 invert" : ""
+            <BrandPinIcon
+              size={18}
+              className={`transition-all ${
+                activeVertical === "experience" ? "text-white" : "text-secondary"
               }`}
             />
             <span>{tHero("tabExperiences") || "Experiences"}</span>
@@ -201,13 +194,10 @@ export default function HomeHero({
               }
             `}
           >
-            <Image
-              src="/assets/car.png"
-              alt="Vehicles"
-              width={20}
-              height={20}
-              className={`object-contain transition-all ${
-                activeVertical === "vehicle" ? "brightness-0 invert" : ""
+            <CategoryVehicleIcon
+              size={20}
+              className={`transition-all ${
+                activeVertical === "vehicle" ? "text-white" : "text-secondary"
               }`}
             />
             <span>{tHero("tabVehicles") || "Vehicles"}</span>
@@ -226,7 +216,7 @@ export default function HomeHero({
               }
             `}
           >
-            <Compass
+            <BrandCompassIcon
               size={18}
               className={`transition-all ${
                 activeVertical === "trip" ? "text-white" : "text-secondary"

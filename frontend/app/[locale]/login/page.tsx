@@ -5,10 +5,16 @@ import Container from "@/components/Container";
 import { useRouter } from "@/navigation";
 import { useRegisterModal } from "@/hook/useRegisterModal";
 import { toast } from "react-toastify";
-import { FcGoogle } from "react-icons/fc";
-import { AiFillApple, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { MdOutlineSmartphone } from "react-icons/md";
-import { BiLockAlt, BiEnvelope, BiArrowBack } from "react-icons/bi";
+import {
+  BrandGoogleIcon,
+  BrandAppleIcon,
+  BrandEyeIcon,
+  BrandEyeOffIcon,
+  BrandPhoneIcon,
+  BrandLockIcon,
+  BrandMailIcon,
+  BrandChevronLeftIcon,
+} from "@/components/icons";
 import Link from "next/link";
 import Image from "next/image";
 import { switchUser, resetUserToGuest } from "@/lib/data/auth";
@@ -112,7 +118,7 @@ export default function LoginPage() {
           href="/"
           className="inline-flex items-center gap-2 text-sm text-neutral-600 hover:text-primary mb-6 transition"
         >
-          <BiArrowBack size={18} />
+          <BrandChevronLeftIcon size={18} className="rtl:rotate-180" />
           <span>Back to Home</span>
         </Link>
 
@@ -166,7 +172,7 @@ export default function LoginPage() {
                 Email Address
               </label>
               <div className="relative">
-                <BiEnvelope
+                <BrandMailIcon
                   size={18}
                   className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
                 />
@@ -195,7 +201,7 @@ export default function LoginPage() {
                 </button>
               </div>
               <div className="relative">
-                <BiLockAlt
+                <BrandLockIcon
                   size={18}
                   className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
                 />
@@ -213,9 +219,9 @@ export default function LoginPage() {
                   className="absolute end-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                 >
                   {showPassword ? (
-                    <AiOutlineEyeInvisible size={18} />
+                    <BrandEyeOffIcon size={18} />
                   ) : (
-                    <AiOutlineEye size={18} />
+                    <BrandEyeIcon size={18} />
                   )}
                 </button>
               </div>
@@ -259,7 +265,7 @@ export default function LoginPage() {
               className="flex items-center justify-center py-2.5 px-3 border border-tertiary/70 rounded-xl hover:bg-neutral-50 transition"
               title="Sign in with Google"
             >
-              <FcGoogle size={20} />
+              <BrandGoogleIcon size={20} />
             </button>
             <button
               type="button"
@@ -267,7 +273,7 @@ export default function LoginPage() {
               className="flex items-center justify-center py-2.5 px-3 border border-tertiary/70 rounded-xl hover:bg-neutral-50 transition"
               title="Sign in with Apple"
             >
-              <AiFillApple size={20} className="text-black" />
+              <BrandAppleIcon size={20} className="text-black" />
             </button>
             <button
               type="button"
@@ -275,7 +281,7 @@ export default function LoginPage() {
               className="flex items-center justify-center py-2.5 px-3 border border-tertiary/70 rounded-xl hover:bg-neutral-50 transition text-neutral-700"
               title="Sign in with Phone / OTP"
             >
-              <MdOutlineSmartphone size={20} className="text-secondary" />
+              <BrandPhoneIcon size={20} className="text-secondary" />
             </button>
           </div>
 

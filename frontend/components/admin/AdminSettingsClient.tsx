@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { getPlatformSettings, updatePlatformSettings } from "@/lib/data/admin";
 import {
-  HiOutlineCog,
-  HiOutlineCurrencyDollar,
-  HiOutlineGlobe,
-  HiOutlineShieldCheck,
-  HiOutlineDeviceMobile,
-} from "react-icons/hi";
+  BrandSettingsIcon,
+  BrandCashIcon,
+  BrandGlobeIcon,
+  BrandShieldIcon,
+  BrandPhoneIcon,
+  BrandCheckIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 
 interface AdminSettingsClientProps {
@@ -77,25 +78,35 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">
-          Platform Configuration & Fiscal Settings
-        </h1>
-        <p className="text-xs sm:text-sm text-neutral-600 mt-1">
-          Configure per-host-type commission take rates, guest checkout service fees, and Algerian banking currency parameters.
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+          <BrandSettingsIcon size={24} />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">
+            Platform Configuration & Fiscal Settings
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-600 mt-1">
+            Configure per-host-type commission take rates, guest checkout service fees, and Algerian banking currency parameters.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Commission fees box */}
         <div className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-6">
-          <div className="pb-3 border-b border-tertiary/60">
-            <h3 className="font-serif text-lg font-bold text-primary">
-              Per-Host-Type Commission Structure
-            </h3>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Independent take-rates automatically deducted against host deposit balances upon confirmed bookings.
-            </p>
+          <div className="pb-3 border-b border-tertiary/60 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-secondary/15 flex items-center justify-center text-primary shrink-0 mt-0.5">
+              <BrandCashIcon size={20} />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-primary">
+                Per-Host-Type Commission Structure
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Independent take-rates automatically deducted against host deposit balances upon confirmed bookings.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -221,9 +232,19 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
 
         {/* Currency & Locales box */}
         <div className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-4">
-          <h3 className="font-serif text-lg font-bold text-primary pb-2 border-b border-tertiary/60">
-            Currency & Internationalization
-          </h3>
+          <div className="pb-2 border-b border-tertiary/60 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-secondary/15 flex items-center justify-center text-primary shrink-0 mt-0.5">
+              <BrandGlobeIcon size={20} />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-primary">
+                Currency & Internationalization
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Supported currencies and multi-lingual platform localization standards.
+              </p>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="bg-neutral-50 p-4 rounded-2xl border border-tertiary/60">
@@ -260,9 +281,19 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
 
         {/* Operational Toggles */}
         <div className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-4">
-          <h3 className="font-serif text-lg font-bold text-primary pb-2 border-b border-tertiary/60">
-            Platform-Wide Operational Controls
-          </h3>
+          <div className="pb-2 border-b border-tertiary/60 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-secondary/15 flex items-center justify-center text-primary shrink-0 mt-0.5">
+              <BrandShieldIcon size={20} />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-primary">
+                Platform-Wide Operational Controls
+              </h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Real-time operational switches for instant bookings, Algerian SMS gateways, and maintenance.
+              </p>
+            </div>
+          </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3.5 bg-neutral-50 rounded-2xl border border-tertiary/60">
@@ -309,9 +340,10 @@ export default function AdminSettingsClient({ initialSettings }: AdminSettingsCl
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs disabled:opacity-50"
             >
-              {isSaving ? "Saving..." : "Save Settings"}
+              <BrandCheckIcon size={16} />
+              <span>{isSaving ? "Saving..." : "Save Settings"}</span>
             </button>
           </div>
         </div>

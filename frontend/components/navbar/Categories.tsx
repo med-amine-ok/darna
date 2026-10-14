@@ -4,68 +4,73 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/navigation";
 import {
-  MdOutlineVilla,
-  MdChevronLeft,
-  MdChevronRight,
-} from "react-icons/md";
-import { TbBeach, TbMountain, TbPool } from "react-icons/tb";
-import { GiCactus, GiCastle, GiForestCamp } from "react-icons/gi";
-import { IoSparklesOutline } from "react-icons/io5";
-import { TbAdjustmentsHorizontal } from "react-icons/tb";
+  BrandFilterIcon,
+  BrandCompassIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  CategoryVillaIcon,
+  CategoryBeachfrontIcon,
+  CategoryDesertIcon,
+  CategoryRiadIcon,
+  CategoryMountainIcon,
+  CategoryPoolIcon,
+  CategoryCampingIcon,
+  CategoryExpeditionsIcon,
+  CategoryVehicleIcon,
+} from "@/components/icons";
 import CategoryBox from "@/components/CategoryBox";
 import { useFilterModal } from "@/hook/useFilterModal";
 import { useTranslations } from "next-intl";
-import { BiCompass } from "react-icons/bi";
 
 export const categories = [
   {
     label: "Villas",
-    icon: MdOutlineVilla,
+    icon: CategoryVillaIcon,
     description: "Spacious private villas across Algeria.",
   },
   {
     label: "Beachfront",
-    icon: TbBeach,
+    icon: CategoryBeachfrontIcon,
     description: "Coastal retreats along the Mediterranean.",
   },
   {
     label: "Desert & Sahara",
-    icon: GiCactus,
+    icon: CategoryDesertIcon,
     description: "Magical desert lodges in Taghit, Djanet, and Timimoun.",
   },
   {
     label: "Historic & Riads",
-    icon: GiCastle,
+    icon: CategoryRiadIcon,
     description: "Centuries of Ottoman and Andalusian heritage.",
   },
   {
     label: "Mountain & Cedar",
-    icon: TbMountain,
+    icon: CategoryMountainIcon,
     description: "Quiet escapes in Kabylie and Atlas mountain ranges.",
   },
   {
     label: "Pools",
-    icon: TbPool,
+    icon: CategoryPoolIcon,
     description: "Properties with private swimming pools.",
   },
   {
     label: "Camping & Glamping",
-    icon: GiForestCamp,
+    icon: CategoryCampingIcon,
     description: "Unforgettable starry nights under Algerian skies.",
   },
   {
     label: "Expeditions",
-    icon: IoSparklesOutline,
+    icon: CategoryExpeditionsIcon,
     description: "Curated Sahara and cultural expeditions.",
   },
   {
     label: "Vehicles 4x4",
-    imgSrc: "/assets/car.png",
+    icon: CategoryVehicleIcon,
     description: "All-terrain vehicles and road trip cruisers.",
   },
   {
     label: "Trips & Circuits",
-    icon: BiCompass,
+    icon: BrandCompassIcon,
     description: "Multi-day packaged trips organized by licensed Algerian travel agencies.",
   },
 ];
@@ -126,7 +131,7 @@ export default function Categories() {
           onClick={() => handleScroll("left")}
           className="hidden md:flex absolute start-0 top-1/2 -translate-y-1/2 p-2 rounded-full border border-tertiary/70 hover:border-primary bg-white text-primary shadow-xs hover:shadow-sm transition z-20 cursor-pointer"
         >
-          <MdChevronLeft size={18} className="rtl:rotate-180" />
+          <BrandChevronLeftIcon size={18} className="rtl:rotate-180" />
         </button>
       )}
 
@@ -156,7 +161,7 @@ export default function Categories() {
           onClick={() => handleScroll("right")}
           className="hidden md:flex absolute end-36 top-1/2 -translate-y-1/2 p-2 rounded-full border border-tertiary/70 hover:border-primary bg-white text-primary shadow-xs hover:shadow-sm transition z-20 cursor-pointer"
         >
-          <MdChevronRight size={18} className="rtl:rotate-180" />
+          <BrandChevronRightIcon size={18} className="rtl:rotate-180" />
         </button>
       )}
 
@@ -167,7 +172,7 @@ export default function Categories() {
           onClick={filterModal.onOpen}
           className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 min-h-[44px] rounded-xl border border-tertiary/80 text-xs sm:text-sm font-semibold text-primary hover:border-primary hover:bg-tertiary/20 transition shadow-xs cursor-pointer bg-white touch-manipulation select-none"
         >
-          <TbAdjustmentsHorizontal size={16} />
+          <BrandFilterIcon size={16} />
           <span>{tCommon("filters") || "Filters"}</span>
         </button>
       </div>
@@ -179,7 +184,7 @@ export default function Categories() {
           onClick={filterModal.onOpen}
           className="flex items-center gap-1.5 px-3 py-2 min-h-[40px] rounded-xl border border-tertiary/80 text-xs font-semibold text-primary hover:border-primary hover:bg-tertiary/20 transition shadow-xs cursor-pointer bg-white touch-manipulation select-none"
         >
-          <TbAdjustmentsHorizontal size={15} />
+          <BrandFilterIcon size={15} />
           <span>{tCommon("filters") || "Filters"}</span>
         </button>
       </div>

@@ -4,10 +4,16 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Listing, User } from "@/types";
 import HeartButton from "@/components/HeartButton";
-import { AiFillStar, AiOutlineShareAlt } from "react-icons/ai";
-import { IoGridOutline, IoClose } from "react-icons/io5";
-import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { toast } from "react-toastify";
+import {
+  GuestFavoriteIcon,
+  BrandStarIcon,
+  BrandShareIcon,
+  BrandGridIcon,
+  BrandCloseIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+} from "@/components/icons";
 
 interface ListingHeadProps {
   listing: Listing;
@@ -48,7 +54,7 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-neutral-600">
             <span className="flex items-center gap-1 font-bold text-primary">
-              <AiFillStar size={16} className="text-accent" />
+              <BrandStarIcon size={16} className="text-accent fill-accent" />
               <span>{listing.rating?.toFixed(2) || "4.95"}</span>
             </span>
             <span>·</span>
@@ -61,8 +67,9 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
             {listing.isGuestFavorite && (
               <>
                 <span>·</span>
-                <span className="bg-primary/5 text-primary text-xs font-bold px-2.5 py-0.5 rounded-full border border-tertiary">
-                  🏆 Guest favorite
+                <span className="bg-primary/5 text-primary text-xs font-bold px-2.5 py-0.5 rounded-full border border-tertiary inline-flex items-center gap-1.5">
+                  <GuestFavoriteIcon size={14} className="text-primary" />
+                  <span>Guest favorite</span>
                 </span>
               </>
             )}
@@ -80,7 +87,7 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
             onClick={handleShare}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs sm:text-sm font-semibold text-primary hover:bg-neutral-100 transition cursor-pointer"
           >
-            <AiOutlineShareAlt size={18} />
+            <BrandShareIcon size={18} />
             <span>Share</span>
           </button>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs sm:text-sm font-semibold text-primary hover:bg-neutral-100 transition">
@@ -139,7 +146,7 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
           }}
           className="absolute bottom-4 end-4 z-10 bg-white/95 backdrop-blur-md text-primary font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg border border-tertiary/70 flex items-center gap-2 hover:scale-105 transition cursor-pointer"
         >
-          <IoGridOutline size={16} />
+          <BrandGridIcon size={16} />
           <span>Show all photos</span>
         </button>
       </div>
@@ -160,18 +167,18 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
               (prev) => (prev - 1 + displayImages.length) % displayImages.length
             )
           }
-          className="absolute start-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md"
+          className="absolute start-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md cursor-pointer"
         >
-          <MdChevronLeft size={20} className="rtl:rotate-180" />
+          <BrandChevronLeftIcon size={20} strokeWidth={2.2} className="rtl:rotate-180" />
         </button>
         <button
           type="button"
           onClick={() =>
             setMobilePhotoIndex((prev) => (prev + 1) % displayImages.length)
           }
-          className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md"
+          className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md cursor-pointer"
         >
-          <MdChevronRight size={20} className="rtl:rotate-180" />
+          <BrandChevronRightIcon size={20} strokeWidth={2.2} className="rtl:rotate-180" />
         </button>
         {/* Photo counter */}
         <div className="absolute bottom-3 end-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-semibold">
@@ -193,7 +200,7 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
               onClick={() => setIsLightboxOpen(false)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer"
             >
-              <IoClose size={22} />
+              <BrandCloseIcon size={20} strokeWidth={2.2} />
               <span className="text-xs sm:text-sm font-semibold">Close gallery</span>
             </button>
             <span className="text-xs sm:text-sm font-semibold">
@@ -220,7 +227,7 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
               }
               className="absolute start-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white transition cursor-pointer"
             >
-              <MdChevronLeft size={28} className="rtl:rotate-180" />
+              <BrandChevronLeftIcon size={28} strokeWidth={2.2} className="rtl:rotate-180" />
             </button>
             <button
               type="button"
@@ -229,7 +236,7 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
               }
               className="absolute end-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white transition cursor-pointer"
             >
-              <MdChevronRight size={28} className="rtl:rotate-180" />
+              <BrandChevronRightIcon size={28} strokeWidth={2.2} className="rtl:rotate-180" />
             </button>
           </div>
 

@@ -12,12 +12,74 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
   // Simulate realistic network latency for skeletons/loading states
   await new Promise((resolve) => setTimeout(resolve, 100));
 
+  // Ensure mockListings additions are present
+  listingsStore = Array.from(new Map([...mockListings, ...listingsStore].map((item) => [item.id, item])).values());
+  g.__darna_listings__ = listingsStore;
+
   let results = [...listingsStore];
 
   if (!params) return results;
 
   if (params.vertical) {
     results = results.filter((item) => item.category === params.vertical);
+  }
+
+  if (params.category) {
+    const cat = params.category.toLowerCase();
+    results = results.filter(
+      (item) =>
+        item.type?.toLowerCase().includes(cat) ||
+        item.amenities?.some((a) => a.toLowerCase().includes(cat)) ||
+        (cat.includes("hotel") && (item.businessCategory === "hotel" || item.type?.toLowerCase().includes("hotel"))) ||
+        (cat.includes("hostel") && (item.businessCategory === "hostel" || item.type?.toLowerCase().includes("hostel")))
+    );
+  }
+
+  if (params.propertyType && params.propertyType !== "any") {
+    const pt = params.propertyType.toLowerCase();
+    if (pt === "hotel") {
+      results = results.filter(
+        (item) => item.businessCategory === "hotel" || item.type?.toLowerCase().includes("hotel")
+      );
+    } else if (pt === "hostel") {
+      results = results.filter(
+        (item) => item.businessCategory === "hostel" || item.type?.toLowerCase().includes("hostel")
+      );
+    } else if (pt === "entire home" || pt === "entire") {
+      results = results.filter(
+        (item) =>
+          item.businessCategory !== "hotel" &&
+          item.businessCategory !== "hostel" &&
+          !item.roomTypes?.some((r) => r.bookingUnit === "bed")
+      );
+    } else if (pt === "private room" || pt === "private_room") {
+      results = results.filter(
+        (item) =>
+          item.type?.toLowerCase().includes("room") ||
+          item.roomTypes?.some((r) => r.bookingUnit === "room")
+      );
+    } else {
+      results = results.filter(
+        (item) => item.type?.toLowerCase() === pt || item.businessCategory === pt
+      );
+    }
+  }
+
+  if (params.amenities && params.amenities.length > 0) {
+    const targetAmenities = Array.isArray(params.amenities)
+      ? params.amenities.map((a) => a.toLowerCase())
+      : typeof params.amenities === "string"
+      ? (params.amenities as string).toLowerCase().split(",")
+      : [];
+
+    if (targetAmenities.length > 0) {
+      results = results.filter((item) => {
+        const itemAmenities = (item.amenities || []).map((a) => a.toLowerCase());
+        return targetAmenities.every((target) =>
+          itemAmenities.some((ia) => ia.includes(target) || target.includes(ia))
+        );
+      });
+    }
   }
 
   if (params.destination) {

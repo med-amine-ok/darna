@@ -7,18 +7,17 @@ import { User, Organization } from "@/types";
 import Avatar from "@/components/Avatar";
 import LanguageSwitcher from "@/components/navbar/LanguageSwitcher";
 import {
-  Bell,
-  Menu,
-  Briefcase,
-  Building2,
-  MessageSquare,
-  ChevronDown,
-  Users,
-  Settings,
-  Compass,
-  Plus,
-  Layers,
-} from "lucide-react";
+  BrandBellIcon,
+  BrandMenuIcon,
+  BrandBriefcaseIcon,
+  BrandBuildingIcon,
+  BrandMessageIcon,
+  BrandUsersIcon,
+  BrandSettingsIcon,
+  BrandCompassIcon,
+  BrandPlusIcon,
+  BrandChevronDownIcon,
+} from "@/components/icons";
 
 interface HostNavbarProps {
   currentUser?: User | null;
@@ -139,7 +138,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                   {organization.name}
                 </span>
                 
-                <ChevronDown
+                <BrandChevronDownIcon
                   size={14}
                   className={`text-neutral-400 transition-transform ${
                     orgMenuOpen ? "rotate-180" : ""
@@ -169,7 +168,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                         onClick={() => setOrgMenuOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2 hover:bg-neutral-50 font-semibold text-primary"
                       >
-                        <Compass size={15} className="text-secondary shrink-0" />
+                        <BrandCompassIcon size={15} className="text-secondary shrink-0" />
                         <span>Agency Trips & Circuits</span>
                       </Link>
                     )}
@@ -179,7 +178,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                       onClick={() => setOrgMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 hover:bg-neutral-50 font-semibold text-primary"
                     >
-                      <Users size={15} className="text-secondary shrink-0" />
+                      <BrandUsersIcon size={15} className="text-secondary shrink-0" />
                       <span>Team Roster & Roles</span>
                     </Link>
 
@@ -188,7 +187,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                       onClick={() => setOrgMenuOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2 hover:bg-neutral-50 font-semibold text-primary"
                     >
-                      <Building2 size={15} className="text-secondary shrink-0" />
+                      <BrandBuildingIcon size={15} className="text-secondary shrink-0" />
                       <span>{orgSettingsLabel} Profile & Settings</span>
                     </Link>
                   </div>
@@ -231,7 +230,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                 }`}
               >
                 <span>Manage</span>
-                <ChevronDown
+                <BrandChevronDownIcon
                   size={13}
                   className={`transition-transform duration-150 ${
                     manageMenuOpen ? "rotate-180" : ""
@@ -255,7 +254,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                           : "hover:bg-neutral-50 text-neutral-700"
                       }`}
                     >
-                      <Compass size={15} className="text-secondary shrink-0" />
+                      <BrandCompassIcon size={15} className="text-secondary shrink-0" />
                       <span>Trips & Expeditions</span>
                     </Link>
                   )}
@@ -269,7 +268,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                         : "hover:bg-neutral-50 text-neutral-700"
                     }`}
                   >
-                    <Users size={15} className="text-secondary shrink-0" />
+                    <BrandUsersIcon size={15} className="text-secondary shrink-0" />
                     <span>Team Members</span>
                   </Link>
 
@@ -282,7 +281,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                         : "hover:bg-neutral-50 text-neutral-700"
                     }`}
                   >
-                    <Building2 size={15} className="text-secondary shrink-0" />
+                    <BrandBuildingIcon size={15} className="text-secondary shrink-0" />
                     <span>{orgSettingsLabel} Settings</span>
                   </Link>
 
@@ -297,7 +296,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                         : "hover:bg-neutral-50 text-neutral-700"
                     }`}
                   >
-                    <Settings size={15} className="text-secondary shrink-0" />
+                    <BrandSettingsIcon size={15} className="text-secondary shrink-0" />
                     <span>Payouts & Host Preferences</span>
                   </Link>
                 </div>
@@ -320,7 +319,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-tertiary/80 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition shadow-2xs btn-press"
             title="Switch to guest traveler mode"
           >
-            <Briefcase size={14} className="text-secondary" />
+            <BrandBriefcaseIcon size={14} className="text-secondary" />
             <span>Switch to traveling</span>
           </button>
 
@@ -335,7 +334,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
             title="Messages"
             aria-label="Host Messages"
           >
-            <MessageSquare size={18} />
+            <BrandMessageIcon size={18} />
           </Link>
 
           <LanguageSwitcher />
@@ -347,7 +346,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
             title="Notifications"
             aria-label="Notifications"
           >
-            <Bell size={18} />
+            <BrandBellIcon size={18} />
             <span className="absolute top-1.5 end-1.5 w-2 h-2 bg-accent rounded-full ring-2 ring-white" />
           </Link>
 
@@ -359,7 +358,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
               className="p-1 border border-tertiary rounded-full hover:shadow-darna transition flex items-center gap-1.5 bg-white btn-press"
               aria-label="Host menu"
             >
-              <Menu size={16} className="text-neutral-600 ms-1.5" />
+              <BrandMenuIcon size={16} className="text-neutral-600 ms-1.5" />
               <Avatar src={currentUser?.image} size={28} />
             </button>
 
@@ -383,7 +382,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50 font-bold text-accent"
                   >
-                    <Plus size={15} />
+                    <BrandPlusIcon size={15} />
                     <span>Create New Listing</span>
                   </Link>
 
@@ -393,7 +392,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50 font-semibold text-primary"
                     >
-                      <Compass size={15} className="text-secondary" />
+                      <BrandCompassIcon size={15} className="text-secondary" />
                       <span>Create New Circuit</span>
                     </Link>
                   )}
@@ -403,7 +402,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50 font-semibold text-neutral-700"
                   >
-                    <Settings size={15} className="text-secondary" />
+                    <BrandSettingsIcon size={15} className="text-secondary" />
                     <span>Host Settings & Payouts</span>
                   </Link>
                 </div>
@@ -421,7 +420,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
                   }}
                   className="w-full text-start px-4 py-2 hover:bg-neutral-50 font-semibold text-secondary flex items-center gap-2 btn-press"
                 >
-                  <Briefcase size={15} />
+                  <BrandBriefcaseIcon size={15} />
                   <span>Switch to traveling</span>
                 </button>
               </div>

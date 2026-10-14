@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  HiOutlineDocumentReport,
-  HiOutlineDownload,
-  HiOutlineCalendar,
-  HiOutlineCurrencyDollar,
-  HiOutlineTrendingUp,
-} from "react-icons/hi";
+import { BrandDownloadIcon, BrandStarIcon } from "@/components/icons";
 import { toast } from "react-toastify";
 
 export default function AdminReportsClient() {
@@ -99,7 +93,7 @@ export default function AdminReportsClient() {
           onClick={handleDownloadCSV}
           className="px-5 py-2.5 bg-primary text-white rounded-2xl text-xs sm:text-sm font-bold hover:bg-primary/95 transition flex items-center gap-2 shadow-2xs self-start md:self-auto"
         >
-          <HiOutlineDownload size={18} className="text-tertiary" />
+          <BrandDownloadIcon size={18} className="text-tertiary" />
           <span>Export Official CSV</span>
         </button>
       </div>
@@ -301,16 +295,21 @@ export default function AdminReportsClient() {
               </thead>
               <tbody className="divide-y divide-tertiary/40">
                 {[
-                  { c: "Coastal Villas", a: 14, n: 2, r: "★ 4.94", ib: "85%" },
-                  { c: "Casbah Riads", a: 8, n: 1, r: "★ 4.91", ib: "75%" },
-                  { c: "Sahara Expeditions", a: 12, n: 3, r: "★ 4.98", ib: "90%" },
-                  { c: "4x4 Overlanders", a: 9, n: 2, r: "★ 4.89", ib: "80%" },
+                  { c: "Coastal Villas", a: 14, n: 2, r: "4.94", ib: "85%" },
+                  { c: "Casbah Riads", a: 8, n: 1, r: "4.91", ib: "75%" },
+                  { c: "Sahara Expeditions", a: 12, n: 3, r: "4.98", ib: "90%" },
+                  { c: "4x4 Overlanders", a: 9, n: 2, r: "4.89", ib: "80%" },
                 ].map((row) => (
                   <tr key={row.c} className="hover:bg-neutral-50/50">
                     <td className="py-2.5 px-3 text-primary font-bold">{row.c}</td>
                     <td className="py-2.5 px-3 text-center font-mono">{row.a}</td>
                     <td className="py-2.5 px-3 text-center text-neutral-600 font-mono">+{row.n}</td>
-                    <td className="py-2.5 px-3 text-center text-amber-600 font-bold">{row.r}</td>
+                    <td className="py-2.5 px-3 text-center text-neutral-700 font-bold">
+                      <span className="inline-flex items-center gap-1">
+                        <BrandStarIcon size={12} className="text-accent fill-accent" />
+                        <span>{row.r}</span>
+                      </span>
+                    </td>
                     <td className="py-2.5 px-3 text-end font-bold text-accent">{row.ib}</td>
                   </tr>
                 ))}

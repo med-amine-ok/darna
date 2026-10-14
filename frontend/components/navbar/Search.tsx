@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { Search as SearchIcon } from "lucide-react";
+import { BrandSearchIcon, BrandPinIcon } from "@/components/icons";
 import { Range } from "react-date-range";
 import { useTranslations } from "next-intl";
 import { ListingVertical } from "@/types";
@@ -217,13 +217,11 @@ export default function Search({
               }
             `}
           >
-            <div className="w-8 h-8 rounded-full  flex items-center justify-center shrink-0">
-              <Image
-                src="/assets/location.png"
-                alt="Where"
-                width={20}
-                height={20}
-                className="object-contain shrink-0"
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-accent">
+              <BrandPinIcon
+                size={20}
+                strokeWidth={1.8}
+                className="shrink-0 text-accent"
               />
             </div>
             <div className="flex flex-col min-w-0">
@@ -298,7 +296,7 @@ export default function Search({
               aria-label="Search"
               className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-accent text-white font-semibold text-xs sm:text-sm shadow-xs hover:bg-accent/90 transition select-none cursor-pointer btn-press"
             >
-              <SearchIcon size={16} strokeWidth={2.4} />
+              <BrandSearchIcon size={16} strokeWidth={2.4} className="text-white" />
               <span className="hidden md:inline">
                 {tNav("search") || "Search"}
               </span>
@@ -319,12 +317,10 @@ export default function Search({
           }}
         >
           <div className="font-semibold text-primary truncate max-w-[110px] sm:max-w-[140px] flex items-center gap-1.5">
-            <Image
-              src="/assets/location.png"
-              alt="Location"
-              width={14}
-              height={14}
-              className="object-contain shrink-0"
+            <BrandPinIcon
+              size={14}
+              strokeWidth={2}
+              className="shrink-0 text-accent"
             />
             <span className="truncate">{destination || "Anywhere in Algeria"}</span>
           </div>
@@ -347,7 +343,7 @@ export default function Search({
             className="p-1.5 bg-accent rounded-full text-white flex items-center justify-center shrink-0 shadow-xs hover:bg-accent/90 transition"
             aria-label="Search"
           >
-            <SearchIcon size={13} strokeWidth={2.5} />
+            <BrandSearchIcon size={13} strokeWidth={2.5} className="text-white" />
           </button>
         </div>
       </div>

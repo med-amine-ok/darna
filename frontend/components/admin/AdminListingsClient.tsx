@@ -6,24 +6,20 @@ import Link from "next/link";
 import { Listing } from "@/types";
 import { updateListing, deleteListing } from "@/lib/data/listings";
 import { logAdminAction } from "@/lib/data/admin";
-import {
-  HiOutlineSearch,
-  HiOutlineFilter,
-  HiOutlineStar,
-  HiOutlineBan,
-  HiOutlineCheckCircle,
-  HiOutlinePencilAlt,
-  HiOutlineTrash,
-  HiOutlineEye,
-  HiOutlineSparkles,
-  HiOutlineChevronLeft,
-  HiOutlineChevronRight,
-  HiOutlineX,
-  HiOutlineDotsVertical,
-  HiOutlineExternalLink,
-} from "react-icons/hi";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import {
+  BrandSearchIcon,
+  BrandStarIcon,
+  BrandBanIcon,
+  BrandTrashIcon,
+  BrandEyeIcon,
+  BrandSparklesIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandCrossIcon,
+  BrandMoreIcon,
+} from "@/components/icons";
 
 interface AdminListingsClientProps {
   initialListings: Listing[];
@@ -242,7 +238,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
               onClick={() => setSelectedIds([])}
               className="p-1.5 text-neutral-500 hover:text-neutral-800"
             >
-              <HiOutlineX size={16} />
+              <BrandCrossIcon size={16} />
             </button>
           </div>
         )}
@@ -252,7 +248,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
       <div className="bg-white rounded-3xl border border-tertiary/70 p-4 shadow-2xs flex flex-col lg:flex-row items-center justify-between gap-4">
         {/* Search */}
         <div className="relative w-full lg:w-96">
-          <HiOutlineSearch size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <BrandSearchIcon size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
@@ -405,7 +401,10 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
 
                   {/* Rating */}
                   <td className="py-3 px-3 text-center font-bold text-neutral-700 whitespace-nowrap">
-                    ★ {listing.rating || "5.0"}
+                    <span className="inline-flex items-center gap-1">
+                      <BrandStarIcon size={12} className="text-accent fill-accent" />
+                      <span>{listing.rating || "5.0"}</span>
+                    </span>
                   </td>
 
                   {/* Row Actions: Primary View + Kebab Overflow (Section 4 UX Audit) */}
@@ -418,7 +417,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                         className="px-2.5 py-1 rounded-lg border border-tertiary/80 hover:bg-neutral-100 text-primary text-xs font-semibold flex items-center gap-1 transition"
                         title="View public page in new tab"
                       >
-                        <HiOutlineEye size={14} />
+                        <BrandEyeIcon size={14} />
                         <span>View</span>
                       </Link>
 
@@ -431,7 +430,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                           title="More actions"
                           aria-label="More actions"
                         >
-                          <HiOutlineDotsVertical size={15} />
+                          <BrandMoreIcon size={15} />
                         </button>
 
                         {openKebabId === listing.id && (
@@ -444,7 +443,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                               }}
                               className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                             >
-                              <HiOutlineSparkles size={14} className={listing.featured ? "text-amber-500" : "text-neutral-400"} />
+                              <BrandSparklesIcon size={14} className={listing.featured ? "text-amber-500" : "text-neutral-400"} />
                               <span>{listing.featured ? "Remove Featured" : "Mark as Featured"}</span>
                             </button>
 
@@ -456,7 +455,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                               }}
                               className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                             >
-                              <HiOutlineBan size={14} className={listing.status === "suspended" ? "text-emerald-600" : "text-rose-600"} />
+                              <BrandBanIcon size={14} className={listing.status === "suspended" ? "text-emerald-600" : "text-rose-600"} />
                               <span>{listing.status === "suspended" ? "Reactivate Listing" : "Suspend Listing"}</span>
                             </button>
 
@@ -470,7 +469,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
                               }}
                               className="w-full text-start px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold"
                             >
-                              <HiOutlineTrash size={14} />
+                              <BrandTrashIcon size={14} />
                               <span>Delete Listing</span>
                             </button>
                           </div>
@@ -498,7 +497,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
               disabled={currentPage === 1}
               className="p-1.5 rounded-lg border border-tertiary/80 hover:bg-white disabled:opacity-40"
             >
-              <HiOutlineChevronLeft size={16} />
+              <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
             </button>
             <span className="font-bold text-primary">
               Page {currentPage} of {totalPages}
@@ -509,7 +508,7 @@ export default function AdminListingsClient({ initialListings }: AdminListingsCl
               disabled={currentPage === totalPages}
               className="p-1.5 rounded-lg border border-tertiary/80 hover:bg-white disabled:opacity-40"
             >
-              <HiOutlineChevronRight size={16} />
+              <BrandChevronRightIcon size={16} className="rtl:rotate-180" />
             </button>
           </div>
         </div>

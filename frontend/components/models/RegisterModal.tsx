@@ -4,8 +4,7 @@ import React, { useCallback, useState } from "react";
 import { useLoginModal } from "@/hook/useLoginModal";
 import { useRegisterModal } from "@/hook/useRegisterModal";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { AiFillGithub } from "react-icons/ai";
-import { FcGoogle } from "react-icons/fc";
+import { BrandGoogleIcon, BrandGithubIcon } from "@/components/icons";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 
@@ -134,13 +133,13 @@ export default function RegisterModal() {
       <Button
         outline
         label="Continue with Google"
-        icon={FcGoogle}
+        icon={BrandGoogleIcon}
         onClick={() => handleOAuthRegister("Google")}
       />
       <Button
         outline
         label="Continue with GitHub"
-        icon={AiFillGithub}
+        icon={BrandGithubIcon}
         onClick={() => handleOAuthRegister("GitHub")}
       />
       <div className="text-neutral-500 text-center mt-3 font-normal text-sm">

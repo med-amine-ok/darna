@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import { AdminCategory, toggleCategoryStatus } from "@/lib/data/admin";
 import {
-  HiOutlineTag,
-  HiOutlinePlus,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlineSparkles,
-} from "react-icons/hi";
+  BrandPlusIcon,
+  CategoryHouseIcon,
+  BrandCompassIcon,
+  CategoryVehicleIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 
 interface AdminCategoriesClientProps {
@@ -81,7 +79,7 @@ export default function AdminCategoriesClient({ initialCategories }: AdminCatego
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 shadow-2xs self-start md:self-auto"
         >
-          <HiOutlinePlus size={16} />
+          <BrandPlusIcon size={16} />
           <span>Add Category</span>
         </button>
       </div>
@@ -95,33 +93,15 @@ export default function AdminCategoriesClient({ initialCategories }: AdminCatego
           >
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-neutral-100 text-neutral-700 capitalize flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-neutral-100 text-neutral-700 capitalize flex items-center gap-1.5">
                   {cat.vertical === "home" && (
-                    <Image
-                      src="/assets/house.png"
-                      alt="Homes"
-                      width={12}
-                      height={12}
-                      className="object-contain"
-                    />
+                    <CategoryHouseIcon size={13} className="text-primary" />
                   )}
                   {cat.vertical === "experience" && (
-                    <Image
-                      src="/assets/location.png"
-                      alt="Experiences"
-                      width={12}
-                      height={12}
-                      className="object-contain"
-                    />
+                    <BrandCompassIcon size={13} className="text-primary" />
                   )}
                   {cat.vertical === "vehicle" && (
-                    <Image
-                      src="/assets/car.png"
-                      alt="Vehicles"
-                      width={14}
-                      height={14}
-                      className="object-contain"
-                    />
+                    <CategoryVehicleIcon size={14} className="text-primary" />
                   )}
                   <span>{cat.vertical}</span>
                 </span>

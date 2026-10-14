@@ -7,21 +7,20 @@ import PriceDisplay from "@/components/common/PriceDisplay";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import { toast } from "react-toastify";
 import {
-  HiOutlineCreditCard,
-  HiOutlineSearch,
-  HiOutlinePlusCircle,
-  HiOutlineDocumentText,
-  HiOutlineExclamation,
-  HiOutlineCheckCircle,
-  HiOutlineArrowUp,
-  HiOutlineArrowDown,
-  HiOutlineRefresh,
-  HiOutlineCash,
-  HiOutlineX,
-  HiOutlineShieldCheck,
-  HiOutlineOfficeBuilding,
-  HiOutlineHome,
-} from "react-icons/hi";
+  BrandCreditCardIcon,
+  BrandSearchIcon,
+  BrandPlusIcon,
+  BrandDocumentTextIcon,
+  BrandExclamationIcon,
+  BrandCheckCircleIcon,
+  BrandArrowUpIcon,
+  BrandArrowDownIcon,
+  BrandRefreshIcon,
+  BrandCashIcon,
+  BrandCrossIcon,
+  BrandBuildingIcon,
+  CategoryHouseIcon,
+} from "@/components/icons";
 
 interface AdminWalletsClientProps {
   initialWallets: Wallet[];
@@ -156,7 +155,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
             className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition"
             title="Reset wallets to default seed state"
           >
-            <HiOutlineRefresh size={15} />
+            <BrandRefreshIcon size={15} />
             <span>Reset Ledger</span>
           </button>
         </div>
@@ -165,7 +164,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
       {/* Negative Balance System Alert if any exist */}
       {negativeWalletsCount > 0 && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3.5 text-rose-900 shadow-2xs">
-          <HiOutlineExclamation className="text-rose-600 shrink-0 mt-0.5" size={22} />
+          <BrandExclamationIcon className="text-rose-600 shrink-0 mt-0.5" size={22} />
           <div className="text-xs space-y-1">
             <span className="font-bold text-sm block">Action Required: Negative Host Balance Detected</span>
             <p className="text-rose-800">
@@ -181,7 +180,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
         <div className="bg-white p-5 rounded-3xl border border-tertiary/70 shadow-2xs space-y-2">
           <div className="flex items-center justify-between text-neutral-500">
             <span className="text-xs font-bold uppercase tracking-wider">Host Deposits Held</span>
-            <HiOutlineCash className="text-primary" size={20} />
+            <BrandCashIcon className="text-primary" size={20} />
           </div>
           <div className="text-2xl font-serif font-black text-primary">
             <PriceDisplay price={totalHostBalance} showEur={false} priceClassName="font-serif font-black text-2xl text-primary" />
@@ -192,7 +191,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
         <div className="bg-white p-5 rounded-3xl border border-tertiary/70 shadow-2xs space-y-2">
           <div className="flex items-center justify-between text-neutral-500">
             <span className="text-xs font-bold uppercase tracking-wider">Commission Deducted</span>
-            <HiOutlineArrowDown className="text-emerald-700" size={20} />
+            <BrandArrowDownIcon className="text-emerald-700" size={20} />
           </div>
           <div className="text-2xl font-serif font-black text-emerald-800">
             <PriceDisplay price={totalCommissionCollected} showEur={false} priceClassName="font-serif font-black text-2xl text-emerald-800" />
@@ -203,7 +202,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
         <div className="bg-white p-5 rounded-3xl border border-tertiary/70 shadow-2xs space-y-2">
           <div className="flex items-center justify-between text-neutral-500">
             <span className="text-xs font-bold uppercase tracking-wider">Active Host Wallets</span>
-            <HiOutlineCreditCard className="text-secondary" size={20} />
+            <BrandCreditCardIcon className="text-secondary" size={20} />
           </div>
           <div className="text-2xl font-serif font-black text-primary">
             {wallets.length} <span className="text-xs font-sans text-neutral-500 font-semibold">Ledgers</span>
@@ -214,7 +213,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
         <div className={`p-5 rounded-3xl border shadow-2xs space-y-2 ${negativeWalletsCount > 0 ? "bg-rose-50/50 border-rose-200" : "bg-white border-tertiary/70"}`}>
           <div className="flex items-center justify-between text-neutral-500">
             <span className="text-xs font-bold uppercase tracking-wider">Negative Balances</span>
-            <HiOutlineExclamation className={negativeWalletsCount > 0 ? "text-rose-600" : "text-emerald-600"} size={20} />
+            <BrandExclamationIcon className={negativeWalletsCount > 0 ? "text-rose-600" : "text-emerald-600"} size={20} />
           </div>
           <div className={`text-2xl font-serif font-black ${negativeWalletsCount > 0 ? "text-rose-700" : "text-emerald-700"}`}>
             {negativeWalletsCount} <span className="text-xs font-sans text-neutral-500 font-semibold">Flagged</span>
@@ -228,7 +227,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
       {/* Toolbar: Search & Filters */}
       <div className="bg-white rounded-3xl border border-tertiary/70 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-96">
-          <HiOutlineSearch size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <BrandSearchIcon size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
@@ -300,9 +299,9 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                             isNegative ? "bg-rose-100 text-rose-800" : "bg-neutral-100 text-primary"
                           }`}>
                             {wallet.ownerType === "organization" ? (
-                              <HiOutlineOfficeBuilding size={18} />
+                              <BrandBuildingIcon size={18} />
                             ) : (
-                              <HiOutlineHome size={18} />
+                              <CategoryHouseIcon size={18} />
                             )}
                           </div>
                           <div>
@@ -335,7 +334,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                       <td className="py-4 px-4 text-center">
                         {isNegative ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">
-                            <HiOutlineExclamation size={12} />
+                            <BrandExclamationIcon size={12} />
                             <span>Negative / Action Needed</span>
                           </span>
                         ) : isLow ? (
@@ -344,7 +343,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <HiOutlineCheckCircle size={12} />
+                            <BrandCheckCircleIcon size={12} />
                             <span>Solvent</span>
                           </span>
                         )}
@@ -363,7 +362,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                             onClick={() => handleOpenRecharge(wallet)}
                             className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
                           >
-                            <HiOutlinePlusCircle size={15} />
+                            <BrandPlusIcon size={15} />
                             <span>Recharge Balance</span>
                           </button>
 
@@ -372,7 +371,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                             onClick={() => setLedgerWallet(wallet)}
                             className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-primary rounded-xl text-xs font-bold transition flex items-center gap-1.5"
                           >
-                            <HiOutlineDocumentText size={15} />
+                            <BrandDocumentTextIcon size={15} />
                             <span>Ledger</span>
                           </button>
                         </div>
@@ -393,7 +392,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
             <div className="flex items-center justify-between pb-4 border-b border-tertiary/60">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-secondary/20 text-primary flex items-center justify-center font-bold">
-                  <HiOutlineCash size={22} />
+                  <BrandCashIcon size={22} />
                 </div>
                 <div>
                   <h3 className="font-serif text-lg font-black text-primary">Recharge Host Balance</h3>
@@ -405,7 +404,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                 onClick={() => setRechargeTarget(null)}
                 className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 flex items-center justify-center"
               >
-                <HiOutlineX size={16} />
+                <BrandCrossIcon size={16} />
               </button>
             </div>
 
@@ -542,7 +541,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
             <div className="flex items-center justify-between pb-4 border-b border-tertiary/60">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-bold">
-                  <HiOutlineDocumentText size={22} />
+                  <BrandDocumentTextIcon size={22} />
                 </div>
                 <div>
                   <h3 className="font-serif text-xl font-black text-primary">
@@ -560,7 +559,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                 onClick={() => setLedgerWallet(null)}
                 className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 flex items-center justify-center"
               >
-                <HiOutlineX size={16} />
+                <BrandCrossIcon size={16} />
               </button>
             </div>
 
@@ -586,7 +585,7 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                 }}
                 className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
               >
-                <HiOutlinePlusCircle size={15} />
+                <BrandPlusIcon size={15} />
                 <span>Recharge Balance</span>
               </button>
             </div>
@@ -648,11 +647,11 @@ export default function AdminWalletsClient({ initialWallets }: AdminWalletsClien
                           <td className="py-3 px-3 whitespace-nowrap">
                             {tx.type === "recharge" ? (
                               <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                                <HiOutlineArrowUp size={13} /> Recharge
+                                <BrandArrowUpIcon size={13} /> Recharge
                               </span>
                             ) : tx.type === "commission_deduction" ? (
                               <span className="inline-flex items-center gap-1 text-rose-700 font-bold">
-                                <HiOutlineArrowDown size={13} /> Commission
+                                <BrandArrowDownIcon size={13} /> Commission
                               </span>
                             ) : (
                               <span className="text-neutral-600 capitalize">{tx.type}</span>

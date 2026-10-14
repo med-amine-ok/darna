@@ -6,18 +6,13 @@ import { Reservation } from "@/types";
 import { updateReservationStatus, cancelReservation } from "@/lib/data/reservations";
 import { logAdminAction } from "@/lib/data/admin";
 import {
-  HiOutlineSearch,
-  HiOutlineFilter,
-  HiOutlineEye,
-  HiOutlineBan,
-  HiOutlineRefresh,
-  HiOutlineExclamation,
-  HiOutlinePhone,
-  HiOutlineMail,
-  HiOutlineCalendar,
-  HiOutlineDocumentText,
-  HiOutlineCheck,
-} from "react-icons/hi";
+  BrandSearchIcon,
+  BrandEyeIcon,
+  BrandBanIcon,
+  BrandRefreshIcon,
+  BrandExclamationIcon,
+  BrandCrossIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 
@@ -127,7 +122,7 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
       {/* Toolbar */}
       <div className="bg-white rounded-3xl border border-tertiary/70 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-96">
-          <HiOutlineSearch size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <BrandSearchIcon size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
@@ -215,7 +210,7 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
                       onClick={() => setSelectedBooking(res)}
                       className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-primary rounded-xl text-xs font-bold transition flex items-center gap-1 ms-auto"
                     >
-                      <HiOutlineEye size={14} />
+                      <BrandEyeIcon size={14} />
                       <span>Audit</span>
                     </button>
                   </td>
@@ -238,9 +233,9 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
               <button
                 type="button"
                 onClick={() => setSelectedBooking(null)}
-                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
+                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center transition"
               >
-                ✕
+                <BrandCrossIcon size={14} />
               </button>
             </div>
 
@@ -287,7 +282,7 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
                 onClick={() => handleMockRefund(selectedBooking.id)}
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
               >
-                <HiOutlineRefresh size={14} />
+                <BrandRefreshIcon size={14} />
                 <span>Issue SATIM Refund</span>
               </button>
               <button
@@ -295,7 +290,7 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
                 onClick={() => handleFlagDispute(selectedBooking.id)}
                 className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
               >
-                <HiOutlineExclamation size={14} />
+                <BrandExclamationIcon size={14} />
                 <span>Flag Dispute</span>
               </button>
               {selectedBooking.status !== "cancelled" && (
@@ -304,7 +299,7 @@ export default function AdminBookingsClient({ initialReservations }: AdminBookin
                   onClick={() => handleForceCancel(selectedBooking.id)}
                   className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
                 >
-                  <HiOutlineBan size={14} />
+                  <BrandBanIcon size={14} />
                   <span>Force Cancel</span>
                 </button>
               )}

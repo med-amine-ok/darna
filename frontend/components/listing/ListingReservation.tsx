@@ -12,7 +12,13 @@ import { createReservation } from "@/lib/data/reservations";
 import { useRouter } from "@/navigation";
 import { toast } from "react-toastify";
 import { differenceInCalendarDays, format } from "date-fns";
-import { Flag, X, AlertCircle, Clock } from "lucide-react";
+import {
+  BrandStarIcon,
+  BrandFlagIcon,
+  BrandCloseIcon,
+  BrandAlertCircleIcon,
+  BrandClockIcon,
+} from "@/components/icons";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -214,8 +220,9 @@ export default function ListingReservation({
               priceClassName="text-xl sm:text-2xl font-bold text-primary"
             />
           </div>
-          <div className="text-xs font-semibold text-neutral-600">
-            ★ {listing.rating?.toFixed(2) || "4.95"} ({listing.reviewCount || 34})
+          <div className="text-xs font-semibold text-neutral-600 flex items-center gap-1">
+            <BrandStarIcon size={12} className="text-accent fill-accent" />
+            <span>{listing.rating?.toFixed(2) || "4.95"} ({listing.reviewCount || 34})</span>
           </div>
         </div>
 
@@ -265,7 +272,7 @@ export default function ListingReservation({
         {/* Partial Availability Notice Banner (Section 6) */}
         {partialAvailabilityInfo && (
           <div className="p-3 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 animate-in fade-in">
-            <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <BrandAlertCircleIcon size={16} className="text-amber-600 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <p className="font-semibold text-amber-950">
                 {tListing("partialAvailabilityNoticeTitle")}
@@ -353,7 +360,7 @@ export default function ListingReservation({
         {/* Host Approval / Instant Booking Mode Indicator */}
         {isRequestToBook ? (
           <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs">
-            <Clock size={16} className="text-amber-700 shrink-0 mt-0.5" />
+            <BrandClockIcon size={16} strokeWidth={1.8} className="text-amber-700 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
               <span className="font-bold block text-amber-950">Host Approval Required</span>
               <p className="text-[11px] text-amber-800 leading-snug">
@@ -431,7 +438,7 @@ export default function ListingReservation({
             onClick={() => toast.info("Listing reported for community review")}
             className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-700 transition cursor-pointer btn-press"
           >
-            <Flag size={14} />
+            <BrandFlagIcon size={14} strokeWidth={1.8} />
             <span>Report this listing</span>
           </button>
         </div>
@@ -479,14 +486,14 @@ export default function ListingReservation({
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition btn-press"
                 aria-label="Close"
               >
-                <X size={18} strokeWidth={2.2} />
+                <BrandCloseIcon size={18} strokeWidth={2.2} />
               </button>
             </div>
 
             {/* Host Approval Notice */}
             {isRequestToBook && (
               <div className="flex items-start gap-2 p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs">
-                <Clock size={16} className="text-amber-700 shrink-0 mt-0.5" />
+                <BrandClockIcon size={16} strokeWidth={1.8} className="text-amber-700 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <span className="font-bold block text-amber-950">Host Approval Required</span>
                   <p className="text-[11px] text-amber-800 leading-snug">
@@ -499,7 +506,7 @@ export default function ListingReservation({
             {/* Partial Availability Notice in Mobile Sheet */}
             {partialAvailabilityInfo && (
               <div className="p-3 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900">
-                <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <BrandAlertCircleIcon size={16} strokeWidth={1.8} className="text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <p className="font-semibold text-amber-950">
                     {tListing("partialAvailabilityNoticeTitle")}

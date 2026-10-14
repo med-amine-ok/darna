@@ -3,21 +3,21 @@
 import React, { useState } from "react";
 import { Link, usePathname, useRouter } from "@/navigation";
 import {
-  Home,
-  CalendarCheck,
-  Calendar,
-  LayoutGrid,
-  MessageSquare,
-  MoreHorizontal,
-  Compass,
-  Users,
-  Building2,
-  Settings,
-  Plus,
-  Briefcase,
-  X,
-  LucideIcon,
-} from "lucide-react";
+  BrandCloseIcon,
+  BrandHomeIcon,
+  BrandBookingsIcon,
+  BrandCalendarIcon,
+  BrandGridIcon,
+  BrandMessageIcon,
+  BrandMoreIcon,
+  BrandCompassIcon,
+  BrandUsersIcon,
+  BrandBuildingIcon,
+  BrandSettingsIcon,
+  BrandPlusIcon,
+  BrandBriefcaseIcon,
+  IconProps,
+} from "@/components/icons";
 
 interface HostBottomNavProps {
   hostType?: "individual" | "agency" | "hotel" | "hostel" | null;
@@ -26,7 +26,7 @@ interface HostBottomNavProps {
 interface HostTab {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: React.FC<IconProps>;
   exact?: boolean;
 }
 
@@ -41,16 +41,16 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
     hostType === "hotel" ? "Hotel" : hostType === "hostel" ? "Hostel" : "Agency";
 
   const soloTabs: HostTab[] = [
-    { href: "/host/listings", label: "Listings", icon: LayoutGrid },
-    { href: "/host/bookings", label: "Bookings", icon: CalendarCheck },
-    { href: "/host/messages", label: "Messages", icon: MessageSquare },
+    { href: "/host/listings", label: "Listings", icon: BrandGridIcon },
+    { href: "/host/bookings", label: "Bookings", icon: BrandBookingsIcon },
+    { href: "/host/messages", label: "Messages", icon: BrandMessageIcon },
   ];
 
   const enterpriseTabs: HostTab[] = [
-    { href: "/host", label: "Today", icon: Home, exact: true },
-    { href: "/host/bookings", label: "Bookings", icon: CalendarCheck },
-    { href: "/host/calendar", label: "Calendar", icon: Calendar },
-    { href: "/host/listings", label: "Listings", icon: LayoutGrid },
+    { href: "/host", label: "Today", icon: BrandHomeIcon, exact: true },
+    { href: "/host/bookings", label: "Bookings", icon: BrandBookingsIcon },
+    { href: "/host/calendar", label: "Calendar", icon: BrandCalendarIcon },
+    { href: "/host/listings", label: "Listings", icon: BrandGridIcon },
   ];
 
   const tabs: HostTab[] = isIndividual ? soloTabs : enterpriseTabs;
@@ -97,7 +97,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                 className="p-1 rounded-full hover:bg-neutral-100 text-neutral-500"
                 aria-label="Close menu"
               >
-                <X size={18} />
+                <BrandCloseIcon size={18} />
               </button>
             </div>
 
@@ -113,7 +113,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                       : "hover:bg-neutral-50 text-neutral-700"
                   }`}
                 >
-                  <MessageSquare size={18} className="text-secondary" />
+                  <BrandMessageIcon size={18} className="text-secondary" />
                   <span>Messages & Guest Inquiries</span>
                 </Link>
               )}
@@ -129,7 +129,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                       : "hover:bg-neutral-50 text-neutral-700"
                   }`}
                 >
-                  <Compass size={18} className="text-secondary" />
+                  <BrandCompassIcon size={18} className="text-secondary" />
                   <span>Agency Trips & Circuits</span>
                 </Link>
               )}
@@ -145,7 +145,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                       : "hover:bg-neutral-50 text-neutral-700"
                   }`}
                 >
-                  <Users size={18} className="text-secondary" />
+                  <BrandUsersIcon size={18} className="text-secondary" />
                   <span>Team Members & Roles</span>
                 </Link>
               )}
@@ -161,7 +161,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                       : "hover:bg-neutral-50 text-neutral-700"
                   }`}
                 >
-                  <Building2 size={18} className="text-secondary" />
+                  <BrandBuildingIcon size={18} className="text-secondary" />
                   <span>{orgLabel} Profile & Settings</span>
                 </Link>
               )}
@@ -176,7 +176,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                     : "hover:bg-neutral-50 text-neutral-700"
                 }`}
               >
-                <Settings size={18} className="text-secondary" />
+                <BrandSettingsIcon size={18} className="text-secondary" />
                 <span>Host Settings & Payouts</span>
               </Link>
 
@@ -188,7 +188,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                 onClick={() => setSheetOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-accent font-bold hover:bg-neutral-50 transition"
               >
-                <Plus size={18} />
+                <BrandPlusIcon size={18} />
                 <span>+ Create New Listing</span>
               </Link>
 
@@ -204,7 +204,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
                 }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-secondary font-bold hover:bg-neutral-50 transition"
               >
-                <Briefcase size={18} />
+                <BrandBriefcaseIcon size={18} />
                 <span>Switch to traveling mode</span>
               </button>
             </div>
@@ -243,7 +243,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
           }`}
           aria-label="More workspace options"
         >
-          <MoreHorizontal
+          <BrandMoreIcon
             size={20}
             className={isMoreActive || sheetOpen ? "text-primary" : "text-neutral-400"}
           />

@@ -13,6 +13,7 @@ import Calendar from "@/components/inputs/Calendar";
 import Counter from "@/components/inputs/Counter";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { BrandPinIcon } from "@/components/icons";
 
 enum STEPS {
   LOCATION = 0,
@@ -139,12 +140,10 @@ export default function SearchModal() {
           placeholder="Search destinations (e.g. Tipaza, Algiers, Djanet)..."
           className="w-full p-4 ps-11 border border-tertiary rounded-2xl outline-none focus:border-primary text-primary font-medium text-sm sm:text-base"
         />
-        <Image
-          src="/assets/location.png"
-          alt="Location"
-          width={20}
-          height={20}
-          className="absolute start-3.5 top-1/2 -translate-y-1/2 object-contain"
+        <BrandPinIcon
+          size={20}
+          strokeWidth={1.8}
+          className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
         />
       </div>
 

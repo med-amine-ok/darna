@@ -7,22 +7,22 @@ import { User, Organization, Reservation, Listing, Review } from "@/types";
 import { updateReservationStatus } from "@/lib/data/reservations";
 import Avatar from "@/components/Avatar";
 import { toast } from "react-toastify";
+import HostWalletWidget from "./HostWalletWidget";
 import {
-  HiOutlineCalendar,
-  HiOutlineCash,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlineTrendingUp,
-  HiOutlineChatAlt2,
-  HiOutlineSparkles,
-  HiOutlineChevronRight,
-  HiOutlineStar,
-  HiOutlineClock,
-  HiOutlinePlus,
-} from "react-icons/hi";
-import { BiDoorOpen, BiCheckCircle } from "react-icons/bi";
-
-import HostWalletWidget from "@/components/host/HostWalletWidget";
+  BrandCalendarIcon,
+  BrandCheckIcon,
+  BrandCloseIcon,
+  BrandTrendingUpIcon,
+  BrandMessageIcon,
+  BrandChevronRightIcon,
+  BrandStarIcon,
+  BrandClockIcon,
+  BrandPlusIcon,
+  BrandDoorIcon,
+  BrandReceiptIcon,
+  CategoryHouseIcon,
+  WelcomeArchIcon,
+} from "@/components/icons";
 
 interface HostTodayClientProps {
   currentUser?: User | null;
@@ -81,8 +81,9 @@ export default function HostTodayClient({
           <span className="text-xs uppercase tracking-wider text-secondary font-bold">
             {organization ? "Agency Command Center" : "Individual Host Dashboard"}
           </span>
-          <h1 className="text-2xl sm:text-4xl font-bold text-primary font-serif mt-1">
-            Marhaban, {displayName}! 👋
+          <h1 className="text-2xl sm:text-4xl font-bold text-primary font-serif mt-1 flex items-center gap-2.5">
+            <span>Marhaban, {displayName}!</span>
+            <WelcomeArchIcon size={28} className="text-primary inline-block shrink-0" />
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
             Here is your daily check-in briefing, pending guest requests, and reservation performance
@@ -94,14 +95,14 @@ export default function HostTodayClient({
             href="/become-a-host/1"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-xs"
           >
-            <HiOutlinePlus size={16} />
+            <BrandPlusIcon size={16} />
             <span>Create Listing</span>
           </Link>
           <Link
             href="/host/calendar"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white border border-tertiary rounded-xl text-xs sm:text-sm font-semibold text-primary hover:bg-neutral-50 transition shadow-xs"
           >
-            <HiOutlineCalendar size={16} className="text-secondary" />
+            <BrandCalendarIcon size={16} className="text-secondary" />
             <span>Calendar</span>
           </Link>
         </div>
@@ -158,7 +159,7 @@ export default function HostTodayClient({
               {totalEarnings.toLocaleString()} <span className="text-xs font-sans font-normal">DZD</span>
             </div>
             <div className="text-[11px] text-emerald-700 flex items-center gap-1">
-              <HiOutlineTrendingUp size={13} />
+              <BrandTrendingUpIcon size={13} />
               <span>+18.4% from last period (~€{Math.round(totalEarnings / 153).toLocaleString()})</span>
             </div>
           </div>
@@ -180,7 +181,7 @@ export default function HostTodayClient({
           <div className="bg-white rounded-3xl p-5 border border-tertiary/70 shadow-xs space-y-1">
             <div className="text-xs font-semibold text-neutral-500">Overall Rating</div>
             <div className="text-xl sm:text-2xl font-bold text-primary flex items-center gap-1">
-              <HiOutlineStar size={20} className="text-amber-500 fill-amber-500" />
+              <BrandStarIcon size={20} className="text-amber-500 fill-amber-500" />
               <span>4.96</span>
             </div>
             <div className="text-[11px] text-neutral-400">Across {reviews.length} guest reviews</div>
@@ -206,7 +207,7 @@ export default function HostTodayClient({
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-amber-200 text-amber-700 font-bold shrink-0">
-                    <HiOutlineClock size={24} />
+                    <BrandClockIcon size={24} />
                   </div>
                   <div>
                     <h3 className="font-bold text-primary text-sm sm:text-base">
@@ -226,7 +227,7 @@ export default function HostTodayClient({
                     onClick={() => handleStatusChange(req.id, "confirmed")}
                     className="px-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition flex items-center gap-1 shadow-2xs disabled:opacity-50"
                   >
-                    <HiOutlineCheck size={16} />
+                    <BrandCheckIcon size={16} />
                     <span>Accept Request</span>
                   </button>
                   <button
@@ -235,7 +236,7 @@ export default function HostTodayClient({
                     onClick={() => handleStatusChange(req.id, "cancelled")}
                     className="px-4 py-2 bg-white border border-rose-300 text-rose-700 rounded-xl text-xs font-semibold hover:bg-rose-50 transition flex items-center gap-1 disabled:opacity-50"
                   >
-                    <HiOutlineX size={16} />
+                    <BrandCloseIcon size={16} />
                     <span>Decline</span>
                   </button>
                 </div>
@@ -251,7 +252,7 @@ export default function HostTodayClient({
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm space-y-5">
             <h2 className="text-xl font-bold text-primary font-serif flex items-center gap-2">
-              <BiDoorOpen size={24} className="text-secondary" />
+              <BrandDoorIcon size={24} className="text-secondary" />
               <span>Today&apos;s Stays & Check-ins</span>
             </h2>
 
@@ -343,7 +344,7 @@ export default function HostTodayClient({
                       <span className="font-bold text-primary">{rev.user?.name}</span>
                     </div>
                     <div className="flex items-center gap-1 font-bold text-primary">
-                      <HiOutlineStar size={14} className="text-amber-500 fill-amber-500" />
+                      <BrandStarIcon size={14} className="text-amber-500 fill-amber-500" />
                       <span>{rev.rating}.0</span>
                     </div>
                   </div>
@@ -365,10 +366,10 @@ export default function HostTodayClient({
               className="p-3 bg-neutral-50 hover:bg-tertiary/20 rounded-2xl border border-tertiary/50 flex items-center justify-between transition group"
             >
               <div className="flex items-center gap-2.5">
-                <HiOutlineCalendar size={18} className="text-secondary" />
+                <BrandCalendarIcon size={18} className="text-secondary" />
                 <span className="text-xs font-bold text-primary">Block Dates or Override Rates</span>
               </div>
-              <HiOutlineChevronRight size={16} className="text-neutral-400 group-hover:translate-x-1 transition" />
+              <BrandChevronRightIcon size={16} className="text-neutral-400 group-hover:translate-x-1 transition rtl:rotate-180" />
             </Link>
 
             <Link
@@ -376,16 +377,13 @@ export default function HostTodayClient({
               className="p-3 bg-neutral-50 hover:bg-tertiary/20 rounded-2xl border border-tertiary/50 flex items-center justify-between transition group"
             >
               <div className="flex items-center gap-2.5">
-                <Image
-                  src="/assets/house.png"
-                  alt="Listings"
-                  width={18}
-                  height={18}
-                  className="object-contain shrink-0"
+                <CategoryHouseIcon
+                  size={18}
+                  className="text-secondary shrink-0"
                 />
                 <span className="text-xs font-bold text-primary">Manage Your Listings ({listings.length})</span>
               </div>
-              <HiOutlineChevronRight size={16} className="text-neutral-400 group-hover:translate-x-1 transition" />
+              <BrandChevronRightIcon size={16} className="text-neutral-400 group-hover:translate-x-1 transition rtl:rotate-180" />
             </Link>
 
             <Link
@@ -393,10 +391,10 @@ export default function HostTodayClient({
               className="p-3 bg-neutral-50 hover:bg-tertiary/20 rounded-2xl border border-tertiary/50 flex items-center justify-between transition group"
             >
               <div className="flex items-center gap-2.5">
-                <HiOutlineChatAlt2 size={18} className="text-secondary" />
+                <BrandMessageIcon size={18} className="text-secondary" />
                 <span className="text-xs font-bold text-primary">Check Guest Messages</span>
               </div>
-              <HiOutlineChevronRight size={16} className="text-neutral-400 group-hover:translate-x-1 transition" />
+              <BrandChevronRightIcon size={16} className="text-neutral-400 group-hover:translate-x-1 transition rtl:rotate-180" />
             </Link>
 
             <Link
@@ -404,10 +402,10 @@ export default function HostTodayClient({
               className="p-3 bg-neutral-50 hover:bg-tertiary/20 rounded-2xl border border-tertiary/50 flex items-center justify-between transition group"
             >
               <div className="flex items-center gap-2.5">
-                <HiOutlineCash size={18} className="text-secondary" />
+                <BrandReceiptIcon size={18} className="text-secondary" />
                 <span className="text-xs font-bold text-primary">Payout Account & RIB</span>
               </div>
-              <HiOutlineChevronRight size={16} className="text-neutral-400 group-hover:translate-x-1 transition" />
+              <BrandChevronRightIcon size={16} className="text-neutral-400 group-hover:translate-x-1 transition rtl:rotate-180" />
             </Link>
           </div>
 

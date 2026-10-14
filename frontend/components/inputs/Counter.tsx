@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { Minus, Plus } from "lucide-react";
+import { BrandMinusIcon, BrandPlusIcon } from "@/components/icons";
 
 interface CounterProps {
   title: string;
@@ -43,7 +43,7 @@ export default function Counter({
           disabled={value <= minValue}
           className="w-9 h-9 rounded-full border border-tertiary flex items-center justify-center text-primary hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer select-none btn-press"
         >
-          <Minus size={14} />
+          <BrandMinusIcon size={14} strokeWidth={2} />
         </button>
         <div className="font-bold text-sm text-primary min-w-[20px] text-center select-none font-mono">
           {value}
@@ -54,7 +54,7 @@ export default function Counter({
           onClick={onAdd}
           className="w-9 h-9 rounded-full border border-tertiary flex items-center justify-center text-primary hover:border-primary transition cursor-pointer select-none btn-press"
         >
-          <Plus size={14} />
+          <BrandPlusIcon size={14} strokeWidth={2} />
         </button>
       </div>
     </div>

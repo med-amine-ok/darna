@@ -7,17 +7,16 @@ import { useRouter } from "@/navigation";
 import { Organization, User } from "@/types";
 import { updateOrganization, deleteOrganization } from "@/lib/data/organizations";
 import {
-  HiOutlineOfficeBuilding,
-  HiOutlineBadgeCheck,
-  HiOutlineExternalLink,
-  HiOutlineExclamation,
-  HiOutlineArrowLeft,
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineLocationMarker,
-  HiOutlineLightningBolt,
-  HiOutlineClock,
-} from "react-icons/hi";
+  BrandBadgeCheckIcon,
+  BrandExternalLinkIcon,
+  BrandExclamationIcon,
+  BrandArrowLeftIcon,
+  BrandMailIcon,
+  BrandPhoneIcon,
+  BrandPinIcon,
+  BrandLightningIcon,
+  BrandClockIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import HostWalletWidget from "@/components/host/HostWalletWidget";
@@ -103,7 +102,7 @@ export default function AgencySettingsClient({
           href="/host"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-500 hover:text-primary transition"
         >
-          <HiOutlineArrowLeft size={16} />
+          <BrandArrowLeftIcon size={16} className="rtl:rotate-180" />
           <span>Back to Host Overview</span>
         </Link>
       </div>
@@ -125,7 +124,7 @@ export default function AgencySettingsClient({
           target="_blank"
           className="px-4 py-2 border border-tertiary/80 hover:bg-neutral-50 rounded-xl text-xs font-bold text-neutral-700 transition flex items-center gap-1.5 shadow-2xs self-start sm:self-auto"
         >
-          <HiOutlineExternalLink size={16} />
+          <BrandExternalLinkIcon size={16} />
           <span>View Public Profile</span>
         </Link>
       </div>
@@ -134,7 +133,7 @@ export default function AgencySettingsClient({
       <div className="bg-white rounded-3xl border border-tertiary/70 p-6 shadow-2xs mb-8 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
-            <HiOutlineBadgeCheck size={26} />
+            <BrandBadgeCheckIcon size={26} />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -206,7 +205,7 @@ export default function AgencySettingsClient({
               Business Email
             </label>
             <div className="relative">
-              <HiOutlineMail size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <BrandMailIcon size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="email"
                 value={businessEmail}
@@ -222,7 +221,7 @@ export default function AgencySettingsClient({
               Business Phone (+213)
             </label>
             <div className="relative">
-              <HiOutlinePhone size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <BrandPhoneIcon size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="tel"
                 value={businessPhone}
@@ -240,7 +239,7 @@ export default function AgencySettingsClient({
               Headquarters Address
             </label>
             <div className="relative">
-              <HiOutlineLocationMarker size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <BrandPinIcon size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
                 value={address}
@@ -301,7 +300,7 @@ export default function AgencySettingsClient({
                     : "bg-neutral-200 text-neutral-600"
                 }`}
               >
-                <HiOutlineLightningBolt size={16} />
+                <BrandLightningIcon size={16} />
               </div>
               <div>
                 <span className="font-bold text-xs text-primary block">Instant Booking</span>
@@ -327,7 +326,7 @@ export default function AgencySettingsClient({
                     : "bg-neutral-200 text-neutral-600"
                 }`}
               >
-                <HiOutlineClock size={16} />
+                <BrandClockIcon size={16} />
               </div>
               <div>
                 <span className="font-bold text-xs text-primary block">Agency Review (24h)</span>
@@ -354,7 +353,7 @@ export default function AgencySettingsClient({
       <div className="bg-rose-50/50 rounded-3xl border border-rose-200 p-6 sm:p-8">
         <div className="flex items-start gap-3 mb-4">
           <div className="p-2 rounded-xl bg-rose-100 text-rose-700 shrink-0 mt-0.5">
-            <HiOutlineExclamation size={20} />
+            <BrandExclamationIcon size={20} />
           </div>
           <div>
             <h4 className="font-serif font-bold text-rose-900 text-base">

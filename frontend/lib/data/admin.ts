@@ -2,7 +2,8 @@ import { mockListings } from "@/lib/mock-data/listings";
 import { mockReservations } from "@/lib/mock-data/reservations";
 import { mockUsers } from "@/lib/mock-data/users";
 import { mockOrganizations } from "@/lib/mock-data/organizations";
-import { Listing, Reservation, User, Organization } from "@/types";
+import { Listing, Reservation, User, Organization, HostTypeCommissionRates } from "@/types";
+import { getCommissionRates, saveCommissionRates } from "@/lib/data/wallet";
 
 // Audit log entry interface
 export interface AuditLogEntry {
@@ -191,8 +192,6 @@ let categoriesStore: AdminCategory[] = [
   { id: "cat_culinary", nameEn: "Culinary & Crafts", nameFr: "Ateliers Culinaires", nameAr: "ورشات الطهي والحرف", vertical: "experience", iconName: "BiCoffee", listingCount: 6, isActive: true },
 ];
 
-import { getCommissionRates, saveCommissionRates } from "@/lib/data/wallet";
-import { HostTypeCommissionRates } from "@/types";
 
 let platformSettings = {
   hostCommissionPercent: 12.0, // Legacy fallback

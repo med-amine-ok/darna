@@ -3,8 +3,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Listing, User } from "@/types";
 import ListingCarouselCard from "./ListingCarouselCard";
-import { MdChevronLeft, MdChevronRight, MdArrowForward } from "react-icons/md";
-import { IoPricetag } from "react-icons/io5";
+import {
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandArrowRightIcon,
+  BrandTagIcon,
+} from "@/components/icons";
 import { useRouter } from "@/navigation";
 
 interface ListingCarouselSectionProps {
@@ -74,7 +78,7 @@ export default function ListingCarouselSection({
               aria-label="View more"
               className="p-1 rounded-full text-primary group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform"
             >
-              <MdArrowForward size={20} className="rtl:rotate-180" />
+              <BrandArrowRightIcon size={20} className="rtl:rotate-180" />
             </button>
           </div>
           {subtitle && (
@@ -91,7 +95,7 @@ export default function ListingCarouselSection({
             aria-label="Previous listings"
             className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
           >
-            <MdChevronLeft size={20} className="rtl:rotate-180" />
+            <BrandChevronLeftIcon size={20} className="rtl:rotate-180" />
           </button>
           <button
             type="button"
@@ -100,7 +104,7 @@ export default function ListingCarouselSection({
             aria-label="Next listings"
             className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
           >
-            <MdChevronRight size={20} className="rtl:rotate-180" />
+            <BrandChevronRightIcon size={20} className="rtl:rotate-180" />
           </button>
         </div>
       </div>
@@ -109,7 +113,7 @@ export default function ListingCarouselSection({
       {badge && (
         <div className="flex justify-center pt-1 pb-1">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-tertiary/60 rounded-2xl shadow-sm text-xs font-semibold text-primary">
-            <IoPricetag size={15} className="text-accent" />
+            <BrandTagIcon size={15} className="text-accent" />
             <span>{badge}</span>
           </div>
         </div>

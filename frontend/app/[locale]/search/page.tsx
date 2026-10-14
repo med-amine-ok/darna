@@ -41,9 +41,32 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   // Filter by propertyType if specified
-  if (searchParams.propertyType) {
+  if (searchParams.propertyType && searchParams.propertyType !== "any") {
     const pt = searchParams.propertyType.toLowerCase();
-    listings = listings.filter((l) => l.type.toLowerCase().includes(pt));
+    if (pt === "hotel") {
+      listings = listings.filter(
+        (l) => l.businessCategory === "hotel" || l.type.toLowerCase().includes("hotel")
+      );
+    } else if (pt === "hostel") {
+      listings = listings.filter(
+        (l) => l.businessCategory === "hostel" || l.type.toLowerCase().includes("hostel")
+      );
+    } else if (pt === "entire home" || pt === "entire") {
+      listings = listings.filter(
+        (l) =>
+          l.businessCategory !== "hotel" &&
+          l.businessCategory !== "hostel" &&
+          !l.roomTypes?.some((r) => r.bookingUnit === "bed")
+      );
+    } else if (pt === "private room" || pt === "private_room") {
+      listings = listings.filter(
+        (l) =>
+          l.type?.toLowerCase().includes("room") ||
+          l.roomTypes?.some((r) => r.bookingUnit === "room")
+      );
+    } else {
+      listings = listings.filter((l) => l.type.toLowerCase().includes(pt));
+    }
   }
 
   // Filter by amenities if specified

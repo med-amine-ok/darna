@@ -3,7 +3,13 @@
 import React from "react";
 import { usePathname, useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
-import { Search, Heart, Compass, MessageSquare, User as UserIcon } from "lucide-react";
+import {
+  BrandSearchIcon,
+  BrandHeartIcon,
+  BrandCompassIcon,
+  BrandMessageIcon,
+  BrandUserIcon,
+} from "@/components/icons";
 import { User } from "@/types";
 import Avatar from "@/components/Avatar";
 import { useLoginModal } from "@/hook/useLoginModal";
@@ -49,9 +55,9 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
             : "text-neutral-500 hover:text-neutral-800"
         }`}
       >
-        <Search
-          size={20}
-          strokeWidth={isExplore ? 2.4 : 1.8}
+        <BrandSearchIcon
+          size={22}
+          strokeWidth={isExplore ? 2.3 : 1.8}
           className={`transition-transform duration-150 ${
             isExplore ? "scale-105" : ""
           }`}
@@ -77,9 +83,9 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
             : "text-neutral-500 hover:text-neutral-800"
         }`}
       >
-        <Heart
-          size={20}
-          strokeWidth={isWishlists ? 2.4 : 1.8}
+        <BrandHeartIcon
+          size={22}
+          strokeWidth={isWishlists ? 2.3 : 1.8}
           className={`transition-transform duration-150 ${
             isWishlists ? "fill-accent text-accent scale-105" : ""
           }`}
@@ -105,9 +111,9 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
             : "text-neutral-500 hover:text-neutral-800"
         }`}
       >
-        <Compass
-          size={20}
-          strokeWidth={isTrips ? 2.4 : 1.8}
+        <BrandCompassIcon
+          size={22}
+          strokeWidth={isTrips ? 2.3 : 1.8}
           className={`transition-transform duration-150 ${
             isTrips ? "scale-105" : ""
           }`}
@@ -133,9 +139,9 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
             : "text-neutral-500 hover:text-neutral-800"
         }`}
       >
-        <MessageSquare
-          size={20}
-          strokeWidth={isMessages ? 2.4 : 1.8}
+        <BrandMessageIcon
+          size={22}
+          strokeWidth={isMessages ? 2.3 : 1.8}
           className={`transition-transform duration-150 ${
             isMessages ? "scale-105" : ""
           }`}
@@ -166,9 +172,9 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
             <Avatar src={currentUser.image} size={20} />
           </div>
         ) : (
-          <UserIcon
-            size={20}
-            strokeWidth={isProfile ? 2.4 : 1.8}
+          <BrandUserIcon
+            size={22}
+            strokeWidth={isProfile ? 2.3 : 1.8}
             className={`transition-transform duration-150 ${
               isProfile ? "scale-105" : ""
             }`}

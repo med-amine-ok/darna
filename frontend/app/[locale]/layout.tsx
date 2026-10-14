@@ -5,6 +5,12 @@ import { getMessages } from "next-intl/server";
 import { locales, Locale } from "@/i18n";
 import { getCurrentUser } from "@/lib/data/auth";
 import { cookies } from "next/headers";
+import ToastContainerBar from "@/components/ToastContainerBar";
+import LoginModal from "@/components/models/LoginModal";
+import RegisterModal from "@/components/models/RegisterModal";
+import FilterModal from "@/components/models/FilterModal";
+import SearchModal from "@/components/models/SearchModal";
+import AppLayoutShell from "@/components/layout/AppLayoutShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,13 +18,6 @@ const inter = Inter({
   variable: "--font-sans",
   display: "swap",
 });
-
-import ToastContainerBar from "@/components/ToastContainerBar";
-import LoginModal from "@/components/models/LoginModal";
-import RegisterModal from "@/components/models/RegisterModal";
-import FilterModal from "@/components/models/FilterModal";
-import SearchModal from "@/components/models/SearchModal";
-import AppLayoutShell from "@/components/layout/AppLayoutShell";
 
 export const dynamic = "force-dynamic";
 

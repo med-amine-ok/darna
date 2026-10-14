@@ -9,20 +9,17 @@ import PriceDisplay from "@/components/common/PriceDisplay";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import { toast } from "react-toastify";
 import {
-  Compass,
-  Plus,
-  Calendar,
-  Users,
-  MapPin,
-  Star,
-  Search,
-  ExternalLink,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  Layers,
-  Sparkles,
-} from "lucide-react";
+  BrandCompassIcon,
+  BrandPlusIcon,
+  BrandCalendarIcon,
+  BrandUsersIcon,
+  BrandPinIcon,
+  BrandStarIcon,
+  BrandSearchIcon,
+  BrandExternalLinkIcon,
+  BrandTrashIcon,
+  BrandListIcon,
+} from "@/components/icons";
 
 interface AgencyTripsClientProps {
   initialTrips: Trip[];
@@ -111,7 +108,7 @@ export default function AgencyTripsClient({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider mb-2">
-            <Compass size={14} />
+            <BrandCompassIcon size={14} />
             <span>{organization?.name || "Agency Workspace"} · Exclusive Vertical</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">
@@ -128,7 +125,7 @@ export default function AgencyTripsClient({
           onClick={() => router.push("/host/agency/trips/new")}
           className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm self-start md:self-auto cursor-pointer btn-press"
         >
-          <Plus size={18} className="text-tertiary" />
+          <BrandPlusIcon size={18} className="text-tertiary" />
           <span>+ Add a Trip</span>
         </button>
       </div>
@@ -158,7 +155,7 @@ export default function AgencyTripsClient({
             Avg Traveler Rating
           </span>
           <span className="text-2xl font-black text-secondary flex items-center gap-1">
-            4.95 <Star size={18} className="text-amber-500 fill-amber-500" />
+            4.95 <BrandStarIcon size={18} className="text-amber-500 fill-amber-500" />
           </span>
         </div>
       </div>
@@ -166,7 +163,7 @@ export default function AgencyTripsClient({
       {/* Search & Filter Bar */}
       <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-80">
-          <Search
+          <BrandSearchIcon
             size={18}
             className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
           />
@@ -219,7 +216,7 @@ export default function AgencyTripsClient({
       {/* Trips Feed / Grid */}
       {filteredTrips.length === 0 ? (
         <div className="bg-white rounded-3xl border border-tertiary/70 p-12 text-center space-y-4 shadow-2xs">
-          <Compass size={48} className="mx-auto text-neutral-300" />
+          <BrandCompassIcon size={48} className="mx-auto text-neutral-300" />
           <h3 className="font-serif text-lg font-bold text-primary">No Circuits Found</h3>
           <p className="text-xs text-neutral-500 max-w-sm mx-auto">
             {searchQuery
@@ -259,7 +256,7 @@ export default function AgencyTripsClient({
                     {/* Top status & duration pills */}
                     <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
                       <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[11px] font-bold text-primary flex items-center gap-1.5 shadow-xs">
-                        <Calendar size={13} className="text-secondary" />
+                        <BrandCalendarIcon size={13} className="text-secondary" />
                         <span>
                           {trip.durationDays} Days / {nights} Nights
                         </span>
@@ -279,11 +276,11 @@ export default function AgencyTripsClient({
                     {/* Bottom overlay: Location & Rating */}
                     <div className="absolute bottom-3 start-3 end-3 flex items-center justify-between text-white text-xs">
                       <div className="flex items-center gap-1 font-semibold">
-                        <MapPin size={14} className="text-secondary" />
+                        <BrandPinIcon size={14} className="text-secondary" />
                         <span>{trip.city}, Algeria</span>
                       </div>
                       <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-lg text-xs font-bold">
-                        <Star size={12} className="text-amber-400 fill-amber-400" />
+                        <BrandStarIcon size={12} className="text-amber-400 fill-amber-400" />
                         <span>{trip.rating?.toFixed(2) || "New"}</span>
                       </div>
                     </div>
@@ -301,13 +298,13 @@ export default function AgencyTripsClient({
                     {/* Logistics highlights */}
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-tertiary/40 text-xs">
                       <div className="flex items-center gap-1.5 text-neutral-600">
-                        <Users size={14} className="text-secondary" />
+                        <BrandUsersIcon size={14} className="text-secondary" />
                         <span>
                           Group: {trip.minGroupSize || 2}–{trip.maxGroupSize} guests
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-neutral-600">
-                        <Layers size={14} className="text-secondary" />
+                        <BrandListIcon size={14} className="text-secondary" />
                         <span>{trip.itinerary?.length || trip.durationDays} Days Itinerary</span>
                       </div>
                     </div>
@@ -369,7 +366,7 @@ export default function AgencyTripsClient({
                       className="p-2 rounded-xl bg-white border border-tertiary/70 text-neutral-700 hover:text-primary hover:border-primary transition shadow-2xs"
                       title="View public booking page"
                     >
-                      <ExternalLink size={16} />
+                      <BrandExternalLinkIcon size={16} />
                     </Link>
 
                     <button
@@ -378,7 +375,7 @@ export default function AgencyTripsClient({
                       className="p-2 rounded-xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 transition shadow-2xs cursor-pointer"
                       title="Delete circuit"
                     >
-                      <Trash2 size={16} />
+                      <BrandTrashIcon size={16} />
                     </button>
                   </div>
                 </div>

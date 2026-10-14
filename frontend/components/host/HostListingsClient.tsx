@@ -7,22 +7,23 @@ import { useRouter } from "@/navigation";
 import { Listing, User } from "@/types";
 import { updateListing, deleteListing } from "@/lib/data/listings";
 import {
-  HiOutlineHome,
-  HiOutlineSearch,
-  HiOutlineFilter,
-  HiOutlinePlus,
-  HiOutlineCalendar,
-  HiOutlinePencilAlt,
-  HiOutlineTrash,
-  HiOutlineEye,
-  HiOutlineViewGrid,
-  HiOutlineViewList,
-  HiOutlineStar,
-  HiOutlineCheckCircle,
-  HiOutlineSwitchHorizontal,
-  HiOutlineDotsVertical,
-} from "react-icons/hi";
-import { BiBed } from "react-icons/bi";
+  BrandSearchIcon,
+  BrandFilterIcon,
+  BrandPlusIcon,
+  BrandCalendarIcon,
+  BrandEditIcon,
+  BrandTrashIcon,
+  BrandEyeIcon,
+  BrandGridIcon,
+  BrandListIcon,
+  BrandStarIcon,
+  BrandCheckIcon,
+  BrandMoreIcon,
+  BrandBedIcon,
+  BrandCloseIcon,
+  CategoryHouseIcon,
+  InstantBookingIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import HostWalletWidget from "@/components/host/HostWalletWidget";
@@ -200,7 +201,7 @@ export default function HostListingsClient({
               onClick={() => router.push("/host/agency/trips/new")}
               className="px-4 py-2.5 bg-secondary/15 hover:bg-secondary/25 text-secondary rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer btn-press"
             >
-              <HiOutlinePlus size={16} />
+              <BrandPlusIcon size={16} />
               <span>+ Add a Trip</span>
             </button>
           )}
@@ -211,7 +212,7 @@ export default function HostListingsClient({
             onClick={() => router.push("/become-a-host/1")}
             className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm cursor-pointer btn-press"
           >
-            <HiOutlinePlus size={18} className="text-tertiary" />
+            <BrandPlusIcon size={18} className="text-tertiary" />
             <span>{isIndividual ? "Add New Listing" : "Create New Listing"}</span>
           </button>
         </div>
@@ -250,7 +251,7 @@ export default function HostListingsClient({
             Avg Rating
           </span>
           <span className="text-2xl font-black text-secondary flex items-center gap-1">
-            4.94 <HiOutlineStar size={18} className="text-amber-500 fill-amber-500" />
+            4.94 <BrandStarIcon size={18} className="text-amber-500 fill-amber-500" />
           </span>
         </div>
       </div>
@@ -259,7 +260,7 @@ export default function HostListingsClient({
       <div className="bg-white rounded-2xl border border-tertiary/70 p-4 mb-6 shadow-2xs flex flex-col lg:flex-row items-center justify-between gap-4">
         {/* Search */}
         <div className="relative w-full lg:w-80">
-          <HiOutlineSearch
+          <BrandSearchIcon
             size={18}
             className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
           />
@@ -315,7 +316,7 @@ export default function HostListingsClient({
               }`}
               title="Grid view"
             >
-              <HiOutlineViewGrid size={18} />
+              <BrandGridIcon size={18} />
             </button>
             <button
               type="button"
@@ -325,7 +326,7 @@ export default function HostListingsClient({
               }`}
               title="Table view"
             >
-              <HiOutlineViewList size={18} />
+              <BrandListIcon size={18} />
             </button>
           </div>
         </div>
@@ -334,12 +335,9 @@ export default function HostListingsClient({
       {/* Listings Content */}
       {filteredListings.length === 0 ? (
         <div className="bg-white rounded-3xl border border-tertiary/70 p-12 text-center shadow-2xs">
-          <Image
-            src="/assets/house.png"
-            alt="Listings"
-            width={44}
-            height={44}
-            className="mx-auto opacity-40 mb-3 object-contain"
+          <CategoryHouseIcon
+            size={44}
+            className="mx-auto text-tertiary mb-3 opacity-60"
           />
           <h3 className="font-serif text-lg font-bold text-primary mb-1">No listings found</h3>
           <p className="text-xs sm:text-sm text-neutral-500 max-w-sm mx-auto mb-4">
@@ -407,7 +405,8 @@ export default function HostListingsClient({
                       {listing.city}, {listing.country}
                     </span>
                     <span className="flex items-center gap-1 font-bold text-neutral-700">
-                      ★ {listing.rating || "5.0"} ({listing.reviewCount || 0})
+                      <BrandStarIcon size={12} className="text-accent fill-accent" />
+                      <span>{listing.rating || "5.0"} ({listing.reviewCount || 0})</span>
                     </span>
                   </div>
 
@@ -418,7 +417,7 @@ export default function HostListingsClient({
                   {listing.roomTypes && listing.roomTypes.length > 0 && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/30 flex items-center gap-1">
-                        <BiBed size={12} />
+                        <BrandBedIcon size={12} />
                         <span>
                           {listing.roomTypes.length} {listing.businessCategory === "hostel" ? "Units / Dorms" : "Room Types"}
                         </span>
@@ -437,8 +436,9 @@ export default function HostListingsClient({
                       {listing.roomTypes && listing.roomTypes.some((r) => r.bookingUnit === "bed") ? "/ bed" : "/ night"}
                     </span>
                     {listing.instantBook && (
-                      <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        ⚡ Instant Book
+                      <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 inline-flex items-center gap-1">
+                        <InstantBookingIcon size={12} className="text-emerald-700" />
+                        <span>Instant Book</span>
                       </span>
                     )}
                   </div>
@@ -453,7 +453,7 @@ export default function HostListingsClient({
                       className="px-3 py-1.5 rounded-xl border border-tertiary/80 hover:bg-neutral-50 text-neutral-700 transition flex items-center gap-1.5 text-xs font-bold"
                       title="Quick edit rate & details"
                     >
-                      <HiOutlinePencilAlt size={15} />
+                      <BrandEditIcon size={15} />
                       <span>Edit</span>
                     </button>
 
@@ -463,7 +463,7 @@ export default function HostListingsClient({
                       className="px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition flex items-center gap-1.5"
                       title="Open calendar"
                     >
-                      <HiOutlineCalendar size={15} className="text-secondary" />
+                      <BrandCalendarIcon size={15} className="text-secondary" />
                       <span>Calendar</span>
                     </button>
                   </div>
@@ -477,7 +477,7 @@ export default function HostListingsClient({
                       title="More actions"
                       aria-label="More actions"
                     >
-                      <HiOutlineDotsVertical size={16} />
+                      <BrandMoreIcon size={16} />
                     </button>
 
                     {openCardMenuId === listing.id && (
@@ -490,7 +490,7 @@ export default function HostListingsClient({
                           }}
                           className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                         >
-                          <HiOutlineSwitchHorizontal size={15} className="text-secondary" />
+                          <BrandFilterIcon size={15} className="text-secondary" />
                           <span>{listing.status === "active" ? "Pause Listing" : "Activate Listing"}</span>
                         </button>
 
@@ -503,7 +503,7 @@ export default function HostListingsClient({
                             }}
                             className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                           >
-                            <BiBed size={15} className="text-secondary" />
+                            <BrandBedIcon size={15} className="text-secondary" />
                             <span>Manage Room Types</span>
                           </button>
                         )}
@@ -514,7 +514,7 @@ export default function HostListingsClient({
                           onClick={() => setOpenCardMenuId(null)}
                           className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                         >
-                          <HiOutlineEye size={15} className="text-secondary" />
+                          <BrandEyeIcon size={15} className="text-secondary" />
                           <span>View Public Page</span>
                         </Link>
 
@@ -528,7 +528,7 @@ export default function HostListingsClient({
                           }}
                           className="w-full text-start px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold"
                         >
-                          <HiOutlineTrash size={15} />
+                          <BrandTrashIcon size={15} />
                           <span>Delete Listing</span>
                         </button>
                       </div>
@@ -601,7 +601,10 @@ export default function HostListingsClient({
                       {listing.bookingsCount || 12} stays
                     </td>
                     <td className="py-3 px-4 font-bold text-neutral-700">
-                      ★ {listing.rating || "5.0"}
+                      <span className="inline-flex items-center gap-1">
+                        <BrandStarIcon size={12} className="text-accent fill-accent" />
+                        <span>{listing.rating || "5.0"}</span>
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-end">
                       <div className="flex items-center justify-end gap-1.5">
@@ -611,7 +614,7 @@ export default function HostListingsClient({
                           className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-700"
                           title="Edit"
                         >
-                          <HiOutlinePencilAlt size={16} />
+                          <BrandEditIcon size={16} />
                         </button>
                         <button
                           type="button"
@@ -619,7 +622,7 @@ export default function HostListingsClient({
                           className="p-1.5 hover:bg-neutral-100 rounded-lg text-secondary"
                           title="Calendar"
                         >
-                          <HiOutlineCalendar size={16} />
+                          <BrandCalendarIcon size={16} />
                         </button>
                         <div className="relative">
                           <button
@@ -628,7 +631,7 @@ export default function HostListingsClient({
                             className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-600"
                             title="More actions"
                           >
-                            <HiOutlineDotsVertical size={16} />
+                            <BrandMoreIcon size={16} />
                           </button>
                           {openCardMenuId === `tbl-${listing.id}` && (
                             <div className="absolute end-0 top-8 w-44 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in">
@@ -638,7 +641,7 @@ export default function HostListingsClient({
                                 onClick={() => setOpenCardMenuId(null)}
                                 className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                               >
-                                <HiOutlineEye size={14} className="text-secondary" />
+                                <BrandEyeIcon size={14} className="text-secondary" />
                                 <span>View Public</span>
                               </Link>
                               <button
@@ -649,7 +652,7 @@ export default function HostListingsClient({
                                 }}
                                 className="w-full text-start px-3.5 py-2 hover:bg-neutral-50 flex items-center gap-2 font-semibold"
                               >
-                                <HiOutlineSwitchHorizontal size={14} className="text-secondary" />
+                                <BrandFilterIcon size={14} className="text-secondary" />
                                 <span>{listing.status === "active" ? "Pause" : "Activate"}</span>
                               </button>
                               <hr className="my-1 border-tertiary/30" />
@@ -661,7 +664,7 @@ export default function HostListingsClient({
                                 }}
                                 className="w-full text-start px-3.5 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 font-semibold"
                               >
-                                <HiOutlineTrash size={14} />
+                                <BrandTrashIcon size={14} />
                                 <span>Delete</span>
                               </button>
                             </div>
@@ -690,7 +693,7 @@ export default function HostListingsClient({
                 onClick={() => setEditingListing(null)}
                 className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
               >
-                ✕
+                <BrandCloseIcon size={16} />
               </button>
             </div>
 
@@ -768,7 +771,7 @@ export default function HostListingsClient({
             <div className="flex items-center justify-between border-b border-tertiary/60 pb-3">
               <div>
                 <h3 className="font-serif font-bold text-lg text-primary flex items-center gap-2">
-                  <BiBed size={22} className="text-secondary" />
+                  <BrandBedIcon size={22} className="text-secondary" />
                   <span>Manage Room Types & Inventory</span>
                 </h3>
                 <p className="text-xs text-neutral-500 mt-0.5">
@@ -780,7 +783,7 @@ export default function HostListingsClient({
                 onClick={() => setManagingRoomTypesListing(null)}
                 className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition"
               >
-                ✕
+                <BrandCloseIcon size={16} />
               </button>
             </div>
 

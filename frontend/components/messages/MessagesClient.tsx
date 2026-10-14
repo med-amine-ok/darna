@@ -2,22 +2,23 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Link, useRouter, usePathname } from "@/navigation";
+import { Link, usePathname } from "@/navigation";
 import { Conversation, Message, User } from "@/types";
 import Avatar from "@/components/Avatar";
 import { sendMessage, markConversationAsRead } from "@/lib/data/conversations";
-import {
-  Search,
-  Settings,
-  ChevronLeft,
-  Paperclip,
-  MessageSquare,
-  Check,
-  CheckCheck,
-  MoreHorizontal,
-  Send,
-} from "lucide-react";
 import { toast } from "react-toastify";
+import {
+  WelcomeArchIcon,
+  BrandSearchIcon,
+  BrandSettingsIcon,
+  BrandMessageIcon,
+  BrandMoreIcon,
+  BrandPaperclipIcon,
+  BrandSendIcon,
+  BrandCheckIcon,
+  BrandCheckDoubleIcon,
+  BrandChevronLeftIcon,
+} from "@/components/icons";
 
 interface MessagesClientProps {
   initialConversations: Conversation[];
@@ -32,7 +33,6 @@ export default function MessagesClient({
   selectedConversationId,
   currentUser,
 }: MessagesClientProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const isHostMode = pathname?.includes("/host");
   const currentUserId = currentUser?.id || "usr_yacine";
@@ -184,7 +184,7 @@ export default function MessagesClient({
                 title={isHostMode ? "Back to Host Dashboard" : "Back to Home"}
                 aria-label="Back"
               >
-                <ChevronLeft size={22} />
+                <BrandChevronLeftIcon size={22} className="rtl:rotate-180" />
               </Link>
               <h1 className="text-xl sm:text-2xl font-bold text-primary font-serif">
                 Messages
@@ -199,7 +199,7 @@ export default function MessagesClient({
                 }`}
                 title="Search messages"
               >
-                <Search size={16} />
+                <BrandSearchIcon size={16} />
               </button>
               <button
                 type="button"
@@ -207,7 +207,7 @@ export default function MessagesClient({
                 className="p-2 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition btn-press"
                 title="Settings"
               >
-                <Settings size={16} />
+                <BrandSettingsIcon size={16} />
               </button>
             </div>
           </div>
@@ -223,7 +223,7 @@ export default function MessagesClient({
                 className="w-full ps-9 pe-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                 autoFocus
               />
-              <Search
+              <BrandSearchIcon
                 size={14}
                 className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
               />
@@ -265,7 +265,7 @@ export default function MessagesClient({
                 /* (1) Filtered Empty State */
                 <div className="space-y-3">
                   <div className="w-12 h-12 bg-neutral-100 text-neutral-500 rounded-full flex items-center justify-center mx-auto">
-                    <MessageSquare size={24} />
+                    <BrandMessageIcon size={24} />
                   </div>
                   <h3 className="text-sm font-bold text-primary">
                     We couldn&apos;t find any messages
@@ -289,7 +289,7 @@ export default function MessagesClient({
                 /* (2) True Empty State */
                 <div className="space-y-3">
                   <div className="w-12 h-12 bg-tertiary/30 text-primary rounded-full flex items-center justify-center mx-auto">
-                    <MessageSquare size={22} />
+                    <BrandMessageIcon size={22} />
                   </div>
                   <h3 className="text-sm font-bold text-primary">
                     No messages yet
@@ -384,7 +384,7 @@ export default function MessagesClient({
           /* Blank Canvas when nothing is selected (Matches reference spec) */
           <div className="flex-1 flex items-center justify-center p-8 bg-white text-center">
             <div className="max-w-xs space-y-2 text-neutral-400">
-              <MessageSquare size={44} className="mx-auto text-tertiary" />
+              <BrandMessageIcon size={44} className="mx-auto text-tertiary" />
               <div className="text-sm font-semibold text-neutral-600">
                 Select a conversation
               </div>
@@ -405,7 +405,7 @@ export default function MessagesClient({
                   className="md:hidden min-w-[44px] min-h-[44px] -ms-2 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 rounded-full transition btn-press"
                   aria-label="Back to conversations list"
                 >
-                  <ChevronLeft size={22} />
+                  <BrandChevronLeftIcon size={22} className="rtl:rotate-180" />
                 </button>
 
                 <Avatar src={activeConversation.otherUser?.image} size={40} />
@@ -445,7 +445,7 @@ export default function MessagesClient({
                   className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-xl transition btn-press"
                   title="Conversation options"
                 >
-                  <MoreHorizontal size={20} />
+                  <BrandMoreIcon size={20} />
                 </button>
               </div>
             </div>
@@ -455,7 +455,9 @@ export default function MessagesClient({
               {/* Empty Thread Prompt with Quick Opener Chips */}
               {currentMessages.length === 0 ? (
                 <div className="p-8 text-center max-w-md mx-auto my-auto space-y-4 bg-white rounded-3xl border border-tertiary/60 shadow-xs">
-                  <span className="text-3xl">👋</span>
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-tertiary/20 flex items-center justify-center">
+                    <WelcomeArchIcon size={28} className="text-primary" />
+                  </div>
                   <h3 className="font-bold text-primary text-base">
                     Say hello to {activeConversation.otherUser?.name || "Host"}
                   </h3>
@@ -508,9 +510,9 @@ export default function MessagesClient({
                         </span>
                         {isSentByMe && (
                           msg.read ? (
-                            <CheckCheck size={13} className="text-emerald-500" />
+                            <BrandCheckDoubleIcon size={13} className="text-emerald-500" />
                           ) : (
-                            <Check size={13} className="text-neutral-400" />
+                            <BrandCheckIcon size={13} className="text-neutral-400" />
                           )
                         )}
                       </div>
@@ -534,7 +536,7 @@ export default function MessagesClient({
                   title="Attach file or photo"
                   aria-label="Attach file"
                 >
-                  <Paperclip size={18} />
+                  <BrandPaperclipIcon size={18} />
                 </button>
 
                 <textarea
@@ -553,7 +555,7 @@ export default function MessagesClient({
                   title="Send message"
                   aria-label="Send message"
                 >
-                  <Send size={16} />
+                  <BrandSendIcon size={16} />
                 </button>
               </form>
             </div>

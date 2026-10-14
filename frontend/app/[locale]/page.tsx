@@ -14,7 +14,7 @@ import TripCard from "@/components/trips/TripCard";
 import Container from "@/components/Container";
 import EmptyState from "@/components/EmptyState";
 import { Link } from "@/navigation";
-import { Compass } from "lucide-react";
+import { BrandCompassIcon } from "@/components/icons";
 
 interface HomePageProps {
   searchParams: {
@@ -38,6 +38,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   });
 
   const homeListings = allListings.filter((l) => l.category === "home");
+  const hotelAndHostelListings = allListings.filter(
+    (l) => l.businessCategory === "hotel" || l.businessCategory === "hostel" || (l.roomTypes && l.roomTypes.length > 0)
+  );
   const vehicleListings = await getVehicles();
   const experienceListings = await getExperiences();
   const featuredListings = await getFeaturedListings();
@@ -160,7 +163,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <ListingCarouselSection
               title="Desert & Saharan Expeditions"
               subtitle="Guided treks through Tassili n'Ajjer, golden dunes of Taghit, and ancient M'zab ksars"
-              badge="✦ Top rated experiences in the Algerian Sahara"
+              badge="Top rated experiences in the Algerian Sahara"
               listings={experienceListings}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=experience"
@@ -171,7 +174,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-tertiary/60 pb-4">
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider mb-2">
-                    <Compass size={14} />
+                    <BrandCompassIcon size={14} />
                     <span>Exclusive Agency Expeditions</span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-serif font-black text-primary">
@@ -200,7 +203,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               </div>
             </div>
 
-            {/* Section 4: All-Terrain Vehicles & 4x4s */}
+            {/* Section 4: Hotels, Palaces & Heritage Hostels */}
+            {hotelAndHostelListings.length > 0 && (
+              <ListingCarouselSection
+                title="Hotels, Palaces & Backpacker Hostels"
+                subtitle="From prestigious 5-star botanical palaces to vibrant Medina rooftops and desert dunes"
+                badge="Multiple room types, instant booking"
+                listings={hotelAndHostelListings}
+                currentUser={currentUser}
+                viewMoreHref="/search?propertyType=Hotel"
+              />
+            )}
+
+            {/* Section 5: All-Terrain Vehicles & 4x4s */}
             <ListingCarouselSection
               title="Explore vehicles for your Algerian road trip"
               subtitle="Dune-ready Toyota 4x4s, rugged mountain crossovers, and city hatchbacks"

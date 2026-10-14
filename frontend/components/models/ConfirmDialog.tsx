@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { AlertTriangle, Trash2, CheckCircle2, AlertCircle, X, HelpCircle, Save } from "lucide-react";
+import {
+  BrandTrashIcon,
+  BrandAlertCircleIcon,
+  BrandCheckIcon,
+  BrandCloseIcon,
+} from "@/components/icons";
 
 export type ConfirmDialogVariant =
   | "neutral"
@@ -190,7 +195,7 @@ export default function ConfirmDialog({
     switch (normalizedVariant) {
       case "destructive":
         return {
-          icon: customIcon || <Trash2 size={22} className="text-rose-600" strokeWidth={2.2} />,
+          icon: customIcon || <BrandTrashIcon size={22} className="text-rose-600" strokeWidth={2} />,
           badgeStyle: "bg-rose-50 border-rose-200/80 text-rose-600 shadow-rose-100/50 animate-badge-shake",
           topAccentGradient: "from-rose-500 via-accent to-rose-700",
           primaryBtn:
@@ -198,7 +203,7 @@ export default function ConfirmDialog({
         };
       case "discard":
         return {
-          icon: customIcon || <AlertCircle size={22} className="text-amber-700" strokeWidth={2.2} />,
+          icon: customIcon || <BrandAlertCircleIcon size={22} className="text-amber-700" strokeWidth={2} />,
           badgeStyle: "bg-amber-50 border-amber-200/80 text-amber-700 shadow-amber-100/50",
           topAccentGradient: "from-amber-500 via-tertiary to-accent",
           primaryBtn:
@@ -207,7 +212,7 @@ export default function ConfirmDialog({
       case "neutral":
       default:
         return {
-          icon: customIcon || <CheckCircle2 size={22} className="text-accent" strokeWidth={2.2} />,
+          icon: customIcon || <BrandCheckIcon size={22} className="text-accent" strokeWidth={2.2} />,
           badgeStyle: "bg-accent/10 border-accent/25 text-accent shadow-accent/10",
           topAccentGradient: "from-accent via-tertiary to-primary",
           primaryBtn:
@@ -258,7 +263,7 @@ export default function ConfirmDialog({
             aria-label="Close dialog"
             className="absolute top-4 end-4 w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer disabled:opacity-40"
           >
-            <X size={18} />
+            <BrandCloseIcon size={18} strokeWidth={2} />
           </button>
         )}
 
@@ -333,7 +338,7 @@ export default function ConfirmDialog({
                 {busy ? (
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <Save size={15} />
+                  <BrandCheckIcon size={15} />
                 )}
                 <span>{saveAndExitLabel}</span>
               </button>

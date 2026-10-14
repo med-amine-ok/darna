@@ -24,19 +24,15 @@ import {
 } from "date-fns";
 import { Listing, Reservation, User } from "@/types";
 import {
-  HiOutlineCalendar,
-  HiOutlineChevronLeft,
-  HiOutlineChevronRight,
-  HiOutlineFilter,
-  HiOutlineLockClosed,
-  HiOutlineLockOpen,
-  HiOutlineCurrencyDollar,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlineClock,
-  HiOutlineUser,
-} from "react-icons/hi";
-import { BiBed } from "react-icons/bi";
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandFilterIcon,
+  BrandLockIcon,
+  BrandDoorIcon,
+  BrandClockIcon,
+  BrandBedIcon,
+  BrandCloseIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 
 type CalendarView = "month" | "week" | "day" | "year";
@@ -270,7 +266,7 @@ export default function HostCalendarClient({
               className="p-2 rounded-xl hover:bg-neutral-100 text-neutral-700 transition border border-tertiary/60"
               title="Previous interval"
             >
-              <HiOutlineChevronLeft size={18} />
+              <BrandChevronLeftIcon size={18} className="rtl:rotate-180" />
             </button>
             <button
               type="button"
@@ -278,7 +274,7 @@ export default function HostCalendarClient({
               className="p-2 rounded-xl hover:bg-neutral-100 text-neutral-700 transition border border-tertiary/60"
               title="Next interval"
             >
-              <HiOutlineChevronRight size={18} />
+              <BrandChevronRightIcon size={18} className="rtl:rotate-180" />
             </button>
           </div>
 
@@ -302,7 +298,7 @@ export default function HostCalendarClient({
         {/* Listing Filter Selector & Legend */}
         <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap">
           <label htmlFor="calendar-property-select" className="text-xs font-bold text-neutral-500 flex items-center gap-1">
-            <HiOutlineFilter size={14} /> Property:
+            <BrandFilterIcon size={14} /> Property:
           </label>
           <select
             id="calendar-property-select"
@@ -325,7 +321,7 @@ export default function HostCalendarClient({
           {activeListing?.roomTypes && activeListing.roomTypes.length > 0 && (
             <div className="flex items-center gap-1.5 ms-1">
               <label htmlFor="calendar-room-select" className="text-xs font-bold text-neutral-500 flex items-center gap-1">
-                <BiBed size={14} className="text-secondary" /> Unit:
+                <BrandBedIcon size={14} className="text-secondary" /> Unit:
               </label>
               <select
                 id="calendar-room-select"
@@ -435,7 +431,7 @@ export default function HostCalendarClient({
                           {/* Blocked icon */}
                           {isBlocked && (
                             <span className="text-neutral-400 shrink-0" title="Blocked">
-                              <HiOutlineLockClosed size={14} />
+                              <BrandLockIcon size={14} />
                             </span>
                           )}
                         </div>
@@ -596,7 +592,7 @@ export default function HostCalendarClient({
               onClick={() => handleToggleBlock(currentDate)}
               className="px-4 py-2 rounded-xl text-xs font-bold border border-tertiary/80 hover:bg-neutral-50 transition flex items-center gap-1.5"
             >
-              <HiOutlineLockClosed size={16} />
+              <BrandLockIcon size={16} />
               <span>Toggle Day Block</span>
             </button>
           </div>
@@ -618,7 +614,7 @@ export default function HostCalendarClient({
                   className="flex items-start gap-4 p-4 rounded-2xl bg-neutral-50/70 border border-tertiary/40 hover:bg-white hover:shadow-xs transition"
                 >
                   <div className="w-16 shrink-0 font-mono font-bold text-sm text-secondary flex items-center gap-1">
-                    <HiOutlineClock size={16} />
+                    <BrandClockIcon size={16} />
                     <span>{slot.time}</span>
                   </div>
                   <div className="flex-1">
@@ -741,7 +737,7 @@ export default function HostCalendarClient({
                 onClick={() => setActiveDay(null)}
                 className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
               >
-                ✕
+                <BrandCloseIcon size={16} />
               </button>
             </div>
 
@@ -776,12 +772,12 @@ export default function HostCalendarClient({
               >
                 {isDayBlocked(activeDay, activeListing?.id || safeListings[0]?.id) ? (
                   <>
-                    <HiOutlineLockOpen size={15} />
+                    <BrandDoorIcon size={15} />
                     <span>Unblock</span>
                   </>
                 ) : (
                   <>
-                    <HiOutlineLockClosed size={15} />
+                    <BrandLockIcon size={15} />
                     <span>Block Date</span>
                   </>
                 )}

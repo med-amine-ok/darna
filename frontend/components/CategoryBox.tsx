@@ -5,10 +5,8 @@ import Image from "next/image";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
-import { IconType } from "react-icons";
-
 interface CategoryBoxProps {
-  icon?: IconType;
+  icon?: React.ComponentType<{ size?: number | string; className?: string; strokeWidth?: number }>;
   imgSrc?: string;
   label: string;
   selected?: boolean;

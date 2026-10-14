@@ -2,13 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { AuditLogEntry } from "@/lib/data/admin";
-import {
-  HiOutlineClipboardList,
-  HiOutlineSearch,
-  HiOutlineFilter,
-  HiOutlineClock,
-  HiOutlineShieldCheck,
-} from "react-icons/hi";
+import { BrandShieldIcon, BrandSearchIcon } from "@/components/icons";
 
 interface AdminAuditLogClientProps {
   initialLogs: AuditLogEntry[];
@@ -49,7 +43,7 @@ export default function AdminAuditLogClient({ initialLogs }: AdminAuditLogClient
         </div>
 
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-tertiary/70 shadow-2xs">
-          <HiOutlineShieldCheck size={18} className="text-secondary" />
+          <BrandShieldIcon size={18} className="text-secondary" />
           <span className="text-xs font-bold text-neutral-500 uppercase">Records:</span>
           <span className="font-mono font-bold text-primary">{logs.length} events</span>
         </div>
@@ -58,7 +52,7 @@ export default function AdminAuditLogClient({ initialLogs }: AdminAuditLogClient
       {/* Toolbar */}
       <div className="bg-white rounded-3xl border border-tertiary/70 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-96">
-          <HiOutlineSearch size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <BrandSearchIcon size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}

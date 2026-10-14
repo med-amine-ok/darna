@@ -16,37 +16,31 @@ import { getOnboardingSteps } from "@/lib/data/onboarding-config";
 import { OnboardingStepConfig } from "@/types";
 import DynamicStepFields from "./DynamicStepFields";
 import {
-  HiOutlineHome,
-  HiOutlineOfficeBuilding,
-  HiOutlineUser,
-  HiOutlineSparkles,
-  HiOutlineLocationMarker,
-  HiOutlinePhotograph,
-  HiOutlineTag,
-  HiOutlineCurrencyDollar,
-  HiOutlineShieldCheck,
-  HiOutlineCheck,
-  HiOutlineChevronLeft,
-  HiOutlineChevronRight,
-  HiOutlineX,
-  HiOutlineTrash,
-  HiOutlinePlus,
-  HiOutlineWifi,
-  HiOutlineSun,
-  HiOutlineStar,
-  HiOutlineClock,
-} from "react-icons/hi";
-import {
-  BiCar,
-  BiCompass,
-  BiBed,
-  BiBath,
-  BiUser,
-  BiWater,
-  BiCoffee,
-  BiCheckCircle,
-  BiBuildings,
-} from "react-icons/bi";
+  InstantBookingIcon,
+  RequestReviewIcon,
+  BrandStarIcon,
+  BrandUserIcon,
+  BrandChevronRightIcon,
+  BrandChevronLeftIcon,
+  BrandCompassIcon,
+  BrandBuildingIcon,
+  BrandBedIcon,
+  CategoryHouseIcon,
+  CategoryRiadIcon,
+  BrandWaterIcon,
+  BrandSunIcon,
+  CategoryVehicleIcon,
+  BrandSparklesIcon,
+  BrandWifiIcon,
+  BrandSnowIcon,
+  BrandKitchenIcon,
+  BrandFlameIcon,
+  BrandTrashIcon,
+  BrandPinIcon,
+  BrandPlusIcon,
+  BrandShieldIcon,
+  BrandCheckIcon,
+} from "@/components/icons";
 
 // Dynamically import Map to prevent SSR errors
 const Map = dynamic(() => import("@/components/Map"), { ssr: false });
@@ -193,6 +187,15 @@ export default function BecomeHostFlow({
   const [hotelTaxId, setHotelTaxId] = useState<string>("002316098765432");
   const [hotelAddress, setHotelAddress] = useState<string>("24 Avenue Souidani Boujemaa, Algiers");
   const [hotelCity, setHotelCity] = useState<string>("Algiers");
+  const [hotelWilaya, setHotelWilaya] = useState<string>("Algiers");
+  const [hotelLatlng, setHotelLatlng] = useState<[number, number]>([36.7538, 3.0588]);
+  const [hotelPhotos, setHotelPhotos] = useState<string[]>([
+    "/assets/hero.jpg",
+    "/assets/oran.jpg",
+    "/assets/constantine.jpg",
+    "/assets/tipaza.jpg",
+  ]);
+  const [hotelCustomPhotoUrl, setHotelCustomPhotoUrl] = useState<string>("");
   const [hotelPhone, setHotelPhone] = useState<string>("+213 21 69 21 21");
   const [hotelEmail, setHotelEmail] = useState<string>("reservations@hoteldjazair.dz");
   const [hotelBookingMode, setHotelBookingMode] = useState<"instant" | "request">("instant");
@@ -204,7 +207,16 @@ export default function BecomeHostFlow({
   const [hostelStep, setHostelStep] = useState<number>(1);
   const [hostelName, setHostelName] = useState<string>("Casbah Heritage Backpacker Hostel");
   const [hostelCity, setHostelCity] = useState<string>("Algiers");
+  const [hostelWilaya, setHostelWilaya] = useState<string>("Algiers");
   const [hostelAddress, setHostelAddress] = useState<string>("12 Rue Sidi Ramdane, Casbah, Algiers");
+  const [hostelLatlng, setHostelLatlng] = useState<[number, number]>([36.7865, 3.0592]);
+  const [hostelPhotos, setHostelPhotos] = useState<string[]>([
+    "/assets/hero.jpg",
+    "/assets/tipaza.jpg",
+    "/assets/oran.jpg",
+    "/assets/constantine.jpg",
+  ]);
+  const [hostelCustomPhotoUrl, setHostelCustomPhotoUrl] = useState<string>("");
   const [hostelDormBeds, setHostelDormBeds] = useState<number>(24);
   const [hostelPrivateRooms, setHostelPrivateRooms] = useState<number>(4);
   const [hostelTotalBeds, setHostelTotalBeds] = useState<number>(28);
@@ -391,6 +403,36 @@ export default function BecomeHostFlow({
       return;
     }
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddHotelPhoto = () => {
+    if (!hotelCustomPhotoUrl.trim()) return;
+    setHotelPhotos((prev) => [...prev, hotelCustomPhotoUrl.trim()]);
+    setHotelCustomPhotoUrl("");
+    toast.success("Photo added to hotel gallery!");
+  };
+
+  const handleRemoveHotelPhoto = (index: number) => {
+    if (hotelPhotos.length <= 1) {
+      toast.error("Hotel gallery must have at least one photo.");
+      return;
+    }
+    setHotelPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddHostelPhoto = () => {
+    if (!hostelCustomPhotoUrl.trim()) return;
+    setHostelPhotos((prev) => [...prev, hostelCustomPhotoUrl.trim()]);
+    setHostelCustomPhotoUrl("");
+    toast.success("Photo added to hostel gallery!");
+  };
+
+  const handleRemoveHostelPhoto = (index: number) => {
+    if (hostelPhotos.length <= 1) {
+      toast.error("Hostel gallery must have at least one photo.");
+      return;
+    }
+    setHostelPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handlePublishListing = async () => {
@@ -609,6 +651,70 @@ export default function BecomeHostFlow({
         verificationStatus: "verified",
       });
       const finalOrgId = orgId || org.id;
+
+      // Register the hotel property listing in public search & map
+      const finalHotelPhotos = hotelPhotos.length >= 4 ? hotelPhotos : [
+        "/assets/hero.jpg",
+        "/assets/oran.jpg",
+        "/assets/constantine.jpg",
+        "/assets/tipaza.jpg",
+      ];
+      await createListing({
+        title: hotelName.trim() || "El Djazair Grand Palace Hotel",
+        description: `${hotelName.trim() || "El Djazair Grand Palace Hotel"} offers exceptional hospitality in ${hotelCity || "Algiers"}, ${hotelWilaya || "Algiers"}. Featuring luxury room options, 24/7 reception, gourmet dining and curated Algerian experiences.`,
+        price: 24000,
+        category: "home",
+        type: "Hotel",
+        city: `${hotelCity || "Algiers"}, ${hotelWilaya || "Algiers"}`,
+        locationValue: hotelWilaya || "Algiers",
+        country: "Algeria",
+        imageSrc: finalHotelPhotos,
+        guestCount: 2,
+        bedroomCount: hotelTotalRooms,
+        roomCount: hotelTotalRooms,
+        bathroomCount: hotelTotalRooms,
+        amenities: hotelAmenities,
+        latlng: hotelLatlng,
+        instantBook: hotelBookingMode === "instant",
+        bookingApprovalMode: hotelBookingMode,
+        cancellationPolicy: "flexible",
+        ownerType: "organization",
+        hostUserId: hostId,
+        organizationId: finalOrgId,
+        businessCategory: "hotel",
+        hotelStarRating: hotelStarRating,
+        roomTypes: [
+          {
+            id: `rt_${Date.now()}_1`,
+            propertyListingId: finalOrgId,
+            name: "Standard Deluxe Room",
+            capacity: 2,
+            price: 24000,
+            basePrice: 24000,
+            description: "Comfortable double room with city view, king bed and marble bath.",
+            amenities: ["wifi", "air_conditioning", "breakfast"],
+            bookingUnit: "room",
+            imageSrc: finalHotelPhotos.slice(0, 2),
+            inventoryCount: 20,
+            totalInventory: 20,
+          },
+          {
+            id: `rt_${Date.now()}_2`,
+            propertyListingId: finalOrgId,
+            name: "Executive Sea View Suite",
+            capacity: 3,
+            price: 42000,
+            basePrice: 42000,
+            description: "Spacious luxury suite with separate sitting lounge and panoramic views.",
+            amenities: ["wifi", "air_conditioning", "breakfast", "pool", "spa"],
+            bookingUnit: "room",
+            imageSrc: finalHotelPhotos.slice(1, 3),
+            inventoryCount: 8,
+            totalInventory: 8,
+          },
+        ],
+      });
+
       await updateUserHostStatus(hostId, {
         hostType: "hotel",
         organizationId: finalOrgId,
@@ -689,6 +795,69 @@ export default function BecomeHostFlow({
         verificationStatus: "verified",
       });
       const finalOrgId = orgId || org.id;
+
+      // Register the hostel property listing in public search & map
+      const finalHostelPhotos = hostelPhotos.length >= 4 ? hostelPhotos : [
+        "/assets/hero.jpg",
+        "/assets/tipaza.jpg",
+        "/assets/oran.jpg",
+        "/assets/constantine.jpg",
+      ];
+      await createListing({
+        title: hostelName.trim() || "Casbah Heritage Backpacker Hostel",
+        description: `${hostelName.trim() || "Casbah Heritage Backpacker Hostel"} is a vibrant traveler community located in the historic heart of ${hostelCity || "Algiers"}. Enjoy panoramic rooftop views, shared kitchen, and cultural social evenings.`,
+        price: 3200,
+        category: "home",
+        type: "Hostel",
+        city: `${hostelCity || "Algiers"}, ${hostelWilaya || "Algiers"}`,
+        locationValue: hostelWilaya || "Algiers",
+        country: "Algeria",
+        imageSrc: finalHostelPhotos,
+        guestCount: hostelTotalBeds,
+        bedroomCount: hostelPrivateRooms + 4,
+        roomCount: hostelTotalBeds,
+        bathroomCount: 6,
+        amenities: hostelFacilities,
+        latlng: hostelLatlng,
+        instantBook: hostelBookingMode === "instant",
+        bookingApprovalMode: hostelBookingMode,
+        cancellationPolicy: "flexible",
+        ownerType: "organization",
+        hostUserId: hostId,
+        organizationId: finalOrgId,
+        businessCategory: "hostel",
+        roomTypes: [
+          {
+            id: `rt_dorm_${Date.now()}`,
+            propertyListingId: finalOrgId,
+            name: "6-Bed Mixed Dormitory Bed",
+            capacity: 1,
+            price: 3200,
+            basePrice: 3200,
+            description: "Individual bunk bed in a spacious, climate-controlled 6-bed dormitory with privacy curtain and personal secure locker.",
+            amenities: ["wifi", "air_conditioning", "shared_kitchen", "lockers"],
+            bookingUnit: "bed",
+            imageSrc: finalHostelPhotos.slice(0, 2),
+            inventoryCount: 18,
+            totalInventory: 18,
+          },
+          {
+            id: `rt_priv_${Date.now()}`,
+            propertyListingId: finalOrgId,
+            name: "Private Double Room (Ensuite)",
+            capacity: 2,
+            price: 7800,
+            basePrice: 7800,
+            description: "Cozy private room with queen bed, ensuite shower, desk, and peaceful courtyard view.",
+            amenities: ["wifi", "air_conditioning", "breakfast"],
+            bookingUnit: "room",
+            imageSrc: finalHostelPhotos.slice(1, 3),
+            inventoryCount: 4,
+            totalInventory: 4,
+          },
+        ],
+      });
+
       await updateUserHostStatus(hostId, {
         hostType: "hostel",
         organizationId: finalOrgId,
@@ -728,25 +897,25 @@ export default function BecomeHostFlow({
   ];
 
   const categoriesConfig = [
-    { label: "Villa", vertical: "home" as const, imgSrc: "/assets/house.png" },
-    { label: "Casbah Heritage House", vertical: "home" as const, imgSrc: "/assets/house.png" },
-    { label: "Seaside Apartment", vertical: "home" as const, icon: BiWater },
-    { label: "Saharan Ksar", vertical: "home" as const, icon: HiOutlineSun },
-    { label: "Desert Camp", vertical: "home" as const, icon: BiCompass },
-    { label: "4x4 Land Cruiser SUV", vertical: "vehicle" as const, imgSrc: "/assets/car.png" },
-    { label: "Sahara 4x4 Expedition", vertical: "experience" as const, icon: BiCompass },
-    { label: "Casbah Architecture Tour", vertical: "experience" as const, icon: HiOutlineSparkles },
+    { label: "Villa", vertical: "home" as const, icon: CategoryHouseIcon },
+    { label: "Casbah Heritage House", vertical: "home" as const, icon: CategoryRiadIcon },
+    { label: "Seaside Apartment", vertical: "home" as const, icon: BrandWaterIcon },
+    { label: "Saharan Ksar", vertical: "home" as const, icon: BrandSunIcon },
+    { label: "Desert Camp", vertical: "home" as const, icon: BrandCompassIcon },
+    { label: "4x4 Land Cruiser SUV", vertical: "vehicle" as const, icon: CategoryVehicleIcon },
+    { label: "Sahara 4x4 Expedition", vertical: "experience" as const, icon: BrandCompassIcon },
+    { label: "Casbah Architecture Tour", vertical: "experience" as const, icon: BrandSparklesIcon },
   ];
 
   const amenitiesList = [
-    { id: "wifi", label: "Fast WiFi", icon: HiOutlineWifi },
-    { id: "air_conditioning", label: "Air Conditioning (Climatisation)", icon: HiOutlineSun },
-    { id: "kitchen", label: "Equipped Kitchen", icon: BiCoffee },
-    { id: "free_parking", label: "Free Parking on Premises", icon: BiCar },
-    { id: "sea_view", label: "Mediterranean Sea View", icon: BiWater },
-    { id: "traditional_patio", label: "Traditional Central Patio", icon: HiOutlineSparkles },
-    { id: "pool", label: "Private Swimming Pool", icon: BiWater },
-    { id: "sahara_fireplace", label: "Sahara Campfire & Fireplace", icon: HiOutlineSun },
+    { id: "wifi", label: "Fast WiFi", icon: BrandWifiIcon },
+    { id: "air_conditioning", label: "Air Conditioning (Climatisation)", icon: BrandSnowIcon },
+    { id: "kitchen", label: "Equipped Kitchen", icon: BrandKitchenIcon },
+    { id: "free_parking", label: "Free Parking on Premises", icon: CategoryVehicleIcon },
+    { id: "sea_view", label: "Mediterranean Sea View", icon: BrandWaterIcon },
+    { id: "traditional_patio", label: "Traditional Central Patio", icon: BrandSparklesIcon },
+    { id: "pool", label: "Private Swimming Pool", icon: BrandWaterIcon },
+    { id: "sahara_fireplace", label: "Sahara Campfire & Fireplace", icon: BrandFlameIcon },
   ];
 
   // Calculate Progress Percentage dynamically from configured active steps
@@ -844,7 +1013,7 @@ export default function BecomeHostFlow({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                      <HiOutlineUser size={26} />
+                      <BrandUserIcon size={26} />
                     </div>
                     <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">
                       Solo Host
@@ -859,7 +1028,7 @@ export default function BecomeHostFlow({
                 </div>
                 <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
                   <span>Continue as Individual</span>
-                  <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
+                  <BrandChevronRightIcon size={18} className="group-hover:translate-x-1 transition rtl:rotate-180" />
                 </div>
               </div>
 
@@ -876,7 +1045,7 @@ export default function BecomeHostFlow({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                      <BiCompass size={26} />
+                      <BrandCompassIcon size={26} />
                     </div>
                     <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">
                       Agency Fleet
@@ -891,7 +1060,7 @@ export default function BecomeHostFlow({
                 </div>
                 <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
                   <span>Register Agency Workspace</span>
-                  <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
+                  <BrandChevronRightIcon size={18} className="group-hover:translate-x-1 transition rtl:rotate-180" />
                 </div>
               </div>
 
@@ -908,7 +1077,7 @@ export default function BecomeHostFlow({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                      <HiOutlineOfficeBuilding size={26} />
+                      <BrandBuildingIcon size={26} />
                     </div>
                     <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-[10px] font-bold">
                       Hotel & Resort
@@ -923,7 +1092,7 @@ export default function BecomeHostFlow({
                 </div>
                 <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
                   <span>Register Hotel Property</span>
-                  <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
+                  <BrandChevronRightIcon size={18} className="group-hover:translate-x-1 transition rtl:rotate-180" />
                 </div>
               </div>
 
@@ -940,7 +1109,7 @@ export default function BecomeHostFlow({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-13 h-13 bg-tertiary/30 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition">
-                      <BiBed size={26} />
+                      <BrandBedIcon size={26} />
                     </div>
                     <span className="px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-[10px] font-bold">
                       Hostel & Beds
@@ -955,7 +1124,7 @@ export default function BecomeHostFlow({
                 </div>
                 <div className="pt-5 mt-4 border-t border-tertiary/40 flex items-center justify-between text-xs font-bold text-primary">
                   <span>Register Hostel Property</span>
-                  <HiOutlineChevronRight size={18} className="group-hover:translate-x-1 transition" />
+                  <BrandChevronRightIcon size={18} className="group-hover:translate-x-1 transition rtl:rotate-180" />
                 </div>
               </div>
             </div>
@@ -1062,17 +1231,7 @@ export default function BecomeHostFlow({
                         : "border-tertiary/70 bg-white hover:border-neutral-400"
                     }`}
                   >
-                    {item.imgSrc ? (
-                      <div className="w-6 h-6 relative flex items-center justify-center">
-                        <Image
-                          src={item.imgSrc}
-                          alt={item.label}
-                          width={24}
-                          height={24}
-                          className="object-contain"
-                        />
-                      </div>
-                    ) : Icon ? (
+                    {Icon ? (
                       <Icon size={24} className={isSelected ? "text-primary" : "text-neutral-500"} />
                     ) : null}
                     <div>
@@ -1357,7 +1516,7 @@ export default function BecomeHostFlow({
                     className="absolute top-2 end-2 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-rose-600"
                     title="Remove photo"
                   >
-                    <HiOutlineTrash size={14} />
+                    <BrandTrashIcon size={14} />
                   </button>
                 </div>
               ))}
@@ -1650,7 +1809,7 @@ export default function BecomeHostFlow({
                   <div>
                     <h3 className="font-bold text-primary text-lg">{title}</h3>
                     <div className="text-xs text-neutral-500 mt-1 flex items-center gap-1">
-                      <HiOutlineLocationMarker size={15} className="text-secondary" />
+                      <BrandPinIcon size={15} className="text-secondary" />
                       <span>{city}, {wilaya}, Algeria</span>
                     </div>
                   </div>
@@ -1924,7 +2083,7 @@ export default function BecomeHostFlow({
                     }
                     className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline pt-1"
                   >
-                    <HiOutlinePlus size={15} />
+                    <BrandPlusIcon size={15} />
                     <span>Add another teammate</span>
                   </button>
                 </div>
@@ -1963,7 +2122,7 @@ export default function BecomeHostFlow({
 
                   <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 mt-2">
                     <div className="font-bold flex items-center gap-1">
-                      <HiOutlineShieldCheck size={16} />
+                      <BrandShieldIcon size={16} />
                       <span>Verification Notice</span>
                     </div>
                     <div className="text-[11px] mt-0.5">
@@ -2039,7 +2198,7 @@ export default function BecomeHostFlow({
                         >
                           <div className="flex items-center text-accent">
                             {Array.from({ length: stars }).map((_, i) => (
-                              <HiOutlineStar key={i} size={13} className="fill-accent text-accent" />
+                              <BrandStarIcon key={i} size={13} className="fill-accent text-accent" />
                             ))}
                           </div>
                           <span className="text-[11px] font-bold">
@@ -2053,138 +2212,19 @@ export default function BecomeHostFlow({
               </div>
             )}
 
-            {/* Step H2: Scale & Operational Times */}
+            {/* Step H2: Business Details, Scale & Facilities */}
             {hotelStep === 2 && (
               <div className="space-y-5">
                 <div className="text-center space-y-1">
                   <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                    Hotel Step 2 of 7 · Scale & Times
+                    Hotel Step 2 of 7 · Details & Facilities
                   </span>
                   <h2 className="text-2xl font-bold text-primary font-serif">
-                    Room Capacity & Check-in Timings
+                    Registration, Timings & Amenities
                   </h2>
                 </div>
 
                 <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
-                  <div className="flex items-center justify-between pb-3 border-b border-tertiary/50">
-                    <div>
-                      <div className="text-xs font-bold text-primary">Total Guest Rooms</div>
-                      <div className="text-[11px] text-neutral-500">
-                        Across all room types (Suites, Deluxe, Standard)
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setHotelTotalRooms((prev) => Math.max(1, prev - 5))}
-                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
-                      >
-                        -
-                      </button>
-                      <span className="w-10 text-center font-bold font-mono text-primary text-sm">
-                        {hotelTotalRooms}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setHotelTotalRooms((prev) => prev + 5)}
-                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-xs font-bold text-primary mb-1">
-                        Standard Check-in Time
-                      </label>
-                      <input
-                        type="text"
-                        value={checkInTime}
-                        onChange={(e) => setCheckInTime(e.target.value)}
-                        placeholder="15:00"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-primary mb-1">
-                        Standard Check-out Time
-                      </label>
-                      <input
-                        type="text"
-                        value={checkOutTime}
-                        onChange={(e) => setCheckOutTime(e.target.value)}
-                        placeholder="12:00"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step H3: Hotel Amenities */}
-            {hotelStep === 3 && (
-              <div className="space-y-5">
-                <div className="text-center space-y-1">
-                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                    Hotel Step 3 of 7 · Facilities
-                  </span>
-                  <h2 className="text-2xl font-bold text-primary font-serif">
-                    Hotel Amenities & Guest Services
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
-                  {[
-                    { id: "breakfast", label: "Breakfast Buffet" },
-                    { id: "pool", label: "Swimming Pool" },
-                    { id: "spa", label: "Spa & Traditional Hammam" },
-                    { id: "wifi", label: "High-Speed WiFi" },
-                    { id: "valet", label: "Valet Parking" },
-                    { id: "conference", label: "Conference Halls" },
-                    { id: "reception_24_7", label: "24/7 Front Desk" },
-                    { id: "shuttle", label: "Airport Shuttle" },
-                  ].map((amenity) => {
-                    const isSelected = hotelAmenities.includes(amenity.id);
-                    return (
-                      <button
-                        key={amenity.id}
-                        type="button"
-                        onClick={() => {
-                          setHotelAmenities((prev) =>
-                            isSelected ? prev.filter((a) => a !== amenity.id) : [...prev, amenity.id]
-                          );
-                        }}
-                        className={`p-3 rounded-2xl border-2 text-start flex items-center justify-between text-xs font-bold transition ${
-                          isSelected
-                            ? "border-primary bg-primary/5 text-primary"
-                            : "border-tertiary/70 bg-neutral-50 text-neutral-600 hover:border-neutral-400"
-                        }`}
-                      >
-                        <span>{amenity.label}</span>
-                        {isSelected && <HiOutlineCheck size={16} className="text-primary shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Step H4: Commercial Registration */}
-            {hotelStep === 4 && (
-              <div className="space-y-5">
-                <div className="text-center space-y-1">
-                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                    Hotel Step 4 of 7 · Legal & Contact
-                  </span>
-                  <h2 className="text-2xl font-bold text-primary font-serif">
-                    Commercial Registration & Address
-                  </h2>
-                </div>
-
-                <div className="space-y-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-primary mb-1">
@@ -2212,17 +2252,31 @@ export default function BecomeHostFlow({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-primary mb-1">
-                      Street Address & Wilaya
-                    </label>
-                    <input
-                      type="text"
-                      value={hotelAddress}
-                      onChange={(e) => setHotelAddress(e.target.value)}
-                      placeholder="24 Avenue Souidani Boujemaa, Algiers"
-                      className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
-                    />
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Check-in Time
+                      </label>
+                      <input
+                        type="text"
+                        value={checkInTime}
+                        onChange={(e) => setCheckInTime(e.target.value)}
+                        placeholder="15:00"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Check-out Time
+                      </label>
+                      <input
+                        type="text"
+                        value={checkOutTime}
+                        onChange={(e) => setCheckOutTime(e.target.value)}
+                        placeholder="12:00"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2249,6 +2303,212 @@ export default function BecomeHostFlow({
                         placeholder="+213 21 69 21 21"
                         className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
                       />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-2">
+                      Property Amenities
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: "breakfast", label: "Breakfast Buffet" },
+                        { id: "pool", label: "Swimming Pool" },
+                        { id: "spa", label: "Spa & Hammam" },
+                        { id: "wifi", label: "High-Speed WiFi" },
+                        { id: "valet", label: "Valet Parking" },
+                        { id: "conference", label: "Conference Room" },
+                        { id: "reception_24_7", label: "24/7 Front Desk" },
+                        { id: "shuttle", label: "Airport Shuttle" },
+                      ].map((amenity) => {
+                        const isSelected = hotelAmenities.includes(amenity.id);
+                        return (
+                          <button
+                            key={amenity.id}
+                            type="button"
+                            onClick={() => {
+                              setHotelAmenities((prev) =>
+                                isSelected ? prev.filter((a) => a !== amenity.id) : [...prev, amenity.id]
+                              );
+                            }}
+                            className={`p-2.5 rounded-xl border text-start flex items-center justify-between text-xs font-medium transition ${
+                              isSelected
+                                ? "border-primary bg-primary/5 text-primary font-bold"
+                                : "border-tertiary/70 bg-neutral-50 text-neutral-600 hover:border-neutral-400"
+                            }`}
+                          >
+                            <span className="truncate">{amenity.label}</span>
+                            {isSelected && <BrandCheckIcon size={14} className="text-primary shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step H3: Location & Map Pin Picker */}
+            {hotelStep === 3 && (
+              <div className="space-y-5 animate-in fade-in">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 3 of 7 · Property Location
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Where is your Hotel located?
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Set your coordinates so guests can find your hotel on the interactive map.
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Wilaya (Province)
+                      </label>
+                      <select
+                        value={hotelWilaya}
+                        onChange={(e) => {
+                          const sel = wilayasAlgeria.find((w) => w.name === e.target.value);
+                          if (sel) {
+                            setHotelWilaya(sel.name);
+                            setHotelLatlng(sel.latlng);
+                          }
+                        }}
+                        className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary"
+                      >
+                        {wilayasAlgeria.map((w) => (
+                          <option key={w.name} value={w.name}>
+                            {w.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        City / Neighborhood
+                      </label>
+                      <input
+                        type="text"
+                        value={hotelCity}
+                        onChange={(e) => setHotelCity(e.target.value)}
+                        placeholder="e.g. Hydra, Didouche Mourad"
+                        className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Exact Street Address
+                    </label>
+                    <input
+                      type="text"
+                      value={hotelAddress}
+                      onChange={(e) => setHotelAddress(e.target.value)}
+                      placeholder="e.g. 24 Avenue Souidani Boujemaa"
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary"
+                    />
+                  </div>
+
+                  {/* Interactive Map */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="block text-xs font-bold text-primary">
+                      Map Pin Position
+                    </label>
+                    <div className="rounded-2xl overflow-hidden border border-tertiary shadow-xs h-60 relative">
+                      <Map center={hotelLatlng} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step H4: Property Photos Gallery */}
+            {hotelStep === 4 && (
+              <div className="space-y-5 animate-in fade-in">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hotel Step 4 of 7 · Property Gallery
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Upload Property Photos
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Add photos of your hotel exterior, lobby, facilities and grounds (min 4 required).
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  {/* Photos Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {hotelPhotos.map((src, index) => (
+                      <div
+                        key={index}
+                        className="relative aspect-video rounded-2xl overflow-hidden border border-tertiary group bg-neutral-100"
+                      >
+                        <Image src={src} alt="Hotel Photo" fill className="object-cover" />
+                        {index === 0 && (
+                          <span className="absolute top-2 start-2 px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full">
+                            Cover
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveHotelPhoto(index)}
+                          className="absolute top-2 end-2 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-rose-600"
+                          title="Remove photo"
+                        >
+                          <BrandTrashIcon size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Photo Input */}
+                  <div className="p-4 bg-neutral-50 rounded-2xl border border-tertiary/70 space-y-3">
+                    <label className="block text-xs font-semibold text-neutral-700">
+                      Add Photo by URL
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={hotelCustomPhotoUrl}
+                        onChange={(e) => setHotelCustomPhotoUrl(e.target.value)}
+                        placeholder="https://images.unsplash.com/photo-..."
+                        className="flex-1 px-3.5 py-2 bg-white border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddHotelPhoto}
+                        className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/95 transition"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="pt-1 flex flex-wrap gap-1.5 text-[11px]">
+                      <span className="text-neutral-400 self-center me-1">Presets:</span>
+                      {[
+                        { label: "+ Grand Lobby", src: "/assets/hero.jpg" },
+                        { label: "+ Seaside Suite", src: "/assets/oran.jpg" },
+                        { label: "+ Historic Courtyard", src: "/assets/constantine.jpg" },
+                        { label: "+ Pool & Patio", src: "/assets/tipaza.jpg" },
+                      ].map((preset, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setHotelPhotos((prev) => [...prev, preset.src])}
+                          className="px-2.5 py-1 bg-white hover:bg-neutral-200 border border-tertiary/60 text-neutral-700 rounded-lg font-medium transition"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2278,7 +2538,7 @@ export default function BecomeHostFlow({
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl">⚡</span>
+                        <InstantBookingIcon size={26} className="text-primary" />
                         <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
                           Recommended
                         </span>
@@ -2300,7 +2560,7 @@ export default function BecomeHostFlow({
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl">📩</span>
+                        <RequestReviewIcon size={26} className="text-primary" />
                         <span className="px-2 py-0.5 bg-neutral-100 text-neutral-700 text-[10px] font-bold rounded-full">
                           Manual Review
                         </span>
@@ -2368,7 +2628,7 @@ export default function BecomeHostFlow({
                     }
                     className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline pt-1"
                   >
-                    <HiOutlinePlus size={15} />
+                    <BrandPlusIcon size={15} />
                     <span>Add another team member</span>
                   </button>
                 </div>
@@ -2392,9 +2652,14 @@ export default function BecomeHostFlow({
                     <span className="text-neutral-500">Property Name:</span>
                     <span className="font-bold text-primary">{hotelName}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-neutral-500">Classification:</span>
-                    <span className="text-accent font-bold">{"★".repeat(hotelStarRating)} ({hotelStarRating} Stars)</span>
+                    <span className="text-accent font-bold inline-flex items-center gap-1">
+                      {Array.from({ length: hotelStarRating }).map((_, i) => (
+                        <BrandStarIcon key={i} size={14} className="text-accent" />
+                      ))}
+                      <span>({hotelStarRating} Stars)</span>
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-neutral-500">Total Rooms:</span>
@@ -2411,7 +2676,7 @@ export default function BecomeHostFlow({
 
                   <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200 text-blue-900 mt-2">
                     <div className="font-bold flex items-center gap-1">
-                      <HiOutlineShieldCheck size={16} />
+                      <BrandShieldIcon size={16} />
                       <span>Hotel Onboarding Completed</span>
                     </div>
                     <div className="text-[11px] mt-0.5">
@@ -2485,182 +2750,19 @@ export default function BecomeHostFlow({
               </div>
             )}
 
-            {/* Step B2: Bed & Room Mix */}
+            {/* Step B2: Commercial Registration & House Policies */}
             {hostelStep === 2 && (
               <div className="space-y-5">
                 <div className="text-center space-y-1">
                   <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                    Hostel Step 2 of 7 · Bed Inventory
+                    Hostel Step 2 of 7 · Details & Policies
                   </span>
                   <h2 className="text-2xl font-bold text-primary font-serif">
-                    Dorm Beds & Private Rooms
+                    Legal Registration & Hostel Policies
                   </h2>
                 </div>
 
                 <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
-                  <div className="flex items-center justify-between pb-3 border-b border-tertiary/50">
-                    <div>
-                      <div className="text-xs font-bold text-primary">Dormitory Beds</div>
-                      <div className="text-[11px] text-neutral-500">
-                        Bookable individually per bed in shared rooms
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = Math.max(0, hostelDormBeds - 4);
-                          setHostelDormBeds(next);
-                          setHostelTotalBeds(next + hostelPrivateRooms);
-                        }}
-                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
-                      >
-                        -
-                      </button>
-                      <span className="w-10 text-center font-bold font-mono text-primary text-sm">
-                        {hostelDormBeds}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = hostelDormBeds + 4;
-                          setHostelDormBeds(next);
-                          setHostelTotalBeds(next + hostelPrivateRooms);
-                        }}
-                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <div>
-                      <div className="text-xs font-bold text-primary">Private Rooms</div>
-                      <div className="text-[11px] text-neutral-500">
-                        Private rooms booked as single units
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = Math.max(0, hostelPrivateRooms - 1);
-                          setHostelPrivateRooms(next);
-                          setHostelTotalBeds(hostelDormBeds + next);
-                        }}
-                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
-                      >
-                        -
-                      </button>
-                      <span className="w-10 text-center font-bold font-mono text-primary text-sm">
-                        {hostelPrivateRooms}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = hostelPrivateRooms + 1;
-                          setHostelPrivateRooms(next);
-                          setHostelTotalBeds(hostelDormBeds + next);
-                        }}
-                        className="w-8 h-8 rounded-full border border-tertiary flex items-center justify-center font-bold text-neutral-600 hover:bg-neutral-100"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step B3: Facilities & House Rules */}
-            {hostelStep === 3 && (
-              <div className="space-y-5">
-                <div className="text-center space-y-1">
-                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                    Hostel Step 3 of 7 · Facilities & Rules
-                  </span>
-                  <h2 className="text-2xl font-bold text-primary font-serif">
-                    Shared Facilities & House Rules
-                  </h2>
-                </div>
-
-                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { id: "lockers", label: "Personal Lockers" },
-                      { id: "shared_kitchen", label: "Communal Kitchen" },
-                      { id: "rooftop", label: "Rooftop Social Patio" },
-                      { id: "coworking", label: "Co-working Zone" },
-                      { id: "luggage_storage", label: "Free Luggage Hold" },
-                      { id: "breakfast", label: "Hostel Breakfast" },
-                    ].map((facility) => {
-                      const isSelected = hostelFacilities.includes(facility.id);
-                      return (
-                        <button
-                          key={facility.id}
-                          type="button"
-                          onClick={() => {
-                            setHostelFacilities((prev) =>
-                              isSelected ? prev.filter((f) => f !== facility.id) : [...prev, facility.id]
-                            );
-                          }}
-                          className={`p-3 rounded-2xl border-2 text-start flex items-center justify-between text-xs font-bold transition ${
-                            isSelected
-                              ? "border-primary bg-primary/5 text-primary"
-                              : "border-tertiary/70 bg-neutral-50 text-neutral-600 hover:border-neutral-400"
-                          }`}
-                        >
-                          <span>{facility.label}</span>
-                          {isSelected && <HiOutlineCheck size={16} className="text-primary shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div>
-                      <label className="block text-xs font-bold text-primary mb-1">
-                        Curfew Policy
-                      </label>
-                      <input
-                        type="text"
-                        value={curfewPolicy}
-                        onChange={(e) => setCurfewPolicy(e.target.value)}
-                        placeholder="No curfew · 24h keycard access"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-primary mb-1">
-                        Age Policy
-                      </label>
-                      <input
-                        type="text"
-                        value={agePolicy}
-                        onChange={(e) => setAgePolicy(e.target.value)}
-                        placeholder="18-35 only in dorms"
-                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step B4: Commercial Registration */}
-            {hostelStep === 4 && (
-              <div className="space-y-5">
-                <div className="text-center space-y-1">
-                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
-                    Hostel Step 4 of 7 · Legal & Contact
-                  </span>
-                  <h2 className="text-2xl font-bold text-primary font-serif">
-                    Legal Registration & Reception Contact
-                  </h2>
-                </div>
-
-                <div className="space-y-3 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-primary mb-1">
@@ -2703,7 +2805,7 @@ export default function BecomeHostFlow({
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-primary mb-1">
-                        Hostel Phone / WhatsApp
+                        Reception Phone / WhatsApp
                       </label>
                       <input
                         type="tel"
@@ -2712,6 +2814,237 @@ export default function BecomeHostFlow({
                         placeholder="+213 21 73 88 19"
                         className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary font-mono"
                       />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Curfew Policy
+                      </label>
+                      <input
+                        type="text"
+                        value={curfewPolicy}
+                        onChange={(e) => setCurfewPolicy(e.target.value)}
+                        placeholder="No curfew · 24h keycard access"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Age Policy
+                      </label>
+                      <input
+                        type="text"
+                        value={agePolicy}
+                        onChange={(e) => setAgePolicy(e.target.value)}
+                        placeholder="All ages welcome (min 18 in dorms)"
+                        className="w-full px-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-2">
+                      Hostel Facilities
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {[
+                        { id: "lockers", label: "Personal Lockers" },
+                        { id: "shared_kitchen", label: "Communal Kitchen" },
+                        { id: "rooftop", label: "Rooftop Social Patio" },
+                        { id: "coworking", label: "Co-working Zone" },
+                        { id: "luggage_storage", label: "Free Luggage Hold" },
+                        { id: "breakfast", label: "Hostel Breakfast" },
+                      ].map((facility) => {
+                        const isSelected = hostelFacilities.includes(facility.id);
+                        return (
+                          <button
+                            key={facility.id}
+                            type="button"
+                            onClick={() => {
+                              setHostelFacilities((prev) =>
+                                isSelected ? prev.filter((f) => f !== facility.id) : [...prev, facility.id]
+                              );
+                            }}
+                            className={`p-2.5 rounded-xl border text-start flex items-center justify-between text-xs font-medium transition ${
+                              isSelected
+                                ? "border-primary bg-primary/5 text-primary font-bold"
+                                : "border-tertiary/70 bg-neutral-50 text-neutral-600 hover:border-neutral-400"
+                            }`}
+                          >
+                            <span className="truncate">{facility.label}</span>
+                            {isSelected && <BrandCheckIcon size={14} className="text-primary shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B3: Location & Map Pin Picker */}
+            {hostelStep === 3 && (
+              <div className="space-y-5 animate-in fade-in">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 3 of 7 · Property Location
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Where is your Hostel located?
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Set your coordinates so backpackers can easily find your hostel on the map.
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        Wilaya (Province)
+                      </label>
+                      <select
+                        value={hostelWilaya}
+                        onChange={(e) => {
+                          const sel = wilayasAlgeria.find((w) => w.name === e.target.value);
+                          if (sel) {
+                            setHostelWilaya(sel.name);
+                            setHostelLatlng(sel.latlng);
+                          }
+                        }}
+                        className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary"
+                      >
+                        {wilayasAlgeria.map((w) => (
+                          <option key={w.name} value={w.name}>
+                            {w.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-primary mb-1">
+                        City / Neighborhood
+                      </label>
+                      <input
+                        type="text"
+                        value={hostelCity}
+                        onChange={(e) => setHostelCity(e.target.value)}
+                        placeholder="e.g. Casbah, Bab El Oued"
+                        className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-primary mb-1">
+                      Exact Street Address
+                    </label>
+                    <input
+                      type="text"
+                      value={hostelAddress}
+                      onChange={(e) => setHostelAddress(e.target.value)}
+                      placeholder="e.g. 12 Rue Sidi Ramdane, Casbah"
+                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary"
+                    />
+                  </div>
+
+                  {/* Interactive Map */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="block text-xs font-bold text-primary">
+                      Map Pin Position
+                    </label>
+                    <div className="rounded-2xl overflow-hidden border border-tertiary shadow-xs h-60 relative">
+                      <Map center={hostelLatlng} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step B4: Property Photos Gallery */}
+            {hostelStep === 4 && (
+              <div className="space-y-5 animate-in fade-in">
+                <div className="text-center space-y-1">
+                  <span className="text-xs uppercase tracking-wider text-secondary font-bold">
+                    Hostel Step 4 of 7 · Property Gallery
+                  </span>
+                  <h2 className="text-2xl font-bold text-primary font-serif">
+                    Upload Property Photos
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Add photos of your hostel facade, common areas, rooftop and vibe (min 4 required).
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-white p-6 rounded-3xl border border-tertiary shadow-xs">
+                  {/* Photos Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {hostelPhotos.map((src, index) => (
+                      <div
+                        key={index}
+                        className="relative aspect-video rounded-2xl overflow-hidden border border-tertiary group bg-neutral-100"
+                      >
+                        <Image src={src} alt="Hostel Photo" fill className="object-cover" />
+                        {index === 0 && (
+                          <span className="absolute top-2 start-2 px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full">
+                            Cover
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveHostelPhoto(index)}
+                          className="absolute top-2 end-2 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-rose-600"
+                          title="Remove photo"
+                        >
+                          <BrandTrashIcon size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Photo Input */}
+                  <div className="p-4 bg-neutral-50 rounded-2xl border border-tertiary/70 space-y-3">
+                    <label className="block text-xs font-semibold text-neutral-700">
+                      Add Photo by URL
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={hostelCustomPhotoUrl}
+                        onChange={(e) => setHostelCustomPhotoUrl(e.target.value)}
+                        placeholder="https://images.unsplash.com/photo-..."
+                        className="flex-1 px-3.5 py-2 bg-white border border-tertiary/70 rounded-xl text-xs text-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddHostelPhoto}
+                        className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/95 transition"
+                      >
+                        Add
+                      </button>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="pt-1 flex flex-wrap gap-1.5 text-[11px]">
+                      <span className="text-neutral-400 self-center me-1">Presets:</span>
+                      {[
+                        { label: "+ Rooftop Lounge", src: "/assets/hero.jpg" },
+                        { label: "+ Saharan Oasis", src: "/assets/tipaza.jpg" },
+                        { label: "+ Historic Courtyard", src: "/assets/constantine.jpg" },
+                        { label: "+ Social Area", src: "/assets/oran.jpg" },
+                      ].map((preset, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setHostelPhotos((prev) => [...prev, preset.src])}
+                          className="px-2.5 py-1 bg-white hover:bg-neutral-200 border border-tertiary/60 text-neutral-700 rounded-lg font-medium transition"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2741,7 +3074,7 @@ export default function BecomeHostFlow({
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl">⚡</span>
+                        <InstantBookingIcon size={26} className="text-primary" />
                         <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-full">
                           Recommended
                         </span>
@@ -2763,7 +3096,7 @@ export default function BecomeHostFlow({
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl">📩</span>
+                        <RequestReviewIcon size={26} className="text-primary" />
                         <span className="px-2 py-0.5 bg-neutral-100 text-neutral-700 text-[10px] font-bold rounded-full">
                           Manual Review
                         </span>
@@ -2828,7 +3161,7 @@ export default function BecomeHostFlow({
                     }
                     className="text-xs font-semibold text-secondary flex items-center gap-1 hover:underline pt-1"
                   >
-                    <HiOutlinePlus size={15} />
+                    <BrandPlusIcon size={15} />
                     <span>Add another crew member</span>
                   </button>
                 </div>
@@ -2871,7 +3204,7 @@ export default function BecomeHostFlow({
 
                   <div className="p-3 bg-purple-50 rounded-2xl border border-purple-200 text-purple-900 mt-2">
                     <div className="font-bold flex items-center gap-1">
-                      <HiOutlineShieldCheck size={16} />
+                      <BrandShieldIcon size={16} />
                       <span>Hostel Community Profile Ready</span>
                     </div>
                     <div className="text-[11px] mt-0.5">
@@ -2940,7 +3273,7 @@ export default function BecomeHostFlow({
                 onClick={() => setHotelStep((prev) => prev - 1)}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
               >
-                <HiOutlineChevronLeft size={16} />
+                <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
                 <span>Back</span>
               </button>
             ) : (
@@ -2952,7 +3285,7 @@ export default function BecomeHostFlow({
                 }}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
               >
-                <HiOutlineChevronLeft size={16} />
+                <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
                 <span>Choose account type</span>
               </button>
             )
@@ -2963,7 +3296,7 @@ export default function BecomeHostFlow({
                 onClick={() => setHostelStep((prev) => prev - 1)}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
               >
-                <HiOutlineChevronLeft size={16} />
+                <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
                 <span>Back</span>
               </button>
             ) : (
@@ -2975,7 +3308,7 @@ export default function BecomeHostFlow({
                 }}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
               >
-                <HiOutlineChevronLeft size={16} />
+                <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
                 <span>Choose account type</span>
               </button>
             )
@@ -2986,7 +3319,7 @@ export default function BecomeHostFlow({
                 onClick={() => setAgencyStep((prev) => prev - 1)}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
               >
-                <HiOutlineChevronLeft size={16} />
+                <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
                 <span>Back</span>
               </button>
             ) : (
@@ -2998,7 +3331,7 @@ export default function BecomeHostFlow({
                 }}
                 className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
               >
-                <HiOutlineChevronLeft size={16} />
+                <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
                 <span>Choose account type</span>
               </button>
             )
@@ -3008,7 +3341,7 @@ export default function BecomeHostFlow({
               onClick={() => setCurrentStep((prev) => prev - 1)}
               className="inline-flex items-center gap-1 px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-600 hover:text-primary transition"
             >
-              <HiOutlineChevronLeft size={16} />
+              <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
               <span>Back</span>
             </button>
           ) : null}
@@ -3031,6 +3364,10 @@ export default function BecomeHostFlow({
                 onClick={() => {
                   if (hotelStep === 1 && !hotelName.trim()) {
                     toast.error("Please enter your hotel name.");
+                    return;
+                  }
+                  if (hotelStep === 4 && hotelPhotos.length < 4) {
+                    toast.warning("Please ensure at least 4 property photos are uploaded.");
                     return;
                   }
                   setHotelStep((prev) => prev + 1);
@@ -3058,6 +3395,10 @@ export default function BecomeHostFlow({
                 onClick={() => {
                   if (hostelStep === 1 && !hostelName.trim()) {
                     toast.error("Please enter your hostel name.");
+                    return;
+                  }
+                  if (hostelStep === 4 && hostelPhotos.length < 4) {
+                    toast.warning("Please ensure at least 4 property photos are uploaded.");
                     return;
                   }
                   setHostelStep((prev) => prev + 1);

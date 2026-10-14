@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import Image from "next/image";
+import { BrandPinIcon } from "@/components/icons";
 
 export interface DestinationItem {
   id: string;
@@ -51,13 +51,11 @@ export default function WherePopover({ query, onSelect }: WherePopoverProps) {
             onClick={() => onSelect(item)}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-2xl hover:bg-darnaBg/70 transition text-start group cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-neutral-100 group-hover:bg-accent/10 flex items-center justify-center shrink-0 transition">
-              <Image
-                src="/assets/location.png"
-                alt="Location"
-                width={20}
-                height={20}
-                className="object-contain"
+            <div className="w-10 h-10 rounded-xl bg-neutral-100 group-hover:bg-accent/10 flex items-center justify-center shrink-0 transition text-neutral-500 group-hover:text-accent">
+              <BrandPinIcon
+                size={20}
+                strokeWidth={1.8}
+                className="shrink-0"
               />
             </div>
             <div className="flex flex-col min-w-0">

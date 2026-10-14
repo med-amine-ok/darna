@@ -7,13 +7,13 @@ import { useRouter } from "@/navigation";
 import { Listing } from "@/types";
 import { toast } from "react-toastify";
 import {
-  HiOutlinePlus,
-  HiOutlineEye,
-  HiOutlinePencilAlt,
-  HiOutlineTrash,
-  HiOutlineLocationMarker,
-  HiOutlineTrendingUp,
-} from "react-icons/hi";
+  BrandPlusIcon,
+  BrandEyeIcon,
+  BrandEditIcon,
+  BrandTrashIcon,
+  BrandPinIcon,
+  BrandTrendingUpIcon,
+} from "@/components/icons";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 
 interface PropertiesClientProps {
@@ -66,7 +66,7 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
           href="/become-a-host/1"
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm"
         >
-          <HiOutlinePlus size={18} />
+          <BrandPlusIcon size={18} />
           <span>Create New Listing</span>
         </Link>
       </div>
@@ -89,7 +89,7 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
           <div className="text-xs font-semibold text-neutral-500">Total Views</div>
           <div className="text-2xl font-bold text-primary mt-1 flex items-center gap-1.5">
             <span>2,410</span>
-            <HiOutlineTrendingUp size={18} className="text-emerald-600" />
+            <BrandTrendingUpIcon size={18} className="text-emerald-600" />
           </div>
         </div>
         <div className="p-5 bg-white rounded-2xl border border-tertiary/70 shadow-xs">
@@ -158,7 +158,7 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
                       <Link href={`/listings/${item.id}`}>{item.title}</Link>
                     </h3>
                     <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-                      <HiOutlineLocationMarker size={15} className="text-secondary shrink-0" />
+                      <BrandPinIcon size={15} className="text-secondary shrink-0" />
                       <span>{item.city}, Algeria</span>
                     </div>
                     <div className="pt-2 text-sm font-bold text-primary">
@@ -178,7 +178,7 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
                       className="p-2 bg-white border border-tertiary rounded-xl text-neutral-700 hover:bg-neutral-100 transition"
                       title="View Public Listing"
                     >
-                      <HiOutlineEye size={16} />
+                      <BrandEyeIcon size={16} />
                     </Link>
                     <button
                       type="button"
@@ -186,7 +186,7 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
                       className="p-2 bg-white border border-tertiary rounded-xl text-neutral-700 hover:bg-neutral-100 transition"
                       title="Edit Listing"
                     >
-                      <HiOutlinePencilAlt size={16} />
+                      <BrandEditIcon size={16} />
                     </button>
                   </div>
 
@@ -196,7 +196,7 @@ export default function PropertiesClient({ initialListings }: PropertiesClientPr
                     className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition"
                     title="Delete Listing"
                   >
-                    <HiOutlineTrash size={16} />
+                    <BrandTrashIcon size={16} />
                   </button>
                 </div>
               </div>

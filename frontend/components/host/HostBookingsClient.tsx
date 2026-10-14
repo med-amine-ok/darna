@@ -6,23 +6,19 @@ import { useRouter } from "@/navigation";
 import { Reservation, Listing, User } from "@/types";
 import { updateReservationStatus, cancelReservation } from "@/lib/data/reservations";
 import {
-  HiOutlineCalendar,
-  HiOutlineSearch,
-  HiOutlineFilter,
-  HiOutlineCheckCircle,
-  HiOutlineXCircle,
-  HiOutlineUser,
-  HiOutlinePhone,
-  HiOutlineMail,
-  HiOutlineDocumentText,
-  HiOutlineChatAlt2,
-  HiOutlineCash,
-  HiOutlineInformationCircle,
-  HiOutlineEye,
-  HiOutlineClock,
-  HiOutlineBan,
-} from "react-icons/hi";
-import { FaCheckCircle } from "react-icons/fa";
+  BrandCalendarIcon,
+  BrandSearchIcon,
+  BrandFilterIcon,
+  BrandCheckIcon,
+  BrandCloseIcon,
+  BrandMessageIcon,
+  BrandEyeIcon,
+  BrandClockIcon,
+  BrandPhoneIcon,
+  BrandMailIcon,
+  BrandReceiptIcon,
+  BrandShieldIcon,
+} from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import Calendar from "@/components/inputs/Calendar";
@@ -258,7 +254,7 @@ export default function HostBookingsClient({
               onClick={() => setShowMiniCalendar(!showMiniCalendar)}
               className="px-4 py-2.5 rounded-2xl border border-tertiary bg-white hover:bg-neutral-50 text-xs font-bold text-primary flex items-center gap-2 shadow-2xs transition btn-press cursor-pointer"
             >
-              <HiOutlineCalendar size={16} className="text-secondary" />
+              <BrandCalendarIcon size={16} className="text-secondary" />
               <span>{showMiniCalendar ? "Hide Calendar" : "Quick Calendar"}</span>
             </button>
           )}
@@ -284,7 +280,7 @@ export default function HostBookingsClient({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-tertiary/40 pb-4">
             <div>
               <h3 className="font-serif text-base sm:text-lg font-bold text-primary flex items-center gap-2">
-                <HiOutlineCalendar className="text-secondary" />
+                <BrandCalendarIcon className="text-secondary" />
                 <span>Solo Host Mini-Calendar & Date Availability</span>
               </h3>
               <p className="text-xs text-neutral-500">
@@ -336,7 +332,7 @@ export default function HostBookingsClient({
                   onClick={handleBlockSelectedDates}
                   className="w-full py-2.5 px-3 bg-neutral-800 hover:bg-black text-white rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-2xs cursor-pointer btn-press"
                 >
-                  <HiOutlineBan size={15} />
+                  <BrandCloseIcon size={15} />
                   <span>Block These Dates</span>
                 </button>
                 <button
@@ -344,7 +340,7 @@ export default function HostBookingsClient({
                   onClick={handleUnblockSelectedDates}
                   className="w-full py-2.5 px-3 bg-white hover:bg-neutral-100 text-primary border border-tertiary/80 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-2xs cursor-pointer btn-press"
                 >
-                  <HiOutlineCheckCircle size={15} className="text-emerald-600" />
+                  <BrandCheckIcon size={15} className="text-emerald-600" />
                   <span>Unblock Dates</span>
                 </button>
               </div>
@@ -402,7 +398,7 @@ export default function HostBookingsClient({
       <div className="bg-white rounded-2xl border border-tertiary/70 p-4 mb-6 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Search Input */}
         <div className="relative w-full md:w-96">
-          <HiOutlineSearch
+          <BrandSearchIcon
             size={18}
             className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
           />
@@ -419,7 +415,7 @@ export default function HostBookingsClient({
               onClick={() => setSearchQuery("")}
               className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 hover:text-neutral-700 font-bold"
             >
-              ✕
+              <BrandCloseIcon size={14} />
             </button>
           )}
         </div>
@@ -427,7 +423,7 @@ export default function HostBookingsClient({
         {/* Listing Selector */}
         <div className="flex items-center gap-2 w-full md:w-auto">
           <label htmlFor="listing-filter-select" className="text-xs font-bold text-neutral-500 whitespace-nowrap flex items-center gap-1">
-            <HiOutlineFilter size={14} /> Filter listing:
+            <BrandFilterIcon size={14} /> Filter listing:
           </label>
           <select
             id="listing-filter-select"
@@ -449,7 +445,7 @@ export default function HostBookingsClient({
       {filteredReservations.length === 0 ? (
         <div className="bg-white rounded-2xl border border-tertiary/70 p-12 text-center shadow-2xs">
           <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4 text-secondary">
-            <HiOutlineCalendar size={32} />
+            <BrandCalendarIcon size={32} />
           </div>
           <h3 className="font-serif text-lg font-bold text-primary mb-1">
             No reservations found
@@ -524,7 +520,7 @@ export default function HostBookingsClient({
                                 : "bg-amber-50 text-amber-800 border-amber-200"
                             }`}
                           >
-                            <HiOutlineClock size={12} />
+                            <BrandClockIcon size={12} />
                             {timer.text}
                           </span>
                         </div>
@@ -571,14 +567,14 @@ export default function HostBookingsClient({
                         />
                       </div>
                       <span className="font-bold text-primary">{guest?.name || "Guest"}</span>
-                      <FaCheckCircle className="text-secondary text-[11px]" title="ID Verified" />
+                      <span title="ID Verified"><BrandShieldIcon size={14} className="text-secondary" /></span>
                       <span>•</span>
                       <span>{res.guestsCount} guests</span>
                     </div>
 
                     {/* Dates & duration */}
                     <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700">
-                      <HiOutlineCalendar size={15} className="text-secondary shrink-0" />
+                      <BrandCalendarIcon size={15} className="text-secondary shrink-0" />
                       <span>
                         {new Date(res.startDate).toLocaleDateString("fr-DZ", {
                           day: "numeric",
@@ -596,7 +592,7 @@ export default function HostBookingsClient({
                     {/* Guest note if provided */}
                     {res.guestMessage && (
                       <div className="mt-2.5 p-2.5 rounded-xl bg-neutral-50/80 border border-tertiary/70 text-xs text-neutral-700 flex items-start gap-2">
-                        <HiOutlineChatAlt2 className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
+                        <BrandMessageIcon size={16} className="text-secondary shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
                             Note from guest
@@ -652,7 +648,7 @@ export default function HostBookingsClient({
                             disabled={actionLoading === res.id}
                             className="px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
                           >
-                            <HiOutlineCheckCircle size={16} />
+                            <BrandCheckIcon size={16} />
                             <span>Accept</span>
                           </button>
                           <button
@@ -661,7 +657,7 @@ export default function HostBookingsClient({
                             disabled={actionLoading === res.id}
                             className="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold hover:bg-rose-100 transition flex items-center gap-1.5 disabled:opacity-50"
                           >
-                            <HiOutlineXCircle size={16} />
+                            <BrandCloseIcon size={16} />
                             <span>Decline</span>
                           </button>
                         </>
@@ -674,7 +670,7 @@ export default function HostBookingsClient({
                         onClick={() => setSelectedReservation(res)}
                         className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-primary rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
                       >
-                        <HiOutlineEye size={15} />
+                        <BrandEyeIcon size={15} />
                         <span>Details</span>
                       </button>
 
@@ -684,7 +680,7 @@ export default function HostBookingsClient({
                         className="p-2 border border-tertiary/80 hover:bg-neutral-50 text-neutral-700 rounded-xl transition"
                         title="Message guest"
                       >
-                        <HiOutlineChatAlt2 size={18} />
+                        <BrandMessageIcon size={18} />
                       </button>
 
                       {res.status === "confirmed" && cat !== "past" && (
@@ -724,7 +720,7 @@ export default function HostBookingsClient({
                 onClick={() => setSelectedReservation(null)}
                 className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
               >
-                ✕
+                <BrandCloseIcon size={16} />
               </button>
             </div>
 
@@ -745,7 +741,7 @@ export default function HostBookingsClient({
                 <div>
                   <div className="flex items-center gap-1.5 font-bold text-primary text-base">
                     <span>{selectedReservation.user?.name || "Guest"}</span>
-                    <FaCheckCircle className="text-secondary text-xs" />
+                    <BrandShieldIcon size={14} className="text-secondary" />
                   </div>
                   <span className="text-xs text-neutral-500">
                     Verified Algerian Explorer • Member since 2024
@@ -755,11 +751,11 @@ export default function HostBookingsClient({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="flex items-center gap-2 text-neutral-700 bg-white p-2.5 rounded-xl border border-tertiary/40">
-                  <HiOutlinePhone size={16} className="text-secondary" />
+                  <BrandPhoneIcon size={16} className="text-secondary" />
                   <span className="font-mono">{selectedReservation.user?.phone || "+213 550 12 34 56"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-neutral-700 bg-white p-2.5 rounded-xl border border-tertiary/40">
-                  <HiOutlineMail size={16} className="text-secondary" />
+                  <BrandMailIcon size={16} className="text-secondary" />
                   <span className="truncate">{selectedReservation.user?.email || "guest@darna.dz"}</span>
                 </div>
               </div>
@@ -835,7 +831,7 @@ export default function HostBookingsClient({
                 }}
                 className="w-full sm:w-auto px-4 py-2.5 border border-tertiary/80 hover:bg-neutral-50 text-neutral-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5"
               >
-                <HiOutlineDocumentText size={16} />
+                <BrandReceiptIcon size={16} />
                 <span>Download Official Facture</span>
               </button>
               <button

@@ -9,14 +9,13 @@ import { updateReservationStatus } from "@/lib/data/reservations";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import {
-  HiOutlineCalendar,
-  HiOutlineUserGroup,
-  HiOutlineChatAlt2,
-  HiOutlineCheck,
-  HiOutlineX,
-  HiOutlineSearch,
-  HiOutlineCash,
-} from "react-icons/hi";
+  BrandCalendarIcon,
+  BrandUsersIcon,
+  BrandMessageIcon,
+  BrandCheckIcon,
+  BrandCloseIcon,
+  BrandSearchIcon,
+} from "@/components/icons";
 
 interface ReservationsClientProps {
   initialReservations: Reservation[];
@@ -159,7 +158,7 @@ export default function ReservationsClient({
 
         {/* Search */}
         <div className="relative min-w-[240px]">
-          <HiOutlineSearch
+          <BrandSearchIcon
             size={16}
             className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
           />
@@ -176,7 +175,7 @@ export default function ReservationsClient({
       {/* Reservation Cards List */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-md mx-auto my-6 shadow-xs">
-          <HiOutlineCalendar size={36} className="text-tertiary mx-auto mb-3" />
+          <BrandCalendarIcon size={36} className="text-tertiary mx-auto mb-3" />
           <h3 className="text-base font-bold text-primary">No reservations found</h3>
           <p className="text-xs text-neutral-500 mt-1">
             No bookings match the selected status filter or search query.
@@ -238,7 +237,7 @@ export default function ReservationsClient({
                       <span>{res.startDate} – {res.endDate}</span>
                       <span>·</span>
                       <span className="flex items-center gap-1">
-                        <HiOutlineUserGroup size={14} />
+                        <BrandUsersIcon size={14} />
                         {res.guestsCount} guests
                       </span>
                     </div>
@@ -264,7 +263,7 @@ export default function ReservationsClient({
                           onClick={() => handleStatusChange(res.id, "confirmed")}
                           className="px-3.5 py-2 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition flex items-center gap-1 disabled:opacity-50"
                         >
-                          <HiOutlineCheck size={15} />
+                          <BrandCheckIcon size={15} />
                           <span>Accept</span>
                         </button>
                         <button
@@ -273,7 +272,7 @@ export default function ReservationsClient({
                           onClick={() => setDecliningId(res.id)}
                           className="px-3.5 py-2 bg-white border border-rose-300 text-rose-700 rounded-xl text-xs font-semibold hover:bg-rose-50 transition flex items-center gap-1 disabled:opacity-50"
                         >
-                          <HiOutlineX size={15} />
+                          <BrandCloseIcon size={15} />
                           <span>Decline</span>
                         </button>
                       </>
@@ -283,7 +282,7 @@ export default function ReservationsClient({
                         onClick={() => router.push(`/messages`)}
                         className="px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
                       >
-                        <HiOutlineChatAlt2 size={15} />
+                        <BrandMessageIcon size={15} />
                         <span>Message</span>
                       </button>
                     )}

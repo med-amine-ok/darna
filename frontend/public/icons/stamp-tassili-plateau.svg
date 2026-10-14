@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Passport stamp circular notched border -->
+  <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" stroke-width="1.25" stroke-dasharray="2 1.5"/>
+  <!-- Desert plateau ground line -->
+  <line x1="5" y1="25" x2="27" y2="25" stroke="#2E3A2F" stroke-width="1.5"/>
+  <!-- Monumental Tassili sandstone rock arch formation -->
+  <path d="M7 25V12C7 9.5 9.5 8.5 12 8.5C16 8.5 19 9.5 21 11V25" stroke="#2E3A2F" stroke-width="1.5"/>
+  <!-- Inner natural rock arch opening -->
+  <path d="M11 25V16.5C11 13 18 13 18 16.5V25" stroke="#2E3A2F" stroke-width="1.5"/>
+  <!-- Stratified sandstone weathering ridges & rock clefts -->
+  <line x1="7.5" y1="14.5" x2="10.5" y2="14.5" stroke="#6B7F5B" stroke-width="1.2"/>
+  <line x1="7.5" y1="19.5" x2="10.5" y2="19.5" stroke="#6B7F5B" stroke-width="1.2"/>
+  <line x1="18.5" y1="15" x2="21" y2="15" stroke="#6B7F5B" stroke-width="1.2"/>
+  <line x1="18.5" y1="20" x2="21" y2="20" stroke="#6B7F5B" stroke-width="1.2"/>
+  <!-- Plateau ridge in distant background -->
+  <path d="M21 17L25 15V25" stroke="#6B7F5B" stroke-width="1.2"/>
+  <!-- Terracotta Sahara sun radiating through the natural stone window -->
+  <circle cx="14.5" cy="12.5" r="1.6" stroke="#C96F4F" stroke-width="1.3" fill="#C96F4F"/>
+  <line x1="14.5" y1="9" x2="14.5" y2="10" stroke="#C96F4F" stroke-width="1.2"/>
+</svg>

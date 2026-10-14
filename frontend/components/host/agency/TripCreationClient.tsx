@@ -8,22 +8,21 @@ import { createTrip } from "@/lib/data/trips";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import { toast } from "react-toastify";
 import {
-  Compass,
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Plus,
-  Trash2,
-  Calendar,
-  Users,
-  MapPin,
-  Clock,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle,
-  XCircle,
-  Eye,
-} from "lucide-react";
+  BrandCompassIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandCheckIcon,
+  BrandPlusIcon,
+  BrandTrashIcon,
+  BrandCalendarIcon,
+  BrandUsersIcon,
+  BrandPinIcon,
+  BrandClockIcon,
+  BrandSparklesIcon,
+  BrandShieldIcon,
+  BrandCloseIcon,
+  BrandEyeIcon,
+} from "@/components/icons";
 
 interface TripCreationClientProps {
   currentUser?: User | null;
@@ -248,7 +247,7 @@ export default function TripCreationClient({
               className="p-2 rounded-xl text-neutral-500 hover:text-primary hover:bg-neutral-100 transition"
               title="Cancel and return to trips"
             >
-              <ArrowLeft size={18} />
+              <BrandChevronLeftIcon size={18} className="rtl:rotate-180" />
             </button>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-secondary block">
@@ -403,7 +402,7 @@ export default function TripCreationClient({
                 onClick={handleAddDay}
                 className="px-4 py-2 bg-secondary/15 hover:bg-secondary/25 text-secondary rounded-2xl text-xs font-bold transition flex items-center gap-1.5 self-start cursor-pointer"
               >
-                <Plus size={16} />
+                <BrandPlusIcon size={16} />
                 <span>+ Add Day</span>
               </button>
             </div>
@@ -425,7 +424,7 @@ export default function TripCreationClient({
                         className="text-neutral-400 hover:text-rose-600 transition"
                         title="Remove day"
                       >
-                        <Trash2 size={16} />
+                        <BrandTrashIcon size={16} />
                       </button>
                     )}
                   </div>
@@ -644,7 +643,7 @@ export default function TripCreationClient({
               {/* Inclusions */}
               <div className="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-200 space-y-3">
                 <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <CheckCircle size={15} />
+                  <BrandCheckIcon size={15} />
                   <span>What&apos;s Included</span>
                 </span>
                 <div className="space-y-2">
@@ -685,7 +684,7 @@ export default function TripCreationClient({
               {/* Exclusions */}
               <div className="p-5 bg-rose-50/50 rounded-2xl border border-rose-200 space-y-3">
                 <span className="text-xs font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <XCircle size={15} />
+                  <BrandCloseIcon size={15} />
                   <span>What&apos;s Excluded</span>
                 </span>
                 <div className="space-y-2">
@@ -858,7 +857,7 @@ export default function TripCreationClient({
                       disabled={isSubmitting}
                       className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/95 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer"
                     >
-                      <Sparkles size={15} />
+                      <BrandSparklesIcon size={15} />
                       <span>{isSubmitting ? "Publishing..." : "Publish to DARNA"}</span>
                     </button>
                   </div>
@@ -882,7 +881,7 @@ export default function TripCreationClient({
                 : "text-primary hover:bg-neutral-100 cursor-pointer"
             }`}
           >
-            <ArrowLeft size={16} />
+            <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
             <span>Previous</span>
           </button>
 
@@ -897,7 +896,7 @@ export default function TripCreationClient({
               className="px-6 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <span>Continue</span>
-              <ArrowRight size={16} />
+              <BrandChevronRightIcon size={16} className="rtl:rotate-180" />
             </button>
           ) : (
             <button
@@ -906,7 +905,7 @@ export default function TripCreationClient({
               disabled={isSubmitting}
               className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
-              <Check size={16} />
+              <BrandCheckIcon size={16} />
               <span>{isSubmitting ? "Publishing..." : "Publish Circuit"}</span>
             </button>
           )}

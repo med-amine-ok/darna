@@ -6,9 +6,17 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-lea
 import Image from "next/image";
 import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
-import { MdClose, MdChevronLeft, MdChevronRight } from "react-icons/md";
-import { AiFillStar } from "react-icons/ai";
-import { Compass, Calendar, Users, CheckCircle, MapPin } from "lucide-react";
+import {
+  BrandCloseIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandStarIcon,
+  BrandCompassIcon,
+  BrandCalendarIcon,
+  BrandUsersIcon,
+  BrandCheckIcon,
+  BrandPinIcon,
+} from "@/components/icons";
 import { Listing, User, Trip, ListingVertical } from "@/types";
 import { getTripCoordinates } from "@/lib/mock-data/trips";
 import HeartButton from "@/components/HeartButton";
@@ -560,7 +568,7 @@ export default function SearchMap({
               }}
               className="absolute top-2.5 start-2.5 z-20 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-md transition cursor-pointer"
             >
-              <MdClose size={16} />
+              <BrandCloseIcon size={16} strokeWidth={2.2} />
             </button>
 
             {/* Favorite or Type Badge */}
@@ -570,7 +578,7 @@ export default function SearchMap({
               </div>
             ) : (
               <div className="absolute top-2.5 end-2.5 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                <Calendar size={11} className="text-secondary" />
+                <BrandCalendarIcon size={11} strokeWidth={2} className="text-secondary" />
                 <span>
                   {activeItem.data.durationDays}D / {Math.max(1, activeItem.data.durationDays - 1)}N
                 </span>
@@ -580,7 +588,7 @@ export default function SearchMap({
             {/* Agency Badge on Trip Image */}
             {activeItem.type === "trip" && (
               <div className="absolute bottom-2.5 start-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold max-w-[80%] truncate">
-                <CheckCircle size={12} className="text-emerald-400 shrink-0" />
+                <BrandCheckIcon size={12} strokeWidth={2.5} className="text-emerald-400 shrink-0" />
                 <span className="truncate">
                   {activeItem.data.organization?.name || "Verified Agency"}
                 </span>
@@ -602,7 +610,7 @@ export default function SearchMap({
                   }}
                   className="absolute top-1/2 -translate-y-1/2 start-2 z-20 w-6 h-6 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-xs transition cursor-pointer"
                 >
-                  <MdChevronLeft size={16} className="rtl:rotate-180" />
+                  <BrandChevronLeftIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
                 </button>
                 <button
                   type="button"
@@ -614,7 +622,7 @@ export default function SearchMap({
                   }}
                   className="absolute top-1/2 -translate-y-1/2 end-2 z-20 w-6 h-6 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-xs transition cursor-pointer"
                 >
-                  <MdChevronRight size={16} className="rtl:rotate-180" />
+                  <BrandChevronRightIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
                 </button>
 
                 {/* Carousel Pagination Dots */}
@@ -640,19 +648,17 @@ export default function SearchMap({
               <>
                 <div className="flex items-center justify-between gap-2">
                   <h4 className="font-bold text-sm text-primary truncate flex items-center gap-1">
-                    <Image
-                      src="/assets/location.png"
-                      alt="Location"
-                      width={13}
-                      height={13}
-                      className="object-contain shrink-0"
+                    <BrandPinIcon
+                      size={13}
+                      strokeWidth={2}
+                      className="text-accent shrink-0"
                     />
                     <span className="truncate">
                       {activeItem.data.city ? `${activeItem.data.city}, Algeria` : activeItem.data.title}
                     </span>
                   </h4>
                   <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
-                    <AiFillStar size={13} className="text-accent" />
+                    <BrandStarIcon size={13} className="fill-accent text-accent" />
                     <span>{activeItem.data.rating?.toFixed(2) || "4.95"}</span>
                   </span>
                 </div>
@@ -680,11 +686,11 @@ export default function SearchMap({
               <>
                 <div className="flex items-center justify-between gap-2">
                   <h4 className="font-bold text-sm text-primary truncate flex items-center gap-1">
-                    <Compass size={14} className="text-secondary shrink-0" />
+                    <BrandCompassIcon size={14} className="text-secondary shrink-0" />
                     <span className="truncate">{activeItem.data.city}, Algeria</span>
                   </h4>
                   <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
-                    <AiFillStar size={13} className="text-amber-500 fill-amber-500" />
+                    <BrandStarIcon size={13} className="fill-accent text-accent" />
                     <span>{activeItem.data.rating?.toFixed(2) || "4.98"}</span>
                   </span>
                 </div>
@@ -700,7 +706,7 @@ export default function SearchMap({
                     priceClassName="font-bold text-sm text-primary"
                   />
                   <span className="text-[10px] text-neutral-500 font-medium flex items-center gap-1">
-                    <Users size={11} />
+                    <BrandUsersIcon size={12} strokeWidth={1.8} />
                     <span>Max {activeItem.data.maxGroupSize}</span>
                   </span>
                 </div>

@@ -2,27 +2,23 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { User, Listing, Reservation } from "@/types";
+import Link from "next/link";
+import { User, Listing, Reservation, Wallet } from "@/types";
 import { logAdminAction } from "@/lib/data/admin";
-import {
-  HiOutlineSearch,
-  HiOutlineUsers,
-  HiOutlineShieldCheck,
-  HiOutlineBan,
-  HiOutlineEye,
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineHome,
-  HiOutlineCalendar,
-  HiOutlineCheckCircle,
-} from "react-icons/hi";
-import { FaCheckCircle } from "react-icons/fa";
+import { getWallets } from "@/lib/data/wallet";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
-import { getWallets } from "@/lib/data/wallet";
-import { Wallet } from "@/types";
-import Link from "next/link";
-import { HiOutlineCreditCard } from "react-icons/hi";
+import {
+  BrandSearchIcon,
+  BrandBanIcon,
+  BrandEyeIcon,
+  BrandCheckCircleIcon,
+  BrandCreditCardIcon,
+  BrandArrowRightIcon,
+  WalletWarningIcon,
+  WalletSolventIcon,
+  BrandCrossIcon,
+} from "@/components/icons";
 
 interface AdminUsersClientProps {
   initialUsers: User[];
@@ -135,7 +131,7 @@ export default function AdminUsersClient({
       {/* Toolbar */}
       <div className="bg-white rounded-3xl border border-tertiary/70 p-4 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="relative w-full md:w-96">
-          <HiOutlineSearch size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <BrandSearchIcon size={18} className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
@@ -218,7 +214,7 @@ export default function AdminUsersClient({
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       {user.isIdentityVerified ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-[11px]">
-                          <FaCheckCircle className="text-secondary" /> Verified
+                          <BrandCheckCircleIcon size={14} className="text-secondary" /> Verified
                         </span>
                       ) : (
                         <span className="text-neutral-400">Unverified</span>
@@ -249,7 +245,7 @@ export default function AdminUsersClient({
                           }`}
                           title={isSuspended ? "Reactivate user" : "Suspend user"}
                         >
-                          <HiOutlineBan size={16} />
+                          <BrandBanIcon size={16} />
                         </button>
 
                         <button
@@ -257,7 +253,7 @@ export default function AdminUsersClient({
                           onClick={() => setSelectedUser(user)}
                           className="px-2.5 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-primary rounded-xl text-xs font-bold transition flex items-center gap-1"
                         >
-                          <HiOutlineEye size={14} />
+                          <BrandEyeIcon size={14} />
                           <span>Dossier</span>
                         </button>
                       </div>
@@ -287,9 +283,10 @@ export default function AdminUsersClient({
               <button
                 type="button"
                 onClick={() => setSelectedUser(null)}
-                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm"
+                className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center transition"
+                aria-label="Close drawer"
               >
-                ✕
+                <BrandCrossIcon size={16} />
               </button>
             </div>
 
@@ -326,14 +323,15 @@ export default function AdminUsersClient({
                 <div className="mb-6 p-4 rounded-2xl bg-neutral-50/90 border border-tertiary/70 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <HiOutlineCreditCard className="text-primary" size={18} />
+                      <BrandCreditCardIcon className="text-primary" size={18} />
                       <span className="font-bold text-xs text-primary">Prepaid Host Wallet & Solvency</span>
                     </div>
                     <Link
                       href="/admin/wallets"
                       className="text-[11px] text-primary font-bold hover:underline flex items-center gap-1"
                     >
-                      <span>Manage in Wallets &rarr;</span>
+                      <span>Manage in Wallets</span>
+                      <BrandArrowRightIcon size={12} className="rtl:rotate-180" />
                     </Link>
                   </div>
 
@@ -350,12 +348,14 @@ export default function AdminUsersClient({
 
                     <div>
                       {isNegative ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">
-                          ⚠️ Negative Balance
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200 inline-flex items-center gap-1">
+                          <WalletWarningIcon size={12} className="text-rose-700 shrink-0" />
+                          <span>Negative Balance</span>
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          ✓ Solvent
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1">
+                          <WalletSolventIcon size={12} className="text-emerald-700 shrink-0" />
+                          <span>Solvent</span>
                         </span>
                       )}
                     </div>
@@ -372,7 +372,7 @@ export default function AdminUsersClient({
                     <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">
                       Recent Activity
                     </span>
-                    {userWallet.transactions.slice(0, 2).map((tx) => (
+                    {userWallet.transactions.slice(0, 2).map((tx: any) => (
                       <div key={tx.id} className="flex items-center justify-between text-[11px] py-1 border-b border-tertiary/30 last:border-none">
                         <span className="text-neutral-600 truncate max-w-[280px]">
                           {tx.type === "recharge" ? "Deposit Recharge" : "Commission"} • {tx.note || tx.id}

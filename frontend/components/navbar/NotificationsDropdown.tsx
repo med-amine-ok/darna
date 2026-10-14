@@ -4,8 +4,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "@/navigation";
 import { Notification } from "@/types";
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/data/notifications";
-import { Bell, Check, Calendar, MessageSquare, Tag, ShieldCheck, ArrowRight, X } from "lucide-react";
 import { toast } from "react-toastify";
+import {
+  BrandBellIcon,
+  BrandCalendarIcon,
+  BrandMessageIcon,
+  BrandTagIcon,
+  BrandShieldIcon,
+  BrandCheckIcon,
+  BrandChevronRightIcon,
+} from "@/components/icons";
 
 function formatNotificationTime(dateStr?: string) {
   if (!dateStr) return "";
@@ -110,15 +118,15 @@ export default function NotificationsDropdown() {
   const getCategoryIcon = (type: string) => {
     switch (type) {
       case "booking":
-        return <Calendar size={16} className="text-emerald-700" />;
+        return <BrandCalendarIcon size={16} className="text-emerald-700" />;
       case "message":
-        return <MessageSquare size={16} className="text-secondary" />;
+        return <BrandMessageIcon size={16} className="text-secondary" />;
       case "price":
-        return <Tag size={16} className="text-accent" />;
+        return <BrandTagIcon size={16} className="text-accent" />;
       case "system":
-        return <ShieldCheck size={16} className="text-primary" />;
+        return <BrandShieldIcon size={16} className="text-primary" />;
       default:
-        return <Bell size={16} className="text-primary" />;
+        return <BrandBellIcon size={16} className="text-primary" />;
     }
   };
 
@@ -134,7 +142,7 @@ export default function NotificationsDropdown() {
           isOpen ? "bg-black/10 text-primary" : "hover:bg-black/5 text-primary"
         }`}
       >
-        <Bell size={18} />
+        <BrandBellIcon size={18} />
         {unreadCount > 0 && (
           <span className="absolute top-1.5 end-1.5 flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
@@ -164,7 +172,7 @@ export default function NotificationsDropdown() {
                 onClick={handleMarkAllRead}
                 className="text-xs font-semibold text-neutral-500 hover:text-accent transition cursor-pointer flex items-center gap-1"
               >
-                <Check size={13} />
+                <BrandCheckIcon size={13} />
                 <span>Mark all read</span>
               </button>
             )}
@@ -175,7 +183,7 @@ export default function NotificationsDropdown() {
             {notifications.length === 0 ? (
               <div className="py-12 px-6 text-center text-neutral-500 flex flex-col items-center justify-center">
                 <div className="w-12 h-12 rounded-2xl bg-tertiary/20 flex items-center justify-center text-neutral-400 mb-3">
-                  <Bell size={22} />
+                  <BrandBellIcon size={22} className="text-tertiary" />
                 </div>
                 <p className="text-xs font-semibold text-primary">No notifications yet</p>
                 <p className="text-[11px] text-neutral-500 mt-0.5">
@@ -229,7 +237,7 @@ export default function NotificationsDropdown() {
               className="w-full py-2.5 px-4 rounded-xl bg-white border border-tertiary/80 hover:border-primary text-primary hover:bg-primary hover:text-white transition-all text-xs font-bold flex items-center justify-center gap-2 shadow-2xs cursor-pointer btn-press"
             >
               <span>See all notifications</span>
-              <ArrowRight size={14} className="rtl:rotate-180" />
+              <BrandChevronRightIcon size={14} className="rtl:rotate-180" />
             </button>
           </div>
         </div>

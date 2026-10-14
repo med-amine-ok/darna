@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Radiating branch lines -->
+  <line x1="8.5" y1="13.5" x2="15.5" y2="17.5" stroke="currentColor" stroke-width="1.6"/>
+  <line x1="8.5" y1="10.5" x2="15.5" y2="6.5" stroke="currentColor" stroke-width="1.6"/>
+  <!-- Hospitality root origin node -->
+  <circle cx="6.5" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/>
+  <!-- Destination share nodes -->
+  <circle cx="17.5" cy="5.5" r="3" stroke="currentColor" stroke-width="1.6"/>
+  <circle cx="17.5" cy="5.5" r="1.1" fill="#C96F4F"/>
+  <circle cx="17.5" cy="18.5" r="3" stroke="currentColor" stroke-width="1.6"/>
+  <circle cx="17.5" cy="18.5" r="1.1" fill="#6B7F5B"/>
+</svg>

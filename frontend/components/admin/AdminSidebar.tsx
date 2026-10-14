@@ -2,25 +2,23 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "@/navigation";
+import { Link, usePathname } from "@/navigation";
 import {
-  HiOutlineChartBar,
-  HiOutlineHome,
-  HiOutlineCalendar,
-  HiOutlineUsers,
-  HiOutlineStar,
-  HiOutlineTag,
-  HiOutlineTicket,
-  HiOutlineDocumentReport,
-  HiOutlineCog,
-  HiOutlineClipboardList,
-  HiOutlineCreditCard,
-  HiOutlineChevronLeft,
-  HiOutlineChevronRight,
-  HiOutlineExternalLink,
-  HiOutlineShieldCheck,
-} from "react-icons/hi";
+  BrandChartIcon,
+  BrandCalendarIcon,
+  BrandUsersIcon,
+  CategoryHouseIcon,
+  BrandStarIcon,
+  BrandTagIcon,
+  BrandDocumentTextIcon,
+  BrandCreditCardIcon,
+  BrandTicketIcon,
+  BrandSettingsIcon,
+  BrandShieldIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandExternalLinkIcon,
+} from "@/components/icons";
 
 interface AdminSidebarProps {
   isMobileOpen?: boolean;
@@ -64,7 +62,7 @@ export default function AdminSidebar({
   interface NavItem {
     href: string;
     label: string;
-    icon?: React.ComponentType<{ size?: number; className?: string }>;
+    icon?: React.ComponentType<any>;
     imgSrc?: string;
     exact?: boolean;
   }
@@ -78,38 +76,38 @@ export default function AdminSidebar({
     {
       title: "Overview",
       items: [
-        { href: "/admin", label: "Dashboard", icon: HiOutlineChartBar, exact: true },
+        { href: "/admin", label: "Dashboard", icon: BrandChartIcon, exact: true },
       ],
     },
     {
       title: "Operations",
       items: [
-        { href: "/admin/bookings", label: "Bookings", icon: HiOutlineCalendar },
-        { href: "/admin/users", label: "Users & Hosts", icon: HiOutlineUsers },
+        { href: "/admin/bookings", label: "Bookings", icon: BrandCalendarIcon },
+        { href: "/admin/users", label: "Users & Hosts", icon: BrandUsersIcon },
       ],
     },
     {
       title: "Content",
       items: [
-        { href: "/admin/listings", label: "Listings Moderation", imgSrc: "/assets/house.png" },
-        { href: "/admin/reviews", label: "Reviews Moderation", icon: HiOutlineStar },
-        { href: "/admin/categories", label: "Categories & Amenities", icon: HiOutlineTag },
-        { href: "/admin/onboarding", label: "Onboarding Flows", icon: HiOutlineClipboardList },
+        { href: "/admin/listings", label: "Listings Moderation", icon: CategoryHouseIcon },
+        { href: "/admin/reviews", label: "Reviews Moderation", icon: BrandStarIcon },
+        { href: "/admin/categories", label: "Categories & Amenities", icon: BrandTagIcon },
+        { href: "/admin/onboarding", label: "Onboarding Flows", icon: BrandDocumentTextIcon },
       ],
     },
     {
       title: "Financial",
       items: [
-        { href: "/admin/wallets", label: "Host Wallets & Ledger", icon: HiOutlineCreditCard },
-        { href: "/admin/promotions", label: "Coupons & Promos", icon: HiOutlineTicket },
+        { href: "/admin/wallets", label: "Host Wallets & Ledger", icon: BrandCreditCardIcon },
+        { href: "/admin/promotions", label: "Coupons & Promos", icon: BrandTicketIcon },
       ],
     },
     {
       title: "System",
       items: [
-        { href: "/admin/reports", label: "Reports & Exports", icon: HiOutlineDocumentReport },
-        { href: "/admin/settings", label: "Platform Settings", icon: HiOutlineCog },
-        { href: "/admin/audit-log", label: "System Audit Log", icon: HiOutlineShieldCheck },
+        { href: "/admin/reports", label: "Reports & Exports", icon: BrandDocumentTextIcon },
+        { href: "/admin/settings", label: "Platform Settings", icon: BrandSettingsIcon },
+        { href: "/admin/audit-log", label: "System Audit Log", icon: BrandShieldIcon },
       ],
     },
   ];
@@ -187,9 +185,9 @@ export default function AdminSidebar({
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? (
-              <HiOutlineChevronRight size={15} className="rtl:rotate-180" />
+              <BrandChevronRightIcon size={15} className="rtl:rotate-180" />
             ) : (
-              <HiOutlineChevronLeft size={16} className="rtl:rotate-180" />
+              <BrandChevronLeftIcon size={16} className="rtl:rotate-180" />
             )}
           </button>
         </div>
@@ -273,7 +271,7 @@ export default function AdminSidebar({
             }`}
             title="Exit to Darna traveler marketplace"
           >
-            <HiOutlineExternalLink size={17} className="shrink-0" />
+            <BrandExternalLinkIcon size={17} className="shrink-0" />
             {!collapsed && <span>Return to App</span>}
             {collapsed && (
               <span className="hidden group-hover:flex absolute start-full ms-3 px-2.5 py-1.5 bg-[#1C241D] text-white text-xs font-semibold rounded-lg whitespace-nowrap z-50 shadow-2xl border border-[#3A493B] pointer-events-none items-center gap-1.5 animate-in fade-in zoom-in-95">

@@ -9,6 +9,7 @@ import Modal from "./Modal";
 import Counter from "@/components/inputs/Counter";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { CategoryHouseIcon } from "@/components/icons";
 
 export default function FilterModal() {
   const router = useRouter();
@@ -37,12 +38,14 @@ export default function FilterModal() {
 
   const propertyTypes = useMemo(
     () => [
-      { id: "any", label: "Any type" },
+      { id: "any", label: "Any stay type" },
+      { id: "Entire home", label: "Entire home" },
+      { id: "Private room", label: "Private room" },
+      { id: "Hotel", label: "Hotel & Resort" },
+      { id: "Hostel", label: "Youth Hostel & Dorms" },
       { id: "Villa", label: "Villa" },
-      { id: "Riad", label: "Riad" },
+      { id: "Riad", label: "Historic Riad & Ksar" },
       { id: "Apartment", label: "Apartment" },
-      { id: "Ksar", label: "Ksar" },
-      { id: "Heritage Home", label: "Heritage Home" },
     ],
     []
   );
@@ -191,12 +194,10 @@ export default function FilterModal() {
       {/* 3. Property Type Section */}
       <div className="flex flex-col gap-3 pt-6">
         <h3 className="font-semibold text-base sm:text-lg text-primary flex items-center gap-2">
-          <Image
-            src="/assets/house.png"
-            alt="Homes"
-            width={18}
-            height={18}
-            className="object-contain"
+          <CategoryHouseIcon
+            size={20}
+            strokeWidth={1.8}
+            className="text-accent shrink-0"
           />
           <span>Property Type</span>
         </h3>

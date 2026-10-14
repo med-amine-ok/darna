@@ -9,7 +9,14 @@ import HeartButton from "@/components/HeartButton";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Button from "@/components/Button";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, Star, CalendarDays } from "lucide-react";
+import {
+  BrandStarIcon,
+  BrandChevronLeftIcon,
+  BrandChevronRightIcon,
+  BrandCalendarIcon,
+  BrandPinIcon,
+  CategoryVehicleIcon,
+} from "@/components/icons";
 
 interface ListingCardProps {
   data: Listing;
@@ -232,7 +239,7 @@ export default function ListingCard({
                 onClick={handlePrevImage}
                 className="hidden group-hover:flex items-center justify-center p-1.5 rounded-full bg-white/95 hover:bg-white text-neutral-800 shadow-darna transition absolute top-1/2 -translate-y-1/2 z-10 start-2 hover:scale-105 active:scale-95 cursor-pointer btn-press"
               >
-                <ChevronLeft size={16} className="rtl:rotate-180" />
+                <BrandChevronLeftIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
               </button>
               <button
                 type="button"
@@ -240,7 +247,7 @@ export default function ListingCard({
                 onClick={handleNextImage}
                 className="hidden group-hover:flex items-center justify-center p-1.5 rounded-full bg-white/95 hover:bg-white text-neutral-800 shadow-darna transition absolute top-1/2 -translate-y-1/2 z-10 end-2 hover:scale-105 active:scale-95 cursor-pointer btn-press"
               >
-                <ChevronRight size={16} className="rtl:rotate-180" />
+                <BrandChevronRightIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
               </button>
             </>
           )}
@@ -265,7 +272,7 @@ export default function ListingCard({
         {/* Partial Availability Badge (Section 6) */}
         {data.matchedAvailability?.isPartial && (
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50/90 text-amber-800 border border-amber-200/80 text-[10px] font-semibold w-fit my-0.5">
-            <CalendarDays size={11} className="text-amber-700 shrink-0" />
+            <BrandCalendarIcon size={12} strokeWidth={1.8} className="text-amber-700 shrink-0" />
             <span className="truncate">
               {tSearch("partialAvailabilityBadge", {
                 range: `${new Date(data.matchedAvailability.overlapStart).toLocaleDateString(locale, { month: "short", day: "numeric" })} – ${new Date(data.matchedAvailability.overlapEnd).toLocaleDateString(locale, { month: "short", day: "numeric" })}`,
@@ -278,17 +285,15 @@ export default function ListingCard({
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-1 text-xs sm:text-sm font-semibold text-primary">
             <span className="truncate flex items-center gap-1">
-              <Image
-                src="/assets/location.png"
-                alt="Location"
-                width={13}
-                height={13}
-                className="object-contain shrink-0"
+              <BrandPinIcon
+                size={13}
+                strokeWidth={2}
+                className="text-accent shrink-0"
               />
               <span className="truncate">{data.city ? `${data.city}, Algeria` : data.title}</span>
             </span>
             <span className="flex items-center gap-0.5 font-semibold flex-shrink-0 ms-1 text-xs text-neutral-800">
-              <Star size={12} className="fill-accent text-accent" />
+              <BrandStarIcon size={12} className="fill-accent text-accent" />
               <span>{rating}</span>
               {data.reviewCount ? (
                 <span className="font-normal text-neutral-500 text-[10px]">
@@ -310,12 +315,10 @@ export default function ListingCard({
                 </>
               ) : data.category === "vehicle" ? (
                 <>
-                  <Image
-                    src="/assets/car.png"
-                    alt="Vehicle"
-                    width={14}
-                    height={14}
-                    className="object-contain shrink-0"
+                  <CategoryVehicleIcon
+                    size={15}
+                    strokeWidth={1.8}
+                    className="text-secondary shrink-0"
                   />
                   <span>{`${data.seats || 5} seats · ${data.transmission || "Automatic"}`}</span>
                 </>
