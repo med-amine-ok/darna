@@ -354,25 +354,6 @@ export default function SearchResultsClient({
               </label>
             </div>
 
-            {/* Selected listing highlight indicator if clicked from home */}
-            {selectedId && (
-              <div className="flex items-center justify-between px-3 py-1.5 bg-accent/10 border border-accent/30 rounded-xl text-xs text-primary">
-                <span className="font-semibold text-accent flex items-center gap-1.5">
-                  <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  {currentVertical === "trip"
-                    ? "Focused circuit selected & pinned on map"
-                    : "Focused property selected & pinned on map"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(null)}
-                  className="text-neutral-500 hover:text-primary text-[11px] underline cursor-pointer"
-                >
-                  Show all
-                </button>
-              </div>
-            )}
-
             {/* Empty State or Listing Cards Grid */}
             {currentVertical === "trip" ? (
               displayTrips.length === 0 ? (

@@ -240,34 +240,10 @@ input:focus, textarea:focus, select:focus {
   padding: 14px 20px 14px 16px !important;
 }
 
+/* Clean Toast Hover elevation */
 .Toastify__toast:hover,
 .darna-toast:hover {
   box-shadow: 0 6px 18px -2px rgba(46, 58, 47, 0.10), 0 20px 44px -4px rgba(46, 58, 47, 0.18), 0 0 0 1px rgba(217, 201, 178, 0.6) !important;
-}
-
-/* Subtle Architectural DARNA Arch Motif Watermark */
-.Toastify__toast::after,
-.darna-toast::after {
-  content: "";
-  position: absolute;
-  top: 6px;
-  right: 28px;
-  width: 48px;
-  height: 48px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none'%3E%3Cpath d='M24 8 C16 8 10 14 10 24 L10 40 L38 40 L38 24 C38 14 32 8 24 8 Z' stroke='%232E3A2F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M24 16 C20 16 16 20 16 26 L16 40 L32 40 L32 26 C32 20 28 16 24 16 Z' stroke='%232E3A2F' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  opacity: 0.04;
-  pointer-events: none;
-  z-index: 1;
-}
-
-[dir="rtl"] .Toastify__toast::after,
-[dir="rtl"] .darna-toast::after,
-.Toastify__toast--rtl::after,
-.darna-toast--rtl::after {
-  right: auto;
-  left: 28px;
 }
 
 /* Leading Edge Vertical Indicator Bar */
@@ -502,4 +478,83 @@ input:focus, textarea:focus, select:focus {
     animation-name: darnaToastMobileIn !important;
   }
 }
+
+/* ==========================================================================
+   DARNA Silky Smooth Map Pin & Multi-Item Cluster System
+   ========================================================================== */
+
+/* Leaflet DivIcon Wrapper adjustments */
+.custom-price-pin,
+.custom-cluster-pin {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Base Price Pin Button - GPU accelerated smooth spring motion */
+.custom-price-pin .price-pin-btn {
+  transform: translate3d(0, 0, 0) scale(1);
+  box-shadow: 0 2px 8px -1px rgba(46, 58, 47, 0.12), 0 1px 3px 0 rgba(46, 58, 47, 0.06);
+  transition: transform 240ms cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 240ms cubic-bezier(0.2, 0, 0, 1),
+              background-color 160ms ease,
+              border-color 160ms ease,
+              color 160ms ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hover & Active states for Price Pins */
+.custom-price-pin:hover .price-pin-btn,
+.custom-price-pin.is-active .price-pin-btn,
+.custom-price-pin.is-hovered .price-pin-btn {
+  transform: translate3d(0, -3px, 0) scale(1.09);
+  box-shadow: 0 12px 24px -4px rgba(46, 58, 47, 0.28), 0 4px 8px -2px rgba(46, 58, 47, 0.14);
+  background-color: #2E3A2F !important;
+  color: #ffffff !important;
+  border-color: #C96F4F !important;
+}
+
+.custom-price-pin .price-pin-btn:active {
+  transform: translate3d(0, -1px, 0) scale(1.02);
+  transition-duration: 80ms;
+}
+
+/* Base Multi-Item Cluster Pin (Compact circular count button) */
+.custom-cluster-pin .cluster-pin-btn {
+  transform: translate3d(0, 0, 0) scale(1);
+  box-shadow: 0 4px 12px -2px rgba(46, 58, 47, 0.22), 0 2px 4px -1px rgba(46, 58, 47, 0.12);
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 200ms ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+/* Hover & Active states for Cluster Pins */
+.custom-cluster-pin:hover .cluster-pin-btn,
+.custom-cluster-pin.is-active .cluster-pin-btn {
+  transform: translate3d(0, -4px, 0) scale(1.15);
+  box-shadow: 0 14px 26px -4px rgba(201, 111, 79, 0.45), 0 4px 10px -2px rgba(46, 58, 47, 0.2);
+  background-color: #B55F40 !important;
+  color: #ffffff !important;
+}
+
+/* Custom Sleek Scrollbar for Cluster Drawer */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(46, 58, 47, 0.18);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 58, 47, 0.35);
+}
+
 

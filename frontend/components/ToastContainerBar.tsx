@@ -123,11 +123,17 @@ export function DarnaToastCloseButton({
   return (
     <button
       type="button"
-      onClick={closeToast}
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (closeToast) {
+          closeToast(e);
+        }
+      }}
       aria-label={ariaLabel || "Close notification"}
-      className="shrink-0 w-7 h-7 -me-1 ms-2 rounded-full flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-tertiary/25 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="shrink-0 w-7 h-7 -me-1 ms-2 rounded-full flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-tertiary/25 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent z-20 pointer-events-auto"
     >
-      <BrandCloseIcon size={15} strokeWidth={2.2} />
+      <BrandCloseIcon size={15} strokeWidth={2.2} className="pointer-events-none" />
     </button>
   );
 }

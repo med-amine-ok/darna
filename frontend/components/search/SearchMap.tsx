@@ -30,20 +30,68 @@ export interface MapBounds {
   west: number;
 }
 
+export interface MapItemEntry {
+  id: string;
+  type: "listing" | "trip";
+  data: Listing | Trip;
+  price: number;
+  coords: [number, number];
+  title: string;
+  rating?: number;
+  category?: string;
+  imageSrc: string;
+}
+
+export interface MapCluster {
+  id: string;
+  center: [number, number];
+  items: MapItemEntry[];
+  minPrice: number;
+  count: number;
+  hasTrips: boolean;
+  hasListings: boolean;
+}
+
+/**
+ * Calculates great-circle distance in kilometers between two lat/lng coordinates (Haversine formula)
+ */
+function getDistanceKm(coord1: [number, number], coord2: [number, number]): number {
+  const R = 6371; // Earth radius in km
+  const dLat = ((coord2[0] - coord1[0]) * Math.PI) / 180;
+  const dLng = ((coord2[1] - coord1[1]) * Math.PI) / 180;
+  const lat1 = (coord1[0] * Math.PI) / 180;
+  const lat2 = (coord2[0] * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function MapController({
   center,
   zoom,
   bounds,
   selectedCoords,
+  mapFocus,
   onBoundsChange,
+  onMapClick,
+  onZoomChange,
 }: {
   center?: [number, number];
   zoom?: number;
   bounds?: L.LatLngBoundsExpression;
   selectedCoords?: [number, number];
+  mapFocus?: { coords: [number, number]; zoom: number; key: number } | null;
   onBoundsChange?: (bounds: MapBounds) => void;
+  onMapClick?: () => void;
+  onZoomChange?: (zoom: number) => void;
 }) {
   const map = useMapEvents({
+    click: () => {
+      if (onMapClick) onMapClick();
+    },
     moveend: () => {
       if (onBoundsChange) {
         const b = map.getBounds();
@@ -56,6 +104,9 @@ function MapController({
       }
     },
     zoomend: () => {
+      if (onZoomChange) {
+        onZoomChange(map.getZoom());
+      }
       if (onBoundsChange) {
         const b = map.getBounds();
         onBoundsChange({
@@ -69,6 +120,14 @@ function MapController({
   });
 
   useEffect(() => {
+    if (mapFocus) {
+      map.flyTo(mapFocus.coords, mapFocus.zoom, {
+        duration: 1.1,
+        easeLinearity: 0.25,
+      });
+      return;
+    }
+
     if (selectedCoords) {
       map.flyTo(selectedCoords, 13, {
         duration: 1.1,
@@ -87,10 +146,13 @@ function MapController({
         easeLinearity: 0.25,
       });
     }
-  }, [map, center, zoom, bounds, selectedCoords]);
+  }, [map, center, zoom, bounds, selectedCoords, mapFocus]);
 
-  // Initial bounds reporting
+  // Initial bounds and zoom reporting
   useEffect(() => {
+    if (onZoomChange) {
+      onZoomChange(map.getZoom());
+    }
     const timer = setTimeout(() => {
       if (onBoundsChange) {
         const b = map.getBounds();
@@ -103,7 +165,7 @@ function MapController({
       }
     }, 600);
     return () => clearTimeout(timer);
-  }, [map, onBoundsChange]);
+  }, [map, onBoundsChange, onZoomChange]);
 
   return null;
 }
@@ -141,22 +203,20 @@ export default function SearchMap({
   const tNav = useTranslations("nav");
 
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
-  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
   const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null);
   const [previewImageIndex, setPreviewImageIndex] = useState(0);
+  const [mapFocus, setMapFocus] = useState<{ coords: [number, number]; zoom: number; key: number } | null>(null);
+  const [mapZoom, setMapZoom] = useState<number>(zoom || 10);
 
-  // Preview card visibility tied to hover and selected item
-  const [hoveredCardListingId, setHoveredCardListingId] = useState<string | null>(
+  // Preview card visibility is strictly tied to click selection (never on hover)
+  const [clickedCardId, setClickedCardId] = useState<string | null>(
     selectedListingId || null
   );
-  const [isCardHovered, setIsCardHovered] = useState(false);
-  const isCardHoveredRef = useRef(false);
-  const leaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sync with selectedListingId on initial open or param change
+  // Sync with selectedListingId prop if provided from parent
   useEffect(() => {
-    if (selectedListingId) {
-      setHoveredCardListingId(selectedListingId);
+    if (selectedListingId !== undefined) {
+      setClickedCardId(selectedListingId);
     }
   }, [selectedListingId]);
 
@@ -166,49 +226,30 @@ export default function SearchMap({
   const dragStartX = useRef<number | null>(null);
   const hasDraggedRef = useRef(false);
 
-  // Sync with incoming hoveredListingId prop
+  // Sync with incoming hoveredListingId prop for pin highlight only
   useEffect(() => {
-    if (hoveredListingId) {
-      if (leaveTimerRef.current) {
-        clearTimeout(leaveTimerRef.current);
-        leaveTimerRef.current = null;
-      }
-      setHoveredCardListingId(hoveredListingId);
-    } else {
-      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-      leaveTimerRef.current = setTimeout(() => {
-        if (!isCardHoveredRef.current) {
-          setHoveredCardListingId(null);
-        }
-      }, 250);
+    if (hoveredListingId !== undefined) {
+      setInternalHoveredId(hoveredListingId);
     }
-    return () => {
-      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-    };
   }, [hoveredListingId]);
-
-  const activeSelectedId =
-    selectedListingId !== undefined ? selectedListingId : internalSelectedId;
-  const activeHoveredId =
-    hoveredCardListingId || (isCardHovered ? hoveredCardListingId : null);
 
   // Determine which items to display on the map
   const showListings = currentVertical !== "trip";
   const showTrips = currentVertical === "trip" || currentVertical === "all" || !currentVertical;
 
-  // Find active item (Listing or Trip) for floating preview card
+  // Find active item (Listing or Trip) for floating preview card - ONLY when clicked!
   const activeItem = useMemo(() => {
-    if (!activeHoveredId) return null;
-    const matchedListing = listings.find((l) => l.id === activeHoveredId);
+    if (!clickedCardId) return null;
+    const matchedListing = listings.find((l) => l.id === clickedCardId);
     if (matchedListing) {
       return { type: "listing" as const, data: matchedListing };
     }
-    const matchedTrip = trips.find((t) => t.id === activeHoveredId);
+    const matchedTrip = trips.find((t) => t.id === clickedCardId);
     if (matchedTrip) {
       return { type: "trip" as const, data: matchedTrip };
     }
     return null;
-  }, [listings, trips, activeHoveredId]);
+  }, [listings, trips, clickedCardId]);
 
   useEffect(() => {
     setPreviewImageIndex(0);
@@ -315,19 +356,143 @@ export default function SearchMap({
   }, [listings, trips, showListings, showTrips, center]);
 
   const selectedCoords = useMemo(() => {
-    if (activeSelectedId) {
-      const matchListing = listings.find((l) => l.id === activeSelectedId);
+    if (clickedCardId) {
+      const matchListing = listings.find((l) => l.id === clickedCardId);
       if (matchListing?.latlng && matchListing.latlng.length === 2) {
         return matchListing.latlng as [number, number];
       }
-      const matchTrip = trips.find((t) => t.id === activeSelectedId);
+      const matchTrip = trips.find((t) => t.id === clickedCardId);
       if (matchTrip) {
         const c = matchTrip.latlng || getTripCoordinates(matchTrip);
         if (c && c.length === 2) return c as [number, number];
       }
     }
     return undefined;
-  }, [activeSelectedId, listings, trips]);
+  }, [clickedCardId, listings, trips]);
+
+  const [expandedClusterId, setExpandedClusterId] = useState<string | null>(null);
+
+  // Group active listings and trips
+  const activeMapItems = useMemo<MapItemEntry[]>(() => {
+    const list: MapItemEntry[] = [];
+
+    if (showListings) {
+      listings.forEach((listing) => {
+        if (listing.latlng && listing.latlng.length === 2 && !isNaN(listing.latlng[0]) && !isNaN(listing.latlng[1])) {
+          const imgs = Array.isArray(listing.imageSrc) ? listing.imageSrc : [listing.imageSrc];
+          list.push({
+            id: listing.id,
+            type: "listing",
+            data: listing,
+            price: listing.price,
+            coords: listing.latlng as [number, number],
+            title: listing.title,
+            rating: listing.rating,
+            category: listing.category,
+            imageSrc: imgs[0] || "/assets/template.jpeg",
+          });
+        }
+      });
+    }
+
+    if (showTrips) {
+      trips.forEach((trip) => {
+        const coords = trip.latlng || getTripCoordinates(trip);
+        if (coords && coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+          const imgs = [trip.coverPhoto, ...(trip.gallery || [])].filter(Boolean);
+          list.push({
+            id: trip.id,
+            type: "trip",
+            data: trip,
+            price: trip.pricePerPerson,
+            coords: coords as [number, number],
+            title: trip.title,
+            rating: trip.rating,
+            category: "trip",
+            imageSrc: imgs[0] || "/assets/template.jpeg",
+          });
+        }
+      });
+    }
+
+    return list;
+  }, [listings, trips, showListings, showTrips]);
+
+  // Individual items with micro-offset for overlapping properties (< 0.0006 deg)
+  const renderedItems = useMemo(() => {
+    return activeMapItems.map((item) => {
+      const sameSpot = activeMapItems.filter(
+        (other) =>
+          Math.hypot(other.coords[0] - item.coords[0], other.coords[1] - item.coords[1]) < 0.0006
+      );
+      if (sameSpot.length > 1) {
+        const subIdx = sameSpot.findIndex((s) => s.id === item.id);
+        const subTotal = sameSpot.length;
+        const angle = (2 * Math.PI * subIdx) / subTotal - Math.PI / 2;
+        const microOffset = 0.0005; // ~40m micro-offset so overlapping pins don't completely occlude each other
+        const cosLat = Math.cos((item.coords[0] * Math.PI) / 180) || 1;
+        return {
+          ...item,
+          displayCoords: [
+            item.coords[0] + microOffset * Math.cos(angle),
+            item.coords[1] + (microOffset * Math.sin(angle)) / cosLat,
+          ] as [number, number],
+        };
+      }
+      return {
+        ...item,
+        displayCoords: item.coords,
+      };
+    });
+  }, [activeMapItems]);
+
+  // Cluster properties within a 10 km range to calculate counts of a place
+  const CLUSTER_RANGE_KM = 10; // 10 km range to calculate counts of a locality/place
+
+  const clusters = useMemo<MapCluster[]>(() => {
+    const result: MapCluster[] = [];
+
+    activeMapItems.forEach((item) => {
+      // Find closest existing cluster within 10 km
+      let closestCluster: MapCluster | null = null;
+      let minDistance = CLUSTER_RANGE_KM;
+
+      result.forEach((c) => {
+        const dist = getDistanceKm(c.center, item.coords);
+        if (dist <= minDistance) {
+          minDistance = dist;
+          closestCluster = c;
+        }
+      });
+
+      if (closestCluster) {
+        closestCluster.items.push(item);
+        closestCluster.count = closestCluster.items.length;
+        closestCluster.minPrice = Math.min(closestCluster.minPrice, item.price);
+        if (item.type === "trip") closestCluster.hasTrips = true;
+        if (item.type === "listing") closestCluster.hasListings = true;
+        // Recalculate geographic centroid for the cluster badge
+        const sumLat = closestCluster.items.reduce((acc, curr) => acc + curr.coords[0], 0);
+        const sumLng = closestCluster.items.reduce((acc, curr) => acc + curr.coords[1], 0);
+        closestCluster.center = [
+          sumLat / closestCluster.items.length,
+          sumLng / closestCluster.items.length,
+        ];
+      } else {
+        result.push({
+          id: `cluster_${item.coords[0].toFixed(4)}_${item.coords[1].toFixed(4)}`,
+          center: [item.coords[0], item.coords[1]],
+          items: [item],
+          minPrice: item.price,
+          count: 1,
+          hasTrips: item.type === "trip",
+          hasListings: item.type === "listing",
+        });
+      }
+    });
+
+    return result;
+  }, [activeMapItems]);
 
   const createPriceIcon = (
     price: number,
@@ -338,35 +503,53 @@ export default function SearchMap({
     const active = isSelected || isHovered;
     const formattedDzd =
       price >= 1000 ? `${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}k DZD` : `${price} DZD`;
-    const eurVal = Math.round(price / 152.47);
 
     const tripBadge = isTrip
-      ? `<svg class="w-3.5 h-3.5 ${
+      ? `<svg class="w-3 h-3 ${
           active ? "text-[#D9C9B2]" : "text-[#6B7F5B]"
         } shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>`
       : "";
 
     return L.divIcon({
-      className: "custom-price-pin !bg-transparent !border-none",
+      className: `custom-price-pin !bg-transparent !border-none ${active ? "is-active" : ""}`,
       html: `
         <button 
           type="button"
-          class="cursor-pointer font-bold text-[11px] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 justify-center whitespace-nowrap select-none transition-all duration-300 transform-gpu ${
+          class="price-pin-btn cursor-pointer font-extrabold text-[11.5px] px-3 py-1.5 rounded-full flex items-center gap-1.5 justify-center whitespace-nowrap select-none border transition-all ${
             active
-              ? "bg-[#2E3A2F] text-white scale-115 -translate-y-1 shadow-2xl ring-2 ring-[#C96F4F] ring-offset-1 z-50 font-extrabold"
-              : "bg-white/95 backdrop-blur-xs text-[#2E3A2F] hover:scale-110 hover:-translate-y-1 border border-[#D9C9B2] hover:border-[#C96F4F] shadow-md hover:shadow-xl"
+              ? "bg-[#2E3A2F] text-white border-[#C96F4F] ring-2 ring-[#C96F4F]/40 shadow-xl"
+              : "bg-white text-[#2E3A2F] border-[#D9C9B2]/90 hover:border-[#C96F4F] shadow-sm hover:shadow-lg"
           }"
-          style="transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;"
         >
           ${tripBadge}
-          <span>${formattedDzd}</span>
-          <span class="text-[9.5px] font-normal ${
-            active ? "text-neutral-300" : "text-neutral-500"
-          }">(~€${eurVal})</span>
+          <span class="tracking-tight">${formattedDzd}</span>
         </button>
       `,
-      iconSize: [isTrip ? 112 : 98, 34],
-      iconAnchor: [isTrip ? 56 : 49, 17],
+      iconSize: [isTrip ? 88 : 74, 30],
+      iconAnchor: [isTrip ? 44 : 37, 15],
+    });
+  };
+
+  const createClusterIcon = (
+    count: number,
+    isSelected: boolean,
+    isHovered: boolean
+  ) => {
+    const active = isSelected || isHovered;
+
+    return L.divIcon({
+      className: `custom-cluster-pin !bg-transparent !border-none ${active ? "is-active" : ""}`,
+      html: `
+        <button 
+          type="button"
+          class="cluster-pin-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-md bg-[#C96F4F] hover:bg-[#B55F40] ring-2 ring-white/90 transition-transform duration-200"
+          aria-label="${count} properties"
+        >
+          <span>${count}</span>
+        </button>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
     });
   };
 
@@ -400,7 +583,19 @@ export default function SearchMap({
           zoom={zoom}
           bounds={bounds}
           selectedCoords={selectedCoords}
+          mapFocus={mapFocus}
           onBoundsChange={onBoundsChange}
+          onZoomChange={(currentZoom) => {
+            setMapZoom(currentZoom);
+            if (currentZoom < 11 && expandedClusterId) {
+              setExpandedClusterId(null);
+            }
+          }}
+          onMapClick={() => {
+            setClickedCardId(null);
+            onSelectListing?.(null);
+            setExpandedClusterId(null);
+          }}
         />
 
         <TileLayer
@@ -410,109 +605,182 @@ export default function SearchMap({
           maxZoom={20}
         />
 
-        {/* 1. Listing Price Bubble Pins */}
-        {showListings &&
-          listings.map((listing) => {
-            if (!listing.latlng || listing.latlng.length !== 2) return null;
-            const isSelected = listing.id === activeSelectedId;
-            const isHovered = listing.id === activeHoveredId;
+        {/* 1. Clustered & Individual Price Bubble Pins */}
+        {mapZoom >= 11 ? (
+          // When zoomed in: ALL properties appear as their normal price pins ("like usual without count button")
+          renderedItems.map((item) => {
+            const isSelected = item.id === clickedCardId;
+            const isHovered = item.id === internalHoveredId;
 
             return (
               <Marker
-                key={listing.id}
-                position={listing.latlng as L.LatLngExpression}
-                icon={createPriceIcon(listing.price, isSelected, isHovered, false)}
+                key={item.id}
+                position={item.displayCoords as L.LatLngExpression}
+                icon={createPriceIcon(item.price, isSelected, isHovered, item.type === "trip")}
                 zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 1}
                 eventHandlers={{
                   click: () => {
-                    router.push(`/listings/${listing.id}`);
+                    setClickedCardId(item.id);
+                    onSelectListing?.(item.id);
                   },
                   mouseover: () => {
-                    if (leaveTimerRef.current) {
-                      clearTimeout(leaveTimerRef.current);
-                      leaveTimerRef.current = null;
-                    }
-                    setHoveredCardListingId(listing.id);
-                    if (onHoverListing) onHoverListing(listing.id);
-                    else setInternalHoveredId(listing.id);
+                    setInternalHoveredId(item.id);
+                    onHoverListing?.(item.id);
                   },
                   mouseout: () => {
-                    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-                    leaveTimerRef.current = setTimeout(() => {
-                      if (!isCardHoveredRef.current) {
-                        setHoveredCardListingId(null);
-                        if (onHoverListing) onHoverListing(null);
-                        else setInternalHoveredId(null);
-                      }
-                    }, 250);
+                    setInternalHoveredId(null);
+                    onHoverListing?.(null);
                   },
                 }}
               />
             );
-          })}
+          })
+        ) : (
+          // When zoomed out (country/regional view): group properties within 10 km into count buttons
+          clusters.map((cluster) => {
+            // A: Single-item pin
+            if (cluster.count === 1) {
+              const item = cluster.items[0];
+              const isSelected = item.id === clickedCardId;
+              const isHovered = item.id === internalHoveredId;
 
-        {/* 2. Agency Trip Price Bubble Pins */}
-        {showTrips &&
-          trips.map((trip) => {
-            const coords = trip.latlng || getTripCoordinates(trip);
-            if (!coords || coords.length !== 2) return null;
-            const isSelected = trip.id === activeSelectedId;
-            const isHovered = trip.id === activeHoveredId;
+              return (
+                <Marker
+                  key={item.id}
+                  position={cluster.center as L.LatLngExpression}
+                  icon={createPriceIcon(item.price, isSelected, isHovered, item.type === "trip")}
+                  zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 1}
+                  eventHandlers={{
+                    click: () => {
+                      setClickedCardId(item.id);
+                      onSelectListing?.(item.id);
+                    },
+                    mouseover: () => {
+                      setInternalHoveredId(item.id);
+                      onHoverListing?.(item.id);
+                    },
+                    mouseout: () => {
+                      setInternalHoveredId(null);
+                      onHoverListing?.(null);
+                    },
+                  }}
+                />
+              );
+            }
 
+            // B: Multi-item cluster (within 10 km range)
+            const isExpanded = expandedClusterId === cluster.id;
+            const isSelected = cluster.items.some((i) => i.id === clickedCardId);
+            const isHovered = cluster.items.some((i) => i.id === internalHoveredId);
+
+            if (!isExpanded) {
+              return (
+                <Marker
+                  key={cluster.id}
+                  position={cluster.center as L.LatLngExpression}
+                  icon={createClusterIcon(cluster.count, isSelected, isHovered)}
+                  zIndexOffset={isHovered ? 950 : 50}
+                  eventHandlers={{
+                    click: (e) => {
+                      setExpandedClusterId(cluster.id);
+
+                      // Smoothly zoom in to this 10 km locality and fit its properties
+                      if (e.target?._map) {
+                        try {
+                          if (cluster.items.length > 1) {
+                            const bounds = L.latLngBounds(cluster.items.map((i) => i.coords));
+                            e.target._map.fitBounds(bounds, {
+                              padding: [60, 60],
+                              maxZoom: 14,
+                              duration: 1.0,
+                              easeLinearity: 0.25,
+                            });
+                          } else {
+                            e.target._map.flyTo(cluster.center, 14, {
+                              duration: 1.0,
+                              easeLinearity: 0.25,
+                            });
+                          }
+                        } catch {}
+                      }
+
+                      setMapFocus({
+                        coords: cluster.center,
+                        zoom: 13,
+                        key: Date.now(),
+                      });
+                    },
+                    mouseover: () => {
+                      setInternalHoveredId(cluster.items[0].id);
+                      onHoverListing?.(cluster.items[0].id);
+                    },
+                    mouseout: () => {
+                      setInternalHoveredId(null);
+                      onHoverListing?.(null);
+                    },
+                  }}
+                />
+              );
+            }
+
+            // C: Expanded multi-item cluster - appears "like usual" (standard price pins), not count!
             return (
-              <Marker
-                key={trip.id}
-                position={coords as L.LatLngExpression}
-                icon={createPriceIcon(trip.pricePerPerson, isSelected, isHovered, true)}
-                zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 2}
-                eventHandlers={{
-                  click: () => {
-                    router.push(`/trips/${trip.id}`);
-                  },
-                  mouseover: () => {
-                    if (leaveTimerRef.current) {
-                      clearTimeout(leaveTimerRef.current);
-                      leaveTimerRef.current = null;
-                    }
-                    setHoveredCardListingId(trip.id);
-                    if (onHoverListing) onHoverListing(trip.id);
-                    else setInternalHoveredId(trip.id);
-                  },
-                  mouseout: () => {
-                    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-                    leaveTimerRef.current = setTimeout(() => {
-                      if (!isCardHoveredRef.current) {
-                        setHoveredCardListingId(null);
-                        if (onHoverListing) onHoverListing(null);
-                        else setInternalHoveredId(null);
-                      }
-                    }, 250);
-                  },
-                }}
-              />
+              <React.Fragment key={cluster.id}>
+                {cluster.items.map((item) => {
+                  const overlappingItems = cluster.items.filter(
+                    (other) =>
+                      Math.hypot(other.coords[0] - item.coords[0], other.coords[1] - item.coords[1]) < 0.0007
+                  );
+
+                  let displayCoords: [number, number] = item.coords;
+                  if (overlappingItems.length > 1) {
+                    const subIdx = overlappingItems.findIndex((o) => o.id === item.id);
+                    const subTotal = overlappingItems.length;
+                    const angle = (2 * Math.PI * subIdx) / subTotal - Math.PI / 2;
+                    const microOffset = 0.0006;
+                    const cosLat = Math.cos((item.coords[0] * Math.PI) / 180) || 1;
+                    displayCoords = [
+                      item.coords[0] + microOffset * Math.cos(angle),
+                      item.coords[1] + (microOffset * Math.sin(angle)) / cosLat,
+                    ];
+                  }
+
+                  const itemSelected = item.id === clickedCardId;
+                  const itemHovered = item.id === internalHoveredId;
+
+                  return (
+                    <Marker
+                      key={item.id}
+                      position={displayCoords as L.LatLngExpression}
+                      icon={createPriceIcon(item.price, itemSelected, itemHovered, item.type === "trip")}
+                      zIndexOffset={itemSelected ? 1000 : itemHovered ? 900 : 700}
+                      eventHandlers={{
+                        click: () => {
+                          setClickedCardId(item.id);
+                          onSelectListing?.(item.id);
+                        },
+                        mouseover: () => {
+                          setInternalHoveredId(item.id);
+                          onHoverListing?.(item.id);
+                        },
+                        mouseout: () => {
+                          setInternalHoveredId(null);
+                          onHoverListing?.(null);
+                        },
+                      }}
+                    />
+                  );
+                })}
+              </React.Fragment>
             );
-          })}
+          })
+        )}
       </MapContainer>
 
-      {/* Floating Preview Card - Appears on hover */}
+      {/* Floating Preview Card - Strictly appears on CLICK with smooth motion */}
       {activeItem && (
         <div
-          className="absolute bottom-5 inset-x-4 sm:inset-x-auto sm:start-5 z-[500] sm:w-84 bg-white rounded-2xl shadow-2xl border border-tertiary/70 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 select-none"
-          onMouseEnter={() => {
-            if (leaveTimerRef.current) {
-              clearTimeout(leaveTimerRef.current);
-              leaveTimerRef.current = null;
-            }
-            isCardHoveredRef.current = true;
-            setIsCardHovered(true);
-          }}
-          onMouseLeave={() => {
-            isCardHoveredRef.current = false;
-            setIsCardHovered(false);
-            setHoveredCardListingId(null);
-            if (onHoverListing) onHoverListing(null);
-            else setInternalHoveredId(null);
-          }}
+          className="absolute bottom-5 inset-x-4 sm:inset-x-auto sm:start-5 z-[500] sm:w-84 bg-white rounded-2xl shadow-2xl border border-tertiary/70 overflow-hidden select-none transition-all duration-300 ease-out transform animate-in fade-in zoom-in-95 slide-in-from-bottom-5"
           onClick={(e) => {
             if (hasDraggedRef.current) {
               e.stopPropagation();
@@ -560,11 +828,8 @@ export default function SearchMap({
               aria-label="Close preview"
               onClick={(e) => {
                 e.stopPropagation();
-                isCardHoveredRef.current = false;
-                setIsCardHovered(false);
-                setHoveredCardListingId(null);
-                if (onHoverListing) onHoverListing(null);
-                else setInternalHoveredId(null);
+                setClickedCardId(null);
+                onSelectListing?.(null);
               }}
               className="absolute top-2.5 start-2.5 z-20 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-md transition cursor-pointer"
             >
