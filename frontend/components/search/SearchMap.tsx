@@ -69,6 +69,22 @@ function getDistanceKm(coord1: [number, number], coord2: [number, number]): numb
   return R * c;
 }
 
+export function isValidLatLng(coords: any): coords is [number, number] {
+  if (!coords || !Array.isArray(coords) || coords.length !== 2) return false;
+  const lat = Number(coords[0]);
+  const lng = Number(coords[1]);
+  return (
+    !Number.isNaN(lat) &&
+    !Number.isNaN(lng) &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
 function MapController({
   center,
   zoom,
@@ -120,31 +136,35 @@ function MapController({
   });
 
   useEffect(() => {
-    if (mapFocus) {
-      map.flyTo(mapFocus.coords, mapFocus.zoom, {
-        duration: 1.1,
-        easeLinearity: 0.25,
-      });
-      return;
-    }
+    try {
+      if (mapFocus?.coords && isValidLatLng(mapFocus.coords)) {
+        map.flyTo(mapFocus.coords, mapFocus.zoom || 12, {
+          duration: 1.1,
+          easeLinearity: 0.25,
+        });
+        return;
+      }
 
-    if (selectedCoords) {
-      map.flyTo(selectedCoords, 13, {
-        duration: 1.1,
-        easeLinearity: 0.25,
-      });
-    } else if (bounds) {
-      map.flyToBounds(bounds, {
-        padding: [50, 50],
-        maxZoom: 13,
-        duration: 1.1,
-        easeLinearity: 0.25,
-      });
-    } else if (center) {
-      map.flyTo(center, zoom || 10, {
-        duration: 1.1,
-        easeLinearity: 0.25,
-      });
+      if (selectedCoords && isValidLatLng(selectedCoords)) {
+        map.flyTo(selectedCoords, 13, {
+          duration: 1.1,
+          easeLinearity: 0.25,
+        });
+      } else if (bounds && typeof (bounds as any).isValid === "function" && (bounds as any).isValid()) {
+        map.flyToBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 13,
+          duration: 1.1,
+          easeLinearity: 0.25,
+        });
+      } else if (center && isValidLatLng(center)) {
+        map.flyTo(center, zoom || 10, {
+          duration: 1.1,
+          easeLinearity: 0.25,
+        });
+      }
+    } catch (err) {
+      console.warn("Map fly navigation prevented invalid coordinate:", err);
     }
   }, [map, center, zoom, bounds, selectedCoords, mapFocus]);
 
@@ -315,8 +335,8 @@ export default function SearchMap({
 
     if (showListings) {
       listings.forEach((l) => {
-        if (l.latlng && l.latlng.length === 2 && !isNaN(l.latlng[0]) && !isNaN(l.latlng[1])) {
-          coords.push(l.latlng as [number, number]);
+        if (isValidLatLng(l.latlng)) {
+          coords.push([Number(l.latlng[0]), Number(l.latlng[1])]);
         }
       });
     }
@@ -324,20 +344,23 @@ export default function SearchMap({
     if (showTrips) {
       trips.forEach((t) => {
         const c = t.latlng || getTripCoordinates(t);
-        if (c && c.length === 2 && !isNaN(c[0]) && !isNaN(c[1])) {
-          coords.push(c as [number, number]);
+        if (isValidLatLng(c)) {
+          coords.push([Number(c[0]), Number(c[1])]);
         }
       });
     }
 
+    const fallbackCenter: [number, number] =
+      center && isValidLatLng(center) ? center : [36.7538, 3.0588];
+
     if (coords.length === 0) {
       return {
-        defaultCenter: center || ([36.5897, 2.4475] as [number, number]),
+        defaultCenter: fallbackCenter,
         bounds: undefined,
       };
     }
 
-    if (center) {
+    if (center && isValidLatLng(center)) {
       return { defaultCenter: center, bounds: undefined };
     }
 
@@ -345,26 +368,35 @@ export default function SearchMap({
       return { defaultCenter: coords[0], bounds: undefined };
     }
 
-    const leafletBounds = L.latLngBounds(coords.map((c) => [c[0], c[1]]));
+    try {
+      const leafletBounds = L.latLngBounds(coords.map((c) => [c[0], c[1]]));
+      if (leafletBounds.isValid()) {
+        const c = leafletBounds.getCenter();
+        if (isValidLatLng([c.lat, c.lng])) {
+          return {
+            defaultCenter: [c.lat, c.lng] as [number, number],
+            bounds: leafletBounds,
+          };
+        }
+      }
+    } catch {}
+
     return {
-      defaultCenter: [
-        leafletBounds.getCenter().lat,
-        leafletBounds.getCenter().lng,
-      ] as [number, number],
-      bounds: leafletBounds,
+      defaultCenter: fallbackCenter,
+      bounds: undefined,
     };
   }, [listings, trips, showListings, showTrips, center]);
 
   const selectedCoords = useMemo(() => {
     if (clickedCardId) {
       const matchListing = listings.find((l) => l.id === clickedCardId);
-      if (matchListing?.latlng && matchListing.latlng.length === 2) {
-        return matchListing.latlng as [number, number];
+      if (matchListing?.latlng && isValidLatLng(matchListing.latlng)) {
+        return [Number(matchListing.latlng[0]), Number(matchListing.latlng[1])] as [number, number];
       }
       const matchTrip = trips.find((t) => t.id === clickedCardId);
       if (matchTrip) {
         const c = matchTrip.latlng || getTripCoordinates(matchTrip);
-        if (c && c.length === 2) return c as [number, number];
+        if (isValidLatLng(c)) return [Number(c[0]), Number(c[1])] as [number, number];
       }
     }
     return undefined;
@@ -378,14 +410,14 @@ export default function SearchMap({
 
     if (showListings) {
       listings.forEach((listing) => {
-        if (listing.latlng && listing.latlng.length === 2 && !isNaN(listing.latlng[0]) && !isNaN(listing.latlng[1])) {
+        if (isValidLatLng(listing.latlng)) {
           const imgs = Array.isArray(listing.imageSrc) ? listing.imageSrc : [listing.imageSrc];
           list.push({
             id: listing.id,
             type: "listing",
             data: listing,
             price: listing.price,
-            coords: listing.latlng as [number, number],
+            coords: [Number(listing.latlng[0]), Number(listing.latlng[1])],
             title: listing.title,
             rating: listing.rating,
             category: listing.category,
@@ -398,14 +430,14 @@ export default function SearchMap({
     if (showTrips) {
       trips.forEach((trip) => {
         const coords = trip.latlng || getTripCoordinates(trip);
-        if (coords && coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        if (isValidLatLng(coords)) {
           const imgs = [trip.coverPhoto, ...(trip.gallery || [])].filter(Boolean);
           list.push({
             id: trip.id,
             type: "trip",
             data: trip,
             price: trip.pricePerPerson,
-            coords: coords as [number, number],
+            coords: [Number(coords[0]), Number(coords[1])],
             title: trip.title,
             rating: trip.rating,
             category: "trip",

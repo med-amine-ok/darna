@@ -102,13 +102,13 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
           type="button"
           onClick={toggleOpen}
           aria-label="User navigation menu"
-          className="p-1 sm:py-1.5 sm:px-2.5 border border-tertiary/80 flex flex-row items-center gap-2.5 rounded-full cursor-pointer hover:shadow-darna transition bg-white/95 backdrop-blur-sm select-none btn-press"
+          className="p-1 sm:py-1.5 sm:px-2.5 border border-tertiary/80 flex flex-row items-center gap-1.5 sm:gap-2.5 rounded-full cursor-pointer hover:shadow-darna transition bg-white/95 backdrop-blur-sm select-none btn-press shrink-0"
         >
-          <BrandMenuIcon size={16} className="text-neutral-700 ms-1" />
-          <div className="hidden sm:block">
+          <BrandMenuIcon size={16} className="text-neutral-700 ms-0.5 sm:ms-1 shrink-0" />
+          <div className="hidden sm:block shrink-0">
             <Avatar src={currentUser?.image} size={30} />
           </div>
-          <div className="sm:hidden">
+          <div className="sm:hidden shrink-0">
             <Avatar src={currentUser?.image} size={28} />
           </div>
         </button>

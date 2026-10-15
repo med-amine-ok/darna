@@ -66,7 +66,7 @@ export default function HomeHero({
   const currentCity = promoData.cities[cityIndex];
 
   return (
-    <section className="relative w-full min-h-[85dvh] md:min-h-[88dvh] flex flex-col items-center justify-start pt-28 sm:pt-40 md:pt-48 pb-12 sm:pb-16 bg-transparent">
+    <section className="relative w-full flex flex-col items-center justify-start pt-24 sm:pt-36 md:pt-44 pb-6 sm:pb-8 md:pb-12 bg-transparent">
       {/* Background Illustration Artwork: Desktop bg.png vs Mobile bg-phone.png */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
         <picture>
@@ -80,27 +80,30 @@ export default function HomeHero({
             className="object-cover object-bottom mix-blend-multiply opacity-30 pointer-events-none"
           />
         </picture>
+        {/* Soft bottom fade into page background */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-darnaBg to-transparent pointer-events-none z-10" />
       </div>
 
       {/* Main Content Container */}
       <div className="relative z-30 w-full max-w-5xl mx-auto px-4 sm:px-6 flex flex-col items-center text-center">
-        {/* Mobile Search Button (Quick access above hero text on narrow viewports) */}
-        <div className="md:hidden w-full max-w-sm mb-6">
+        {/* Mobile Search Button in Hero: Clean card matching hero aesthetic, opens search modal */}
+        <div className="md:hidden w-full max-w-sm mb-4">
           <button
             type="button"
             onClick={searchModal.onOpen}
-            className="w-full flex items-center justify-between p-3 rounded-full bg-white/95 backdrop-blur-md border border-tertiary/80 shadow-darna-sm text-start"
+            aria-label="Search stays, trips and vehicles"
+            className="w-full flex items-center justify-between p-2.5 sm:p-3 rounded-full bg-white/95 backdrop-blur-md border border-tertiary/80 shadow-darna-sm text-start transition-all cursor-pointer select-none active:scale-[0.98]"
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
                 <BrandPinIcon size={16} className="text-secondary" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-primary">Where to?</span>
-                <span className="text-[11px] text-neutral-500">Anywhere in Algeria · Any week</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-bold text-primary truncate">Where to?</span>
+                <span className="text-[11px] text-neutral-500 truncate">Anywhere in Algeria · Any week</span>
               </div>
             </div>
-            <div className="p-2 bg-accent rounded-full text-white shrink-0">
+            <div className="px-3.5 py-1.5 bg-accent rounded-full text-white shrink-0 shadow-xs">
               <span className="text-xs font-bold">Search</span>
             </div>
           </button>

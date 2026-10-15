@@ -42,10 +42,10 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-black/5 transition text-xs sm:text-sm font-semibold text-primary cursor-pointer select-none btn-press"
+        className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full hover:bg-black/5 transition text-xs sm:text-sm font-semibold text-primary cursor-pointer select-none btn-press shrink-0"
         aria-label="Language selector"
       >
-        <BrandGlobeIcon size={16} className="text-primary/80" />
+        <BrandGlobeIcon size={16} className="text-primary/80 shrink-0" />
         <span className="uppercase tracking-wider">{currentLocale}</span>
       </button>
 

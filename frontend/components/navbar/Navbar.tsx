@@ -13,7 +13,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Search from "./Search";
 import NotificationsDropdown from "./NotificationsDropdown";
-import { BrandPinIcon } from "@/components/icons";
+import { BrandPinIcon, BrandSearchIcon } from "@/components/icons";
 
 interface NavbarProps {
   currentUser?: User | null;
@@ -85,10 +85,34 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
           <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 md:gap-0 min-h-[44px]">
             {/* Start: Logo */}
             <div className="flex items-center shrink-0 z-50">
-              <Logo variant="horizontal" />
+              {/* Desktop: Always horizontal logo */}
+              <div className="hidden md:block">
+                <Logo variant="horizontal" />
+              </div>
+              {/* Mobile: Horizontal at hero top, smoothly transitions to compact icon when scrolled or on non-hero pages */}
+              <div className="md:hidden relative flex items-center h-9">
+                <div
+                  className={`transition-all duration-200 ${
+                    isHero && scrollProgress < 0.4
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-90 pointer-events-none absolute inset-0"
+                  }`}
+                >
+                  <Logo variant="horizontal" />
+                </div>
+                <div
+                  className={`transition-all duration-200 ${
+                    isHero && scrollProgress < 0.4
+                      ? "opacity-0 scale-90 pointer-events-none absolute inset-0"
+                      : "opacity-100 scale-100"
+                  }`}
+                >
+                  <Logo variant="icon" />
+                </div>
+              </div>
             </div>
 
-            {/* Desktop Center: The continuous scroll-transform Search Bar (Immune to RTL flip) */}
+            {/* Desktop Center: The continuous scroll-transform Search Bar */}
             <div className="hidden md:flex absolute inset-x-0 top-1/2 -translate-y-1/2 justify-center pointer-events-none">
               <div className="pointer-events-auto flex justify-center">
                 <Search
@@ -98,30 +122,41 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
               </div>
             </div>
 
-            {/* Mobile Center/Inline Search Button */}
-            <div className="md:hidden flex-1 px-2 flex justify-center">
-              {(!isHero || scrollProgress > 0.3) && (
-                <button
-                  type="button"
-                  onClick={searchModal.onOpen}
-                  className="flex items-center gap-2 py-1.5 px-3 rounded-full border border-tertiary bg-white shadow-xs text-xs font-semibold text-primary truncate max-w-[190px] transition-all"
-                  style={{
-                    opacity: isHero ? Math.min(1, (scrollProgress - 0.2) * 2) : 1,
-                    transform: isHero
-                      ? `scale(${0.9 + scrollProgress * 0.1})`
-                      : "scale(1)",
-                  }}
-                >
+            {/* Mobile Center: Flexible inline pill (Bounded cleanly between Logo and Right controls) */}
+            <div className="md:hidden flex-1 min-w-0 flex items-center justify-center px-1">
+              <button
+                type="button"
+                onClick={searchModal.onOpen}
+                aria-label="Search"
+                className={`
+                  w-full max-w-[210px] flex items-center justify-between gap-1.5 py-1.5 px-3 
+                  rounded-full bg-white/95 backdrop-blur-md border border-tertiary/80 shadow-xs 
+                  hover:border-primary text-xs font-semibold text-primary transition-all duration-200 cursor-pointer select-none
+                  ${
+                    isHero && scrollProgress < 0.35
+                      ? "opacity-0 pointer-events-none scale-90 translate-y-2"
+                      : "opacity-100 scale-100 translate-y-0"
+                  }
+                `}
+              >
+                <div className="flex items-center gap-1.5 min-w-0 truncate">
                   <BrandPinIcon
                     size={14}
                     strokeWidth={2}
                     className="text-accent shrink-0"
                   />
-                  <span className="truncate">
+                  <span className="truncate text-xs font-semibold text-primary">
                     {destination || "Anywhere in Algeria"}
                   </span>
-                </button>
-              )}
+                </div>
+                <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                  <BrandSearchIcon
+                    size={11}
+                    strokeWidth={2.4}
+                    className="text-accent"
+                  />
+                </div>
+              </button>
             </div>
 
             {/* End: LanguageSwitcher + Notifications + UserMenu */}

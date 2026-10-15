@@ -81,7 +81,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       </div> */}
 
       {/* 4. Main Feed Section */}
-      <Container className="py-8 space-y-12">
+      <Container className="pt-2 sm:pt-4 pb-8 space-y-10 sm:space-y-12">
         {isTripVertical ? (
           /* Trips vertical grid view */
           <div className="space-y-6">
