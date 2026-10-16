@@ -18,6 +18,7 @@ export default function Avatar({ src, size = 30 }: AvatarProps) {
         src={src || "/assets/avatar.png"}
         alt="Avatar"
         fill
+        sizes={`${size}px`}
       />
     </div>
   );

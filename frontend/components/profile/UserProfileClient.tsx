@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { User, Listing, Review } from "@/types";
 import ListingCard from "@/components/listing/ListingCard";
 import Avatar from "@/components/Avatar";

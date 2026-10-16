@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { Link } from "@/navigation";
 
 interface LogoProps {
   variant?: "horizontal" | "icon" | "vertical";
@@ -20,8 +19,6 @@ export default function Logo({
   interactive,
 }: LogoProps) {
   const isClickable = interactive !== undefined ? interactive : clickable;
-  const params = useParams();
-  const locale = params?.locale || "en";
 
   let src = "/assets/logo-horizontal.png";
   let width = 140;
@@ -57,5 +54,5 @@ export default function Logo({
 
   if (!isClickable) return content;
 
-  return <Link href={`/${locale}`}>{content}</Link>;
+  return <Link href="/">{content}</Link>;
 }

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Container from "@/components/Container";
-import { useRouter } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { useRegisterModal } from "@/hook/useRegisterModal";
 import { toast } from "react-toastify";
 import {
@@ -15,7 +15,6 @@ import {
   BrandMailIcon,
   BrandChevronLeftIcon,
 } from "@/components/icons";
-import Link from "next/link";
 import Image from "next/image";
 import { switchUser, resetUserToGuest } from "@/lib/data/auth";
 

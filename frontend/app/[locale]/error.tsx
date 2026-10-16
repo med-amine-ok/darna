@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/navigation";
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -21,6 +21,7 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
           src="/assets/404-illustration.png"
           alt="DARNA Error"
           fill
+          sizes="256px"
           className="object-contain"
         />
       </div>

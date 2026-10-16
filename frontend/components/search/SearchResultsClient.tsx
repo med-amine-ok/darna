@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import qs from "query-string";
 import { useTranslations } from "next-intl";
 import { Listing, User, ListingVertical, Trip } from "@/types";
-import { getTripCoordinates } from "@/lib/mock-data/trips";
+import { getTripCoordinates } from "@/lib/data/trips";
 import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
 import EmptyState from "@/components/EmptyState";

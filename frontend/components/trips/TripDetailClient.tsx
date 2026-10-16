@@ -5,7 +5,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Link, useRouter } from "@/navigation";
 import { Trip, User, Organization } from "@/types";
-import { getTripCoordinates } from "@/lib/mock-data/trips";
+import { getTripCoordinates } from "@/lib/data/trips";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Container from "@/components/Container";
 import { createReservation } from "@/lib/data/reservations";

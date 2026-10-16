@@ -1,6 +1,9 @@
+// TODO: replace with Supabase query
 import { Trip } from "@/types";
 import { mockTrips, getTripCoordinates } from "@/lib/mock-data/trips";
 import { getOrganizationById } from "@/lib/data/organizations";
+
+export { getTripCoordinates };
 
 let tripsState: Trip[] = [...mockTrips];
 

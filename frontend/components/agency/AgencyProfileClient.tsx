@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { Organization, Membership, Listing } from "@/types";
 import ListingCard from "@/components/listing/ListingCard";
 import Avatar from "@/components/Avatar";

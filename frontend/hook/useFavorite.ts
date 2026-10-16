@@ -16,17 +16,23 @@ const favListeners = new Set<(ids: string[]) => void>();
 
 export default function useFavorite({ listingId, currentUser }: Props) {
   const loginModal = useLoginModal();
-  const [favorites, setFavorites] = useState<string[]>(() => {
+  const [favorites, setFavorites] = useState<string[]>(
+    () => currentUser?.favoriteIds || clientFavorites
+  );
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("darna_favorites");
       if (stored) {
         try {
-          return JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setFavorites(parsed);
+          }
         } catch {}
       }
     }
-    return currentUser?.favoriteIds || clientFavorites;
-  });
+  }, []);
 
   useEffect(() => {
     const handleFavChange = (ids: string[]) => {

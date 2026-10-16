@@ -72,19 +72,19 @@ export default function Search({
   // Format labels based on active vertical
   const labels = {
     home: {
-      whereTitle: "Where",
-      wherePlaceholder: "Search destinations",
-      whenTitle: "When",
-      whenPlaceholder: "Add dates",
-      whoTitle: "Who",
-      whoPlaceholder: "Add guests",
+      whereTitle: tNav("where"),
+      wherePlaceholder: tNav("searchDestinations"),
+      whenTitle: tNav("when"),
+      whenPlaceholder: tNav("addDates"),
+      whoTitle: tNav("who"),
+      whoPlaceholder: tNav("addGuests"),
       whoSubtitle: "Ages 13 or above",
     },
     hotel: {
-      whereTitle: "Destination",
+      whereTitle: tNav("where"),
       wherePlaceholder: "City, hotel or hostel name",
-      whenTitle: "Check-in / out",
-      whenPlaceholder: "Add dates",
+      whenTitle: tNav("when"),
+      whenPlaceholder: tNav("addDates"),
       whoTitle: "Rooms & Guests",
       whoPlaceholder: "Add rooms & guests",
       whoSubtitle: "Rooms, adults & children",
@@ -101,7 +101,7 @@ export default function Search({
     experience: {
       whereTitle: "Region",
       wherePlaceholder: "Explore activities in...",
-      whenTitle: "Date",
+      whenTitle: tNav("when"),
       whenPlaceholder: "Select experience date",
       whoTitle: "Group Size",
       whoPlaceholder: "Number of participants",

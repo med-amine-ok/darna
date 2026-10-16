@@ -9,8 +9,6 @@ import { User } from "@/types";
 import { useSearchModal } from "@/hook/useSearchModal";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
-import Image from "next/image";
 import Search from "./Search";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { BrandPinIcon, BrandSearchIcon } from "@/components/icons";

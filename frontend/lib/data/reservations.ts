@@ -14,10 +14,15 @@ export async function getReservations(params?: {
   tripId?: string;
   hostId?: string;
   organizationId?: string;
+  status?: ReservationStatus;
 }): Promise<Reservation[]> {
   await new Promise((resolve) => setTimeout(resolve, 80));
 
   let results = [...reservationsStore];
+
+  if (params?.status) {
+    results = results.filter((r) => r.status === params.status);
+  }
 
   if (params?.userId) {
     results = results.filter((r) => r.userId === params.userId);
@@ -106,6 +111,25 @@ export async function createReservation(data: {
   selectedRoomTypeId?: string;
 }): Promise<Reservation> {
   await new Promise((resolve) => setTimeout(resolve, 120));
+
+  // Double-booking / date overlap validation for listings
+  if (data.listingId) {
+    const reqStart = new Date(data.startDate).getTime();
+    const reqEnd = new Date(data.endDate).getTime();
+    if (!isNaN(reqStart) && !isNaN(reqEnd) && reqStart < reqEnd) {
+      const hasConflict = reservationsStore.some((r) => {
+        if (r.listingId !== data.listingId) return false;
+        if (r.status !== "confirmed" && r.status !== "pending") return false;
+        const existingStart = new Date(r.startDate).getTime();
+        const existingEnd = new Date(r.endDate).getTime();
+        return reqStart < existingEnd && reqEnd > existingStart;
+      });
+
+      if (hasConflict) {
+        throw new Error("DATES_UNAVAILABLE: The selected dates overlap with an existing confirmed reservation.");
+      }
+    }
+  }
 
   const approvalMode = data.approvalMode || "instant";
   const status: ReservationStatus = data.status || (approvalMode === "request" ? "pending" : "confirmed");

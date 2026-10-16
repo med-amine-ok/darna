@@ -2,8 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { Listing, User } from "@/types";
 import { updateListing, deleteListing } from "@/lib/data/listings";
 import {

@@ -43,6 +43,25 @@ export default function Modal({
     }, 300);
   }, [disabled, onClose]);
 
+  // Accessibility: Handle Escape key and body scroll lock
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isOpen && !disabled) {
+        handleClose();
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen, disabled, handleClose]);
+
   const handleSubmit = useCallback(() => {
     if (disabled) return;
     onSubmit();

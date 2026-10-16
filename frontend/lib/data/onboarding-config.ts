@@ -1,3 +1,4 @@
+// TODO: replace with Supabase query
 import { HostType, OnboardingStepConfig, HostTypeOnboardingConfig } from "@/types";
 
 export const defaultOnboardingConfigs: Record<HostType, OnboardingStepConfig[]> = {

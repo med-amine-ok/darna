@@ -18,7 +18,7 @@ import {
   BrandPinIcon,
 } from "@/components/icons";
 import { Listing, User, Trip, ListingVertical } from "@/types";
-import { getTripCoordinates } from "@/lib/mock-data/trips";
+import { getTripCoordinates } from "@/lib/data/trips";
 import HeartButton from "@/components/HeartButton";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import "leaflet/dist/leaflet.css";

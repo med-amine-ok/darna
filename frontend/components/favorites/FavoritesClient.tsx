@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/navigation";
+import { useTranslations } from "next-intl";
 import { Listing, User, ListingVertical } from "@/types";
 import ListingCard from "@/components/listing/ListingCard";
 import { BrandHeartIcon } from "@/components/icons";
@@ -15,26 +16,34 @@ export default function FavoritesClient({
   initialListings,
   currentUser,
 }: FavoritesClientProps) {
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("darna_favorites");
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {}
-      }
-    }
-    return currentUser?.favoriteIds || ["lst_tipaza_villa", "lst_djanet_tassili"];
-  });
+  const tNav = useTranslations("nav");
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(
+    () => currentUser?.favoriteIds || ["lst_tipaza_villa", "lst_djanet_tassili"]
+  );
 
   const [activeVertical, setActiveVertical] = useState<"all" | ListingVertical>("all");
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("darna_favorites");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setFavoriteIds(parsed);
+          }
+        } catch {}
+      }
+    }
+
     const handleStorage = () => {
       const stored = localStorage.getItem("darna_favorites");
       if (stored) {
         try {
-          setFavoriteIds(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setFavoriteIds(parsed);
+          }
         } catch {}
       }
     };
@@ -49,13 +58,22 @@ export default function FavoritesClient({
     return l.category === activeVertical;
   });
 
+  const tabs: { id: "all" | ListingVertical; label: string }[] = [
+    { id: "all", label: tNav("tabAll") },
+    { id: "home", label: tNav("tabHomes") },
+    { id: "hotel", label: tNav("tabHotels") },
+    { id: "vehicle", label: tNav("tabVehicles") },
+    { id: "experience", label: tNav("tabExperiences") },
+    { id: "trip", label: tNav("tabTrips") },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-tertiary/50 pb-5">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-primary font-serif">
-            Your Wishlist & Saved Places
+            {tNav("myFavorites")}
           </h1>
           <p className="text-sm text-neutral-500 mt-1">
             {savedListings.length}{" "}
@@ -65,19 +83,12 @@ export default function FavoritesClient({
 
         {/* Vertical Tabs */}
         {savedListings.length > 0 && (
-          <div className="flex items-center gap-1.5 bg-tertiary/20 p-1.5 rounded-2xl border border-tertiary/40">
-            {(
-              [
-                { id: "all", label: "All" },
-                { id: "home", label: "Homes" },
-                { id: "vehicle", label: "Vehicles" },
-                { id: "experience", label: "Experiences" },
-              ] as const
-            ).map((tab) => (
+          <div className="flex flex-wrap items-center gap-1.5 bg-tertiary/20 p-1.5 rounded-2xl border border-tertiary/40">
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveVertical(tab.id as any)}
+                onClick={() => setActiveVertical(tab.id)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
                   activeVertical === tab.id
                     ? "bg-white text-primary shadow-xs"
@@ -109,7 +120,7 @@ export default function FavoritesClient({
             href="/search"
             className="inline-flex items-center justify-center py-2.5 px-6 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm"
           >
-            Explore Algeria
+            {tNav("explore")}
           </Link>
         </div>
       ) : (

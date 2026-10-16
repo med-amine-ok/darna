@@ -7,7 +7,6 @@ import { getTrips } from "@/lib/data/trips";
 
 import Navbar from "@/components/navbar/Navbar";
 import HomeHero from "@/components/home/HomeHero";
-import MainCategoryTabs from "@/components/navbar/MainCategoryTabs";
 import ListingCarouselSection from "@/components/home/ListingCarouselSection";
 import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
@@ -73,14 +72,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       {/* Authentic Algerian Hero Section */}
       <HomeHero />
 
-      {/* 3. Horizontal Scrollable Category Tabs Bar */}
-      {/* <div className="sticky top-0 z-30 bg-darnaBg/95 backdrop-blur-md border-b border-tertiary/50 shadow-2xs">
-        <Container>
-          <MainCategoryTabs />
-        </Container>
-      </div> */}
-
-      {/* 4. Main Feed Section */}
+      {/* Main Feed Section */}
       <Container className="pt-2 sm:pt-4 pb-8 space-y-10 sm:space-y-12">
         {isTripVertical ? (
           /* Trips vertical grid view */

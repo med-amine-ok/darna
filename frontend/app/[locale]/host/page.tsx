@@ -28,13 +28,13 @@ export default async function HostTodayPage({
   if (effectiveHostType === "individual") {
     redirect(`/${locale}/host/listings`);
   }
-  const isAgency = effectiveHostType === "agency";
+  const isOrgHost = effectiveHostType === "agency" || effectiveHostType === "hotel" || effectiveHostType === "hostel";
 
-  const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : null;
+  const orgId = isOrgHost ? (currentUser?.organizationId || cookieAgencyId) : null;
   const organization = orgId ? await getOrganizationById(orgId) : null;
 
   const reservations = await getReservations();
-  const hostId = (isAgency && orgId) ? orgId : (currentUser?.id || "usr_amina");
+  const hostId = (isOrgHost && orgId) ? orgId : (currentUser?.id || "usr_amina");
   const listings = await getHostListings(hostId);
   const reviews = currentUser ? await getReviewsByUserId(currentUser.id) : [];
 

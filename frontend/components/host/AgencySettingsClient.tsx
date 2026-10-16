@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { Organization, User } from "@/types";
 import { updateOrganization, deleteOrganization } from "@/lib/data/organizations";
 import {

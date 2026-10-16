@@ -36,7 +36,7 @@ export const mockListings: Listing[] = [
     amenities: ["wifi", "pool", "kitchen", "parking", "air_conditioning", "sea_view"],
     cancellationPolicy: "flexible",
     availableFrom: "2026-10-02",
-    availableTo: "2026-10-10",
+    availableTo: "2027-12-31",
   },
   {
     id: "lst_algiers_casbah",
@@ -288,7 +288,7 @@ export const mockListings: Listing[] = [
     mileagePolicy: "Unlimited mileage in northern regions; Sahara permits provided.",
     insuranceNotes: "Comprehensive all-risk insurance included with standard deductible.",
     availableFrom: "2026-10-02",
-    availableTo: "2026-10-10",
+    availableTo: "2027-12-31",
   },
   {
     id: "lst_nissan_patrol",

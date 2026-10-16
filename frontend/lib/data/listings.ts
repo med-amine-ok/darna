@@ -1,6 +1,7 @@
 // TODO: replace with Supabase query
 import { Listing, ListingVertical, SearchParams } from "@/types";
 import { mockListings } from "@/lib/mock-data/listings";
+import { getReservations } from "./reservations";
 
 const g = globalThis as unknown as { __darna_listings__?: Listing[] };
 if (!g.__darna_listings__) {
@@ -118,9 +119,10 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
     results = results.filter((item) => item.price <= (params.maxPrice || Infinity));
   }
 
-  if (params.guests && params.guests > 1) {
+  const guestCount = params.guests || (params as any).guestCount;
+  if (guestCount && guestCount > 1) {
     results = results.filter(
-      (item) => !item.guestCount || item.guestCount >= (params.guests || 1)
+      (item) => !item.guestCount || item.guestCount >= guestCount
     );
   }
 
@@ -176,6 +178,18 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
           return item;
         })
         .filter((item): item is Listing => item !== null);
+
+      // Exclude listings that have confirmed reservations overlapping with searched interval
+      const confirmedReservations = await getReservations({ status: "confirmed" });
+      results = results.filter((listing) => {
+        const hasBooking = confirmedReservations.some((r) => {
+          if (r.listingId !== listing.id) return false;
+          const rStart = new Date(r.startDate).getTime();
+          const rEnd = new Date(r.endDate).getTime();
+          return sStart.getTime() < rEnd && sEnd.getTime() > rStart;
+        });
+        return !hasBooking;
+      });
     }
   }
 

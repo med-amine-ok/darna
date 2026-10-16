@@ -1,3 +1,4 @@
+// TODO: replace with Supabase query
 import { Wallet, Transaction, HostTypeCommissionRates, HostType } from "@/types";
 export type { HostTypeCommissionRates };
 

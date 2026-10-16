@@ -24,7 +24,7 @@ body {
 
 /* RTL Specific rules */
 [dir="rtl"] {
-  font-family: "Tajawal", "IBM Plex Sans Arabic", var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-arabic), "Tajawal", "IBM Plex Sans Arabic", var(--font-sans), system-ui, -apple-system, sans-serif;
 }
 
 /* Custom scrollbar utility */

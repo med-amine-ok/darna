@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { Organization, Membership, User } from "@/types";
 import {
   addOrganizationMember,

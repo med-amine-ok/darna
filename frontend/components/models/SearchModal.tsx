@@ -73,8 +73,11 @@ export default function SearchModal() {
     const updatedQuery: any = {
       ...currentQuery,
       destination: destination || undefined,
+      guests: guestCount,
       guestCount,
+      rooms: roomCount,
       roomCount,
+      bathrooms: bathroomCount,
       bathroomCount,
     };
 

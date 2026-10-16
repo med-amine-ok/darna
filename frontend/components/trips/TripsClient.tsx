@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { Reservation } from "@/types";
 import { cancelReservation } from "@/lib/data/reservations";
 import { toast } from "react-toastify";

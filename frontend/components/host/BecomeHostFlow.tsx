@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "@/navigation";
+import { Link, useRouter } from "@/navigation";
 import { createListing } from "@/lib/data/listings";
 import { createOrganization } from "@/lib/data/organizations";
 import { getCurrentUser, updateUserHostStatus } from "@/lib/data/auth";

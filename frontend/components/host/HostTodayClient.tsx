@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/navigation";
 import { User, Organization, Reservation, Listing, Review } from "@/types";
 import { updateReservationStatus } from "@/lib/data/reservations";
 import Avatar from "@/components/Avatar";

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "@/navigation";
 import { Notification } from "@/types";
 import { markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/data/notifications";
