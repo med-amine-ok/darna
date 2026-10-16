@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import Image from "next/image";
@@ -85,12 +85,101 @@ export function isValidLatLng(coords: any): coords is [number, number] {
   );
 }
 
+// Global safety guard for Leaflet: Prevents NaN calculations and crashes when container size is 0 or hidden
+if (typeof window !== "undefined" && typeof (L as any)?.Map?.prototype !== "undefined") {
+  const mapProto = L.Map.prototype as any;
+  if (!mapProto._darnaGuarded) {
+    mapProto._darnaGuarded = true;
+
+    // Guard getBoundsZoom to never produce NaN or divide-by-zero zoom levels
+    const origGetBoundsZoom = mapProto.getBoundsZoom;
+    mapProto.getBoundsZoom = function (bounds: any, inside?: boolean, padding?: any) {
+      try {
+        const size = this.getSize();
+        const pad = L.point(padding || [0, 0]);
+        if (!size || size.x <= pad.x || size.y <= pad.y) {
+          return this.getZoom() || 11;
+        }
+        const result = origGetBoundsZoom.call(this, bounds, inside, padding);
+        return isNaN(result) || !isFinite(result) ? (this.getZoom() || 11) : result;
+      } catch {
+        return this.getZoom() || 11;
+      }
+    };
+
+    // Guard flyTo from running animation loop when container size is 0x0 or coords are invalid
+    const origFlyTo = mapProto.flyTo;
+    mapProto.flyTo = function (targetCenter: any, targetZoom?: any, options?: any) {
+      try {
+        if (!targetCenter || !isValidLatLng(targetCenter)) {
+          return this;
+        }
+        const size = this.getSize();
+        if (!size || size.x <= 0 || size.y <= 0) {
+          return this.setView(targetCenter, targetZoom || this.getZoom() || 11, { animate: false });
+        }
+        return origFlyTo.call(this, targetCenter, targetZoom, options);
+      } catch {
+        try {
+          if (targetCenter && isValidLatLng(targetCenter)) {
+            return this.setView(targetCenter, targetZoom || this.getZoom() || 11, { animate: false });
+          }
+        } catch {}
+        return this;
+      }
+    };
+
+    // Guard flyToBounds
+    const origFlyToBounds = mapProto.flyToBounds;
+    mapProto.flyToBounds = function (bounds: any, options?: any) {
+      try {
+        if (!bounds || (typeof bounds.isValid === "function" && !bounds.isValid())) {
+          return this;
+        }
+        const size = this.getSize();
+        if (!size || size.x <= 0 || size.y <= 0) {
+          const center = typeof bounds.getCenter === "function" ? bounds.getCenter() : null;
+          if (center && isValidLatLng([center.lat, center.lng])) {
+            return this.setView(center, this.getZoom() || 11, { animate: false });
+          }
+          return this;
+        }
+        return origFlyToBounds.call(this, bounds, options);
+      } catch {
+        return this;
+      }
+    };
+
+    // Guard fitBounds
+    const origFitBounds = mapProto.fitBounds;
+    mapProto.fitBounds = function (bounds: any, options?: any) {
+      try {
+        if (!bounds || (typeof bounds.isValid === "function" && !bounds.isValid())) {
+          return this;
+        }
+        const size = this.getSize();
+        if (!size || size.x <= 0 || size.y <= 0) {
+          const center = typeof bounds.getCenter === "function" ? bounds.getCenter() : null;
+          if (center && isValidLatLng([center.lat, center.lng])) {
+            return this.setView(center, this.getZoom() || 11, { animate: false });
+          }
+          return this;
+        }
+        return origFitBounds.call(this, bounds, options);
+      } catch {
+        return this;
+      }
+    };
+  }
+}
+
 function MapController({
   center,
   zoom,
   bounds,
   selectedCoords,
   mapFocus,
+  isVisible,
   onBoundsChange,
   onMapClick,
   onZoomChange,
@@ -100,6 +189,7 @@ function MapController({
   bounds?: L.LatLngBoundsExpression;
   selectedCoords?: [number, number];
   mapFocus?: { coords: [number, number]; zoom: number; key: number } | null;
+  isVisible?: boolean;
   onBoundsChange?: (bounds: MapBounds) => void;
   onMapClick?: () => void;
   onZoomChange?: (zoom: number) => void;
@@ -109,22 +199,51 @@ function MapController({
       if (onMapClick) onMapClick();
     },
     moveend: () => {
-      if (onBoundsChange) {
+      if (!onBoundsChange || isVisible === false) return;
+      try {
+        const size = map.getSize();
+        if (!size || size.x <= 0 || size.y <= 0) return;
         const b = map.getBounds();
-        onBoundsChange({
-          north: b.getNorth(),
-          south: b.getSouth(),
-          east: b.getEast(),
-          west: b.getWest(),
-        });
-      }
+        if (b && typeof b.isValid === "function" && b.isValid()) {
+          onBoundsChange({
+            north: b.getNorth(),
+            south: b.getSouth(),
+            east: b.getEast(),
+            west: b.getWest(),
+          });
+        }
+      } catch {}
     },
     zoomend: () => {
       if (onZoomChange) {
-        onZoomChange(map.getZoom());
+        try {
+          onZoomChange(map.getZoom());
+        } catch {}
       }
-      if (onBoundsChange) {
+      if (!onBoundsChange || isVisible === false) return;
+      try {
+        const size = map.getSize();
+        if (!size || size.x <= 0 || size.y <= 0) return;
         const b = map.getBounds();
+        if (b && typeof b.isValid === "function" && b.isValid()) {
+          onBoundsChange({
+            north: b.getNorth(),
+            south: b.getSouth(),
+            east: b.getEast(),
+            west: b.getWest(),
+          });
+        }
+      } catch {}
+    },
+  });
+
+  const reportBounds = useCallback(() => {
+    if (!onBoundsChange || isVisible === false) return;
+    try {
+      const size = map.getSize();
+      if (!size || size.x <= 0 || size.y <= 0) return;
+      const b = map.getBounds();
+      if (b && typeof b.isValid === "function" && b.isValid()) {
         onBoundsChange({
           north: b.getNorth(),
           south: b.getSouth(),
@@ -132,36 +251,95 @@ function MapController({
           west: b.getWest(),
         });
       }
-    },
-  });
+    } catch {}
+  }, [map, onBoundsChange, isVisible]);
+
+  // Observe map container size changes to automatically invalidate size
+  useEffect(() => {
+    if (!map) return;
+    const container = map.getContainer();
+    if (!container || typeof ResizeObserver === "undefined") return;
+
+    let resizeTimer: any = null;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            try {
+              map.invalidateSize();
+            } catch {}
+          }, 80);
+        }
+      }
+    });
+
+    observer.observe(container);
+    return () => {
+      clearTimeout(resizeTimer);
+      observer.disconnect();
+    };
+  }, [map]);
+
+  // Auto invalidate size on mount
+  useEffect(() => {
+    if (!map) return;
+    const timer = setTimeout(() => {
+      try {
+        map.invalidateSize();
+      } catch {}
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [map]);
 
   useEffect(() => {
     try {
+      const size = map.getSize();
+      const canAnimate = size && size.x > 0 && size.y > 0;
+
       if (mapFocus?.coords && isValidLatLng(mapFocus.coords)) {
-        map.flyTo(mapFocus.coords, mapFocus.zoom || 12, {
-          duration: 1.1,
-          easeLinearity: 0.25,
-        });
+        if (canAnimate) {
+          map.flyTo(mapFocus.coords, mapFocus.zoom || 12, {
+            duration: 1.1,
+            easeLinearity: 0.25,
+          });
+        } else {
+          map.setView(mapFocus.coords, mapFocus.zoom || 12, { animate: false });
+        }
         return;
       }
 
       if (selectedCoords && isValidLatLng(selectedCoords)) {
-        map.flyTo(selectedCoords, 13, {
-          duration: 1.1,
-          easeLinearity: 0.25,
-        });
+        if (canAnimate) {
+          map.flyTo(selectedCoords, 13, {
+            duration: 1.1,
+            easeLinearity: 0.25,
+          });
+        } else {
+          map.setView(selectedCoords, 13, { animate: false });
+        }
       } else if (bounds && typeof (bounds as any).isValid === "function" && (bounds as any).isValid()) {
-        map.flyToBounds(bounds, {
-          padding: [50, 50],
-          maxZoom: 13,
-          duration: 1.1,
-          easeLinearity: 0.25,
-        });
+        if (canAnimate) {
+          map.flyToBounds(bounds, {
+            padding: [50, 50],
+            maxZoom: 13,
+            duration: 1.1,
+            easeLinearity: 0.25,
+          });
+        } else {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13, animate: false });
+        }
       } else if (center && isValidLatLng(center)) {
-        map.flyTo(center, zoom || 10, {
-          duration: 1.1,
-          easeLinearity: 0.25,
-        });
+        if (canAnimate) {
+          map.flyTo(center, zoom || 10, {
+            duration: 1.1,
+            easeLinearity: 0.25,
+          });
+        } else {
+          map.setView(center, zoom || 10, { animate: false });
+        }
       }
     } catch (err) {
       console.warn("Map fly navigation prevented invalid coordinate:", err);
@@ -170,22 +348,29 @@ function MapController({
 
   // Initial bounds and zoom reporting
   useEffect(() => {
+    if (isVisible === false) return;
     if (onZoomChange) {
-      onZoomChange(map.getZoom());
+      try {
+        onZoomChange(map.getZoom());
+      } catch {}
     }
     const timer = setTimeout(() => {
-      if (onBoundsChange) {
-        const b = map.getBounds();
-        onBoundsChange({
-          north: b.getNorth(),
-          south: b.getSouth(),
-          east: b.getEast(),
-          west: b.getWest(),
-        });
-      }
-    }, 600);
+      reportBounds();
+    }, 400);
     return () => clearTimeout(timer);
-  }, [map, onBoundsChange, onZoomChange]);
+  }, [map, isVisible, reportBounds, onZoomChange]);
+
+  useEffect(() => {
+    if (isVisible !== false) {
+      const timer = setTimeout(() => {
+        try {
+          map.invalidateSize();
+          reportBounds();
+        } catch {}
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, map, reportBounds]);
 
   return null;
 }
@@ -197,6 +382,7 @@ interface SearchMapProps {
   currentUser?: User | null;
   selectedListingId?: string | null;
   hoveredListingId?: string | null;
+  isVisible?: boolean;
   onSelectListing?: (id: string | null) => void;
   onHoverListing?: (id: string | null) => void;
   onBoundsChange?: (bounds: MapBounds) => void;
@@ -212,6 +398,7 @@ export default function SearchMap({
   currentUser,
   selectedListingId,
   hoveredListingId,
+  isVisible,
   onSelectListing,
   onHoverListing,
   onBoundsChange,
@@ -617,6 +804,7 @@ export default function SearchMap({
           bounds={bounds}
           selectedCoords={selectedCoords}
           mapFocus={mapFocus}
+          isVisible={isVisible}
           onBoundsChange={onBoundsChange}
           onZoomChange={(currentZoom) => {
             setMapZoom(currentZoom);
@@ -717,30 +905,28 @@ export default function SearchMap({
                       setExpandedClusterId(cluster.id);
 
                       // Smoothly zoom in to this 10 km locality and fit its properties
-                      if (e.target?._map) {
-                        try {
-                          if (cluster.items.length > 1) {
-                            const bounds = L.latLngBounds(cluster.items.map((i) => i.coords));
-                            e.target._map.fitBounds(bounds, {
-                              padding: [60, 60],
-                              maxZoom: 14,
-                              duration: 1.0,
-                              easeLinearity: 0.25,
-                            });
-                          } else {
-                            e.target._map.flyTo(cluster.center, 14, {
-                              duration: 1.0,
-                              easeLinearity: 0.25,
-                            });
-                          }
-                        } catch {}
+                      if (cluster.items.length > 1) {
+                        const validCoords = cluster.items
+                          .map((i) => i.coords)
+                          .filter(isValidLatLng);
+                        if (validCoords.length > 0 && e.target?._map) {
+                          try {
+                            const b = L.latLngBounds(validCoords);
+                            if (b.isValid()) {
+                              e.target._map.fitBounds(b, {
+                                padding: [60, 60],
+                                maxZoom: 14,
+                              });
+                            }
+                          } catch {}
+                        }
+                      } else if (isValidLatLng(cluster.center)) {
+                        setMapFocus({
+                          coords: cluster.center,
+                          zoom: 14,
+                          key: Date.now(),
+                        });
                       }
-
-                      setMapFocus({
-                        coords: cluster.center,
-                        zoom: 13,
-                        key: Date.now(),
-                      });
                     },
                     mouseover: () => {
                       setInternalHoveredId(cluster.items[0].id);

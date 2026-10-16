@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter } from "@/navigation";
@@ -67,6 +67,15 @@ export default function SearchResultsClient({
     null;
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [showMobileMap, setShowMobileMap] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [searchAsMoveMap, setSearchAsMoveMap] = useState(true);
   const [mapBounds, setMapBounds] = useState<{
     north: number;
@@ -91,7 +100,7 @@ export default function SearchResultsClient({
   const displayListings = useMemo(() => {
     let list = listings;
 
-    if (searchAsMoveMap && mapBounds) {
+    if (searchAsMoveMap && mapBounds && (isDesktop || showMobileMap)) {
       const inBounds = listings.filter((l) => {
         if (!l.latlng || l.latlng.length !== 2) return false;
         const [lat, lng] = l.latlng;
@@ -109,13 +118,13 @@ export default function SearchResultsClient({
     const target = list.find((l) => l.id === selectedId);
     if (!target) return list;
     return [target, ...list.filter((l) => l.id !== selectedId)];
-  }, [listings, selectedId, searchAsMoveMap, mapBounds]);
+  }, [listings, selectedId, searchAsMoveMap, mapBounds, isDesktop, showMobileMap]);
 
   // Dynamically filter agency trips within the visible map area
   const displayTrips = useMemo(() => {
     let list = trips;
 
-    if (searchAsMoveMap && mapBounds) {
+    if (searchAsMoveMap && mapBounds && (isDesktop || showMobileMap)) {
       const inBounds = trips.filter((t) => {
         const coords = t.latlng || getTripCoordinates(t);
         if (!coords || coords.length !== 2) return false;
@@ -134,7 +143,7 @@ export default function SearchResultsClient({
     const target = list.find((t) => t.id === selectedId);
     if (!target) return list;
     return [target, ...list.filter((t) => t.id !== selectedId)];
-  }, [trips, selectedId, searchAsMoveMap, mapBounds]);
+  }, [trips, selectedId, searchAsMoveMap, mapBounds, isDesktop, showMobileMap]);
 
   // Quick filter parameters from query
   const currentVertical = (searchParams?.get("vertical") as ListingVertical) || activeVertical;
@@ -383,6 +392,7 @@ export default function SearchResultsClient({
               currentUser={currentUser}
               selectedListingId={selectedId}
               hoveredListingId={hoveredId}
+              isVisible={isDesktop || showMobileMap}
               onSelectListing={(id) => setSelectedId(id)}
               onHoverListing={(id) => setHoveredId(id)}
               onBoundsChange={(b) => setMapBounds(b)}
