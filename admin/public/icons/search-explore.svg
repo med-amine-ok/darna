@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Vision lens circle -->
+  <circle cx="10.5" cy="10.5" r="7" stroke="currentColor" stroke-width="1.75"/>
+  <!-- Moorish geometric star facet glint inside lens -->
+  <path d="M10.5 7.5L11.2 9.5L13.2 10.2L11.2 10.9L10.5 12.9L9.8 10.9L7.8 10.2L9.8 9.5Z" fill="#C96F4F" opacity="0.85"/>
+  <!-- Angled geometric handle with Moorish terminal -->
+  <path d="M15.5 15.5L20.5 20.5" stroke="currentColor" stroke-width="2"/>
+  <path d="M18.5 20.5L20.5 18.5" stroke="#6B7F5B" stroke-width="1.5"/>
+</svg>

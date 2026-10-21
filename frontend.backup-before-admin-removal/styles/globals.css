@@ -1,0 +1,560 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #2E3A2F;
+  --color-secondary: #6B7F5B;
+  --color-tertiary: #D9C9B2;
+  --color-accent: #C96F4F;
+  --color-bg: #F8F6EE;
+  --color-surface: #FFFFFF;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-sans), "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-primary);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* RTL Specific rules */
+[dir="rtl"] {
+  font-family: var(--font-arabic), "Tajawal", "IBM Plex Sans Arabic", var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar utility */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D9C9B2;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B09875;
+}
+
+/* DARNA Admin Sidebar Custom Scrollbar (Slider) */
+.darna-admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3A493B transparent;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-thumb {
+  background: #3A493B;
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6B7F5B;
+}
+
+.darna-admin-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #C96F4F;
+}
+
+/* Hide scrollbar / slider utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Full-screen Messaging App Mobile Optimization */
+@media (max-width: 767px) {
+  body.mobile-thread-open header {
+    display: none !important;
+  }
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid #C96F4F;
+  outline-offset: 2px;
+}
+
+/* Elevated Surface Layering */
+.elevated-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(217, 201, 178, 0.5);
+  box-shadow: 0 2px 8px -2px rgba(46, 58, 47, 0.06), 0 6px 18px -4px rgba(46, 58, 47, 0.05);
+}
+
+.elevated-panel {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(217, 201, 178, 0.6);
+  box-shadow: 0 4px 20px -2px rgba(46, 58, 47, 0.08), 0 2px 6px -1px rgba(46, 58, 47, 0.04);
+}
+
+.elevated-modal {
+  background-color: #FFFFFF;
+  box-shadow: 0 20px 48px -8px rgba(46, 58, 47, 0.18), 0 8px 20px -4px rgba(46, 58, 47, 0.08);
+}
+
+/* Card hover lift & scale micro-interaction - Clean & shadowless */
+.card-hover-lift {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: none !important;
+}
+
+/* Button tactile press micro-interaction */
+.btn-press {
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s ease;
+}
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* Input focus ring refinement */
+input, textarea, select {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #C96F4F;
+  box-shadow: 0 0 0 3px rgba(201, 111, 79, 0.18);
+}
+
+/* Minimum accessible touch target helper */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Restrained badge shake animation for destructive dialog icon */
+@keyframes badge-shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-6deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+  60% {
+    transform: rotate(-3deg);
+  }
+  80% {
+    transform: rotate(2deg);
+  }
+}
+.animate-badge-shake {
+  animation: badge-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ==========================================================================
+   DARNA Premium Toast Notification System
+   Earthy Minimal palette, multi-layer shadows, variant-coded badges & indicators
+   ========================================================================== */
+
+/* Toast Container Viewport Anchors */
+.Toastify__toast-container {
+  z-index: 99999 !important;
+  box-sizing: border-box !important;
+}
+
+.Toastify__toast-container--bottom-left {
+  bottom: 1.5rem !important;
+  left: 1.5rem !important;
+  width: 400px !important;
+  max-width: calc(100vw - 3rem) !important;
+}
+
+.Toastify__toast-container--bottom-right {
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+  width: 400px !important;
+  max-width: calc(100vw - 3rem) !important;
+}
+
+@media only screen and (max-width: 640px) {
+  .Toastify__toast-container {
+    left: 1rem !important;
+    right: 1rem !important;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+}
+
+/* Base Toast Card */
+.Toastify__toast,
+.darna-toast {
+  position: relative !important;
+  min-height: 62px !important;
+  margin-bottom: 0.75rem !important;
+  padding: 14px 16px 14px 20px !important;
+  border-radius: 1rem !important; /* rounded-2xl */
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(217, 201, 178, 0.75) !important;
+  box-shadow: 0 4px 14px -2px rgba(46, 58, 47, 0.08), 0 16px 36px -4px rgba(46, 58, 47, 0.14), 0 0 0 1px rgba(217, 201, 178, 0.45) !important;
+  overflow: hidden !important;
+  font-family: inherit !important;
+  color: #2E3A2F !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: default !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+  direction: ltr !important;
+}
+
+[dir="rtl"] .Toastify__toast,
+[dir="rtl"] .darna-toast,
+.Toastify__toast--rtl,
+.darna-toast--rtl {
+  direction: rtl !important;
+  padding: 14px 20px 14px 16px !important;
+}
+
+/* Clean Toast Hover elevation */
+.Toastify__toast:hover,
+.darna-toast:hover {
+  box-shadow: 0 6px 18px -2px rgba(46, 58, 47, 0.10), 0 20px 44px -4px rgba(46, 58, 47, 0.18), 0 0 0 1px rgba(217, 201, 178, 0.6) !important;
+}
+
+/* Leading Edge Vertical Indicator Bar */
+.Toastify__toast::before,
+.darna-toast::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  left: 0;
+  border-radius: 0 9999px 9999px 0;
+  transition: background-color 0.2s ease;
+  z-index: 3;
+}
+
+[dir="rtl"] .Toastify__toast::before,
+[dir="rtl"] .darna-toast::before,
+.Toastify__toast--rtl::before,
+.darna-toast--rtl::before {
+  left: auto;
+  right: 0;
+  border-radius: 9999px 0 0 9999px;
+}
+
+/* Variant Colored Indicators */
+.Toastify__toast--success::before,
+.darna-toast--success::before {
+  background-color: #6B7F5B !important; /* Sage green / Secondary */
+}
+
+.Toastify__toast--error::before,
+.darna-toast--error::before {
+  background-color: #C94A4A !important; /* Brick red / Destructive */
+}
+
+.Toastify__toast--info::before,
+.darna-toast--info::before {
+  background-color: #B09875 !important; /* Warm camel tan / Tertiary */
+}
+
+.Toastify__toast--warning::before,
+.darna-toast--warning::before {
+  background-color: #D9822B !important; /* Warm amber / Status amber */
+}
+
+.Toastify__toast--default::before,
+.darna-toast--default::before {
+  background-color: #C96F4F !important; /* Terracotta / Accent */
+}
+
+/* Toast Body Layout */
+.Toastify__toast-body,
+.darna-toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  z-index: 2 !important;
+  font-family: inherit !important;
+}
+
+.Toastify__toast-body > div:last-child {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: #2E3A2F !important;
+  letter-spacing: -0.01em !important;
+  word-break: break-word !important;
+}
+
+/* Hide default react-toastify raw icons if not replaced */
+.Toastify__toast-icon {
+  margin: 0 !important;
+  width: auto !important;
+  display: flex !important;
+}
+
+/* Shrinking Bottom Progress Indicator */
+.Toastify__progress-bar,
+.darna-toast-progress {
+  position: absolute !important;
+  height: 3px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  transform-origin: left !important;
+  opacity: 0.95 !important;
+  z-index: 4 !important;
+}
+
+[dir="rtl"] .Toastify__progress-bar,
+[dir="rtl"] .darna-toast-progress,
+.Toastify__progress-bar--rtl,
+.darna-toast--rtl .Toastify__progress-bar {
+  transform-origin: right !important;
+}
+
+.Toastify__progress-bar--success,
+.darna-toast-progress--success {
+  background: #6B7F5B !important;
+}
+
+.Toastify__progress-bar--error,
+.darna-toast-progress--error {
+  background: #C94A4A !important;
+}
+
+.Toastify__progress-bar--info,
+.darna-toast-progress--info {
+  background: #B09875 !important;
+}
+
+.Toastify__progress-bar--warning,
+.darna-toast-progress--warning {
+  background: #D9822B !important;
+}
+
+.Toastify__progress-bar--default,
+.darna-toast-progress--default {
+  background: #C96F4F !important;
+}
+
+/* Subtle Track Behind Progress Bar */
+.Toastify__progress-bar::before,
+.darna-toast-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(217, 201, 178, 0.3) !important;
+  z-index: -1;
+}
+
+/* Close Button */
+.Toastify__close-button {
+  color: #8C8275 !important;
+  opacity: 0.7 !important;
+  align-self: center !important;
+  transition: opacity 0.15s ease, color 0.15s ease !important;
+  margin-inline-start: 8px !important;
+  margin-inline-end: 2px !important;
+  z-index: 3 !important;
+}
+
+.Toastify__close-button:hover,
+.Toastify__close-button:focus {
+  opacity: 1 !important;
+  color: #2E3A2F !important;
+}
+
+/* Confident Motion Animations with Spring Overshoot */
+@keyframes darnaToastInLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(-28px, 14px, 0) scale(0.94);
+  }
+  70% {
+    transform: translate3d(3px, -2px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes darnaToastInRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(28px, 14px, 0) scale(0.94);
+  }
+  70% {
+    transform: translate3d(-3px, -2px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes darnaToastMobileIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.94);
+  }
+  70% {
+    transform: translate3d(0, -3px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes darnaToastOut {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.93);
+  }
+}
+
+.darna-toast-enter {
+  animation-duration: 250ms !important;
+  animation-fill-mode: both !important;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.darna-toast-enter--bottom-left {
+  animation-name: darnaToastInLeft !important;
+}
+
+.darna-toast-enter--bottom-right {
+  animation-name: darnaToastInRight !important;
+}
+
+.darna-toast-exit {
+  animation-name: darnaToastOut !important;
+  animation-duration: 180ms !important;
+  animation-fill-mode: both !important;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
+}
+
+@media only screen and (max-width: 640px) {
+  .darna-toast-enter--bottom-left,
+  .darna-toast-enter--bottom-right {
+    animation-name: darnaToastMobileIn !important;
+  }
+}
+
+/* ==========================================================================
+   DARNA Silky Smooth Map Pin & Multi-Item Cluster System
+   ========================================================================== */
+
+/* Leaflet DivIcon Wrapper adjustments */
+.custom-price-pin,
+.custom-cluster-pin {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Base Price Pin Button - GPU accelerated smooth spring motion */
+.custom-price-pin .price-pin-btn {
+  transform: translate3d(0, 0, 0) scale(1);
+  box-shadow: 0 2px 8px -1px rgba(46, 58, 47, 0.12), 0 1px 3px 0 rgba(46, 58, 47, 0.06);
+  transition: transform 240ms cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 240ms cubic-bezier(0.2, 0, 0, 1),
+              background-color 160ms ease,
+              border-color 160ms ease,
+              color 160ms ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hover & Active states for Price Pins */
+.custom-price-pin:hover .price-pin-btn,
+.custom-price-pin.is-active .price-pin-btn,
+.custom-price-pin.is-hovered .price-pin-btn {
+  transform: translate3d(0, -3px, 0) scale(1.09);
+  box-shadow: 0 12px 24px -4px rgba(46, 58, 47, 0.28), 0 4px 8px -2px rgba(46, 58, 47, 0.14);
+  background-color: #2E3A2F !important;
+  color: #ffffff !important;
+  border-color: #C96F4F !important;
+}
+
+.custom-price-pin .price-pin-btn:active {
+  transform: translate3d(0, -1px, 0) scale(1.02);
+  transition-duration: 80ms;
+}
+
+/* Base Multi-Item Cluster Pin (Compact circular count button) */
+.custom-cluster-pin .cluster-pin-btn {
+  transform: translate3d(0, 0, 0) scale(1);
+  box-shadow: 0 4px 12px -2px rgba(46, 58, 47, 0.22), 0 2px 4px -1px rgba(46, 58, 47, 0.12);
+  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 200ms ease;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+}
+
+/* Hover & Active states for Cluster Pins */
+.custom-cluster-pin:hover .cluster-pin-btn,
+.custom-cluster-pin.is-active .cluster-pin-btn {
+  transform: translate3d(0, -4px, 0) scale(1.15);
+  box-shadow: 0 14px 26px -4px rgba(201, 111, 79, 0.45), 0 4px 10px -2px rgba(46, 58, 47, 0.2);
+  background-color: #B55F40 !important;
+  color: #ffffff !important;
+}
+
+/* Custom Sleek Scrollbar for Cluster Drawer */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(46, 58, 47, 0.18);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 58, 47, 0.35);
+}
+
+

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Rounded geometric warning triangle -->
+  <path d="M10.3 3.8C11 2.5 13 2.5 13.7 3.8L21.3 17.5C22 18.8 21 20.5 19.5 20.5H4.5C3 20.5 2 18.8 2.7 17.5L10.3 3.8Z" stroke="#C96F4F" stroke-width="1.75"/>
+  <!-- Exclamation stroke & point -->
+  <line x1="12" y1="8.5" x2="12" y2="13.5" stroke="#2E3A2F" stroke-width="2"/>
+  <circle cx="12" cy="17" r="1.1" fill="#2E3A2F"/>
+</svg>

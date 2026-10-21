@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Top suspension loop -->
+  <path d="M12 3V4" stroke="currentColor" stroke-width="1.75"/>
+  <!-- Bell / lantern body with Moorish flare -->
+  <path
+    d="M18 16.5C16.8 15 16.5 11.5 16.5 8.5C16.5 6 14.5 4 12 4C9.5 4 7.5 6 7.5 8.5C7.5 11.5 7.2 15 6 16.5H18Z"
+    stroke="currentColor"
+    stroke-width="1.75"
+  />
+  <!-- Clapper with terracotta accent dot -->
+  <path d="M10 18.5C10.5 19.8 11.2 20.5 12 20.5C12.8 20.5 13.5 19.8 14 18.5" stroke="currentColor" stroke-width="1.5"/>
+  <circle cx="12" cy="18.5" r="1.1" fill="#C96F4F"/>
+</svg>

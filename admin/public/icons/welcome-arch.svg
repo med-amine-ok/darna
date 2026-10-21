@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Threshold base line -->
+  <line x1="3" y1="21" x2="21" y2="21" stroke="#2E3A2F" stroke-width="1.75"/>
+  <!-- Outer Moorish Horseshoe Arch -->
+  <path d="M5 21V12.5C5 7.8 8.1 4 12 4C15.9 4 19 7.8 19 12.5V21" stroke="#2E3A2F" stroke-width="1.75"/>
+  <!-- Inner hospitality archway opening -->
+  <path d="M8 21V13.2C8 9.8 9.8 7.2 12 7.2C14.2 7.2 16 9.8 16 13.2V21" stroke="#6B7F5B" stroke-width="1.5"/>
+  <!-- Subtle decorative lintel tier -->
+  <path d="M4 14.5C6 13.2 8 13.2 12 13.2C16 13.2 18 13.2 20 14.5" stroke="#D9C9B2" stroke-width="1.25"/>
+  <!-- Warmth radiance / hospitality sunburst at keystone apex -->
+  <line x1="12" y1="1" x2="12" y2="2.6" stroke="#C96F4F" stroke-width="1.75"/>
+  <line x1="8.2" y1="1.8" x2="9.4" y2="3.1" stroke="#C96F4F" stroke-width="1.5"/>
+  <line x1="15.8" y1="1.8" x2="14.6" y2="3.1" stroke="#C96F4F" stroke-width="1.5"/>
+  <!-- Welcome lantern / focal accent dot -->
+  <circle cx="12" cy="10.5" r="1.1" fill="#C96F4F"/>
+</svg>

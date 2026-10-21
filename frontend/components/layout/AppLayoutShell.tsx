@@ -19,7 +19,6 @@ export default function AppLayoutShell({
   const pathname = usePathname();
   const normalizedPath = pathname?.replace(/^\/(?:en|fr|ar)(?=\/|$)/, "") || "/";
 
-  const isAdmin = normalizedPath.startsWith("/admin");
   const isHost = normalizedPath.startsWith("/host");
   const isBecomeHost = normalizedPath.startsWith("/become-a-host");
   const isMessages = normalizedPath === "/messages" || normalizedPath.startsWith("/messages/");
@@ -27,11 +26,6 @@ export default function AppLayoutShell({
 
   const isHostMessages =
     normalizedPath === "/host/messages" || normalizedPath.startsWith("/host/messages/");
-
-  // 1. Admin mode handles its own layout (AdminSidebar + AdminHeader)
-  if (isAdmin) {
-    return <div className="min-h-[100dvh] flex flex-col">{children}</div>;
-  }
 
   // 2. Host Messages handles its own full-viewport app layout (HostLayoutShell)
   if (isHostMessages) {

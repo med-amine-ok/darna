@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Moorish arch shield contour -->
+  <path
+    d="M12 2.5L19.5 5.5V11.5C19.5 16.5 16 20.2 12 21.5C8 20.2 4.5 16.5 4.5 11.5V5.5L12 2.5Z"
+    stroke="currentColor"
+    stroke-width="1.75"
+  />
+  <!-- Inner approval checkmark with terracotta accent detail -->
+  <path d="M9 11.5L11.5 14L15.5 9.5" stroke="currentColor" stroke-width="2"/>
+  <circle cx="12" cy="4" r="0.8" fill="#C96F4F"/>
+</svg>

@@ -14,7 +14,6 @@ export default function Footer() {
   const [openSections, setOpenSections] = useState<number[]>([]);
 
   if (
-    pathname?.startsWith("/admin") ||
     pathname?.startsWith("/become-a-host") ||
     pathname?.startsWith("/host") ||
     (pathname?.startsWith("/messages/") && pathname !== "/messages")

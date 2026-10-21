@@ -24,9 +24,8 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
   const tNav = useTranslations("nav");
   const loginModal = useLoginModal();
 
-  // Hide on admin routes, host mode, become-a-host flow, and active message threads
+  // Hide on host mode, become-a-host flow, and active message threads
   if (
-    pathname?.startsWith("/admin") ||
     pathname?.startsWith("/host") ||
     pathname?.startsWith("/become-a-host") ||
     (pathname?.startsWith("/messages/") && pathname !== "/messages")
