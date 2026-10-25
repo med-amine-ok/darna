@@ -13,6 +13,7 @@ export interface DropdownMenuItem {
 
 export interface DropdownMenuProps {
   items: DropdownMenuItem[];
+  trigger?: React.ReactNode;
   triggerIcon?: React.ReactNode;
   align?: "left" | "right";
   className?: string;
@@ -20,6 +21,7 @@ export interface DropdownMenuProps {
 
 export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   items,
+  trigger,
   triggerIcon = <MoreVertical className="w-4 h-4" />,
   align = "right",
   className = "",
@@ -41,17 +43,23 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
   return (
     <div ref={containerRef} className={`relative inline-block text-start ${className}`}>
-      <button
-        type="button"
+      <div
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="p-1.5 rounded-lg text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer"
+        className="cursor-pointer"
         aria-label="More options"
       >
-        {triggerIcon}
-      </button>
+        {trigger || (
+          <button
+            type="button"
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer"
+          >
+            {triggerIcon}
+          </button>
+        )}
+      </div>
 
       {isOpen && (
         <div

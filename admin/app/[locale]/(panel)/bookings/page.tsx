@@ -20,7 +20,6 @@ export default async function BookingsPage({
 
   return (
     <BookingsClient
-      initialData={data}
       initialStatus={status}
       initialVertical={vertical}
     />

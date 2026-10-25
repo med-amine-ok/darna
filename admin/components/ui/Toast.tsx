@@ -10,6 +10,7 @@ export interface ToastOptions {
   title: string;
   description?: string;
   type?: ToastType;
+  variant?: ToastType | "danger";
   duration?: number;
   undoAction?: () => void;
   undoLabel?: string;
@@ -22,6 +23,7 @@ interface ToastItem extends ToastOptions {
 
 interface ToastContextType {
   toast: (options: ToastOptions) => void;
+  addToast: (options: ToastOptions) => void;
   success: (title: string, description?: string, undoAction?: () => void) => void;
   error: (title: string, description?: string) => void;
   info: (title: string, description?: string) => void;
@@ -39,13 +41,15 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const addToast = useCallback(
-    ({ title, description, type = "info", duration = 4500, undoAction, undoLabel = "Undo" }: ToastOptions) => {
+    ({ title, description, type, variant, duration = 4500, undoAction, undoLabel = "Undo" }: ToastOptions) => {
+      const computedType: ToastType =
+        type || (variant === "danger" ? "error" : variant) || "info";
       const id = `tst_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       const newToast: ToastItem = {
         id,
         title,
         description,
-        type,
+        type: computedType,
         duration,
         undoAction,
         undoLabel,
@@ -102,7 +106,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <ToastContext.Provider value={{ toast: addToast, success, error, info, warning, removeToast }}>
+    <ToastContext.Provider value={{ toast: addToast, addToast, success, error, info, warning, removeToast }}>
       {children}
 
       {/* Floating Toasts Viewport */}

@@ -26,6 +26,35 @@ export interface ListingFilterParams {
   pageSize?: number;
 }
 
+export function matchListingStatus(listingStatus: string, filterStatus: string): boolean {
+  if (!filterStatus || filterStatus === "all") return true;
+
+  if (filterStatus.includes(",")) {
+    const list = filterStatus.split(",").map((s) => s.trim().toLowerCase());
+    return list.some((s) => matchListingStatus(listingStatus, s));
+  }
+
+  const lStatus = (listingStatus || "").toLowerCase();
+  const fStatus = filterStatus.toLowerCase();
+
+  // "pending" <===> "pending_review"
+  if (fStatus === "pending" || fStatus === "pending_review") {
+    return lStatus === "pending" || lStatus === "pending_review";
+  }
+
+  // "published" <===> "approved"
+  if (fStatus === "published" || fStatus === "approved") {
+    return lStatus === "published" || lStatus === "approved";
+  }
+
+  // "refused" <===> "rejected"
+  if (fStatus === "refused" || fStatus === "rejected") {
+    return lStatus === "refused" || lStatus === "rejected";
+  }
+
+  return lStatus === fStatus;
+}
+
 export async function listListings(
   params: ListingFilterParams = {}
 ): Promise<PaginatedResult<Listing>> {
@@ -36,9 +65,9 @@ export async function listListings(
 
   let filtered = [...store.listings];
 
-  // 1. Status Filter
+  // 1. Status Filter (Bidirectional normalization between DB and UI terms)
   if (params.status && params.status !== "all") {
-    filtered = filtered.filter((l) => l.status === params.status);
+    filtered = filtered.filter((l) => matchListingStatus(l.status, params.status!));
   }
 
   // 2. Vertical Filter
@@ -99,16 +128,27 @@ export async function listListings(
     filtered = filtered.filter((l) => l.amenities.includes(params.amenity!));
   }
 
-  // Facets
+  // Facets - Scoped to vertical if provided, with alias support for both UI and DB keys
+  const scopedListings = params.vertical && params.vertical !== "all"
+    ? store.listings.filter((l) => l.category === params.vertical)
+    : store.listings;
+
+  const countByStatus = (statusKey: string) =>
+    scopedListings.filter((l) => matchListingStatus(l.status, statusKey)).length;
+
   const facets: Record<string, Record<string, number>> = {
     status: {
-      all: store.listings.length,
-      pending_review: store.listings.filter((l) => l.status === "pending_review").length,
-      approved: store.listings.filter((l) => l.status === "approved").length,
-      changes_requested: store.listings.filter((l) => l.status === "changes_requested").length,
-      rejected: store.listings.filter((l) => l.status === "rejected").length,
-      suspended: store.listings.filter((l) => l.status === "suspended").length,
-      archived: store.listings.filter((l) => l.status === "archived").length,
+      all: scopedListings.length,
+      pending: countByStatus("pending"),
+      pending_review: countByStatus("pending_review"),
+      approved: countByStatus("approved"),
+      published: countByStatus("published"),
+      changes_requested: countByStatus("changes_requested"),
+      rejected: countByStatus("rejected"),
+      refused: countByStatus("refused"),
+      suspended: countByStatus("suspended"),
+      archived: countByStatus("archived"),
+      draft: countByStatus("draft"),
     },
     vertical: {
       all: store.listings.length,
@@ -133,7 +173,21 @@ export async function listListings(
 
   const total = filtered.length;
   const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const rows = filtered.slice((page - 1) * pageSize, page * pageSize).map((l) => {
+    let formattedId = l.formattedId;
+    if (!formattedId) {
+      const numPart = l.id.replace("lst_", "").padStart(5, "0");
+      if (l.category === "home" || l.category === "hotel") formattedId = `#H${numPart}`;
+      else if (l.category === "experience") formattedId = `#EXP${numPart.slice(-4)}`;
+      else if (l.category === "trip") formattedId = `#T${numPart.slice(-4)}`;
+      else if (l.category === "vehicle") formattedId = `#V${numPart.slice(-4)}`;
+      else formattedId = `#L${numPart}`;
+    }
+    return {
+      ...l,
+      formattedId,
+    };
+  });
 
   return {
     rows,
@@ -354,6 +408,34 @@ export async function restoreListing(
     "listing",
     id,
     `Restored listing: ${prev.title}`,
+    prev,
+    store.listings[idx]
+  );
+
+  return store.listings[idx];
+}
+
+export async function updateListingStatus(
+  id: string,
+  status: ListingStatus,
+  actor: { id: string; name: string; role: any } = { id: "usr_admin", name: "Admin", role: "super_admin" }
+): Promise<Listing> {
+  await delay(200);
+  const idx = store.listings.findIndex((l) => l.id === id);
+  if (idx === -1) throw new Error("Listing not found");
+
+  const prev = { ...store.listings[idx] };
+  store.listings[idx] = {
+    ...store.listings[idx],
+    status,
+  };
+
+  await logAudit(
+    actor,
+    "LISTING_STATUS_CHANGE",
+    "listing",
+    id,
+    `Changed listing status from ${prev.status} to ${status}: ${prev.title}`,
     prev,
     store.listings[idx]
   );

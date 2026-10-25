@@ -31,11 +31,8 @@ let teamStore: AdminUser[] = MOCK_ADMIN_ACCOUNTS.map(({ password, ...u }) => u);
 
 let categoriesStore: CategoryItem[] = [
   { id: "cat_villas", name: { en: "Coastal Villas", fr: "Villas Côtières", ar: "فيلات ساحلية" }, vertical: "home", iconName: "Home", listingCount: 48, isActive: true, order: 1 },
-  { id: "cat_riads", name: { en: "Heritage Riads", fr: "Riads Historiques", ar: "رياض أثرية" }, vertical: "home", iconName: "Building", listingCount: 32, isActive: true, order: 2 },
-  { id: "cat_sahara", name: { en: "Desert Camps & Bivouacs", fr: "Camps Sahariens", ar: "مخيمات صحراوية" }, vertical: "experience", iconName: "Tent", listingCount: 42, isActive: true, order: 3 },
-  { id: "cat_4x4", name: { en: "4x4 Desert Overlanders", fr: "Véhicules Tout-Terrain", ar: "مركبات الدفع الرباعي" }, vertical: "vehicle", iconName: "Truck", listingCount: 28, isActive: true, order: 4 },
-  { id: "cat_culinary", name: { en: "Culinary & Crafts", fr: "Ateliers Culinaires", ar: "ورشات الطهي والحرف" }, vertical: "experience", iconName: "Utensils", listingCount: 19, isActive: true, order: 5 },
-  { id: "cat_trips", name: { en: "Guided Sahara Expeditions", fr: "Expéditions Sahariennes", ar: "رحلات استكشافية إرشادية" }, vertical: "trip", iconName: "Compass", listingCount: 35, isActive: true, order: 6 },
+  { id: "cat_sahara", name: { en: "Desert Camps & Bivouacs", fr: "Camps Sahariens", ar: "مخيمات صحراوية" }, vertical: "experience", iconName: "Tent", listingCount: 42, isActive: true, order: 2 },
+  { id: "cat_4x4", name: { en: "4x4 Desert Overlanders", fr: "Véhicules Tout-Terrain", ar: "مركبات الدفع الرباعي" }, vertical: "vehicle", iconName: "Truck", listingCount: 28, isActive: true, order: 3 },
 ];
 
 let promotionsStore: PromotionCoupon[] = [

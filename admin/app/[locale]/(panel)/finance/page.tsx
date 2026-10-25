@@ -1,16 +1,7 @@
-import { Metadata } from "next";
-import FinanceClient from "./FinanceClient";
+import { getLocale } from "next-intl/server";
+import PaymentsClient from "../payments/PaymentsClient";
 
-export const metadata: Metadata = {
-  title: "Treasury & Finance",
-};
-
-interface Props {
-  params: {
-    locale: string;
-  };
-}
-
-export default function FinancePage({ params }: Props) {
-  return <FinanceClient locale={params.locale} />;
+export default async function FinancePage() {
+  const locale = await getLocale();
+  return <PaymentsClient locale={locale} initialTab="overview" />;
 }

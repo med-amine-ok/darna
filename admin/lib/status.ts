@@ -19,9 +19,12 @@ export const HOST_STATUS_CONFIG: Record<HostStatus, StatusConfig> = {
 export const LISTING_STATUS_CONFIG: Record<ListingStatus, StatusConfig> = {
   draft: { labelKey: "status.draft", variant: "neutral", iconName: "FileEdit" },
   pending_review: { labelKey: "status.pending_review", variant: "warning", iconName: "Clock" },
+  pending: { labelKey: "status.pending", variant: "warning", iconName: "Clock" },
   approved: { labelKey: "status.approved", variant: "success", iconName: "CheckCircle" },
+  published: { labelKey: "status.published", variant: "success", iconName: "CheckCircle" },
   changes_requested: { labelKey: "status.changes_requested", variant: "warning", iconName: "AlertCircle" },
   rejected: { labelKey: "status.rejected", variant: "danger", iconName: "XCircle" },
+  refused: { labelKey: "status.rejected", variant: "danger", iconName: "XCircle" },
   suspended: { labelKey: "status.suspended", variant: "danger", iconName: "AlertTriangle" },
   archived: { labelKey: "status.archived", variant: "neutral", iconName: "Archive" },
   deleted: { labelKey: "status.deleted", variant: "neutral", iconName: "Trash2" },
@@ -29,6 +32,7 @@ export const LISTING_STATUS_CONFIG: Record<ListingStatus, StatusConfig> = {
 
 export const GUEST_STATUS_CONFIG: Record<GuestStatus, StatusConfig> = {
   active: { labelKey: "status.active", variant: "success", iconName: "CheckCircle" },
+  pending: { labelKey: "status.pending", variant: "warning", iconName: "Clock" },
   suspended: { labelKey: "status.suspended", variant: "warning", iconName: "AlertTriangle" },
   banned: { labelKey: "status.banned", variant: "danger", iconName: "Ban" },
   deleted: { labelKey: "status.deleted", variant: "neutral", iconName: "Trash2" },
@@ -64,9 +68,12 @@ export const HOST_TRANSITIONS: Record<HostStatus, HostStatus[]> = {
 export const LISTING_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
   draft: ["pending_review", "deleted"],
   pending_review: ["approved", "changes_requested", "rejected"],
+  pending: ["approved", "changes_requested", "rejected"],
   changes_requested: ["pending_review", "approved", "rejected"],
   approved: ["suspended", "archived", "deleted"],
+  published: ["suspended", "archived", "deleted"],
   rejected: ["pending_review", "deleted"],
+  refused: ["pending_review", "deleted"],
   suspended: ["approved", "deleted"],
   archived: ["approved", "deleted"],
   deleted: ["approved", "archived"], // restore

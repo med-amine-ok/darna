@@ -1,6 +1,128 @@
 export type UserRole = "guest" | "host" | "admin";
 export type HostType = "individual" | "agency" | "hotel" | "hostel";
 
+export type ProviderCategory =
+  | "host"
+  | "hotel_hostel"
+  | "travel_agency"
+  | "experience_company"
+  | "rental_agency";
+
+export interface Document {
+  id: string;
+  type: string;
+  title: string;
+  fileName: string;
+  fileSize: string;
+  fileUrl: string;
+  mimeType?: string;
+  status: "valid" | "to_check" | "missing" | "rejected";
+  reviewer?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+}
+
+export interface ModerationChecklistItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  status: "valid" | "to_check" | "missing" | "rejected" | "conforme" | "verifiee" | "complete";
+  proofType?: string;
+  proofUrl?: string;
+  isPassed: boolean;
+  notes?: string;
+}
+
+export interface ModerationChecklist {
+  id: string;
+  entityId: string;
+  entityType: "stay" | "experience" | "trip" | "car" | "provider";
+  items: ModerationChecklistItem[];
+  internalNotes?: string;
+  decision?: "approve_publish" | "request_changes" | "reject";
+  decisionReason?: string;
+  decisionAt?: string;
+  decidedBy?: string;
+}
+
+export interface ChangeRequest {
+  id: string;
+  entityType: "stay" | "experience" | "trip" | "car" | "provider";
+  entityId: string;
+  entityTitle: string;
+  requestedBy: string;
+  requestedAt: string;
+  status: "pending" | "approved" | "rejected";
+  beforeState: Record<string, any>;
+  afterState: Record<string, any>;
+  reason?: string;
+  adminResponse?: string;
+}
+
+export interface WizardDraft {
+  id: string;
+  entityType: "stay" | "experience" | "trip" | "car";
+  step: number;
+  data: Record<string, any>;
+  updatedAt: string;
+}
+
+export interface PointOfInterest {
+  id?: string;
+  name: string;
+  distance: string;
+  travelTime?: string;
+}
+
+export interface PickupPoint {
+  id?: string;
+  name: string;
+  location?: string;
+}
+
+export interface ProgrammeItem {
+  id?: string;
+  day?: number;
+  time?: string;
+  title: string;
+  description: string;
+  order: number;
+}
+
+export interface PricingTier {
+  id?: string;
+  label: string; // e.g. "1 - 3 jours"
+  daysRange: string;
+  priceDzd: number;
+}
+
+export interface Insurance {
+  id: string;
+  title: string;
+  provider: string;
+  coverage: string;
+  dailyPriceDzd: number;
+  included: boolean;
+}
+
+export interface HouseRules {
+  checkInTime: string;
+  checkOutTime: string;
+  petsAllowed: boolean;
+  partiesAllowed: boolean;
+  smokingAllowed: boolean;
+  childrenAllowed: boolean;
+}
+
+export interface Amenity {
+  id: string;
+  name: { en: string; fr: string; ar: string };
+  icon: string;
+  category: string;
+  order?: number;
+  isFeatured?: boolean;
+}
+
 export type AdminRole = "super_admin" | "moderator" | "support" | "finance" | "analyst";
 
 export interface AdminUser {
@@ -130,6 +252,8 @@ export interface Host {
   documents: HostDocument[];
   adminNotes: string[];
   // Type-specific metadata
+  providerCategory?: ProviderCategory;
+  formattedId?: string;
   agencyMetadata?: {
     teamSize: number;
     hasTrips: boolean;
@@ -155,7 +279,10 @@ export type ListingStatus =
   | "rejected"
   | "suspended"
   | "archived"
-  | "deleted";
+  | "deleted"
+  | "pending"
+  | "published"
+  | "refused";
 
 export type BookingUnit = "room" | "bed" | "property" | "person" | "day";
 
@@ -176,15 +303,18 @@ export interface RoomType {
 
 export interface Listing {
   id: string;
+  formattedId?: string;
   title: string;
   description: string;
   category: ListingVertical;
+  vertical?: ListingVertical;
   propertyType: string; // e.g. "Coastal Villa", "Casbah Riad", "4x4 Desert Tour", etc.
   hostId: string;
   hostName: string;
   hostType: HostType;
   status: ListingStatus;
   price: number; // in DZD
+  priceDzd?: number;
   originalPrice?: number;
   imageSrc: string[];
   images?: string[];
@@ -200,6 +330,8 @@ export interface Listing {
   guestCapacity: number;
   bedroomCount?: number;
   bathroomCount?: number;
+  surfaceM2?: number;
+  constructionYear?: number;
   rating: number;
   reviewsCount: number;
   bookingsCount: number;
@@ -216,9 +348,15 @@ export interface Listing {
     descriptionAppropriate: boolean;
   };
   rooms?: RoomType[]; // For hotels/hostels
+  houseRules?: HouseRules;
+  pointsOfInterest?: PointOfInterest[];
+  pickupPoints?: PickupPoint[];
+  programme?: ProgrammeItem[];
+  pricingTiers?: PricingTier[];
+  specs?: Record<string, any>;
 }
 
-export type GuestStatus = "active" | "suspended" | "banned" | "deleted";
+export type GuestStatus = "active" | "pending" | "suspended" | "banned" | "deleted";
 
 export interface GuestUser {
   id: string;
@@ -330,6 +468,7 @@ export interface WalletTransaction {
   hostType: HostType;
   type: TransactionType;
   amount: number; // positive = credit, negative = debit
+  amountDzd?: number;
   balanceAfter: number;
   reference: string;
   description: string;
@@ -344,11 +483,14 @@ export interface HostWallet {
   hostId: string;
   ownerName: string;
   businessName?: string;
+  hostName?: string;
   hostType: HostType;
   wilayaCode: string;
   balance: number; // strictly derived from transactions sum
+  balanceDzd?: number;
   totalEarned: number;
   totalCommissionsPaid: number;
+  totalCommissionsPaidDzd?: number;
   totalPayouts: number;
   lastTransactionAt: string;
   isNegative: boolean;
@@ -367,6 +509,7 @@ export interface PayoutRequest {
     rib?: string;
     phone?: string;
   };
+  rib?: string;
   status: "pending" | "approved" | "processed" | "rejected";
   requestedAt: string;
   processedAt?: string;
@@ -458,6 +601,7 @@ export interface CategoryItem {
   id: string;
   name: { en: string; fr: string; ar: string };
   vertical: ListingVertical;
+  slug?: string;
   iconName?: string;
   icon?: string;
   listingCount: number;
@@ -474,6 +618,7 @@ export interface PromotionCoupon {
   maxUsage?: number;
   maxUses?: number;
   usedCount: number;
+  currentUses?: number;
   startDate?: string;
   endDate?: string;
   expiresAt?: string;

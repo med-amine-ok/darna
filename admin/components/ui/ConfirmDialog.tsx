@@ -7,7 +7,8 @@ import { AlertTriangle, AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  onCancel?: () => void;
   onConfirm: () => Promise<void> | void;
   title: string;
   description: string;
@@ -23,6 +24,7 @@ export interface ConfirmDialogProps {
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isOpen,
   onClose,
+  onCancel,
   onConfirm,
   title,
   description,
@@ -34,6 +36,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isLoading = false,
   requireTypedConfirmation,
 }) => {
+  const closeAction = onClose || onCancel || (() => {});
   const activeConfirmLabel = confirmText || confirmLabel || "Confirm";
   const activeVariant: "danger" | "warning" | "primary" = (confirmVariant as any) || variant || "danger";
   const [typedInput, setTypedInput] = useState("");
@@ -43,7 +46,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   const handleClose = () => {
     setTypedInput("");
-    onClose();
+    closeAction();
   };
 
   const handleConfirm = async () => {

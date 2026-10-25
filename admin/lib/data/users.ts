@@ -34,7 +34,12 @@ export async function listUsers(
 
   // 1. Status Filter
   if (params.status && params.status !== "all") {
-    filtered = filtered.filter((u) => u.status === params.status);
+    if (params.status.includes(",")) {
+      const list = params.status.split(",").map((s) => s.trim().toLowerCase());
+      filtered = filtered.filter((u) => list.includes(u.status.toLowerCase()));
+    } else {
+      filtered = filtered.filter((u) => u.status === params.status);
+    }
   }
 
   // 2. Role Filter
@@ -246,7 +251,7 @@ export async function deleteUser(
 
 export async function restoreUser(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: { id: string; name: string; role: any } = { id: "adm_01", name: "Admin", role: "super_admin" }
 ): Promise<GuestUser> {
   assertCan(actor.role, "users.delete");
   await delay(200);
@@ -266,6 +271,34 @@ export async function restoreUser(
     "user",
     id,
     `Restored soft-deleted user ${prev.name}`,
+    prev,
+    store.users[idx]
+  );
+
+  return store.users[idx];
+}
+
+export async function updateUserStatus(
+  id: string,
+  status: GuestStatus,
+  actor: { id: string; name: string; role: any } = { id: "adm_01", name: "Admin", role: "super_admin" }
+): Promise<GuestUser> {
+  await delay(200);
+  const idx = store.users.findIndex((u) => u.id === id);
+  if (idx === -1) throw new Error("User not found");
+
+  const prev = { ...store.users[idx] };
+  store.users[idx] = {
+    ...store.users[idx],
+    status,
+  };
+
+  await logAudit(
+    actor,
+    "USER_STATUS_CHANGE",
+    "user",
+    id,
+    `Changed user status from ${prev.status} to ${status}: ${prev.name}`,
     prev,
     store.users[idx]
   );

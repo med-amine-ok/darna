@@ -13,6 +13,11 @@ import {
   Tag,
   Copy,
   Users,
+  Download,
+  Flame,
+  Award,
+  Eye,
+  PlusCircle,
 } from "lucide-react";
 import {
   listPromotions,
@@ -21,19 +26,27 @@ import {
   deletePromotion,
 } from "@/lib/data/promotions";
 import { PromotionCoupon, HostType, ListingVertical } from "@/lib/types";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { KpiStrip } from "@/components/ui/KpiStrip";
+import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { formatDzd, formatDate } from "@/lib/utils/format";
 
-interface Props {
+export interface PromotionsClientProps {
   locale: string;
+  initialTab?: "coupons" | "featured";
 }
 
-export default function PromotionsClient({ locale }: Props) {
+export default function PromotionsClient({
+  locale,
+  initialTab = "coupons",
+}: PromotionsClientProps) {
   const t = useTranslations("promotions");
   const tCommon = useTranslations("common");
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [promotions, setPromotions] = useState<PromotionCoupon[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +71,7 @@ export default function PromotionsClient({ locale }: Props) {
       const list = await listPromotions();
       setPromotions(list);
     } catch (err: any) {
-      error("Failed to load promotions", err.message);
+      error("Erreur de chargement", err.message);
     } finally {
       setLoading(false);
     }
@@ -69,23 +82,23 @@ export default function PromotionsClient({ locale }: Props) {
   }, [loadData]);
 
   const handleToggle = async (p: PromotionCoupon) => {
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
+    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
       const updated = await togglePromotionStatus(p.id, actor);
-      success("Promotion Status Updated", `Coupon ${p.code} is now ${updated.status}`);
+      success("Statut mis à jour", `Le code ${p.code} est désormais ${updated.status}`);
       loadData();
     } catch (err: any) {
-      error("Toggle failed", err.message);
+      error("Échec de la mise à jour", err.message);
     }
   };
 
   const handleCreate = async () => {
     if (!code.trim()) {
-      error("Missing Code", "Please enter a promotional promo code.");
+      error("Code manquant", "Veuillez saisir un code promotionnel.");
       return;
     }
 
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
+    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
       await createPromotion(
         {
@@ -99,262 +112,337 @@ export default function PromotionsClient({ locale }: Props) {
         },
         actor
       );
-
-      success("Promotion Created", `Coupon ${code.toUpperCase()} has been published.`);
+      success("Code promo créé avec succès");
       setModalOpen(false);
       setCode("");
       loadData();
     } catch (err: any) {
-      error("Creation failed", err.message);
+      error("Création échouée", err.message);
     }
   };
 
-  const confirmDelete = async () => {
+  const handleDelete = async () => {
     if (!promoToDelete) return;
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
+    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
       await deletePromotion(promoToDelete.id, actor);
-      success("Promotion Deleted", `Coupon ${promoToDelete.code} removed.`);
+      success("Code promo supprimé");
       setDeleteModalOpen(false);
       setPromoToDelete(null);
       loadData();
     } catch (err: any) {
-      error("Delete failed", err.message);
+      error("Échec de suppression", err.message);
     }
   };
 
+  const activeCodesCount = promotions.filter((p) => p.status === "active").length;
+  const totalUses = promotions.reduce((acc, p) => acc + (p.currentUses || 0), 0);
+  const totalSavings = 1450000;
+
+  const kpis = [
+    {
+      id: "all",
+      label: "Codes promo créés",
+      value: promotions.length,
+      icon: Tag,
+      colorVariant: "primary" as const,
+      active: activeTab === "coupons",
+      onClick: () => setActiveTab("coupons"),
+    },
+    {
+      id: "active",
+      label: "Codes actifs",
+      value: activeCodesCount,
+      icon: CheckCircle,
+      colorVariant: "secondary" as const,
+      active: activeTab === "coupons",
+      onClick: () => setActiveTab("coupons"),
+    },
+    {
+      id: "uses",
+      label: "Utilisations totales",
+      value: totalUses,
+      icon: Users,
+      colorVariant: "tertiary" as const,
+      active: false,
+    },
+    {
+      id: "featured",
+      label: "Mises en avant actives",
+      value: 12,
+      icon: Flame,
+      colorVariant: "accent" as const,
+      active: activeTab === "featured",
+      onClick: () => setActiveTab("featured"),
+    },
+  ];
+
   return (
     <div className="space-y-6 text-start">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-primary tracking-tight">{t("title")}</h1>
-          <p className="text-xs text-neutral-500 mt-1">
-            {t("subtitle")}
-          </p>
-        </div>
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={[
+          {
+            label: "Nouveau code promo",
+            icon: <PlusCircle className="w-4 h-4" />,
+            variant: "primary",
+            onClick: () => setModalOpen(true),
+          },
+        ]}
+      />
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setModalOpen(true)}
-          className="text-xs font-bold"
-        >
-          <Plus className="w-3.5 h-3.5 me-1.5" />
-          {t("createCode")}
-        </Button>
-      </div>
+      <KpiStrip cards={kpis} />
 
-      {/* Promotions Table */}
-      <div className="bg-white rounded-2xl border border-tertiary/70 overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-start">
-            <thead className="bg-darnaBg/60 border-b border-tertiary/60 text-neutral-600 text-xs font-semibold">
-              <tr>
-                <th className="py-3 px-4 text-start">{t("code")}</th>
-                <th className="py-3 px-4 text-start">{t("discount")}</th>
-                <th className="py-3 px-4 text-start">{t("minSpend")}</th>
-                <th className="py-3 px-4 text-start">{t("used")}</th>
-                <th className="py-3 px-4 text-start">{t("validUntil")}</th>
-                <th className="py-3 px-4 text-start">{tCommon("status")}</th>
-                <th className="py-3 px-4 text-end">{tCommon("actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-tertiary/40">
-              {loading ? (
+      <Tabs
+        items={[
+          { id: "coupons", label: "Codes promo", count: promotions.length, icon: <Tag className="w-4 h-4" /> },
+          { id: "featured", label: "Mises en avant (Placements)", count: 12, icon: <Flame className="w-4 h-4" /> },
+        ]}
+        activeId={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {/* Coupons Tab */}
+      {activeTab === "coupons" && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-tertiary/60 overflow-hidden shadow-2xs">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-neutral-400">
-                    {tCommon("loading")}
-                  </td>
+                  <th className="py-3 px-4">Code</th>
+                  <th className="py-3 px-4">Réduction</th>
+                  <th className="py-3 px-4">Dépense min.</th>
+                  <th className="py-3 px-4">Utilisations</th>
+                  <th className="py-3 px-4">Expiration</th>
+                  <th className="py-3 px-4">Statut</th>
+                  <th className="py-3 px-4 text-end">Actions</th>
                 </tr>
-              ) : promotions.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-neutral-400">
-                    {t("subtitle")}
-                  </td>
-                </tr>
-              ) : (
-                promotions.map((p) => (
-                  <tr key={p.id} className="hover:bg-darnaBg/20 transition-colors">
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {promotions.map((p) => (
+                  <tr key={p.id} className="hover:bg-neutral-50/50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-primary bg-darnaBg/80 px-2 py-0.5 rounded border border-tertiary">
+                        <span className="font-mono font-bold text-primary px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200">
                           {p.code}
                         </span>
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-1 text-neutral-400 hover:text-primary"
                           onClick={() => {
                             navigator.clipboard.writeText(p.code);
-                            info("Copied", `${p.code} copied`);
+                            info("Code copié dans le presse-papier");
                           }}
-                          className="text-neutral-400 hover:text-primary"
                         >
-                          <Copy className="w-3 h-3" />
-                        </button>
+                          <Copy className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </td>
                     <td className="py-3 px-4 font-bold text-secondary">
-                      {p.discountType === "percentage"
-                        ? `${p.discountValue}% OFF`
-                        : `${formatDzd(p.discountValue, locale)} OFF`}
+                      {p.discountType === "percentage" ? `${p.discountValue}%` : formatDzd(p.discountValue, locale)}
                     </td>
-                    <td className="py-3 px-4 text-neutral-600 font-medium">
-                      {formatDzd(p.minSpendDzd, locale)}
+                    <td className="py-3 px-4 font-mono text-neutral-600">
+                      {p.minSpendDzd ? formatDzd(p.minSpendDzd, locale) : "Aucun"}
                     </td>
-                    <td className="py-3 px-4 font-medium text-neutral-700">
-                      {p.usedCount} / {p.maxUses}
+                    <td className="py-3 px-4 font-mono text-neutral-700">
+                      {p.currentUses} / {p.maxUses}
                     </td>
-                    <td className="py-3 px-4 text-neutral-500">
+                    <td className="py-3 px-4 font-mono text-neutral-500">
                       {formatDate(p.expiresAt, locale)}
                     </td>
                     <td className="py-3 px-4">
                       <button
                         onClick={() => handleToggle(p)}
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer ${
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
                           p.status === "active"
-                            ? "bg-secondary/15 text-secondary border-secondary/30"
-                            : "bg-neutral-100 text-neutral-400 border-neutral-300"
+                            ? "bg-secondary/15 text-secondary hover:bg-secondary/25"
+                            : "bg-neutral-200 text-neutral-500 hover:bg-neutral-300"
                         }`}
                       >
-                        {p.status === "active" ? tCommon("active") : tCommon("disabled")}
+                        {p.status === "active" ? "Actif" : "Inactif"}
                       </button>
                     </td>
                     <td className="py-3 px-4 text-end">
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-accent hover:bg-accent/10"
                         onClick={() => {
                           setPromoToDelete(p);
                           setDeleteModalOpen(true);
                         }}
-                        className="p-1 rounded-lg text-accent/80 hover:text-accent hover:bg-accent/10"
-                        title="Delete Coupon"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* CREATE MODAL */}
+      {/* Featured Placements Tab */}
+      {activeTab === "featured" && (
+        <div className="bg-white rounded-2xl border border-tertiary/60 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-primary text-base">Mises en avant sur la page d'accueil</h3>
+              <p className="text-xs text-neutral-500 mt-1">
+                Gérez les annonces sponsorisées ou mises en vedette par la modération.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => success("Sélectionnez une annonce à promouvoir")}>
+              + Ajouter une mise en avant
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-primary">Villa Hydra avec piscine</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
+                  En vedette
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-500">Placement : En-tête Page d'accueil · Alger</p>
+              <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
+                <span className="text-neutral-400">Jusqu'au 30 avril 2024</span>
+                <span className="font-bold text-primary">1 240 clics</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-primary">Circuit Tassili & Djanet 7J</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
+                  Coup de cœur
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-500">Placement : Rubrique Voyages Organisés</p>
+              <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
+                <span className="text-neutral-400">Jusqu'au 15 mai 2024</span>
+                <span className="font-bold text-primary">890 clics</span>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-primary">Hyundai Tucson 2023</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
+                  Top Loueur
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-500">Placement : Carrousel Voitures Populaires</p>
+              <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
+                <span className="text-neutral-400">Jusqu'au 20 avril 2024</span>
+                <span className="font-bold text-primary">640 clics</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Modal */}
       <Dialog
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={t("createCode")}
-        size="md"
+        title="Créer un nouveau code promo"
+        description="Configurez le code, le taux de réduction et les limites d'utilisation."
       >
-        <div className="space-y-4 text-start">
+        <div className="space-y-4 text-xs text-start">
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
-              {t("code")}
-            </label>
+            <label className="block font-bold text-primary mb-1">Code promo (en majuscules)*</label>
             <input
               type="text"
+              placeholder="ex: DARNA2024"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="DARNAWELCOME"
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary font-mono uppercase font-bold"
+              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                {t("discountType")}
-              </label>
+              <label className="block font-bold text-primary mb-1">Type de réduction</label>
               <select
                 value={discountType}
                 onChange={(e) => setDiscountType(e.target.value as any)}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary cursor-pointer"
               >
-                <option value="percentage">Percentage (%)</option>
-                <option value="fixed">Fixed DZD Amount</option>
+                <option value="percentage">Pourcentage (%)</option>
+                <option value="fixed">Montant fixe (DZD)</option>
               </select>
             </div>
-
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                {t("discount")}
-              </label>
+              <label className="block font-bold text-primary mb-1">Valeur de la réduction*</label>
               <input
                 type="number"
+                min="1"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(Number(e.target.value))}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary font-bold"
+                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                {t("minSpend")}
-              </label>
+              <label className="block font-bold text-primary mb-1">Dépense min. (DZD)</label>
               <input
                 type="number"
+                min="0"
+                step="1000"
                 value={minSpend}
                 onChange={(e) => setMinSpend(Number(e.target.value))}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono text-primary focus:outline-none focus:border-secondary"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                {t("usageLimit")}
-              </label>
+              <label className="block font-bold text-primary mb-1">Nombre max. d'utilisations</label>
               <input
                 type="number"
+                min="1"
                 value={maxUses}
                 onChange={(e) => setMaxUses(Number(e.target.value))}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono text-primary focus:outline-none focus:border-secondary"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
-              {t("validUntil")}
-            </label>
+            <label className="block font-bold text-primary mb-1">Date d'expiration</label>
             <input
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary cursor-pointer"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setModalOpen(false)}
-            >
-              {tCommon("cancel")}
+          <div className="flex items-center justify-end gap-2 pt-3">
+            <Button variant="outline" onClick={() => setModalOpen(false)}>
+              Annuler
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleCreate}
-              className="font-bold text-xs"
-            >
-              {tCommon("save")}
+            <Button variant="primary" onClick={handleCreate}>
+              Créer le code
             </Button>
           </div>
         </div>
       </Dialog>
 
+      {/* Delete Confirm */}
       <ConfirmDialog
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
-        title={t("deleteConfirmTitle")}
-        description={t("deleteConfirmDesc")}
-        confirmLabel={tCommon("delete")}
+        onConfirm={handleDelete}
+        title="Supprimer le code promotionnel"
+        description={`Êtes-vous sûr de vouloir supprimer le code ${promoToDelete?.code} ? Cette action est irréversible.`}
         variant="danger"
+        confirmLabel="Supprimer"
       />
     </div>
   );

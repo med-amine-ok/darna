@@ -7,6 +7,7 @@ import { logAudit } from "./audit";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface HostFilterParams {
+  category?: string; // "all" | ProviderCategory
   hostType?: string; // "all" | HostType
   status?: string; // "all" | HostStatus
   verificationStatus?: string;
@@ -28,6 +29,15 @@ export interface HostFilterParams {
   pageSize?: number;
 }
 
+export function getProviderCategory(h: Host): "host" | "hotel_hostel" | "travel_agency" | "experience_company" | "rental_agency" {
+  if (h.providerCategory) return h.providerCategory;
+  if (h.hostType === "hotel" || h.hostType === "hostel") return "hotel_hostel";
+  if (h.hostType === "agency" && h.verticalsOffered?.includes("trip")) return "travel_agency";
+  if (h.verticalsOffered?.includes("vehicle")) return "rental_agency";
+  if (h.verticalsOffered?.includes("experience")) return "experience_company";
+  return "host";
+}
+
 export async function listHosts(
   params: HostFilterParams = {}
 ): Promise<PaginatedResult<Host>> {
@@ -36,35 +46,42 @@ export async function listHosts(
   const page = params.page || 1;
   const pageSize = params.pageSize || 12;
 
-  let filtered = [...store.hosts];
+  const matchStatus = (hStatus: string, filterStatus?: string) => {
+    if (!filterStatus || filterStatus === "all") return true;
+    const parts = filterStatus.split(",").map((s) => s.trim().toLowerCase());
+    return parts.includes(hStatus.toLowerCase());
+  };
+
+  // Base filtering across all filters EXCEPT category (for category facets)
+  let baseline = [...store.hosts];
 
   // 1. Host Type Tab
   if (params.hostType && params.hostType !== "all") {
-    filtered = filtered.filter((h) => h.hostType === params.hostType);
+    baseline = baseline.filter((h) => h.hostType === params.hostType);
   }
 
-  // 2. Status
+  // 2. Status (supports comma-separated)
   if (params.status && params.status !== "all") {
-    filtered = filtered.filter((h) => h.status === params.status);
+    baseline = baseline.filter((h) => matchStatus(h.status, params.status));
   }
 
   // 3. Verification
   if (params.verificationStatus && params.verificationStatus !== "all") {
-    filtered = filtered.filter((h) => h.verificationStatus === params.verificationStatus);
+    baseline = baseline.filter((h) => h.verificationStatus === params.verificationStatus);
   }
 
   // 4. Wilayas (support single or array)
   if (params.wilayaCode && params.wilayaCode !== "all") {
     const codes = Array.isArray(params.wilayaCode) ? params.wilayaCode : [params.wilayaCode];
     if (codes.length > 0) {
-      filtered = filtered.filter((h) => codes.includes(h.wilayaCode));
+      baseline = baseline.filter((h) => codes.includes(h.wilayaCode));
     }
   }
 
   // 5. Search
   if (params.search?.trim()) {
     const q = params.search.toLowerCase();
-    filtered = filtered.filter((h) => {
+    baseline = baseline.filter((h) => {
       const matchName = h.ownerName.toLowerCase().includes(q);
       const matchBiz = (h.businessName || "").toLowerCase().includes(q);
       const matchEmail = h.email.toLowerCase().includes(q);
@@ -76,38 +93,46 @@ export async function listHosts(
 
   // 6. Approval Mode
   if (params.approvalMode && params.approvalMode !== "all") {
-    filtered = filtered.filter((h) => h.bookingApprovalMode === params.approvalMode);
+    baseline = baseline.filter((h) => h.bookingApprovalMode === params.approvalMode);
   }
 
   // 7. Verticals Offered
   if (params.vertical && params.vertical !== "all") {
-    filtered = filtered.filter((h) => h.verticalsOffered.includes(params.vertical as any));
+    baseline = baseline.filter((h) => h.verticalsOffered.includes(params.vertical as any));
   }
 
   // 8. Rating & Activity
   if (params.minRating && params.minRating > 0) {
-    filtered = filtered.filter((h) => h.rating >= params.minRating!);
+    baseline = baseline.filter((h) => h.rating >= params.minRating!);
   }
   if (params.minBookings && params.minBookings > 0) {
-    filtered = filtered.filter((h) => h.bookingsCount >= params.minBookings!);
+    baseline = baseline.filter((h) => h.bookingsCount >= params.minBookings!);
   }
   if (params.minListings && params.minListings > 0) {
-    filtered = filtered.filter((h) => h.listingsCount >= params.minListings!);
+    baseline = baseline.filter((h) => h.listingsCount >= params.minListings!);
   }
   if (params.onlyNegativeBalance) {
-    filtered = filtered.filter((h) => h.walletBalance < 0);
+    baseline = baseline.filter((h) => h.walletBalance < 0);
   }
 
   // 9. Hotel stars / Agency trips
   if (params.minStars && params.minStars > 0) {
-    filtered = filtered.filter((h) => (h.hotelMetadata?.starRating || 0) >= params.minStars!);
+    baseline = baseline.filter((h) => (h.hotelMetadata?.starRating || 0) >= params.minStars!);
   }
   if (params.hasTrips) {
-    filtered = filtered.filter((h) => !!h.agencyMetadata?.hasTrips);
+    baseline = baseline.filter((h) => !!h.agencyMetadata?.hasTrips);
   }
 
-  // Compute Facets across current baseline before pagination
+  // Compute category facets dynamically based on baseline matching current filters
   const facets: Record<string, Record<string, number>> = {
+    category: {
+      all: baseline.length,
+      host: baseline.filter((h) => getProviderCategory(h) === "host").length,
+      hotel_hostel: baseline.filter((h) => getProviderCategory(h) === "hotel_hostel").length,
+      travel_agency: baseline.filter((h) => getProviderCategory(h) === "travel_agency").length,
+      experience_company: baseline.filter((h) => getProviderCategory(h) === "experience_company").length,
+      rental_agency: baseline.filter((h) => getProviderCategory(h) === "rental_agency").length,
+    },
     hostType: {
       all: store.hosts.length,
       individual: store.hosts.filter((h) => h.hostType === "individual").length,
@@ -126,6 +151,11 @@ export async function listHosts(
     },
   };
 
+  // Now apply category filter to get final results
+  let filtered = params.category && params.category !== "all"
+    ? baseline.filter((h) => getProviderCategory(h) === params.category)
+    : baseline;
+
   // Sorting
   const sortBy = params.sortBy || "joined";
   const order = params.sortOrder === "asc" ? 1 : -1;
@@ -139,8 +169,12 @@ export async function listHosts(
   });
 
   const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rows = filtered.slice((page - 1) * pageSize, page * pageSize).map((h) => ({
+    ...h,
+    providerCategory: getProviderCategory(h),
+    formattedId: h.formattedId || `#P${h.id.replace("hst_", "").padStart(5, "0")}`,
+  }));
 
   return {
     rows,

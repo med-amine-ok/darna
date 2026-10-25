@@ -19,6 +19,11 @@ export interface DataTableProps<T> {
   data: T[];
   keyExtractor: (row: T) => string;
   selectedIds?: string[];
+  selectedRowId?: string;
+  selection?: {
+    selectedIds: string[];
+    onSelectionChange: (ids: string[]) => void;
+  };
   onSelectRow?: (id: string) => void;
   onSelectAll?: () => void;
   isAllSelected?: boolean;
@@ -29,6 +34,7 @@ export interface DataTableProps<T> {
   density?: "comfortable" | "compact";
   onRowClick?: (row: T) => void;
   emptyState?: React.ReactNode;
+  emptyMessage?: string;
   className?: string;
 }
 
@@ -37,6 +43,8 @@ export function DataTable<T>({
   data,
   keyExtractor,
   selectedIds = [],
+  selectedRowId,
+  selection,
   onSelectRow,
   onSelectAll,
   isAllSelected = false,
@@ -47,9 +55,11 @@ export function DataTable<T>({
   density = "comfortable",
   onRowClick,
   emptyState,
+  emptyMessage,
   className = "",
 }: DataTableProps<T>) {
-  const isSelectable = !!onSelectRow;
+  const effectiveSelectedIds = selection ? selection.selectedIds : selectedIds;
+  const isSelectable = !!onSelectRow || !!selection;
 
   const renderSortIcon = (colKey: string) => {
     if (sortBy !== colKey) {
@@ -135,14 +145,14 @@ export function DataTable<T>({
               // Empty state
               <tr>
                 <td colSpan={columns.length + (isSelectable ? 1 : 0)} className="p-8 text-center">
-                  {emptyState || <p className="text-neutral-400 text-xs">No records found</p>}
+                  {emptyState || <p className="text-neutral-400 text-xs">{emptyMessage || "Aucun élément trouvé"}</p>}
                 </td>
               </tr>
             ) : (
               // Real Data Rows
               data.map((row) => {
                 const id = keyExtractor(row);
-                const isSelected = selectedIds.includes(id);
+                const isSelected = effectiveSelectedIds.includes(id) || selectedRowId === id;
 
                 return (
                   <tr
@@ -163,7 +173,17 @@ export function DataTable<T>({
                       >
                         <Checkbox
                           checked={isSelected}
-                          onChange={() => onSelectRow && onSelectRow(id)}
+                          onChange={() => {
+                            if (selection) {
+                              if (isSelected) {
+                                selection.onSelectionChange(effectiveSelectedIds.filter((item) => item !== id));
+                              } else {
+                                selection.onSelectionChange([...effectiveSelectedIds, id]);
+                              }
+                            } else if (onSelectRow) {
+                              onSelectRow(id);
+                            }
+                          }}
                           aria-label={`Select row ${id}`}
                         />
                       </td>

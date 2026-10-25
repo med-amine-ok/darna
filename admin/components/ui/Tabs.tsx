@@ -11,8 +11,10 @@ export interface TabItem {
 }
 
 export interface TabsProps {
-  tabs: TabItem[];
-  activeTab: string;
+  tabs?: TabItem[];
+  items?: TabItem[];
+  activeTab?: string;
+  activeId?: string;
   onChange: (id: string) => void;
   className?: string;
   variant?: "pill" | "line";
@@ -20,11 +22,15 @@ export interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({
   tabs,
+  items,
   activeTab,
+  activeId,
   onChange,
   className = "",
   variant = "pill",
 }) => {
+  const tabList = items || tabs || [];
+  const selectedTab = activeId !== undefined ? activeId : (activeTab || "");
   return (
     <div
       role="tablist"
@@ -34,8 +40,8 @@ export const Tabs: React.FC<TabsProps> = ({
           : "border-b border-tertiary/60 gap-4"
       } ${className}`}
     >
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
+      {tabList.map((tab) => {
+        const isActive = selectedTab === tab.id;
 
         if (variant === "pill") {
           return (

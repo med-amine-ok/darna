@@ -1,12 +1,13 @@
 export interface Wilaya {
   code: string;
+  name?: string;
   nameEn: string;
   nameFr: string;
   nameAr: string;
   region: "north" | "high_plateaus" | "south";
 }
 
-export const WILAYAS: Wilaya[] = [
+const RAW_WILAYAS: Wilaya[] = [
   { code: "01", nameEn: "Adrar", nameFr: "Adrar", nameAr: "أدرار", region: "south" },
   { code: "02", nameEn: "Chlef", nameFr: "Chlef", nameAr: "الشلف", region: "north" },
   { code: "03", nameEn: "Laghouat", nameFr: "Laghouat", nameAr: "الأغواط", region: "high_plateaus" },
@@ -75,12 +76,22 @@ export const WILAYAS: Wilaya[] = [
   { code: "66", nameEn: "Messaad", nameFr: "Messaad", nameAr: "مسعد", region: "high_plateaus" },
   { code: "67", nameEn: "Ksar El Boukhari", nameFr: "Ksar El Boukhari", nameAr: "قصر البخاري", region: "high_plateaus" },
   { code: "68", nameEn: "Bou Saâda", nameFr: "Bou Saâda", nameAr: "بوسعادة", region: "high_plateaus" },
-  { code: "69", nameEn: "El Abiodh Sidi Cheikh", nameFr: "El Abiodh Sidi Cheikh", nameAr: "الأبيض سيدي الشيخ", region: "south" },
 ];
+
+export const WILAYAS: Wilaya[] = RAW_WILAYAS.map((w) => ({
+  ...w,
+  name: w.name || w.nameFr || w.nameEn,
+}));
 
 export const WILAYAS_MAP = new Map(WILAYAS.map((w) => [w.code, w]));
 
-export function getWilayaName(code: string, locale: "en" | "fr" | "ar" = "en"): string {
+export function getWilayaLabel(w: Wilaya, locale: string = "fr"): string {
+  if (!w) return "";
+  const name = locale === "ar" ? w.nameAr : locale === "en" ? w.nameEn : (w.nameFr || w.name);
+  return `${w.code} - ${name}`;
+}
+
+export function getWilayaName(code: string, locale: "en" | "fr" | "ar" | string = "en"): string {
   const wilaya = WILAYAS_MAP.get(code);
   if (!wilaya) return code;
   if (locale === "ar") return `${wilaya.code} - ${wilaya.nameAr}`;

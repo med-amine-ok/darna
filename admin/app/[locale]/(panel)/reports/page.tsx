@@ -1,16 +1,7 @@
-import { Metadata } from "next";
-import ReportsClient from "./ReportsClient";
+import { getLocale } from "next-intl/server";
+import StatsClient from "../stats/StatsClient";
 
-export const metadata: Metadata = {
-  title: "Reports & Financial Statements",
-};
-
-interface Props {
-  params: {
-    locale: string;
-  };
-}
-
-export default function ReportsPage({ params }: Props) {
-  return <ReportsClient locale={params.locale} />;
+export default async function ReportsPage() {
+  const locale = await getLocale();
+  return <StatsClient locale={locale} initialTab="reports" />;
 }

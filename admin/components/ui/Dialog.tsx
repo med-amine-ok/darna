@@ -9,6 +9,7 @@ export interface DialogProps {
   onClose: () => void;
   title?: React.ReactNode;
   subtitle?: React.ReactNode;
+  description?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl";
@@ -21,6 +22,7 @@ export const Dialog: React.FC<DialogProps> = ({
   onClose,
   title,
   subtitle,
+  description,
   children,
   footer,
   maxWidth,
@@ -73,7 +75,7 @@ export const Dialog: React.FC<DialogProps> = ({
             className={`relative w-full ${widthClasses[(size as keyof typeof widthClasses) || maxWidth || "md"] || "max-w-md"} bg-white rounded-3xl shadow-darna-modal border border-tertiary/70 overflow-hidden z-10 ${className}`}
           >
             {/* Header */}
-            {(title || subtitle) && (
+            {(title || subtitle || description) && (
               <div className="p-6 pb-4 flex items-start justify-between gap-4">
                 <div>
                   {title && (
@@ -81,8 +83,8 @@ export const Dialog: React.FC<DialogProps> = ({
                       {title}
                     </h3>
                   )}
-                  {subtitle && (
-                    <p className="text-xs text-neutral-500 mt-1">{subtitle}</p>
+                  {(subtitle || description) && (
+                    <p className="text-xs text-neutral-500 mt-1">{subtitle || description}</p>
                   )}
                 </div>
                 <button

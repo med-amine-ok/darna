@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 
 export interface ListingsMapViewProps {
   listings: Listing[];
-  onSelectListing: (listing: Listing) => void;
+  onSelectListing?: (listing: Listing) => void;
   selectedListingId?: string | null;
 }
 
@@ -47,7 +47,7 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
                 type="button"
                 onClick={() => {
                   setSelectedListing(l);
-                  onSelectListing(l);
+                  onSelectListing?.(l);
                 }}
                 style={{ top: `${latPercent}%`, left: `${lngPercent}%` }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 group transition-transform ${
@@ -112,7 +112,7 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
           <Button
             variant="primary"
             size="sm"
-            onClick={() => onSelectListing(selectedListing)}
+            onClick={() => onSelectListing?.(selectedListing)}
             className="w-full mt-4"
           >
             Moderate Listing Details

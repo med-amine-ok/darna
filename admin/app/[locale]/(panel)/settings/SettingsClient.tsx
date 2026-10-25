@@ -13,21 +13,30 @@ import {
   CheckCircle,
   AlertTriangle,
   Server,
+  Save,
+  Languages,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
 import { getPlatformSettings, updatePlatformSettings } from "@/lib/data/settings";
 import { PlatformSettings } from "@/lib/types";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 
-interface Props {
+export interface SettingsClientProps {
   locale: string;
+  initialTab?: "general" | "languages" | "notifications" | "security";
 }
 
-export default function SettingsClient({ locale }: Props) {
+export default function SettingsClient({
+  locale,
+  initialTab = "general",
+}: SettingsClientProps) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
-  const tRoles = useTranslations("roles");
-
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,6 +47,11 @@ export default function SettingsClient({ locale }: Props) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(120);
+
+  // Notifications states
+  const [emailAlerts, setEmailAlerts] = useState(true);
+  const [smsAlerts, setSmsAlerts] = useState(false);
+  const [instantBookingNotifications, setInstantBookingNotifications] = useState(true);
 
   const { success, error } = useToast();
 
@@ -52,7 +66,7 @@ export default function SettingsClient({ locale }: Props) {
       setTwoFactorEnabled(data.security?.twoFactorRequired || false);
       setSessionTimeoutMinutes(data.security?.sessionTimeoutMinutes || 120);
     } catch (err: any) {
-      error("Failed to load settings", err.message);
+      error("Erreur de chargement", err.message);
     } finally {
       setLoading(false);
     }
@@ -64,7 +78,7 @@ export default function SettingsClient({ locale }: Props) {
 
   const handleSave = async () => {
     setSaving(true);
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
+    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
       const updated = await updatePlatformSettings(
         {
@@ -80,9 +94,9 @@ export default function SettingsClient({ locale }: Props) {
       );
 
       setSettings(updated);
-      success("Settings Saved", "Platform configuration updated successfully.");
+      success("Paramètres enregistrés", "La configuration de la plateforme a été mise à jour.");
     } catch (err: any) {
-      error("Save failed", err.message);
+      error("Échec de sauvegarde", err.message);
     } finally {
       setSaving(false);
     }
@@ -90,134 +104,199 @@ export default function SettingsClient({ locale }: Props) {
 
   return (
     <div className="max-w-4xl space-y-6 text-start">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-primary tracking-tight">{t("title")}</h1>
-          <p className="text-xs text-neutral-500 mt-1">
-            {t("subtitle")}
-          </p>
-        </div>
+      <PageHeader
+        title={t("title")}
+        subtitle="Configurez le nom de la plateforme, la sécurité, les langues et les règles globales."
+        actions={[
+          {
+            label: saving ? "Enregistrement..." : "Enregistrer les modifications",
+            icon: <Save className="w-4 h-4" />,
+            variant: "primary",
+            onClick: handleSave,
+          },
+        ]}
+      />
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleSave}
-          disabled={saving}
-          className="text-xs font-bold"
-        >
-          <CheckCircle className="w-3.5 h-3.5 me-1.5" />
-          {saving ? t("saving") : t("saveSettings")}
-        </Button>
-      </div>
+      <Tabs
+        items={[
+          { id: "general", label: "Général", icon: <Sliders className="w-4 h-4" /> },
+          { id: "languages", label: "Langues & traductions", icon: <Languages className="w-4 h-4" /> },
+          { id: "notifications", label: "Notifications & alertes", icon: <Bell className="w-4 h-4" /> },
+          { id: "security", label: "Sécurité & sessions", icon: <ShieldCheck className="w-4 h-4" /> },
+        ]}
+        activeId={activeTab}
+        onChange={setActiveTab}
+      />
 
-      {/* Main Settings Sections */}
-      <div className="space-y-5">
-        {/* General Marketplace */}
-        <div className="bg-white p-5 rounded-2xl border border-tertiary/70 shadow-2xs space-y-4">
-          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-secondary" />
-            <span>{t("general")}</span>
-          </h3>
+      {/* General Settings */}
+      {activeTab === "general" && (
+        <div className="space-y-4">
+          <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+            <h3 className="font-bold text-primary text-base">Identité de la plateforme</h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                {t("platformName")}
-              </label>
+              <label className="block text-xs font-bold text-primary mb-1">Nom public de la plateforme</label>
               <input
                 type="text"
                 value={platformName}
                 onChange={(e) => setPlatformName(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+                className="w-full text-xs rounded-xl border border-tertiary/70 p-2.5 bg-darnaBg/30 text-primary font-bold focus:outline-none focus:border-secondary"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-primary mb-1">
-                {t("serviceFee")}
+                Frais de service voyageur par défaut (%)
               </label>
               <input
                 type="number"
-                min={0}
-                max={25}
+                min="0"
+                max="25"
                 value={serviceFeePercent}
                 onChange={(e) => setServiceFeePercent(Number(e.target.value))}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary font-bold"
+                className="w-32 text-xs rounded-xl border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
               />
-            </div>
-          </div>
-        </div>
-
-        {/* Maintenance Mode */}
-        <div className="bg-white p-5 rounded-2xl border border-tertiary/70 shadow-2xs space-y-3">
-          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
-            <Server className="w-4 h-4 text-secondary" />
-            <span>{t("maintenance")}</span>
-          </h3>
-
-          <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 flex items-center justify-between">
-            <div>
-              <h4 className="text-xs font-bold text-primary">{t("maintenance")}</h4>
-              <p className="text-[11px] text-neutral-500 mt-0.5">
-                {locale === "ar"
-                  ? "عند التفعيل، يعرض الموقع العام للضيوف والمضيفين لافتة صيانة مع احتفاظ المسؤولين بكامل صلاحيات الدخول."
-                  : locale === "fr"
-                  ? "Lorsqu'il est activé, le site public affiche une bannière de maintenance tandis que les administrateurs conservent un accès complet."
-                  : "When enabled, the public guest and host site displays a maintenance banner while admins retain full access."}
+              <p className="text-[11px] text-neutral-400 mt-1">
+                Appliqué au sous-total des réservations avant prélèvement de la commission prestataire.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={maintenanceMode}
-                onChange={(e) => setMaintenanceMode(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
-            </label>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-primary text-sm">Mode maintenance</h4>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Verrouille l'accès public au marketplace tout en permettant aux administrateurs de naviguer.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={maintenanceMode}
+                  onChange={(e) => setMaintenanceMode(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+              </label>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Security & Access */}
-        <div className="bg-white p-5 rounded-2xl border border-tertiary/70 shadow-2xs space-y-4">
-          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
-            <Lock className="w-4 h-4 text-secondary" />
-            <span>{t("security")}</span>
-          </h3>
+      {/* Languages */}
+      {activeTab === "languages" && (
+        <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+          <h3 className="font-bold text-primary text-base">Langues prises en charge</h3>
+          <p className="text-xs text-neutral-500">
+            La plateforme DARNA fonctionne en 3 langues officielles avec support RTL complet pour l'arabe.
+          </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40">
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-xs text-primary">Français (FR)</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary/15 text-secondary">
+                  Source de vérité
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-secondary">100% traduit</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40">
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-xs text-primary">العربية (AR)</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                  RTL complet
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-secondary">100% traduit</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40">
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-xs text-primary">English (EN)</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600">
+                  International
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-secondary">100% traduit</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications */}
+      {activeTab === "notifications" && (
+        <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+          <h3 className="font-bold text-primary text-base">Canaux de notification</h3>
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+              <div>
+                <span className="font-bold text-xs text-primary block">Alertes par email</span>
+                <span className="text-[11px] text-neutral-400">Pour chaque nouvelle demande de validation</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={emailAlerts}
+                onChange={(e) => setEmailAlerts(e.target.checked)}
+                className="w-4 h-4 text-secondary rounded cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+              <div>
+                <span className="font-bold text-xs text-primary block">Notifications SMS urgentes</span>
+                <span className="text-[11px] text-neutral-400">Pour les litiges critiques et incidents de sécurité</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={smsAlerts}
+                onChange={(e) => setSmsAlerts(e.target.checked)}
+                className="w-4 h-4 text-secondary rounded cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <span className="font-bold text-xs text-primary block">Alertes temps réel dans le panneau</span>
+                <span className="text-[11px] text-neutral-400">Cloche de notification et badges de comptage</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={instantBookingNotifications}
+                onChange={(e) => setInstantBookingNotifications(e.target.checked)}
+                className="w-4 h-4 text-secondary rounded cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Security */}
+      {activeTab === "security" && (
+        <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+          <h3 className="font-bold text-primary text-base">Politique de sécurité</h3>
+
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-primary mb-1">
-                {t("sessionTimeout")}
+                Délai d'expiration de session administrateur (minutes)
               </label>
               <input
                 type="number"
-                min={15}
-                max={1440}
+                min="15"
+                max="480"
                 value={sessionTimeoutMinutes}
                 onChange={(e) => setSessionTimeoutMinutes(Number(e.target.value))}
-                className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+                className="w-32 text-xs rounded-xl border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
               />
-              <p className="text-[10px] text-neutral-400 mt-1">
-                {locale === "ar"
-                  ? "تنتهي صلاحية ملف تعريف الارتباط الآمن تلقائياً بعد فترة الخمول المحددة."
-                  : locale === "fr"
-                  ? "Le cookie sécurisé expire automatiquement après la durée d'inactivité spécifiée."
-                  : "Signed HTTP-only cookie automatically expires after inactive duration."}
-              </p>
             </div>
 
-            <div className="p-3.5 rounded-xl border border-tertiary/60 bg-darnaBg/30 flex items-center justify-between">
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
               <div>
-                <h4 className="text-xs font-bold text-primary">{t("twoFactor")}</h4>
-                <p className="text-[10px] text-neutral-500 mt-0.5">
-                  {locale === "ar"
-                    ? "طلب رمز المصادقة الثنائية TOTP عند تسجيل دخول الموظفين."
-                    : locale === "fr"
-                    ? "Exiger un jeton TOTP d'authentificateur lors de la connexion du personnel."
-                    : "Require authenticator TOTP token on staff login."}
-                </p>
+                <span className="font-bold text-xs text-primary block">Authentification à deux facteurs (2FA)</span>
+                <span className="text-[11px] text-neutral-400">Obligatoire pour les rôles Super Administrateur</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -231,38 +310,7 @@ export default function SettingsClient({ locale }: Props) {
             </div>
           </div>
         </div>
-
-        {/* Active Admin Profile */}
-        <div className="bg-white p-5 rounded-2xl border border-tertiary/70 shadow-2xs space-y-3">
-          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
-            <User className="w-4 h-4 text-secondary" />
-            <span>
-              {locale === "ar" ? "ملف الجلسة النشطة" : locale === "fr" ? "Profil de session active" : "Active Session Profile"}
-            </span>
-          </h3>
-
-          <div className="p-3.5 rounded-xl border border-tertiary/60 bg-darnaBg/20 text-xs space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-neutral-500">
-                {locale === "ar" ? "المسؤول المسجل:" : locale === "fr" ? "Administrateur connecté :" : "Logged in Administrator:"}
-              </span>
-              <span className="font-bold text-primary">Amine Admin (adm_01)</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">
-                {locale === "ar" ? "مستوى التصريح الأمني:" : locale === "fr" ? "Niveau d'habilitation :" : "Security Clearance:"}
-              </span>
-              <span className="font-mono text-secondary font-semibold capitalize">{tRoles("super_admin")}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">
-                {locale === "ar" ? "نوع جلسة الأمان:" : locale === "fr" ? "Type de session sécurisée :" : "Session Cookie Type:"}
-              </span>
-              <span className="font-mono text-neutral-600">Signed JWT (jose) · httpOnly · SameSite=Strict</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

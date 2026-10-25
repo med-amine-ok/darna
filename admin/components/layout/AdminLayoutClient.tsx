@@ -92,8 +92,8 @@ function AdminLayoutInner({
           onToggleTrainingMode={handleToggleTrainingMode}
         />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 md:ms-64 [aside.w-20_+_&]:md:ms-20">
+        {/* Main Content Area: Offset by 218px on desktop, full-width content area */}
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 md:ms-[218px] [aside.w-20_+_&]:md:ms-20">
           <Header
             currentUser={currentUser}
             onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
@@ -105,7 +105,7 @@ function AdminLayoutInner({
             onToggleTrainingMode={handleToggleTrainingMode}
           />
 
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-in fade-in">
+          <main className="flex-1 p-4 sm:p-6 w-full animate-in fade-in">
             {children}
           </main>
         </div>

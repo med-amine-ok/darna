@@ -242,7 +242,7 @@ export function generateSeedData() {
   // 3. Generate ≥ 420 Listings
   const listings: Listing[] = [];
   const propertySubtypes = [
-    "Mediterranean Seaside Villa", "Historic Casbah Riad", "Saharan Oasis Ecolodge",
+    "Mediterranean Seaside Villa", "Darna Heritage House", "Saharan Oasis Ecolodge",
     "Modern Heights Apartment", "Traditional M'zab House", "Tassili Bivouac Expedition",
     "Sahara 4x4 Land Cruiser", "Roman Ruins Heritage Stay", "Corniche Luxury Penthouse",
     "Cedar Forest Mountain Chalet", "Palm Grove Desert Camp", "Gorge View Heritage Suite"

@@ -23,6 +23,7 @@ import {
   Check,
   AlertCircle,
   ShieldCheck,
+  Clock,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 import { DataTable, Column } from "@/components/data-table/DataTable";
@@ -52,6 +53,7 @@ import {
   featureListing,
   deleteListing,
   restoreListing,
+  updateListingStatus,
 } from "@/lib/data/listings";
 import ListingsMapView from "@/components/features/listings/ListingsMapView";
 
@@ -411,22 +413,41 @@ export default function ListingsClient({
                 onClick: () => setDetailListing(l),
               },
               {
-                label: l.isFeatured ? "Unfeature Listing" : "Feature on Homepage",
+                label: l.isFeatured ? (locale === "ar" ? "إلغاء التمييز" : "Unfeature Listing") : (locale === "ar" ? "تمييز في الصفحة الأولى" : "Feature on Homepage"),
                 onClick: () => handleToggleFeature(l),
               },
               {
-                label: t("approveAction"),
+                label: locale === "ar" ? "موافقة ونشر (Approved)" : locale === "en" ? "Approve Listing" : "Approuver et publier",
                 onClick: () => handleApprove(l),
-                disabled: l.status === "approved",
+                disabled: l.status === "approved" || l.status === "published",
               },
               {
-                label: "Suspend Listing",
+                label: locale === "ar" ? "تعيين قيد المراجعة (Pending)" : locale === "en" ? "Mark as Pending Review" : "Mettre en attente",
+                onClick: async () => {
+                  await updateListingStatus(l.id, "pending_review");
+                  info(locale === "ar" ? "تم وضع الإعلان قيد المراجعة" : locale === "en" ? "Listing marked pending review" : "Annonce mise en attente");
+                  fetchData();
+                },
+                disabled: l.status === "pending" || l.status === "pending_review",
+              },
+              {
+                label: locale === "ar" ? "تعليق الإعلان (Suspend)" : locale === "en" ? "Suspend Listing" : "Suspendre l'annonce",
                 onClick: () => handleSuspend(l),
                 variant: "danger",
                 disabled: l.status === "suspended",
               },
               {
-                label: "Delete Listing",
+                label: locale === "ar" ? "رفض الإعلان (Reject)" : locale === "en" ? "Reject Listing" : "Refuser l'annonce",
+                onClick: async () => {
+                  await updateListingStatus(l.id, "rejected");
+                  info(locale === "ar" ? "تم رفض الإعلان" : locale === "en" ? "Listing rejected" : "Annonce refusée");
+                  fetchData();
+                },
+                variant: "danger",
+                disabled: l.status === "rejected" || l.status === "refused",
+              },
+              {
+                label: locale === "ar" ? "حذف نهائي (Delete)" : locale === "en" ? "Delete Listing" : "Supprimer",
                 onClick: () => handleDelete(l),
                 variant: "danger",
               },
@@ -836,6 +857,57 @@ export default function ListingsClient({
                 <span className="font-bold text-secondary text-xs">
                   ~16,500 DZD (Within Normal Range)
                 </span>
+              </div>
+            </div>
+
+            {/* Price & Discounts Section (Price & Disc) */}
+            <div className="bg-[#FAF9F5] p-3.5 rounded-xl border border-tertiary/60 space-y-2">
+              <span className="text-xs font-bold text-primary block">
+                {locale === "ar" ? "تفاصيل الأسعار والخصومات (Price & Disc)" : locale === "en" ? "Pricing & Discount Rules" : "Tarification & Remises"}
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "عمولة المنصة" : "Commission DARNA"}</span>
+                  <span className="font-semibold text-secondary">12% ({locale === "ar" ? "مشمولة" : "incluse"})</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "خصم أسبوعي" : "Remise 7 jours"}</span>
+                  <span className="font-semibold text-secondary">-10% ({Math.round(detailListing.price * 7 * 0.9).toLocaleString("fr-FR")} DZD)</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "رسوم التنظيف" : "Frais de ménage"}</span>
+                  <span className="font-semibold text-primary">3 500 DZD</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "التأمين المسترد" : "Caution remboursable"}</span>
+                  <span className="font-semibold text-primary">20 000 DZD</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Time & Schedule Section (Time) */}
+            <div className="bg-[#FAF9F5] p-3.5 rounded-xl border border-tertiary/60 space-y-2">
+              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-secondary" />
+                <span>{locale === "ar" ? "المواعيد والشروط الزمنية (Time)" : locale === "en" ? "Times & Duration Rules" : "Horaires & Conditions temporelles"}</span>
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "تسجيل الوصول" : "Arrivée (Check-in)"}</span>
+                  <span className="font-medium text-primary">À partir de 15h00</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "تسجيل المغادرة" : "Départ (Check-out)"}</span>
+                  <span className="font-medium text-primary">Avant 11h00</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "الحد الأدنى للإقامة" : "Séjour minimum"}</span>
+                  <span className="font-medium text-primary">2 nuits</span>
+                </div>
+                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
+                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "سياسة الإلغاء" : "Annulation"}</span>
+                  <span className="font-medium text-secondary">Flexible (48h)</span>
+                </div>
               </div>
             </div>
 
