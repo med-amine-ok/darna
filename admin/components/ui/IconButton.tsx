@@ -37,8 +37,8 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
     };
 
     const sizeStyles = {
-      sm: "w-8 h-8 p-1.5",
-      md: "w-9 h-9 p-2",
+      sm: "w-11 h-11 sm:w-8 sm:h-8 p-1.5 sm:p-1.5",
+      md: "w-11 h-11 sm:w-9 sm:h-9 p-2 sm:p-2",
       lg: "w-11 h-11 p-2.5",
     };
 

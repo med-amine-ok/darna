@@ -69,11 +69,11 @@ export const ReviewChecklist: React.FC<ReviewChecklistProps> = ({
                 <button
                   type="button"
                   onClick={item.onInspect}
-                  className="p-1 rounded-lg text-neutral-400 hover:text-primary hover:bg-neutral-200/60 transition cursor-pointer"
+                  className="w-11 h-11 flex items-center justify-center rounded-xl text-neutral-500 hover:text-primary hover:bg-neutral-200/60 transition cursor-pointer shrink-0"
                   title="Inspecter le document justificatif"
                   aria-label="Inspecter le document justificatif"
                 >
-                  <Eye className="w-3.5 h-3.5" />
+                  <Eye className="w-4 h-4" />
                 </button>
               )}
             </div>

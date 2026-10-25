@@ -8,7 +8,8 @@ import { PageHelpDrawer } from "./PageHelpDrawer";
 import { ProductTour } from "./ProductTour";
 import { TrainingModeBanner } from "./TrainingModeBanner";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
-import { SessionPayload } from "@/lib/auth/session";
+import { MobileBottomNav } from "./MobileBottomNav";
+import type { SessionPayload } from "@/lib/auth/session";
 
 export interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -92,8 +93,8 @@ function AdminLayoutInner({
           onToggleTrainingMode={handleToggleTrainingMode}
         />
 
-        {/* Main Content Area: Offset by 218px on desktop, full-width content area */}
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 md:ms-[218px] [aside.w-20_+_&]:md:ms-20">
+        {/* Main Content Area: Offset by 218px on desktop (lg+), full-width on mobile & tablet */}
+        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ms-[218px] [aside.w-20_+_&]:lg:ms-20">
           <Header
             currentUser={currentUser}
             onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
@@ -105,10 +106,16 @@ function AdminLayoutInner({
             onToggleTrainingMode={handleToggleTrainingMode}
           />
 
-          <main className="flex-1 p-4 sm:p-6 w-full animate-in fade-in">
+          <main className="flex-1 p-3.5 sm:p-6 pb-24 lg:pb-8 w-full animate-in fade-in">
             {children}
           </main>
         </div>
+
+        {/* Mobile Bottom Navigation for phones & tablets */}
+        <MobileBottomNav
+          onOpenSidebar={() => setIsMobileSidebarOpen(true)}
+          approvalsCount={approvalsCount}
+        />
 
         {/* Command Palette */}
         <CommandPalette

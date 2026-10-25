@@ -109,10 +109,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ toast: addToast, addToast, success, error, info, warning, removeToast }}>
       {children}
 
-      {/* Floating Toasts Viewport */}
+      {/* Floating Toasts Viewport: safe-area and mobile-bottom-nav aware */}
       <div
         aria-live="polite"
-        className="fixed bottom-5 end-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"
+        className="fixed bottom-20 lg:bottom-5 start-4 end-4 sm:start-auto sm:end-5 z-50 flex flex-col gap-2.5 max-w-[calc(100vw-2rem)] sm:max-w-sm w-full pointer-events-none pb-[env(safe-area-inset-bottom)]"
       >
         <AnimatePresence>
           {toasts.map((t) => (

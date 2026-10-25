@@ -55,7 +55,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Left Side: Search + Inline Filters */}
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           {/* Search Box */}
-          <div className="relative min-w-[240px] max-w-sm flex-1">
+          <div className="relative min-w-0 w-full sm:w-auto sm:min-w-[240px] max-w-sm flex-1">
             <Search className="w-4 h-4 text-neutral-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               ref={searchInputRef}
@@ -63,7 +63,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={placeholder}
-              className="w-full text-xs bg-white rounded-xl ps-9 pe-8 py-2 border border-tertiary/70 text-primary placeholder:text-neutral-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+              className="w-full text-base sm:text-xs min-h-[44px] sm:min-h-[38px] bg-white rounded-xl ps-9 pe-8 py-2 border border-tertiary/70 text-primary placeholder:text-neutral-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
             />
             {/* Shortcut hint */}
             {!searchQuery && (

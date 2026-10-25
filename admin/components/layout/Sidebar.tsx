@@ -73,6 +73,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
     } catch {}
   }, []);
 
+  // Close mobile drawer on route change
+  useEffect(() => {
+    if (isMobileOpen && onMobileClose) {
+      onMobileClose();
+    }
+  }, [pathname, searchParams]);
+
+  // Close mobile drawer on ESC key & lock body scroll on mobile
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onMobileClose) {
+        onMobileClose();
+      }
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileOpen, onMobileClose]);
+
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
@@ -340,18 +363,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileOpen && (
         <div
           onClick={onMobileClose}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
         />
       )}
 
-      {/* Sidebar Container: Fixed ~218 px wide, full height, primary background #2E3A2F */}
+      {/* Sidebar Container: Off-canvas drawer under 1024px (lg), fixed on desktop */}
       <aside
-        className={`fixed top-0 bottom-0 start-0 z-50 bg-primary text-white flex flex-col transition-all duration-300 border-e border-[#3A493B] shadow-xl ${
-          collapsed ? "w-20" : "w-[218px]"
+        className={`fixed inset-y-0 start-0 z-50 bg-primary text-white flex flex-col h-[100dvh] transition-all duration-300 border-e border-[#3A493B] shadow-xl ${
+          collapsed ? "lg:w-20 w-[280px] max-w-[85vw]" : "w-[280px] sm:w-[260px] lg:w-[218px] max-w-[85vw]"
         } ${
           isMobileOpen
-            ? "translate-x-0"
-            : "-translate-x-full md:translate-x-0 rtl:translate-x-full md:rtl:translate-x-0"
+            ? "translate-x-0 opacity-100 visible"
+            : "-translate-x-full lg:translate-x-0 rtl:translate-x-full lg:rtl:translate-x-0 max-lg:invisible max-lg:pointer-events-none"
         }`}
       >
         {/* Brand Header */}

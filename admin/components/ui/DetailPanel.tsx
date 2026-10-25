@@ -41,7 +41,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl border border-tertiary-200/80 shadow-darna-card flex flex-col overflow-hidden max-h-[calc(100vh-100px)] ${className}`}
+      className={`bg-white rounded-none lg:rounded-2xl border-s lg:border border-tertiary-200/80 shadow-2xl lg:shadow-darna-card flex flex-col h-full lg:max-h-[calc(100vh-100px)] overflow-hidden ${className}`}
     >
       {/* Optional Header */}
       {(title || onClose) && (
@@ -63,10 +63,11 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200/70 transition cursor-pointer"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200/70 transition cursor-pointer"
                 title="Fermer"
+                aria-label="Fermer le panneau"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -106,7 +107,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
 
       {/* Sticky Footer */}
       {footer && (
-        <div className="p-3.5 border-t border-neutral-100 bg-neutral-50/70 shrink-0">
+        <div className="p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-neutral-100 bg-neutral-50/70 shrink-0">
           {footer}
         </div>
       )}

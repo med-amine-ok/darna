@@ -295,33 +295,28 @@ export default function BookingsClient({
       <PageHeader
         title="Gestion des réservations"
         subtitle="Suivez l'état des réservations, les paiements reçus et les demandes d'annulation."
-        actions={
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => {
-                addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
-              }}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
-            >
-              <Download className="w-4 h-4" />
-              <span>Exporter</span>
-            </button>
-            <button
-              onClick={() => router.push("/stats")}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Rapport</span>
-            </button>
-            <button
-              onClick={() => addToast({ title: "Création manuelle", description: "Ouvre le formulaire de réservation assistée.", variant: "info" })}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nouvelle réservation</span>
-            </button>
-          </div>
-        }
+        actions={[
+          {
+            label: "Exporter",
+            icon: <Download className="w-4 h-4" />,
+            onClick: () => {
+              addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
+            },
+            variant: "outline",
+          },
+          {
+            label: "Rapport",
+            icon: <FileText className="w-4 h-4" />,
+            onClick: () => router.push("/stats"),
+            variant: "outline",
+          },
+          {
+            label: "Nouvelle réservation",
+            icon: <Plus className="w-4 h-4" />,
+            onClick: () => addToast({ title: "Création manuelle", description: "Ouvre le formulaire de réservation assistée.", variant: "info" }),
+            variant: "primary",
+          },
+        ]}
       />
 
       {/* 2. Vertical Tabs (Mockup 11) */}

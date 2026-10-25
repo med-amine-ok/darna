@@ -23,7 +23,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           id={textareaId}
           ref={ref}
-          className={`w-full rounded-xl bg-white border text-sm text-primary placeholder:text-neutral-400 p-3 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary disabled:bg-neutral-50 disabled:text-neutral-400 ${
+          className={`w-full rounded-xl bg-white border text-base sm:text-sm text-primary placeholder:text-neutral-400 p-3 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary disabled:bg-neutral-50 disabled:text-neutral-400 ${
             error ? "border-accent focus:ring-accent/40 focus:border-accent" : "border-tertiary/70"
           } ${className}`}
           rows={3}

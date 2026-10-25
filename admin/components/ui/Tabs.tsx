@@ -50,7 +50,7 @@ export const Tabs: React.FC<TabsProps> = ({
               role="tab"
               aria-selected={isActive}
               onClick={() => onChange(tab.id)}
-              className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold select-none transition-colors duration-150 cursor-pointer whitespace-nowrap ${
+              className={`relative flex items-center gap-2 px-3.5 py-1.5 min-h-[44px] sm:min-h-[34px] rounded-xl text-xs font-semibold select-none transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive ? "text-primary" : "text-neutral-600 hover:text-primary hover:bg-white/40"
               }`}
             >
@@ -85,7 +85,7 @@ export const Tabs: React.FC<TabsProps> = ({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
-            className={`relative flex items-center gap-2 pb-2.5 text-xs font-semibold select-none transition-colors duration-150 cursor-pointer whitespace-nowrap ${
+            className={`relative flex items-center gap-2 px-2 pb-2.5 min-h-[44px] sm:min-h-[36px] text-xs font-semibold select-none transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
               isActive ? "text-primary border-b-2 border-primary -mb-[1px]" : "text-neutral-500 hover:text-primary"
             }`}
           >

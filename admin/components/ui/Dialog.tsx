@@ -55,7 +55,7 @@ export const Dialog: React.FC<DialogProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 text-start">
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 text-start">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -72,14 +72,14 @@ export const Dialog: React.FC<DialogProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className={`relative w-full ${widthClasses[(size as keyof typeof widthClasses) || maxWidth || "md"] || "max-w-md"} bg-white rounded-3xl shadow-darna-modal border border-tertiary/70 overflow-hidden z-10 ${className}`}
+            className={`relative w-full max-h-[calc(100dvh-2rem)] flex flex-col ${widthClasses[(size as keyof typeof widthClasses) || maxWidth || "md"] || "max-w-md"} bg-white rounded-2xl sm:rounded-3xl shadow-darna-modal border border-tertiary/70 overflow-hidden z-10 ${className}`}
           >
             {/* Header */}
             {(title || subtitle || description) && (
-              <div className="p-6 pb-4 flex items-start justify-between gap-4">
-                <div>
+              <div className="p-4 sm:p-6 pb-3 sm:pb-4 flex items-start justify-between gap-3 shrink-0">
+                <div className="min-w-0 flex-1">
                   {title && (
-                    <h3 className="text-lg font-serif font-black text-primary leading-tight">
+                    <h3 className="text-base sm:text-lg font-serif font-black text-primary leading-tight">
                       {title}
                     </h3>
                   )}
@@ -90,7 +90,7 @@ export const Dialog: React.FC<DialogProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-1.5 rounded-xl text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer"
+                  className="w-10 h-10 -me-1 -mt-1 rounded-xl flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer shrink-0"
                   aria-label="Close dialog"
                 >
                   <X className="w-5 h-5" />
@@ -99,11 +99,11 @@ export const Dialog: React.FC<DialogProps> = ({
             )}
 
             {/* Body */}
-            <div className="p-6 pt-2 space-y-4">{children}</div>
+            <div className="p-4 sm:p-6 pt-2 space-y-4 overflow-y-auto flex-1">{children}</div>
 
             {/* Footer */}
             {footer && (
-              <div className="p-4 px-6 bg-darnaBg/40 border-t border-tertiary/50 flex items-center justify-end gap-2.5">
+              <div className="p-3 sm:p-4 px-4 sm:px-6 bg-darnaBg/40 border-t border-tertiary/50 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5 shrink-0">
                 {footer}
               </div>
             )}

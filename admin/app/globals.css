@@ -22,6 +22,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Touch ergonomics & manipulation */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="tab"],
+[role="menuitem"] {
+  touch-action: manipulation;
+}
+
+/* Ensure inputs on phones never trigger Safari auto-zoom (min 16px) */
+@media screen and (max-width: 640px), screen and (max-height: 480px) and (max-width: 932px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* RTL Specific rules */
 [dir="rtl"] {
   font-family: var(--font-arabic), "Tajawal", "IBM Plex Sans Arabic", var(--font-sans), system-ui, -apple-system, sans-serif;

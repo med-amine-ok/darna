@@ -53,7 +53,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
 
   return (
     <div
-      className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 w-full ${className}`}
+      className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 w-full ${className}`}
     >
       {cardList.map((card) => {
         const isSelected =
@@ -63,7 +63,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
           if (!card.icon) return null;
           if (React.isValidElement(card.icon)) return card.icon;
           const IconComp = card.icon as React.ComponentType<{ className?: string }>;
-          return <IconComp className="w-5 h-5" />;
+          return <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />;
         };
 
         return (
@@ -74,7 +74,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
               if (card.onClick) card.onClick();
               if (onCardClick) onCardClick(card.id);
             }}
-            className={`flex items-center gap-3.5 p-3.5 rounded-2xl border text-start transition-all cursor-pointer ${
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border text-start transition-all cursor-pointer min-h-[44px] ${
               isSelected
                 ? "bg-white border-primary shadow-darna-card ring-2 ring-primary/20"
                 : "bg-white/80 border-tertiary-200/70 hover:border-tertiary-400 hover:bg-white shadow-2xs"
@@ -82,7 +82,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
           >
             {/* Icon Tile */}
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${getIconBg(
+              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 border ${getIconBg(
                 card.iconBg,
                 card.colorVariant
               )}`}
@@ -92,10 +92,10 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
 
             {/* Label & Value */}
             <div className="min-w-0 flex-1">
-              <span className="block font-mono text-lg font-bold text-primary leading-tight truncate">
+              <span className="block font-mono text-base sm:text-lg font-bold text-primary leading-tight truncate">
                 {card.value}
               </span>
-              <span className="block text-[11px] font-medium text-neutral-500 truncate leading-snug mt-0.5">
+              <span className="block text-[10px] sm:text-[11px] font-medium text-neutral-500 truncate leading-snug mt-0.5">
                 {card.label}
               </span>
             </div>

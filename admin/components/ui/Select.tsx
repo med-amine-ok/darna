@@ -30,7 +30,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={selectId}
             ref={ref}
-            className={`w-full appearance-none rounded-xl bg-white border text-sm text-primary ps-3 pe-8 py-2 shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary cursor-pointer ${
+            className={`w-full appearance-none rounded-xl bg-white border text-base sm:text-sm min-h-[44px] sm:min-h-[38px] text-primary ps-3.5 pe-9 py-2 shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary cursor-pointer ${
               error ? "border-accent focus:ring-accent" : "border-tertiary/70"
             } ${className}`}
             {...props}

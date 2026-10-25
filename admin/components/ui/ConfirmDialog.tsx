@@ -99,8 +99,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-between pt-4 border-t border-neutral-100">
-          <Button variant="outline" size="sm" onClick={handleClose} disabled={isLoading}>
+        <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-neutral-100">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClose}
+            disabled={isLoading}
+            className="min-h-[44px] justify-center"
+          >
             {cancelLabel}
           </Button>
           <Button
@@ -109,6 +115,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onClick={handleConfirm}
             isLoading={isLoading}
             disabled={!isTypedMatch || isLoading}
+            className="min-h-[44px] justify-center"
           >
             {activeConfirmLabel}
           </Button>

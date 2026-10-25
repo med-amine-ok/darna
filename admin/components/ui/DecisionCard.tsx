@@ -135,7 +135,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
             type="button"
             onClick={() => onApprove()}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-secondary hover:bg-secondary-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-secondary hover:bg-secondary-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
           >
             <Check className="w-4 h-4 stroke-[2.5]" />
             <span>Approuver et publier</span>
@@ -145,7 +145,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
             type="button"
             onClick={() => setDialogOpen("changes")}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer"
           >
             <MessageSquare className="w-3.5 h-3.5 text-neutral-500" />
             <span>Demander des modifications</span>
@@ -155,7 +155,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
             type="button"
             onClick={() => setDialogOpen("reject")}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-accent/40 text-accent hover:bg-accent/10 text-xs font-semibold transition cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-accent/40 text-accent hover:bg-accent/10 text-xs font-semibold transition cursor-pointer"
           >
             <XCircle className="w-3.5 h-3.5" />
             <span>Refuser</span>
@@ -165,8 +165,8 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
 
       {/* Reason Modal Dialog for Rejection or Request Changes */}
       {dialogOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-tertiary-200 max-w-md w-full p-5 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-tertiary-200 max-w-md w-full p-4 sm:p-5 shadow-2xl space-y-4">
             <h3 className="font-bold text-sm text-primary">
               {dialogOpen === "changes"
                 ? "Demander des modifications à l'hôte"
@@ -183,14 +183,14 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
               value={reasonInput}
               onChange={(e) => setReasonInput(e.target.value)}
               placeholder="Ex: Photos non conformes, titre de propriété manquant, descriptif incomplet..."
-              className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary resize-none"
+              className="w-full p-3 rounded-xl border border-tertiary-200 text-base sm:text-xs focus:outline-none focus:border-primary resize-none"
             />
 
-            <div className="flex items-center justify-end gap-2.5 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setDialogOpen(null)}
-                className="px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600 hover:bg-neutral-100 transition"
+                className="px-4 py-2.5 min-h-[44px] rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600 hover:bg-neutral-100 transition justify-center"
               >
                 Annuler
               </button>
@@ -198,7 +198,7 @@ export const DecisionCard: React.FC<DecisionCardProps> = ({
                 type="button"
                 onClick={handleConfirmModal}
                 disabled={!reasonInput.trim()}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition text-white ${
+                className={`px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold transition text-white justify-center ${
                   dialogOpen === "changes"
                     ? "bg-amber-600 hover:bg-amber-700"
                     : "bg-accent hover:bg-accent-700"

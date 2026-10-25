@@ -373,33 +373,28 @@ export default function ExperiencesListClient() {
       <PageHeader
         title="Gestion des expériences"
         subtitle="Supervisez les activités, excursions et ateliers proposés par les guides et agences."
-        actions={
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => {
-                addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
-              }}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
-            >
-              <Download className="w-4 h-4" />
-              <span>Exporter</span>
-            </button>
-            <button
-              onClick={() => router.push("/experiences/categories")}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
-            >
-              <Tag className="w-4 h-4" />
-              <span>Catégories</span>
-            </button>
-            <button
-              onClick={() => router.push("/experiences/new")}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Ajouter une expérience</span>
-            </button>
-          </div>
-        }
+        actions={[
+          {
+            label: "Exporter",
+            icon: <Download className="w-4 h-4" />,
+            onClick: () => {
+              addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
+            },
+            variant: "outline",
+          },
+          {
+            label: "Catégories",
+            icon: <Tag className="w-4 h-4" />,
+            onClick: () => router.push("/experiences/categories"),
+            variant: "outline",
+          },
+          {
+            label: "Ajouter une expérience",
+            icon: <Plus className="w-4 h-4" />,
+            onClick: () => router.push("/experiences/new"),
+            variant: "primary",
+          },
+        ]}
       />
 
       {/* 2. KPI Strip (Mockup 07) */}

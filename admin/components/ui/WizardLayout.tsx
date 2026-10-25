@@ -46,7 +46,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`space-y-6 pb-20 sm:pb-0 ${className}`}>
       {/* Top Navigation & Actions Bar */}
       <div>
         <a
@@ -59,11 +59,11 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-primary tracking-tight">{title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">{title}</h1>
             {subtitle && <p className="text-xs text-neutral-500 mt-0.5">{subtitle}</p>}
           </div>
 
-          <div className="flex items-center flex-wrap gap-2.5">
+          <div className="hidden sm:flex items-center flex-wrap gap-2.5">
             {lastDraftSavedAt && (
               <span className="text-[11px] text-neutral-400 font-medium me-1 hidden md:inline">
                 {lastDraftSavedAt}
@@ -75,7 +75,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
                 type="button"
                 onClick={onSaveDraft}
                 disabled={isSavingDraft}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer min-h-[44px]"
               >
                 <Save className="w-3.5 h-3.5 text-neutral-500" />
                 <span>
@@ -88,7 +88,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
               <button
                 type="button"
                 onClick={onPublish}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-secondary hover:bg-secondary-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-secondary hover:bg-secondary-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer min-h-[44px]"
               >
                 <Check className="w-4 h-4 stroke-[2.5]" />
                 <span>{publishLabel}</span>
@@ -97,7 +97,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
               <button
                 type="button"
                 onClick={onNext}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer min-h-[44px]"
               >
                 <span>Suivant</span>
                 <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
@@ -108,7 +108,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
       </div>
 
       {/* Stepper Bar */}
-      <div className="bg-white rounded-2xl border border-tertiary-200/80 px-6 py-2 shadow-xs">
+      <div className="bg-white rounded-2xl border border-tertiary-200/80 px-4 sm:px-6 py-2.5 shadow-xs">
         <Stepper
           steps={steps}
           currentStep={currentStep}
@@ -125,6 +125,41 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
         <div className="w-full xl:w-[320px] xl:shrink-0 space-y-4 xl:sticky xl:top-20">
           {rightRailContent}
         </div>
+      </div>
+
+      {/* Mobile Sticky Bottom Action Bar (< sm) */}
+      <div className="sm:hidden fixed bottom-0 start-0 end-0 z-40 bg-white/95 backdrop-blur-md border-t border-tertiary-200 p-3 shadow-lg flex items-center justify-between gap-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {onSaveDraft && (
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={isSavingDraft}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-tertiary-300 bg-white text-xs font-semibold text-neutral-700 transition min-h-[44px]"
+          >
+            <Save className="w-3.5 h-3.5 text-neutral-500" />
+            <span className="truncate">Brouillon</span>
+          </button>
+        )}
+
+        {isPublishStep ? (
+          <button
+            type="button"
+            onClick={onPublish}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-secondary text-white rounded-xl text-xs font-bold transition shadow-xs min-h-[44px]"
+          >
+            <Check className="w-4 h-4 stroke-[2.5]" />
+            <span className="truncate">{publishLabel}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onNext}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-white rounded-xl text-xs font-bold transition shadow-xs min-h-[44px]"
+          >
+            <span>Suivant</span>
+            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+          </button>
+        )}
       </div>
     </div>
   );

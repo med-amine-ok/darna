@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-10-25T17:18:29.240Z",
+  "totalRoutesChecked": 16,
+  "localesChecked": [
+    "fr",
+    "en",
+    "ar"
+  ],
+  "viewportsChecked": [
+    "phone_360 (360x640)",
+    "phone_390 (390x844)",
+    "phone_landscape (667x375)",
+    "tablet_768 (768x1024)",
+    "desktop_1280 (1280x720)"
+  ],
+  "totalFindings": 11,
+  "blockingCount": 11,
+  "warningCount": 0,
+  "findings": [
+    {
+      "type": "page_load_error",
+      "route": "/",
+      "locale": "fr",
+      "viewport": "360x640",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/stays",
+      "locale": "fr",
+      "viewport": "360x640",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr/stays\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/stays/new",
+      "locale": "fr",
+      "viewport": "360x640",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr/stays/new\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/users",
+      "locale": "fr",
+      "viewport": "360x640",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr/users\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/moderation/providers",
+      "locale": "fr",
+      "viewport": "360x640",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr/moderation/providers\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/bookings",
+      "locale": "fr",
+      "viewport": "360x640",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr/bookings\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/moderation/providers",
+      "locale": "fr",
+      "viewport": "1280x720",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/fr/moderation/providers\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/users",
+      "locale": "ar",
+      "viewport": "1280x720",
+      "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/ar/users\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/moderation/providers",
+      "locale": "ar",
+      "viewport": "1280x720",
+      "message": "page.goto: net::ERR_NETWORK_IO_SUSPENDED at http://localhost:3001/ar/moderation/providers\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/ar/moderation/providers\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/bookings",
+      "locale": "ar",
+      "viewport": "1280x720",
+      "message": "page.goto: Navigation to \"http://localhost:3001/ar/bookings\" is interrupted by another navigation to \"chrome-error://chromewebdata/\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/ar/bookings\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    },
+    {
+      "type": "page_load_error",
+      "route": "/payments",
+      "locale": "ar",
+      "viewport": "1280x720",
+      "message": "page.goto: Navigation to \"http://localhost:3001/ar/payments\" is interrupted by another navigation to \"http://localhost:3001/ar/bookings\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3001/ar/payments\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "severity": "blocking"
+    }
+  ]
+}

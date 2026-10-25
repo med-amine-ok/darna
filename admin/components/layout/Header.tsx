@@ -158,29 +158,29 @@ export const Header: React.FC<HeaderProps> = ({
   const userName = currentUser?.name || "Admin";
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-tertiary-200/80 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 shadow-2xs">
-      {/* Left: Mobile Toggle & Wide Search Field */}
-      <div className="flex items-center gap-3 flex-1 max-w-2xl">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-tertiary-200/80 px-3.5 sm:px-6 h-14 flex items-center justify-between gap-2.5 sm:gap-4 shadow-2xs shrink-0">
+      {/* Left: Mobile Toggle & Search Field */}
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-2xl">
         {/* Mobile Hamburger Button */}
         <button
           type="button"
           onClick={onMobileMenuToggle}
-          className="md:hidden p-2 rounded-xl border border-tertiary/70 text-neutral-700 hover:bg-neutral-100 transition"
+          className="lg:hidden p-2 rounded-xl border border-tertiary/70 text-neutral-700 hover:bg-neutral-100 transition shrink-0"
           aria-label="Open navigation menu"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Global Search Field matching Mockup */}
-        <form onSubmit={handleSearchSubmit} className="relative flex-1">
+        {/* Global Search Field */}
+        <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-0">
           <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-neutral-400 absolute start-3.5 pointer-events-none" />
+            <Search className="w-4 h-4 text-neutral-400 absolute start-3 pointer-events-none shrink-0" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={getPlaceholder()}
-              className="w-full ps-10 pe-16 py-2 rounded-xl bg-darnaBg/70 hover:bg-darnaBg border border-tertiary-300/80 focus:border-primary focus:bg-white focus:outline-none text-xs text-neutral-800 placeholder-neutral-400 transition shadow-2xs"
+              className="w-full ps-9 pe-10 sm:pe-16 py-1.5 sm:py-2 rounded-xl bg-darnaBg/70 hover:bg-darnaBg border border-tertiary-300/80 focus:border-primary focus:bg-white focus:outline-none text-base sm:text-xs text-neutral-800 placeholder-neutral-400 transition shadow-2xs truncate"
             />
             <button
               type="button"
@@ -195,7 +195,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right Controls: Training Mode, Language Switcher, Notifications, User Menu */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Training Mode Banner Indicator */}
         {isTrainingMode && (
           <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#C96F4F]/15 border border-[#C96F4F]/30 text-[#C96F4F] text-[11px] font-bold">
@@ -210,8 +210,10 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         )}
 
-        {/* Language Switcher */}
-        <LocaleSwitcher />
+        {/* Language Switcher - hidden on mobile, placed inside avatar menu */}
+        <div className="hidden sm:block">
+          <LocaleSwitcher />
+        </div>
 
         {/* Notification Bell with Count Badge */}
         <div className="relative">
@@ -293,6 +295,14 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="px-3 py-2 border-b border-neutral-100">
                 <p className="text-xs font-bold text-primary">{userName}</p>
                 <p className="text-[10px] text-secondary font-semibold">{roleName}</p>
+              </div>
+
+              {/* Language Switcher for mobile (< 640px) */}
+              <div className="sm:hidden px-3 py-2 border-b border-neutral-100 flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-neutral-500">
+                  {locale === "ar" ? "اللغة" : locale === "en" ? "Language" : "Langue"}
+                </span>
+                <LocaleSwitcher />
               </div>
 
               <Link
