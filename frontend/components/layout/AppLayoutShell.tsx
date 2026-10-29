@@ -29,17 +29,17 @@ export default function AppLayoutShell({
 
   // 2. Host Messages handles its own full-viewport app layout (HostLayoutShell)
   if (isHostMessages) {
-    return <div className="h-[100dvh] flex flex-col overflow-hidden bg-white">{children}</div>;
+    return <div id="main-content" className="h-[100dvh] flex flex-col overflow-hidden bg-white">{children}</div>;
   }
 
   // 3. General Host mode handles its own layout (HostNavbar + HostBottomNav)
   if (isHost) {
-    return <div className="min-h-[100dvh] flex flex-col">{children}</div>;
+    return <div id="main-content" className="min-h-[100dvh] flex flex-col">{children}</div>;
   }
 
   // 3. Become a Host onboarding flow handles its own sticky header and progress bar
   if (isBecomeHost) {
-    return <div className="min-h-[100dvh] flex flex-col">{children}</div>;
+    return <div id="main-content" className="min-h-[100dvh] flex flex-col">{children}</div>;
   }
 
   // 4. Messages: Compact Navbar at top, NO marketing footer, full viewport app-like layout
@@ -47,7 +47,7 @@ export default function AppLayoutShell({
     return (
       <div className="h-[100dvh] flex flex-col overflow-hidden bg-darnaBg">
         <Navbar currentUser={currentUser} isHero={false} />
-        <div className="flex-1 flex flex-col overflow-hidden">{children}</div>
+        <main id="main-content" className="flex-1 flex flex-col overflow-hidden">{children}</main>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export default function AppLayoutShell({
   return (
     <div className="min-h-[100dvh] flex flex-col bg-darnaBg">
       <Navbar currentUser={currentUser} isHero={isHome} />
-      <div className="flex-1 flex flex-col">{children}</div>
+      <main id="main-content" className="flex-1 flex flex-col">{children}</main>
       <Footer />
       <BottomNav currentUser={currentUser} />
     </div>

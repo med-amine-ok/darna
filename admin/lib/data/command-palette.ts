@@ -1,14 +1,9 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
+import type { CommandPaletteResult } from "@/lib/types";
 
-export interface CommandPaletteResult {
-  id: string;
-  type: "host" | "listing" | "user" | "booking" | "review" | "action";
-  title: string;
-  subtitle: string;
-  href: string;
-  badge?: string;
-}
+export type { CommandPaletteResult } from "@/lib/types";
 
 export async function searchGlobalCommandPalette(query: string): Promise<CommandPaletteResult[]> {
   const q = query.trim().toLowerCase();
@@ -18,8 +13,8 @@ export async function searchGlobalCommandPalette(query: string): Promise<Command
       { id: "act_approvals", type: "action", title: "Go to Moderation Approvals", subtitle: "Review pending hosts & listings", href: "/approvals", badge: "Inbox" },
       { id: "act_network", type: "action", title: "Open Network Explorer", subtitle: "Search marketplace with guest filters", href: "/network", badge: "Explore" },
       { id: "act_hosts", type: "action", title: "Browse Hosts & Partners", subtitle: "4 categories, wilaya and price filters", href: "/hosts", badge: "Partners" },
-      { id: "act_finance", type: "action", title: "Manage Host Wallets & Ledger", subtitle: "Ledger, commissions, payouts", href: "/finance", badge: "Finance" },
-      { id: "act_onboarding", type: "action", title: "Configure Onboarding Flows", subtitle: "Step builder & field editor", href: "/onboarding", badge: "Config" },
+      { id: "act_finance", type: "action", title: "Manage Host Wallets & Ledger", subtitle: "Ledger, commissions, payouts", href: "/payments", badge: "Finance" },
+      { id: "act_onboarding", type: "action", title: "Configure Onboarding Flows", subtitle: "Step builder & field editor", href: "/settings/onboarding", badge: "Config" },
     ];
   }
 

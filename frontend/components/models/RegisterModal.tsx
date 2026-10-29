@@ -7,6 +7,7 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { BrandGoogleIcon, BrandGithubIcon } from "@/components/icons";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
+import { useActionError } from "@/hook/useActionError";
 
 import Button from "@/components/Button";
 import Heading from "@/components/Heading";
@@ -15,9 +16,11 @@ import Modal from "./Modal";
 import Logo from "@/components/navbar/Logo";
 
 export default function RegisterModal() {
-  const registerModal = useRegisterModal();
-  const loginModal = useLoginModal();
-  const tNav = useTranslations("nav");
+  const openLogin = useLoginModal((s) => s.onOpen);
+  const isRegisterOpen = useRegisterModal((s) => s.isOpen);
+  const closeRegister = useRegisterModal((s) => s.onClose);
+  const t = useTranslations("modals.register");
+  const errorText = useActionError();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -45,49 +48,32 @@ export default function RegisterModal() {
         }),
       });
 
+      const result = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error("Registration failed");
+        toast.error(errorText(result, t("genericError")));
+        return;
       }
 
-      const result = await res.json();
-      const userName = result.user?.name || data.name || "Traveler";
-      toast.success(`Account created! Welcome to DARNA, ${userName}!`);
-      registerModal.onClose();
+      const userName = typeof result.user?.name === "string" ? result.user.name : data.name;
+      toast.success(userName ? t("welcomeName", { name: userName }) : t("success"));
+      closeRegister();
       window.location.reload();
     } catch {
-      toast.error("Could not create account. Please try again.");
+      toast.error(t("genericError"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOAuthRegister = async (provider: string) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `${provider} Traveler`,
-          email: `traveler.${provider.toLowerCase()}@darna.dz`,
-        }),
-      });
-      if (res.ok) {
-        toast.success(`Account registered via ${provider}!`);
-        registerModal.onClose();
-        window.location.reload();
-      }
-    } catch {
-      toast.error(`Could not sign up with ${provider}`);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleOAuthRegister = (provider: string) => {
+    // Social sign-up is not available yet in the mock backend.
+    toast.info(t("oauthComingSoon", { provider }));
   };
 
   const toggle = useCallback(() => {
-    registerModal.onClose();
-    loginModal.onOpen();
-  }, [loginModal, registerModal]);
+    closeRegister();
+    openLogin();
+  }, [closeRegister, openLogin]);
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
@@ -95,13 +81,14 @@ export default function RegisterModal() {
         <Logo variant="vertical" interactive={false} />
       </div>
       <Heading
-        title="Welcome to DARNA"
-        subtitle="Create an account to unlock instant bookings across Algeria"
+        title={t("title")}
+        subtitle={t("subtitle")}
         center
       />
       <Input
         id="name"
-        label="Full Name"
+        label={t("name")}
+        autoComplete="name"
         disabled={isLoading}
         register={register}
         errors={errors}
@@ -109,7 +96,9 @@ export default function RegisterModal() {
       />
       <Input
         id="email"
-        label="Email"
+        label={t("email")}
+        type="email"
+        autoComplete="email"
         disabled={isLoading}
         register={register}
         errors={errors}
@@ -118,7 +107,8 @@ export default function RegisterModal() {
       <Input
         id="password"
         type="password"
-        label="Password"
+        label={t("password")}
+        autoComplete="new-password"
         disabled={isLoading}
         register={register}
         errors={errors}
@@ -132,25 +122,26 @@ export default function RegisterModal() {
       <hr className="border-tertiary/40" />
       <Button
         outline
-        label="Continue with Google"
+        label={t("continueGoogle")}
         icon={BrandGoogleIcon}
         onClick={() => handleOAuthRegister("Google")}
       />
       <Button
         outline
-        label="Continue with GitHub"
+        label={t("continueGithub")}
         icon={BrandGithubIcon}
         onClick={() => handleOAuthRegister("GitHub")}
       />
-      <div className="text-neutral-500 text-center mt-3 font-normal text-sm">
+      <div className="text-neutral-600 text-center mt-3 font-normal text-sm">
         <div>
-          Already have an account?{" "}
-          <span
+          {t("alreadyAccount")}{" "}
+          <button
+            type="button"
             onClick={toggle}
-            className="text-primary font-semibold cursor-pointer hover:underline"
+            className="text-primary font-semibold cursor-pointer hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
-            Log in
-          </span>
+            {t("logIn")}
+          </button>
         </div>
       </div>
     </div>
@@ -159,10 +150,10 @@ export default function RegisterModal() {
   return (
     <Modal
       disabled={isLoading}
-      isOpen={registerModal.isOpen}
-      title={tNav("signUp") || "Sign up"}
-      actionLabel="Continue"
-      onClose={registerModal.onClose}
+      isOpen={isRegisterOpen}
+      title={t("modalTitle")}
+      actionLabel={t("continue")}
+      onClose={closeRegister}
       onSubmit={handleSubmit(onSubmit)}
       body={bodyContent}
       footer={footerContent}

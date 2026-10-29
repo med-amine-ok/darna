@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   Home,
   Building2,
@@ -63,6 +64,7 @@ export const TypePill: React.FC<TypePillProps> = ({
   size = "md",
   className = "",
 }) => {
+  const t = useTranslations("uiKit.types");
   const normalized = (type || "").toLowerCase().replace(/[\s-]/g, "_");
 
   // Determine label if not provided
@@ -72,54 +74,54 @@ export const TypePill: React.FC<TypePillProps> = ({
       case "host":
       case "individual":
       case "hote":
-        return "Hôte";
+        return t("host");
       case "hotel":
-        return "Hôtel";
+        return t("hotel");
       case "hostel":
-        return "Hostel";
+        return t("hostel");
       case "travel_agency":
       case "agency":
       case "agence_voyage":
-        return "Agence voyage";
+        return t("travelAgency");
       case "experience":
       case "experience_company":
-        return "Expérience";
+        return t("experience");
       case "rental_agency":
       case "car_agency":
       case "agence_location":
-        return "Agence location";
+        return t("rentalAgency");
       case "aventure":
-        return "Aventure";
+        return t("aventure");
       case "culture":
-        return "Culture";
+        return t("culture");
       case "nature":
-        return "Nature";
+        return t("nature");
       case "gastronomie":
-        return "Gastronomie";
+        return t("gastronomie");
       case "mer":
-        return "Mer";
+        return t("mer");
       case "suv":
-        return "SUV";
+        return t("suv");
       case "citadine":
-        return "Citadine";
+        return t("citadine");
       case "berline":
-        return "Berline";
+        return t("berline");
       case "compacte":
-        return "Compacte";
+        return t("compacte");
       case "utilitaire":
-        return "Utilitaire";
+        return t("utilitaire");
       case "villa":
-        return "Villa";
+        return t("villa");
       case "appartement":
-        return "Appartement";
+        return t("appartement");
       case "maison":
-        return "Maison";
+        return t("maison");
       case "bungalow":
-        return "Bungalow";
+        return t("bungalow");
       case "chalet":
-        return "Chalet";
+        return t("chalet");
       case "studio":
-        return "Studio";
+        return t("studio");
       default:
         return type;
     }
@@ -228,7 +230,7 @@ export const TypePill: React.FC<TypePillProps> = ({
     <span
       className={`inline-flex items-center font-medium rounded-full border shadow-2xs select-none whitespace-nowrap ${styles} ${sizeStyles[size]} ${className}`}
     >
-      {icon || defaultIcon}
+      <span aria-hidden="true" className="inline-flex">{icon || defaultIcon}</span>
       <span>{getDisplayLabel()}</span>
     </span>
   );

@@ -3,20 +3,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Sparkles,
-  Plus,
   Trash2,
-  Calendar,
-  Percent,
   CheckCircle,
-  XCircle,
   Tag,
   Copy,
   Users,
-  Download,
   Flame,
-  Award,
-  Eye,
   PlusCircle,
 } from "lucide-react";
 import {
@@ -24,8 +16,10 @@ import {
   createPromotion,
   togglePromotionStatus,
   deletePromotion,
-} from "@/lib/data/promotions";
-import { PromotionCoupon, HostType, ListingVertical } from "@/lib/types";
+} from "@/lib/actions/promotions";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
+import { PromotionCoupon } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip } from "@/components/ui/KpiStrip";
 import { Tabs } from "@/components/ui/Tabs";
@@ -33,12 +27,25 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
-import { formatDzd, formatDate } from "@/lib/utils/format";
+import { formatDzd, formatDate, formatNumber } from "@/lib/utils/format";
 
 export interface PromotionsClientProps {
   locale: string;
   initialTab?: "coupons" | "featured";
 }
+
+const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+const FIELD =
+  "w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600";
+
+// Mock featured placements (titles are listing data; labels are translated at render time).
+const FEATURED_PLACEMENTS = [
+  { id: "f1", title: "Villa Hydra avec piscine", badgeKey: "featured", placeKey: "homeHeader", until: "2024-04-30", clicks: 1240 },
+  { id: "f2", title: "Circuit Tassili & Djanet 7J", badgeKey: "favorite", placeKey: "tours", until: "2024-05-15", clicks: 890 },
+  { id: "f3", title: "Hyundai Tucson 2023", badgeKey: "topRenter", placeKey: "carsCarousel", until: "2024-04-20", clicks: 640 },
+] as const;
 
 export default function PromotionsClient({
   locale,
@@ -46,6 +53,7 @@ export default function PromotionsClient({
 }: PromotionsClientProps) {
   const t = useTranslations("promotions");
   const tCommon = useTranslations("common");
+  const tStatus = useTranslations("status");
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [promotions, setPromotions] = useState<PromotionCoupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +61,7 @@ export default function PromotionsClient({
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState(false);
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage");
   const [discountValue, setDiscountValue] = useState(15);
   const [minSpend, setMinSpend] = useState(10000);
@@ -64,43 +73,50 @@ export default function PromotionsClient({
   const [promoToDelete, setPromoToDelete] = useState<PromotionCoupon | null>(null);
 
   const { success, error, info } = useToast();
+  const can = useCan();
+  const canManage = can("promotions.manage");
+
+  const statusLabel = (status: PromotionCoupon["status"]) =>
+    status === "expired" ? t("expired") : tStatus(status);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const list = await listPromotions();
+      const list = unwrap(await listPromotions());
       setPromotions(list);
-    } catch (err: any) {
-      error("Erreur de chargement", err.message);
+    } catch (err) {
+      error(t("toast.loadFailed"), errMsg(err));
     } finally {
       setLoading(false);
     }
-  }, [error]);
+  }, [error, t]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const handleToggle = async (p: PromotionCoupon) => {
-    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
-      const updated = await togglePromotionStatus(p.id, actor);
-      success("Statut mis à jour", `Le code ${p.code} est désormais ${updated.status}`);
+      const updated = unwrap(await togglePromotionStatus(p.id));
+      success(
+        t("toast.statusUpdated"),
+        t("toast.statusUpdatedDesc", { code: p.code, status: statusLabel(updated.status) })
+      );
       loadData();
-    } catch (err: any) {
-      error("Échec de la mise à jour", err.message);
+    } catch (err) {
+      error(t("toast.updateFailed"), errMsg(err));
     }
   };
 
   const handleCreate = async () => {
     if (!code.trim()) {
-      error("Code manquant", "Veuillez saisir un code promotionnel.");
+      setCodeError(true);
+      error(t("toast.codeMissing"), t("form.codeMissing"));
       return;
     }
 
-    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
-      await createPromotion(
+      unwrap(await createPromotion(
         {
           code: code.trim().toUpperCase(),
           discountType,
@@ -109,40 +125,38 @@ export default function PromotionsClient({
           maxUses,
           status: "active",
           expiresAt: new Date(expiresAt).toISOString(),
-        },
-        actor
-      );
-      success("Code promo créé avec succès");
+        }
+      ));
+      success(t("toast.created"));
       setModalOpen(false);
       setCode("");
+      setCodeError(false);
       loadData();
-    } catch (err: any) {
-      error("Création échouée", err.message);
+    } catch (err) {
+      error(t("toast.createFailed"), errMsg(err));
     }
   };
 
   const handleDelete = async () => {
     if (!promoToDelete) return;
-    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
-      await deletePromotion(promoToDelete.id, actor);
-      success("Code promo supprimé");
+      unwrap(await deletePromotion(promoToDelete.id));
+      success(t("toast.deleted"));
       setDeleteModalOpen(false);
       setPromoToDelete(null);
       loadData();
-    } catch (err: any) {
-      error("Échec de suppression", err.message);
+    } catch (err) {
+      error(t("toast.deleteFailed"), errMsg(err));
     }
   };
 
   const activeCodesCount = promotions.filter((p) => p.status === "active").length;
   const totalUses = promotions.reduce((acc, p) => acc + (p.currentUses || 0), 0);
-  const totalSavings = 1450000;
 
   const kpis = [
     {
       id: "all",
-      label: "Codes promo créés",
+      label: t("kpi.created"),
       value: promotions.length,
       icon: Tag,
       colorVariant: "primary" as const,
@@ -151,7 +165,7 @@ export default function PromotionsClient({
     },
     {
       id: "active",
-      label: "Codes actifs",
+      label: t("kpi.active"),
       value: activeCodesCount,
       icon: CheckCircle,
       colorVariant: "secondary" as const,
@@ -160,7 +174,7 @@ export default function PromotionsClient({
     },
     {
       id: "uses",
-      label: "Utilisations totales",
+      label: t("kpi.uses"),
       value: totalUses,
       icon: Users,
       colorVariant: "tertiary" as const,
@@ -168,7 +182,7 @@ export default function PromotionsClient({
     },
     {
       id: "featured",
-      label: "Mises en avant actives",
+      label: t("kpi.featured"),
       value: 12,
       icon: Flame,
       colorVariant: "accent" as const,
@@ -182,22 +196,22 @@ export default function PromotionsClient({
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
-        actions={[
+        actions={canManage ? [
           {
-            label: "Nouveau code promo",
-            icon: <PlusCircle className="w-4 h-4" />,
+            label: t("newCode"),
+            icon: <PlusCircle className="w-4 h-4" aria-hidden="true" />,
             variant: "primary",
             onClick: () => setModalOpen(true),
           },
-        ]}
+        ] : []}
       />
 
       <KpiStrip cards={kpis} />
 
       <Tabs
         items={[
-          { id: "coupons", label: "Codes promo", count: promotions.length, icon: <Tag className="w-4 h-4" /> },
-          { id: "featured", label: "Mises en avant (Placements)", count: 12, icon: <Flame className="w-4 h-4" /> },
+          { id: "coupons", label: t("tabCoupons"), count: promotions.length, icon: <Tag className="w-4 h-4" aria-hidden="true" /> },
+          { id: "featured", label: t("tabFeatured"), count: 12, icon: <Flame className="w-4 h-4" aria-hidden="true" /> },
         ]}
         activeId={activeTab}
         onChange={setActiveTab}
@@ -206,79 +220,108 @@ export default function PromotionsClient({
       {/* Coupons Tab */}
       {activeTab === "coupons" && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-tertiary/60 overflow-hidden shadow-2xs">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
+          <div className="bg-white rounded-2xl border border-tertiary/60 overflow-x-auto shadow-2xs">
+            <table className="w-full text-xs text-start">
+              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
                 <tr>
-                  <th className="py-3 px-4">Code</th>
-                  <th className="py-3 px-4">Réduction</th>
-                  <th className="py-3 px-4">Dépense min.</th>
-                  <th className="py-3 px-4">Utilisations</th>
-                  <th className="py-3 px-4">Expiration</th>
-                  <th className="py-3 px-4">Statut</th>
-                  <th className="py-3 px-4 text-end">Actions</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("colCode")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("colDiscount")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("colMinSpend")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("colUses")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("colExpires")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{tCommon("status")}</th>
+                  <th scope="col" className="py-3 px-4 text-end">{tCommon("actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
-                {promotions.map((p) => (
+                {loading && promotions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-neutral-500" aria-live="polite">
+                      {tCommon("loading")}
+                    </td>
+                  </tr>
+                ) : promotions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-neutral-500">
+                      {t("empty")}
+                    </td>
+                  </tr>
+                ) : (
+                  promotions.map((p) => (
                   <tr key={p.id} className="hover:bg-neutral-50/50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-primary px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200">
+                        <span dir="ltr" className="font-mono font-bold text-primary px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200">
                           {p.code}
                         </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-1 text-neutral-400 hover:text-primary"
+                          className="p-1 text-neutral-500 hover:text-primary"
+                          aria-label={t("copyCode", { code: p.code })}
+                          title={t("copyCode", { code: p.code })}
                           onClick={() => {
                             navigator.clipboard.writeText(p.code);
-                            info("Code copié dans le presse-papier");
+                            info(t("copied"));
                           }}
                         >
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                         </Button>
                       </div>
                     </td>
                     <td className="py-3 px-4 font-bold text-secondary">
-                      {p.discountType === "percentage" ? `${p.discountValue}%` : formatDzd(p.discountValue, locale)}
+                      {p.discountType === "percentage"
+                        ? `${formatNumber(p.discountValue, locale)}%`
+                        : formatDzd(p.discountValue, locale)}
                     </td>
                     <td className="py-3 px-4 font-mono text-neutral-600">
-                      {p.minSpendDzd ? formatDzd(p.minSpendDzd, locale) : "Aucun"}
+                      {p.minSpendDzd ? formatDzd(p.minSpendDzd, locale) : t("none")}
                     </td>
-                    <td className="py-3 px-4 font-mono text-neutral-700">
-                      {p.currentUses} / {p.maxUses}
+                    <td className="py-3 px-4 font-mono text-neutral-700" dir="ltr">
+                      {t("usesValue", {
+                        used: formatNumber(p.currentUses ?? 0, locale),
+                        max: p.maxUses != null ? formatNumber(p.maxUses, locale) : t("unlimited"),
+                      })}
                     </td>
                     <td className="py-3 px-4 font-mono text-neutral-500">
                       {formatDate(p.expiresAt, locale)}
                     </td>
                     <td className="py-3 px-4">
                       <button
+                        type="button"
                         onClick={() => handleToggle(p)}
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                        disabled={!canManage}
+                        aria-pressed={p.status === "active"}
+                        title={t("toggleStatus", { code: p.code })}
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer disabled:cursor-default ${FOCUS_RING} ${
                           p.status === "active"
                             ? "bg-secondary/15 text-secondary hover:bg-secondary/25"
-                            : "bg-neutral-200 text-neutral-500 hover:bg-neutral-300"
+                            : "bg-neutral-200 text-neutral-600 hover:bg-neutral-300"
                         }`}
                       >
-                        {p.status === "active" ? "Actif" : "Inactif"}
+                        {statusLabel(p.status)}
                       </button>
                     </td>
                     <td className="py-3 px-4 text-end">
+                      {canManage && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-accent hover:bg-accent/10"
+                        className="text-accent-700 hover:bg-accent/10"
+                        aria-label={t("deleteCode", { code: p.code })}
+                        title={t("deleteCode", { code: p.code })}
                         onClick={() => {
                           setPromoToDelete(p);
                           setDeleteModalOpen(true);
                         }}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                       </Button>
+                      )}
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -288,61 +331,46 @@ export default function PromotionsClient({
       {/* Featured Placements Tab */}
       {activeTab === "featured" && (
         <div className="bg-white rounded-2xl border border-tertiary/60 p-6 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-primary text-base">Mises en avant sur la page d'accueil</h3>
+              <h3 className="font-bold text-primary text-base">{t("featured.title")}</h3>
               <p className="text-xs text-neutral-500 mt-1">
-                Gérez les annonces sponsorisées ou mises en vedette par la modération.
+                {t("featured.subtitle")}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => success("Sélectionnez une annonce à promouvoir")}>
-              + Ajouter une mise en avant
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<PlusCircle className="w-4 h-4" aria-hidden="true" />}
+              onClick={() => success(t("featured.selectListing"))}
+            >
+              {t("featured.add")}
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-primary">Villa Hydra avec piscine</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
-                  En vedette
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-500">Placement : En-tête Page d'accueil · Alger</p>
-              <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
-                <span className="text-neutral-400">Jusqu'au 30 avril 2024</span>
-                <span className="font-bold text-primary">1 240 clics</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-primary">Circuit Tassili & Djanet 7J</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
-                  Coup de cœur
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-500">Placement : Rubrique Voyages Organisés</p>
-              <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
-                <span className="text-neutral-400">Jusqu'au 15 mai 2024</span>
-                <span className="font-bold text-primary">890 clics</span>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-primary">Hyundai Tucson 2023</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
-                  Top Loueur
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-500">Placement : Carrousel Voitures Populaires</p>
-              <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
-                <span className="text-neutral-400">Jusqu'au 20 avril 2024</span>
-                <span className="font-bold text-primary">640 clics</span>
-              </div>
-            </div>
-          </div>
+          <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            {FEATURED_PLACEMENTS.map((f) => (
+              <li key={f.id} className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-xs text-primary">{f.title}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
+                    {t(`featured.badge.${f.badgeKey}`)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-neutral-500">
+                  {t("featured.placement", { place: t(`featured.place.${f.placeKey}`) })}
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
+                  <span className="text-neutral-500">
+                    {t("featured.until", { date: formatDate(f.until, locale) })}
+                  </span>
+                  <span className="font-bold text-primary">
+                    {t("featured.clicks", { count: f.clicks })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -350,85 +378,112 @@ export default function PromotionsClient({
       <Dialog
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Créer un nouveau code promo"
-        description="Configurez le code, le taux de réduction et les limites d'utilisation."
+        title={t("form.title")}
+        description={t("form.description")}
       >
         <div className="space-y-4 text-xs text-start">
           <div>
-            <label className="block font-bold text-primary mb-1">Code promo (en majuscules)*</label>
+            <label htmlFor="promo-code" className="block font-bold text-primary mb-1">
+              {t("form.code")}
+              <span aria-hidden="true">*</span>
+            </label>
             <input
+              id="promo-code"
               type="text"
-              placeholder="ex: DARNA2024"
+              dir="ltr"
+              required
+              aria-required="true"
+              aria-invalid={codeError || undefined}
+              aria-describedby={codeError ? "promo-code-error" : undefined}
+              placeholder={t("form.codePlaceholder")}
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
+              onChange={(e) => {
+                setCode(e.target.value.toUpperCase());
+                if (codeError) setCodeError(false);
+              }}
+              className={`${FIELD} font-mono font-bold`}
             />
+            {codeError && (
+              <p id="promo-code-error" role="alert" className="mt-1 text-[11px] text-accent-700">
+                {t("form.codeMissing")}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-primary mb-1">Type de réduction</label>
+              <label htmlFor="promo-type" className="block font-bold text-primary mb-1">{t("form.type")}</label>
               <select
+                id="promo-type"
                 value={discountType}
-                onChange={(e) => setDiscountType(e.target.value as any)}
-                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+                onChange={(e) => setDiscountType(e.target.value as "percentage" | "fixed")}
+                className={`${FIELD} cursor-pointer`}
               >
-                <option value="percentage">Pourcentage (%)</option>
-                <option value="fixed">Montant fixe (DZD)</option>
+                <option value="percentage">{t("form.percentage")}</option>
+                <option value="fixed">{t("form.fixed")}</option>
               </select>
             </div>
             <div>
-              <label className="block font-bold text-primary mb-1">Valeur de la réduction*</label>
+              <label htmlFor="promo-value" className="block font-bold text-primary mb-1">
+                {t("form.value")}
+                <span aria-hidden="true">*</span>
+              </label>
               <input
+                id="promo-value"
                 type="number"
                 min="1"
+                required
+                aria-required="true"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(Number(e.target.value))}
-                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
+                className={`${FIELD} font-mono font-bold`}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-primary mb-1">Dépense min. (DZD)</label>
+              <label htmlFor="promo-min-spend" className="block font-bold text-primary mb-1">{t("form.minSpend")}</label>
               <input
+                id="promo-min-spend"
                 type="number"
                 min="0"
                 step="1000"
                 value={minSpend}
                 onChange={(e) => setMinSpend(Number(e.target.value))}
-                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono text-primary focus:outline-none focus:border-secondary"
+                className={`${FIELD} font-mono`}
               />
             </div>
             <div>
-              <label className="block font-bold text-primary mb-1">Nombre max. d'utilisations</label>
+              <label htmlFor="promo-max-uses" className="block font-bold text-primary mb-1">{t("form.maxUses")}</label>
               <input
+                id="promo-max-uses"
                 type="number"
                 min="1"
                 value={maxUses}
                 onChange={(e) => setMaxUses(Number(e.target.value))}
-                className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono text-primary focus:outline-none focus:border-secondary"
+                className={`${FIELD} font-mono`}
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1">Date d'expiration</label>
+            <label htmlFor="promo-expires" className="block font-bold text-primary mb-1">{t("form.expiresAt")}</label>
             <input
+              id="promo-expires"
               type="date"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
-              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+              className={`${FIELD} cursor-pointer`}
             />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
             <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Annuler
+              {tCommon("cancel")}
             </Button>
             <Button variant="primary" onClick={handleCreate}>
-              Créer le code
+              {t("form.submit")}
             </Button>
           </div>
         </div>
@@ -439,10 +494,10 @@ export default function PromotionsClient({
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDelete}
-        title="Supprimer le code promotionnel"
-        description={`Êtes-vous sûr de vouloir supprimer le code ${promoToDelete?.code} ? Cette action est irréversible.`}
+        title={t("deleteTitle")}
+        description={t("deleteDesc", { code: promoToDelete?.code ?? "" })}
         variant="danger"
-        confirmLabel="Supprimer"
+        confirmLabel={tCommon("delete")}
       />
     </div>
   );

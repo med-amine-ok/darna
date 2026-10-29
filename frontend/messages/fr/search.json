@@ -1,0 +1,180 @@
+{
+  "price": "Prix",
+  "instantBook": "Réservation instantanée",
+  "apply": "Appliquer",
+  "minPrice": "Prix min.",
+  "maxPrice": "Prix max.",
+  "perNight": "par nuit",
+  "clearAllFilters": "Effacer tous les filtres",
+  "showMap": "Afficher la carte",
+  "partialAvailabilityBadge": "Disponible du {range} dans vos dates",
+  "anywhereInAlgeria": "Partout en Algérie",
+  "popularDestinations": "Destinations populaires en Algérie",
+  "matchingDestinations": "Destinations correspondantes",
+  "popularInAlgeria": "Populaire en Algérie",
+  "noDestinationsFound": "Aucune destination ne correspond à « {query} »",
+  "destinationMeta": "{tag} · Wilaya {wilaya}",
+  "selectDates": "Choisir les dates",
+  "clearDates": "Effacer les dates",
+  "done": "Terminé",
+  "guestCount": "{count, plural, one {# voyageur} other {# voyageurs}}",
+  "passengerCount": "{count, plural, one {# passager} other {# passagers}}",
+  "destinations": {
+    "algiers": {
+      "name": "Alger",
+      "tag": "Casbah historique & baies"
+    },
+    "oran": {
+      "name": "Oran",
+      "tag": "Fort de Santa Cruz & corniche"
+    },
+    "constantine": {
+      "name": "Constantine",
+      "tag": "La ville des ponts suspendus"
+    },
+    "tipaza": {
+      "name": "Tipaza",
+      "tag": "Ruines romaines & côte méditerranéenne"
+    },
+    "tlemcen": {
+      "name": "Tlemcen",
+      "tag": "Art et architecture andalous"
+    },
+    "djanet": {
+      "name": "Djanet",
+      "tag": "Art rupestre du Tassili n'Ajjer & dunes"
+    },
+    "taghit": {
+      "name": "Taghit",
+      "tag": "Oasis du Grand Erg occidental"
+    },
+    "ghardaia": {
+      "name": "Ghardaïa",
+      "tag": "Ksour de la vallée du M'zab (UNESCO)"
+    },
+    "bejaia": {
+      "name": "Béjaïa",
+      "tag": "Cap Carbon & falaises de Gouraya"
+    },
+    "annaba": {
+      "name": "Annaba",
+      "tag": "Basilique Saint-Augustin & plages"
+    }
+  },
+  "modal": {
+    "title": "Rechercher sur DARNA",
+    "whereTitle": "Où souhaitez-vous aller ?",
+    "whereSubtitle": "Explorez les plus belles wilayas, villas côtières ou escapades dans le désert",
+    "destinationPlaceholder": "Rechercher une destination (ex. Tipaza, Alger, Djanet)…",
+    "whenTitle": "Quand partez-vous ?",
+    "whenSubtitle": "Choisissez les dates de votre séjour, expérience ou location de véhicule",
+    "whoTitle": "Qui vient ?",
+    "whoSubtitle": "Ajoutez les voyageurs ou passagers",
+    "guests": "Voyageurs",
+    "guestsSubtitle": "Adultes et enfants",
+    "rooms": "Chambres / espaces",
+    "roomsSubtitle": "Combien de chambres ou pièces séparées ?",
+    "bathrooms": "Salles de bain",
+    "bathroomsSubtitle": "Nombre minimum de salles de bain"
+  },
+  "bar": {
+    "home": {
+      "whereTitle": "Où",
+      "wherePlaceholder": "Rechercher une destination",
+      "whenTitle": "Quand",
+      "whenPlaceholder": "Ajouter des dates",
+      "whoTitle": "Voyageurs",
+      "whoPlaceholder": "Ajouter des voyageurs",
+      "whoSubtitle": "13 ans et plus"
+    },
+    "hotel": {
+      "whereTitle": "Où",
+      "wherePlaceholder": "Ville, hôtel ou auberge",
+      "whenTitle": "Quand",
+      "whenPlaceholder": "Ajouter des dates",
+      "whoTitle": "Chambres & voyageurs",
+      "whoPlaceholder": "Ajouter chambres & voyageurs",
+      "whoSubtitle": "Chambres, adultes & enfants"
+    },
+    "vehicle": {
+      "whereTitle": "Prise en charge",
+      "wherePlaceholder": "Aéroport ou ville",
+      "whenTitle": "Dates de location",
+      "whenPlaceholder": "Dates de prise en charge et de retour",
+      "whoTitle": "Passagers",
+      "whoPlaceholder": "Places & passagers",
+      "whoSubtitle": "Nombre de places requises"
+    },
+    "experience": {
+      "whereTitle": "Région",
+      "wherePlaceholder": "Activités à…",
+      "whenTitle": "Quand",
+      "whenPlaceholder": "Date de l'expérience",
+      "whoTitle": "Taille du groupe",
+      "whoPlaceholder": "Nombre de participants",
+      "whoSubtitle": "Nombre de participants"
+    },
+    "trip": {
+      "whereTitle": "Circuit / région",
+      "wherePlaceholder": "Sahara, Atlas, côte…",
+      "whenTitle": "Dates du circuit",
+      "whenPlaceholder": "Dates de départ",
+      "whoTitle": "Voyageurs",
+      "whoPlaceholder": "Nombre de participants",
+      "whoSubtitle": "Tous âges bienvenus"
+    }
+  },
+  "loadingMap": "Chargement de la carte interactive…",
+  "algeria": "Algérie",
+  "editSearch": "Modifier la recherche",
+  "tabsLabel": "Type de séjour",
+  "tabs": {
+    "all": "Tous les séjours et locations",
+    "home": "Logements",
+    "hotel": "Hôtels / auberges",
+    "vehicle": "Véhicules 4x4",
+    "experience": "Expériences",
+    "trip": "Circuits d'agences"
+  },
+  "guestFavorites": "Coups de cœur voyageurs",
+  "heading": {
+    "tripsIn": "Circuits et expéditions d'agences à {place}, Algérie",
+    "trips": "Circuits et expéditions de plusieurs jours en Algérie",
+    "hotelsIn": "Hôtels et auberges à {place}, Algérie",
+    "hotels": "Hôtels et auberges en Algérie",
+    "staysIn": "Séjours et locations à {place}, Algérie",
+    "all": "Tous les séjours, véhicules et expériences en Algérie"
+  },
+  "count": {
+    "tripsInMap": "{count, plural, one {# circuit d'agence visible} other {# circuits d'agences visibles}} dans la zone de la carte ({total} au total)",
+    "trips": "{count, plural, =0 {Aucun circuit d'agence vérifié disponible} one {# circuit d'agence vérifié disponible} other {# circuits d'agences vérifiés disponibles}}",
+    "listingsInMap": "{count, plural, one {# annonce visible} other {# annonces visibles}} dans la zone de la carte ({total} au total)",
+    "listings": "{count, plural, =0 {Aucune annonce vérifiée disponible} one {# annonce vérifiée disponible} other {# annonces vérifiées disponibles}}"
+  },
+  "addDatesForTotal": "Ajoutez des dates pour voir le prix total",
+  "showTotalPrice": "Afficher le prix total",
+  "showTotalPriceAddDates": "Afficher le prix total (ajoutez des dates)",
+  "searchAsMapMoves": "Rechercher en déplaçant la carte",
+  "empty": {
+    "trips": "Aucun circuit d'agence dans cette zone",
+    "tripsDesc": "Dézoomez ou déplacez la carte pour découvrir des expéditions dans le Sahara, le M'zab et sur la côte.",
+    "listings": "Aucune annonce dans cette zone",
+    "listingsDesc": "Dézoomez ou déplacez la carte pour découvrir des annonces partout en Algérie."
+  },
+  "showList": "Afficher la liste",
+  "mapDialogLabel": "Carte des résultats",
+  "map": {
+    "pinLabel": "{title}, {price}",
+    "clusterLabel": "{count, plural, one {# lieu ici} other {# lieux ici}}, zoomez",
+    "previewLabel": "Lieu sélectionné",
+    "closePreview": "Fermer l'aperçu",
+    "tripDuration": "{days} j / {nights} n",
+    "verifiedAgency": "Agence vérifiée",
+    "maxGroup": "Max. {count}"
+  },
+  "meta": {
+    "title": "Rechercher séjours, expériences et véhicules en Algérie",
+    "titleIn": "Séjours et locations à {place}",
+    "description": "Comparez logements, hôtels, circuits guidés et locations de 4x4 partout en Algérie sur une carte interactive, avec des prix en DZD."
+  }
+}

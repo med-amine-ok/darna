@@ -4,6 +4,7 @@ import React from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useTranslations } from "next-intl";
 
 export interface Column<T> {
   key: string;
@@ -38,6 +39,26 @@ export interface DataTableProps<T> {
   emptyMessage?: string;
   className?: string;
   tableOnly?: boolean; // Keep as horizontal-scroll table even on mobile (e.g. dense ledger)
+  /** Accessible name of the table (rendered as a visually hidden caption). */
+  caption?: string;
+  /** Accessible label of a row, used for selection checkboxes and keyboard-activatable rows. */
+  rowLabel?: (row: T) => string;
+}
+
+function cellValue<T>(row: T, key: string): React.ReactNode {
+  return (row as Record<string, unknown>)[key] as React.ReactNode;
+}
+
+/** Enter/Space on a focused clickable row (but not on its inner controls) activates it. */
+function rowKeyHandler<T>(row: T, onRowClick?: (row: T) => void) {
+  if (!onRowClick) return undefined;
+  return (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onRowClick(row);
+    }
+  };
 }
 
 export function DataTable<T>({
@@ -60,20 +81,23 @@ export function DataTable<T>({
   emptyMessage,
   className = "",
   tableOnly = false,
+  caption,
+  rowLabel,
 }: DataTableProps<T>) {
+  const t = useTranslations("dataTable");
   const effectiveSelectedIds = selection ? selection.selectedIds : selectedIds;
   const isSelectable = !!onSelectRow || !!selection;
 
   const renderSortIcon = (colKey: string) => {
     if (sortBy !== colKey) {
       return (
-        <ArrowUpDown className="w-3 h-3 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ArrowUpDown className="w-3 h-3 text-neutral-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" aria-hidden="true" />
       );
     }
     return sortOrder === "asc" ? (
-      <ArrowUp className="w-3.5 h-3.5 text-secondary" />
+      <ArrowUp className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
     ) : (
-      <ArrowDown className="w-3.5 h-3.5 text-secondary" />
+      <ArrowDown className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
     );
   };
 
@@ -113,8 +137,8 @@ export function DataTable<T>({
           ) : data.length === 0 ? (
             <div className="p-8 text-center bg-white rounded-2xl border border-tertiary/60 shadow-xs">
               {emptyState || (
-                <p className="text-neutral-400 text-xs">
-                  {emptyMessage || "Aucun élément trouvé"}
+                <p className="text-neutral-500 text-xs">
+                  {emptyMessage || t("empty")}
                 </p>
               )}
             </div>
@@ -127,7 +151,10 @@ export function DataTable<T>({
                 <div
                   key={id}
                   onClick={() => onRowClick && onRowClick(row)}
-                  className={`p-3.5 rounded-2xl bg-white border transition-all shadow-xs relative text-start ${
+                  onKeyDown={rowKeyHandler(row, onRowClick)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  aria-label={onRowClick && rowLabel ? rowLabel(row) : undefined}
+                  className={`p-3.5 rounded-2xl bg-white border transition-all shadow-xs relative text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
                     isSelected
                       ? "border-secondary ring-2 ring-secondary/20 bg-secondary/5"
                       : "border-tertiary/60 hover:border-tertiary-400 active:scale-[0.99]"
@@ -156,19 +183,19 @@ export function DataTable<T>({
                                 onSelectRow(id);
                               }
                             }}
-                            aria-label={`Select row ${id}`}
+                            aria-label={t("selectRow", { label: rowLabel ? rowLabel(row) : id })}
                           />
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        {primaryCol.render ? primaryCol.render(row) : (row as any)[primaryCol.key]}
+                        {primaryCol.render ? primaryCol.render(row) : cellValue(row, primaryCol.key)}
                       </div>
                     </div>
 
                     {/* Status Pill on top right/end */}
                     {statusCol && (
                       <div className="shrink-0">
-                        {statusCol.render ? statusCol.render(row) : (row as any)[statusCol.key]}
+                        {statusCol.render ? statusCol.render(row) : cellValue(row, statusCol.key)}
                       </div>
                     )}
                   </div>
@@ -178,11 +205,11 @@ export function DataTable<T>({
                     <div className="grid grid-cols-2 gap-2.5 pt-2 text-xs">
                       {metricCols.slice(0, 4).map((col) => (
                         <div key={col.key} className="min-w-0">
-                          <span className="block text-[10px] font-semibold text-neutral-400 truncate">
+                          <span className="block text-[10px] font-semibold text-neutral-500 truncate">
                             {col.header}
                           </span>
                           <div className="text-xs font-medium text-neutral-700 truncate mt-0.5">
-                            {col.render ? col.render(row) : (row as any)[col.key]}
+                            {col.render ? col.render(row) : cellValue(row, col.key)}
                           </div>
                         </div>
                       ))}
@@ -195,7 +222,7 @@ export function DataTable<T>({
                       className="pt-2 mt-2 border-t border-neutral-100 flex items-center justify-end"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {actionsCol.render ? actionsCol.render(row) : (row as any)[actionsCol.key]}
+                      {actionsCol.render ? actionsCol.render(row) : cellValue(row, actionsCol.key)}
                     </div>
                   )}
                 </div>
@@ -215,15 +242,16 @@ export function DataTable<T>({
       >
         <div className="w-full overflow-x-auto darna-admin-scrollbar">
           <table className="w-full text-start border-collapse text-xs">
+            {caption && <caption className="sr-only">{caption}</caption>}
             {/* Sticky Header */}
             <thead className="bg-darnaBg/70 border-b border-tertiary/60 select-none sticky top-0 z-10 backdrop-blur-xs">
               <tr>
                 {isSelectable && (
-                  <th className="py-3 px-4 w-10 text-center">
+                  <th scope="col" className="py-3 px-4 w-10 text-center">
                     <Checkbox
                       checked={isAllSelected}
                       onChange={onSelectAll}
-                      aria-label="Select all displayed rows"
+                      aria-label={t("selectAll")}
                     />
                   </th>
                 )}
@@ -248,19 +276,22 @@ export function DataTable<T>({
                       className={`${paddingClass} font-semibold text-neutral-600 text-xs ${alignClass} ${stickyFirstCol} ${
                         col.className || ""
                       }`}
+                      scope="col"
                       aria-sort={
-                        sortBy === col.key
-                          ? sortOrder === "asc"
-                            ? "ascending"
-                            : "descending"
-                          : "none"
+                        col.sortable && onSort
+                          ? sortBy === col.key
+                            ? sortOrder === "asc"
+                              ? "ascending"
+                              : "descending"
+                            : "none"
+                          : undefined
                       }
                     >
                       {col.sortable && onSort ? (
                         <button
                           type="button"
                           onClick={() => onSort(col.key)}
-                          className="group inline-flex items-center gap-1.5 font-bold hover:text-primary transition focus:outline-none"
+                          className="group inline-flex items-center gap-1.5 font-bold hover:text-primary transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                         >
                           <span>{col.header}</span>
                           {renderSortIcon(col.key)}
@@ -298,8 +329,8 @@ export function DataTable<T>({
                     className="p-8 text-center"
                   >
                     {emptyState || (
-                      <p className="text-neutral-400 text-xs">
-                        {emptyMessage || "Aucun élément trouvé"}
+                      <p className="text-neutral-500 text-xs">
+                        {emptyMessage || t("empty")}
                       </p>
                     )}
                   </td>
@@ -314,7 +345,9 @@ export function DataTable<T>({
                     <tr
                       key={id}
                       onClick={() => onRowClick && onRowClick(row)}
-                      className={`transition-colors duration-150 ${
+                      onKeyDown={rowKeyHandler(row, onRowClick)}
+                      tabIndex={onRowClick ? 0 : undefined}
+                      className={`transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600 ${
                         onRowClick ? "cursor-pointer" : ""
                       } ${
                         isSelected
@@ -345,7 +378,7 @@ export function DataTable<T>({
                                 onSelectRow(id);
                               }
                             }}
-                            aria-label={`Select row ${id}`}
+                            aria-label={t("selectRow", { label: rowLabel ? rowLabel(row) : id })}
                           />
                         </td>
                       )}
@@ -370,7 +403,7 @@ export function DataTable<T>({
                               col.className || ""
                             }`}
                           >
-                            {col.render ? col.render(row) : (row as any)[col.key]}
+                            {col.render ? col.render(row) : cellValue(row, col.key)}
                           </td>
                         );
                       })}

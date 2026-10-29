@@ -1,6 +1,7 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { PromotionCoupon } from "@/lib/types";
+import { PromotionCoupon, AdminActor } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
 import { logAudit } from "./audit";
 
@@ -13,7 +14,7 @@ export async function listPromotions(): Promise<PromotionCoupon[]> {
 
 export async function createPromotion(
   data: Omit<PromotionCoupon, "id" | "usedCount">,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<PromotionCoupon> {
   assertCan(actor.role, "promotions.manage");
   await delay(180);
@@ -31,7 +32,7 @@ export async function createPromotion(
 
 export async function togglePromotionStatus(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<PromotionCoupon> {
   assertCan(actor.role, "promotions.manage");
   await delay(180);
@@ -58,7 +59,7 @@ export async function togglePromotionStatus(
 
 export async function deletePromotion(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<boolean> {
   assertCan(actor.role, "promotions.manage");
   await delay(180);

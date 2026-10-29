@@ -1,39 +1,30 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useId, useState, useTransition } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Home,
   Building,
-  Bed,
   Compass,
   Truck,
   Sparkles,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  RotateCcw,
   Eye,
-  SlidersHorizontal,
   Table as TableIcon,
   LayoutGrid,
   Map as MapIcon,
-  Star,
-  Check,
-  AlertCircle,
   ShieldCheck,
   Clock,
+  ArrowRight,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { FilterBar } from "@/components/data-table/FilterBar";
 import { FilterDrawer } from "@/components/data-table/FilterDrawer";
 import { ActiveFilterChips, ActiveFilterItem } from "@/components/data-table/ActiveFilterChips";
-import { BulkBar } from "@/components/data-table/BulkBar";
+import { BulkBar, type BulkAction } from "@/components/data-table/BulkBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Drawer } from "@/components/ui/Drawer";
@@ -41,26 +32,59 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RangeSlider } from "@/components/ui/RangeSlider";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { useToast } from "@/components/ui/Toast";
-import { Listing, ListingStatus, ListingVertical, PaginatedResult } from "@/lib/types";
-import { WILAYAS, getWilayaName } from "@/lib/utils/wilayas";
-import { formatDzd, formatDate } from "@/lib/utils/format";
+import { Listing, PaginatedResult } from "@/lib/types";
+import { WILAYAS, getWilayaLabel, getWilayaName } from "@/lib/utils/wilayas";
+import { formatDzd } from "@/lib/utils/format";
 import {
   listListings,
   approveListing,
-  rejectListing,
   requestChangesListing,
-  suspendListing,
   featureListing,
   deleteListing,
-  restoreListing,
-  updateListingStatus,
-} from "@/lib/data/listings";
+  exportListings,
+} from "@/lib/actions/listings";
+import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
+import { downloadCsv } from "@/lib/utils/download";
+import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { canTransitionListing } from "@/lib/domain/transitions";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import ListingsMapView from "@/components/features/listings/ListingsMapView";
 
 export interface ListingsClientProps {
   initialData: PaginatedResult<Listing>;
   initialStatus: string;
   initialVertical: string;
+}
+
+type FetchOverrides = {
+  status?: string;
+  vertical?: string;
+  search?: string;
+  selectedWilayas?: string[];
+  page?: number;
+  pageSize?: number;
+};
+
+type ChecklistKey =
+  | "photosOk"
+  | "locationAccurate"
+  | "priceReasonable"
+  | "policiesPresent"
+  | "descriptionAppropriate";
+
+const CHECKLIST_KEYS: ChecklistKey[] = [
+  "photosOk",
+  "locationAccurate",
+  "priceReasonable",
+  "policiesPresent",
+  "descriptionAppropriate",
+];
+
+const HOST_TYPE_KEYS = ["individual", "agency", "hotel", "hostel"];
+
+function errorMessage(e: unknown): string | undefined {
+  return e instanceof Error && e.message ? e.message : undefined;
 }
 
 export default function ListingsClient({
@@ -72,8 +96,12 @@ export default function ListingsClient({
   const t = useTranslations("listings");
   const tCommon = useTranslations("common");
   const tVerticals = useTranslations("verticals");
+  const tHostTypes = useTranslations("hostTypes");
+  const tActions = useTranslations("actions");
   const { success, error, info } = useToast();
+  const can = useCan();
   const [isPending, startTransition] = useTransition();
+  const revisionId = useId();
 
   // State
   const [data, setData] = useState<PaginatedResult<Listing>>(initialData);
@@ -94,7 +122,7 @@ export default function ListingsClient({
   const [detailListing, setDetailListing] = useState<Listing | null>(null);
 
   // Moderation checklist state for detail review
-  const [checklist, setChecklist] = useState({
+  const [checklist, setChecklist] = useState<Record<ChecklistKey, boolean>>({
     photosOk: true,
     locationAccurate: true,
     priceReasonable: true,
@@ -104,6 +132,7 @@ export default function ListingsClient({
 
   const [changesNote, setChangesNote] = useState("");
   const [isRequestingChanges, setIsRequestingChanges] = useState(false);
+  const [changesNoteError, setChangesNoteError] = useState(false);
 
   // Dialogs
   const [confirmState, setConfirmState] = useState<{
@@ -121,9 +150,14 @@ export default function ListingsClient({
     action: async () => {},
   });
 
-  const fetchData = async (overrideParams: Record<string, any> = {}) => {
+  const hostTypeLabel = (type: string) => (HOST_TYPE_KEYS.includes(type) ? tHostTypes(type) : type);
+  const verticalLabel = (v: string) => (tVerticals.has(v) ? tVerticals(v) : v);
+
+  const fetchData = async (overrideParams: FetchOverrides = {}) => {
     startTransition(async () => {
-      const res = await listListings({
+      let res;
+      try {
+        res = unwrap(await listListings({
         status: overrideParams.status ?? status,
         vertical: overrideParams.vertical ?? vertical,
         search: overrideParams.search ?? search,
@@ -132,7 +166,11 @@ export default function ListingsClient({
         maxPrice: priceRange[1] < 100000 ? priceRange[1] : undefined,
         page: overrideParams.page ?? currentPage,
         pageSize: overrideParams.pageSize ?? pageSize,
-      });
+      }));
+      } catch (e: unknown) {
+        error(errorMessage(e) || t("toasts.loadFailed"));
+        return;
+      }
       setData(res);
     });
   };
@@ -157,13 +195,13 @@ export default function ListingsClient({
   // Active filter chips
   const activeChips: ActiveFilterItem[] = [];
   if (vertical !== "all") {
-    activeChips.push({ key: "vertical", label: "Vertical", valueDisplay: vertical });
+    activeChips.push({ key: "vertical", label: t("vertical"), valueDisplay: verticalLabel(vertical) });
   }
   if (selectedWilayas.length > 0) {
     activeChips.push({
       key: "wilayas",
-      label: "Wilayas",
-      valueDisplay: `${selectedWilayas.length} selected`,
+      label: t("filters.wilayas"),
+      valueDisplay: t("filters.wilayasSelected", { count: selectedWilayas.length }),
     });
   }
 
@@ -196,88 +234,100 @@ export default function ListingsClient({
   const handleApprove = (listing: Listing) => {
     setConfirmState({
       isOpen: true,
-      title: `Approve Listing`,
-      description: `Publish ${listing.title} directly to the public traveler catalog.`,
+      title: t("approveAction"),
+      description: t("dialogs.approveDescription", { title: listing.title }),
       variant: "primary",
-      confirmLabel: "Approve Listing",
+      confirmLabel: t("approveAction"),
       action: async () => {
         try {
-          const updated = await approveListing(listing.id, { id: "adm_01", name: "Admin", role: "super_admin" });
-          success(`Approved listing: ${listing.title}`, undefined, () => {
-            suspendListing(listing.id, "Undo approve", { id: "adm_01", name: "Admin", role: "super_admin" }).then(() => fetchData());
-          });
+          const updated = unwrap(await approveListing(listing.id));
+          success(t("toasts.approved", { title: listing.title }));
           setDetailListing(updated);
           fetchData();
-        } catch (e: any) {
-          error(e.message || "Failed to approve listing");
+        } catch (e: unknown) {
+          error(errorMessage(e) || t("toasts.approveFailed"));
         }
       },
     });
   };
 
+  const statusActions = useListingStatusActions(() => {
+    setDetailListing(null);
+    fetchData();
+  });
+
   const handleRequestChanges = async (listing: Listing) => {
-    if (!changesNote.trim()) return;
+    if (changesNote.trim().length < 3) {
+      setChangesNoteError(true);
+      return;
+    }
     try {
-      const updated = await requestChangesListing(listing.id, changesNote, { id: "adm_01", name: "Admin", role: "super_admin" });
-      info(`Requested changes on ${listing.title}`);
+      const updated = unwrap(await requestChangesListing(listing.id, changesNote));
+      info(t("toasts.changesRequested", { title: listing.title }));
       setDetailListing(updated);
       setIsRequestingChanges(false);
       setChangesNote("");
+      setChangesNoteError(false);
       fetchData();
-    } catch (e: any) {
-      error(e.message || "Failed to request changes");
+    } catch (e: unknown) {
+      error(errorMessage(e) || t("toasts.requestChangesFailed"));
     }
   };
 
   const handleToggleFeature = async (listing: Listing) => {
     try {
-      const updated = await featureListing(listing.id, !listing.isFeatured, { id: "adm_01", name: "Admin", role: "super_admin" });
-      success(updated.isFeatured ? "Featured on homepage" : "Unfeatured listing");
+      const updated = unwrap(await featureListing(listing.id, !listing.isFeatured));
+      success(updated.isFeatured ? t("toasts.featured") : t("toasts.unfeatured"));
       setDetailListing(updated);
       fetchData();
-    } catch (e: any) {
-      error(e.message || "Failed to feature listing");
+    } catch (e: unknown) {
+      error(errorMessage(e) || t("toasts.featureFailed"));
     }
   };
 
   const handleDelete = (listing: Listing) => {
     setConfirmState({
       isOpen: true,
-      title: `Permanent Deletion Confirmation`,
-      description: `Soft-delete listing ${listing.title}. To confirm, please type the exact title below.`,
+      title: t("dialogs.deleteTitle"),
+      description: t("dialogs.deleteDescription", { title: listing.title }),
       variant: "danger",
-      confirmLabel: "Delete Listing",
+      confirmLabel: t("dialogs.deleteConfirm"),
       requireTypedConfirmation: listing.title,
       action: async () => {
         try {
-          await deleteListing(listing.id, { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Deleted listing: ${listing.title}`);
+          unwrap(await deleteListing(listing.id));
+          info(t("toasts.deleted", { title: listing.title }));
           setDetailListing(null);
           fetchData();
-        } catch (e: any) {
-          error(e.message || "Failed to delete listing");
+        } catch (e: unknown) {
+          error(errorMessage(e) || t("toasts.deleteFailed"));
         }
       },
     });
   };
 
-  const handleExportCsv = () => {
-    const headers = "ID,Title,Vertical,Host,Wilaya,Price_DZD,Status,Rating,Bookings\n";
-    const rows = data.rows
-      .map(
-        (l) =>
-          `"${l.id}","${l.title.replace(/"/g, '""')}","${l.category}","${l.hostName}","${l.wilayaCode}",${l.price},"${l.status}",${l.rating},${l.bookingsCount}`
-      )
-      .join("\n");
-    const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `DARNA-Listings-${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    success("Filtered listings CSV exported successfully");
+  // Full filtered dataset (all pages), built + audited on the server.
+  const handleExportCsv = async () => {
+    try {
+      const res = unwrap(await exportListings({
+        status,
+        vertical,
+        search,
+        wilayaCode: selectedWilayas.length > 0 ? selectedWilayas : undefined,
+        minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+        maxPrice: priceRange[1] < 100000 ? priceRange[1] : undefined,
+      }));
+      downloadCsv(res.filename, res.csv);
+      success(tActions("exportStarted"), tActions("exportRows", { count: res.rowCount }));
+    } catch (e: unknown) {
+      error(tActions("exportFailed"), errorMessage(e));
+    }
+  };
+
+  const closeDetail = () => {
+    setDetailListing(null);
+    setIsRequestingChanges(false);
+    setChangesNoteError(false);
   };
 
   const columns: Column<Listing>[] = [
@@ -290,51 +340,40 @@ export default function ListingsClient({
           <div className="relative w-12 h-10 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-tertiary/60">
             <Image
               src={l.imageSrc[0] || "/assets/house.png"}
-              alt={l.title}
+              alt=""
               fill
+              sizes="48px"
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-primary truncate leading-tight block">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailListing(l);
+                }}
+                className="font-bold text-primary truncate leading-tight block text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              >
                 {l.title}
-              </span>
+              </button>
               {l.isFeatured && (
                 <span className="text-[10px] font-bold px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded-md">
-                  Featured
+                  {t("featuredBadge")}
                 </span>
               )}
             </div>
-            <span className="block text-[11px] text-neutral-400 truncate leading-snug">
-              by {l.hostName} ({l.hostType})
+            <span className="block text-[11px] text-neutral-500 truncate leading-snug">
+              {t("byHost", { host: l.hostName, type: hostTypeLabel(l.hostType) })}
             </span>
           </div>
         </div>
       ),
     },
-    // {
-    //   key: "category",
-    //   header: t("vertical"),
-    //   render: (l) => (
-    //     <Badge
-    //       variant={
-    //         l.category === "home"
-    //           ? "primary"
-    //           : l.category === "hotel"
-    //           ? "secondary"
-    //           : l.category === "trip"
-    //           ? "accent"
-    //           : "outline"
-    //       }
-    //     >
-    //       {tVerticals.has(l.category) ? tVerticals(l.category) : l.category}
-    //     </Badge>
-    //   ),
-    // },
     {
       key: "wilayaCode",
-      header: "Wilaya",
+      header: t("columns.wilaya"),
       render: (l) => (
         <span className="font-semibold text-neutral-600">
           {getWilayaName(l.wilayaCode, locale)}
@@ -364,18 +403,19 @@ export default function ListingsClient({
     },
     {
       key: "rating",
-      header: "Rating",
+      header: t("columns.rating"),
       align: "center",
       sortable: true,
       render: (l) => (
-        <span className="font-semibold text-amber-600 tabular-nums">
-          ★ {l.rating.toFixed(1)}
+        <span className="font-semibold text-amber-700 tabular-nums">
+          <span aria-hidden="true">★ </span>
+          {l.rating.toFixed(1)}
         </span>
       ),
     },
     {
       key: "bookingsCount",
-      header: "Bookings",
+      header: t("columns.bookings"),
       align: "center",
       sortable: true,
       render: (l) => <span className="font-bold tabular-nums">{l.bookingsCount}</span>,
@@ -386,7 +426,7 @@ export default function ListingsClient({
       align: "right",
       render: (l) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          {l.status === "pending_review" ? (
+          {l.status === "pending_review" && can("listings.approve") ? (
             <Button
               variant="secondary"
               size="sm"
@@ -402,7 +442,7 @@ export default function ListingsClient({
               onClick={() => setDetailListing(l)}
               className="text-[11px] py-1 px-2 text-neutral-600"
             >
-              <Eye className="w-3.5 h-3.5 me-1" /> {tCommon("view")}
+              <Eye className="w-3.5 h-3.5 me-1" aria-hidden="true" /> {tCommon("view")}
             </Button>
           )}
 
@@ -413,43 +453,37 @@ export default function ListingsClient({
                 onClick: () => setDetailListing(l),
               },
               {
-                label: l.isFeatured ? (locale === "ar" ? "إلغاء التمييز" : "Unfeature Listing") : (locale === "ar" ? "تمييز في الصفحة الأولى" : "Feature on Homepage"),
+                label: l.isFeatured ? t("menu.unfeature") : t("menu.feature"),
                 onClick: () => handleToggleFeature(l),
+                disabled: !can("listings.feature"),
               },
               {
-                label: locale === "ar" ? "موافقة ونشر (Approved)" : locale === "en" ? "Approve Listing" : "Approuver et publier",
+                label: t("menu.approve"),
                 onClick: () => handleApprove(l),
-                disabled: l.status === "approved" || l.status === "published",
+                disabled: !statusActions.allowed(l, "approved"),
               },
               {
-                label: locale === "ar" ? "تعيين قيد المراجعة (Pending)" : locale === "en" ? "Mark as Pending Review" : "Mettre en attente",
-                onClick: async () => {
-                  await updateListingStatus(l.id, "pending_review");
-                  info(locale === "ar" ? "تم وضع الإعلان قيد المراجعة" : locale === "en" ? "Listing marked pending review" : "Annonce mise en attente");
-                  fetchData();
-                },
-                disabled: l.status === "pending" || l.status === "pending_review",
+                label: t("menu.markPending"),
+                onClick: () => statusActions.changeStatus(l, "pending_review"),
+                disabled: !statusActions.allowed(l, "pending_review"),
               },
               {
-                label: locale === "ar" ? "تعليق الإعلان (Suspend)" : locale === "en" ? "Suspend Listing" : "Suspendre l'annonce",
-                onClick: () => handleSuspend(l),
+                label: t("menu.suspend"),
+                onClick: () => statusActions.changeStatus(l, "suspended"),
                 variant: "danger",
-                disabled: l.status === "suspended",
+                disabled: !statusActions.allowed(l, "suspended"),
               },
               {
-                label: locale === "ar" ? "رفض الإعلان (Reject)" : locale === "en" ? "Reject Listing" : "Refuser l'annonce",
-                onClick: async () => {
-                  await updateListingStatus(l.id, "rejected");
-                  info(locale === "ar" ? "تم رفض الإعلان" : locale === "en" ? "Listing rejected" : "Annonce refusée");
-                  fetchData();
-                },
+                label: t("menu.reject"),
+                onClick: () => statusActions.changeStatus(l, "rejected"),
                 variant: "danger",
-                disabled: l.status === "rejected" || l.status === "refused",
+                disabled: !statusActions.allowed(l, "rejected"),
               },
               {
-                label: locale === "ar" ? "حذف نهائي (Delete)" : locale === "en" ? "Delete Listing" : "Supprimer",
+                label: t("menu.delete"),
                 onClick: () => handleDelete(l),
                 variant: "danger",
+                disabled: !statusActions.canDelete(l),
               },
             ]}
           />
@@ -458,25 +492,21 @@ export default function ListingsClient({
     },
   ];
 
-  const handleSuspend = (listing: Listing) => {
-    setConfirmState({
-      isOpen: true,
-      title: "Suspend Listing",
-      description: `Temporarily suspend ${listing.title} from catalog visibility.`,
-      variant: "danger",
-      confirmLabel: "Suspend Listing",
-      action: async () => {
-        try {
-          const updated = await suspendListing(listing.id, "Violation of quality rules", { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Suspended listing ${listing.title}`);
-          setDetailListing(updated);
-          fetchData();
-        } catch (e: any) {
-          error(e.message || "Failed to suspend listing");
-        }
-      },
-    });
+  const viewModes = [
+    { id: "table" as const, label: t("tableView"), icon: <TableIcon className="w-4 h-4" aria-hidden="true" /> },
+    { id: "grid" as const, label: t("gridView"), icon: <LayoutGrid className="w-4 h-4" aria-hidden="true" /> },
+    { id: "map" as const, label: t("mapView"), icon: <MapIcon className="w-4 h-4" aria-hidden="true" /> },
+  ];
+
+  const checklistLabels: Record<ChecklistKey, string> = {
+    photosOk: t("checklist.photosOk"),
+    locationAccurate: t("checklist.locationAccurate"),
+    priceReasonable: t("checklist.priceReasonable"),
+    policiesPresent: t("checklist.policiesPresent"),
+    descriptionAppropriate: t("checklist.descriptionAppropriate"),
   };
+
+  const revisionErrorId = `${revisionId}-error`;
 
   return (
     <div className="space-y-6 text-start">
@@ -492,37 +522,26 @@ export default function ListingsClient({
         </div>
 
         {/* View Switchers */}
-        <div className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-tertiary/70 shadow-2xs self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setViewMode("table")}
-            className={`p-1.5 rounded-xl text-xs font-bold transition ${
-              viewMode === "table" ? "bg-primary text-white shadow-2xs" : "text-neutral-500 hover:text-primary"
-            }`}
-            title={t("tableView")}
-          >
-            <TableIcon className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("grid")}
-            className={`p-1.5 rounded-xl text-xs font-bold transition ${
-              viewMode === "grid" ? "bg-primary text-white shadow-2xs" : "text-neutral-500 hover:text-primary"
-            }`}
-            title={t("gridView")}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("map")}
-            className={`p-1.5 rounded-xl text-xs font-bold transition ${
-              viewMode === "map" ? "bg-primary text-white shadow-2xs" : "text-neutral-500 hover:text-primary"
-            }`}
-            title={t("mapView")}
-          >
-            <MapIcon className="w-4 h-4" />
-          </button>
+        <div
+          role="group"
+          aria-label={t("viewModeLabel")}
+          className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-tertiary/70 shadow-2xs self-start sm:self-auto"
+        >
+          {viewModes.map((mode) => (
+            <button
+              key={mode.id}
+              type="button"
+              onClick={() => setViewMode(mode.id)}
+              aria-pressed={viewMode === mode.id}
+              aria-label={mode.label}
+              title={mode.label}
+              className={`p-1.5 rounded-xl text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+                viewMode === mode.id ? "bg-primary text-white shadow-2xs" : "text-neutral-500 hover:text-primary"
+              }`}
+            >
+              {mode.icon}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -541,22 +560,27 @@ export default function ListingsClient({
       />
 
       {/* Secondary Vertical Segmented Control */}
-      <div className="flex items-center gap-1.5 overflow-x-auto darna-admin-scrollbar py-1 text-xs">
+      <div
+        role="group"
+        aria-label={t("vertical")}
+        className="flex items-center gap-1.5 overflow-x-auto darna-admin-scrollbar py-1 text-xs"
+      >
         {[
           { id: "all", label: tCommon("all") },
-          { id: "home", label: tVerticals("home"), icon: <Home className="w-3.5 h-3.5" /> },
-          { id: "hotel", label: tVerticals("hotel"), icon: <Building className="w-3.5 h-3.5" /> },
-          { id: "experience", label: tVerticals("experience"), icon: <Sparkles className="w-3.5 h-3.5" /> },
-          { id: "vehicle", label: tVerticals("vehicle"), icon: <Truck className="w-3.5 h-3.5" /> },
-          { id: "trip", label: tVerticals("trip"), icon: <Compass className="w-3.5 h-3.5" /> },
+          { id: "home", label: tVerticals("home"), icon: <Home className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "hotel", label: tVerticals("hotel"), icon: <Building className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "experience", label: tVerticals("experience"), icon: <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "vehicle", label: tVerticals("vehicle"), icon: <Truck className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "trip", label: tVerticals("trip"), icon: <Compass className="w-3.5 h-3.5" aria-hidden="true" /> },
         ].map((v) => (
           <button
             key={v.id}
             type="button"
             onClick={() => handleVerticalChange(v.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer select-none whitespace-nowrap ${
+            aria-pressed={vertical === v.id}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer select-none whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
               vertical === v.id
-                ? "bg-secondary text-white shadow-xs"
+                ? "bg-secondary-700 text-white shadow-xs"
                 : "bg-white border border-tertiary/70 text-neutral-600 hover:bg-darnaBg"
             }`}
           >
@@ -575,7 +599,7 @@ export default function ListingsClient({
         onOpenFilterDrawer={() => setIsFilterDrawerOpen(true)}
         totalResults={data.total}
         resultsLabel={t("allTab")}
-        onExport={handleExportCsv}
+        onExport={can("reports.export") ? handleExportCsv : undefined}
       />
 
       {/* Active Filter Chips */}
@@ -608,54 +632,64 @@ export default function ListingsClient({
         />
       ) : viewMode === "grid" ? (
         /* Cards Grid View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {data.rows.map((listing) => (
-            <div
-              key={listing.id}
-              onClick={() => setDetailListing(listing)}
-              className="group rounded-3xl bg-white border border-tertiary/70 shadow-darna-card overflow-hidden hover:shadow-darna-hover transition cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative w-full h-44 bg-neutral-100 overflow-hidden">
-                  <Image
-                    src={listing.imageSrc[0] || "/assets/house.png"}
-                    alt={listing.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2.5 start-2.5">
-                    <StatusPill
-                      label={listing.status.replace("_", " ")}
-                      variant={listing.status === "approved" ? "success" : "warning"}
-                      size="sm"
+            <li key={listing.id}>
+              <button
+                type="button"
+                onClick={() => setDetailListing(listing)}
+                aria-label={t("grid.openLabel", { title: listing.title })}
+                className="group w-full h-full text-start rounded-3xl bg-white border border-tertiary/70 shadow-darna-card overflow-hidden hover:shadow-darna-hover transition cursor-pointer flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              >
+                <span className="block w-full">
+                  <span className="relative block w-full h-44 bg-neutral-100 overflow-hidden">
+                    <Image
+                      src={listing.imageSrc[0] || "/assets/house.png"}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    <span className="absolute top-2.5 start-2.5">
+                      <StatusPill
+                        status={listing.status}
+                        variant={listing.status === "approved" ? "success" : "warning"}
+                        size="sm"
+                      />
+                    </span>
+                    <span className="absolute bottom-2.5 end-2.5 font-mono font-bold text-xs bg-black/75 text-white px-2 py-0.5 rounded-md backdrop-blur-xs">
+                      {formatDzd(listing.price, locale)}
+                    </span>
                   </span>
-                  <span className="absolute bottom-2.5 end-2.5 font-mono font-bold text-xs bg-black/75 text-white px-2 py-0.5 rounded-md backdrop-blur-xs">
-                    {formatDzd(listing.price, locale)}
+
+                  <span className="block p-4 space-y-1.5">
+                    <span className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-secondary-700">{verticalLabel(listing.category)}</span>
+                      <span className="text-amber-700 font-bold">
+                        <span aria-hidden="true">★ </span>
+                        {listing.rating.toFixed(1)}
+                      </span>
+                    </span>
+                    <span className="block text-sm font-bold text-primary line-clamp-2 leading-tight">
+                      {listing.title}
+                    </span>
+                    <span className="block text-[11px] text-neutral-500">
+                      {t("cityHost", { city: listing.city, host: listing.hostName })}
+                    </span>
                   </span>
-                </div>
+                </span>
 
-                <div className="p-4 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-secondary">{listing.category.toUpperCase()}</span>
-                    <span className="text-amber-600 font-bold">★ {listing.rating.toFixed(1)}</span>
-                  </div>
-                  <h4 className="text-sm font-bold text-primary line-clamp-2 leading-tight">
-                    {listing.title}
-                  </h4>
-                  <p className="text-[11px] text-neutral-400">
-                    {listing.city} · Host: {listing.hostName}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-3 px-4 border-t border-neutral-100 flex items-center justify-between text-xs bg-darnaBg/30">
-                <span className="text-neutral-500 font-medium">{listing.bookingsCount} bookings</span>
-                <span className="font-bold text-secondary group-hover:underline">Moderate →</span>
-              </div>
-            </div>
+                <span className="w-full p-3 px-4 border-t border-neutral-100 flex items-center justify-between text-xs bg-darnaBg/30">
+                  <span className="text-neutral-500 font-medium">{t("grid.bookings", { count: listing.bookingsCount })}</span>
+                  <span className="font-bold text-secondary-700 group-hover:underline inline-flex items-center gap-1">
+                    {t("grid.moderate")}
+                    <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+                  </span>
+                </span>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
         /* Interactive Map View */
         <ListingsMapView
@@ -670,6 +704,7 @@ export default function ListingsClient({
         totalPages={data.totalPages}
         totalItems={data.total}
         pageSize={pageSize}
+        itemLabel={t("itemLabel")}
         onPageChange={(page) => {
           setCurrentPage(page);
           fetchData({ page });
@@ -686,23 +721,31 @@ export default function ListingsClient({
         selectedCount={selectedIds.length}
         totalFilteredCount={data.total}
         onClearSelection={() => setSelectedIds([])}
-        actions={[
+        actions={([
           {
             id: "bulk_approve_listings",
-            label: "Approve Selected",
+            label: t("bulk.approve"),
             variant: "secondary",
             onClick: () => {
               setConfirmState({
                 isOpen: true,
-                title: `Approve ${selectedIds.length} Listings`,
-                description: "Publish all selected properties to the live traveler catalog.",
+                title: t("bulk.approveTitle", { count: selectedIds.length }),
+                description: t("bulk.approveDescription"),
                 variant: "primary",
-                confirmLabel: "Approve Selected",
+                confirmLabel: t("bulk.approve"),
                 action: async () => {
-                  for (const id of selectedIds) {
-                    await approveListing(id, { id: "adm_01", name: "Admin", role: "super_admin" });
+                  try {
+                    for (const id of selectedIds) {
+                      const row = data.rows.find((r) => r.id === id);
+                      if (row && !canTransitionListing(row.status, "approved")) continue;
+                      unwrap(await approveListing(id));
+                    }
+                  } catch (e: unknown) {
+                    error(errorMessage(e) || t("bulk.approveFailed"));
+                    fetchData();
+                    return;
                   }
-                  success(`Bulk approved ${selectedIds.length} listings`);
+                  success(t("bulk.approved", { count: selectedIds.length }));
                   setSelectedIds([]);
                   fetchData();
                 },
@@ -711,11 +754,13 @@ export default function ListingsClient({
           },
           {
             id: "bulk_export_listings",
-            label: "Export Selected",
+            label: t("bulk.export"),
             variant: "outline",
             onClick: handleExportCsv,
           },
-        ]}
+        ] as BulkAction[])
+          .filter((a) => a.id !== "bulk_approve_listings" || can("listings.approve"))
+          .filter((a) => a.id !== "bulk_export_listings" || can("reports.export"))}
       />
 
       {/* Filter Drawer */}
@@ -726,21 +771,19 @@ export default function ListingsClient({
         onReset={handleClearAllFilters}
         onApply={() => fetchData({ page: 1 })}
       >
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-primary">Wilaya</label>
-          <MultiSelect
-            placeholder="Select provinces..."
-            options={WILAYAS.map((w) => ({
-              value: w.code,
-              label: `${w.code} - ${w.nameEn}`,
-            }))}
-            selectedValues={selectedWilayas}
-            onChange={setSelectedWilayas}
-          />
-        </div>
+        <MultiSelect
+          label={t("columns.wilaya")}
+          placeholder={t("filters.wilayaPlaceholder")}
+          options={WILAYAS.map((w) => ({
+            value: w.code,
+            label: getWilayaLabel(w, locale),
+          }))}
+          selectedValues={selectedWilayas}
+          onChange={setSelectedWilayas}
+        />
 
         <RangeSlider
-          label="Price Range (DZD)"
+          label={t("filters.priceRange")}
           min={0}
           max={100000}
           step={2500}
@@ -753,41 +796,35 @@ export default function ListingsClient({
       {detailListing && (
         <Drawer
           isOpen={!!detailListing}
-          onClose={() => {
-            setDetailListing(null);
-            setIsRequestingChanges(false);
-          }}
+          onClose={closeDetail}
           size="lg"
           title={detailListing.title}
-          subtitle={`${detailListing.propertyType} in ${detailListing.city} · ID: ${detailListing.id}`}
+          subtitle={t("detail.subtitle", {
+            type: detailListing.propertyType,
+            city: detailListing.city,
+            id: detailListing.id,
+          })}
           footer={
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setDetailListing(null);
-                  setIsRequestingChanges(false);
-                }}
-              >
-                Close
+              <Button variant="outline" size="sm" onClick={closeDetail}>
+                {tCommon("close")}
               </Button>
-              {detailListing.status === "pending_review" && (
+              {detailListing.status === "pending_review" && can("listings.approve") && (
                 <>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setIsRequestingChanges(true)}
-                    className="text-amber-700"
+                    className="text-amber-800"
                   >
-                    Request Changes
+                    {t("requestChanges")}
                   </Button>
                   <Button
                     variant="primary"
                     size="sm"
                     onClick={() => handleApprove(detailListing)}
                   >
-                    Approve Listing
+                    {t("approveAction")}
                   </Button>
                 </>
               )}
@@ -801,11 +838,12 @@ export default function ListingsClient({
                 src={detailListing.imageSrc[0] || "/assets/house.png"}
                 alt={detailListing.title}
                 fill
+                sizes="(min-width: 768px) 640px, 100vw"
                 className="object-cover"
               />
               <span className="absolute top-3 start-3">
                 <StatusPill
-                  label={detailListing.status.replace("_", " ")}
+                  status={detailListing.status}
                   variant={detailListing.status === "approved" ? "success" : "warning"}
                   size="sm"
                 />
@@ -813,100 +851,100 @@ export default function ListingsClient({
             </div>
 
             {/* Moderation Checklist */}
-            <div className="p-4 rounded-2xl bg-darnaBg/60 border border-tertiary/70 space-y-2.5">
-              <h4 className="font-bold text-primary flex items-center gap-1.5 text-xs">
-                <ShieldCheck className="w-4 h-4 text-secondary" />
-                Moderation Quality Checklist
+            <fieldset className="p-4 rounded-2xl bg-darnaBg/60 border border-tertiary/70 space-y-2.5">
+              <legend className="sr-only">{t("moderationChecklist")}</legend>
+              <h4 aria-hidden="true" className="font-bold text-primary flex items-center gap-1.5 text-xs">
+                <ShieldCheck className="w-4 h-4 text-secondary-700" aria-hidden="true" />
+                {t("moderationChecklist")}
               </h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                {[
-                  { key: "photosOk", label: "High quality realistic photos" },
-                  { key: "locationAccurate", label: "Accurate wilaya & coordinates" },
-                  { key: "priceReasonable", label: "Price sanity vs wilaya median" },
-                  { key: "policiesPresent", label: "Cancellation policies present" },
-                  { key: "descriptionAppropriate", label: "Appropriate description copy" },
-                ].map((item) => (
+                {CHECKLIST_KEYS.map((key) => (
                   <label
-                    key={item.key}
+                    key={key}
                     className="flex items-center gap-2 p-1.5 rounded-lg bg-white border border-tertiary/50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
-                      checked={(checklist as any)[item.key]}
+                      checked={checklist[key]}
                       onChange={(e) =>
-                        setChecklist({ ...checklist, [item.key]: e.target.checked })
+                        setChecklist({ ...checklist, [key]: e.target.checked })
                       }
                       className="rounded text-secondary focus:ring-secondary"
                     />
-                    <span className="text-[11px] font-medium text-primary">{item.label}</span>
+                    <span className="text-[11px] font-medium text-primary">{checklistLabels[key]}</span>
                   </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* Price Sanity Hint vs Wilaya Median */}
             <div className="p-3.5 rounded-xl bg-white border border-tertiary/60 flex items-center justify-between text-xs">
               <div>
-                <span className="text-neutral-400 block text-[11px]">Nightly Price</span>
+                <span className="text-neutral-500 block text-[11px]">{t("detail.nightlyPrice")}</span>
                 <span className="font-bold font-mono text-primary text-sm">
                   {formatDzd(detailListing.price, locale)}
                 </span>
               </div>
               <div className="text-end">
-                <span className="text-neutral-400 block text-[11px]">Wilaya Median Benchmark</span>
-                <span className="font-bold text-secondary text-xs">
-                  ~16,500 DZD (Within Normal Range)
+                <span className="text-neutral-500 block text-[11px]">{t("detail.medianBenchmark")}</span>
+                <span className="font-bold text-secondary-700 text-xs">
+                  {t("detail.medianValue", { amount: formatDzd(16500, locale) })}
                 </span>
               </div>
             </div>
 
-            {/* Price & Discounts Section (Price & Disc) */}
+            {/* Price & Discounts Section */}
             <div className="bg-[#FAF9F5] p-3.5 rounded-xl border border-tertiary/60 space-y-2">
               <span className="text-xs font-bold text-primary block">
-                {locale === "ar" ? "تفاصيل الأسعار والخصومات (Price & Disc)" : locale === "en" ? "Pricing & Discount Rules" : "Tarification & Remises"}
+                {t("detail.pricingTitle")}
               </span>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "عمولة المنصة" : "Commission DARNA"}</span>
-                  <span className="font-semibold text-secondary">12% ({locale === "ar" ? "مشمولة" : "incluse"})</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.commission")}</span>
+                  <span className="font-semibold text-secondary-700">{t("detail.commissionValue", { rate: 12 })}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "خصم أسبوعي" : "Remise 7 jours"}</span>
-                  <span className="font-semibold text-secondary">-10% ({Math.round(detailListing.price * 7 * 0.9).toLocaleString("fr-FR")} DZD)</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.weeklyDiscount")}</span>
+                  <span className="font-semibold text-secondary-700">
+                    {t("detail.weeklyDiscountValue", {
+                      rate: DISCOUNTS.weekly,
+                      amount: formatDzd(applyDiscount(detailListing.price, DISCOUNTS.weekly, 7), locale),
+                    })}
+                  </span>
                 </div>
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "رسوم التنظيف" : "Frais de ménage"}</span>
-                  <span className="font-semibold text-primary">3 500 DZD</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.cleaningFee")}</span>
+                  <span className="font-semibold text-primary">{formatDzd(3500, locale)}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "التأمين المسترد" : "Caution remboursable"}</span>
-                  <span className="font-semibold text-primary">20 000 DZD</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.deposit")}</span>
+                  <span className="font-semibold text-primary">{formatDzd(20000, locale)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Time & Schedule Section (Time) */}
+            {/* Time & Schedule Section */}
             <div className="bg-[#FAF9F5] p-3.5 rounded-xl border border-tertiary/60 space-y-2">
               <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-secondary" />
-                <span>{locale === "ar" ? "المواعيد والشروط الزمنية (Time)" : locale === "en" ? "Times & Duration Rules" : "Horaires & Conditions temporelles"}</span>
+                <Clock className="w-3.5 h-3.5 text-secondary-700" aria-hidden="true" />
+                <span>{t("detail.timesTitle")}</span>
               </span>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "تسجيل الوصول" : "Arrivée (Check-in)"}</span>
-                  <span className="font-medium text-primary">À partir de 15h00</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.checkIn")}</span>
+                  <span className="font-medium text-primary">{t("detail.checkInValue", { time: "15:00" })}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "تسجيل المغادرة" : "Départ (Check-out)"}</span>
-                  <span className="font-medium text-primary">Avant 11h00</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.checkOut")}</span>
+                  <span className="font-medium text-primary">{t("detail.checkOutValue", { time: "11:00" })}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "الحد الأدنى للإقامة" : "Séjour minimum"}</span>
-                  <span className="font-medium text-primary">2 nuits</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.minStay")}</span>
+                  <span className="font-medium text-primary">{t("detail.nights", { count: 2 })}</span>
                 </div>
                 <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-400 block text-[10px]">{locale === "ar" ? "سياسة الإلغاء" : "Annulation"}</span>
-                  <span className="font-medium text-secondary">Flexible (48h)</span>
+                  <span className="text-neutral-500 block text-[10px]">{t("detail.cancellation")}</span>
+                  <span className="font-medium text-secondary-700">{t("detail.cancellationValue", { hours: 48 })}</span>
                 </div>
               </div>
             </div>
@@ -914,20 +952,40 @@ export default function ListingsClient({
             {/* Request Changes Form */}
             {isRequestingChanges && (
               <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-3">
-                <h4 className="font-bold text-amber-900">Note to Host: Revisions Required</h4>
+                <label htmlFor={revisionId} className="block font-bold text-amber-900">
+                  {t("revision.title")}
+                </label>
                 <textarea
+                  id={revisionId}
                   rows={3}
                   value={changesNote}
-                  onChange={(e) => setChangesNote(e.target.value)}
-                  placeholder="e.g. Please upload clear photos of the bathroom and clarify the exact parking location."
-                  className="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  onChange={(e) => {
+                    setChangesNote(e.target.value);
+                    if (e.target.value.trim().length >= 3) setChangesNoteError(false);
+                  }}
+                  aria-invalid={changesNoteError || undefined}
+                  aria-describedby={changesNoteError ? revisionErrorId : undefined}
+                  placeholder={t("revision.placeholder")}
+                  className="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600"
                 />
+                {changesNoteError && (
+                  <p id={revisionErrorId} role="alert" className="text-[11px] font-medium text-accent-700">
+                    {tActions("reasonTooShort", { min: 3 })}
+                  </p>
+                )}
                 <div className="flex items-center justify-end gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setIsRequestingChanges(false)}>
-                    Cancel
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsRequestingChanges(false);
+                      setChangesNoteError(false);
+                    }}
+                  >
+                    {tCommon("cancel")}
                   </Button>
                   <Button variant="primary" size="sm" onClick={() => handleRequestChanges(detailListing)}>
-                    Send Revision Request
+                    {t("revision.send")}
                   </Button>
                 </div>
               </div>
@@ -935,23 +993,23 @@ export default function ListingsClient({
 
             {/* Description & Amenities */}
             <div className="space-y-2">
-              <h4 className="font-bold text-primary">Description</h4>
+              <h4 className="font-bold text-primary">{t("detail.description")}</h4>
               <p className="text-neutral-600 leading-relaxed">{detailListing.description}</p>
             </div>
 
             {/* Amenities tags */}
             <div className="space-y-2">
-              <h4 className="font-bold text-primary">Amenities & Inclusions</h4>
-              <div className="flex flex-wrap gap-1.5">
+              <h4 className="font-bold text-primary">{t("detail.amenities")}</h4>
+              <ul className="flex flex-wrap gap-1.5">
                 {detailListing.amenities.map((amenity, idx) => (
-                  <span
+                  <li
                     key={idx}
                     className="px-2.5 py-1 rounded-lg bg-neutral-100 text-neutral-600 font-medium text-[11px]"
                   >
                     {amenity}
-                  </span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           </div>
         </Drawer>
@@ -971,6 +1029,7 @@ export default function ListingsClient({
         confirmLabel={confirmState.confirmLabel}
         requireTypedConfirmation={confirmState.requireTypedConfirmation}
       />
+      {statusActions.dialog}
     </div>
   );
 }

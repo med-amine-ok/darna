@@ -1,72 +1,88 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useId, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "@/navigation";
-import {
-  ArrowLeft,
-  Save,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  Home,
-  MapPin,
-  Clock,
-  Sparkles,
-  Phone,
-  Mail,
-  Camera,
-  DollarSign,
-  ShieldCheck,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, ChevronRight, ChevronLeft } from "lucide-react";
 import { Stepper, StepItem } from "@/components/ui/Stepper";
 import { LivePreviewCard } from "@/components/ui/LivePreviewCard";
 import { ProgressChecklist } from "@/components/ui/ProgressChecklist";
 import { TipsCard } from "@/components/ui/TipsCard";
 import { PhoneInput } from "@/components/ui/PhoneInput";
-import { ChipInput } from "@/components/ui/ChipInput";
 import { RichTextField } from "@/components/ui/RichTextField";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { MapPicker } from "@/components/ui/MapPicker";
 import { useToast } from "@/components/ui/Toast";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatDzd, intlLocale } from "@/lib/utils/format";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
 
-const PROPERTY_TYPES = [
-  "Villa avec piscine",
-  "Appartement haut standing",
-  "Maison traditionnelle / Casbah",
-  "Bungalow bord de mer",
-  "Chalet de montagne",
-  "Studio moderne",
-  "Hôtel / Suite",
-  "Auberge de jeunesse (Hostel)",
+/** Stored values (kept as before) → translation key under `stayWizard.propertyTypes`. */
+const PROPERTY_TYPES: { value: string; key: string }[] = [
+  { value: "Villa avec piscine", key: "villaPool" },
+  { value: "Appartement haut standing", key: "luxuryApartment" },
+  { value: "Maison traditionnelle / Casbah", key: "traditionalHouse" },
+  { value: "Bungalow bord de mer", key: "beachBungalow" },
+  { value: "Chalet de montagne", key: "mountainChalet" },
+  { value: "Studio moderne", key: "modernStudio" },
+  { value: "Hôtel / Suite", key: "hotelSuite" },
+  { value: "Auberge de jeunesse (Hostel)", key: "hostel" },
 ];
 
-const AMENITIES_CATALOG = [
-  "Wifi haute vitesse",
-  "Piscine privée",
-  "Climatisation réversible",
-  "Cuisine équipée",
-  "Parking sécurisé",
-  "Télévision 4K",
-  "Lave-linge",
-  "Vue sur mer",
-  "Chauffage central",
-  "Espace de travail",
-  "Jacuzzi / Spa",
-  "Barbecue extérieur",
+/** Stored values (kept as before) → translation key under `stayWizard.amenities`. */
+const AMENITIES_CATALOG: { value: string; key: string }[] = [
+  { value: "Wifi haute vitesse", key: "wifi" },
+  { value: "Piscine privée", key: "privatePool" },
+  { value: "Climatisation réversible", key: "airConditioning" },
+  { value: "Cuisine équipée", key: "kitchen" },
+  { value: "Parking sécurisé", key: "parking" },
+  { value: "Télévision 4K", key: "tv" },
+  { value: "Lave-linge", key: "washer" },
+  { value: "Vue sur mer", key: "seaView" },
+  { value: "Chauffage central", key: "heating" },
+  { value: "Espace de travail", key: "workspace" },
+  { value: "Jacuzzi / Spa", key: "jacuzzi" },
+  { value: "Barbecue extérieur", key: "barbecue" },
 ];
+
+/** Mock host directory (names are data, the type is translated). */
+const HOSTS: { name: string; key: "individualAlgiers" | "agency" | "establishment" }[] = [
+  { name: "Ahmed Benali", key: "individualAlgiers" },
+  { name: "Immobilier Casbah SAS", key: "agency" },
+  { name: "Hôtel El Aurassi", key: "establishment" },
+];
+
+const STEP_KEYS = ["general", "location", "amenities", "photos", "pricing", "rules"] as const;
+const PROGRESS_KEYS = ["general", "locationContact", "amenities", "media", "pricing", "rules"] as const;
+const TIP_COUNTS: Record<number, number> = { 1: 3, 2: 3, 3: 2, 4: 2, 5: 2, 6: 2 };
+
+type FieldName =
+  | "title"
+  | "guestCapacity"
+  | "bedroomCount"
+  | "bathroomCount"
+  | "surfaceM2"
+  | "shortDescription"
+  | "city"
+  | "address"
+  | "email"
+  | "price";
+
+const inputBase =
+  "w-full text-xs bg-white border rounded-lg text-[#2E3A2F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
+const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function StayWizardClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
+  const t = useTranslations("stayWizard");
   const router = useRouter();
   const { addToast } = useToast();
+  const uid = useId();
+  const summaryRef = useRef<HTMLDivElement>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [draftSavedAt, setDraftSavedAt] = useState<string>("10:15");
+  const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -104,33 +120,85 @@ export default function StayWizardClient() {
     coordinates: { lat: 36.7525, lng: 3.042 },
   });
 
+  const fieldId = (name: string) => `${uid}-${name}`;
+  const errorId = (name: FieldName) => `${uid}-${name}-error`;
+  /** id + aria wiring for an input that may have a validation error. */
+  const a11y = (name: FieldName) => ({
+    id: fieldId(name),
+    "aria-invalid": errors[name] ? true : undefined,
+    "aria-describedby": errors[name] ? errorId(name) : undefined,
+  });
+  const inputClass = (name?: FieldName) =>
+    `${inputBase} ${name && errors[name] ? "border-accent-600" : "border-[#D9C9B2]"}`;
+  const fieldError = (name: FieldName) =>
+    errors[name] ? (
+      <p id={errorId(name)} className="mt-1 text-[11px] font-medium text-accent-700">
+        {errors[name]}
+      </p>
+    ) : null;
+  const required = (
+    <>
+      <span aria-hidden="true"> *</span>
+      <span className="sr-only">{t("required")}</span>
+    </>
+  );
+
   // 6 numbered steps (Mockup 08)
-  const steps: StepItem[] = [
-    { id: 1, title: "Informations générales" },
-    { id: 2, title: "Localisation" },
-    { id: 3, title: "Équipements" },
-    { id: 4, title: "Photos et description" },
-    { id: 5, title: "Tarifs et disponibilité" },
-    { id: 6, title: "Règles et validation" },
-  ];
+  const steps: StepItem[] = STEP_KEYS.map((key, i) => ({ id: i + 1, title: t(`steps.${key}`) }));
+
+  const propertyTypeLabel = (value: string) => {
+    const pt = PROPERTY_TYPES.find((p) => p.value === value);
+    return pt ? t(`propertyTypes.${pt.key}`) : value;
+  };
+  const wilayaName = (() => {
+    const w = WILAYAS.find((x) => x.code === formData.wilayaCode);
+    return w ? getWilayaLabel(w, locale) : formData.wilayaCode;
+  })();
+  const locationText = t("locationValue", { city: formData.city, wilaya: wilayaName });
+
+  const validateStep = (step: number): Partial<Record<FieldName, string>> => {
+    const e: Partial<Record<FieldName, string>> = {};
+    if (step === 1) {
+      if (!formData.title.trim()) e.title = t("errors.titleRequired");
+      if (!formData.shortDescription.trim()) e.shortDescription = t("errors.shortDescriptionRequired");
+      if (!(formData.guestCapacity >= 1)) e.guestCapacity = t("errors.min", { min: 1 });
+      if (!(formData.bedroomCount >= 1)) e.bedroomCount = t("errors.min", { min: 1 });
+      if (!(formData.bathroomCount >= 1)) e.bathroomCount = t("errors.min", { min: 1 });
+      if (!(formData.surfaceM2 >= 10)) e.surfaceM2 = t("errors.min", { min: 10 });
+    } else if (step === 2) {
+      if (!formData.city.trim()) e.city = t("errors.cityRequired");
+      if (!formData.address.trim()) e.address = t("errors.addressRequired");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) e.email = t("errors.emailInvalid");
+    } else if (step === 5) {
+      if (!(formData.price > 0)) e.price = t("errors.priceRequired");
+    }
+    return e;
+  };
 
   const handleSaveDraft = () => {
-    const time = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    const time = new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(new Date());
     setDraftSavedAt(time);
     addToast({
-      title: "Brouillon sauvegardé",
-      description: `Enregistré à ${time}. Vous pouvez reprendre à tout moment.`,
+      title: t("toasts.draftSaved"),
+      description: t("toasts.draftSavedDescription", { time }),
       variant: "info",
     });
   };
 
   const handleNext = () => {
+    const stepErrors = validateStep(currentStep);
+    setErrors(stepErrors);
+    if (Object.keys(stepErrors).length > 0) {
+      // Let the summary render, then move focus to it.
+      requestAnimationFrame(() => summaryRef.current?.focus());
+      return;
+    }
     if (currentStep < 6) {
       setCurrentStep((prev) => prev + 1);
     } else {
       addToast({
-        title: "Hébergement créé avec succès",
-        description: "L'annonce a été enregistrée et envoyée pour publication.",
+        title: t("toasts.created"),
+        description: t("toasts.createdDescription"),
         variant: "success",
       });
       router.push("/stays");
@@ -138,6 +206,7 @@ export default function StayWizardClient() {
   };
 
   const handleBack = () => {
+    setErrors({});
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
     } else {
@@ -145,52 +214,19 @@ export default function StayWizardClient() {
     }
   };
 
-  const tipsPerStep: Record<number, { title: string; tips: string[] }> = {
-    1: {
-      title: "Conseils pour une bonne annonce",
-      tips: [
-        "Choisissez un titre accrocheur qui mentionne le type de logement et son atout clé.",
-        "Renseignez la surface réelle et le nombre exact de chambres et lits disponibles.",
-        "Assurez-vous de sélectionner le propriétaire vérifié dans le répertoire DARNA.",
-      ],
-    },
-    2: {
-      title: "Conseils de localisation",
-      tips: [
-        "Positionnez le repère précisément sur la carte pour aider les voyageurs à situer le quartier.",
-        "Indiquez les points de repère ou attractions majeures à moins de 15 minutes.",
-        "L'adresse exacte peut être protégée jusqu'à la confirmation de réservation.",
-      ],
-    },
-    3: {
-      title: "Sélection des équipements",
-      tips: [
-        "Les hébergements avec Wifi et Climatisation reçoivent 40% de réservations en plus.",
-        "Indiquez si le stationnement est gratuit ou payant sur place.",
-      ],
-    },
-    4: {
-      title: "Photos percutantes",
-      tips: [
-        "Téléchargez au moins 5 photos haute résolution avec éclairage naturel.",
-        "Prenez en photo toutes les pièces principales, la vue et l'extérieur.",
-      ],
-    },
-    5: {
-      title: "Tarification optimale",
-      tips: [
-        "Fixez un tarif de base adapté aux prix du marché de la wilaya.",
-        "La réservation instantanée maximise le taux de conversion.",
-      ],
-    },
-    6: {
-      title: "Validation finale",
-      tips: [
-        "Vérifiez l'ensemble des règles de la maison.",
-        "Une fois soumis, l'hébergement sera immédiatement indexé sur DARNA.",
-      ],
-    },
+  const goToStep = (step: number) => {
+    setErrors({});
+    setCurrentStep(step);
   };
+
+  const tipCount = TIP_COUNTS[currentStep] ?? 0;
+  const tips = Array.from({ length: tipCount }, (_, i) => t(`tips.step${currentStep}.tip${i + 1}`));
+  const errorEntries = Object.entries(errors) as [FieldName, string][];
+
+  const setNumber = (name: "guestCapacity" | "bedroomCount" | "bathroomCount" | "surfaceM2" | "price" | "cleaningFee" | "deposit" | "minStayDays") =>
+    (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [name]: Number(e.target.value) });
+
+  const nextLabel = currentStep === 6 ? t("publish") : t("next");
 
   return (
     <div className="space-y-6">
@@ -198,278 +234,288 @@ export default function StayWizardClient() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D9C9B2]/50 pb-5">
         <div>
           <button
+            type="button"
             onClick={() => router.push("/stays")}
-            className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] mb-2 font-medium"
+            className={`inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] mb-2 font-medium rounded ${focusRing}`}
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Retour</span>
+            <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+            <span>{t("back")}</span>
           </button>
-          <h1 className="text-xl font-bold text-[#2E3A2F]">Ajouter un hébergement</h1>
-          <p className="text-xs text-[#2E3A2F]/60 mt-0.5">
-            Remplissez les informations étape par étape pour créer et publier une nouvelle annonce d'hébergement.
-          </p>
+          <h1 className="text-xl font-bold text-[#2E3A2F]">{t("title")}</h1>
+          <p className="text-xs text-[#2E3A2F]/70 mt-0.5">{t("subtitle")}</p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <span className="text-[11px] text-[#2E3A2F]/60 hidden sm:inline">
-            Brouillon enregistré à {draftSavedAt}
+          <span className="text-[11px] text-[#2E3A2F]/70 hidden sm:inline" aria-live="polite">
+            {t("draftSavedAt", { time: draftSavedAt })}
           </span>
           <button
+            type="button"
             onClick={handleSaveDraft}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors ${focusRing}`}
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>Enregistrer en brouillon</span>
+            <Save className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>{t("saveDraft")}</span>
           </button>
           <button
+            type="button"
             onClick={handleNext}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors"
+            className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors ${focusRing}`}
           >
-            <span>{currentStep === 6 ? "Publier l'hébergement" : "Suivant →"}</span>
+            <span>{nextLabel}</span>
+            {currentStep < 6 && <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
       {/* 2. Stepper (Mockup 08: 6 steps) */}
       <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
-        <Stepper steps={steps} currentStep={currentStep} onStepClick={setCurrentStep} />
+        <Stepper steps={steps} currentStep={currentStep} onStepClick={goToStep} />
       </div>
 
       {/* 3. Three-Column Body: Form Cards (Left/Center) + Right Rail (Mockup 08) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Body (2 cols) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* STEP 1: Informations Générales */}
+          {/* Error summary */}
+          {errorEntries.length > 0 && (
+            <div
+              ref={summaryRef}
+              tabIndex={-1}
+              role="alert"
+              className="p-4 rounded-xl border border-accent-600/40 bg-accent/10 text-xs text-[#2E3A2F] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            >
+              <p className="font-semibold text-accent-800">{t("errors.summary", { count: errorEntries.length })}</p>
+              <ul className="mt-1.5 list-disc ps-5 space-y-0.5">
+                {errorEntries.map(([name, message]) => (
+                  <li key={name}>
+                    <a href={`#${fieldId(name)}`} className="underline hover:no-underline text-accent-800">
+                      {message}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* STEP 1: General information */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              {/* Card 1: Informations Générales */}
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                  Informations générales
-                </h3>
+              <section aria-labelledby={`${uid}-general`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+                <h2 id={`${uid}-general`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                  {t("steps.general")}
+                </h2>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Titre de l'hébergement *
+                  <label htmlFor={fieldId("title")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("fields.title")}
+                    {required}
                   </label>
                   <input
                     type="text"
+                    {...a11y("title")}
+                    aria-required="true"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
-                    placeholder="Ex: Villa panoramique avec piscine – Hydra"
+                    className={`${inputClass("title")} px-3.5 py-2`}
+                    placeholder={t("fields.titlePlaceholder")}
                   />
+                  {fieldError("title")}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Type de logement *
+                    <label htmlFor={fieldId("propertyType")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      {t("fields.propertyType")}
+                      {required}
                     </label>
                     <select
+                      id={fieldId("propertyType")}
+                      aria-required="true"
                       value={formData.propertyType}
                       onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                      className={`${inputClass()} px-3.5 py-2`}
                     >
-                      {PROPERTY_TYPES.map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                      {PROPERTY_TYPES.map((p) => (
+                        <option key={p.value} value={p.value}>{t(`propertyTypes.${p.key}`)}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Catégorie *
+                    <label htmlFor={fieldId("category")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      {t("fields.category")}
+                      {required}
                     </label>
                     <select
+                      id={fieldId("category")}
+                      aria-required="true"
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                      className={`${inputClass()} px-3.5 py-2`}
                     >
-                      <option value="home">Logement entier (Maison / Villa / Appartement)</option>
-                      <option value="hotel">Hôtel / Établissement</option>
-                      <option value="hostel">Auberge de jeunesse</option>
+                      <option value="home">{t("categories.home")}</option>
+                      <option value="hotel">{t("categories.hotel")}</option>
+                      <option value="hostel">{t("categories.hostel")}</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Capacité *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.guestCapacity}
-                      onChange={(e) => setFormData({ ...formData, guestCapacity: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Chambres *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.bedroomCount}
-                      onChange={(e) => setFormData({ ...formData, bedroomCount: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Salles de bain *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.bathroomCount}
-                      onChange={(e) => setFormData({ ...formData, bathroomCount: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Surface (m²) *
-                    </label>
-                    <input
-                      type="number"
-                      min="10"
-                      value={formData.surfaceM2}
-                      onChange={(e) => setFormData({ ...formData, surfaceM2: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
-                    />
-                  </div>
+                  {(
+                    [
+                      { name: "guestCapacity", label: t("fields.capacity"), min: 1 },
+                      { name: "bedroomCount", label: t("fields.bedrooms"), min: 1 },
+                      { name: "bathroomCount", label: t("fields.bathrooms"), min: 1 },
+                      { name: "surfaceM2", label: t("fields.surface"), min: 10 },
+                    ] as const
+                  ).map((f) => (
+                    <div key={f.name}>
+                      <label htmlFor={fieldId(f.name)} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                        {f.label}
+                        {required}
+                      </label>
+                      <input
+                        type="number"
+                        min={f.min}
+                        {...a11y(f.name)}
+                        aria-required="true"
+                        value={formData[f.name]}
+                        onChange={setNumber(f.name)}
+                        className={`${inputClass(f.name)} px-3 py-2`}
+                      />
+                      {fieldError(f.name)}
+                    </div>
+                  ))}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Hôte / Propriétaire *
+                  <label htmlFor={fieldId("host")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("fields.host")}
+                    {required}
                   </label>
                   <select
+                    id={fieldId("host")}
+                    aria-required="true"
                     value={formData.hostName}
                     onChange={(e) => setFormData({ ...formData, hostName: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    className={`${inputClass()} px-3.5 py-2`}
                   >
-                    <option value="Ahmed Benali">Ahmed Benali (Particulier - Alger)</option>
-                    <option value="Immobilier Casbah SAS">Immobilier Casbah SAS (Agence)</option>
-                    <option value="Hôtel El Aurassi">Hôtel El Aurassi (Établissement)</option>
+                    {HOSTS.map((h) => (
+                      <option key={h.name} value={h.name}>
+                        {t(`hostOptions.${h.key}`, { name: h.name })}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Description courte * ({formData.shortDescription.length}/300)
+                  <label htmlFor={fieldId("shortDescription")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("fields.shortDescription")}
+                    {required}{" "}
+                    <span className="font-normal text-[#2E3A2F]/70" dir="ltr">
+                      {t("charCount", { count: formData.shortDescription.length, max: 300 })}
+                    </span>
                   </label>
                   <textarea
                     rows={2}
                     maxLength={300}
+                    {...a11y("shortDescription")}
+                    aria-required="true"
                     value={formData.shortDescription}
                     onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    className={`${inputClass("shortDescription")} px-3.5 py-2`}
                   />
+                  {fieldError("shortDescription")}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Description détaillée *
-                  </label>
+                <div role="group" aria-labelledby={`${uid}-fullDescription-label`}>
+                  <span id={`${uid}-fullDescription-label`} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("fields.fullDescription")}
+                    {required}
+                  </span>
                   <RichTextField
                     value={formData.fullDescription}
                     onChange={(val) => setFormData({ ...formData, fullDescription: val })}
                     maxLength={2000}
+                    placeholder={t("fields.fullDescriptionPlaceholder")}
                   />
                 </div>
-              </div>
+              </section>
 
-              {/* Card 2: Règles principales (Toggles + times) */}
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                  Règles principales
-                </h3>
+              {/* Card 2: Main rules (toggles + times) */}
+              <section aria-labelledby={`${uid}-rules`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+                <h2 id={`${uid}-rules`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                  {t("rules.title")}
+                </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.petsAllowed}
-                      onChange={(e) => setFormData({ ...formData, petsAllowed: e.target.checked })}
-                      className="accent-[#2E3A2F] rounded"
-                    />
-                    <span>Animaux autorisés</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.partiesAllowed}
-                      onChange={(e) => setFormData({ ...formData, partiesAllowed: e.target.checked })}
-                      className="accent-[#2E3A2F] rounded"
-                    />
-                    <span>Fêtes & événements</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.smokingAllowed}
-                      onChange={(e) => setFormData({ ...formData, smokingAllowed: e.target.checked })}
-                      className="accent-[#2E3A2F] rounded"
-                    />
-                    <span>Fumer autorisé</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.childrenAllowed}
-                      onChange={(e) => setFormData({ ...formData, childrenAllowed: e.target.checked })}
-                      className="accent-[#2E3A2F] rounded"
-                    />
-                    <span>Adapté aux enfants</span>
-                  </label>
+                  {(
+                    [
+                      { name: "petsAllowed", label: t("rules.pets") },
+                      { name: "partiesAllowed", label: t("rules.parties") },
+                      { name: "smokingAllowed", label: t("rules.smoking") },
+                      { name: "childrenAllowed", label: t("rules.children") },
+                    ] as const
+                  ).map((r) => (
+                    <label key={r.name} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData[r.name]}
+                        onChange={(e) => setFormData({ ...formData, [r.name]: e.target.checked })}
+                        className="accent-[#2E3A2F] rounded"
+                      />
+                      <span>{r.label}</span>
+                    </label>
+                  ))}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#D9C9B2]/40 text-xs">
                   <div>
-                    <label className="block font-semibold text-[#2E3A2F] mb-1">Heure d'arrivée</label>
+                    <label htmlFor={fieldId("checkIn")} className="block font-semibold text-[#2E3A2F] mb-1">{t("rules.checkInTime")}</label>
                     <input
-                      type="text"
+                      id={fieldId("checkIn")}
+                      type="time"
+                      dir="ltr"
                       value={formData.checkInTime}
                       onChange={(e) => setFormData({ ...formData, checkInTime: e.target.value })}
-                      className="w-full px-3 py-1.5 bg-white border border-[#D9C9B2] rounded-lg"
-                      placeholder="15:00"
+                      className={`${inputClass()} px-3 py-1.5`}
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-[#2E3A2F] mb-1">Heure de départ</label>
+                    <label htmlFor={fieldId("checkOut")} className="block font-semibold text-[#2E3A2F] mb-1">{t("rules.checkOutTime")}</label>
                     <input
-                      type="text"
+                      id={fieldId("checkOut")}
+                      type="time"
+                      dir="ltr"
                       value={formData.checkOutTime}
                       onChange={(e) => setFormData({ ...formData, checkOutTime: e.target.value })}
-                      className="w-full px-3 py-1.5 bg-white border border-[#D9C9B2] rounded-lg"
-                      placeholder="11:00"
+                      className={`${inputClass()} px-3 py-1.5`}
                     />
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
           )}
 
-          {/* STEP 2: Localisation & Contact */}
+          {/* STEP 2: Location & contact */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                  Adresse et géolocalisation
-                </h3>
+              <section aria-labelledby={`${uid}-address`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+                <h2 id={`${uid}-address`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                  {t("location.title")}
+                </h2>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Wilaya *
+                    <label htmlFor={fieldId("wilaya")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      {t("location.wilaya")}
+                      {required}
                     </label>
                     <select
+                      id={fieldId("wilaya")}
+                      aria-required="true"
                       value={formData.wilayaCode}
                       onChange={(e) => setFormData({ ...formData, wilayaCode: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                      className={`${inputClass()} px-3.5 py-2`}
                     >
                       {WILAYAS.map((w) => (
                         <option key={w.code} value={w.code}>
@@ -479,67 +525,84 @@ export default function StayWizardClient() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Commune / Ville *
+                    <label htmlFor={fieldId("city")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      {t("location.city")}
+                      {required}
                     </label>
                     <input
                       type="text"
+                      {...a11y("city")}
+                      aria-required="true"
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                      className={`${inputClass("city")} px-3.5 py-2`}
                     />
+                    {fieldError("city")}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Adresse exacte *
+                  <label htmlFor={fieldId("address")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("location.address")}
+                    {required}
                   </label>
                   <input
                     type="text"
+                    {...a11y("address")}
+                    aria-required="true"
+                    autoComplete="street-address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    className={`${inputClass("address")} px-3.5 py-2`}
                   />
+                  {fieldError("address")}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-2">
-                    Position sur la carte (déplacez le repère pour affiner)
-                  </label>
+                <div role="group" aria-labelledby={`${uid}-map-label`}>
+                  <span id={`${uid}-map-label`} className="block text-xs font-semibold text-[#2E3A2F] mb-2">
+                    {t("location.mapLabel")}
+                  </span>
                   <MapPicker
+                    addressText={formData.address}
                     lat={formData.coordinates.lat}
                     lng={formData.coordinates.lng}
                     onChange={(lat, lng) => setFormData({ ...formData, coordinates: { lat, lng } })}
                   />
                 </div>
-              </div>
+              </section>
 
               {/* Contact Card */}
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                  Coordonnées du contact
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Numéro de téléphone *
-                    </label>
+              <section aria-labelledby={`${uid}-contact`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+                <h2 id={`${uid}-contact`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                  {t("contact.title")}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div role="group" aria-labelledby={`${uid}-phone-label`}>
+                    <span id={`${uid}-phone-label`} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      {t("contact.phone")}
+                      {required}
+                    </span>
                     <PhoneInput
                       value={formData.phone}
                       onChange={(val) => setFormData({ ...formData, phone: val })}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                      Adresse email *
+                    <label htmlFor={fieldId("email")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      {t("contact.email")}
+                      {required}
                     </label>
                     <input
                       type="email"
+                      dir="ltr"
+                      autoComplete="email"
+                      {...a11y("email")}
+                      aria-required="true"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                      className={`${inputClass("email")} px-3.5 py-2`}
                     />
+                    {fieldError("email")}
                   </div>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-[#2E3A2F] cursor-pointer">
@@ -549,28 +612,27 @@ export default function StayWizardClient() {
                     onChange={(e) => setFormData({ ...formData, showContactOnListing: e.target.checked })}
                     className="accent-[#2E3A2F] rounded"
                   />
-                  <span>Afficher le contact public sur l'annonce après validation</span>
+                  <span>{t("contact.showPublic")}</span>
                 </label>
-              </div>
+              </section>
             </div>
           )}
 
-          {/* STEP 3: Équipements */}
+          {/* STEP 3: Amenities */}
           {currentStep === 3 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                Sélection des équipements
-              </h3>
-              <p className="text-xs text-[#2E3A2F]/60">
-                Cochez tous les équipements et commodités inclus dans cet hébergement.
-              </p>
+            <fieldset className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+              <legend className="sr-only">{t("amenitiesStep.title")}</legend>
+              <h2 aria-hidden="true" className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                {t("amenitiesStep.title")}
+              </h2>
+              <p className="text-xs text-[#2E3A2F]/70">{t("amenitiesStep.subtitle")}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                 {AMENITIES_CATALOG.map((am) => {
-                  const isChecked = formData.amenities.includes(am);
+                  const isChecked = formData.amenities.includes(am.value);
                   return (
                     <label
-                      key={am}
-                      className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs cursor-pointer transition-colors ${
+                      key={am.value}
+                      className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-accent-600 ${
                         isChecked
                           ? "bg-secondary/10 border-secondary text-[#2E3A2F] font-semibold"
                           : "bg-[#FAF9F5] border-[#D9C9B2]/50 text-[#2E3A2F]/80 hover:bg-[#F8F6EE]"
@@ -580,202 +642,200 @@ export default function StayWizardClient() {
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => {
-                          if (isChecked) {
-                            setFormData({
-                              ...formData,
-                              amenities: formData.amenities.filter((a) => a !== am),
-                            });
-                          } else {
-                            setFormData({
-                              ...formData,
-                              amenities: [...formData.amenities, am],
-                            });
-                          }
+                          setFormData({
+                            ...formData,
+                            amenities: isChecked
+                              ? formData.amenities.filter((a) => a !== am.value)
+                              : [...formData.amenities, am.value],
+                          });
                         }}
                         className="accent-[#6B7F5B] rounded"
                       />
-                      <span>{am}</span>
+                      <span>{t(`amenities.${am.key}`)}</span>
                     </label>
                   );
                 })}
               </div>
-            </div>
+            </fieldset>
           )}
 
           {/* STEP 4: Photos */}
           {currentStep === 4 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                Photos et galerie (min. 5 photos recommandées)
-              </h3>
+            <section aria-labelledby={`${uid}-photos`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+              <h2 id={`${uid}-photos`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                {t("photosStep.title")}
+              </h2>
               <FileDropzone
-                label="Déposez les photos de l'hébergement ici"
-                hint="Formats acceptés: JPG, PNG, WEBP jusqu'à 10 Mo par photo"
-                onFileSelect={(file) => {
-                  addToast({ title: "Photo ajoutée", variant: "info" });
+                label={t("photosStep.dropLabel")}
+                hint={t("photosStep.dropHint")}
+                accept="image/jpeg,image/png,image/webp"
+                onFileSelect={() => {
+                  addToast({ title: t("toasts.photoAdded"), variant: "info" });
                 }}
               />
-              <div className="grid grid-cols-3 gap-3 pt-3">
-                <div className="relative aspect-video rounded-lg overflow-hidden border border-[#D9C9B2]">
-                  <Image src="/placeholder-stay.jpg" alt="" fill className="object-cover" />
+              <ul className="grid grid-cols-3 gap-3 pt-3">
+                <li className="relative aspect-video rounded-lg overflow-hidden border border-[#D9C9B2]">
+                  <Image src="/placeholder-stay.jpg" alt={t("photosStep.coverAlt")} fill sizes="200px" className="object-cover" />
                   <span className="absolute bottom-1 start-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] rounded">
-                    Couverture
+                    {t("photosStep.cover")}
                   </span>
-                </div>
-              </div>
-            </div>
+                </li>
+              </ul>
+            </section>
           )}
 
-          {/* STEP 5: Tarifs et Disponibilité */}
+          {/* STEP 5: Pricing & availability */}
           {currentStep === 5 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                Tarifs et conditions de réservation
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
+            <section aria-labelledby={`${uid}-pricing`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+              <h2 id={`${uid}-pricing`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                {t("pricing.title")}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Prix par nuit (DZD) *
+                  <label htmlFor={fieldId("price")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("pricing.price")}
+                    {required}
                   </label>
                   <input
                     type="number"
+                    min={0}
+                    {...a11y("price")}
+                    aria-required="true"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    onChange={setNumber("price")}
+                    className={`${inputClass("price")} px-3.5 py-2`}
                   />
+                  {fieldError("price")}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Frais de ménage (DZD)
+                  <label htmlFor={fieldId("cleaningFee")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("pricing.cleaningFee")}
                   </label>
                   <input
+                    id={fieldId("cleaningFee")}
                     type="number"
+                    min={0}
                     value={formData.cleaningFee}
-                    onChange={(e) => setFormData({ ...formData, cleaningFee: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    onChange={setNumber("cleaningFee")}
+                    className={`${inputClass()} px-3.5 py-2`}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Caution exigée (DZD)
+                  <label htmlFor={fieldId("deposit")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("pricing.deposit")}
                   </label>
                   <input
+                    id={fieldId("deposit")}
                     type="number"
+                    min={0}
                     value={formData.deposit}
-                    onChange={(e) => setFormData({ ...formData, deposit: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    onChange={setNumber("deposit")}
+                    className={`${inputClass()} px-3.5 py-2`}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                    Séjour minimum (nuits)
+                  <label htmlFor={fieldId("minStay")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    {t("pricing.minStay")}
                   </label>
                   <input
+                    id={fieldId("minStay")}
                     type="number"
-                    min="1"
+                    min={1}
                     value={formData.minStayDays}
-                    onChange={(e) => setFormData({ ...formData, minStayDays: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2 text-xs bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                    onChange={setNumber("minStayDays")}
+                    className={`${inputClass()} px-3.5 py-2`}
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
-                  Mode de réservation
-                </label>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <label
-                    className={`p-3 rounded-lg border cursor-pointer ${
-                      formData.bookingApprovalMode === "instant"
-                        ? "bg-secondary/10 border-secondary"
-                        : "bg-[#FAF9F5] border-[#D9C9B2]"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="approval"
-                      checked={formData.bookingApprovalMode === "instant"}
-                      onChange={() => setFormData({ ...formData, bookingApprovalMode: "instant" })}
-                      className="accent-[#6B7F5B] me-2"
-                    />
-                    <span className="font-semibold">Instantanée</span>
-                    <p className="text-[11px] text-[#2E3A2F]/60 mt-1">Le voyageur réserve sans attente.</p>
-                  </label>
-                  <label
-                    className={`p-3 rounded-lg border cursor-pointer ${
-                      formData.bookingApprovalMode === "request"
-                        ? "bg-[#D9C9B2]/30 border-[#8C682E]"
-                        : "bg-[#FAF9F5] border-[#D9C9B2]"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="approval"
-                      checked={formData.bookingApprovalMode === "request"}
-                      onChange={() => setFormData({ ...formData, bookingApprovalMode: "request" })}
-                      className="accent-[#8C682E] me-2"
-                    />
-                    <span className="font-semibold">Sur demande</span>
-                    <p className="text-[11px] text-[#2E3A2F]/60 mt-1">L'hôte doit valider chaque demande.</p>
-                  </label>
+              <fieldset>
+                <legend className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">{t("pricing.bookingMode")}</legend>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {(
+                    [
+                      { id: "instant", selected: "bg-secondary/10 border-secondary", accent: "accent-[#6B7F5B]" },
+                      { id: "request", selected: "bg-[#D9C9B2]/30 border-[#8C682E]", accent: "accent-[#8C682E]" },
+                    ] as const
+                  ).map((m) => (
+                    <label
+                      key={m.id}
+                      className={`p-3 rounded-lg border cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
+                        formData.bookingApprovalMode === m.id ? m.selected : "bg-[#FAF9F5] border-[#D9C9B2]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`${uid}-approval`}
+                        value={m.id}
+                        checked={formData.bookingApprovalMode === m.id}
+                        onChange={() => setFormData({ ...formData, bookingApprovalMode: m.id })}
+                        className={`${m.accent} me-2`}
+                      />
+                      <span className="font-semibold">{t(`pricing.modes.${m.id}.title`)}</span>
+                      <span className="block text-[11px] text-[#2E3A2F]/70 mt-1">{t(`pricing.modes.${m.id}.description`)}</span>
+                    </label>
+                  ))}
                 </div>
-              </div>
-            </div>
+              </fieldset>
+            </section>
           )}
 
-          {/* STEP 6: Règles & Validation */}
+          {/* STEP 6: Rules & validation */}
           {currentStep === 6 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-                Récapitulatif avant publication
-              </h3>
-              <p className="text-xs text-[#2E3A2F]/70">
-                Vérifiez que toutes les données ci-dessous sont complètes et conformes aux règles de modération DARNA.
-              </p>
-              <div className="p-4 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[#2E3A2F]/60">Titre:</span>
-                  <span className="font-medium text-[#2E3A2F]">{formData.title}</span>
+            <section aria-labelledby={`${uid}-summary`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+              <h2 id={`${uid}-summary`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+                {t("summary.title")}
+              </h2>
+              <p className="text-xs text-[#2E3A2F]/70">{t("summary.subtitle")}</p>
+              <dl className="p-4 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-2">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#2E3A2F]/70">{t("summary.titleLabel")}</dt>
+                  <dd className="font-medium text-[#2E3A2F] text-end">{formData.title}</dd>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#2E3A2F]/60">Localisation:</span>
-                  <span className="font-medium text-[#2E3A2F]">{formData.city}, Wilaya {formData.wilayaCode}</span>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#2E3A2F]/70">{t("summary.location")}</dt>
+                  <dd className="font-medium text-[#2E3A2F] text-end">{locationText}</dd>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#2E3A2F]/60">Capacité:</span>
-                  <span className="font-medium text-[#2E3A2F]">{formData.guestCapacity} voyageurs • {formData.bedroomCount} chambres</span>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#2E3A2F]/70">{t("summary.capacity")}</dt>
+                  <dd className="font-medium text-[#2E3A2F] text-end">
+                    {t("summary.capacityValue", { guests: formData.guestCapacity, bedrooms: formData.bedroomCount })}
+                  </dd>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#2E3A2F]/60">Tarif par nuit:</span>
-                  <span className="font-semibold text-[#2E3A2F]">{formData.price.toLocaleString("fr-FR")} DZD</span>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#2E3A2F]/70">{t("summary.price")}</dt>
+                  <dd className="font-semibold text-[#2E3A2F] text-end">{formatDzd(formData.price, locale)}</dd>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[#2E3A2F]/60">Équipements déclarés:</span>
-                  <span className="font-medium text-[#2E3A2F]">{formData.amenities.length} sélectionnés</span>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#2E3A2F]/70">{t("summary.amenities")}</dt>
+                  <dd className="font-medium text-[#2E3A2F] text-end">
+                    {t("summary.amenitiesValue", { count: formData.amenities.length })}
+                  </dd>
                 </div>
-              </div>
-            </div>
+              </dl>
+            </section>
           )}
 
           {/* Bottom Navigation Buttons */}
           <div className="flex items-center justify-between pt-4 border-t border-[#D9C9B2]/40">
             <button
+              type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+              className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] ${focusRing}`}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>{currentStep === 1 ? "Annuler" : "Précédent"}</span>
+              <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+              <span>{currentStep === 1 ? t("cancel") : t("previous")}</span>
             </button>
             <button
+              type="button"
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
+              className={`inline-flex items-center gap-1.5 px-5 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] ${focusRing}`}
             >
-              <span>{currentStep === 6 ? "Publier l'hébergement" : "Suivant →"}</span>
-              {currentStep < 6 && <ChevronRight className="w-3.5 h-3.5" />}
+              <span>{nextLabel}</span>
+              {currentStep < 6 && <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -785,8 +845,9 @@ export default function StayWizardClient() {
           {/* Live Preview Card */}
           <LivePreviewCard
             title={formData.title}
-            propertyType={formData.propertyType}
-            location={`${formData.city}, Wilaya ${formData.wilayaCode}`}
+            previewTitle={t("preview.title")}
+            propertyType={propertyTypeLabel(formData.propertyType)}
+            location={locationText}
             priceDzd={formData.price}
             guestCapacity={formData.guestCapacity}
             bedroomCount={formData.bedroomCount}
@@ -798,21 +859,15 @@ export default function StayWizardClient() {
           <ProgressChecklist
             currentStep={currentStep}
             totalSteps={6}
-            items={[
-              { stepNumber: 1, label: "Informations générales", completed: currentStep > 1 },
-              { stepNumber: 2, label: "Localisation & Contact", completed: currentStep > 2 },
-              { stepNumber: 3, label: "Équipements", completed: currentStep > 3 },
-              { stepNumber: 4, label: "Photos & médias", completed: currentStep > 4 },
-              { stepNumber: 5, label: "Tarifs & disponibilité", completed: currentStep > 5 },
-              { stepNumber: 6, label: "Règles & validation", completed: currentStep > 6 },
-            ]}
+            items={PROGRESS_KEYS.map((key, i) => ({
+              stepNumber: i + 1,
+              label: t(`progress.${key}`),
+              completed: currentStep > i + 1,
+            }))}
           />
 
           {/* Step-Specific Tips */}
-          <TipsCard
-            title={tipsPerStep[currentStep]?.title || "Conseils"}
-            tips={tipsPerStep[currentStep]?.tips || []}
-          />
+          <TipsCard title={t(`tips.step${currentStep}.title`)} tips={tips} />
         </div>
       </div>
     </div>

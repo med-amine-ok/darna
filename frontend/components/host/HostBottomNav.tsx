@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/navigation";
+import { useDialogA11y } from "@/hook/useDialogA11y";
 import {
   BrandCloseIcon,
   BrandHomeIcon,
@@ -30,27 +32,32 @@ interface HostTab {
   exact?: boolean;
 }
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
 export default function HostBottomNav({ hostType }: HostBottomNavProps) {
+  const t = useTranslations("hostNav");
   const pathname = usePathname();
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetTitleId = useId();
+  const sheetRef = useDialogA11y<HTMLDivElement>(sheetOpen, { onEscape: () => setSheetOpen(false) });
 
   const isIndividual = hostType === "individual" || !hostType;
   const isAgency = hostType === "agency";
-  const orgLabel =
-    hostType === "hotel" ? "Hotel" : hostType === "hostel" ? "Hostel" : "Agency";
+  const orgType = hostType || "agency";
 
   const soloTabs: HostTab[] = [
-    { href: "/host/listings", label: "Listings", icon: BrandGridIcon },
-    { href: "/host/bookings", label: "Bookings", icon: BrandBookingsIcon },
-    { href: "/host/messages", label: "Messages", icon: BrandMessageIcon },
+    { href: "/host/listings", label: t("tabs.listings"), icon: BrandGridIcon },
+    { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
+    { href: "/host/messages", label: t("tabs.messages"), icon: BrandMessageIcon },
   ];
 
   const enterpriseTabs: HostTab[] = [
-    { href: "/host", label: "Today", icon: BrandHomeIcon, exact: true },
-    { href: "/host/bookings", label: "Bookings", icon: BrandBookingsIcon },
-    { href: "/host/calendar", label: "Calendar", icon: BrandCalendarIcon },
-    { href: "/host/listings", label: "Listings", icon: BrandGridIcon },
+    { href: "/host", label: t("tabs.today"), icon: BrandHomeIcon, exact: true },
+    { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
+    { href: "/host/calendar", label: t("tabs.calendar"), icon: BrandCalendarIcon },
+    { href: "/host/listings", label: t("tabs.listings"), icon: BrandGridIcon },
   ];
 
   const tabs: HostTab[] = isIndividual ? soloTabs : enterpriseTabs;
@@ -70,150 +77,135 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
     return null;
   }
 
+  const sheetLinkClass = (active: boolean | undefined) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${focusRing} ${
+      active ? "bg-primary/10 text-primary font-bold" : "hover:bg-neutral-50 text-neutral-700"
+    }`;
+
   return (
     <>
-      {/* Mobile Slide-Up "More" Sheet */}
+      {/* Mobile slide-up "More" sheet */}
       {sheetOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in"
+            aria-hidden="true"
             onClick={() => setSheetOpen(false)}
           />
 
-          {/* Bottom Sheet Card */}
-          <div className="relative bg-white rounded-t-3xl border-t border-tertiary/70 p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-5 duration-200">
-            {/* Sheet Handle & Header */}
+          <div
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={sheetTitleId}
+            className="relative bg-white rounded-t-3xl border-t border-tertiary/70 p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-5 duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-tertiary/40 mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-1 rounded-full bg-neutral-300 mx-auto" />
-                <span className="font-serif font-black text-primary text-base">
-                  Host Workspace Navigation
-                </span>
+                <div className="w-8 h-1 rounded-full bg-neutral-300 mx-auto" aria-hidden="true" />
+                <h2 id={sheetTitleId} className="font-serif font-black text-primary text-base">
+                  {t("mobileNav")}
+                </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}
-                className="p-1 rounded-full hover:bg-neutral-100 text-neutral-500"
-                aria-label="Close menu"
+                className={`p-1 rounded-full hover:bg-neutral-100 text-neutral-600 ${focusRing}`}
+                aria-label={t("closeMenu")}
               >
-                <BrandCloseIcon size={18} />
+                <BrandCloseIcon size={18} aria-hidden="true" />
               </button>
             </div>
 
-            <div className="space-y-1 text-sm">
-              {/* Messages (for enterprise hosts) */}
+            <nav aria-labelledby={sheetTitleId} className="space-y-1 text-sm">
               {!isIndividual && (
                 <Link
                   href="/host/messages"
                   onClick={() => setSheetOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    pathname?.startsWith("/host/messages")
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "hover:bg-neutral-50 text-neutral-700"
-                  }`}
+                  className={sheetLinkClass(pathname?.startsWith("/host/messages"))}
                 >
-                  <BrandMessageIcon size={18} className="text-secondary" />
-                  <span>Messages & Guest Inquiries</span>
+                  <BrandMessageIcon size={18} className="text-secondary" aria-hidden="true" />
+                  <span>{t("messagesInquiries")}</span>
                 </Link>
               )}
 
-              {/* Agency Trips Vertical */}
               {isAgency && (
                 <Link
                   href="/host/agency/trips"
                   onClick={() => setSheetOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    pathname?.startsWith("/host/agency/trips")
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "hover:bg-neutral-50 text-neutral-700"
-                  }`}
+                  className={sheetLinkClass(pathname?.startsWith("/host/agency/trips"))}
                 >
-                  <BrandCompassIcon size={18} className="text-secondary" />
-                  <span>Agency Trips & Circuits</span>
+                  <BrandCompassIcon size={18} className="text-secondary" aria-hidden="true" />
+                  <span>{t("agencyTrips")}</span>
                 </Link>
               )}
 
-              {/* Team Members */}
               {!isIndividual && (
                 <Link
                   href="/host/agency/team"
                   onClick={() => setSheetOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    pathname?.startsWith("/host/agency/team")
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "hover:bg-neutral-50 text-neutral-700"
-                  }`}
+                  className={sheetLinkClass(pathname?.startsWith("/host/agency/team"))}
                 >
-                  <BrandUsersIcon size={18} className="text-secondary" />
-                  <span>Team Members & Roles</span>
+                  <BrandUsersIcon size={18} className="text-secondary" aria-hidden="true" />
+                  <span>{t("teamRoles")}</span>
                 </Link>
               )}
 
-              {/* Organization Settings */}
               {!isIndividual && (
                 <Link
                   href="/host/agency/settings"
                   onClick={() => setSheetOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    pathname?.startsWith("/host/agency/settings")
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "hover:bg-neutral-50 text-neutral-700"
-                  }`}
+                  className={sheetLinkClass(pathname?.startsWith("/host/agency/settings"))}
                 >
-                  <BrandBuildingIcon size={18} className="text-secondary" />
-                  <span>{orgLabel} Profile & Settings</span>
+                  <BrandBuildingIcon size={18} className="text-secondary" aria-hidden="true" />
+                  <span>{t("orgProfileSettings", { type: orgType })}</span>
                 </Link>
               )}
 
-              {/* Host Settings & Payouts */}
               <Link
                 href="/host/settings"
                 onClick={() => setSheetOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                  pathname === "/host/settings"
-                    ? "bg-primary/10 text-primary font-bold"
-                    : "hover:bg-neutral-50 text-neutral-700"
-                }`}
+                className={sheetLinkClass(pathname === "/host/settings")}
               >
-                <BrandSettingsIcon size={18} className="text-secondary" />
-                <span>Host Settings & Payouts</span>
+                <BrandSettingsIcon size={18} className="text-secondary" aria-hidden="true" />
+                <span>{t("hostSettingsPayouts")}</span>
               </Link>
 
               <hr className="my-2 border-tertiary/40" />
 
-              {/* Create Listing */}
               <Link
                 href="/become-a-host/1"
                 onClick={() => setSheetOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-accent font-bold hover:bg-neutral-50 transition"
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-accent-700 font-bold hover:bg-neutral-50 transition ${focusRing}`}
               >
-                <BrandPlusIcon size={18} />
-                <span>+ Create New Listing</span>
+                <BrandPlusIcon size={18} aria-hidden="true" />
+                <span>{t("createListing")}</span>
               </Link>
 
-              {/* Switch to Traveling */}
               <button
                 type="button"
                 onClick={() => {
                   setSheetOpen(false);
                   try {
                     localStorage.setItem("darna_mode", "traveler");
-                  } catch (e) {}
+                  } catch {}
                   router.push("/");
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-secondary font-bold hover:bg-neutral-50 transition"
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-secondary font-bold hover:bg-neutral-50 transition ${focusRing}`}
               >
-                <BrandBriefcaseIcon size={18} />
-                <span>Switch to traveling mode</span>
+                <BrandBriefcaseIcon size={18} aria-hidden="true" />
+                <span>{t("switchToTravelingMode")}</span>
               </button>
-            </div>
+            </nav>
           </div>
         </div>
       )}
 
-      {/* Persistent Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-tertiary/60 h-16 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]">
+      {/* Persistent bottom bar */}
+      <nav
+        aria-label={t("primaryNav")}
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-tertiary/60 h-16 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
+      >
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.href, tab.exact);
@@ -222,32 +214,37 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition ${
-                active ? "text-primary font-bold scale-105" : "text-neutral-500 hover:text-neutral-700"
+              aria-current={active ? "page" : undefined}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition ${focusRing} ${
+                active ? "text-primary font-bold scale-105" : "text-neutral-600 hover:text-neutral-800"
               }`}
             >
-              <Icon size={20} className={active ? "text-primary" : "text-neutral-400"} />
+              <Icon size={20} aria-hidden="true" className={active ? "text-primary" : "text-neutral-500"} />
               <span className="text-[10px] leading-none">{tab.label}</span>
             </Link>
           );
         })}
 
-        {/* More Tab */}
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
-          className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition cursor-pointer ${
+          aria-haspopup="dialog"
+          aria-expanded={sheetOpen}
+          aria-label={t("moreOptions")}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition cursor-pointer ${focusRing} ${
             isMoreActive || sheetOpen
               ? "text-primary font-bold scale-105"
-              : "text-neutral-500 hover:text-neutral-700"
+              : "text-neutral-600 hover:text-neutral-800"
           }`}
-          aria-label="More workspace options"
         >
           <BrandMoreIcon
             size={20}
-            className={isMoreActive || sheetOpen ? "text-primary" : "text-neutral-400"}
+            aria-hidden="true"
+            className={isMoreActive || sheetOpen ? "text-primary" : "text-neutral-500"}
           />
-          <span className="text-[10px] leading-none">More</span>
+          <span className="text-[10px] leading-none" aria-hidden="true">
+            {t("tabs.more")}
+          </span>
         </button>
       </nav>
     </>

@@ -1,0 +1,57 @@
+{
+  "eyebrowAgency": "Agency command centre",
+  "eyebrowIndividual": "Host dashboard",
+  "greeting": "Marhaba, {name}!",
+  "hostFallback": "Host",
+  "subtitle": "Your daily check-in briefing, pending guest requests and booking performance.",
+  "createListing": "Create listing",
+  "performanceTitle": "Performance overview",
+  "periodLabel": "Period",
+  "period": {
+    "month": "This month",
+    "30days": "Last 30 days",
+    "year": "Year to date"
+  },
+  "kpi": {
+    "grossEarnings": "Gross host earnings",
+    "earningsTrend": "{change} vs. last period (≈ {eur})",
+    "occupancyRate": "Occupancy rate",
+    "occupancyNote": "{booked} of {available} available nights booked",
+    "activeBookings": "Active bookings",
+    "activeBookingsNote": "Confirmed stays and vehicle rentals",
+    "overallRating": "Overall rating",
+    "ratingNote": "{count, plural, =0 {No guest reviews yet} one {Across # guest review} other {Across # guest reviews}}",
+    "earningsEur": "≈ {eur}"
+  },
+  "pendingTitle": "Action needed: pending booking requests ({count})",
+  "requestFor": "Booking request for {title}",
+  "requestDetails": "Dates: <strong>{dates}</strong> · {guests, plural, one {# guest} other {# guests}} · Payout: <strong>{payout}</strong>",
+  "acceptRequest": "Accept request",
+  "toast": {
+    "accepted": "Reservation accepted. The guest has been confirmed.",
+    "declined": "Reservation declined.",
+    "updateFailed": "Could not update the reservation status."
+  },
+  "todayTitle": "Today’s stays & check-ins",
+  "noCheckIns": "No guest check-ins scheduled for today.",
+  "checkInAt": "Check-in at {time}",
+  "stayDetails": "{count, plural, one {# traveller} other {# travellers}} · Check-in confirmed",
+  "currentlyHosting": "Currently hosting ({count})",
+  "stayEnds": "Stay ends on {date}",
+  "inHouse": "Currently in-house",
+  "recentReviews": "Recent guest reviews",
+  "noReviews": "No guest reviews yet.",
+  "quickActions": "Quick actions",
+  "quick": {
+    "calendar": "Block dates or adjust prices",
+    "listings": "Manage your listings ({count})",
+    "messages": "Check guest messages",
+    "payout": "Payout account & RIB"
+  },
+  "tip": {
+    "eyebrow": "Algerian host tip",
+    "title": "Winter is high season in the Sahara",
+    "body": "Demand for expeditions and 4x4 rentals around Djanet and Taghit peaks between November and March. Adjust your calendar prices accordingly.",
+    "cta": "Open pricing calendar"
+  }
+}

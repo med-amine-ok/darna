@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -34,6 +35,7 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const t = useTranslations("ui");
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const removeToast = useCallback((id: string) => {
@@ -41,7 +43,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const addToast = useCallback(
-    ({ title, description, type, variant, duration = 4500, undoAction, undoLabel = "Undo" }: ToastOptions) => {
+    ({ title, description, type, variant, duration = 4500, undoAction, undoLabel }: ToastOptions) => {
       const computedType: ToastType =
         type || (variant === "danger" ? "error" : variant) || "info";
       const id = `tst_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -93,7 +95,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const icons: Record<ToastType, React.ReactNode> = {
     success: <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />,
-    error: <AlertCircle className="w-4 h-4 text-accent shrink-0" />,
+    error: <AlertCircle className="w-4 h-4 text-accent-700 shrink-0" />,
     warning: <AlertTriangle className="w-4 h-4 text-[#8C682E] shrink-0" />,
     info: <Info className="w-4 h-4 text-primary shrink-0" />,
   };
@@ -111,45 +113,50 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       {/* Floating Toasts Viewport: safe-area and mobile-bottom-nav aware */}
       <div
+        role="region"
+        aria-label={t("notifications")}
         aria-live="polite"
+        aria-relevant="additions"
         className="fixed bottom-20 lg:bottom-5 start-4 end-4 sm:start-auto sm:end-5 z-50 flex flex-col gap-2.5 max-w-[calc(100vw-2rem)] sm:max-w-sm w-full pointer-events-none pb-[env(safe-area-inset-bottom)]"
       >
         <AnimatePresence>
-          {toasts.map((t) => (
+          {toasts.map((item) => (
             <motion.div
-              key={t.id}
+              key={item.id}
               initial={{ opacity: 0, y: 16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, y: 8 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
+              role={item.type === "error" ? "alert" : "status"}
+              aria-atomic="true"
               className="pointer-events-auto relative w-full bg-white rounded-2xl shadow-darna-modal border border-tertiary/80 overflow-hidden text-start"
             >
               <div className="p-3.5 flex items-start gap-3">
                 <div
                   className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${
-                    badgeBgs[t.type || "info"]
+                    badgeBgs[item.type || "info"]
                   }`}
                 >
-                  {icons[t.type || "info"]}
+                  {icons[item.type || "info"]}
                 </div>
 
                 <div className="flex-1 min-w-0 pt-0.5">
-                  <h4 className="text-xs font-bold text-primary leading-tight">{t.title}</h4>
-                  {t.description && (
+                  <p className="text-xs font-bold text-primary leading-tight">{item.title}</p>
+                  {item.description && (
                     <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
-                      {t.description}
+                      {item.description}
                     </p>
                   )}
-                  {t.undoAction && (
+                  {item.undoAction && (
                     <button
                       type="button"
                       onClick={() => {
-                        t.undoAction?.();
-                        removeToast(t.id);
+                        item.undoAction?.();
+                        removeToast(item.id);
                       }}
-                      className="mt-1.5 text-xs font-bold text-secondary hover:text-[#526445] underline cursor-pointer"
+                      className="mt-1.5 text-xs font-bold text-secondary-700 hover:text-[#526445] underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 rounded"
                     >
-                      {t.undoLabel || "Undo"}
+                      {item.undoLabel || t("undo")}
                     </button>
                   )}
                 </div>
@@ -157,24 +164,24 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 {/* Working Close Button */}
                 <button
                   type="button"
-                  onClick={() => removeToast(t.id)}
-                  className="p-1 rounded-lg text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer shrink-0"
-                  aria-label="Dismiss notification"
+                  onClick={() => removeToast(item.id)}
+                  className="p-1 rounded-lg text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  aria-label={t("dismissNotification")}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>
 
               {/* Progress Bar */}
-              {t.duration && t.duration > 0 && (
+              {item.duration && item.duration > 0 && (
                 <motion.div
                   initial={{ width: "100%" }}
                   animate={{ width: "0%" }}
-                  transition={{ duration: t.duration / 1000, ease: "linear" }}
+                  transition={{ duration: item.duration / 1000, ease: "linear" }}
                   className={`h-0.5 ${
-                    t.type === "success"
+                    item.type === "success"
                       ? "bg-secondary"
-                      : t.type === "error"
+                      : item.type === "error"
                       ? "bg-accent"
                       : "bg-primary"
                   }`}

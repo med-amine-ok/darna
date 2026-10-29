@@ -1,0 +1,15 @@
+{
+  "metaTitle": "Notifications",
+  "title": "Notifications",
+  "unreadCount": "{count, plural, one {You have # unread notification} other {You have # unread notifications}}",
+  "allCaughtUp": "You're all caught up!",
+  "markAllRead": "Mark all as read",
+  "allMarkedRead": "All notifications marked as read.",
+  "updateFailed": "We couldn't update your notifications. Please try again.",
+  "emptyTitle": "No notifications",
+  "emptyBody": "When you receive booking confirmations, host messages or price alerts, they will appear here.",
+  "today": "Today",
+  "earlier": "Earlier",
+  "justNow": "Just now",
+  "unread": "Unread"
+}

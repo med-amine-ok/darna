@@ -1,0 +1,45 @@
+{
+  "login": {
+    "title": "Welcome to DARNA",
+    "subtitle": "Log in to manage bookings, wishlists, and host settings",
+    "email": "Email",
+    "password": "Password",
+    "continue": "Continue",
+    "continueGoogle": "Continue with Google",
+    "continueGithub": "Continue with GitHub",
+    "firstTime": "First time using DARNA?",
+    "createAccount": "Create an account",
+    "success": "Logged in successfully!",
+    "modalTitle": "Log in",
+    "genericError": "We couldn't log you in. Please try again.",
+    "welcomeBackName": "Welcome back, {name}!",
+    "oauthComingSoon": "Sign-in with {provider} is coming soon."
+  },
+  "register": {
+    "title": "Welcome to DARNA",
+    "subtitle": "Create an account to unlock instant bookings across Algeria",
+    "name": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "continue": "Continue",
+    "continueGoogle": "Continue with Google",
+    "continueGithub": "Continue with GitHub",
+    "alreadyAccount": "Already have an account?",
+    "logIn": "Log in",
+    "success": "Registered successfully!",
+    "modalTitle": "Sign up",
+    "genericError": "We couldn't create your account. Please try again.",
+    "welcomeName": "Account created! Welcome to DARNA, {name}!",
+    "oauthComingSoon": "Sign-up with {provider} is coming soon."
+  },
+  "search": {
+    "title": "Filters",
+    "stepLocationTitle": "Where do you want to go?",
+    "stepLocationSubtitle": "Find the perfect location!",
+    "stepDateTitle": "When do you plan to go?",
+    "stepDateSubtitle": "Make sure everyone is free!",
+    "stepInfoTitle": "More information",
+    "stepInfoSubtitle": "Find your perfect place!",
+    "actionSearch": "Search"
+  }
+}

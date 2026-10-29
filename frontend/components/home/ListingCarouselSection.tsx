@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useId } from "react";
+import { useTranslations } from "next-intl";
 import { Listing, User } from "@/types";
 import ListingCarouselCard from "./ListingCarouselCard";
 import {
@@ -9,7 +10,7 @@ import {
   BrandArrowRightIcon,
   BrandTagIcon,
 } from "@/components/icons";
-import { useRouter } from "@/navigation";
+import { Link } from "@/navigation";
 
 interface ListingCarouselSectionProps {
   title: string;
@@ -30,7 +31,8 @@ export default function ListingCarouselSection({
   viewMoreHref,
   isLoading = false,
 }: ListingCarouselSectionProps) {
-  const router = useRouter();
+  const t = useTranslations("common");
+  const headingId = useId();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -58,31 +60,29 @@ export default function ListingCarouselSection({
   };
 
   return (
-    <section className="space-y-4 py-4">
+    <section className="space-y-4 py-4" aria-labelledby={headingId}>
       {/* Header Row */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <div
-            onClick={() => {
-              if (viewMoreHref) {
-                router.push(viewMoreHref);
-              }
-            }}
-            className="flex items-center gap-2 group cursor-pointer"
-          >
-            <h2 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-              {title}
-            </h2>
-            <button
-              type="button"
-              aria-label="View more"
-              className="p-1 rounded-full text-primary group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform"
-            >
-              <BrandArrowRightIcon size={20} className="rtl:rotate-180" />
-            </button>
-          </div>
+          <h2 id={headingId} className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
+            {viewMoreHref ? (
+              <Link
+                href={viewMoreHref}
+                className="inline-flex items-center gap-2 group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              >
+                <span>{title}</span>
+                <span className="sr-only">{t("seeAll")}</span>
+                <BrandArrowRightIcon
+                  size={20}
+                  className="rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform"
+                />
+              </Link>
+            ) : (
+              title
+            )}
+          </h2>
           {subtitle && (
-            <p className="text-sm text-neutral-500 mt-0.5">{subtitle}</p>
+            <p className="text-sm text-neutral-600 mt-0.5">{subtitle}</p>
           )}
         </div>
 
@@ -92,8 +92,8 @@ export default function ListingCarouselSection({
             type="button"
             onClick={() => handleScroll("left")}
             disabled={!canScrollLeft}
-            aria-label="Previous listings"
-            className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+            aria-label={t("previous")}
+            className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             <BrandChevronLeftIcon size={20} className="rtl:rotate-180" />
           </button>
@@ -101,8 +101,8 @@ export default function ListingCarouselSection({
             type="button"
             onClick={() => handleScroll("right")}
             disabled={!canScrollRight}
-            aria-label="Next listings"
-            className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+            aria-label={t("next")}
+            className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             <BrandChevronRightIcon size={20} className="rtl:rotate-180" />
           </button>
@@ -129,6 +129,7 @@ export default function ListingCarouselSection({
           ? Array.from({ length: 4 }).map((_, idx) => (
               <div
                 key={idx}
+                aria-hidden="true"
                 className="flex-shrink-0 w-52 sm:w-60 space-y-2.5 animate-pulse"
               >
                 <div className="aspect-square w-full rounded-xl bg-neutral-200/70" />

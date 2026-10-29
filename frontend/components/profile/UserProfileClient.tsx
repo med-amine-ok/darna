@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { User, Listing, Review } from "@/types";
+import React, { useId, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { User, PublicUser, Listing, Review } from "@/types";
+import { updateProfileAction } from "@/app/actions/account";
+import { useActionError } from "@/hook/useActionError";
+import { formatDate, formatNumber, formatRating } from "@/lib/i18n/date-locale";
 import ListingCard from "@/components/listing/ListingCard";
 import Avatar from "@/components/Avatar";
 import { toast } from "react-toastify";
 import {
-  PremiumStarIcon,
   BrandStarIcon,
   BrandShareIcon,
   BrandShieldIcon,
@@ -16,15 +18,25 @@ import {
   BrandEditIcon,
   BrandCameraIcon,
   BrandPinIcon,
-  passportStampIcons,
 } from "@/components/icons";
 
+/** Owners get their full record; visitors only the public projection (no contact details). */
+type ProfileUser = PublicUser & Partial<Pick<User, "email" | "phone" | "address" | "emailVerified">>;
+
+type ProfileTab = "overview" | "edit" | "listings" | "reviews";
+
 interface UserProfileClientProps {
-  user: User;
+  user: ProfileUser;
   listings: Listing[];
   reviews: Review[];
   isOwner?: boolean;
 }
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+const inputClass =
+  "w-full px-4 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-sm text-primary placeholder-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 aria-[invalid=true]:border-status-error";
+
 
 export default function UserProfileClient({
   user: initialUser,
@@ -32,56 +44,74 @@ export default function UserProfileClient({
   reviews,
   isOwner = false,
 }: UserProfileClientProps) {
-  const [user, setUser] = useState<User>(initialUser);
-  const [activeTab, setActiveTab] = useState<"overview" | "edit" | "listings" | "reviews">("overview");
+  const t = useTranslations("profile");
+  const tCommon = useTranslations("common");
+  const tListing = useTranslations("listing");
+  const errorText = useActionError();
+  const locale = useLocale();
+  const formId = useId();
+  const [user, setUser] = useState<ProfileUser>(initialUser);
+  const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
 
   // Edit form state
   const [name, setName] = useState(user.name);
-  const [bio, setBio] = useState(
-    user.bio ||
-      "Passionate traveler and host exploring the hidden architectural treasures of Algeria."
-  );
-  const [address, setAddress] = useState(user.address || "Tipaza & Algiers, Algeria");
-  const [phone, setPhone] = useState(user.phone || "+213 550 12 34 56");
-  const [languages, setLanguages] = useState<string[]>(
-    user.languages || ["Arabic", "French", "English"]
-  );
-  const [funFact, setFunFact] = useState("Favorite road trip: Algiers to Djanet Tassili plateau");
+  const [bio, setBio] = useState(user.bio || "");
+  const [address, setAddress] = useState(user.address || "");
+  const [phone, setPhone] = useState(user.phone || "");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      setNameError(t("page.nameRequired"));
+      return;
+    }
+    setNameError(null);
     setIsSaving(true);
-    setTimeout(() => {
-      setUser((prev) => ({
-        ...prev,
-        name,
-        bio,
-        address,
-        phone,
-        languages,
-      }));
-      setIsSaving(false);
-      toast.success("Profile successfully updated!");
+    try {
+      const result = await updateProfileAction({ name, bio, address, phone, languages: user.languages });
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      setUser(result.data);
+      toast.success(t("editForm.saveSuccess"));
       setActiveTab("overview");
-    }, 400);
-  };
-
-  const handleShare = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      toast.info("Profile link copied to clipboard!");
+    } catch {
+      toast.error(t("page.saveFailed"));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const passportStamps = [
-    { id: "algiers", name: "Casbah of Algiers", region: "North Coast", unlocked: true },
-    { id: "tipaza", name: "Tipaza Roman Coast", region: "North Coast", unlocked: true },
-    { id: "oran", name: "Oran El Bahia", region: "West Coast", unlocked: true },
-    { id: "constantine", name: "Constantine Bridges", region: "East Rock", unlocked: true },
-    { id: "taghit", name: "Taghit Golden Oasis", region: "Saoura Desert", unlocked: true },
-    { id: "djanet", name: "Tassili n'Ajjer Plateau", region: "Deep Sahara", unlocked: true },
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.info(t("copied"));
+    } catch {
+      toast.error(t("page.copyFailed"));
+    }
+  };
+
+  // Review-weighted average of the host's listing ratings; null → "New".
+  const ratedListings = listings.filter((l) => l.rating && l.rating > 0);
+  const ratingWeight = ratedListings.reduce((sum, l) => sum + (l.reviewCount || 1), 0);
+  const hostRating = ratingWeight
+    ? formatRating(ratedListings.reduce((sum, l) => sum + (l.rating || 0) * (l.reviewCount || 1), 0) / ratingWeight, locale)
+    : null;
+
+  const memberSinceYear = formatDate(user.createdAt, locale, { year: "numeric" });
+  const roleLabel = user.role === "host" ? t("page.verifiedHost") : t("page.verifiedTraveler");
+
+  const tabs: { id: ProfileTab; label: string }[] = [
+    { id: "overview", label: t("tabs.overview") },
+    { id: "listings", label: t("page.listingsTab", { count: listings.length }) },
+    { id: "reviews", label: t("page.reviewsTab", { count: reviews.length }) },
+    ...(isOwner ? [{ id: "edit" as const, label: t("editProfile") }] : []),
   ];
+
+  const fieldId = (f: string) => `${formId}-${f}`;
 
   return (
     <div className="space-y-8">
@@ -89,12 +119,10 @@ export default function UserProfileClient({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-tertiary/50 pb-5">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-primary font-serif">
-            {isOwner ? "Your Profile & Explorer Passport" : `${user.name}'s Profile`}
+            {isOwner ? t("page.ownerTitle") : t("page.visitorTitle", { name: user.name })}
           </h1>
           <p className="text-sm text-neutral-500 mt-1">
-            {isOwner
-              ? "Manage your identity, Algerian passport stamps, and public traveler persona"
-              : `Member since ${new Date(user.createdAt).getFullYear()} · Verified DARNA Community`}
+            {isOwner ? t("page.ownerSubtitle") : t("page.visitorSubtitle", { year: memberSinceYear })}
           </p>
         </div>
 
@@ -102,121 +130,143 @@ export default function UserProfileClient({
           <button
             type="button"
             onClick={handleShare}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-tertiary rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition shadow-xs"
+            className={`inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-tertiary rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition shadow-xs ${focusRing}`}
           >
-            <BrandShareIcon size={16} />
-            <span>Share</span>
+            <BrandShareIcon size={16} aria-hidden="true" />
+            <span>{t("shareProfile")}</span>
           </button>
           {isOwner && (
             <button
               type="button"
               onClick={() => setActiveTab(activeTab === "edit" ? "overview" : "edit")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-xs"
+              aria-pressed={activeTab === "edit"}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-xs ${focusRing}`}
             >
-              <BrandEditIcon size={16} />
-              <span>{activeTab === "edit" ? "View Profile" : "Edit Profile"}</span>
+              <BrandEditIcon size={16} aria-hidden="true" />
+              <span>{activeTab === "edit" ? t("page.viewProfile") : t("editProfile")}</span>
             </button>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Avatar & Trust Card */}
+        {/* Start column: Avatar & Trust Card */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm text-center">
+          <section className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm text-center">
             <div className="relative inline-block mx-auto mb-4">
-              <Avatar src={user.image} size={110} />
+              <Avatar src={user.image} size={110} alt={t("page.avatarAlt", { name: user.name })} />
               {isOwner && (
                 <button
                   type="button"
-                  onClick={() => toast.info("Avatar photo change simulated.")}
-                  className="absolute bottom-1 end-1 p-2 bg-primary text-white rounded-full shadow-md hover:bg-primary/90 transition"
-                  title="Change photo"
+                  onClick={() => toast.info(t("page.photoChangeSimulated"))}
+                  className={`absolute bottom-1 end-1 p-2 bg-primary text-white rounded-full shadow-md hover:bg-primary/90 transition ${focusRing}`}
+                  aria-label={t("page.changePhoto")}
+                  title={t("page.changePhoto")}
                 >
-                  <BrandCameraIcon size={16} />
+                  <BrandCameraIcon size={16} aria-hidden="true" />
                 </button>
               )}
             </div>
 
             <h2 className="text-xl font-bold text-primary font-serif">{user.name}</h2>
-            <div className="text-xs text-neutral-500 mt-1">
-              {user.role === "host" ? "Verified Host & Superhost" : "Verified Traveler"}
-            </div>
+            <div className="text-xs text-neutral-500 mt-1">{roleLabel}</div>
 
-            {/* Verification Badges */}
-            <div className="my-6 p-4 bg-tertiary/20 rounded-2xl border border-tertiary/40 text-start space-y-2.5">
-              <div className="text-xs font-bold text-primary uppercase tracking-wider">
-                Confirmed Information
-              </div>
-              <div className="flex items-center gap-2 text-xs text-neutral-700">
-                <BrandShieldIcon size={16} className="text-emerald-700 shrink-0" />
-                <span>Identity verified with Algerian ID</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-neutral-700">
-                <BrandCheckIcon size={16} className="text-emerald-700 shrink-0" />
-                <span>Email address confirmed</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-neutral-700">
-                <BrandCheckIcon size={16} className="text-emerald-700 shrink-0" />
-                <span>Phone number verified</span>
-              </div>
-            </div>
-
-            {/* Host Stats */}
-            {user.role === "host" && (
-              <div className="pt-4 border-t border-tertiary/50 grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <div className="text-lg font-bold text-primary">{user.yearsHosting || 3}</div>
-                  <div className="text-[11px] text-neutral-500">Years hosting</div>
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-primary">{user.responseRate || 98}%</div>
-                  <div className="text-[11px] text-neutral-500">Response rate</div>
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-primary flex items-center gap-1">
-                    <BrandStarIcon size={16} className="text-accent" />
-                    <span>4.96</span>
-                  </div>
-                  <div className="text-[11px] text-neutral-500">Rating</div>
-                </div>
+            {/* Verification badges: only what the account record actually confirms */}
+            {(user.isIdentityVerified || user.emailVerified) && (
+              <div className="my-6 p-4 bg-tertiary/20 rounded-2xl border border-tertiary/40 text-start space-y-2.5">
+                <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t("page.confirmedInfo")}</h3>
+                <ul className="space-y-2.5">
+                  {user.isIdentityVerified && (
+                    <li className="flex items-center gap-2 text-xs text-neutral-700">
+                      <BrandShieldIcon size={16} className="text-emerald-700 shrink-0" aria-hidden="true" />
+                      <span>{t("page.identityVerified")}</span>
+                    </li>
+                  )}
+                  {user.emailVerified && (
+                    <li className="flex items-center gap-2 text-xs text-neutral-700">
+                      <BrandCheckIcon size={16} className="text-emerald-700 shrink-0" aria-hidden="true" />
+                      <span>{t("page.emailConfirmed")}</span>
+                    </li>
+                  )}
+                </ul>
               </div>
             )}
-          </div>
+
+            {/* Host stats (from the user record and their listings' real ratings) */}
+            {user.role === "host" && (
+              <dl className="pt-4 border-t border-tertiary/50 grid grid-cols-3 gap-2 text-center">
+                {typeof user.yearsHosting === "number" && (
+                  <div className="flex flex-col-reverse">
+                    <dt className="text-[11px] text-neutral-500">{t("page.yearsHosting")}</dt>
+                    <dd className="text-lg font-bold text-primary">{formatNumber(user.yearsHosting, locale)}</dd>
+                  </div>
+                )}
+                {typeof user.responseRate === "number" && (
+                  <div className="flex flex-col-reverse">
+                    <dt className="text-[11px] text-neutral-500">{t("page.responseRate")}</dt>
+                    <dd className="text-lg font-bold text-primary">
+                      {formatNumber(user.responseRate / 100, locale, { style: "percent" })}
+                    </dd>
+                  </div>
+                )}
+                <div className="flex flex-col-reverse">
+                  <dt className="text-[11px] text-neutral-500">{t("page.rating")}</dt>
+                  <dd className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                    {hostRating ? (
+                      <>
+                        <BrandStarIcon size={16} className="text-accent" aria-hidden="true" />
+                        <span>{hostRating}</span>
+                      </>
+                    ) : (
+                      tListing("ratingNew")
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            )}
+          </section>
 
           {/* Quick Info Block */}
-          <div className="bg-white rounded-3xl p-6 border border-tertiary shadow-sm space-y-3.5 text-xs text-neutral-700">
-            <h3 className="font-bold text-primary text-sm">Profile Details</h3>
+          <section className="bg-white rounded-3xl p-6 border border-tertiary shadow-sm space-y-3.5 text-xs text-neutral-700">
+            <h2 className="font-bold text-primary text-sm">{t("about.details")}</h2>
             <div className="flex items-center gap-2">
-              <BrandPinIcon size={16} className="text-secondary shrink-0" />
-              <span>Lives in: <strong>{user.address || "Algiers, Algeria"}</strong></span>
+              <BrandPinIcon size={16} className="text-secondary shrink-0" aria-hidden="true" />
+              <span>
+                {t.rich("page.livesIn", {
+                  place: (isOwner && user.address) || t("page.defaultCountry"),
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
+              </span>
             </div>
             <div className="flex items-center gap-2">
-              <BrandGlobeIcon size={16} className="text-secondary shrink-0" />
-              <span>Languages: <strong>{(user.languages || ["Arabic", "French"]).join(", ")}</strong></span>
+              <BrandGlobeIcon size={16} className="text-secondary shrink-0" aria-hidden="true" />
+              <span>
+                {t.rich("page.speaks", {
+                  languages: user.languages?.length
+                    ? new Intl.ListFormat(locale, { type: "conjunction" }).format(user.languages)
+                    : t("about.notProvided"),
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <BrandGlobeIcon size={16} className="text-secondary shrink-0" />
-              <span>Wilayas visited: <strong>14 of 58</strong></span>
-            </div>
-          </div>
+          </section>
         </div>
 
-        {/* Right Column: Content Tabs */}
+        {/* End column: Content Tabs */}
         <div className="lg:col-span-8 space-y-6">
           {/* Tabs Navigation */}
-          <div className="flex items-center gap-2 border-b border-tertiary/50 pb-2">
-            {[
-              { id: "overview", label: "Overview & Passport" },
-              { id: "listings", label: `Listings (${listings.length})` },
-              { id: "reviews", label: `Reviews (${reviews.length})` },
-              ...(isOwner ? [{ id: "edit", label: "Edit Profile" }] : []),
-            ].map((tab) => (
+          <div
+            role="group"
+            aria-label={t("page.sectionsLabel")}
+            className="flex flex-wrap items-center gap-2 border-b border-tertiary/50 pb-2"
+          >
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
+                aria-pressed={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${focusRing} ${
                   activeTab === tab.id
                     ? "bg-primary text-white shadow-xs"
                     : "text-neutral-600 hover:text-primary hover:bg-neutral-100"
@@ -231,63 +281,22 @@ export default function UserProfileClient({
           {activeTab === "overview" && (
             <div className="space-y-6">
               {/* About Me */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm space-y-3">
-                <h3 className="text-lg font-bold text-primary font-serif">About Me</h3>
+              <section className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm space-y-3">
+                <h2 className="text-lg font-bold text-primary font-serif">{t("about.title")}</h2>
                 <p className="text-sm text-neutral-600 leading-relaxed whitespace-pre-line">
-                  {user.bio || "Welcome to my DARNA profile!"}
+                  {user.bio || t("page.defaultBio")}
                 </p>
-                <div className="pt-3 border-t border-tertiary/40 text-xs text-neutral-500">
-                  Fun fact: <span className="font-semibold text-primary">{funFact}</span>
-                </div>
-              </div>
-
-              {/* Algerian Explorer Passport */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-primary font-serif flex items-center gap-2">
-                      <span>DARNA Algerian Explorer Passport</span>
-                      <PremiumStarIcon size={18} className="text-accent" />
-                    </h3>
-                    <p className="text-xs text-neutral-500 mt-0.5">
-                      Cultural wilaya stamps earned by booking stays and journeys across Algeria
-                    </p>
-                  </div>
-                  <span className="px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-bold">
-                    6 Stamps Earned
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pt-2">
-                  {passportStamps.map((stamp) => {
-                    const StampIcon = passportStampIcons[stamp.id];
-                    return (
-                      <div
-                        key={stamp.id}
-                        className="p-3.5 bg-neutral-50 rounded-2xl border border-tertiary/60 flex flex-col items-center text-center hover:bg-tertiary/20 transition group"
-                      >
-                        <div className="w-12 h-12 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-105">
-                          {StampIcon && <StampIcon size={44} className="drop-shadow-xs" />}
-                        </div>
-                        <div className="text-xs font-bold text-primary">{stamp.name}</div>
-                        <div className="text-[10px] text-neutral-400 mt-0.5">{stamp.region}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              </section>
             </div>
           )}
 
           {/* TAB: Listings */}
           {activeTab === "listings" && (
-            <div className="space-y-4">
-              <h3 className="text-base font-bold text-primary">
-                Listings hosted by {user.name}
-              </h3>
+            <section className="space-y-4">
+              <h2 className="text-base font-bold text-primary">{t("page.listingsBy", { name: user.name })}</h2>
               {listings.length === 0 ? (
                 <div className="bg-white rounded-3xl p-8 border border-tertiary text-center text-xs text-neutral-500">
-                  No listings published yet.
+                  {t("page.noListings")}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -296,140 +305,147 @@ export default function UserProfileClient({
                   ))}
                 </div>
               )}
-            </div>
+            </section>
           )}
 
           {/* TAB: Reviews */}
           {activeTab === "reviews" && (
-            <div className="space-y-4">
-              <h3 className="text-base font-bold text-primary">
-                Community Reviews ({reviews.length})
-              </h3>
+            <section className="space-y-4">
+              <h2 className="text-base font-bold text-primary">
+                {t("page.reviewsHeading", { count: reviews.length })}
+              </h2>
               {reviews.length === 0 ? (
                 <div className="bg-white rounded-3xl p-8 border border-tertiary text-center text-xs text-neutral-500">
-                  No reviews received yet.
+                  {t("page.noReviews")}
                 </div>
               ) : (
-                <div className="space-y-4">
+                <ul className="space-y-4">
                   {reviews.map((rev) => (
-                    <div
-                      key={rev.id}
-                      className="bg-white rounded-2xl border border-tertiary p-5 shadow-xs space-y-2"
-                    >
+                    <li key={rev.id} className="bg-white rounded-2xl border border-tertiary p-5 shadow-xs space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <Avatar src={rev.user?.image} size={36} />
                           <div>
                             <div className="text-xs font-bold text-primary">
-                              {rev.user?.name || "Traveler"}
+                              {rev.user?.name || t("page.anonymousTraveler")}
                             </div>
-                            <div className="text-[11px] text-neutral-400">
-                              {new Date(rev.createdAt).toLocaleDateString()}
-                            </div>
+                            <time dateTime={rev.createdAt} className="text-[11px] text-neutral-500">
+                              {formatDate(rev.createdAt, locale)}
+                            </time>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 text-xs font-bold text-primary">
-                          <BrandStarIcon size={14} className="text-amber-500 fill-amber-500" />
-                          <span>{rev.rating}.0</span>
+                          <BrandStarIcon size={14} className="text-amber-500 fill-amber-500" aria-hidden="true" />
+                          <span className="sr-only">{t("page.ratingOutOf", { rating: rev.rating })}</span>
+                          <span aria-hidden="true">
+                            {formatNumber(rev.rating, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                          </span>
                         </div>
                       </div>
-                      <p className="text-xs text-neutral-600 leading-relaxed">
-                        {rev.comment}
-                      </p>
-                    </div>
+                      <p className="text-xs text-neutral-600 leading-relaxed">{rev.comment}</p>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-            </div>
+            </section>
           )}
 
           {/* TAB: Edit Profile Form */}
           {activeTab === "edit" && isOwner && (
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm">
-              <h3 className="text-lg font-bold text-primary font-serif mb-4">
-                Edit Your Profile Information
-              </h3>
-              <form onSubmit={handleSaveProfile} className="space-y-4">
+            <section className="bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm">
+              <h2 className="text-lg font-bold text-primary font-serif mb-4">{t("editForm.title")}</h2>
+              <form onSubmit={handleSaveProfile} noValidate className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                    Display Name
+                  <label htmlFor={fieldId("name")} className="block text-xs font-semibold text-neutral-700 mb-1.5">
+                    {t("editForm.fullName")}
                   </label>
                   <input
+                    id={fieldId("name")}
                     type="text"
+                    autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    placeholder={t("editForm.namePlaceholder")}
                     required
-                    className="w-full px-4 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    aria-invalid={nameError ? true : undefined}
+                    aria-describedby={nameError ? fieldId("name-error") : undefined}
+                    className={inputClass}
                   />
+                  {nameError && (
+                    <p id={fieldId("name-error")} role="alert" className="mt-1 text-xs text-status-error">
+                      {nameError}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                    About You (Bio)
+                  <label htmlFor={fieldId("bio")} className="block text-xs font-semibold text-neutral-700 mb-1.5">
+                    {t("editForm.bio")}
                   </label>
                   <textarea
+                    id={fieldId("bio")}
                     rows={4}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder={t("editForm.bioPlaceholder")}
+                    className={inputClass}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                      Where You Live (Wilaya)
+                    <label
+                      htmlFor={fieldId("address")}
+                      className="block text-xs font-semibold text-neutral-700 mb-1.5"
+                    >
+                      {t("editForm.location")}
                     </label>
                     <input
+                      id={fieldId("address")}
                       type="text"
+                      autoComplete="address-level1"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder={t("editForm.locationPlaceholder")}
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                      Phone Number
+                    <label htmlFor={fieldId("phone")} className="block text-xs font-semibold text-neutral-700 mb-1.5">
+                      {t("editForm.phone")}
                     </label>
                     <input
-                      type="text"
+                      id={fieldId("phone")}
+                      type="tel"
+                      autoComplete="tel"
+                      dir="ltr"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder={t("editForm.phonePlaceholder")}
+                      className={`${inputClass} text-start`}
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                    Fun Fact Prompt
-                  </label>
-                  <input
-                    type="text"
-                    value={funFact}
-                    onChange={(e) => setFunFact(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
 
                 <div className="pt-2 flex items-center justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setActiveTab("overview")}
-                    className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition"
+                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-neutral-600 hover:bg-neutral-100 transition ${focusRing}`}
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="px-6 py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-sm disabled:opacity-50"
+                    className={`px-6 py-2.5 bg-primary text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary/95 transition shadow-sm disabled:opacity-50 ${focusRing}`}
                   >
-                    {isSaving ? "Saving changes..." : "Save Profile Changes"}
+                    {isSaving ? t("editForm.saving") : t("editForm.saveButton")}
                   </button>
                 </div>
               </form>
-            </div>
+            </section>
           )}
         </div>
       </div>

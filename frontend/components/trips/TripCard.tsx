@@ -3,6 +3,8 @@
 import React from "react";
 import Image from "next/image";
 import { Link } from "@/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/lib/i18n/date-locale";
 import { Trip } from "@/types";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import {
@@ -28,14 +30,19 @@ export default function TripCard({
   customHref,
 }: TripCardProps) {
   const nights = Math.max(1, trip.durationDays - 1);
-  const agencyName = trip.organization?.name || "Verified Travel Agency";
+  const t = useTranslations("trips");
+  const locale = useLocale();
+  const ratingText = trip.rating
+    ? formatNumber(trip.rating, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "";
+  const agencyName = trip.organization?.name || t("card.verifiedAgency");
 
   return (
     <Link
       href={customHref || `/trips/${trip.id}`}
       onMouseEnter={() => onHover && onHover(trip.id)}
       onMouseLeave={() => onHover && onHover(null)}
-      className={`group flex flex-col bg-white rounded-3xl border overflow-hidden transition-all duration-300 transform ${
+      className={`group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 bg-white rounded-3xl border overflow-hidden transition-all duration-300 transform ${
         isHovered
           ? "border-primary shadow-2xl -translate-y-1.5 ring-2 ring-primary ring-offset-2 scale-[1.01]"
           : "border-tertiary/60 shadow-2xs hover:shadow-xl hover:border-primary/40 hover:-translate-y-1"
@@ -55,20 +62,21 @@ export default function TripCard({
         {/* Top Badges */}
         <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 min-w-0 pointer-events-none">
           <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[11px] font-bold text-primary flex items-center gap-1.5 shadow-xs shrink-0 truncate max-w-[65%]">
-            <BrandCalendarIcon size={13} className="text-secondary shrink-0" />
+            <BrandCalendarIcon size={13} className="text-secondary shrink-0" aria-hidden="true" />
             <span className="truncate">
-              {trip.durationDays} Days / {nights} Nights
+              {t("card.duration", { days: trip.durationDays, nights })}
             </span>
           </span>
 
           {trip.rating ? (
             <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-bold text-white flex items-center gap-1 shrink-0">
-              <BrandStarIcon size={12} className="text-accent fill-accent shrink-0" />
-              <span>{trip.rating.toFixed(2)}</span>
+              <BrandStarIcon size={12} className="text-accent fill-accent shrink-0" aria-hidden="true" />
+              <span className="sr-only">{t("card.ratingLabel", { rating: ratingText })}</span>
+              <span aria-hidden="true">{ratingText}</span>
             </span>
           ) : (
-            <span className="px-2.5 py-1 rounded-full bg-accent text-[11px] font-bold text-white shrink-0">
-              New Expedition
+            <span className="px-2.5 py-1 rounded-full bg-accent-600 text-[11px] font-bold text-white shrink-0">
+              {t("card.newBadge")}
             </span>
           )}
         </div>
@@ -76,12 +84,13 @@ export default function TripCard({
         {/* Bottom Image Overlay: Agency Tag */}
         <div className="absolute bottom-3 start-3 end-3 flex items-center justify-between gap-2 min-w-0 text-white text-xs">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/50 backdrop-blur-md min-w-0 flex-1">
-            <BrandShieldIcon size={13} className="text-emerald-400 shrink-0" />
+            <BrandShieldIcon size={13} className="text-emerald-400 shrink-0" aria-hidden="true" />
             <span className="font-semibold truncate">{agencyName}</span>
           </div>
           <span className="px-2 py-0.5 rounded-lg bg-white/20 backdrop-blur-md text-[11px] font-medium flex items-center gap-1 shrink-0">
-            <BrandUsersIcon size={12} className="shrink-0" />
-            <span>Max {trip.maxGroupSize}</span>
+            <BrandUsersIcon size={12} className="shrink-0" aria-hidden="true" />
+            <span className="sr-only">{t("card.maxGroupLabel", { count: trip.maxGroupSize })}</span>
+            <span aria-hidden="true">{t("card.maxGroup", { count: trip.maxGroupSize })}</span>
           </span>
         </div>
       </div>
@@ -91,8 +100,8 @@ export default function TripCard({
         <div>
           {/* Location */}
           <div className="flex items-center gap-1 text-xs font-semibold text-secondary uppercase tracking-wider mb-1.5">
-            <BrandPinIcon size={13} strokeWidth={2} />
-            <span>{trip.city}, Algeria</span>
+            <BrandPinIcon size={13} strokeWidth={2} aria-hidden="true" />
+            <span>{t("locationLine", { city: trip.city, country: t("countryAlgeria") })}</span>
           </div>
 
           {/* Title */}
@@ -109,20 +118,20 @@ export default function TripCard({
         {/* Card Footer: Pricing & Action */}
         <div className="pt-3 border-t border-tertiary/40 flex items-end justify-between gap-2">
           <div>
-            <span className="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-              Starting from
+            <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+              {t("card.startingFrom")}
             </span>
             <PriceDisplay
               price={trip.pricePerPerson}
-              period="/ person"
+              period={t("card.perPerson")}
               priceClassName="text-lg font-black text-primary"
-              eurClassName="text-[11px] text-neutral-400"
+              eurClassName="text-[11px] text-neutral-500"
             />
           </div>
 
-          <div className="flex items-center gap-1 text-xs font-bold text-primary group-hover:text-secondary group-hover:translate-x-1 transition-all">
-            <span>Details</span>
-            <BrandChevronRightIcon size={14} strokeWidth={2} />
+          <div className="flex items-center gap-1 text-xs font-bold text-primary group-hover:text-secondary group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-all">
+            <span>{t("card.details")}</span>
+            <BrandChevronRightIcon size={14} strokeWidth={2} className="rtl:rotate-180" aria-hidden="true" />
           </div>
         </div>
       </div>

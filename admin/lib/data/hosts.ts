@@ -1,8 +1,14 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { Host, HostType, HostStatus, PaginatedResult } from "@/lib/types";
+import { Host, PaginatedResult, AdminActor, Permission } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
-import { logAudit } from "./audit";
+import { canHostAction, isValidReason, type HostAction } from "@/lib/domain/transitions";
+import { isValidCommissionRate } from "@/lib/pricing";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { logAudit, logExport } from "./audit";
+import { computeWalletAggregates, getHostBalance } from "./ledger";
+import { DomainError, ValidationError } from "./errors";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -52,8 +58,12 @@ export async function listHosts(
     return parts.includes(hStatus.toLowerCase());
   };
 
+  // Wallet balances are always derived from the ledger.
+  const aggregates = computeWalletAggregates();
+  const withBalances: Host[] = store.hosts.map((h) => ({ ...h, walletBalance: aggregates.get(h.id)?.balance ?? 0 }));
+
   // Base filtering across all filters EXCEPT category (for category facets)
-  let baseline = [...store.hosts];
+  let baseline = [...withBalances];
 
   // 1. Host Type Tab
   if (params.hostType && params.hostType !== "all") {
@@ -189,198 +199,149 @@ export async function listHosts(
 export async function getHostById(id: string): Promise<Host | null> {
   await delay(150);
   const host = store.hosts.find((h) => h.id === id);
-  return host ? { ...host } : null;
+  return host ? { ...host, walletBalance: getHostBalance(host.id) } : null;
 }
 
-export async function approveHost(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Host> {
-  assertCan(actor.role, "hosts.approve");
+/** Full filtered host list (all pages) as CSV; audited. */
+export async function exportHosts(params: HostFilterParams, actor: AdminActor): Promise<CsvExport> {
+  const result = await listHosts({ ...params, page: 1, pageSize: Number.MAX_SAFE_INTEGER });
+  const rows = result.rows;
+  const csv = toCsv(
+    ["ID", "Owner", "Business", "Email", "Phone", "Host Type", "Category", "Status", "Verification", "Wilaya", "City", "Rating", "Listings", "Bookings", "Wallet Balance (DZD)", "Commission (%)", "Joined"],
+    rows.map((h) => [
+      h.formattedId || h.id, h.ownerName, h.businessName, h.email, h.phone, h.hostType, h.providerCategory, h.status,
+      h.verificationStatus, h.wilayaCode, h.city, h.rating, h.listingsCount, h.bookingsCount, h.walletBalance,
+      h.commissionRate, h.joinedAt,
+    ])
+  );
+  await logExport(actor, "hosts", rows.length, { ...params });
+  return { filename: `darna_hosts_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
+}
+
+const HOST_ACTION_PERMISSION: Record<HostAction, Permission> = {
+  approve: "hosts.approve",
+  reject: "hosts.reject",
+  suspend: "hosts.suspend",
+  unsuspend: "hosts.suspend",
+  ban: "hosts.delete",
+  delete: "hosts.delete",
+  restore: "hosts.delete",
+};
+
+const HOST_ACTION_AUDIT: Record<HostAction, string> = {
+  approve: "HOST_APPROVE",
+  reject: "HOST_REJECT",
+  suspend: "HOST_SUSPEND",
+  unsuspend: "HOST_UNSUSPEND",
+  ban: "HOST_BAN",
+  delete: "HOST_DELETE",
+  restore: "HOST_RESTORE",
+};
+
+const HOST_ACTIONS_REQUIRING_REASON: readonly HostAction[] = ["reject", "suspend", "ban"];
+
+/**
+ * Single guarded entry point for host moderation. Validates permission, the
+ * mandatory reason, and the allowed-transition map (lib/domain/transitions)
+ * before writing; soft delete remembers the previous status and restore
+ * returns to it.
+ */
+async function transitionHost(id: string, action: HostAction, actor: AdminActor, reason?: string): Promise<Host> {
+  assertCan(actor.role, HOST_ACTION_PERMISSION[action]);
+  if (HOST_ACTIONS_REQUIRING_REASON.includes(action) && !isValidReason(reason)) {
+    throw new ValidationError(`A reason is required to ${action} a host`);
+  }
   await delay(200);
 
   const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
-
+  if (idx === -1) throw new DomainError("Host not found");
   const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    status: "approved",
-    verificationStatus: "verified",
-  };
+  if (!canHostAction(prev.status, action)) {
+    throw new DomainError(`Cannot ${action} a host whose status is ${prev.status}`);
+  }
+
+  let next: Host;
+  switch (action) {
+    case "approve":
+      next = { ...prev, status: "approved", verificationStatus: "verified" };
+      break;
+    case "reject":
+      next = { ...prev, status: "rejected", adminNotes: [...prev.adminNotes, `Rejected: ${reason}`] };
+      break;
+    case "suspend":
+      next = { ...prev, status: "suspended", adminNotes: [...prev.adminNotes, `Suspended: ${reason}`] };
+      break;
+    case "unsuspend":
+      next = { ...prev, status: "approved" };
+      break;
+    case "ban":
+      next = { ...prev, status: "banned", adminNotes: [...prev.adminNotes, `Banned: ${reason}`] };
+      break;
+    case "delete":
+      next = { ...prev, status: "deleted", statusBeforeDelete: prev.status };
+      break;
+    case "restore": {
+      const restored = prev.statusBeforeDelete && prev.statusBeforeDelete !== "deleted" ? prev.statusBeforeDelete : "under_review";
+      next = { ...prev, status: restored, statusBeforeDelete: undefined };
+      break;
+    }
+  }
+  store.hosts[idx] = next;
 
   await logAudit(
     actor,
-    "HOST_APPROVE",
+    HOST_ACTION_AUDIT[action],
     "host",
     id,
-    `Approved host ${prev.ownerName} (${prev.hostType})`,
-    prev,
-    store.hosts[idx]
+    `${action} host ${prev.ownerName} (${prev.status} -> ${next.status})${reason ? `: ${reason}` : ""}`,
+    { status: prev.status },
+    { status: next.status }
   );
 
-  return store.hosts[idx];
+  return { ...next, walletBalance: getHostBalance(next.id) };
 }
 
-export async function rejectHost(
-  id: string,
-  reason: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Host> {
-  assertCan(actor.role, "hosts.reject");
-  await delay(200);
-
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
-
-  const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    status: "rejected",
-    adminNotes: [...store.hosts[idx].adminNotes, `Rejected: ${reason}`],
-  };
-
-  await logAudit(
-    actor,
-    "HOST_REJECT",
-    "host",
-    id,
-    `Rejected host ${prev.ownerName}: ${reason}`,
-    prev,
-    store.hosts[idx]
-  );
-
-  return store.hosts[idx];
+export async function approveHost(id: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "approve", actor);
 }
 
-export async function suspendHost(
-  id: string,
-  reason: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Host> {
-  assertCan(actor.role, "hosts.suspend");
-  await delay(200);
-
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
-
-  const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    status: "suspended",
-    adminNotes: [...store.hosts[idx].adminNotes, `Suspended: ${reason}`],
-  };
-
-  await logAudit(
-    actor,
-    "HOST_SUSPEND",
-    "host",
-    id,
-    `Suspended host ${prev.ownerName}: ${reason}`,
-    prev,
-    store.hosts[idx]
-  );
-
-  return store.hosts[idx];
+export async function rejectHost(id: string, reason: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "reject", actor, reason);
 }
 
-export async function unsuspendHost(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Host> {
-  assertCan(actor.role, "hosts.suspend");
-  await delay(200);
-
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
-
-  const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    status: "approved",
-  };
-
-  await logAudit(
-    actor,
-    "HOST_UNSUSPEND",
-    "host",
-    id,
-    `Reactivated host ${prev.ownerName}`,
-    prev,
-    store.hosts[idx]
-  );
-
-  return store.hosts[idx];
+export async function suspendHost(id: string, reason: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "suspend", actor, reason);
 }
 
-export async function deleteHost(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Host> {
-  assertCan(actor.role, "hosts.delete");
-  await delay(200);
-
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
-
-  const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    status: "deleted",
-  };
-
-  await logAudit(
-    actor,
-    "HOST_DELETE",
-    "host",
-    id,
-    `Soft deleted host ${prev.ownerName}`,
-    prev,
-    store.hosts[idx]
-  );
-
-  return store.hosts[idx];
+export async function unsuspendHost(id: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "unsuspend", actor);
 }
 
-export async function restoreHost(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Host> {
-  assertCan(actor.role, "hosts.delete");
-  await delay(200);
+export async function banHost(id: string, reason: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "ban", actor, reason);
+}
 
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
+export async function deleteHost(id: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "delete", actor);
+}
 
-  const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    status: "approved",
-  };
-
-  await logAudit(
-    actor,
-    "HOST_RESTORE",
-    "host",
-    id,
-    `Restored soft-deleted host ${prev.ownerName}`,
-    prev,
-    store.hosts[idx]
-  );
-
-  return store.hosts[idx];
+export async function restoreHost(id: string, actor: AdminActor): Promise<Host> {
+  return transitionHost(id, "restore", actor);
 }
 
 export async function overrideCommission(
   id: string,
   newRate: number,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<Host> {
   assertCan(actor.role, "hosts.commission_override");
+  if (!isValidCommissionRate(newRate)) {
+    throw new ValidationError("Commission rate must be between 0 and 100 with at most 2 decimals");
+  }
   await delay(200);
 
   const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new Error("Host not found");
+  if (idx === -1) throw new DomainError("Host not found");
 
   const prev = { ...store.hosts[idx] };
   store.hosts[idx] = {
@@ -395,9 +356,9 @@ export async function overrideCommission(
     "host",
     id,
     `Overrode commission rate to ${newRate}% for host ${prev.ownerName}`,
-    prev,
-    store.hosts[idx]
+    { commissionRate: prev.commissionRate, isCommissionOverridden: prev.isCommissionOverridden ?? false },
+    { commissionRate: newRate, isCommissionOverridden: true }
   );
 
-  return store.hosts[idx];
+  return { ...store.hosts[idx], walletBalance: getHostBalance(id) };
 }

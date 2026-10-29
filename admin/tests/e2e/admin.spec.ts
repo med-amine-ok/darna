@@ -1,12 +1,14 @@
 import { test, expect, Page } from "@playwright/test";
 
 async function loginAsSuperAdmin(page: Page) {
+  // Skip the first-visit product tour overlay so it doesn't intercept clicks.
+  await page.addInitScript(() => localStorage.setItem("darna_admin_tour_completed", "true"));
   await page.goto("/en/login");
   await page.fill('input[type="email"]', "admin@darna.dz");
-  await page.fill('input[type="password"]', "DarnaAdmin2026!");
+  await page.fill('input[type="password"]', process.env.ADMIN_SEED_PASSWORD || "DarnaAdmin2026!");
   await page.click('button[type="submit"]');
   await page.waitForURL((url) => url.pathname === "/en");
-  await expect(page.locator("h1")).toContainText("Marketplace Command Center");
+  await expect(page.locator("h1").first()).toContainText(/Good (morning|afternoon|evening), DARNA/);
 }
 
 test.describe("DARNA Admin Panel E2E Tests", () => {
@@ -31,12 +33,12 @@ test.describe("DARNA Admin Panel E2E Tests", () => {
 
     // Valid login attempt
     await page.fill('input[type="email"]', "admin@darna.dz");
-    await page.fill('input[type="password"]', "DarnaAdmin2026!");
+    await page.fill('input[type="password"]', process.env.ADMIN_SEED_PASSWORD || "DarnaAdmin2026!");
     await page.click('button[type="submit"]');
 
     // Successfully redirects to Dashboard
     await page.waitForURL((url) => url.pathname === "/en");
-    await expect(page.locator("h1")).toContainText("Marketplace Command Center");
+    await expect(page.locator("h1").first()).toContainText(/Good (morning|afternoon|evening), DARNA/);
   });
 
   test("3. Hosts page: filter by category tab, search and wilaya", async ({ page }) => {
@@ -72,22 +74,66 @@ test.describe("DARNA Admin Panel E2E Tests", () => {
     }
   });
 
-  test("5. Treasury: open wallet credit recharge dialog", async ({ page }) => {
+  test("5. Treasury: /finance redirects to /payments and the recharge dialog validates amounts", async ({ page }) => {
     await loginAsSuperAdmin(page);
 
+    // Legacy duplicate route is a server redirect to the canonical page.
     await page.goto("/en/finance");
-    await expect(page.locator("h1")).toContainText("Financial Treasury");
+    await page.waitForURL((url) => url.pathname === "/en/payments");
+    await expect(page.locator("h1").first()).toContainText("Payments & Finance");
 
-    // Click Credit Recharge on first row
-    const rechargeBtn = page.locator("text=Credit Recharge").first();
-    await rechargeBtn.click();
+    await page.goto("/en/payments/wallets");
+    await page.locator("table tbody tr button", { hasText: "Recharge" }).first().click();
+    await expect(page.locator("text=Recharge host wallet")).toBeVisible();
 
-    // Verify dialog opens
-    await expect(page.locator("text=Recharge Wallet:")).toBeVisible();
-    await expect(page.locator("text=Confirm Ledger Credit")).toBeVisible();
+    // Non-integer / out-of-range amounts are rejected client-side (and server-side).
+    await page.fill("#recharge-amount", "12.5");
+    await expect(page.locator("text=Enter a whole amount between 1 and")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Confirm recharge" })).toBeDisabled();
 
-    // Cancel modal
-    await page.click("text=Cancel");
+    await page.getByRole("button", { name: "Cancel" }).click();
+  });
+
+  test("5b. Payouts: approval asks for confirmation with the amount and masks the account", async ({ page }) => {
+    await loginAsSuperAdmin(page);
+    await page.goto("/en/payments/payouts");
+    await expect(page.locator("text=007 99999 0001234567 89")).toHaveCount(0);
+    await expect(page.locator("td", { hasText: "••••" }).first()).toBeVisible();
+
+    await page.getByRole("button", { name: /^Approve the payout of / }).first().click();
+    await expect(page.locator("text=Approve this payout?")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Approve .*DZD$/ })).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).click();
+  });
+
+  test("5c. Payouts: approving debits the wallet once; insufficient balance is refused", async ({ page }) => {
+    await loginAsSuperAdmin(page);
+    await page.goto("/en/payments/payouts");
+    const approveButtons = page.getByRole("button", { name: /^Approve the payout of / });
+    await expect(page.locator("td", { hasText: "••••" }).first()).toBeVisible();
+    const pending = await approveButtons.count();
+    test.skip(pending === 0, "no pending payouts left in the mock store");
+
+    let approved = 0;
+    let refused = 0;
+    for (let i = 0; i < pending; i++) {
+      const before = await approveButtons.count();
+      if (before === 0) break;
+      await approveButtons.nth(i % before).click();
+      await page.getByRole("button", { name: /^Approve .*DZD$/ }).click();
+      // Dialog closes once the server answered; then the list is reloaded.
+      await expect(page.locator("text=Approve this payout?")).toHaveCount(0);
+      await page.waitForTimeout(1200);
+      if ((await approveButtons.count()) < before) approved++;
+      else refused++;
+    }
+    expect(approved).toBeGreaterThan(0);
+    // The seed deliberately includes requests larger than the wallet balance.
+    expect(refused).toBeGreaterThan(0);
+    // Approved rows no longer offer an Approve button (idempotent: no second debit possible).
+    await page.reload();
+    await expect(page.locator("td", { hasText: "••••" }).first()).toBeVisible();
+    await expect(approveButtons).toHaveCount(pending - approved);
   });
 
   test("6. Internationalization: language switch to Arabic sets dir='rtl'", async ({ page }) => {

@@ -1,6 +1,10 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
 import { WILAYAS } from "@/lib/utils/wilayas";
+import type { AdminActor } from "@/lib/types";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { logExport } from "./audit";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -196,4 +200,20 @@ export async function getAttentionItems() {
       })),
     ],
   };
+}
+
+/** KPI summary report as CSV (computed server-side); the export is audited. */
+export async function exportKpiReport(
+  reportName: string,
+  period: string,
+  actor: AdminActor
+): Promise<CsvExport> {
+  const k = await getDashboardKPIs(period);
+  const csv = toCsv(
+    ["Report", "Period", "Platform Net Revenue (DZD)", "Gross Bookings (DZD)", "Commission Revenue (DZD)", "Bookings", "Active Listings", "Generated At"],
+    [[reportName, period, k.netPlatformRevenueDzd, k.totalGrossVolumeDzd, k.commissionRevenueDzd, k.totalBookingsCount, k.activeListingsCount, new Date().toISOString()]]
+  );
+  await logExport(actor, "kpi_report", 1, { reportName, period });
+  const slug = reportName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "report";
+  return { filename: `darna_${slug}_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: 1 };
 }

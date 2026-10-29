@@ -1,19 +1,19 @@
-import { cookies } from "next/headers";
+import { hostPageMetadata } from "@/components/host/hostMetadata";
+import { requireHostContext } from "@/lib/server/host-context";
 import { getConversations, getMessages } from "@/lib/data/conversations";
-import { getCurrentUser } from "@/lib/data/auth";
 import MessagesClient from "@/components/messages/MessagesClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function HostMessagesPage() {
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
-  const hostId = currentUser?.id || "usr_amina";
+export function generateMetadata({ params }: { params: { locale: string } }) {
+  return hostPageMetadata(params.locale, "messages");
+}
 
-  const conversations = await getConversations(hostId);
+export default async function HostMessagesPage({ params }: { params: { locale: string } }) {
+  const ctx = await requireHostContext(params?.locale || "en", "/host/messages");
+  const conversations = await getConversations(ctx.user.id);
 
-  // Load initial messages for first host conversation if available
+  // getConversations only returns threads the user takes part in.
   const initialConvId = conversations[0]?.id;
   const initialMessages = initialConvId ? await getMessages(initialConvId) : [];
 
@@ -21,7 +21,7 @@ export default async function HostMessagesPage() {
     <MessagesClient
       initialConversations={conversations}
       initialMessages={initialMessages}
-      currentUser={currentUser}
+      currentUser={ctx.user}
     />
   );
 }

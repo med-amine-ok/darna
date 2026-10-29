@@ -1,3 +1,4 @@
+import "server-only";
 import { User } from "@/types";
 
 export const mockUsers: User[] = [
@@ -92,4 +93,3 @@ export const mockUsers: User[] = [
   },
 ];
 
-export const currentUserMock = mockUsers[2]; // Default authenticated mock user (Yacine Cherif - guest, hostType: null)

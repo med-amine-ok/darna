@@ -1,0 +1,22 @@
+{
+  "priceRange": "نطاق الأسعار",
+  "priceRangeSubtitle": "الأسعار لليلة أو لليوم في أماكن الإقامة والتأجير بالجزائر",
+  "minimum": "الحد الأدنى",
+  "maximum": "الحد الأقصى",
+  "roomsAndBeds": "الغرف والمساحات",
+  "bedrooms": "غرف النوم",
+  "bedroomsSubtitle": "الحد الأدنى لعدد غرف النوم",
+  "bathrooms": "الحمامات",
+  "bathroomsSubtitle": "حمامات خاصة أو مشتركة",
+  "propertyType": "نوع مكان الإقامة",
+  "apartment": "شقة",
+  "hotel": "فندق",
+  "amenities": "وسائل الراحة والمزايا",
+  "anyStayType": "أي نوع إقامة",
+  "entireHome": "منزل كامل",
+  "privateRoom": "غرفة خاصة",
+  "hotelResort": "فندق ومنتجع",
+  "hostelDorms": "نُزل شباب ومهاجع",
+  "villa": "فيلا",
+  "riad": "رياض وقصور تاريخية"
+}

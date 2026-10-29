@@ -1,11 +1,19 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { AuditEntry, AdminRole, PaginatedResult } from "@/lib/types";
+import { AuditEntry, AuditActor, AdminActor, PaginatedResult } from "@/lib/types";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * The ONLY writer of the audit trail. Entries are appended (never edited or
+ * removed) through store.appendAudit, which freezes them. The actor and IP
+ * always come from the server-side session (lib/auth/current-admin) or, for
+ * sign-in attempts, from the request headers — never from the client.
+ */
 export async function logAudit(
-  actor: { id: string; name: string; role: AdminRole },
+  actor: AuditActor,
   action: string,
   entityType: AuditEntry["entityType"],
   entityId: string,
@@ -25,26 +33,43 @@ export async function logAudit(
     details,
     beforeState,
     afterState,
-    ipAddress: "197.200.45.12 (Algiers, DZ)",
+    ipAddress: actor.ip || "unknown",
   };
 
-  store.audit = [newEntry, ...store.audit];
-  return newEntry;
+  return { ...store.appendAudit(newEntry) };
 }
 
-export async function listAuditLogs(params: {
+/** Records a data export (CSV) in the audit trail. */
+export async function logExport(
+  actor: AdminActor,
+  dataset: string,
+  rowCount: number,
+  filters: Record<string, unknown> = {}
+): Promise<void> {
+  const activeFilters = Object.fromEntries(
+    Object.entries(filters).filter(([, v]) => v !== undefined && v !== null && v !== "" && v !== "all")
+  );
+  await logAudit(
+    actor,
+    "DATA_EXPORT",
+    "export",
+    dataset,
+    `Exported ${rowCount} ${dataset} row(s) as CSV`,
+    undefined,
+    { dataset, rowCount, filters: activeFilters }
+  );
+}
+
+export interface AuditFilterParams {
   page?: number;
   pageSize?: number;
   actorRole?: string;
   entityType?: string;
   search?: string;
-}): Promise<PaginatedResult<AuditEntry>> {
-  await delay(180);
+}
 
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 20;
-
-  let filtered = [...store.audit];
+function filterAudit(params: AuditFilterParams): AuditEntry[] {
+  let filtered: AuditEntry[] = [...store.audit];
 
   if (params.entityType && params.entityType !== "all") {
     filtered = filtered.filter((a) => a.entityType === params.entityType);
@@ -64,10 +89,19 @@ export async function listAuditLogs(params: {
         a.entityId.toLowerCase().includes(q)
     );
   }
+  return filtered;
+}
+
+export async function listAuditLogs(params: AuditFilterParams): Promise<PaginatedResult<AuditEntry>> {
+  await delay(180);
+
+  const page = params.page || 1;
+  const pageSize = params.pageSize || 20;
+  const filtered = filterAudit(params);
 
   const total = filtered.length;
   const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const rows = filtered.slice((page - 1) * pageSize, page * pageSize).map((e) => ({ ...e }));
 
   return {
     rows,
@@ -76,4 +110,15 @@ export async function listAuditLogs(params: {
     pageSize,
     totalPages,
   };
+}
+
+/** Full filtered audit trail (all pages) as CSV; the export itself is audited. */
+export async function exportAuditLogs(params: AuditFilterParams, actor: AdminActor): Promise<CsvExport> {
+  const rows = filterAudit({ ...params, page: undefined, pageSize: undefined });
+  const csv = toCsv(
+    ["Timestamp", "Actor", "Role", "Action", "Entity Type", "Entity ID", "Details", "IP Address"],
+    rows.map((r) => [r.timestamp, r.actorName, r.actorRole, r.action, r.entityType, r.entityId, r.details, r.ipAddress])
+  );
+  await logExport(actor, "audit_log", rows.length, { ...params });
+  return { filename: `darna_audit_log_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
 }

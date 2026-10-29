@@ -1,0 +1,12 @@
+{
+  "title": "Favoris",
+  "subtitle": "Liste des logements que vous avez ajoutés à vos coups de cœur !",
+  "emptyTitle": "Aucun favori trouvé",
+  "savedPlaces": "{count, plural, =0 {Aucun lieu enregistré} one {# lieu enregistré en Algérie} other {# lieux enregistrés en Algérie}}",
+  "noFavoritesDesc": "En explorant DARNA, touchez le cœur d'une villa, d'un 4x4 ou d'un trek dans le Sahara pour l'enregistrer ici.",
+  "noSavedInTab": "Rien d'enregistré dans « {tab} » pour l'instant",
+  "filterLabel": "Filtrer les lieux enregistrés par type",
+  "metaTitle": "Mes favoris",
+  "toastSaved": "Ajouté aux favoris",
+  "toastRemoved": "Retiré des favoris"
+}

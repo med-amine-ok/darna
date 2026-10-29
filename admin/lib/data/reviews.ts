@@ -1,6 +1,7 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { ReviewItem, ReviewStatus, PaginatedResult } from "@/lib/types";
+import { ReviewItem, ReviewStatus, PaginatedResult, AdminActor } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
 import { logAudit } from "./audit";
 
@@ -80,7 +81,7 @@ export async function listReviews(
 
 export async function hideReview(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<ReviewItem> {
   assertCan(actor.role, "reviews.moderate");
   await delay(200);
@@ -109,7 +110,7 @@ export async function hideReview(
 
 export async function restoreReview(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<ReviewItem> {
   assertCan(actor.role, "reviews.moderate");
   await delay(200);
@@ -138,7 +139,7 @@ export async function restoreReview(
 
 export async function deleteReview(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<ReviewItem> {
   assertCan(actor.role, "reviews.delete");
   await delay(200);
@@ -167,7 +168,7 @@ export async function deleteReview(
 
 export async function dismissFlag(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<ReviewItem> {
   assertCan(actor.role, "reviews.moderate");
   await delay(200);

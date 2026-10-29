@@ -1,0 +1,100 @@
+{
+  "title": "Agency Team",
+  "subtitle": "Manage team members, roles, and property management permissions.",
+  "inviteTeammate": "Invite Teammate",
+  "activeMembers": "Active Team Members",
+  "pendingInvites": "Pending Invitations",
+  "resend": "Resend",
+  "cancel": "Cancel",
+  "remove": "Remove",
+  "roleOwner": "Owner",
+  "roleAdmin": "Admin",
+  "roleManager": "Manager",
+  "roleManagerStaff": "Manager / staff",
+  "organizationOwner": "Organization owner",
+  "backToHost": "Back to host overview",
+  "logoAlt": "{name} logo",
+  "verifiedAgency": "Verified Algerian tourism agency",
+  "verificationPending": "Verification pending",
+  "rcLabel": "Trade Register (RC):",
+  "inviteNotAllowed": "Only the owner or an admin can invite members.",
+  "invitedOn": "Invited on {date}",
+  "kpi": {
+    "totalRoster": "Total roster",
+    "permissionModel": "Permission model",
+    "threeTier": "3-tier access"
+  },
+  "table": {
+    "title": "Team members & access levels",
+    "count": "{count, plural, =0 {No team members yet} one {# team member registered} other {# team members registered}}",
+    "colMember": "Member",
+    "colRole": "Role",
+    "colStatus": "Status",
+    "colDate": "Joined / invited",
+    "colActions": "Actions",
+    "roleFor": "Role for {name}",
+    "rolesOwnerOnly": "Only the owner can change roles"
+  },
+  "status": {
+    "active": "Active",
+    "pending": "Invitation pending"
+  },
+  "actions": {
+    "resendFor": "Resend invitation to {name}",
+    "makeOwner": "Make owner",
+    "makeOwnerFor": "Make {name} the owner",
+    "revoke": "Revoke access",
+    "revokeFor": "Revoke access for {name}"
+  },
+  "matrix": {
+    "title": "The 3 permission levels explained",
+    "owner": {
+      "title": "1. Owner",
+      "description": "Full legal and financial control. Receives CCP / BNA payouts, configures agency settings and manages billing."
+    },
+    "admin": {
+      "title": "2. Admin",
+      "description": "Listing and fleet management. Can create and edit listings, adjust prices, manage the calendar and invite team members."
+    },
+    "manager": {
+      "title": "3. Manager / staff",
+      "description": "Day-to-day operations. Can view incoming reservations, message guests, coordinate check-in/check-out and check calendar availability."
+    }
+  },
+  "invite": {
+    "title": "Invite a team member",
+    "close": "Close",
+    "emailLabel": "Work email",
+    "emailPlaceholder": "colleague@agency.dz",
+    "emailRequired": "Enter a valid work email address.",
+    "nameLabel": "Full name (optional)",
+    "namePlaceholder": "e.g. Sarah Touati",
+    "roleLabel": "Assigned role",
+    "managerHint": "Bookings & guest messaging",
+    "adminHint": "Listings, fleet & team management",
+    "sending": "Sending…",
+    "send": "Send invitation"
+  },
+  "removeDialog": {
+    "title": "Revoke team access",
+    "message": "Remove {name} from {organization}? They will immediately lose access to your agency dashboard, calendar and bookings.",
+    "cancel": "Keep member"
+  },
+  "transferDialog": {
+    "title": "Transfer ownership",
+    "message": "Make {name} the owner of {organization}? You will become an admin.",
+    "confirm": "Transfer ownership",
+    "cancel": "Cancel"
+  },
+  "toasts": {
+    "inviteSent": "Invitation sent to {email}.",
+    "inviteFailed": "Couldn't send the invitation.",
+    "roleUpdated": "Role updated to {role}.",
+    "roleFailed": "Couldn't update the role.",
+    "ownerCannotBeRemoved": "The organization owner can't be removed.",
+    "memberRemoved": "Team member access revoked.",
+    "removeFailed": "Couldn't remove the member.",
+    "resendComingSoon": "Invitation emails are coming soon. For now, share the invitation with {email} directly.",
+    "ownershipTransferred": "Ownership transferred."
+  }
+}

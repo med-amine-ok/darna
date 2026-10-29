@@ -23,6 +23,27 @@ export interface User {
   responseTime?: string;
 }
 
+/**
+ * Public projection of a user — safe to send to any visitor.
+ * Never contains email, phone or address.
+ */
+export interface PublicUser {
+  id: string;
+  name: string;
+  image?: string | null;
+  role: UserRole;
+  hostType?: HostType | null;
+  createdAt: string;
+  bio?: string;
+  languages?: string[];
+  isIdentityVerified?: boolean;
+  yearsHosting?: number;
+  responseRate?: number;
+  responseTime?: string;
+}
+
+export type CancellationPolicy = "flexible" | "moderate" | "strict";
+
 export type ListingVertical = "home" | "hotel" | "experience" | "vehicle" | "trip";
 export type ListingOwnerType = "individual" | "organization";
 export type ListingStatus = "active" | "pending" | "suspended" | "draft";
@@ -128,7 +149,24 @@ export interface Listing {
   bedroomCount?: number;
   amenities?: string[];
   houseRules?: string[];
-  cancellationPolicy?: "flexible" | "moderate" | "strict";
+  cancellationPolicy?: CancellationPolicy;
+
+  // Pricing (DZD integers). `cleaningFee: 0` is valid ("no cleaning fee").
+  cleaningFee?: number;
+  /** Admin-only override of DARNA's guest service fee rate (0–1). */
+  serviceFeeRate?: number;
+  /** Admin-only override of the tax rate (0–1). */
+  taxRate?: number;
+
+  // Stay rules (defaults: STAY_RULE_DEFAULTS in lib/booking/config.ts)
+  minNights?: number;
+  maxNights?: number;
+  advanceNoticeDays?: number;
+  checkInTime?: string; // "HH:mm"
+  checkOutTime?: string; // "HH:mm"
+
+  /** Search-only: total price incl. fees for the searched dates (server-computed). */
+  quotedTotal?: number;
 
   // Vehicle-specific fields
   make?: string;
@@ -152,6 +190,8 @@ export interface Listing {
 
 export type ReservationStatus = "confirmed" | "pending" | "cancelled" | "completed" | "declined" | "expired";
 
+export type PaymentStatus = "paid" | "pending" | "refunded" | "partially_refunded" | "voided";
+
 export interface Reservation {
   id: string;
   userId: string;
@@ -167,7 +207,18 @@ export interface Reservation {
   status: ReservationStatus;
   createdAt: string;
   paymentMethod?: string;
-  paymentStatus?: "paid" | "pending" | "refunded";
+  paymentStatus?: PaymentStatus;
+  /** Accommodation subtotal (price × units), excl. cleaning, service fee and taxes. */
+  subtotal?: number;
+  /** Rooms or beds booked (hotels / hostels). */
+  unitCount?: number;
+  cancellationPolicy?: CancellationPolicy;
+  refundAmount?: number;
+  cancelledAt?: string;
+  cancelledBy?: "guest" | "host" | "system";
+  /** DARNA commission charged to the host (on the subtotal). */
+  commissionAmount?: number;
+  commissionRate?: number;
   approvalMode?: "instant" | "request";
   expiresAt?: string;
   guestMessage?: string;
@@ -207,14 +258,15 @@ export interface Trip {
   city: string;
   locationValue: string;
   latlng?: [number, number];
-  cancellationPolicy: "flexible" | "moderate" | "strict";
+  cancellationPolicy: CancellationPolicy;
   organizationId: string; // Must belong to an Agency
   status: "active" | "draft";
   rating?: number;
   reviewsCount?: number;
   departureDates?: string[];
   createdAt: string;
-  organization?: Organization;
+  /** Public projection of the organizing agency (no contact/legal details). */
+  organization?: PublicOrganization;
 }
 
 export type OrganizationVerificationStatus = "pending" | "verified" | "rejected";
@@ -248,6 +300,39 @@ export interface Organization {
   curfewPolicy?: string;
   agePolicy?: string;
   bookingApprovalMode?: "instant" | "request";
+}
+
+/** Public projection of an organization (no contact or legal details). */
+export interface PublicOrganization {
+  id: string;
+  name: string;
+  businessCategory: "agency" | "hotel" | "hostel";
+  logo?: string | null;
+  description?: string;
+  businessType?: string;
+  country?: string;
+  isVerified: boolean;
+  createdAt: string;
+  rating?: number;
+  reviewCount?: number;
+  hotelStarRating?: number;
+  totalRoomCount?: number;
+  checkInTime?: string;
+  checkOutTime?: string;
+  hotelAmenities?: string[];
+  hostelFacilities?: string[];
+  curfewPolicy?: string;
+  agePolicy?: string;
+  bookingApprovalMode?: "instant" | "request";
+}
+
+/** Public projection of a team member (no email). */
+export interface PublicMember {
+  id: string;
+  name: string;
+  role: "owner" | "admin" | "manager";
+  avatar?: string | null;
+  joinedAt?: string | null;
 }
 
 export type MembershipRole = "owner" | "admin" | "manager";

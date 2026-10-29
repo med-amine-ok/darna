@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Tajawal } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { locales, Locale } from "@/i18n";
 import { ToastProvider } from "@/components/ui/Toast";
 import "../globals.css";
@@ -30,23 +30,25 @@ export const viewport: Viewport = {
   themeColor: "#2E3A2F",
 };
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s · DARNA Admin",
-    default: "DARNA Admin Panel",
-  },
-  description: "DARNA Algerian Marketplace Administration and Moderation Console",
-  robots: {
-    index: false,
-    follow: false,
-    nocache: true,
-  },
-  icons: {
-    icon: "/icons/favicon-32x32.png",
-    shortcut: "/icons/favicon-16x16.png",
-    apple: "/icons/apple-touch-icon.png",
-  },
-};
+// Icons come from the file conventions app/favicon.ico, app/icon.png and app/apple-icon.png.
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const locale = locales.includes(params.locale as Locale) ? params.locale : "en";
+  const t = await getTranslations({ locale, namespace: "meta" });
+  return {
+    title: {
+      template: t("titleTemplate"),
+      default: t("defaultTitle"),
+    },
+    description: t("description"),
+    // Back-office: never indexed (see also app/robots.ts).
+    robots: {
+      index: false,
+      follow: false,
+      nocache: true,
+      googleBot: { index: false, follow: false },
+    },
+  };
+}
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));

@@ -1,5 +1,7 @@
 // TODO: replace with Supabase query
+import "server-only";
 import { Review } from "@/types";
+import { listingsTable } from "./_tables";
 
 export const mockReviews: Review[] = [
   {
@@ -106,5 +108,7 @@ export async function getReviewsByListingId(listingId: string): Promise<Review[]
 
 export async function getReviewsByUserId(userId: string): Promise<Review[]> {
   await new Promise((resolve) => setTimeout(resolve, 60));
-  return mockReviews.filter((r) => r.userId === userId || r.listingId === "lst_tipaza_villa");
+  // Reviews written by the user, plus reviews left on listings they host.
+  const hostedIds = new Set(listingsTable.filter((l) => l.hostUserId === userId).map((l) => l.id));
+  return mockReviews.filter((r) => r.userId === userId || hostedIds.has(r.listingId));
 }

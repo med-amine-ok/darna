@@ -1,0 +1,34 @@
+{
+  "propertiesManaged": "Properties Managed",
+  "contactAgency": "Contact Agency",
+  "team": "Hospitality & Management Team",
+  "metaTitleFallback": "Agency profile",
+  "metaDescription": "Discover stays, vehicles and experiences offered by {name} on DARNA.",
+  "logoAlt": "{name} logo",
+  "pendingVerification": "Pending verification",
+  "verified": {
+    "agency": "Verified agency",
+    "hotel": "Verified hotel",
+    "hostel": "Verified hostel"
+  },
+  "reviewTitle": "Compliance review in progress",
+  "reviewBody": "DARNA is still verifying this organization's commercial registration.",
+  "teamMembers": "Team members",
+  "rating": "Rating",
+  "noRating": "New",
+  "reviewsReceived": "Reviews received",
+  "memberCount": "{count, plural, one {# member} other {# members}}",
+  "roles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "manager": "Manager"
+  },
+  "contactNote": {
+    "agency": "You can message this agency through DARNA once you have a booking.",
+    "hotel": "You can message this hotel through DARNA once you have a booking.",
+    "hostel": "You can message this hostel through DARNA once you have a booking."
+  },
+  "listingsBy": "Stays, vehicles & experiences by {name}",
+  "listingCount": "{count, plural, =0 {No listings} one {# listing} other {# listings}}",
+  "noListings": "This agency has no published listings yet."
+}

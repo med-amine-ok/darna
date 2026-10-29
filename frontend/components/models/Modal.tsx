@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useId, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useDialogA11y } from "@/hook/useDialogA11y";
 import { BrandCloseIcon } from "@/components/icons";
 import Button from "@/components/Button";
 
@@ -29,6 +31,7 @@ export default function Modal({
   secondaryAction,
   secondaryActionLabel,
 }: ModalProps) {
+  const t = useTranslations("common");
   const [showModal, setShowModal] = useState(isOpen);
 
   useEffect(() => {
@@ -43,24 +46,11 @@ export default function Modal({
     }, 300);
   }, [disabled, onClose]);
 
-  // Accessibility: Handle Escape key and body scroll lock
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen && !disabled) {
-        handleClose();
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen, disabled, handleClose]);
+  // Focus trap, Escape to close, scroll lock and focus restore.
+  const panelRef = useDialogA11y<HTMLDivElement>(Boolean(isOpen), {
+    onEscape: disabled ? undefined : handleClose,
+  });
+  const titleId = useId();
 
   const handleSubmit = useCallback(() => {
     if (disabled) return;
@@ -76,9 +66,6 @@ export default function Modal({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={title || "Dialog"}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           handleClose();
@@ -102,18 +89,23 @@ export default function Modal({
               : "translate-y-full sm:translate-y-4 opacity-0 scale-95"
           }`}
         >
-          <div className="h-full sm:h-auto border border-tertiary/40 sm:rounded-3xl shadow-darna-modal relative flex flex-col w-full bg-white outline-none focus:outline-none overflow-hidden max-h-[100dvh] sm:max-h-[90vh]">
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            className="h-full sm:h-auto border border-tertiary/40 sm:rounded-3xl shadow-darna-modal relative flex flex-col w-full bg-white outline-none focus:outline-none overflow-hidden max-h-[100dvh] sm:max-h-[90vh]">
             {/* Header */}
             <div className="flex items-center px-6 py-4 rounded-t justify-center relative border-b border-tertiary/40 flex-shrink-0 bg-white">
               <button
                 type="button"
-                aria-label="Close"
-                className="w-9 h-9 flex items-center justify-center border-0 hover:bg-neutral-100 rounded-full transition absolute start-4 text-neutral-600 hover:text-primary cursor-pointer touch-manipulation btn-press z-10"
+                aria-label={t("close")}
+                className="w-9 h-9 flex items-center justify-center border-0 hover:bg-neutral-100 rounded-full transition absolute start-4 text-neutral-600 hover:text-primary cursor-pointer touch-manipulation btn-press z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                 onClick={handleClose}
               >
                 <BrandCloseIcon size={18} strokeWidth={2.2} />
               </button>
-              <div className="text-base sm:text-lg font-bold text-primary px-10 text-center truncate max-w-full">{title}</div>
+              <h2 id={titleId} className="text-base sm:text-lg font-bold text-primary px-10 text-center truncate max-w-full">{title}</h2>
             </div>
 
             {/* Body */}

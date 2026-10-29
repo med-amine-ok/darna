@@ -1,0 +1,107 @@
+{
+  "title": "Host settings & payout preferences",
+  "subtitle": "Configure Algerian bank payouts (CCP / bank RIB), booking rules, host identity and communication channels.",
+  "tabs": {
+    "ariaLabel": "Host settings sections",
+    "payouts": "Payout accounts & history",
+    "identity": "Host type & legal status",
+    "defaults": "Booking defaults",
+    "notifications": "Guest communication"
+  },
+  "channels": {
+    "CCP": "Algérie Poste CCP",
+    "BNA": "Banque Nationale d'Algérie (BNA)",
+    "BEA": "Banque Extérieure d'Algérie (BEA)"
+  },
+  "channelsShort": {
+    "CCP": "CCP",
+    "BNA": "BNA",
+    "BEA": "BEA"
+  },
+  "payouts": {
+    "title": "Algerian payout accounts (DZD)",
+    "description": "Earnings are paid out automatically in Algerian dinars (DZD) 24 hours after guest check-in.",
+    "add": "Add payout method",
+    "badgeCcp": "CCP",
+    "badgeRib": "RIB",
+    "defaultBadge": "Default payout",
+    "setDefault": "Set as default",
+    "setDefaultFor": "Set {method} as default payout",
+    "ccpDetails": "{number} Key {key}",
+    "ribDetails": "RIB: {number}",
+    "holderFallback": "Host"
+  },
+  "history": {
+    "title": "Disbursement & payout history",
+    "description": "All transfers are processed via Algérie Poste CCP or BNA interbank clearing.",
+    "colDate": "Date",
+    "colReference": "Reference ID",
+    "colMethod": "Transfer method",
+    "colAmount": "Amount",
+    "colStatus": "Status",
+    "statusTransferred": "Transferred"
+  },
+  "identity": {
+    "title": "Hosting account type & verification",
+    "description": "Manage your individual host registration or your tourism agency workspace credentials.",
+    "currentStatus": "Current status",
+    "individualHost": "Individual certified host",
+    "verifiedAgency": "Verified agency • RC: {rc}",
+    "individualVerified": "Algerian national identity card (CNI) verified",
+    "manageTeam": "Manage agency team",
+    "upgrade": "Upgrade to an agency workspace",
+    "complianceTitle": "Legal compliance in Algeria",
+    "complianceBody": "Hosting activities on DARNA follow Algerian tourism and tax regulations. Individual hosts are registered as auto-entrepreneurs or individuals. Agencies must provide their Trade Register number (RC) and tax identification number (NIF)."
+  },
+  "defaults": {
+    "title": "Global booking parameters",
+    "description": "Set standard rules that apply to your existing and future listings.",
+    "approvalModeLabel": "Default booking approval mode",
+    "instantTitle": "Instant confirmation",
+    "instantDesc": "Guests book automatically without host review. Maximum conversion and instant bookings.",
+    "requestTitle": "Host review (24h window)",
+    "requestDesc": "You review the guest's profile and message before confirming. A response within 24h is required.",
+    "advanceNoticeLabel": "Required advance notice",
+    "advanceSameDay": "Same-day bookings allowed",
+    "advanceDays": "{count, plural, one {At least # day before arrival} other {At least # days before arrival}}",
+    "prepTimeLabel": "Preparation time between stays",
+    "prepNone": "None (same-day check-in allowed)",
+    "prepOneNight": "Block 1 night between reservations",
+    "checkInLabel": "Standard check-in time",
+    "checkOutLabel": "Standard check-out time",
+    "cancellationLabel": "Default cancellation policy",
+    "cancellationFlexible": "Flexible: full refund up to 1 day before check-in",
+    "cancellationModerate": "Moderate: full refund up to 5 days before check-in",
+    "cancellationStrict": "Strict: full refund up to 14 days before check-in, 50% from 13 to 7 days",
+    "save": "Save parameters"
+  },
+  "notifications": {
+    "title": "Guest communication & SMS alerts",
+    "description": "Configure automatic welcome notes and mobile alerts on Algerian networks (Mobilis, Djezzy, Ooredoo).",
+    "smsTitle": "SMS booking alerts",
+    "smsDesc": "Get an instant SMS when a traveler books or cancels on your listing.",
+    "emailTitle": "Email notifications",
+    "emailDesc": "Receive inquiry summaries and weekly earnings digests.",
+    "welcomeLabel": "Automatic welcome message (sent as soon as a booking is confirmed)",
+    "welcomeDefault": "Salam alaykoum! Thank you for booking your stay with us in Algeria. We look forward to welcoming you. Please let us know your estimated arrival time.",
+    "save": "Save preferences"
+  },
+  "addPayout": {
+    "title": "Add an Algerian payout account",
+    "close": "Close",
+    "channelLabel": "Payout channel",
+    "ccpNumberLabel": "Account number (CCP)",
+    "ccpKeyLabel": "Key (Clé)",
+    "ribLabel": "20-digit bank RIB",
+    "errorRequired": "Please enter your account number.",
+    "cancel": "Cancel",
+    "save": "Save account"
+  },
+  "toasts": {
+    "payoutAdded": "Payout method added.",
+    "defaultPayoutUpdated": "Default payout account updated.",
+    "defaultsSaved": "Booking parameters and approval mode saved.",
+    "agencyUpgradeRequested": "Agency upgrade requested. Our team will verify your Trade Register (RC).",
+    "communicationSaved": "Communication preferences saved."
+  }
+}

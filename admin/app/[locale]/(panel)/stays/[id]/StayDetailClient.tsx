@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "@/navigation";
 import {
@@ -11,21 +11,10 @@ import {
   Star,
   ShieldCheck,
   CheckCircle2,
-  Clock,
-  XCircle,
   FileText,
   Eye,
   Download,
   Edit,
-  Trash2,
-  Home,
-  Users,
-  Bed,
-  Bath,
-  Maximize2,
-  Calendar,
-  AlertTriangle,
-  Info,
   Check,
   RotateCcw,
 } from "lucide-react";
@@ -33,9 +22,16 @@ import { Tabs } from "@/components/ui/Tabs";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { TypePill } from "@/components/ui/TypePill";
 import { InfoTile } from "@/components/ui/InfoTile";
+import { Dialog } from "@/components/ui/Dialog";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { getListingById, approveListing, rejectListing, requestChangesListing, restoreListing } from "@/lib/data/listings";
+import { approveListing, rejectListing, requestChangesListing, restoreListing, updateListingStatus } from "@/lib/actions/listings";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { canTransitionListing } from "@/lib/domain/transitions";
+import { formatDateTime, formatDzd, formatNumber } from "@/lib/utils/format";
+import { useLocale, useTranslations } from "next-intl";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 
 interface StayDetailClientProps {
@@ -43,89 +39,121 @@ interface StayDetailClientProps {
   stayId: string;
 }
 
+function errorMessage(err: unknown): string | undefined {
+  return err instanceof Error ? err.message : undefined;
+}
+
+const TAB_IDS = ["overview", "info", "photos", "amenities", "pricing", "rules", "calendar", "documents", "history"] as const;
+
+/** Mock moderation checklist (key → result key), translated at render time. */
+const CHECK_POINTS: { key: string; result: "compliant" | "verified" | "complete" }[] = [
+  { key: "ownerDocuments", result: "compliant" },
+  { key: "photos", result: "verified" },
+  { key: "address", result: "verified" },
+  { key: "amenities", result: "complete" },
+  { key: "pricingPolicy", result: "compliant" },
+  { key: "houseRules", result: "compliant" },
+];
+
+/** Mock owner documents. */
+const OWNER_DOCUMENTS: { key: string; ext: string; sizeMb: number; validated: boolean }[] = [
+  { key: "identity", ext: "PDF", sizeMb: 1.8, validated: true },
+  { key: "propertyTitle", ext: "PDF", sizeMb: 4.2, validated: true },
+  { key: "proofOfAddress", ext: "JPG", sizeMb: 2.1, validated: false },
+];
+
+const iconBtn =
+  "p-1 hover:bg-[#EAE5D9] rounded text-[#2E3A2F]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
 export default function StayDetailClient({ initialStay, stayId }: StayDetailClientProps) {
   const router = useRouter();
   const { addToast } = useToast();
+  const can = useCan();
+  const locale = useLocale();
+  const t = useTranslations("stays");
+  const tCommon = useTranslations("common");
+  const tActions = useTranslations("actions");
 
   const [stay, setStay] = useState<Listing | null>(initialStay);
   const [activeTab, setActiveTab] = useState("overview");
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [decisionModal, setDecisionModal] = useState<"approve" | "reject" | "changes" | null>(null);
-  const [decisionNotes, setDecisionNotes] = useState("");
 
   const formattedId = stay?.formattedId || `#H${stayId.replace("lst_", "").padStart(5, "0")}`;
+
+  const showError = (err: unknown) =>
+    addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
 
   const handleApprove = async () => {
     if (!stay) return;
     try {
-      const updated = await approveListing(stay.id, { id: "usr_admin", name: "Admin", role: "super_admin" });
+      const updated = unwrap(await approveListing(stay.id));
       setStay(updated);
-      addToast({ title: "Hébergement approuvé et publié", variant: "success" });
+      addToast({ title: t("detail.toasts.approved"), variant: "success" });
       setDecisionModal(null);
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      showError(err);
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason: string) => {
     if (!stay) return;
     try {
-      const updated = await rejectListing(stay.id, decisionNotes || "Dossier non conforme", {
-        id: "usr_admin",
-        name: "Admin",
-        role: "super_admin",
-      });
+      const updated = unwrap(await rejectListing(stay.id, reason));
       setStay(updated);
-      addToast({ title: "Hébergement refusé", variant: "warning" });
+      addToast({ title: t("detail.toasts.rejected"), variant: "warning" });
       setDecisionModal(null);
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      showError(err);
     }
   };
 
-  const handleRequestChanges = async () => {
+  const handleRequestChanges = async (reason: string) => {
     if (!stay) return;
     try {
-      const updated = await requestChangesListing(stay.id, decisionNotes || "Modifications requises", {
-        id: "usr_admin",
-        name: "Admin",
-        role: "super_admin",
-      });
+      const updated = unwrap(await requestChangesListing(stay.id, reason));
       setStay(updated);
-      addToast({ title: "Modifications demandées à l'hôte", variant: "info" });
+      addToast({ title: t("detail.toasts.changesRequested"), variant: "info" });
       setDecisionModal(null);
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      showError(err);
     }
   };
 
+  // deleted → previous status (restore); suspended → approved; rejected → back to review.
   const handleRestore = async () => {
     if (!stay) return;
     try {
-      const updated = await restoreListing(stay.id, { id: "usr_admin", name: "Admin", role: "super_admin" });
+      const updated =
+        stay.status === "deleted"
+          ? unwrap(await restoreListing(stay.id))
+          : unwrap(await updateListingStatus(stay.id, stay.status === "suspended" ? "approved" : "pending_review"));
       setStay(updated);
-      addToast({ title: "Suspension annulée / Hébergement réactivé", variant: "success" });
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+      addToast({ title: tActions("statusUpdated"), variant: "success" });
+    } catch (err: unknown) {
+      showError(err);
     }
   };
 
   if (!stay) {
     return (
       <div className="p-8 text-center bg-white rounded-xl border border-[#D9C9B2]/60">
-        <h2 className="text-base font-semibold text-[#2E3A2F]">Hébergement introuvable</h2>
-        <p className="text-xs text-[#2E3A2F]/60 mt-1">L'annonce demandée n'existe pas ou a été supprimée.</p>
+        <h1 className="text-base font-semibold text-[#2E3A2F]">{t("detail.notFoundTitle")}</h1>
+        <p className="text-xs text-[#2E3A2F]/70 mt-1">{t("detail.notFoundText")}</p>
         <button
+          type="button"
           onClick={() => router.push("/stays")}
-          className="mt-4 px-4 py-2 bg-[#2E3A2F] text-white rounded-lg text-xs"
+          className="mt-4 px-4 py-2 bg-[#2E3A2F] text-white rounded-lg text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
         >
-          Retour aux hébergements
+          {t("detail.backToStays")}
         </button>
       </div>
     );
   }
 
   const images = stay.imageSrc?.length ? stay.imageSrc : ["/placeholder-stay.jpg"];
+  const isPublished = stay.status === "approved" || stay.status === "published";
+  const isPending = stay.status === "pending_review" || stay.status === "pending";
 
   return (
     <div className="space-y-6">
@@ -133,63 +161,62 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D9C9B2]/50 pb-5">
         <div>
           <button
+            type="button"
             onClick={() => router.push("/stays")}
-            className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] mb-2 font-medium"
+            className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] mb-2 font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Retour à la liste</span>
+            <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+            <span>{t("detail.backToList")}</span>
           </button>
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-[#2E3A2F]">{stay.title}</h1>
             <StatusPill status={stay.status} />
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#2E3A2F]/60 mt-1">
-            <span className="font-mono font-medium">{formattedId}</span>
-            <span>•</span>
-            <span>Ajouté le {new Date(stay.createdAt).toLocaleDateString("fr-FR")} à {new Date(stay.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
-            <span>•</span>
-            <span className="text-[#6B7F5B] flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" /> {stay.city}, {stay.wilayaCode}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[#2E3A2F]/70 mt-1">
+            <span className="font-mono font-medium" dir="ltr">{formattedId}</span>
+            <span aria-hidden="true">•</span>
+            <span>{t("detail.addedOn", { date: formatDateTime(stay.createdAt, locale) })}</span>
+            <span aria-hidden="true">•</span>
+            <span className="text-secondary-700 flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> {stay.city}, {stay.wilayaCode}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => router.push(`/stays/${stay.id}/review`)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Vérification & Modération</span>
+            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>{t("detail.reviewModeration")}</span>
+          </button>
+          {/* Prev / next navigation is not wired to the data layer yet. */}
+          <button
+            type="button"
+            disabled
+            className="p-2 border border-[#D9C9B2] rounded-lg bg-white text-[#2E3A2F]/70 hover:bg-[#F8F6EE] disabled:opacity-50 disabled:cursor-not-allowed"
+            title={t("detail.previous")}
+            aria-label={t("detail.previous")}
+          >
+            <ChevronLeft className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
           </button>
           <button
-            className="p-2 border border-[#D9C9B2] rounded-lg bg-white text-[#2E3A2F]/70 hover:bg-[#F8F6EE]"
-            title="Précédent"
+            type="button"
+            disabled
+            className="p-2 border border-[#D9C9B2] rounded-lg bg-white text-[#2E3A2F]/70 hover:bg-[#F8F6EE] disabled:opacity-50 disabled:cursor-not-allowed"
+            title={t("detail.next")}
+            aria-label={t("detail.next")}
           >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            className="p-2 border border-[#D9C9B2] rounded-lg bg-white text-[#2E3A2F]/70 hover:bg-[#F8F6EE]"
-            title="Suivant"
-          >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {/* 2. Tab Bar (Mockup 06: 9 tabs) */}
       <Tabs
-        items={[
-          { id: "overview", label: "Vue d'ensemble" },
-          { id: "info", label: "Informations" },
-          { id: "photos", label: "Photos" },
-          { id: "amenities", label: "Équipements" },
-          { id: "pricing", label: "Tarifs et disponibilité" },
-          { id: "rules", label: "Règles" },
-          { id: "calendar", label: "Calendrier" },
-          { id: "documents", label: "Documents" },
-          { id: "history", label: "Historique" },
-        ]}
+        items={TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) }))}
         activeId={activeTab}
         onChange={setActiveTab}
       />
@@ -205,312 +232,324 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
                 src={images[0]}
                 alt={stay.title}
                 fill
+                sizes="(min-width: 1024px) 66vw, 100vw"
                 className="object-cover"
               />
               <span className="absolute top-3 start-3 px-2.5 py-1 text-[11px] font-medium bg-[#2E3A2F]/80 text-white backdrop-blur-sm rounded-md">
-                Image principale
+                {t("detail.mainImage")}
               </span>
             </div>
 
             {/* Thumbnail Strip */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <ul className="flex items-center gap-2 overflow-x-auto pb-1">
               {images.slice(1, 6).map((img, i) => (
-                <div
-                  key={i}
-                  onClick={() => setLightboxImage(img)}
-                  className="relative w-20 h-16 rounded-lg overflow-hidden border border-[#D9C9B2]/50 shrink-0 cursor-pointer hover:opacity-90"
-                >
-                  <Image src={img} alt="" fill className="object-cover" />
-                </div>
+                <li key={i} className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage(img)}
+                    aria-label={t("detail.enlargePhoto", { index: i + 2 })}
+                    className="relative block w-20 h-16 rounded-lg overflow-hidden border border-[#D9C9B2]/50 cursor-pointer hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                  >
+                    <Image src={img} alt="" fill sizes="80px" className="object-cover" />
+                  </button>
+                </li>
               ))}
               {images.length > 6 && (
-                <button
-                  onClick={() => setActiveTab("photos")}
-                  className="w-20 h-16 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/60 flex items-center justify-center text-xs font-medium text-[#2E3A2F] shrink-0 hover:bg-[#EAE5D9]"
-                >
-                  +{images.length - 6} photos
-                </button>
+                <li className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("photos")}
+                    className="w-20 h-16 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/60 flex items-center justify-center text-xs font-medium text-[#2E3A2F] hover:bg-[#EAE5D9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  >
+                    {t("detail.morePhotos", { count: images.length - 6 })}
+                  </button>
+                </li>
               )}
-            </div>
+            </ul>
           </div>
 
-          {/* Informations Générales Card (3-column field grid) */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
+          {/* General information card (3-column field grid) */}
+          <section aria-labelledby="stay-general-info" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#D9C9B2]/40">
-              <h3 className="text-sm font-semibold text-[#2E3A2F]">Informations générales</h3>
-              <button className="text-xs font-medium text-[#6B7F5B] hover:underline flex items-center gap-1">
-                <Edit className="w-3.5 h-3.5" /> Modifier
+              <h2 id="stay-general-info" className="text-sm font-semibold text-[#2E3A2F]">{t("detail.generalInfo")}</h2>
+              <button type="button" className="text-xs font-medium text-secondary-700 hover:underline flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600">
+                <Edit className="w-3.5 h-3.5" aria-hidden="true" /> {tCommon("edit")}
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <InfoTile label="Type de logement" value={stay.propertyType} />
-              <InfoTile label="Catégorie" value={stay.category} />
-              <InfoTile label="Capacité d'accueil" value={`${stay.guestCapacity} personnes`} />
-              <InfoTile label="Chambres" value={`${stay.bedroomCount || 1}`} />
-              <InfoTile label="Salles de bain" value={`${stay.bathroomCount || 1}`} />
-              <InfoTile label="Surface" value={`${stay.surfaceM2 || 120} m²`} />
-              <InfoTile label="Année de construction" value={`${stay.constructionYear || 2020}`} />
-              <InfoTile label="Prix par nuit" value={`${stay.price.toLocaleString("fr-FR")} DZD`} />
-              <InfoTile label="Mode d'approbation" value={stay.bookingApprovalMode === "instant" ? "Instantanée" : "Sur demande"} />
+              <InfoTile label={t("fields.propertyType")} value={stay.propertyType} />
+              <InfoTile label={t("fields.category")} value={stay.category} />
+              <InfoTile label={t("detail.guestCapacity")} value={t("detail.people", { count: stay.guestCapacity })} />
+              <InfoTile label={t("fields.bedrooms")} value={`${stay.bedroomCount || 1}`} />
+              <InfoTile label={t("fields.bathrooms")} value={`${stay.bathroomCount || 1}`} />
+              <InfoTile label={t("fields.surface")} value={t("values.surface", { value: stay.surfaceM2 || 120 })} />
+              <InfoTile label={t("fields.constructionYear")} value={`${stay.constructionYear || 2020}`} />
+              <InfoTile label={t("fields.pricePerNight")} value={formatDzd(stay.price, locale)} />
+              <InfoTile
+                label={t("fields.approvalMode")}
+                value={stay.bookingApprovalMode === "instant" ? t("detail.instant") : t("values.onRequest")}
+              />
             </div>
 
             <div className="mt-4 pt-4 border-t border-[#D9C9B2]/40">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">Description</h4>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">{t("fields.description")}</h3>
               <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
                 {stay.description}
               </p>
             </div>
-          </div>
+          </section>
 
-          {/* Équipements Card (Grid of icons) */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
+          {/* Amenities card */}
+          <section aria-labelledby="stay-amenities" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#D9C9B2]/40">
               <div>
-                <h3 className="text-sm font-semibold text-[#2E3A2F]">Équipements ({stay.amenities.length})</h3>
-                <p className="text-xs text-[#2E3A2F]/60">Équipements déclarés disponibles par l'hôte</p>
+                <h2 id="stay-amenities" className="text-sm font-semibold text-[#2E3A2F]">
+                  {t("detail.amenitiesTitle", { count: stay.amenities.length })}
+                </h2>
+                <p className="text-xs text-[#2E3A2F]/70">{t("detail.amenitiesSubtitle")}</p>
               </div>
               <button
+                type="button"
                 onClick={() => setActiveTab("amenities")}
-                className="text-xs font-medium text-[#6B7F5B] hover:underline"
+                className="text-xs font-medium text-secondary-700 hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
               >
-                Voir tous ({stay.amenities.length})
+                {t("detail.seeAll", { count: stay.amenities.length })}
               </button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {stay.amenities.slice(0, 9).map((amenity, i) => (
-                <div
+                <li
                   key={i}
                   className="flex items-center gap-2 p-2 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40 text-xs text-[#2E3A2F]"
                 >
-                  <Check className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-secondary-700 shrink-0" aria-hidden="true" />
                   <span className="truncate">{amenity}</span>
-                </div>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </section>
 
-          {/* Règles de la maison Card */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
+          {/* House rules card */}
+          <section aria-labelledby="stay-house-rules" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#D9C9B2]/40">
-              <h3 className="text-sm font-semibold text-[#2E3A2F]">Règles de la maison</h3>
-              <button className="text-xs font-medium text-[#6B7F5B] hover:underline flex items-center gap-1">
-                <Edit className="w-3.5 h-3.5" /> Modifier
+              <h2 id="stay-house-rules" className="text-sm font-semibold text-[#2E3A2F]">{t("detail.houseRules")}</h2>
+              <button type="button" className="text-xs font-medium text-secondary-700 hover:underline flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600">
+                <Edit className="w-3.5 h-3.5" aria-hidden="true" /> {tCommon("edit")}
               </button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-[#2E3A2F]">
+            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-[#2E3A2F]">
               <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                <span className="text-[#2E3A2F]/60 block text-[11px]">Arrivée</span>
-                <span className="font-semibold text-sm">À partir de 15:00</span>
+                <dt className="text-[#2E3A2F]/70 block text-[11px]">{t("times.checkIn")}</dt>
+                <dd className="font-semibold text-sm">{t("times.checkInValue", { time: "15:00" })}</dd>
               </div>
               <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                <span className="text-[#2E3A2F]/60 block text-[11px]">Départ</span>
-                <span className="font-semibold text-sm">Avant 11:00</span>
+                <dt className="text-[#2E3A2F]/70 block text-[11px]">{t("times.checkOut")}</dt>
+                <dd className="font-semibold text-sm">{t("times.checkOutValue", { time: "11:00" })}</dd>
               </div>
               <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                <span className="text-[#2E3A2F]/60 block text-[11px]">Animaux</span>
-                <span className="font-medium text-[#C96F4F]">Non autorisés</span>
+                <dt className="text-[#2E3A2F]/70 block text-[11px]">{t("detail.rules.pets")}</dt>
+                <dd className="font-medium text-accent-700">{t("detail.rules.notAllowed")}</dd>
               </div>
               <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                <span className="text-[#2E3A2F]/60 block text-[11px]">Fumeurs</span>
-                <span className="font-medium text-[#C96F4F]">Non autorisé</span>
+                <dt className="text-[#2E3A2F]/70 block text-[11px]">{t("detail.rules.smoking")}</dt>
+                <dd className="font-medium text-accent-700">{t("detail.rules.notAllowed")}</dd>
               </div>
               <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                <span className="text-[#2E3A2F]/60 block text-[11px]">Fêtes & Événements</span>
-                <span className="font-medium text-[#C96F4F]">Non autorisées</span>
+                <dt className="text-[#2E3A2F]/70 block text-[11px]">{t("detail.rules.parties")}</dt>
+                <dd className="font-medium text-accent-700">{t("detail.rules.notAllowed")}</dd>
               </div>
               <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                <span className="text-[#2E3A2F]/60 block text-[11px]">Enfants</span>
-                <span className="font-medium text-[#6B7F5B]">Adapté aux enfants</span>
+                <dt className="text-[#2E3A2F]/70 block text-[11px]">{t("detail.rules.children")}</dt>
+                <dd className="font-medium text-secondary-700">{t("detail.rules.childFriendly")}</dd>
               </div>
-            </div>
-          </div>
+            </dl>
+          </section>
         </div>
 
         {/* Right Rail (1 col) - Mockup 06 */}
         <div className="space-y-6">
-          {/* Statut de validation Card */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+          {/* Validation status card */}
+          <section aria-labelledby="stay-validation" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#D9C9B2]/40">
-              <h3 className="text-sm font-semibold text-[#2E3A2F]">Statut de validation</h3>
+              <h2 id="stay-validation" className="text-sm font-semibold text-[#2E3A2F]">{t("detail.validationStatus")}</h2>
               <StatusPill status={stay.status} />
             </div>
             <p className="text-xs text-[#2E3A2F]/70 leading-relaxed">
-              {(stay.status === "approved" || stay.status === "published")
-                ? "Cet hébergement est actuellement validé et visible publiquement par tous les voyageurs."
-                : (stay.status === "pending_review" || stay.status === "pending")
-                ? "Cet hébergement est en attente d'examen par l'équipe de modération."
-                : "Cet hébergement nécessite votre attention ou a été suspendu."}
+              {isPublished
+                ? t("detail.statusText.published")
+                : isPending
+                ? t("detail.statusText.pending")
+                : t("detail.statusText.attention")}
             </p>
             <div className="space-y-2 pt-1">
-              {stay.status !== "approved" && stay.status !== "published" && (
+              {can("listings.approve") && canTransitionListing(stay.status, "approved") && (
                 <button
+                  type="button"
                   onClick={() => setDecisionModal("approve")}
-                  className="w-full py-2.5 px-3 bg-[#6B7F5B] hover:bg-[#5a6b4c] text-white text-xs font-semibold rounded-lg shadow-sm transition-colors text-center"
+                  className="w-full py-2.5 px-3 bg-secondary-700 hover:bg-secondary-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                 >
-                  Approuver et publier
+                  {t("detail.approvePublish")}
                 </button>
               )}
+              {can("listings.approve") && canTransitionListing(stay.status, "changes_requested") && (
               <button
+                type="button"
                 onClick={() => setDecisionModal("changes")}
-                className="w-full py-2 px-3 border border-[#D9C9B2] hover:bg-[#F8F6EE] text-[#2E3A2F] text-xs font-medium rounded-lg transition-colors text-center"
+                className="w-full py-2 px-3 border border-[#D9C9B2] hover:bg-[#F8F6EE] text-[#2E3A2F] text-xs font-medium rounded-lg transition-colors text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               >
-                Demander des modifications
+                {t("detail.requestChanges")}
               </button>
-              {stay.status !== "rejected" && (
+              )}
+              {can("listings.reject") && canTransitionListing(stay.status, "rejected") && (
                 <button
+                  type="button"
                   onClick={() => setDecisionModal("reject")}
-                  className="w-full py-2 px-3 border border-[#C96F4F]/40 hover:bg-[#C96F4F]/10 text-[#C96F4F] text-xs font-medium rounded-lg transition-colors text-center"
+                  className="w-full py-2 px-3 border border-[#C96F4F]/40 hover:bg-[#C96F4F]/10 text-accent-700 text-xs font-medium rounded-lg transition-colors text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                 >
-                  Refuser
+                  {tActions("reject")}
                 </button>
               )}
-              {(stay.status === "suspended" || stay.status === "rejected" || stay.status === "refused") && (
+              {(stay.status === "deleted"
+                ? can("listings.delete")
+                : (stay.status === "suspended" || stay.status === "rejected" || stay.status === "refused") &&
+                  can("listings.approve") &&
+                  canTransitionListing(stay.status, stay.status === "suspended" ? "approved" : "pending_review")) && (
                 <button
+                  type="button"
                   onClick={handleRestore}
-                  className="w-full py-2.5 px-3 bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 px-3 bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] text-[#2E3A2F] text-xs font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                  <span>Annuler la suspension / Réactiver</span>
+                  <RotateCcw className="w-3.5 h-3.5 text-secondary-700" aria-hidden="true" />
+                  <span>{stay.status === "deleted" ? tActions("restore") : t("detail.reactivate")}</span>
                 </button>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* À Vérifier Quick Checklist */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
-            <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-              Points à vérifier
-            </h3>
-            <div className="space-y-2 text-xs">
-              {[
-                { label: "Documents du propriétaire", status: "Conforme" },
-                { label: "Conformité des photos", status: "Vérifiée" },
-                { label: "Adresse exacte sur la carte", status: "Vérifiée" },
-                { label: "Équipements déclarés", status: "Complet" },
-                { label: "Tarifs et politique d'annulation", status: "Conforme" },
-                { label: "Règles de la maison", status: "Conforme" },
-              ].map((pt, i) => (
-                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/30">
+          {/* Quick checklist */}
+          <section aria-labelledby="stay-checkpoints" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
+            <h2 id="stay-checkpoints" className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              {t("detail.checkpointsTitle")}
+            </h2>
+            <ul className="space-y-2 text-xs">
+              {CHECK_POINTS.map((pt) => (
+                <li key={pt.key} className="flex items-center justify-between p-2 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/30">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#6B7F5B]" />
-                    <span className="text-[#2E3A2F] font-medium">{pt.label}</span>
+                    <CheckCircle2 className="w-4 h-4 text-secondary-700" aria-hidden="true" />
+                    <span className="text-[#2E3A2F] font-medium">{t(`detail.checkpoints.${pt.key}`)}</span>
                   </div>
-                  <span className="text-[11px] text-[#6B7F5B] font-semibold">{pt.status}</span>
-                </div>
+                  <span className="text-[11px] text-secondary-700 font-semibold">{t(`detail.checkResults.${pt.result}`)}</span>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </section>
 
-          {/* Hôte / Propriétaire Card with Verification Badges */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
+          {/* Host / owner card with verification badges */}
+          <section aria-labelledby="stay-host" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-[#D9C9B2]/40">
-              <h3 className="text-sm font-semibold text-[#2E3A2F]">Hôte / Propriétaire</h3>
+              <h2 id="stay-host" className="text-sm font-semibold text-[#2E3A2F]">{t("host.title")}</h2>
               <TypePill type={stay.hostType} />
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-base text-[#2E3A2F]">
+              <div aria-hidden="true" className="w-12 h-12 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-base text-[#2E3A2F]">
                 {stay.hostName.charAt(0)}
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-[#2E3A2F]">{stay.hostName}</h4>
-                <div className="flex items-center gap-1 text-xs text-amber-500 font-semibold">
-                  <Star className="w-3.5 h-3.5 fill-amber-500" />
+                <h3 className="text-sm font-semibold text-[#2E3A2F]">{stay.hostName}</h3>
+                <div className="flex items-center gap-1 text-xs text-amber-700 font-semibold">
+                  <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" aria-hidden="true" />
                   <span>{stay.rating.toFixed(1)}</span>
-                  <span className="text-[#2E3A2F]/60">({stay.reviewsCount} avis)</span>
+                  <span className="text-[#2E3A2F]/70">{t("values.reviews", { count: stay.reviewsCount })}</span>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1.5 pt-2 border-t border-[#D9C9B2]/40 text-xs">
-              <div className="flex items-center justify-between text-[#2E3A2F]/80">
-                <span>Identité</span>
-                <span className="text-[#6B7F5B] font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Vérifiée
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[#2E3A2F]/80">
-                <span>Téléphone</span>
-                <span className="text-[#6B7F5B] font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Vérifié
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[#2E3A2F]/80">
-                <span>Email</span>
-                <span className="text-[#6B7F5B] font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Vérifié
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Documents du propriétaire List */}
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
-            <h3 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
-              Documents du propriétaire
-            </h3>
-            <div className="space-y-2 text-xs">
-              {[
-                { name: "Pièce d'identité", ext: "PDF", size: "1.8 Mo", status: "Validé" },
-                { name: "Titre de propriété", ext: "PDF", size: "4.2 Mo", status: "Validé" },
-                { name: "Justificatif de domicile", ext: "JPG", size: "2.1 Mo", status: "À vérifier" },
-              ].map((doc, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/40">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#6B7F5B]" />
-                    <div>
-                      <div className="font-medium text-[#2E3A2F]">{doc.name}</div>
-                      <div className="text-[11px] text-[#2E3A2F]/60">{doc.ext} • {doc.size}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1 hover:bg-[#EAE5D9] rounded text-[#2E3A2F]/70">
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
-                    <button className="p-1 hover:bg-[#EAE5D9] rounded text-[#2E3A2F]/70">
-                      <Download className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+            <dl className="space-y-1.5 pt-2 border-t border-[#D9C9B2]/40 text-xs">
+              {(["identity", "phone", "email"] as const).map((k) => (
+                <div key={k} className="flex items-center justify-between text-[#2E3A2F]/80">
+                  <dt>{t(`detail.verification.${k}`)}</dt>
+                  <dd className="text-secondary-700 font-medium flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> {t("host.verified")}
+                  </dd>
                 </div>
               ))}
-            </div>
-          </div>
+            </dl>
+          </section>
+
+          {/* Owner documents list */}
+          <section aria-labelledby="stay-documents" className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
+            <h2 id="stay-documents" className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              {t("detail.ownerDocuments")}
+            </h2>
+            <ul className="space-y-2 text-xs">
+              {OWNER_DOCUMENTS.map((doc) => {
+                const name = t(`detail.documents.${doc.key}`);
+                return (
+                  <li key={doc.key} className="flex items-center justify-between p-2.5 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/40">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-secondary-700" aria-hidden="true" />
+                      <div>
+                        <div className="font-medium text-[#2E3A2F]">{name}</div>
+                        <div className="text-[11px] text-[#2E3A2F]/70">
+                          {t("detail.fileMeta", { ext: doc.ext, size: formatNumber(doc.sizeMb, locale) })}
+                          {" · "}
+                          <span className={doc.validated ? "text-secondary-700" : "text-amber-800"}>
+                            {doc.validated ? t("detail.docValidated") : t("detail.docToCheck")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button type="button" className={iconBtn} aria-label={t("detail.viewDocument", { name })} title={tCommon("view")}>
+                        <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
+                      <button type="button" className={iconBtn} aria-label={t("detail.downloadDocument", { name })} title={t("detail.download")}>
+                        <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </div>
       </div>
 
-      {/* Decision Dialog */}
-      {decisionModal && (
+      {/* Photo lightbox */}
+      <Dialog
+        isOpen={!!lightboxImage}
+        onClose={() => setLightboxImage(null)}
+        title={stay.title}
+        size="xl"
+      >
+        {lightboxImage && (
+          <div className="relative w-full aspect-[16/10] rounded-lg overflow-hidden bg-[#E5DFD3]">
+            <Image src={lightboxImage} alt={stay.title} fill sizes="(min-width: 768px) 672px, 100vw" className="object-contain" />
+          </div>
+        )}
+      </Dialog>
+
+      {/* Decision Dialogs: approval needs a confirmation, reject / changes need a reason */}
+      {decisionModal === "approve" && (
         <ConfirmDialog
           isOpen={true}
-          title={
-            decisionModal === "approve"
-              ? "Approuver et publier cet hébergement ?"
-              : decisionModal === "reject"
-              ? "Refuser cet hébergement ?"
-              : "Demander des modifications à l'hôte ?"
-          }
-          description={
-            decisionModal === "approve"
-              ? "L'annonce sera immédiatement visible sur DARNA et ouverte aux réservations."
-              : "Veuillez préciser la raison de cette décision qui sera transmise au propriétaire."
-          }
-          confirmLabel={
-            decisionModal === "approve"
-              ? "Approuver et publier"
-              : decisionModal === "reject"
-              ? "Confirmer le refus"
-              : "Envoyer la demande"
-          }
-          variant={decisionModal === "reject" ? "danger" : "primary"}
-          onConfirm={
-            decisionModal === "approve"
-              ? handleApprove
-              : decisionModal === "reject"
-              ? handleReject
-              : handleRequestChanges
-          }
+          title={t("detail.approveDialogTitle")}
+          description={t("detail.approveDialogText")}
+          confirmLabel={t("detail.approvePublish")}
+          variant="primary"
+          onConfirm={handleApprove}
           onCancel={() => setDecisionModal(null)}
         />
       )}
+      <ReasonDialog
+        isOpen={decisionModal === "reject" || decisionModal === "changes"}
+        title={decisionModal === "reject" ? tActions("rejectListingTitle") : tActions("requestChangesTitle")}
+        description={stay.title}
+        confirmLabel={decisionModal === "reject" ? tActions("reject") : tActions("requestChanges")}
+        variant={decisionModal === "reject" ? "danger" : "primary"}
+        onCancel={() => setDecisionModal(null)}
+        onConfirm={(reason) => (decisionModal === "reject" ? handleReject(reason) : handleRequestChanges(reason))}
+      />
     </div>
   );
 }

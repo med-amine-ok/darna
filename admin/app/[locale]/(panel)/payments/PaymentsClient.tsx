@@ -1,26 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useTransition } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
   Wallet,
   ArrowUpRight,
-  ArrowDownLeft,
   DollarSign,
   CreditCard,
-  Building,
-  RefreshCw,
   Download,
   Search,
-  Filter,
   PlusCircle,
   Percent,
-  CheckCircle,
-  AlertCircle,
-  AlertTriangle,
   FileText,
   Clock,
-  Eye,
   RotateCcw,
 } from "lucide-react";
 import {
@@ -31,218 +23,354 @@ import {
   updateCommissionRates,
   listPayouts,
   approvePayout,
-} from "@/lib/data/finance";
-import {
-  HostWallet,
-  WalletTransaction,
-  PayoutRequest,
-  HostType,
-} from "@/lib/types";
+  rejectPayout,
+  getFinanceSummary,
+  listRefunds,
+  exportTransactions,
+  exportWallets,
+} from "@/lib/actions/finance";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
+import type { HostWallet, WalletTransaction, PayoutRequest, HostType, TransactionType } from "@/lib/types";
+import type { FinanceSummary } from "@/lib/data/finance";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip } from "@/components/ui/KpiStrip";
 import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { useToast } from "@/components/ui/Toast";
-import { formatDzd, formatDate } from "@/lib/utils/format";
-import { WILAYAS } from "@/lib/utils/wilayas";
-import { DataTable, Column } from "@/components/data-table/DataTable";
+import { formatDzd, formatDate, maskAccount } from "@/lib/utils/format";
+import { downloadCsv } from "@/lib/utils/download";
+import { WILAYAS, getWilayaLabel, getWilayaName } from "@/lib/utils/wilayas";
+import {
+  DEFAULT_COMMISSION_RATES,
+  MAX_RECHARGE_DZD,
+  isValidCommissionRate,
+  isValidDzdAmount,
+} from "@/lib/pricing";
+
+type TabId = "overview" | "wallets" | "transactions" | "commissions" | "payouts" | "refunds";
 
 export interface PaymentsClientProps {
   locale: string;
-  initialTab?: "overview" | "wallets" | "transactions" | "commissions" | "payouts" | "refunds";
+  initialTab?: TabId;
 }
 
-export default function PaymentsClient({
-  locale,
-  initialTab = "overview",
-}: PaymentsClientProps) {
-  const tCommon = useTranslations("common");
+const TX_TYPES: TransactionType[] = [
+  "booking_payment",
+  "commission_deduction",
+  "host_payout",
+  "wallet_recharge",
+  "booking_refund",
+  "adjustment",
+];
+const HOST_TYPES: HostType[] = ["individual", "agency", "hotel", "hostel"];
+const RECHARGE_METHODS = ["ccp", "bank_transfer", "cash_guarantee"] as const;
+
+type RefundRow = {
+  id: string;
+  reference: string;
+  guestName: string;
+  hostName: string;
+  totalAmountDzd: number;
+  refundedAmountDzd: number;
+  paymentStatus: string;
+  status: string;
+  date: string;
+};
+
+/** Account identifier for a payout, masked to its last 4 characters. */
+function payoutAccount(p: PayoutRequest): string {
+  return maskAccount(p.accountDetails?.ccpRip ?? p.accountDetails?.rib ?? p.accountDetails?.phone);
+}
+
+const inputCls =
+  "w-full text-xs rounded-xl bg-darnaBg/50 border border-tertiary/60 py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40";
+const selectCls =
+  "text-xs rounded-xl bg-white border border-tertiary/60 p-2 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40 cursor-pointer";
+const fieldCls =
+  "w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40";
+
+export default function PaymentsClient({ locale, initialTab = "overview" }: PaymentsClientProps) {
+  const t = useTranslations("payments");
+  const tActions = useTranslations("actions");
+  const tHostTypes = useTranslations("hostTypes");
   const { success, error, info } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const can = useCan();
 
-  const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
-  // Wallets State
+  // Server-side aggregates (over all rows)
+  const [summary, setSummary] = useState<FinanceSummary | null>(null);
+
+  // Wallets
   const [wallets, setWallets] = useState<HostWallet[]>([]);
   const [walletsTotal, setWalletsTotal] = useState(0);
   const [walletsPage, setWalletsPage] = useState(1);
   const [walletsPageSize, setWalletsPageSize] = useState(10);
-  const [walletsLoading, setWalletsLoading] = useState(false);
   const [hostTypeFilter, setHostTypeFilter] = useState("all");
+  const [wilayaFilter, setWilayaFilter] = useState("all");
+  const [negativeOnly, setNegativeOnly] = useState(false);
   const [walletSearch, setWalletSearch] = useState("");
 
-  // Ledger / Transactions State
+  // Ledger
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [txTotal, setTxTotal] = useState(0);
   const [txPage, setTxPage] = useState(1);
   const [txTypeFilter, setTxTypeFilter] = useState("all");
   const [txSearch, setTxSearch] = useState("");
-  const [txLoading, setTxLoading] = useState(false);
 
-  // Commission Rates State
-  const [commissionRates, setCommissionRates] = useState<Record<HostType, number>>({
-    individual: 12,
-    agency: 15,
-    hotel: 18,
-    hostel: 10,
-  });
+  // Commissions
+  const [commissionRates, setCommissionRates] = useState<Record<HostType, number>>({ ...DEFAULT_COMMISSION_RATES });
   const [commissionSaving, setCommissionSaving] = useState(false);
 
-  // Payouts State
+  // Payouts
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
-  const [payoutsLoading, setPayoutsLoading] = useState(false);
+  const [payoutToApprove, setPayoutToApprove] = useState<PayoutRequest | null>(null);
+  const [payoutToReject, setPayoutToReject] = useState<PayoutRequest | null>(null);
+  const [payoutBusy, setPayoutBusy] = useState(false);
 
-  // Recharge Dialog State
+  // Refunds
+  const [refunds, setRefunds] = useState<RefundRow[]>([]);
+  const [refundsTotal, setRefundsTotal] = useState(0);
+  const [refundsPage, setRefundsPage] = useState(1);
+
+  // Recharge dialog
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<HostWallet | null>(null);
-  const [rechargeAmount, setRechargeAmount] = useState<number>(50000);
-  const [rechargeMethod, setRechargeMethod] = useState("ccp");
-  const [rechargeReason, setRechargeReason] = useState("Dépôt de garantie / Recharge manuelle");
-  const [rechargeReceipt, setRechargeReceipt] = useState("CCP-REC-2026-9812");
+  const [rechargeAmount, setRechargeAmount] = useState<string>("50000");
+  const [rechargeMethod, setRechargeMethod] = useState<(typeof RECHARGE_METHODS)[number]>("ccp");
+  const [rechargeReason, setRechargeReason] = useState("");
+  const [rechargeReceipt, setRechargeReceipt] = useState("");
   const [rechargeSubmitting, setRechargeSubmitting] = useState(false);
 
-  // Load Wallets
-  const loadWallets = useCallback(async () => {
-    setWalletsLoading(true);
+  const [exporting, setExporting] = useState(false);
+
+  const fail = useCallback(
+    (err: unknown) => error(t("loadError"), err instanceof Error ? err.message : String(err)),
+    [error, t]
+  );
+
+  const loadSummary = useCallback(async () => {
     try {
-      const res = await listWallets({
-        hostType: hostTypeFilter === "all" ? undefined : (hostTypeFilter as HostType),
-        search: walletSearch || undefined,
-        page: walletsPage,
-        pageSize: walletsPageSize,
-      });
+      setSummary(unwrap(await getFinanceSummary()));
+    } catch (err) {
+      fail(err);
+    }
+  }, [fail]);
+
+  const loadWallets = useCallback(async () => {
+    try {
+      const res = unwrap(
+        await listWallets({
+          hostType: hostTypeFilter === "all" ? undefined : hostTypeFilter,
+          wilayaCode: wilayaFilter === "all" ? undefined : wilayaFilter,
+          onlyNegative: negativeOnly || undefined,
+          search: walletSearch || undefined,
+          page: walletsPage,
+          pageSize: walletsPageSize,
+        })
+      );
       setWallets(res.rows);
       setWalletsTotal(res.total);
-    } catch (err: any) {
-      error("Erreur de chargement", err.message);
-    } finally {
-      setWalletsLoading(false);
+    } catch (err) {
+      fail(err);
     }
-  }, [hostTypeFilter, walletSearch, walletsPage, walletsPageSize, error]);
+  }, [hostTypeFilter, wilayaFilter, negativeOnly, walletSearch, walletsPage, walletsPageSize, fail]);
 
-  // Load Transactions
   const loadTransactions = useCallback(async () => {
-    setTxLoading(true);
     try {
-      const res = await listTransactions({
-        type: txTypeFilter === "all" ? undefined : (txTypeFilter as any),
-        search: txSearch || undefined,
-        page: txPage,
-        pageSize: 10,
-      });
+      const res = unwrap(
+        await listTransactions({
+          type: txTypeFilter === "all" ? undefined : txTypeFilter,
+          search: txSearch || undefined,
+          page: txPage,
+          pageSize: 10,
+        })
+      );
       setTransactions(res.rows);
       setTxTotal(res.total);
-    } catch (err: any) {
-      error("Erreur transactions", err.message);
-    } finally {
-      setTxLoading(false);
+    } catch (err) {
+      fail(err);
     }
-  }, [txTypeFilter, txSearch, txPage, error]);
+  }, [txTypeFilter, txSearch, txPage, fail]);
 
-  // Load Commission Rates
   const loadCommissions = useCallback(async () => {
     try {
-      const rates = await getCommissionRates();
-      setCommissionRates(rates);
-    } catch (err: any) {
-      error("Erreur commissions", err.message);
+      setCommissionRates(unwrap(await getCommissionRates()));
+    } catch (err) {
+      fail(err);
     }
-  }, [error]);
+  }, [fail]);
 
-  // Load Payouts
   const loadPayouts = useCallback(async () => {
-    setPayoutsLoading(true);
     try {
-      const res = await listPayouts();
-      setPayouts(res);
-    } catch (err: any) {
-      error("Erreur virements", err.message);
-    } finally {
-      setPayoutsLoading(false);
+      setPayouts(unwrap(await listPayouts()));
+    } catch (err) {
+      fail(err);
     }
-  }, [error]);
+  }, [fail]);
+
+  const loadRefunds = useCallback(async () => {
+    try {
+      const res = unwrap(await listRefunds({ page: refundsPage, pageSize: 10 }));
+      setRefunds(res.rows);
+      setRefundsTotal(res.total);
+    } catch (err) {
+      fail(err);
+    }
+  }, [refundsPage, fail]);
 
   useEffect(() => {
-    loadWallets();
-    loadTransactions();
+    loadSummary();
     loadCommissions();
     loadPayouts();
-  }, [loadWallets, loadTransactions, loadCommissions, loadPayouts]);
+  }, [loadSummary, loadCommissions, loadPayouts]);
+  useEffect(() => {
+    loadWallets();
+  }, [loadWallets]);
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
+  useEffect(() => {
+    loadRefunds();
+  }, [loadRefunds]);
 
-  // Save Commissions
+  // ---- Commissions -------------------------------------------------------
+  const ratesValid = HOST_TYPES.every((h) => isValidCommissionRate(commissionRates[h]));
+
   const handleSaveCommissions = async () => {
+    if (!ratesValid) {
+      error(t("invalidRate"));
+      return;
+    }
     setCommissionSaving(true);
     try {
-      await updateCommissionRates(commissionRates, {
-        id: "adm_01",
-        name: "Admin",
-        role: "super_admin",
-      });
-      success("Taux de commission enregistrés");
-    } catch (err: any) {
-      error("Erreur de sauvegarde", err.message);
+      setCommissionRates(unwrap(await updateCommissionRates(commissionRates)));
+      success(t("ratesSaved"));
+    } catch (err) {
+      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
     } finally {
       setCommissionSaving(false);
     }
   };
 
-  // Submit Recharge
+  // ---- Recharge ------------------------------------------------------------
+  const parsedRecharge = Number(rechargeAmount);
+  const rechargeValid =
+    rechargeAmount.trim() !== "" &&
+    isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD) &&
+    rechargeReceipt.trim().length > 0;
+
+  const openRecharge = (w: HostWallet) => {
+    setSelectedWallet(w);
+    setRechargeAmount("50000");
+    setRechargeReason("");
+    setRechargeReceipt("");
+    setRechargeDialogOpen(true);
+  };
+
   const handleRechargeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedWallet) return;
+    if (!selectedWallet || !rechargeValid) return;
     setRechargeSubmitting(true);
     try {
-      await rechargeWallet({
-        hostId: selectedWallet.hostId,
-        amount: rechargeAmount,
-        method: rechargeMethod,
-        reason: rechargeReason,
-        receiptReference: rechargeReceipt,
-        actor: { id: "adm_01", name: "Admin", role: "super_admin" },
-      });
-      success("Portefeuille rechargé avec succès");
+      unwrap(
+        await rechargeWallet({
+          hostId: selectedWallet.hostId,
+          amount: parsedRecharge,
+          method: rechargeMethod,
+          reason: rechargeReason,
+          receiptReference: rechargeReceipt,
+        })
+      );
+      success(t("rechargeDone"), formatDzd(parsedRecharge, locale));
       setRechargeDialogOpen(false);
       loadWallets();
       loadTransactions();
-    } catch (err: any) {
-      error("Erreur de recharge", err.message);
+      loadSummary();
+    } catch (err) {
+      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
     } finally {
       setRechargeSubmitting(false);
     }
   };
 
-  // Approve Payout
-  const handleApprovePayout = async (payoutId: string) => {
+  // ---- Payouts -------------------------------------------------------------
+  const refreshAfterPayout = () => {
+    loadPayouts();
+    loadWallets();
+    loadTransactions();
+    loadSummary();
+  };
+
+  const confirmApprovePayout = async () => {
+    if (!payoutToApprove || payoutBusy) return;
+    setPayoutBusy(true);
     try {
-      await approvePayout(payoutId, {
-        id: "adm_01",
-        name: "Admin",
-        role: "super_admin",
-      });
-      success("Virement prestataire validé");
-      loadPayouts();
-      loadWallets();
-    } catch (err: any) {
-      error("Erreur de validation", err.message);
+      unwrap(await approvePayout(payoutToApprove.id));
+      success(t("payoutApproved"), formatDzd(payoutToApprove.amountDzd, locale));
+    } catch (err) {
+      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
+    } finally {
+      setPayoutToApprove(null);
+      setPayoutBusy(false);
+      refreshAfterPayout();
     }
   };
 
-  // KPIs
-  const totalBalance = wallets.reduce((acc, w) => acc + (w.balanceDzd ?? w.balance ?? 0), 0);
-  const pendingPayoutsTotal = payouts
-    .filter((p) => p.status === "pending")
-    .reduce((acc, p) => acc + (p.amountDzd || 0), 0);
-  const monthlyCommissions = 1845000;
-  const refundsTotal = 432000;
+  const confirmRejectPayout = async (reason: string) => {
+    if (!payoutToReject) return;
+    try {
+      unwrap(await rejectPayout(payoutToReject.id, reason));
+      success(t("payoutRejected"));
+      setPayoutToReject(null);
+    } catch (err) {
+      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
+    } finally {
+      refreshAfterPayout();
+    }
+  };
 
+  // ---- Exports (full filtered dataset, server-side, audited) ---------------
+  const canExport = can("reports.export");
+
+  const runExport = async (kind: "ledger" | "wallets") => {
+    setExporting(true);
+    try {
+      const res = unwrap(
+        kind === "ledger"
+          ? await exportTransactions({
+              type: txTypeFilter === "all" ? undefined : txTypeFilter,
+              search: txSearch || undefined,
+            })
+          : await exportWallets({
+              hostType: hostTypeFilter === "all" ? undefined : hostTypeFilter,
+              wilayaCode: wilayaFilter === "all" ? undefined : wilayaFilter,
+              onlyNegative: negativeOnly || undefined,
+              search: walletSearch || undefined,
+            })
+      );
+      downloadCsv(res.filename, res.csv);
+      info(tActions("exportStarted"), tActions("exportRows", { count: res.rowCount }));
+    } catch (err) {
+      error(tActions("exportFailed"), err instanceof Error ? err.message : String(err));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // ---- KPIs ------------------------------------------------------------------
+  const dash = "—";
   const kpis = [
     {
       id: "wallets",
-      label: "Total portefeuilles",
-      value: formatDzd(totalBalance, locale),
+      label: t("kpi.wallets"),
+      value: summary ? formatDzd(summary.totalWalletBalanceDzd, locale) : dash,
       icon: Wallet,
       colorVariant: "primary" as const,
       active: activeTab === "wallets",
@@ -250,8 +378,8 @@ export default function PaymentsClient({
     },
     {
       id: "payouts",
-      label: "Paiements en attente",
-      value: formatDzd(pendingPayoutsTotal, locale),
+      label: t("kpi.pendingPayouts"),
+      value: summary ? formatDzd(summary.pendingPayoutsDzd, locale) : dash,
       icon: Clock,
       colorVariant: "tertiary" as const,
       active: activeTab === "payouts",
@@ -259,8 +387,8 @@ export default function PaymentsClient({
     },
     {
       id: "commissions",
-      label: "Commissions du mois",
-      value: formatDzd(monthlyCommissions, locale),
+      label: t("kpi.monthCommissions"),
+      value: summary ? formatDzd(summary.monthCommissionsDzd, locale) : dash,
       icon: Percent,
       colorVariant: "secondary" as const,
       active: activeTab === "commissions",
@@ -268,8 +396,8 @@ export default function PaymentsClient({
     },
     {
       id: "refunds",
-      label: "Remboursements effectués",
-      value: formatDzd(refundsTotal, locale),
+      label: t("kpi.refunds"),
+      value: summary ? formatDzd(summary.refundsTotalDzd, locale) : dash,
       icon: RotateCcw,
       colorVariant: "accent" as const,
       active: activeTab === "refunds",
@@ -277,230 +405,287 @@ export default function PaymentsClient({
     },
   ];
 
+  const pendingCount = payouts.filter((p) => p.status === "pending").length;
   const tabsList = [
-    { id: "overview", label: "Vue d'ensemble", icon: <DollarSign className="w-4 h-4" /> },
-    { id: "wallets", label: "Portefeuilles", count: walletsTotal, icon: <Wallet className="w-4 h-4" /> },
-    { id: "transactions", label: "Transactions", count: txTotal, icon: <FileText className="w-4 h-4" /> },
-    { id: "commissions", label: "Commissions", icon: <Percent className="w-4 h-4" /> },
-    { id: "payouts", label: "Paiements prestataires", count: payouts.length, icon: <ArrowUpRight className="w-4 h-4" /> },
-    { id: "refunds", label: "Remboursements", icon: <RotateCcw className="w-4 h-4" /> },
+    { id: "overview", label: t("tabs.overview"), icon: <DollarSign className="w-4 h-4" aria-hidden="true" /> },
+    { id: "wallets", label: t("tabs.wallets"), count: walletsTotal, icon: <Wallet className="w-4 h-4" aria-hidden="true" /> },
+    { id: "transactions", label: t("tabs.transactions"), count: txTotal, icon: <FileText className="w-4 h-4" aria-hidden="true" /> },
+    { id: "commissions", label: t("tabs.commissions"), icon: <Percent className="w-4 h-4" aria-hidden="true" /> },
+    { id: "payouts", label: t("tabs.payouts"), count: pendingCount, icon: <ArrowUpRight className="w-4 h-4" aria-hidden="true" /> },
+    { id: "refunds", label: t("tabs.refunds"), count: refundsTotal, icon: <RotateCcw className="w-4 h-4" aria-hidden="true" /> },
   ];
+
+  const txTypeLabel = (type: string) => (TX_TYPES.includes(type as TransactionType) ? t(`txTypes.${type}`) : type);
+  const hostTypeLabel = (type: string) => (HOST_TYPES.includes(type as HostType) ? tHostTypes(type) : type);
+
+  const headerActions = [
+    ...(canExport
+      ? [
+          {
+            label: t("exportLedger"),
+            icon: <Download className="w-4 h-4" aria-hidden="true" />,
+            variant: "outline" as const,
+            onClick: () => runExport("ledger"),
+          },
+        ]
+      : []),
+    ...(can("wallets.recharge")
+      ? [
+          {
+            label: t("rechargeWallet"),
+            icon: <PlusCircle className="w-4 h-4" aria-hidden="true" />,
+            variant: "primary" as const,
+            onClick: () => {
+              if (wallets.length > 0) openRecharge(wallets[0]);
+              else info(t("noWallet"));
+            },
+          },
+        ]
+      : []),
+  ];
+
+  const ledgerTable = (rows: WalletTransaction[], withBalance: boolean) => (
+    <table className="w-full text-xs text-start">
+      <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+        <tr>
+          <th scope="col" className="py-3 px-4 text-start">{t("cols.date")}</th>
+          <th scope="col" className="py-3 px-4 text-start">{t("cols.reference")}</th>
+          <th scope="col" className="py-3 px-4 text-start">{t("cols.host")}</th>
+          <th scope="col" className="py-3 px-4 text-start">{t("cols.type")}</th>
+          <th scope="col" className="py-3 px-4 text-start">{t("cols.description")}</th>
+          <th scope="col" className="py-3 px-4 text-end">{t("cols.amount")}</th>
+          {withBalance && <th scope="col" className="py-3 px-4 text-end">{t("cols.balanceAfter")}</th>}
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-neutral-100">
+        {rows.length === 0 && (
+          <tr>
+            <td colSpan={withBalance ? 7 : 6} className="py-6 px-4 text-center text-neutral-500">
+              {t("noTransactions")}
+            </td>
+          </tr>
+        )}
+        {rows.map((tx) => (
+          <tr key={tx.id} className="hover:bg-neutral-50/50">
+            <td className="py-3 px-4 font-mono text-neutral-500">{formatDate(tx.createdAt, locale)}</td>
+            <td className="py-3 px-4 font-mono font-bold text-primary">{tx.reference}</td>
+            <td className="py-3 px-4 font-semibold text-primary">{tx.hostName}</td>
+            <td className="py-3 px-4">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-700">
+                {txTypeLabel(tx.type)}
+              </span>
+            </td>
+            <td className="py-3 px-4 text-neutral-600">{tx.description}</td>
+            <td
+              className={`py-3 px-4 font-mono font-bold text-end ${tx.amount >= 0 ? "text-secondary-700" : "text-accent-700"}`}
+              dir="ltr"
+            >
+              {tx.amount >= 0 ? "+" : ""}
+              {formatDzd(tx.amount, locale)}
+            </td>
+            {withBalance && (
+              <td className="py-3 px-4 font-mono text-end text-neutral-600" dir="ltr">
+                {formatDzd(tx.balanceAfter, locale)}
+              </td>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 
   return (
     <div className="space-y-6 text-start">
-      <PageHeader
-        title="Paiements & Finances"
-        subtitle="Supervisez les portefeuilles prestataires, transactions, commissions et virements."
-        actions={[
-          {
-            label: "Exporter le grand livre",
-            icon: <Download className="w-4 h-4" />,
-            variant: "outline",
-            onClick: () => success("Export du grand livre comptable généré"),
-          },
-          {
-            label: "Recharger un portefeuille",
-            icon: <PlusCircle className="w-4 h-4" />,
-            variant: "primary",
-            onClick: () => {
-              if (wallets.length > 0) {
-                setSelectedWallet(wallets[0]);
-                setRechargeDialogOpen(true);
-              } else {
-                info("Aucun portefeuille disponible");
-              }
-            },
-          },
-        ]}
-      />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} actions={headerActions} />
 
       <KpiStrip cards={kpis} />
 
-      <Tabs
-        items={tabsList}
-        activeId={activeTab}
-        onChange={setActiveTab}
-      />
+      <Tabs items={tabsList} activeId={activeTab} onChange={(id) => setActiveTab(id as TabId)} />
 
-      {/* Overview Tab */}
+      {/* Overview */}
       {activeTab === "overview" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-primary">Solde total séquestre</span>
+                <span className="font-bold text-sm text-primary">{t("overview.escrow")}</span>
                 <span className="p-2 rounded-xl bg-secondary/10 text-secondary">
-                  <CreditCard className="w-5 h-5" />
+                  <CreditCard className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
               <p className="text-2xl font-serif font-black text-primary">
-                {formatDzd(totalBalance + 12450000, locale)}
+                {summary ? formatDzd(summary.escrowDzd, locale) : dash}
               </p>
-              <p className="text-xs text-neutral-500">
-                Fonds garantis pour les réservations en cours et à venir.
-              </p>
+              <p className="text-xs text-neutral-500">{t("overview.escrowHint")}</p>
             </div>
 
             <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-primary">Virements exécutés ce mois</span>
+                <span className="font-bold text-sm text-primary">{t("overview.monthPayouts")}</span>
                 <span className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <ArrowUpRight className="w-5 h-5" />
+                  <ArrowUpRight className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
               <p className="text-2xl font-serif font-black text-primary">
-                {formatDzd(6820000, locale)}
+                {summary ? formatDzd(summary.monthPayoutsDzd, locale) : dash}
               </p>
               <p className="text-xs text-neutral-500">
-                142 virements CCP / Banque vers les prestataires.
+                {t("overview.monthPayoutsHint", { count: summary?.monthPayoutsCount ?? 0 })}
               </p>
             </div>
 
             <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-primary">Revenus nets commissions</span>
+                <span className="font-bold text-sm text-primary">{t("overview.monthCommissions")}</span>
                 <span className="p-2 rounded-xl bg-tertiary/20 text-primary">
-                  <Percent className="w-5 h-5" />
+                  <Percent className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
-              <p className="text-2xl font-serif font-black text-secondary">
-                {formatDzd(monthlyCommissions, locale)}
+              <p className="text-2xl font-serif font-black text-secondary-700">
+                {summary ? formatDzd(summary.monthCommissionsDzd, locale) : dash}
               </p>
               <p className="text-xs text-neutral-500">
-                Commissions prélevées selon les taux configurés (10% - 18%).
+                {t("overview.monthCommissionsHint", { date: summary ? formatDate(summary.monthStart, locale) : dash })}
               </p>
             </div>
           </div>
 
           <div className="p-6 rounded-2xl bg-white border border-tertiary/40 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-primary text-base">Dernières transactions financières</h3>
+              <h3 className="font-bold text-primary text-base">{t("overview.latest")}</h3>
               <Button variant="ghost" size="sm" onClick={() => setActiveTab("transactions")}>
-                Voir tout le grand livre →
+                {t("overview.seeAll")}
               </Button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
-                  <tr>
-                    <th className="py-2.5 px-3">Date</th>
-                    <th className="py-2.5 px-3">ID Transaction</th>
-                    <th className="py-2.5 px-3">Prestataire / Compte</th>
-                    <th className="py-2.5 px-3">Type</th>
-                    <th className="py-2.5 px-3 text-right">Montant</th>
-                    <th className="py-2.5 px-3">Statut</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {transactions.slice(0, 5).map((tx) => (
-                    <tr key={tx.id} className="hover:bg-neutral-50/50">
-                      <td className="py-2.5 px-3 font-mono text-neutral-500">
-                        {formatDate(tx.createdAt, locale)}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-primary">
-                        #{tx.id}
-                      </td>
-                      <td className="py-2.5 px-3 font-semibold text-primary">
-                        {tx.hostName || "Prestataire DARNA"}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-700">
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className={`py-2.5 px-3 font-mono font-bold text-right ${
-                        tx.amount >= 0 ? "text-secondary" : "text-accent"
-                      }`}>
-                        {tx.amount >= 0 ? "+" : ""}{formatDzd(tx.amount, locale)}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary/10 text-secondary">
-                          Confirmé
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <div className="overflow-x-auto">{ledgerTable(transactions.slice(0, 5), false)}</div>
           </div>
         </div>
       )}
 
-      {/* Wallets Tab */}
+      {/* Wallets */}
       {activeTab === "wallets" && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-tertiary/40">
             <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
               <input
-                type="text"
-                placeholder="Rechercher par nom de prestataire..."
+                type="search"
+                aria-label={t("filters.searchWallets")}
+                placeholder={t("filters.searchWallets")}
                 value={walletSearch}
-                onChange={(e) => setWalletSearch(e.target.value)}
-                className="w-full text-xs rounded-xl bg-darnaBg/50 border border-tertiary/60 py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-secondary"
+                onChange={(e) => {
+                  setWalletSearch(e.target.value);
+                  setWalletsPage(1);
+                }}
+                className={inputCls}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-neutral-500">Type :</label>
+            <div className="flex flex-wrap items-center gap-2">
               <select
+                aria-label={t("filters.hostType")}
                 value={hostTypeFilter}
-                onChange={(e) => setHostTypeFilter(e.target.value)}
-                className="text-xs rounded-xl bg-white border border-tertiary/60 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+                onChange={(e) => {
+                  setHostTypeFilter(e.target.value);
+                  setWalletsPage(1);
+                }}
+                className={selectCls}
               >
-                <option value="all">Tous les types</option>
-                <option value="individual">Individuel (Hôte)</option>
-                <option value="agency">Agence de voyage</option>
-                <option value="hotel">Hôtel</option>
-                <option value="hostel">Hostel / Auberge</option>
+                <option value="all">{t("filters.allHostTypes")}</option>
+                {HOST_TYPES.map((h) => (
+                  <option key={h} value={h}>
+                    {hostTypeLabel(h)}
+                  </option>
+                ))}
               </select>
+              <select
+                aria-label={t("filters.wilaya")}
+                value={wilayaFilter}
+                onChange={(e) => {
+                  setWilayaFilter(e.target.value);
+                  setWalletsPage(1);
+                }}
+                className={selectCls}
+              >
+                <option value="all">{t("filters.allWilayas")}</option>
+                {WILAYAS.map((w) => (
+                  <option key={w.code} value={w.code}>
+                    {getWilayaLabel(w, locale)}
+                  </option>
+                ))}
+              </select>
+              <label className="flex items-center gap-1.5 text-xs text-primary cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={negativeOnly}
+                  onChange={(e) => {
+                    setNegativeOnly(e.target.checked);
+                    setWalletsPage(1);
+                  }}
+                />
+                {t("filters.negativeOnly")}
+                {summary && <span className="text-neutral-600">({summary.negativeWalletCount})</span>}
+              </label>
+              {canExport && (
+                <Button variant="outline" size="sm" onClick={() => runExport("wallets")} disabled={exporting}>
+                  <Download className="w-4 h-4" aria-hidden="true" />
+                  {t("exportWallets")}
+                </Button>
+              )}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
+          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto">
+            <table className="w-full text-xs text-start">
+              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
                 <tr>
-                  <th className="py-3 px-4">Prestataire</th>
-                  <th className="py-3 px-4">Type</th>
-                  <th className="py-3 px-4">Localisation</th>
-                  <th className="py-3 px-4 text-right">Solde disponible</th>
-                  <th className="py-3 px-4 text-right">Commissions retenues</th>
-                  <th className="py-3 px-4 text-end">Actions</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("cols.host")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("cols.type")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">{t("cols.location")}</th>
+                  <th scope="col" className="py-3 px-4 text-end">{t("cols.balance")}</th>
+                  <th scope="col" className="py-3 px-4 text-end">{t("cols.commissionsPaid")}</th>
+                  <th scope="col" className="py-3 px-4 text-end">{t("cols.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
+                {wallets.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-6 px-4 text-center text-neutral-500">
+                      {t("noWallets")}
+                    </td>
+                  </tr>
+                )}
                 {wallets.map((w) => (
                   <tr key={w.hostId} className="hover:bg-neutral-50/50">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-primary">{w.hostName || w.ownerName || w.businessName}</div>
-                      <div className="text-[11px] text-neutral-400">ID: #{w.hostId}</div>
+                      <div className="font-bold text-primary">{w.businessName || w.ownerName}</div>
+                      <div className="text-[11px] text-neutral-500">{w.hostId}</div>
                     </td>
                     <td className="py-3 px-4">
                       <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-neutral-100 text-primary">
-                        {w.hostType}
+                        {hostTypeLabel(w.hostType)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-neutral-600">
-                      {w.wilayaCode ? `${w.wilayaCode} - Algérie` : "Alger"}
+                    <td className="py-3 px-4 text-neutral-600">{getWilayaName(w.wilayaCode, locale)}</td>
+                    <td
+                      className={`py-3 px-4 font-mono font-bold text-end ${w.balance < 0 ? "text-accent-700" : "text-primary"}`}
+                      dir="ltr"
+                    >
+                      {formatDzd(w.balance, locale)}
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-right text-primary">
-                      {formatDzd(w.balanceDzd ?? w.balance, locale)}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-right text-neutral-500">
-                      {formatDzd(w.totalCommissionsPaidDzd ?? w.totalCommissionsPaid ?? 0, locale)}
+                    <td className="py-3 px-4 font-mono text-end text-neutral-500" dir="ltr">
+                      {formatDzd(w.totalCommissionsPaid, locale)}
                     </td>
                     <td className="py-3 px-4 text-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedWallet(w);
-                          setRechargeDialogOpen(true);
-                        }}
-                      >
-                        Recharger
-                      </Button>
+                      {can("wallets.recharge") && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openRecharge(w)}
+                          aria-label={t("rechargeFor", { host: w.businessName || w.ownerName })}
+                        >
+                          {t("recharge")}
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -513,375 +698,417 @@ export default function PaymentsClient({
             totalPages={Math.max(1, Math.ceil(walletsTotal / walletsPageSize))}
             totalItems={walletsTotal}
             pageSize={walletsPageSize}
+            itemLabel={t("itemLabels.wallets")}
             onPageChange={setWalletsPage}
-            onPageSizeChange={setWalletsPageSize}
+            onPageSizeChange={(s) => {
+              setWalletsPageSize(s);
+              setWalletsPage(1);
+            }}
           />
         </div>
       )}
 
-      {/* Transactions / Ledger Tab */}
+      {/* Ledger */}
       {activeTab === "transactions" && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-tertiary/40">
             <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
               <input
-                type="text"
-                placeholder="Rechercher par référence, prestataire..."
+                type="search"
+                aria-label={t("filters.searchTransactions")}
+                placeholder={t("filters.searchTransactions")}
                 value={txSearch}
-                onChange={(e) => setTxSearch(e.target.value)}
-                className="w-full text-xs rounded-xl bg-darnaBg/50 border border-tertiary/60 py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-secondary"
+                onChange={(e) => {
+                  setTxSearch(e.target.value);
+                  setTxPage(1);
+                }}
+                className={inputCls}
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-neutral-500">Type :</label>
               <select
+                aria-label={t("filters.txType")}
                 value={txTypeFilter}
-                onChange={(e) => setTxTypeFilter(e.target.value)}
-                className="text-xs rounded-xl bg-white border border-tertiary/60 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+                onChange={(e) => {
+                  setTxTypeFilter(e.target.value);
+                  setTxPage(1);
+                }}
+                className={selectCls}
               >
-                <option value="all">Tous les types</option>
-                <option value="deposit">Dépôt / Recharge</option>
-                <option value="payout">Virement prestataire</option>
-                <option value="booking_payment">Paiement réservation</option>
-                <option value="commission">Commission DARNA</option>
-                <option value="refund">Remboursement</option>
+                <option value="all">{t("filters.allTxTypes")}</option>
+                {TX_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {txTypeLabel(type)}
+                  </option>
+                ))}
               </select>
+              {canExport && (
+                <Button variant="outline" size="sm" onClick={() => runExport("ledger")} disabled={exporting}>
+                  <Download className="w-4 h-4" aria-hidden="true" />
+                  {t("exportLedger")}
+                </Button>
+              )}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
-                <tr>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Référence</th>
-                  <th className="py-3 px-4">Prestataire</th>
-                  <th className="py-3 px-4">Type</th>
-                  <th className="py-3 px-4">Description</th>
-                  <th className="py-3 px-4 text-right">Montant</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {transactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-neutral-50/50">
-                    <td className="py-3 px-4 font-mono text-neutral-500">
-                      {formatDate(tx.createdAt, locale)}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-primary">
-                      #{tx.id}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-primary">
-                      {tx.hostName || "Système"}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-700">
-                        {tx.type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-neutral-600">
-                      {tx.description}
-                    </td>
-                    <td className={`py-3 px-4 font-mono font-bold text-right ${
-                      tx.amount >= 0 ? "text-secondary" : "text-accent"
-                    }`}>
-                      {tx.amount >= 0 ? "+" : ""}{formatDzd(tx.amount, locale)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto">{ledgerTable(transactions, true)}</div>
 
           <Pagination
             currentPage={txPage}
             totalPages={Math.max(1, Math.ceil(txTotal / 10))}
             totalItems={txTotal}
             pageSize={10}
+            itemLabel={t("itemLabels.transactions")}
             onPageChange={setTxPage}
           />
         </div>
       )}
 
-      {/* Commissions Tab */}
+      {/* Commissions */}
       {activeTab === "commissions" && (
         <div className="max-w-2xl bg-white rounded-2xl border border-tertiary/40 p-6 space-y-6">
           <div>
-            <h3 className="font-bold text-primary text-base">Taux de commissions par type de prestataire</h3>
-            <p className="text-xs text-neutral-500 mt-1">
-              Les commissions s'appliquent automatiquement lors de la confirmation d'une réservation.
-            </p>
+            <h3 className="font-bold text-primary text-base">{t("commissionsTitle")}</h3>
+            <p className="text-xs text-neutral-500 mt-1">{t("commissionsHint")}</p>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/40 border border-tertiary/40">
-              <div>
-                <span className="font-bold text-xs text-primary block">Hôtes individuels (Particuliers)</span>
-                <span className="text-[11px] text-neutral-500">Logements chez l'habitant, villas, studios</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={commissionRates.individual}
-                  onChange={(e) => setCommissionRates({ ...commissionRates, individual: Number(e.target.value) })}
-                  className="w-16 text-center font-mono font-bold text-xs rounded-lg border border-tertiary/70 py-1 bg-white"
-                />
-                <span className="font-bold text-xs text-primary">%</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/40 border border-tertiary/40">
-              <div>
-                <span className="font-bold text-xs text-primary block">Agences de voyages</span>
-                <span className="text-[11px] text-neutral-500">Voyages organisés, circuits, forfaits</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={commissionRates.agency}
-                  onChange={(e) => setCommissionRates({ ...commissionRates, agency: Number(e.target.value) })}
-                  className="w-16 text-center font-mono font-bold text-xs rounded-lg border border-tertiary/70 py-1 bg-white"
-                />
-                <span className="font-bold text-xs text-primary">%</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/40 border border-tertiary/40">
-              <div>
-                <span className="font-bold text-xs text-primary block">Hôtels</span>
-                <span className="text-[11px] text-neutral-500">Établissements hôteliers classés (1 à 5 étoiles)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={commissionRates.hotel}
-                  onChange={(e) => setCommissionRates({ ...commissionRates, hotel: Number(e.target.value) })}
-                  className="w-16 text-center font-mono font-bold text-xs rounded-lg border border-tertiary/70 py-1 bg-white"
-                />
-                <span className="font-bold text-xs text-primary">%</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/40 border border-tertiary/40">
-              <div>
-                <span className="font-bold text-xs text-primary block">Auberges de jeunesse (Hostels)</span>
-                <span className="text-[11px] text-neutral-500">Dortoirs, lits individuels, auberges</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={commissionRates.hostel}
-                  onChange={(e) => setCommissionRates({ ...commissionRates, hostel: Number(e.target.value) })}
-                  className="w-16 text-center font-mono font-bold text-xs rounded-lg border border-tertiary/70 py-1 bg-white"
-                />
-                <span className="font-bold text-xs text-primary">%</span>
-              </div>
-            </div>
+            {HOST_TYPES.map((h) => {
+              const value = commissionRates[h];
+              const valid = isValidCommissionRate(value);
+              return (
+                <div
+                  key={h}
+                  className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/40 border border-tertiary/40"
+                >
+                  <label htmlFor={`rate-${h}`} className="font-bold text-xs text-primary">
+                    {t(`commissionLabels.${h}`)}
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      id={`rate-${h}`}
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.01}
+                      inputMode="decimal"
+                      aria-invalid={!valid}
+                      aria-describedby={!ratesValid ? "commission-rates-error" : undefined}
+                      value={Number.isFinite(value) ? value : ""}
+                      disabled={!can("commissions.manage")}
+                      onChange={(e) =>
+                        setCommissionRates({
+                          ...commissionRates,
+                          [h]: e.target.value === "" ? NaN : Number(e.target.value),
+                        })
+                      }
+                      className={`w-20 text-center font-mono font-bold text-xs rounded-lg border py-1 bg-white ${
+                        valid ? "border-tertiary/70" : "border-accent-700 text-accent-700"
+                      } focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600/40`}
+                    />
+                    <span className="font-bold text-xs text-primary" aria-hidden="true">%</span>
+                  </div>
+                </div>
+              );
+            })}
+            {!ratesValid && (
+              <p id="commission-rates-error" className="text-[11px] text-accent-700" role="alert">
+                {t("invalidRate")}
+              </p>
+            )}
           </div>
 
-          <div className="pt-2 flex justify-end">
-            <Button
-              variant="primary"
-              onClick={handleSaveCommissions}
-              disabled={commissionSaving}
-            >
-              {commissionSaving ? "Enregistrement..." : "Enregistrer les taux de commission"}
-            </Button>
-          </div>
+          {can("commissions.manage") && (
+            <div className="pt-2 flex justify-end">
+              <Button variant="primary" onClick={handleSaveCommissions} disabled={commissionSaving || !ratesValid}>
+                {t("saveRates")}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Payouts Tab */}
+      {/* Payouts */}
       {activeTab === "payouts" && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
+        <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto">
+          <table className="w-full text-xs text-start">
+            <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+              <tr>
+                <th scope="col" className="py-3 px-4 text-start">{t("cols.requestedAt")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("cols.host")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("cols.method")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("cols.account")}</th>
+                <th scope="col" className="py-3 px-4 text-end">{t("cols.amount")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("cols.status")}</th>
+                <th scope="col" className="py-3 px-4 text-end">{t("cols.actions")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {payouts.length === 0 && (
                 <tr>
-                  <th className="py-3 px-4">Date de demande</th>
-                  <th className="py-3 px-4">Prestataire</th>
-                  <th className="py-3 px-4">Coordonnées bancaires (RIB / RIP)</th>
-                  <th className="py-3 px-4 text-right">Montant demandé</th>
-                  <th className="py-3 px-4">Statut</th>
-                  <th className="py-3 px-4 text-end">Action</th>
+                  <td colSpan={7} className="py-6 px-4 text-center text-neutral-500">
+                    {t("noPayouts")}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {payouts.map((p) => (
-                  <tr key={p.id} className="hover:bg-neutral-50/50">
-                    <td className="py-3 px-4 font-mono text-neutral-500">
-                      {formatDate(p.requestedAt, locale)}
-                    </td>
-                    <td className="py-3 px-4 font-bold text-primary">
-                      {p.hostName}
-                    </td>
-                    <td className="py-3 px-4 font-mono text-neutral-600">
-                      {p.rib || "007 99999 0001234567 89"}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-right text-primary">
-                      {formatDzd(p.amountDzd, locale)}
-                    </td>
-                    <td className="py-3 px-4">
-                      <StatusPill status={p.status} />
-                    </td>
-                    <td className="py-3 px-4 text-end">
-                      {p.status === "pending" ? (
+              )}
+              {payouts.map((p) => (
+                <tr key={p.id} className="hover:bg-neutral-50/50">
+                  <td className="py-3 px-4 font-mono text-neutral-500">{formatDate(p.requestedAt, locale)}</td>
+                  <td className="py-3 px-4 font-bold text-primary">{p.hostName}</td>
+                  <td className="py-3 px-4 text-neutral-600">{t(`payoutMethods.${p.payoutMethod}`)}</td>
+                  <td className="py-3 px-4 font-mono text-neutral-600" dir="ltr">
+                    {payoutAccount(p)}
+                  </td>
+                  <td className="py-3 px-4 font-mono font-bold text-end text-primary" dir="ltr">
+                    {formatDzd(p.amountDzd, locale)}
+                  </td>
+                  <td className="py-3 px-4">
+                    <StatusPill status={p.status} />
+                    {p.status === "rejected" && p.rejectionReason && (
+                      <div className="text-[10px] text-neutral-500 mt-1 max-w-[220px]">{p.rejectionReason}</div>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-end">
+                    {p.status === "pending" && can("payouts.approve") ? (
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => handleApprovePayout(p.id)}
+                          onClick={() => setPayoutToApprove(p)}
+                          aria-label={t("approvePayoutFor", { host: p.hostName })}
                         >
-                          Valider le virement
+                          {t("approvePayout")}
                         </Button>
-                      ) : (
-                        <span className="text-secondary font-semibold text-xs">Exécuté</span>
-                      )}
+                        <Button
+                          variant="dangerOutline"
+                          size="sm"
+                          onClick={() => setPayoutToReject(p)}
+                          aria-label={t("rejectPayoutFor", { host: p.hostName })}
+                        >
+                          {t("rejectPayout")}
+                        </Button>
+                      </div>
+                    ) : p.processedAt ? (
+                      <span className="text-[11px] text-neutral-500">
+                        {p.processedBy
+                          ? t("processedOnBy", { date: formatDate(p.processedAt, locale), name: p.processedBy })
+                          : formatDate(p.processedAt, locale)}
+                      </span>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Refunds */}
+      {activeTab === "refunds" && (
+        <div className="bg-white rounded-2xl border border-tertiary/40 p-6 space-y-4">
+          <h3 className="font-bold text-primary text-base">{t("refundsTitle")}</h3>
+          <p className="text-xs text-neutral-500">{t("refundsHint")}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-start">
+              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+                <tr>
+                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.date")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.booking")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.guest")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.host")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-end">{t("cols.total")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-end">{t("cols.refunded")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.status")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {refunds.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-6 px-3 text-center text-neutral-500">
+                      {t("noRefunds")}
+                    </td>
+                  </tr>
+                )}
+                {refunds.map((r) => (
+                  <tr key={r.id} className="hover:bg-neutral-50/50">
+                    <td className="py-2.5 px-3 font-mono text-neutral-500">{formatDate(r.date, locale)}</td>
+                    <td className="py-2.5 px-3 font-mono font-bold text-primary">{r.reference}</td>
+                    <td className="py-2.5 px-3 font-semibold text-primary">{r.guestName}</td>
+                    <td className="py-2.5 px-3 text-neutral-600">{r.hostName}</td>
+                    <td className="py-2.5 px-3 font-mono text-end text-neutral-600" dir="ltr">
+                      {formatDzd(r.totalAmountDzd, locale)}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono font-bold text-end text-accent-700" dir="ltr">
+                      {formatDzd(r.refundedAmountDzd, locale)}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <StatusPill status={r.paymentStatus} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={refundsPage}
+            totalPages={Math.max(1, Math.ceil(refundsTotal / 10))}
+            totalItems={refundsTotal}
+            pageSize={10}
+            itemLabel={t("itemLabels.refunds")}
+            onPageChange={setRefundsPage}
+          />
         </div>
       )}
 
-      {/* Refunds Tab */}
-      {activeTab === "refunds" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 p-6 space-y-4">
-          <h3 className="font-bold text-primary text-base">Historique des remboursements clients</h3>
-          <p className="text-xs text-neutral-500">
-            Remboursements automatisés ou manuels suite à une annulation de réservation ou résolution de litige.
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-darnaBg/60 text-neutral-500 font-semibold border-b border-tertiary/40">
-                <tr>
-                  <th className="py-2.5 px-3">Date</th>
-                  <th className="py-2.5 px-3">Réservation</th>
-                  <th className="py-2.5 px-3">Bénéficiaire</th>
-                  <th className="py-2.5 px-3">Motif</th>
-                  <th className="py-2.5 px-3 text-right">Montant remboursé</th>
-                  <th className="py-2.5 px-3">Statut</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                <tr className="hover:bg-neutral-50/50">
-                  <td className="py-2.5 px-3 font-mono text-neutral-500">14 mars 2024</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-primary">#R1205</td>
-                  <td className="py-2.5 px-3 font-semibold text-primary">Karim Mansouri</td>
-                  <td className="py-2.5 px-3 text-neutral-600">Annulation client dans les délais (&gt;48h)</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-right text-accent">54 000 DZD</td>
-                  <td className="py-2.5 px-3">
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary/10 text-secondary">
-                      Remboursé sur carte
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-neutral-50/50">
-                  <td className="py-2.5 px-3 font-mono text-neutral-500">08 mars 2024</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-primary">#R1189</td>
-                  <td className="py-2.5 px-3 font-semibold text-primary">Amel Belkacem</td>
-                  <td className="py-2.5 px-3 text-neutral-600">Litige résolu en faveur du voyageur</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-right text-accent">38 000 DZD</td>
-                  <td className="py-2.5 px-3">
-                    <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary/10 text-secondary">
-                      Remboursé sur carte
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      {/* Payout approval confirmation (always shows amount, host and account) */}
+      <ConfirmDialog
+        isOpen={!!payoutToApprove}
+        variant="primary"
+        title={t("approveTitle")}
+        description={
+          payoutToApprove
+            ? t("approveDescription", {
+                amount: formatDzd(payoutToApprove.amountDzd, locale),
+                host: payoutToApprove.hostName,
+                account: payoutAccount(payoutToApprove),
+                method: t(`payoutMethods.${payoutToApprove.payoutMethod}`),
+              })
+            : ""
+        }
+        confirmLabel={payoutToApprove ? t("approveConfirm", { amount: formatDzd(payoutToApprove.amountDzd, locale) }) : ""}
+        cancelLabel={tActions("cancel")}
+        isLoading={payoutBusy}
+        onConfirm={confirmApprovePayout}
+        onCancel={() => setPayoutToApprove(null)}
+      />
 
-      {/* Recharge Dialog */}
+      <ReasonDialog
+        isOpen={!!payoutToReject}
+        title={t("rejectTitle")}
+        description={
+          payoutToReject
+            ? t("rejectDescription", { amount: formatDzd(payoutToReject.amountDzd, locale), host: payoutToReject.hostName })
+            : undefined
+        }
+        confirmLabel={t("rejectPayout")}
+        onCancel={() => setPayoutToReject(null)}
+        onConfirm={confirmRejectPayout}
+      />
+
+      {/* Recharge */}
       <Dialog
         isOpen={rechargeDialogOpen}
         onClose={() => setRechargeDialogOpen(false)}
-        title="Recharger le portefeuille prestataire"
-        description="Créditer manuellement le compte d'un prestataire suite à un versement CCP ou virement bancaire."
+        title={t("rechargeTitle")}
+        description={t("rechargeDescription")}
       >
         <form onSubmit={handleRechargeSubmit} className="space-y-4 text-xs text-start">
           <div>
-            <label className="block font-bold text-primary mb-1">Prestataire</label>
-            <input
-              type="text"
-              disabled
-              value={selectedWallet?.hostName || selectedWallet?.ownerName || selectedWallet?.businessName || ""}
-              className="w-full rounded-xl bg-neutral-100 border border-tertiary/40 p-2.5 font-bold text-primary"
-            />
-          </div>
-
-          <div>
-            <label className="block font-bold text-primary mb-1">Montant à créditer (DZD)*</label>
-            <input
-              type="number"
-              min="1000"
-              step="1000"
-              required
-              value={rechargeAmount}
-              onChange={(e) => setRechargeAmount(Number(e.target.value))}
-              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
-            />
-          </div>
-
-          <div>
-            <label className="block font-bold text-primary mb-1">Mode de règlement</label>
+            <label className="block font-bold text-primary mb-1" htmlFor="recharge-host">
+              {t("rechargeHost")}
+            </label>
             <select
-              value={rechargeMethod}
-              onChange={(e) => setRechargeMethod(e.target.value)}
-              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+              id="recharge-host"
+              value={selectedWallet?.hostId ?? ""}
+              onChange={(e) => setSelectedWallet(wallets.find((w) => w.hostId === e.target.value) ?? selectedWallet)}
+              className={`${fieldCls} font-bold`}
             >
-              <option value="ccp">Versement CCP / Algérie Poste</option>
-              <option value="bank_transfer">Virement bancaire (BNA, CPA, BEA...)</option>
-              <option value="cash_guarantee">Dépôt d'espèces sous garantie</option>
+              {selectedWallet && !wallets.some((w) => w.hostId === selectedWallet.hostId) && (
+                <option value={selectedWallet.hostId}>{selectedWallet.businessName || selectedWallet.ownerName}</option>
+              )}
+              {wallets.map((w) => (
+                <option key={w.hostId} value={w.hostId}>
+                  {w.businessName || w.ownerName}
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1">Numéro de reçu / Référence</label>
+            <label className="block font-bold text-primary mb-1" htmlFor="recharge-amount">
+              {t("rechargeAmount")}
+            </label>
             <input
+              id="recharge-amount"
+              type="number"
+              min={1}
+              max={MAX_RECHARGE_DZD}
+              step={1}
+              inputMode="numeric"
+              required
+              aria-invalid={!isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)}
+              aria-describedby="recharge-amount-hint"
+              value={rechargeAmount}
+              onChange={(e) => setRechargeAmount(e.target.value)}
+              className={`${fieldCls} font-mono font-bold`}
+            />
+            <p
+              id="recharge-amount-hint"
+              role={rechargeAmount && !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD) ? "alert" : undefined}
+              className={`mt-1 text-[11px] ${
+                rechargeAmount && !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD) ? "text-accent-700" : "text-neutral-500"
+              }`}
+            >
+              {rechargeAmount && !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)
+                ? t("invalidAmount", { max: formatDzd(MAX_RECHARGE_DZD, locale) })
+                : t("rechargeAmountHint", { max: formatDzd(MAX_RECHARGE_DZD, locale) })}
+            </p>
+          </div>
+
+          <div>
+            <label className="block font-bold text-primary mb-1" htmlFor="recharge-method">
+              {t("rechargeMethod")}
+            </label>
+            <select
+              id="recharge-method"
+              value={rechargeMethod}
+              onChange={(e) => setRechargeMethod(e.target.value as (typeof RECHARGE_METHODS)[number])}
+              className={`${fieldCls} cursor-pointer`}
+            >
+              {RECHARGE_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {t(`rechargeMethods.${m}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-bold text-primary mb-1" htmlFor="recharge-receipt">
+              {t("rechargeReceipt")}
+            </label>
+            <input
+              id="recharge-receipt"
               type="text"
               required
+              maxLength={200}
               value={rechargeReceipt}
               onChange={(e) => setRechargeReceipt(e.target.value)}
-              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary font-mono"
+              className={`${fieldCls} font-mono`}
             />
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1">Motif interne</label>
+            <label className="block font-bold text-primary mb-1" htmlFor="recharge-reason">
+              {t("rechargeReason")}
+            </label>
             <input
+              id="recharge-reason"
               type="text"
+              maxLength={2000}
               value={rechargeReason}
               onChange={(e) => setRechargeReason(e.target.value)}
-              className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary"
+              className={fieldCls}
             />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setRechargeDialogOpen(false)}
-            >
-              Annuler
+            <Button type="button" variant="outline" onClick={() => setRechargeDialogOpen(false)}>
+              {tActions("cancel")}
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={rechargeSubmitting}
-            >
-              {rechargeSubmitting ? "Traitement..." : "Confirmer le rechargement"}
+            <Button type="submit" variant="primary" disabled={rechargeSubmitting || !rechargeValid}>
+              {t("rechargeConfirm")}
             </Button>
           </div>
         </form>

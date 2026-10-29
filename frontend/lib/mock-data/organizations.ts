@@ -1,3 +1,4 @@
+import "server-only";
 import { Organization, Membership } from "@/types";
 
 export const mockOrganizations: Organization[] = [
@@ -102,5 +103,31 @@ export const mockMemberships: Membership[] = [
     invitedBy: "usr_karim",
     createdAt: "2024-02-10T11:20:00.000Z",
     joinedAt: null,
+  },
+  {
+    id: "mem_karim_hotel_owner",
+    organizationId: "org_el_djazair_hotel",
+    userId: "usr_karim",
+    name: "Karim Mansouri",
+    email: "karim.mansouri@darna.dz",
+    role: "owner",
+    status: "active",
+    invitedBy: "system",
+    createdAt: "2020-01-10T10:00:00.000Z",
+    joinedAt: "2020-01-10T10:00:00.000Z",
+    avatar: "/assets/avatar.png",
+  },
+  {
+    id: "mem_amina_hostel_owner",
+    organizationId: "org_casbah_hostel",
+    userId: "usr_amina",
+    name: "Amina Benali",
+    email: "amina.benali@darna.dz",
+    role: "owner",
+    status: "active",
+    invitedBy: "system",
+    createdAt: "2022-04-12T14:30:00.000Z",
+    joinedAt: "2022-04-12T14:30:00.000Z",
+    avatar: "/assets/avatar.png",
   },
 ];

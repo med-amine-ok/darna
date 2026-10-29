@@ -1,21 +1,31 @@
-import { cookies } from "next/headers";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+import { getCurrentAdmin } from "@/lib/auth/current-admin";
 import { getApprovalsInbox } from "@/lib/data/approvals";
+import { locales, defaultLocale, type Locale } from "@/i18n";
 import AdminLayoutClient from "@/components/layout/AdminLayoutClient";
 
 export default async function PanelLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: { locale: string };
 }) {
-  const cookieStore = cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const session = token ? await verifySessionToken(token) : null;
+  // Defense in depth: middleware only checks the JWT signature. Here the
+  // session is resolved against the admin store, so revoked, deactivated or
+  // deleted accounts are bounced even with a still-valid token.
+  const admin = await getCurrentAdmin();
+  if (!admin) {
+    const locale = locales.includes(params.locale as Locale) ? params.locale : defaultLocale;
+    redirect(`/${locale}/login`);
+  }
 
-  const inbox = await getApprovalsInbox();
+  const approvalsCount = admin.permissions.includes("hosts.view")
+    ? (await getApprovalsInbox()).counts.total
+    : 0;
 
   return (
-    <AdminLayoutClient currentUser={session} approvalsCount={inbox.counts.total}>
+    <AdminLayoutClient currentAdmin={admin} approvalsCount={approvalsCount}>
       {children}
     </AdminLayoutClient>
   );

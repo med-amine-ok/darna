@@ -1,13 +1,15 @@
-import { cookies } from "next/headers";
-import { getCurrentUser } from "@/lib/data/auth";
+import { getSessionUser } from "@/lib/server/session";
 import { getListings } from "@/lib/data/listings";
 import { SearchParams } from "@/types";
-import Navbar from "@/components/navbar/Navbar";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates, OG_LOCALE } from "@/lib/site";
 import SearchResultsClient from "@/components/search/SearchResultsClient";
 
 import { getTrips } from "@/lib/data/trips";
 
 interface SearchPageProps {
+  params: { locale: string };
   searchParams: SearchParams & {
     instantBook?: string;
     isGuestFavorite?: string;
@@ -16,10 +18,28 @@ interface SearchPageProps {
   };
 }
 
+export async function generateMetadata({ params: { locale }, searchParams }: SearchPageProps): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: "search" });
+  const destination = searchParams.destination?.trim();
+  const title = destination ? t("meta.titleIn", { place: destination }) : t("meta.title");
+  // Only the bare /search page is indexable; filtered variations are noindex (canonical points to /search).
+  const isFiltered = Object.values(searchParams || {}).some((v) => v !== undefined && v !== "");
+  return {
+    title,
+    description: t("meta.description"),
+    alternates: localeAlternates(locale, "/search"),
+    openGraph: {
+      title,
+      description: t("meta.description"),
+      locale: OG_LOCALE[locale] ?? "en_US",
+      type: "website",
+    },
+    ...(isFiltered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+  const currentUser = await getSessionUser();
 
   // Load listings matching search parameters
   let [listings, trips] = await Promise.all([
@@ -80,7 +100,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <main className="min-h-[100dvh] flex flex-col bg-darnaBg">
+    <div className="min-h-[100dvh] flex flex-col bg-darnaBg">
       {/* Two-Column Search Results Client */}
       <SearchResultsClient
         listings={listings}
@@ -89,6 +109,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         destination={searchParams.destination}
         activeVertical={searchParams.vertical}
       />
-    </main>
+    </div>
   );
 }

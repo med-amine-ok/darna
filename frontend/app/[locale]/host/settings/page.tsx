@@ -1,27 +1,14 @@
-import { cookies } from "next/headers";
-import { getCurrentUser } from "@/lib/data/auth";
-import { getOrganizationById } from "@/lib/data/organizations";
+import { hostPageMetadata } from "@/components/host/hostMetadata";
+import { requireHostContext } from "@/lib/server/host-context";
 import HostSettingsClient from "@/components/host/HostSettingsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function HostSettingsPage() {
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
-  const cookieHostType = cookieStore.get("darna_host_type")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+export function generateMetadata({ params }: { params: { locale: string } }) {
+  return hostPageMetadata(params.locale, "settings");
+}
 
-  const effectiveHostType = currentUser?.hostType || cookieHostType;
-  const isAgency = effectiveHostType === "agency";
-
-  const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : null;
-  const organization = orgId ? await getOrganizationById(orgId) : null;
-
-  return (
-    <HostSettingsClient
-      currentUser={currentUser}
-      organization={organization}
-    />
-  );
+export default async function HostSettingsPage({ params }: { params: { locale: string } }) {
+  const ctx = await requireHostContext(params?.locale || "en", "/host/settings");
+  return <HostSettingsClient currentUser={{ ...ctx.user, hostType: ctx.hostType }} organization={ctx.organization} />;
 }

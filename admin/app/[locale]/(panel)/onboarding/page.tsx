@@ -1,16 +1,10 @@
-import { Metadata } from "next";
-import OnboardingClient from "./OnboardingClient";
+import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-export const metadata: Metadata = {
-  title: "Onboarding Flow Configurator",
-};
-
-interface Props {
-  params: {
-    locale: string;
-  };
-}
-
-export default function OnboardingPage({ params }: Props) {
-  return <OnboardingClient locale={params.locale} />;
+/** Legacy duplicate route — canonical page is /settings/onboarding. */
+export default function OnboardingRedirect({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  redirectToCanonical("/settings/onboarding", searchParams);
 }

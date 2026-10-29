@@ -1,0 +1,49 @@
+{
+  "step1Title": "Tell us about your tourism agency or fleet",
+  "step1Subtitle": "Set your agency brand name, logo, and public bio.",
+  "businessName": "Registered business name",
+  "businessNamePlaceholder": "e.g. Atlas Escapes Tourism SARL",
+  "step2Title": "Business registration & license",
+  "step2Subtitle": "Enter your legal registration, business category, and contact channels.",
+  "regNumber": "Commercial register (RC) / license number",
+  "regNumberPlaceholder": "DZ-ALG-2024-B-XXXXX",
+  "businessType": "Business category",
+  "contactEmail": "Official business email",
+  "contactPhone": "Phone number",
+  "headquarters": "Headquarters Country",
+  "address": "Headquarters address",
+  "addressPlaceholder": "e.g. Didouche Mourad, Algiers",
+  "step3Title": "What is your agency team size?",
+  "step3Subtitle": "How many people work in your property operations and guest management?",
+  "step4Title": "Invite team managers & co-hosts",
+  "step4Subtitle": "This step is optional. You can invite your booking team anytime.",
+  "step5Title": "Review and register your agency",
+  "step5Subtitle": "Review your agency registration before entering your agency workspace.",
+  "createAgency": "Register agency workspace",
+  "creatingAgency": "Registering agency...",
+  "verificationNotice": "Your agency will show a “Pending verification” badge while our Algerian compliance team reviews your commercial register.",
+  "eyebrow": "Agency step {current} of {total}",
+  "emailPlaceholder": "contact@agency.dz",
+  "phonePlaceholder": "+213 21 XX XX XX",
+  "invitePlaceholder": "teammate@agency.dz",
+  "businessTypes": {
+    "tourismAgency": "Licensed tourism agency (agence de voyage)",
+    "vehicleRental": "Vehicle rental fleet (location de voitures)",
+    "hotelOperator": "Hotel & residence operator",
+    "saharaOutfitter": "Sahara expedition outfitter"
+  },
+  "teamSizes": {
+    "1": "Just me",
+    "2-10": "2–10 members",
+    "11-50": "11–50 members",
+    "50+": "50+ members"
+  },
+  "review": {
+    "name": "Agency name",
+    "license": "License number",
+    "email": "Business email",
+    "category": "Category"
+  },
+  "verificationTitle": "Verification notice",
+  "success": "Agency registered! It is pending verification — you can start setting up your workspace."
+}

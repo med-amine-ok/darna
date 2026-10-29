@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useId } from "react";
 import Image from "next/image";
+import { useFormatter, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/navigation";
 import { Conversation, Message, User } from "@/types";
 import Avatar from "@/components/Avatar";
-import { sendMessage, markConversationAsRead } from "@/lib/data/conversations";
+import {
+  getConversationMessagesAction,
+  markConversationReadAction,
+  sendMessageAction,
+} from "@/app/actions/messages";
 import { toast } from "react-toastify";
 import {
   WelcomeArchIcon,
@@ -20,6 +25,9 @@ import {
   BrandChevronLeftIcon,
 } from "@/components/icons";
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
 interface MessagesClientProps {
   initialConversations: Conversation[];
   initialMessages?: Message[];
@@ -33,9 +41,14 @@ export default function MessagesClient({
   selectedConversationId,
   currentUser,
 }: MessagesClientProps) {
+  const t = useTranslations("messages");
+  const format = useFormatter();
   const pathname = usePathname();
   const isHostMode = pathname?.includes("/host");
-  const currentUserId = currentUser?.id || "usr_yacine";
+  const currentUserId = currentUser?.id || "";
+  const baseId = useId();
+  const searchId = `${baseId}-search`;
+  const composerId = `${baseId}-composer`;
 
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [activeId, setActiveId] = useState<string | null>(
@@ -56,6 +69,7 @@ export default function MessagesClient({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeId);
+  const otherName = (conv?: Conversation) => conv?.otherUser?.name || t("defaultHostName");
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -82,14 +96,22 @@ export default function MessagesClient({
   const handleSelectConversation = (conv: Conversation) => {
     setActiveId(conv.id);
     setMobileShowThread(true);
-    markConversationAsRead(conv.id, currentUserId);
+
+    if (conv.id !== activeId) {
+      setMessages([]);
+      getConversationMessagesAction(conv.id)
+        .then((result) => {
+          if (result.ok) setMessages(result.data);
+          else toast.error(t("loadFailed"));
+        })
+        .catch(() => toast.error(t("loadFailed")));
+    }
+    markConversationReadAction(conv.id).catch(() => {});
 
     // Clear unread count locally
     setConversations((prev) =>
       prev.map((c) =>
-        c.id === conv.id && c.unreadCount
-          ? { ...c, unreadCount: { ...c.unreadCount, [currentUserId]: 0 } }
-          : c
+        c.id === conv.id && c.unreadCount ? { ...c, unreadCount: { ...c.unreadCount, [currentUserId]: 0 } } : c
       )
     );
   };
@@ -101,11 +123,11 @@ export default function MessagesClient({
       if (unread === 0) return false;
     }
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const otherName = c.otherUser?.name?.toLowerCase() || "";
-      const lastMsg = c.lastMessage?.toLowerCase() || "";
-      const listingTitle = c.listing?.title?.toLowerCase() || "";
-      if (!otherName.includes(q) && !lastMsg.includes(q) && !listingTitle.includes(q)) {
+      const q = searchQuery.toLocaleLowerCase();
+      const name = c.otherUser?.name?.toLocaleLowerCase() || "";
+      const lastMsg = c.lastMessage?.toLocaleLowerCase() || "";
+      const listingTitle = c.listing?.title?.toLocaleLowerCase() || "";
+      if (!name.includes(q) && !lastMsg.includes(q) && !listingTitle.includes(q)) {
         return false;
       }
     }
@@ -123,7 +145,7 @@ export default function MessagesClient({
 
     // Optimistic message
     const tempMsg: Message = {
-      id: `msg_${Date.now()}`,
+      id: `tmp_${globalThis.crypto.randomUUID()}`,
       conversationId: activeId,
       senderId: currentUserId,
       receiverId: activeConversation?.otherUser?.id || "usr_host",
@@ -136,22 +158,21 @@ export default function MessagesClient({
 
     // Update conversation last message preview
     setConversations((prev) =>
-      prev.map((c) =>
-        c.id === activeId
-          ? { ...c, lastMessage: sentText, lastMessageAt: tempMsg.createdAt }
-          : c
-      )
+      prev.map((c) => (c.id === activeId ? { ...c, lastMessage: sentText, lastMessageAt: tempMsg.createdAt } : c))
     );
 
     try {
-      await sendMessage({
-        conversationId: activeId,
-        senderId: currentUserId,
-        receiverId: activeConversation?.otherUser?.id,
-        text: sentText,
-      });
+      // Sender and receiver are derived from the session on the server.
+      const result = await sendMessageAction(activeId, sentText);
+      if (!result.ok) {
+        setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+        toast.error(t("sendFailed"));
+        return;
+      }
+      setMessages((prev) => prev.map((m) => (m.id === tempMsg.id ? result.data : m)));
     } catch {
-      toast.error("Failed to send message.");
+      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      toast.error(t("sendFailed"));
     } finally {
       setIsSending(false);
     }
@@ -164,11 +185,25 @@ export default function MessagesClient({
     }
   };
 
+  const formatListDate = (value?: string) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return format.dateTime(date, { month: "short", day: "numeric" });
+  };
+
+  const formatMessageTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return format.dateTime(date, { hour: "2-digit", minute: "2-digit" });
+  };
+
   const currentMessages = messages.filter((m) => m.conversationId === activeId);
+  const openers = [t("openerStay"), t("openerCheckIn"), t("openerDirections")];
 
   return (
     <div className="w-full h-full flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
-      {/* LEFT COLUMN: Conversation List */}
+      {/* START COLUMN: Conversation List */}
       <div
         className={`w-full md:w-[360px] lg:w-[400px] shrink-0 border-e border-tertiary/60 flex flex-col h-full overflow-hidden bg-white ${
           mobileShowThread ? "hidden md:flex" : "flex"
@@ -180,99 +215,106 @@ export default function MessagesClient({
             <div className="flex items-center gap-2">
               <Link
                 href={isHostMode ? "/host" : "/"}
-                className="md:hidden p-1.5 -ms-1 rounded-full hover:bg-neutral-100 text-neutral-600 transition btn-press"
-                title={isHostMode ? "Back to Host Dashboard" : "Back to Home"}
-                aria-label="Back"
+                className={`md:hidden p-1.5 -ms-1 rounded-full hover:bg-neutral-100 text-neutral-600 transition btn-press ${focusRing}`}
+                aria-label={isHostMode ? t("backToHost") : t("backToHome")}
               >
-                <BrandChevronLeftIcon size={22} className="rtl:rotate-180" />
+                <BrandChevronLeftIcon size={22} className="rtl:rotate-180" aria-hidden="true" />
               </Link>
-              <h1 className="text-xl sm:text-2xl font-bold text-primary font-serif">
-                Messages
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-primary font-serif">{t("title")}</h1>
             </div>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
-                className={`p-2 rounded-full transition btn-press ${
+                aria-expanded={searchOpen}
+                aria-controls={searchOpen ? searchId : undefined}
+                aria-label={t("searchToggle")}
+                title={t("searchToggle")}
+                className={`p-2 rounded-full transition btn-press ${focusRing} ${
                   searchOpen ? "bg-primary text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                 }`}
-                title="Search messages"
               >
-                <BrandSearchIcon size={16} />
+                <BrandSearchIcon size={16} aria-hidden="true" />
               </button>
               <button
                 type="button"
-                onClick={() => toast.info("Message notification settings")}
-                className="p-2 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition btn-press"
-                title="Settings"
+                onClick={() => toast.info(t("settingsComingSoon"))}
+                aria-label={t("settings")}
+                title={t("settings")}
+                className={`p-2 rounded-full bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition btn-press ${focusRing}`}
               >
-                <BrandSettingsIcon size={16} />
+                <BrandSettingsIcon size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
 
           {/* Search Bar (Toggled) */}
           {searchOpen && (
-            <div className="mt-3 relative animate-in fade-in">
+            <div className="mt-3 relative animate-in fade-in" role="search">
+              <label htmlFor={searchId} className="sr-only">
+                {t("searchPlaceholder")}
+              </label>
               <input
-                type="text"
+                id={searchId}
+                type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search messages or listings..."
-                className="w-full ps-9 pe-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setSearchOpen(false);
+                }}
+                placeholder={t("searchConversationsPlaceholder")}
+                className="w-full ps-9 pe-3 py-2 bg-neutral-50 border border-tertiary/70 rounded-xl text-xs text-primary placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent-600 focus:border-accent"
                 autoFocus
               />
               <BrandSearchIcon
                 size={14}
+                aria-hidden="true"
                 className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
               />
             </div>
           )}
 
-          {/* Header Row 2: Pills (All ▾ / Unread) */}
-          <div className="flex items-center gap-2 mt-4">
+          {/* Header Row 2: Filter pills */}
+          <div className="flex items-center gap-2 mt-4" role="group" aria-label={t("filterLabel")}>
             <button
               type="button"
+              aria-pressed={filterType === "all"}
               onClick={() => setFilterType("all")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition ${focusRing} ${
                 filterType === "all"
                   ? "bg-primary text-white shadow-xs"
                   : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
               }`}
             >
-              All ▾
+              {t("filterAll")}
             </button>
             <button
               type="button"
+              aria-pressed={filterType === "unread"}
               onClick={() => setFilterType(filterType === "unread" ? "all" : "unread")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${focusRing} ${
                 filterType === "unread"
                   ? "bg-primary text-white border-primary shadow-xs"
                   : "border-tertiary/80 text-neutral-600 hover:bg-neutral-50"
               }`}
             >
-              Unread
+              {t("filterUnread")}
             </button>
           </div>
         </div>
 
         {/* Conversation List Scrollable */}
-        <div className="flex-1 overflow-y-auto divide-y divide-tertiary/30">
+        <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center my-auto">
               {filterType === "unread" || searchQuery ? (
                 /* (1) Filtered Empty State */
-                <div className="space-y-3">
+                <div className="space-y-3" role="status">
                   <div className="w-12 h-12 bg-neutral-100 text-neutral-500 rounded-full flex items-center justify-center mx-auto">
-                    <BrandMessageIcon size={24} />
+                    <BrandMessageIcon size={24} aria-hidden="true" />
                   </div>
-                  <h3 className="text-sm font-bold text-primary">
-                    We couldn&apos;t find any messages
-                  </h3>
-                  <p className="text-xs text-neutral-500 max-w-xs mx-auto">
-                    Try removing or adjusting your search filters.
-                  </p>
+                  <h2 className="text-sm font-bold text-primary">{t("filteredTitle")}</h2>
+                  <p className="text-xs text-neutral-500 max-w-xs mx-auto">{t("filteredSubtitle")}</p>
                   <button
                     type="button"
                     onClick={() => {
@@ -280,117 +322,125 @@ export default function MessagesClient({
                       setSearchQuery("");
                       setSearchOpen(false);
                     }}
-                    className="px-4 py-1.5 border border-tertiary rounded-xl text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition"
+                    className={`px-4 py-1.5 border border-tertiary rounded-xl text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition ${focusRing}`}
                   >
-                    Clear all filters
+                    {t("clearAllFilters")}
                   </button>
                 </div>
               ) : (
                 /* (2) True Empty State */
                 <div className="space-y-3">
                   <div className="w-12 h-12 bg-tertiary/30 text-primary rounded-full flex items-center justify-center mx-auto">
-                    <BrandMessageIcon size={22} />
+                    <BrandMessageIcon size={22} aria-hidden="true" />
                   </div>
-                  <h3 className="text-sm font-bold text-primary">
-                    No messages yet
-                  </h3>
-                  <p className="text-xs text-neutral-500 max-w-xs mx-auto">
-                    When you contact a host or receive booking questions, they will show up here.
-                  </p>
+                  <h2 className="text-sm font-bold text-primary">{t("trueEmptyTitle")}</h2>
+                  <p className="text-xs text-neutral-500 max-w-xs mx-auto">{t("trueEmptySubtitle")}</p>
                   <Link
                     href="/search"
-                    className="inline-block px-4 py-1.5 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/95 transition btn-press"
+                    className={`inline-block px-4 py-1.5 bg-primary text-white rounded-xl text-xs font-semibold hover:bg-primary/95 transition btn-press ${focusRing}`}
                   >
-                    Explore homes & stays
+                    {t("exploreHomes")}
                   </Link>
                 </div>
               )}
             </div>
           ) : (
-            filteredConversations.map((conv) => {
-              const isSelected = conv.id === activeId;
-              const unread = conv.unreadCount?.[currentUserId] || 0;
-              const otherUser = conv.otherUser;
-              const listing = conv.listing;
+            <ul aria-label={t("conversationsLabel")} className="divide-y divide-tertiary/30">
+              {filteredConversations.map((conv) => {
+                const isSelected = conv.id === activeId;
+                const unread = conv.unreadCount?.[currentUserId] || 0;
+                const listing = conv.listing;
 
-              return (
-                <div
-                  key={conv.id}
-                  data-testid="conversation-item"
-                  onClick={() => handleSelectConversation(conv)}
-                  className={`p-4 cursor-pointer transition flex items-start gap-3.5 select-none ${
-                    isSelected
-                      ? "bg-tertiary/25 border-s-4 border-primary"
-                      : "hover:bg-neutral-50"
-                  }`}
-                >
-                  {/* Avatar with relative online indicator */}
-                  <div className="relative shrink-0">
-                    <Avatar src={otherUser?.image} size={44} />
-                    <span className="absolute bottom-0 end-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-                  </div>
+                return (
+                  <li key={conv.id}>
+                    <button
+                      type="button"
+                      data-testid="conversation-item"
+                      onClick={() => handleSelectConversation(conv)}
+                      aria-current={isSelected ? "true" : undefined}
+                      className={`w-full text-start p-4 transition flex items-start gap-3.5 ${focusRing} focus-visible:ring-inset focus-visible:ring-offset-0 ${
+                        isSelected ? "bg-tertiary/25 border-s-4 border-primary" : "hover:bg-neutral-50"
+                      }`}
+                    >
+                      {/* Avatar */}
+                      <span className="relative shrink-0">
+                        <Avatar src={conv.otherUser?.image} size={44} />
+                        <span
+                          aria-hidden="true"
+                          className="absolute bottom-0 end-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"
+                        />
+                      </span>
 
-                  {/* Text details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <div className={`text-xs sm:text-sm truncate ${unread > 0 ? "font-bold text-primary" : "font-semibold text-neutral-800"}`}>
-                        {otherUser?.name || "Host"}
-                      </div>
-                      <div className="text-[10px] text-neutral-400 shrink-0">
-                        {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : ""}
-                      </div>
-                    </div>
-
-                    <div className={`text-xs truncate mt-0.5 ${unread > 0 ? "font-semibold text-primary" : "text-neutral-500"}`}>
-                      {conv.lastMessage || "Started a conversation"}
-                    </div>
-
-                    {/* Listing thumbnail chip */}
-                    {listing && (
-                      <div className="flex items-center gap-1.5 mt-2 px-2 py-1 bg-white/80 rounded-lg border border-tertiary/40 w-fit max-w-full">
-                        <div className="relative w-4 h-4 rounded overflow-hidden shrink-0">
-                          <Image
-                            src={listing.imageSrc?.[0] || "/assets/placeholder.jpg"}
-                            alt={listing.title}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <span className="text-[10px] text-neutral-600 truncate font-medium">
-                          {listing.title}
+                      {/* Text details */}
+                      <span className="flex-1 min-w-0">
+                        <span className="flex items-center justify-between gap-1">
+                          <span
+                            className={`text-xs sm:text-sm truncate ${
+                              unread > 0 ? "font-bold text-primary" : "font-semibold text-neutral-800"
+                            }`}
+                          >
+                            {otherName(conv)}
+                          </span>
+                          {conv.lastMessageAt && (
+                            <time dateTime={conv.lastMessageAt} className="text-[10px] text-neutral-500 shrink-0">
+                              {formatListDate(conv.lastMessageAt)}
+                            </time>
+                          )}
                         </span>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Unread badge */}
-                  {unread > 0 && (
-                    <span className="w-2.5 h-2.5 rounded-full bg-accent shrink-0 mt-1.5" />
-                  )}
-                </div>
-              );
-            })
+                        <span
+                          className={`block text-xs truncate mt-0.5 ${
+                            unread > 0 ? "font-semibold text-primary" : "text-neutral-500"
+                          }`}
+                        >
+                          {conv.lastMessage || t("startedConversation")}
+                        </span>
+
+                        {/* Listing thumbnail chip */}
+                        {listing && (
+                          <span className="flex items-center gap-1.5 mt-2 px-2 py-1 bg-white/80 rounded-lg border border-tertiary/40 w-fit max-w-full">
+                            <span className="relative w-4 h-4 rounded overflow-hidden shrink-0">
+                              <Image
+                                src={listing.imageSrc?.[0] || "/assets/placeholder.jpg"}
+                                alt=""
+                                fill
+                                sizes="16px"
+                                className="object-cover"
+                              />
+                            </span>
+                            <span className="text-[10px] text-neutral-600 truncate font-medium">{listing.title}</span>
+                          </span>
+                        )}
+                      </span>
+
+                      {/* Unread badge */}
+                      {unread > 0 && (
+                        <span className="w-2.5 h-2.5 rounded-full bg-accent shrink-0 mt-1.5">
+                          <span className="sr-only">{t("unreadCount", { count: unread })}</span>
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Thread Canvas */}
+      {/* END COLUMN: Thread Canvas */}
       <div
         className={`flex-1 flex flex-col h-full overflow-hidden bg-[#FAF9F5] ${
           !mobileShowThread ? "hidden md:flex" : "flex"
         }`}
       >
         {!activeConversation ? (
-          /* Blank Canvas when nothing is selected (Matches reference spec) */
+          /* Blank canvas when nothing is selected */
           <div className="flex-1 flex items-center justify-center p-8 bg-white text-center">
-            <div className="max-w-xs space-y-2 text-neutral-400">
-              <BrandMessageIcon size={44} className="mx-auto text-tertiary" />
-              <div className="text-sm font-semibold text-neutral-600">
-                Select a conversation
-              </div>
-              <p className="text-xs text-neutral-400">
-                Choose a guest or host from the left list to read messages and reply.
-              </p>
+            <div className="max-w-xs space-y-2">
+              <BrandMessageIcon size={44} className="mx-auto text-tertiary" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-neutral-600">{t("selectConversation")}</h2>
+              <p className="text-xs text-neutral-500">{t("selectConversationHint")}</p>
             </div>
           </div>
         ) : (
@@ -402,26 +452,24 @@ export default function MessagesClient({
                 <button
                   type="button"
                   onClick={() => setMobileShowThread(false)}
-                  className="md:hidden min-w-[44px] min-h-[44px] -ms-2 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 rounded-full transition btn-press"
-                  aria-label="Back to conversations list"
+                  className={`md:hidden min-w-[44px] min-h-[44px] -ms-2 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 rounded-full transition btn-press ${focusRing}`}
+                  aria-label={t("back")}
                 >
-                  <BrandChevronLeftIcon size={22} className="rtl:rotate-180" />
+                  <BrandChevronLeftIcon size={22} className="rtl:rotate-180" aria-hidden="true" />
                 </button>
 
                 <Avatar src={activeConversation.otherUser?.image} size={40} />
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-sm sm:text-base text-primary">
-                      {activeConversation.otherUser?.name || "Host"}
-                    </span>
+                    <h2 className="font-bold text-sm sm:text-base text-primary">{otherName(activeConversation)}</h2>
                     <span className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-semibold">
-                      Verified
+                      {t("verified")}
                     </span>
                   </div>
                   {activeConversation.listing && (
                     <Link
                       href={`/listings/${activeConversation.listing.id}`}
-                      className="text-xs text-neutral-500 hover:text-accent hover:underline line-clamp-1"
+                      className={`text-xs text-neutral-500 hover:text-accent-700 hover:underline line-clamp-1 rounded ${focusRing}`}
                     >
                       {activeConversation.listing.title}
                     </Link>
@@ -434,49 +482,49 @@ export default function MessagesClient({
                 {activeConversation.listing && (
                   <Link
                     href={`/listings/${activeConversation.listing.id}`}
-                    className="hidden sm:inline-block px-3.5 py-1.5 bg-tertiary/25 hover:bg-tertiary/45 text-primary font-semibold rounded-xl transition btn-press"
+                    className={`hidden sm:inline-block px-3.5 py-1.5 bg-tertiary/25 hover:bg-tertiary/45 text-primary font-semibold rounded-xl transition btn-press ${focusRing}`}
                   >
-                    View Listing
+                    {t("viewListing")}
                   </Link>
                 )}
                 <button
                   type="button"
-                  onClick={() => toast.info("Conversation options")}
-                  className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-xl transition btn-press"
-                  title="Conversation options"
+                  onClick={() => toast.info(t("optionsComingSoon"))}
+                  className={`p-2 text-neutral-500 hover:bg-neutral-100 rounded-xl transition btn-press ${focusRing}`}
+                  aria-label={t("conversationOptions")}
+                  title={t("conversationOptions")}
                 >
-                  <BrandMoreIcon size={20} />
+                  <BrandMoreIcon size={20} aria-hidden="true" />
                 </button>
               </div>
             </div>
 
             {/* Scrollable Messages Stream */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+            <div
+              className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"
+              role="log"
+              aria-live="polite"
+              aria-label={t("threadLabel", { name: otherName(activeConversation) })}
+            >
               {/* Empty Thread Prompt with Quick Opener Chips */}
               {currentMessages.length === 0 ? (
                 <div className="p-8 text-center max-w-md mx-auto my-auto space-y-4 bg-white rounded-3xl border border-tertiary/60 shadow-xs">
                   <div className="w-12 h-12 mx-auto rounded-2xl bg-tertiary/20 flex items-center justify-center">
-                    <WelcomeArchIcon size={28} className="text-primary" />
+                    <WelcomeArchIcon size={28} className="text-primary" aria-hidden="true" />
                   </div>
                   <h3 className="font-bold text-primary text-base">
-                    Say hello to {activeConversation.otherUser?.name || "Host"}
+                    {t("emptyThreadTitle", { name: otherName(activeConversation) })}
                   </h3>
-                  <p className="text-xs text-neutral-500">
-                    Ask about check-in details, directions, local recommendations, or special requests.
-                  </p>
+                  <p className="text-xs text-neutral-500">{t("emptyThreadHint")}</p>
                   <div className="flex flex-col gap-2 pt-2">
-                    {[
-                      "Salam! Looking forward to our stay in Algeria!",
-                      "Hi! Is flexible check-in or airport pickup possible?",
-                      "What is the best route to reach the property?",
-                    ].map((opener, i) => (
+                    {openers.map((opener) => (
                       <button
-                        key={i}
+                        key={opener}
                         type="button"
                         onClick={() => handleSendMessage(undefined, opener)}
-                        className="px-3.5 py-2 bg-neutral-50 hover:bg-tertiary/30 border border-tertiary/50 rounded-xl text-xs text-primary font-medium transition text-start"
+                        className={`px-3.5 py-2 bg-neutral-50 hover:bg-tertiary/30 border border-tertiary/50 rounded-xl text-xs text-primary font-medium transition text-start ${focusRing}`}
                       >
-                        &ldquo;{opener}&rdquo;
+                        {t("quotedOpener", { text: opener })}
                       </button>
                     ))}
                   </div>
@@ -488,33 +536,35 @@ export default function MessagesClient({
                   return (
                     <div
                       key={msg.id}
-                      className={`flex flex-col ${
-                        isSentByMe ? "items-end text-end" : "items-start text-start"
-                      }`}
+                      className={`flex flex-col ${isSentByMe ? "items-end text-end" : "items-start text-start"}`}
                     >
                       <div
-                        className={`max-w-[80%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                        dir="auto"
+                        className={`max-w-[80%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs text-start ${
                           isSentByMe
                             ? "bg-primary text-white rounded-ee-xs"
                             : "bg-white text-neutral-800 border border-tertiary/70 rounded-es-xs"
                         }`}
                       >
+                        <span className="sr-only">
+                          {isSentByMe ? t("youSaid") : t("theySaid", { name: otherName(activeConversation) })}
+                        </span>
                         {msg.text}
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-neutral-400 mt-1 px-1">
-                        <span>
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        {isSentByMe && (
-                          msg.read ? (
-                            <BrandCheckDoubleIcon size={13} className="text-emerald-500" />
+                      <div className="flex items-center gap-1 text-[10px] text-neutral-500 mt-1 px-1">
+                        <time dateTime={msg.createdAt}>{formatMessageTime(msg.createdAt)}</time>
+                        {isSentByMe &&
+                          (msg.read ? (
+                            <>
+                              <BrandCheckDoubleIcon size={13} className="text-emerald-600" aria-hidden="true" />
+                              <span className="sr-only">{t("readStatus")}</span>
+                            </>
                           ) : (
-                            <BrandCheckIcon size={13} className="text-neutral-400" />
-                          )
-                        )}
+                            <>
+                              <BrandCheckIcon size={13} className="text-neutral-500" aria-hidden="true" />
+                              <span className="sr-only">{t("sentStatus")}</span>
+                            </>
+                          ))}
                       </div>
                     </div>
                   );
@@ -527,35 +577,40 @@ export default function MessagesClient({
             <div className="p-3 sm:p-4 bg-white border-t border-tertiary/60 shrink-0 shadow-[0_-2px_10px_rgba(46,58,47,0.03)] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <form
                 onSubmit={handleSendMessage}
-                className="flex items-end gap-2 bg-neutral-50/80 border border-tertiary/80 rounded-2xl p-2 shadow-2xs focus-within:ring-2 focus-within:ring-accent/30 focus-within:border-accent focus-within:bg-white transition-all duration-150"
+                className="flex items-end gap-2 bg-neutral-50/80 border border-tertiary/80 rounded-2xl p-2 shadow-2xs focus-within:ring-2 focus-within:ring-accent-600 focus-within:border-accent focus-within:bg-white transition-all duration-150"
               >
                 <button
                   type="button"
-                  onClick={() => toast.info("File attachment simulated.")}
-                  className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-neutral-100 rounded-xl transition shrink-0 btn-press"
-                  title="Attach file or photo"
-                  aria-label="Attach file"
+                  onClick={() => toast.info(t("attachSimulated"))}
+                  className={`p-2 min-w-[36px] min-h-[36px] flex items-center justify-center text-neutral-500 hover:text-primary hover:bg-neutral-100 rounded-xl transition shrink-0 btn-press ${focusRing}`}
+                  title={t("attach")}
+                  aria-label={t("attach")}
                 >
-                  <BrandPaperclipIcon size={18} />
+                  <BrandPaperclipIcon size={18} aria-hidden="true" />
                 </button>
 
+                <label htmlFor={composerId} className="sr-only">
+                  {t("messageLabel", { name: otherName(activeConversation) })}
+                </label>
                 <textarea
+                  id={composerId}
+                  dir="auto"
                   value={newMessageText}
                   onChange={(e) => setNewMessageText(e.target.value)}
                   onKeyDown={handleKeyDown}
                   rows={1}
-                  placeholder="Type a message (Press Enter to send)..."
-                  className="flex-1 bg-transparent py-2 px-2 text-xs sm:text-sm text-primary placeholder-neutral-400 focus:outline-none resize-none max-h-32 leading-relaxed"
+                  placeholder={t("typeMessage")}
+                  className="flex-1 bg-transparent py-2 px-2 text-xs sm:text-sm text-primary placeholder-neutral-500 focus:outline-none resize-none max-h-32 leading-relaxed"
                 />
 
                 <button
                   type="submit"
                   disabled={!newMessageText.trim() || isSending}
-                  className="p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center bg-accent text-white rounded-xl hover:bg-accent/90 transition shrink-0 disabled:opacity-40 disabled:hover:bg-accent btn-press shadow-xs"
-                  title="Send message"
-                  aria-label="Send message"
+                  className={`p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center bg-accent-600 text-white rounded-xl hover:bg-accent-700 transition shrink-0 disabled:opacity-40 disabled:hover:bg-accent-600 btn-press shadow-xs ${focusRing}`}
+                  title={t("send")}
+                  aria-label={t("send")}
                 >
-                  <BrandSendIcon size={16} />
+                  <BrandSendIcon size={16} className="rtl:-scale-x-100" aria-hidden="true" />
                 </button>
               </form>
             </div>

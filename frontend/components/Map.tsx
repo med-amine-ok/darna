@@ -4,13 +4,14 @@ import L from "leaflet";
 import React, { useState, useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, Circle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTranslations } from "next-intl";
 
-// Custom DARNA Location Pin from /assets/location.png
+// Custom DARNA Location Pin from /assets/location.png (70x104 source, shown at half size).
 const darnaLocationIcon = L.icon({
   iconUrl: "/assets/location.png",
   iconSize: [36, 52],
-  iconAnchor: [18, 50],
-  popupAnchor: [0, -46],
+  iconAnchor: [18, 52],
+  popupAnchor: [0, -48],
   className: "darna-location-pin drop-shadow-xl transition-transform duration-200 hover:scale-110",
 });
 
@@ -50,6 +51,7 @@ export default function Map({
   zoom,
   className = "w-full h-[35vh] min-h-[300px]",
 }: MapProps) {
+  const t = useTranslations("common");
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const defaultZoom = zoom || (isApproximate ? 13 : center ? 9 : 6);
   const mapCenter = (center as [number, number]) || [36.5897, 2.4475]; // Tipaza default
@@ -107,28 +109,30 @@ export default function Map({
       </MapContainer>
 
       {/* Map Layer Switcher */}
-      <div className="absolute top-3 end-3 z-[400] flex items-center bg-white/90 backdrop-blur-md p-1 rounded-xl shadow-md border border-tertiary/60 text-xs font-semibold">
+      <div role="group" aria-label={t("mapType")} className="absolute top-3 end-3 z-[400] flex items-center bg-white/90 backdrop-blur-md p-1 rounded-xl shadow-md border border-tertiary/60 text-xs font-semibold">
         <button
           type="button"
           onClick={() => setMapType("roadmap")}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+          aria-pressed={mapType === "roadmap"}
+          className={`px-3 py-1.5 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
             mapType === "roadmap"
               ? "bg-primary text-white shadow-xs"
               : "text-neutral-700 hover:bg-neutral-100"
           }`}
         >
-          Map
+          {t("mapView")}
         </button>
         <button
           type="button"
           onClick={() => setMapType("satellite")}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+          aria-pressed={mapType === "satellite"}
+          className={`px-3 py-1.5 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
             mapType === "satellite"
               ? "bg-primary text-white shadow-xs"
               : "text-neutral-700 hover:bg-neutral-100"
           }`}
         >
-          Satellite
+          {t("satelliteView")}
         </button>
       </div>
     </div>

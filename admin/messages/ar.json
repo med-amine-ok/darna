@@ -138,7 +138,10 @@
       "security": "الأمان",
       "team": "فريق العمل والأدوار",
       "auditLog": "سجل التدقيق"
-    }
+    },
+    "more": "المزيد",
+    "openMenu": "فتح قائمة التنقل الكاملة",
+    "quickNavigation": "التنقل السريع"
   },
   "sidebar": {
     "overview": "نظرة عامة",
@@ -147,7 +150,16 @@
     "configuration": "الإعدادات التقنية",
     "system": "النظام والحوكمة",
     "adminBadge": "مركز تحكم الإدارة",
-    "version": "منصة دارنا الإصدار 2.4"
+    "version": "منصة دارنا الإصدار 2.4",
+    "consoleTitle": "لوحة إدارة دارنا",
+    "tagline": "سافروا في الجزائر",
+    "expandSidebar": "توسيع الشريط الجانبي",
+    "collapseSidebar": "طي الشريط الجانبي",
+    "toggleSection": "{section}: إظهار الصفحات الفرعية أو إخفاؤها",
+    "mainNavigation": "التنقل الرئيسي",
+    "menuLabel": "قائمة التنقل",
+    "closeMenu": "إغلاق قائمة التنقل",
+    "pendingBadge": "{count, plural, zero {لا توجد عناصر في الانتظار} one {عنصر واحد في الانتظار} two {عنصران في الانتظار} few {# عناصر في الانتظار} many {# عنصرًا في الانتظار} other {# عنصر في الانتظار}}"
   },
   "header": {
     "searchPlaceholder": "ابحث في المنصة أو اكتب أمراً...",
@@ -159,7 +171,42 @@
     "trainingMode": "وضع التدريب",
     "trainingActive": "التدريب مفعّل",
     "simpleView": "عرض مبسط",
-    "detailedView": "عرض مفصل"
+    "detailedView": "عرض مفصل",
+    "openNavigation": "فتح قائمة التنقل",
+    "openCommandPalette": "فتح لوحة الأوامر (⌘K)",
+    "searchLabel": "البحث في المنصة",
+    "searchPlaceholders": {
+      "trips": "البحث عن رحلة، وجهة، أو منظم...",
+      "stays": "البحث عن سكن، مضيف، أو مدينة...",
+      "experiences": "البحث عن تجربة، مرشد، أو مدينة...",
+      "cars": "البحث عن سيارة، مدينة، أو فئة...",
+      "bookings": "البحث عن حجز، عميل، أو سكن...",
+      "moderation": "البحث عن مقدم خدمة، وكالة، أو فندق...",
+      "default": "البحث عن سكن، رحلة، تجربة، وكالة، فندق، سيارة..."
+    },
+    "markAllRead": "تعليم الكل كمقروء",
+    "unread": "غير مقروء",
+    "accountMenu": "{name}، قائمة الحساب",
+    "adminFallback": "المسؤول",
+    "language": "اللغة",
+    "myProfileSecurity": "ملفي الشخصي والأمان",
+    "guidedTour": "جولة تعريفية",
+    "helpCenter": "مركز المساعدة",
+    "sampleNotifications": {
+      "newValidation": {
+        "title": "طلب اعتماد جديد",
+        "description": "فيلا الزيتون (أحمد بن علي) في تيزي وزو"
+      },
+      "tripPending": {
+        "title": "رحلة في انتظار الموافقة",
+        "description": "رحلة استكشافية إلى طاسيلي ناجر من تنظيم Sahara Tours"
+      },
+      "reviewReported": {
+        "title": "إبلاغ عن تقييم عميل",
+        "description": "تعليق مُبلَّغ عنه على فندق الأوراسي"
+      }
+    },
+    "notificationsUnread": "{count, plural, one {إشعار واحد غير مقروء} two {إشعاران غير مقروءين} few {# إشعارات غير مقروءة} many {# إشعارًا غير مقروء} other {# إشعار غير مقروء}}"
   },
   "commandPalette": {
     "placeholder": "اكتب بحثاً، اسم مضيف، ولاية، أو أمراً إدارياً...",
@@ -172,7 +219,16 @@
       "users": "الضيوف والمستخدمون",
       "bookings": "الحجوزات",
       "actions": "أوامر سريعة"
-    }
+    },
+    "title": "لوحة الأوامر",
+    "inputLabel": "البحث في السجلات والأوامر",
+    "clear": "مسح البحث",
+    "resultsLabel": "نتائج البحث",
+    "noResultsFor": "لا توجد نتائج مطابقة لـ«{query}»",
+    "typeToSearch": "ابدأ الكتابة للبحث.",
+    "navigateHint": "التنقل <kbd>↑</kbd> <kbd>↓</kbd>",
+    "selectHint": "فتح <kbd>↵</kbd>",
+    "tipLabel": "نصيحة:"
   },
   "status": {
     "applied": "مقدَم حديثاً",
@@ -195,7 +251,12 @@
     "flagged": "مبلّغ عنه",
     "hidden": "مخفي",
     "active": "نشط",
-    "disabled": "معطّل"
+    "disabled": "معطّل",
+    "partially_refunded": "مستردّ جزئياً",
+    "paid": "مدفوع",
+    "processed": "تمت المعالجة",
+    "invited": "مدعو",
+    "failed": "فشل"
   },
   "roles": {
     "super_admin": "مدير عام",
@@ -272,9 +333,9 @@
     "kpiMoneyPaid": "المبالغ المدفوعة من الضيوف",
     "kpiEarnings": "أرباح دارنا",
     "kpiNewHosts": "المضيفون الجدد",
-    "comparisonMore": "أكثر بـ {percent}% من الفترة السابقة",
-    "comparisonFewer": "أقل بـ {percent}% من الفترة السابقة",
-    "comparisonSame": "مماثل للفترة السابقة",
+    "comparisonMore": "أكثر بنسبة {percent}% مقارنةً بـ{period}",
+    "comparisonFewer": "أقل بنسبة {percent}% مقارنةً بـ{period}",
+    "comparisonSame": "مماثل لـ{period}",
     "chartBookingsTitle": "الحجوزات ارتفعت بنسبة 12% هذا الشهر",
     "chartWilayasTitle": "وهران والجزائر وتيبازة تسجل أعلى نسبة حجوزات",
     "viewAsTable": "عرض كجدول",
@@ -287,7 +348,82 @@
     "moreDetails": "تفاصيل إضافية",
     "hideDetails": "إخفاء التفاصيل",
     "simpleView": "عرض مبسط",
-    "detailedView": "عرض تفصيلي"
+    "detailedView": "عرض تفصيلي",
+    "greetingNeutral": "مرحباً، {name}",
+    "greetingAfternoon": "مساء الخير، {name}",
+    "greetingEvening": "مساء الخير، {name}",
+    "needsAttentionTitle": "مهام تحتاج إلى انتباهك",
+    "needsAttentionHint": "قرّر بنقرة واحدة",
+    "attentionCards": {
+      "hosts": "مضيفون في انتظار الاعتماد",
+      "listings": "إعلانات في انتظار المراجعة",
+      "reviews": "تقييمات أبلغ عنها الضيوف",
+      "bookings": "طلبات تجاوزت 24 ساعة ونزاعات"
+    },
+    "waitingDays": "{count, plural, one {يوم واحد} two {يومان} few {{value} أيام} many {{value} يوماً} other {{value} يوم}}",
+    "howDoingTitle": "كيف هو أداء دارنا؟",
+    "howDoingSubtitle": "المؤشرات الرئيسية بلغة واضحة ومبسطة، دون اختصارات.",
+    "periodSwitchLabel": "الفترة",
+    "comparisonPeriods": {
+      "today": "اليوم السابق",
+      "7d": "الأيام السبعة السابقة",
+      "30d": "الأيام الثلاثين السابقة"
+    },
+    "chartBookingsSubtitle": "العدد اليومي للحجوزات المؤكدة هذا الأسبوع",
+    "chartTooltipBookings": "{count, plural, one {حجز واحد} two {حجزان} few {{value} حجوزات} many {{value} حجزاً} other {{value} حجز}}",
+    "chartWilayasSubtitle": "الولايات الأكثر تسجيلاً للإقامات المؤكدة هذا الشهر",
+    "wilayaColumn": "الولاية",
+    "staysCount": "{count, plural, one {إقامة واحدة} two {إقامتان} few {{value} إقامات} many {{value} إقامة} other {{value} إقامة}}",
+    "moreDetailsSubtitle": "إحصائيات متقدمة حسب نوع الشريك وفئة الإقامة ومعدل الإشغال",
+    "expand": "توسيع",
+    "collapse": "طيّ",
+    "tiersTitle": "الأداء المالي حسب نوع الشريك",
+    "tier": {
+      "total": "الإجمالي: <b>{value}</b>",
+      "darna": "دارنا: <b>{value}</b>",
+      "bookings": "الحجوزات: <b>{value}</b>",
+      "commissionValue": "{amount} ({rate}%)"
+    },
+    "avgResponseTitle": "متوسط وقت الاستجابة",
+    "avgResponseValue": "{minutes} دقيقة",
+    "avgResponseHint": "متوسط الوقت الذي يستغرقه المضيفون لتأكيد طلبات الحجز",
+    "checklist": {
+      "title": "دليل البدء السريع",
+      "subtitle": "{count, plural, one {خطوة واحدة بسيطة لإتقان المهام الأساسية في إدارة دارنا.} two {خطوتان بسيطتان لإتقان المهام الأساسية في إدارة دارنا.} few {{count} خطوات بسيطة لإتقان المهام الأساسية في إدارة دارنا.} other {{count} خطوة بسيطة لإتقان المهام الأساسية في إدارة دارنا.}}",
+      "progress": "{done} / {total}",
+      "dismiss": "إخفاء هذا الدليل",
+      "markDone": "تعليم كمنجزة: {task}",
+      "goToPage": "الانتقال إلى الصفحة",
+      "items": {
+        "review_host": {
+          "title": "مراجعة طلب مضيف قيد الانتظار",
+          "desc": "تحقق من بطاقة الهوية الوطنية والوثائق السياحية في صندوق الاعتمادات."
+        },
+        "approve_listing": {
+          "title": "اعتماد إعلان إقامة أو رحلة",
+          "desc": "تحقق من الصور والسعر بالدينار الجزائري وقواعد الإقامة قبل النشر."
+        },
+        "find_guest": {
+          "title": "البحث عن ضيف في الدليل",
+          "desc": "ابحث برقم الهاتف أو البريد الإلكتروني أو سجل الحجوزات."
+        },
+        "recharge_wallet": {
+          "title": "معاينة أرصدة محافظ المضيفين",
+          "desc": "اطّلع على الأرصدة والتحويلات البنكية وعمليات شحن المحافظ."
+        },
+        "switch_language": {
+          "title": "استكشاف اللغات (FR / AR / EN)",
+          "desc": "جرّب العرض العربي الكامل من اليمين إلى اليسار وتنسيق الدينار الجزائري."
+        }
+      }
+    },
+    "whatChanged": {
+      "ariaLabel": "تنبيه حول تحديثات الواجهة",
+      "title": "جديد: قائمة تنقل مبسطة في 7 أقسام أساسية",
+      "description": "خيارات أقل وسرعة أكبر: أصبحت الصفحات الثانوية مجمّعة تحت «إدارة».",
+      "guideLink": "أين ذهبت صفحتي السابقة؟",
+      "dismiss": "إخفاء هذا التنبيه"
+    }
   },
   "hosts": {
     "title": "الشركاء والمضيفون",
@@ -312,7 +448,149 @@
     "viewDetails": "معاينة",
     "suspendHost": "إيقاف الشريك مؤقتاً",
     "deleteHost": "حذف الشريك",
-    "exportSuccess": "تم تصدير ملف المضيفين بنجاح"
+    "exportSuccess": "تم تصدير ملف المضيفين بنجاح",
+    "documentsColumn": "الوثائق",
+    "moreActions": "إجراءات إضافية لـ {name}",
+    "verification": {
+      "verified": "موثّقة",
+      "pending": "قيد المراجعة",
+      "missing": "ناقصة",
+      "expired": "منتهية الصلاحية"
+    },
+    "approvalModes": {
+      "instant": "حجز فوري",
+      "request": "طلب يدوي من المضيف"
+    },
+    "chips": {
+      "status": "الحالة",
+      "wilayas": "الولايات",
+      "wilayasSelected": "{count, plural, zero {لا شيء محدد} one {ولاية واحدة محددة} two {ولايتان محددتان} few {# ولايات محددة} many {# ولاية محددة} other {# ولاية محددة}}",
+      "verification": "التحقق",
+      "bookingMode": "نمط الحجز",
+      "balance": "الرصيد",
+      "negativeOnly": "السالب فقط"
+    },
+    "confirm": {
+      "approveTitle": "الموافقة على {name}؟",
+      "approveDescription": "سيمنح هذا الإجراء صلاحيات النشاط في السوق لـ {name} ({type}).",
+      "approveConfirm": "الموافقة على المضيف",
+      "deleteTitle": "تأكيد الحذف",
+      "deleteDescription": "سيتم حذف سجل المضيف {name} حذفًا قابلًا للاسترجاع. للتأكيد، اكتب الاسم الكامل للمالك أدناه.",
+      "deleteConfirm": "حذف المضيف",
+      "bulkApproveTitle": "موافقة جماعية: {count, plural, one {مضيف واحد} two {مضيفان} few {# مضيفين} many {# مضيفًا} other {# مضيف}}",
+      "bulkApproveDescription": "ستتم الموافقة فورًا على جميع حسابات المضيفين المحددة.",
+      "bulkApproveConfirm": "الموافقة على المحدد"
+    },
+    "toasts": {
+      "approved": "تمت الموافقة على المضيف {name}",
+      "approveFailed": "تعذّرت الموافقة على المضيف",
+      "suspended": "تم تعليق المضيف {name}",
+      "deleted": "تم حذف المضيف {name}",
+      "deleteFailed": "تعذّر حذف المضيف",
+      "commissionUpdated": "تم تحديث نسبة العمولة إلى {rate}",
+      "commissionFailed": "تعذّر تحديث العمولة",
+      "recharged": "تمت إضافة {amount} إلى محفظة المضيف",
+      "rechargeFailed": "تعذّر شحن المحفظة",
+      "bulkApproved": "{count, plural, one {تمت الموافقة على مضيف واحد} two {تمت الموافقة على مضيفَين} few {تمت الموافقة على # مضيفين} many {تمت الموافقة على # مضيفًا} other {تمت الموافقة على # مضيف}}",
+      "bulkApproveFailed": "تعذّرت الموافقة على المضيفين المحددين"
+    },
+    "bulk": {
+      "approveSelected": "الموافقة على المحدد",
+      "exportSelected": "تصدير المحدد"
+    },
+    "filters": {
+      "wilaya": "الولاية",
+      "regionShortcuts": "التحديد حسب المنطقة",
+      "north": "الشمال",
+      "highPlateaus": "الهضاب العليا",
+      "south": "الجنوب",
+      "wilayaPlaceholder": "اختر الولايات…",
+      "partnerStatus": "حالة الشريك",
+      "allStatuses": "جميع الحالات",
+      "appliedNew": "طلب جديد",
+      "documentVerification": "التحقق من الوثائق",
+      "allDocuments": "جميع الوثائق",
+      "docsVerified": "كاملة وموثّقة",
+      "docsPending": "بانتظار مراجعة الوثائق",
+      "docsMissing": "وثائق ناقصة",
+      "docsExpired": "وثائق منتهية الصلاحية",
+      "approvalMode": "نمط الموافقة على الحجوزات",
+      "anyMode": "كل الأنماط",
+      "priceRange": "نطاق السعر (د.ج)"
+    },
+    "drawer": {
+      "subtitle": "{type} في {city} · المعرّف: {id}",
+      "approveHost": "الموافقة على المضيف",
+      "suspendHost": "تعليق المضيف",
+      "sections": "أقسام تفاصيل المضيف",
+      "tabs": {
+        "overview": "نظرة عامة",
+        "documents": "الوثائق ({count})",
+        "listings": "الإعلانات ({count})",
+        "bookings": "الحجوزات ({count})",
+        "money": "المالية",
+        "history": "السجل"
+      },
+      "overview": {
+        "ownerName": "اسم المالك",
+        "businessName": "الاسم التجاري",
+        "individualPartner": "شريك فردي",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "wilaya": "الولاية",
+        "walletBalance": "رصيد المحفظة",
+        "agencyTitle": "تفاصيل الوكالة والفريق",
+        "teamSize": "حجم الفريق",
+        "teamSizeValue": "{count, plural, one {موظف واحد} two {موظفان} few {# موظفين} many {# موظفًا} other {# موظف}}",
+        "licenseNo": "رقم الرخصة",
+        "offersTrips": "يقدّم رحلات",
+        "yes": "نعم",
+        "no": "لا",
+        "hotelTitle": "تصنيف الفندق",
+        "stars": "النجوم",
+        "starsValue": "{count, plural, one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
+        "totalRooms": "عدد الغرف",
+        "roomsValue": "{count, plural, one {غرفة واحدة} two {غرفتان} few {# غرف} many {# غرفة} other {# غرفة}}",
+        "internalNotes": "ملاحظات داخلية",
+        "internalNotesText": "متعامل سياحي جزائري موثّق. تمت مطابقة وثائق الهوية مع السجلات الوطنية. تم التحقق من رقم الهاتف عبر رسالة قصيرة."
+      },
+      "documents": {
+        "meta": "رُفعت في {date} · الحالة: {status}",
+        "viewFile": "عرض الملف",
+        "viewFileLabel": "عرض الملف {title} (يُفتح في علامة تبويب جديدة)"
+      },
+      "listings": {
+        "activeFleet": "الإعلانات النشطة",
+        "registered": "{count, plural, one {عقار واحد مسجّل} two {عقاران مسجّلان} few {# عقارات مسجّلة} many {# عقارًا مسجّلًا} other {# عقار مسجّل}}",
+        "subsections": "أقسام الكتالوج",
+        "stays": "إقامات / منازل",
+        "hotelRooms": "غرف فندقية",
+        "trips": "رحلات وجولات"
+      },
+      "bookings": {
+        "title": "حجوزات المسافرين",
+        "completed": "{count, plural, one {إقامة واحدة مكتملة} two {إقامتان مكتملتان} few {# إقامات مكتملة} many {# إقامة مكتملة} other {# إقامة مكتملة}}",
+        "trackRecord": "سجل موثوق. متوسط تأكيد الوصول خلال 24 دقيقة."
+      },
+      "money": {
+        "currentBalance": "رصيد المحفظة الحالي",
+        "rate": "النسبة: <strong>{rate}</strong>",
+        "commissionTitle": "نسبة عمولة المنصة",
+        "commissionInput": "نسبة العمولة (%)",
+        "saveOverride": "حفظ النسبة",
+        "rechargeTitle": "شحن محفظة الشريك (شحن خارج الإنترنت)",
+        "amount": "المبلغ (د.ج)",
+        "receiptRef": "مرجع الإيصال / التحويل",
+        "receiptPlaceholder": "مثال: BNA-VIR-891244",
+        "creditWallet": "شحن المحفظة"
+      },
+      "history": {
+        "title": "سجل إجراءات الشريك",
+        "verifiedBy": "تم التحقق من الحساب بواسطة {name}",
+        "idApproved": "تمت الموافقة على وثيقة الهوية",
+        "applicationSubmitted": "تم تقديم طلب الشراكة"
+      }
+    }
   },
   "listings": {
     "title": "أسطول الإعلانات والإقامات",
@@ -334,7 +612,108 @@
     "moderationChecklist": "قائمة التحقق وتدقيق الجودة",
     "approveAction": "اعتماد الإعلان",
     "requestChanges": "طلب تعديلات من المضيف",
-    "rejectAction": "رفض الإعلان"
+    "rejectAction": "رفض الإعلان",
+    "viewModeLabel": "طريقة العرض",
+    "featuredBadge": "مميّز",
+    "byHost": "بواسطة {host} ({type})",
+    "cityHost": "{city} · المضيف: {host}",
+    "itemLabel": "إعلانات",
+    "columns": {
+      "wilaya": "الولاية",
+      "rating": "التقييم",
+      "bookings": "الحجوزات"
+    },
+    "filters": {
+      "wilayas": "الولايات",
+      "wilayasSelected": "{count, plural, one {ولاية واحدة محددة} two {ولايتان محددتان} few {# ولايات محددة} many {# ولاية محددة} other {# ولاية محددة}}",
+      "wilayaPlaceholder": "اختر الولايات…",
+      "priceRange": "نطاق السعر (د.ج)"
+    },
+    "toasts": {
+      "loadFailed": "تعذّر تحميل الإعلانات",
+      "approved": "تمت الموافقة على الإعلان: {title}",
+      "approveFailed": "تعذّرت الموافقة على الإعلان",
+      "changesRequested": "تم طلب تعديلات على {title}",
+      "requestChangesFailed": "تعذّر طلب التعديلات",
+      "featured": "تم تمييزه في الصفحة الرئيسية",
+      "unfeatured": "تم إلغاء تمييز الإعلان",
+      "featureFailed": "تعذّر تحديث التمييز",
+      "deleted": "تم حذف الإعلان: {title}",
+      "deleteFailed": "تعذّر حذف الإعلان"
+    },
+    "dialogs": {
+      "approveDescription": "نشر {title} مباشرة في الكتالوج العام للمسافرين.",
+      "deleteTitle": "تأكيد الحذف",
+      "deleteDescription": "حذف الإعلان {title}. للتأكيد، اكتب عنوانه بالضبط أدناه.",
+      "deleteConfirm": "حذف الإعلان"
+    },
+    "menu": {
+      "feature": "تمييز في الصفحة الرئيسية",
+      "unfeature": "إلغاء التمييز",
+      "approve": "موافقة ونشر",
+      "markPending": "وضع قيد المراجعة",
+      "suspend": "تعليق الإعلان",
+      "reject": "رفض الإعلان",
+      "delete": "حذف الإعلان"
+    },
+    "grid": {
+      "openLabel": "فتح الإشراف على {title}",
+      "bookings": "{count, plural, =0 {لا حجوزات} one {حجز واحد} two {حجزان} few {# حجوزات} many {# حجزًا} other {# حجز}}",
+      "moderate": "إشراف"
+    },
+    "bulk": {
+      "approve": "الموافقة على المحدد",
+      "approveTitle": "الموافقة على {count, plural, one {إعلان واحد} two {إعلانين} few {# إعلانات} many {# إعلانًا} other {# إعلان}}؟",
+      "approveDescription": "نشر جميع الإعلانات المحددة في كتالوج المسافرين.",
+      "approveFailed": "فشلت الموافقة الجماعية",
+      "approved": "{count, plural, one {تمت الموافقة على إعلان واحد} two {تمت الموافقة على إعلانين} few {تمت الموافقة على # إعلانات} many {تمت الموافقة على # إعلانًا} other {تمت الموافقة على # إعلان}}",
+      "export": "تصدير المحدد"
+    },
+    "checklist": {
+      "photosOk": "صور واقعية وعالية الجودة",
+      "locationAccurate": "ولاية وإحداثيات دقيقة",
+      "priceReasonable": "سعر متناسب مع متوسط الولاية",
+      "policiesPresent": "سياسة الإلغاء متوفرة",
+      "descriptionAppropriate": "وصف مناسب"
+    },
+    "detail": {
+      "subtitle": "{type} · {city} · المعرّف: {id}",
+      "nightlyPrice": "السعر لليلة",
+      "medianBenchmark": "متوسط الولاية",
+      "medianValue": "≈ {amount}",
+      "pricingTitle": "الأسعار والخصومات",
+      "commission": "عمولة DARNA",
+      "commissionValue": "{rate}٪",
+      "weeklyDiscount": "خصم أسبوعي",
+      "weeklyDiscountValue": "-{rate}٪ ({amount} / أسبوع)",
+      "cleaningFee": "رسوم التنظيف",
+      "deposit": "مبلغ التأمين",
+      "timesTitle": "المواعيد وشروط الإقامة",
+      "checkIn": "تسجيل الوصول",
+      "checkInValue": "ابتداءً من {time}",
+      "checkOut": "المغادرة",
+      "checkOutValue": "قبل {time}",
+      "minStay": "الحد الأدنى للإقامة",
+      "nights": "{count, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+      "cancellation": "الإلغاء",
+      "cancellationValue": "مجاني حتى {hours} ساعة قبل الموعد",
+      "description": "الوصف",
+      "amenities": "المرافق"
+    },
+    "revision": {
+      "title": "التعديلات المطلوبة من المضيف",
+      "placeholder": "مثال: يرجى رفع صور واضحة للحمام وتحديد موقع موقف السيارات بدقة.",
+      "send": "إرسال الطلب"
+    },
+    "map": {
+      "title": "خريطة تفاعلية للجزائر",
+      "pins": "{count, plural, =0 {لا علامات} one {علامة واحدة} two {علامتان} few {# علامات} many {# علامة} other {# علامة}}",
+      "pinLabel": "{title}، {price}",
+      "legend": "* علامات موزعة على الولايات الجزائرية، من التل الساحلي إلى الهضبة الصحراوية.",
+      "cityHost": "{city} · المضيف: {host}",
+      "rating": "التقييم:",
+      "moderate": "الإشراف على هذا الإعلان"
+    }
   },
   "approvals": {
     "title": "صندوق التحقق والمراجعة المركزي",
@@ -364,7 +743,113 @@
     "showingResults": "عرض {shown} من أصل {total} عنصر",
     "resetFilters": "إعادة تعيين الفلاتر",
     "noMatchesTitle": "لا توجد عناصر مطابقة للفلاتر",
-    "noMatchesSubtitle": "جرب تعديل الفئة أو الولاية أو نص البحث لعرض العناصر المعلقة."
+    "noMatchesSubtitle": "جرب تعديل الفئة أو الولاية أو نص البحث لعرض العناصر المعلقة.",
+    "pendingBadge": "{count} قيد الانتظار (SLA)",
+    "tabsLabel": "قوائم الإشراف",
+    "shortcuts": {
+      "title": "اختصارات:",
+      "navigate": "تنقّل",
+      "approve": "موافقة",
+      "reject": "رفض"
+    },
+    "search": {
+      "label": "البحث في القائمة",
+      "hosts": "ابحث بالمضيف أو المؤسسة أو المعرّف أو المدينة...",
+      "listings": "ابحث بعنوان الإعلان أو المضيف أو المدينة أو المعرّف...",
+      "default": "ابحث في العناصر المعلّقة...",
+      "clear": "مسح البحث"
+    },
+    "filterChip": "{label}: {value}",
+    "quoted": "«{text}»",
+    "removeFilter": "إزالة عامل التصفية: {label}",
+    "bulk": {
+      "selected": "{count, plural, =0 {لم يتم تحديد أي عنصر} one {تم تحديد عنصر واحد} two {تم تحديد عنصرين} few {تم تحديد # عناصر} many {تم تحديد # عنصرًا} other {تم تحديد # عنصر}}",
+      "clear": "مسح",
+      "approve": "موافقة جماعية ({count})"
+    },
+    "selectAll": "تحديد الكل ({count})",
+    "selectItem": "تحديد {title}",
+    "sortedBy": "الترتيب: الأقدم أولًا (أولوية SLA)",
+    "caughtUpTitle": "لا شيء معلّق!",
+    "caughtUpDesc": "لا توجد عناصر بانتظار الإشراف في هذه القائمة. عمل رائع في الحفاظ على أمان المنصة وموثوقيتها.",
+    "waitingDays": "بانتظار منذ {count, plural, =0 {اليوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}",
+    "submitted": "أُرسل بتاريخ {date}",
+    "approveItem": "الموافقة على {title} (A)",
+    "rejectItem": "رفض {title} (R)",
+    "inspectItem": "فحص {title}",
+    "typeLabel": {
+      "host": "مراجعة مضيف",
+      "listing": "مراجعة إعلان",
+      "document": "مراجعة وثيقة",
+      "review": "الإشراف على تقييم",
+      "dispute": "مراجعة نزاع"
+    },
+    "typeName": {
+      "host": "المضيف",
+      "listing": "الإعلان",
+      "document": "الوثيقة",
+      "review": "التقييم",
+      "dispute": "النزاع"
+    },
+    "closeDetail": "إغلاق التفاصيل",
+    "detail": {
+      "businessOwner": "المؤسسة / المالك",
+      "category": "الفئة",
+      "wilaya": "الولاية",
+      "phone": "الهاتف",
+      "nif": "السجل التجاري / NIF",
+      "na": "غير متوفر",
+      "host": "المضيف",
+      "vertical": "الفئة / القسم",
+      "nightlyPrice": "سعر الليلة",
+      "cityWilaya": "المدينة والولاية",
+      "wilayaCity": "{wilaya} ({city})",
+      "approvalMode": "طريقة الموافقة",
+      "approvalModes": {
+        "instant": "فوري",
+        "request": "عند الطلب"
+      },
+      "reportedContent": "المحتوى المبلّغ عنه",
+      "flaggedByCommunity": "أبلغ عنه المجتمع",
+      "reason": "السبب: {reason}",
+      "offensiveDefault": "لغة مسيئة",
+      "disputedBooking": "حجز متنازع عليه",
+      "bookingRef": "مرجع الحجز",
+      "disputeAmount": "المبلغ المتنازع عليه"
+    },
+    "emptyDetail": "اختر عنصرًا من القائمة أو اضغط <kbd>J</kbd> لعرض التفاصيل.",
+    "reject": {
+      "title": "رفض {type}: {title}",
+      "intro": "يجب تقديم سبب رسمي للرفض. سيتلقى مقدّم الطلب إشعارًا يتضمن هذا التوضيح.",
+      "templateLabel": "قالب السبب المعتمد",
+      "noteLabel": "تفاصيل إضافية / ملاحظة للمضيف (اختياري)",
+      "notePlaceholder": "مثال: يرجى إعادة رفع السجل التجاري بختم صالح لسنة 2026.",
+      "withNote": "{template} — ملاحظة: {note}",
+      "templates": {
+        "registration": "وثيقة التسجيل التجاري أو الجبائي غير مكتملة",
+        "photos": "صور الإعلان تحتوي على علامات مائية ترويجية أو دقتها منخفضة",
+        "pricing": "الأسعار لا تتوافق مع مرجعيات السوق الجهوية",
+        "idExpired": "بطاقة الهوية منتهية الصلاحية أو الصورة غير واضحة",
+        "address": "تعذّر التحقق من عنوان العقار عبر سجلات المسح العقاري",
+        "hateSpeech": "التقييم يتضمن خطاب كراهية أو لغة مسيئة محظورة",
+        "other": "عدم مطابقة تنظيمية أخرى"
+      }
+    },
+    "toast": {
+      "loadFailed": "تعذّر تحميل قائمة الإشراف",
+      "approved": "تمت الموافقة: {title}",
+      "approvedDesc": "تم تنفيذ الإجراء وتسجيله في سجل التدقيق",
+      "undoRequested": "تم طلب التراجع",
+      "undoDesc": "أُعيد العنصر إلى قائمة المراجعة",
+      "approveFailed": "تعذّرت الموافقة",
+      "rejected": "تم الرفض: {title}",
+      "rejectedDesc": "تم إرسال السبب إلى المستخدم: «{reason}»",
+      "rejectFailed": "تعذّر الرفض",
+      "bulkApproved": "{count, plural, =0 {لم تتم الموافقة على أي عنصر} one {تمت الموافقة على عنصر واحد} two {تمت الموافقة على عنصرين} few {تمت الموافقة على # عناصر} many {تمت الموافقة على # عنصرًا} other {تمت الموافقة على # عنصر}}",
+      "bulkApprovedDesc": "تم تحديث جميع الكيانات المتحقق منها وجدولة الإشعارات.",
+      "bulkFailed": "واجهت الموافقة الجماعية مشكلة",
+      "disputeFailed": "تعذّرت تسوية النزاع"
+    }
   },
   "finance": {
     "title": "الخزينة المالية والعمولات",
@@ -392,7 +877,36 @@
     "priceRange": "نطاق السعر (دج)",
     "resultsFound": "العروض المتوفرة في المنصة",
     "listView": "عرض قائمة",
-    "mapView": "مستكشف الخريطة"
+    "mapView": "مستكشف الخريطة",
+    "liveMirror": "نسخة مباشرة من السوق",
+    "viewMode": "وضع العرض",
+    "verticalsLabel": "فئات الإعلانات",
+    "where": "أين في الجزائر",
+    "wherePlaceholder": "مدينة أو واحة أو معلم…",
+    "wilaya": "الولاية (69 ولاية)",
+    "allWilayas": "جميع الولايات الـ69",
+    "guestsCapacity": "المسافرون / السعة",
+    "hostType": "نوع المضيف",
+    "allCategories": "جميع الفئات",
+    "unitPriceRange": "نطاق السعر لليلة / للوحدة",
+    "mapCount": "{count, plural, zero {لا توجد إعلانات على خريطة الجزائر} one {عرض إعلان واحد على خريطة الجزائر} two {عرض إعلانين على خريطة الجزائر} few {عرض # إعلانات على خريطة الجزائر} many {عرض # إعلانًا على خريطة الجزائر} other {عرض # إعلان على خريطة الجزائر}}",
+    "foundCount": "{count, plural, zero {لا توجد إعلانات مطابقة على الشبكة} one {تم العثور على <strong>إعلان واحد</strong> مطابق على الشبكة} two {تم العثور على <strong>إعلانين</strong> مطابقين على الشبكة} few {تم العثور على <strong>#</strong> إعلانات مطابقة على الشبكة} many {تم العثور على <strong>#</strong> إعلانًا مطابقًا على الشبكة} other {تم العثور على <strong>#</strong> إعلان مطابق على الشبكة}}",
+    "emptyTitle": "لا توجد نتائج مطابقة تمامًا على الشبكة",
+    "emptyHint": "جرّب توسيع نطاق السعر أو استكشاف ولاية أخرى.",
+    "wilayaCity": "الولاية {code} · {city}",
+    "host": "المضيف: <strong>{name}</strong>",
+    "photoAlt": "صورة {title}",
+    "inspect": "فحص",
+    "inspectLabel": "فحص {title}",
+    "approve": "موافقة",
+    "suspend": "تعليق",
+    "searchFailed": "فشل البحث",
+    "approved": "تمت الموافقة على الإعلان",
+    "approvedDescription": "أصبح الآن منشورًا وقابلًا للحجز على الشبكة.",
+    "approveFailed": "فشلت الموافقة",
+    "suspended": "تم تعليق الإعلان",
+    "suspendedDescription": "تم سحبه من نتائج البحث في السوق.",
+    "suspendFailed": "فشل التعليق"
   },
   "users": {
     "title": "الضيوف والمستخدمون",
@@ -415,7 +929,103 @@
     "delete": "حذف المستخدم",
     "flaggedOnly": "الحسابات المبلّغ عنها فقط",
     "filterTitle": "تصفية متقدمة للمستخدمين",
-    "filterSubtitle": "تخصيص البحث بالحالة والدور والتحقق"
+    "filterSubtitle": "تخصيص البحث بالحالة والدور والتحقق",
+    "resultsLabel": "مستخدم",
+    "wilaya": "الولاية",
+    "location": "الموقع",
+    "quickView": "معاينة سريعة لـ {name}",
+    "moreActions": "إجراءات إضافية لـ {name}",
+    "roles": {
+      "guest": "مسافر",
+      "host": "مضيف",
+      "both": "مسافر ومضيف"
+    },
+    "kpis": {
+      "all": "جميع المستخدمين",
+      "active": "الحسابات النشطة",
+      "guests": "المسافرون",
+      "suspended": "الحسابات المعلّقة",
+      "banned": "الحسابات المحظورة"
+    },
+    "menu": {
+      "viewProfile": "عرض الملف الشخصي",
+      "markActive": "تفعيل الحساب",
+      "markPending": "وضع قيد المراجعة",
+      "suspendAccount": "تعليق الحساب",
+      "banAccount": "حظر الحساب"
+    },
+    "confirm": {
+      "suspendTitle": "تعليق حساب هذا المستخدم؟",
+      "suspendDescription": "سيتم تعليق {name} مؤقتًا ولن يتمكن من الحجز أو نشر التقييمات.",
+      "suspendConfirm": "تعليق المستخدم",
+      "banTitle": "حظر هذا المستخدم نهائيًا؟",
+      "banDescription": "سيتم حظر {name} نهائيًا من منصة DARNA.",
+      "banConfirm": "حظر المستخدم",
+      "deleteTitle": "حذف هذا المستخدم؟",
+      "deleteDescription": "سيتم حذف حساب {name} حذفًا قابلًا للاسترجاع. اكتب اسم المستخدم للتأكيد.",
+      "deleteConfirm": "حذف الحساب"
+    },
+    "toasts": {
+      "suspended": "تم تعليق المستخدم {name}",
+      "suspendFailed": "تعذّر تعليق المستخدم",
+      "banned": "تم حظر المستخدم {name}",
+      "banFailed": "تعذّر حظر المستخدم",
+      "deleted": "تم حذف المستخدم {name}",
+      "deleteFailed": "تعذّر حذف المستخدم",
+      "resetSent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى {email}",
+      "markedActive": "تم تفعيل الحساب بنجاح",
+      "markedPending": "تم وضع الحساب قيد المراجعة",
+      "exportReady": "تم إنشاء ملف تصدير المستخدمين"
+    },
+    "detail": {
+      "subtitle": "المعرّف: #{id} · {email}",
+      "tabs": {
+        "profile": "الملف الشخصي",
+        "bookings": "الحجوزات",
+        "reviews": "التقييمات",
+        "payments": "المدفوعات",
+        "activity": "النشاط"
+      },
+      "resetPassword": "كلمة المرور",
+      "suspend": "تعليق",
+      "ban": "حظر",
+      "joinedOn": "انضم في {date}",
+      "financialTitle": "المؤشرات المالية والإنفاق",
+      "totalSpent": "إجمالي الإنفاق",
+      "walletBalance": "رصيد المحفظة",
+      "avgBooking": "متوسط الحجز",
+      "activityTitle": "النشاط والتواريخ",
+      "registeredOn": "تاريخ التسجيل",
+      "lastActive": "آخر نشاط",
+      "aboutTitle": "حول الحساب والتحقق",
+      "userRole": "الدور",
+      "language": "اللغة المفضلة",
+      "bookings": "الحجوزات",
+      "bookingsValue": "{count, plural, zero {لا حجوزات} one {حجز واحد} two {حجزان} few {# حجوزات} many {# حجزًا} other {# حجز}}",
+      "reviewsFavs": "التقييمات والمفضلة",
+      "reviewsFavsValue": "{reviews, plural, zero {لا تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}} · {favs, plural, zero {لا مفضلة} one {مفضلة واحدة} two {مفضلتان} few {# مفضلات} many {# مفضلة} other {# مفضلة}}",
+      "identityStatus": "حالة التحقق من الهوية",
+      "idVerified": "موثّق (بطاقة التعريف مطابقة)",
+      "idPending": "بانتظار التحقق",
+      "bioTitle": "النبذة والوصف",
+      "bioText": "مسافر موثّق على منصة DARNA، شغوف بالإقامات الأصيلة والرحلات الصحراوية. سجل حجوزات ممتاز دون أي نزاع.",
+      "nights": "{count, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+      "days": "{count, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}",
+      "dateRange": "{start} – {end} · {duration}",
+      "cardPayment": "دفع عبر CIB / الذهبية",
+      "transaction": "المعاملة {ref}",
+      "login": "تسجيل الدخول إلى الحساب",
+      "loginMeta": "اليوم على الساعة {time} (IP: {ip})",
+      "bookingMade": "تم الحجز {ref}",
+      "rating": "التقييم {rating} من 5"
+    },
+    "filters": {
+      "allStatuses": "جميع الحالات",
+      "allRoles": "جميع الأدوار",
+      "guestOnly": "المسافرون فقط",
+      "guestAndHost": "مسافر ومضيف",
+      "allWilayas": "جميع الولايات"
+    }
   },
   "bookings": {
     "title": "الحجوزات والرحلات",
@@ -440,7 +1050,69 @@
     "refundBooking": "إصدار استرداد مالي",
     "cancelBooking": "إلغاء الحجز",
     "filterTitle": "تصفية متقدمة للحجوزات",
-    "filterSubtitle": "التصفية حسب الفئة وحالة النزاع والفترة الزمنية"
+    "filterSubtitle": "التصفية حسب الفئة وحالة النزاع والفترة الزمنية",
+    "pageTitle": "إدارة الحجوزات",
+    "pageSubtitle": "تابع حالة الحجوزات والمدفوعات المستلمة وطلبات الإلغاء.",
+    "report": "تقرير",
+    "verticalTabs": {
+      "all": "الكل",
+      "stays": "الإقامات",
+      "experiences": "التجارب",
+      "trips": "الرحلات المنظمة",
+      "cars": "السيارات"
+    },
+    "types": {
+      "home": "إقامة",
+      "experience": "تجربة",
+      "trip": "رحلة",
+      "vehicle": "سيارة"
+    },
+    "cols": {
+      "booking": "الحجز",
+      "type": "النوع",
+      "details": "التفاصيل",
+      "dates": "التواريخ",
+      "amount": "المبلغ"
+    },
+    "dateRange": "{from} – {to}",
+    "nights": "{count, plural, one {ليلة واحدة} two {ليلتان} few {{count} ليالٍ} other {{count} ليلة}}",
+    "guestsCount": "{count, plural, one {شخص واحد} two {شخصان} few {{count} أشخاص} other {{count} شخصاً}}",
+    "quickView": "عرض سريع",
+    "quickViewOf": "عرض سريع للحجز {reference}",
+    "invoiceUnavailable": "الفاتورة (غير متاحة بعد)",
+    "allStatuses": "جميع الحالات",
+    "wilayaFilter": "المنطقة / الولاية",
+    "allWilayas": "جميع الولايات",
+    "empty": "لا توجد حجوزات.",
+    "itemLabel": "حجوزات",
+    "bookedOn": "تم الحجز في {date}",
+    "print": "طباعة الحجز",
+    "editBooking": "تعديل الحجز",
+    "panelTabs": {
+      "details": "التفاصيل",
+      "guest": "الضيف",
+      "payment": "الدفع",
+      "messages": "الرسائل"
+    },
+    "checkIn": "الوصول",
+    "checkOut": "المغادرة",
+    "duration": "المدة",
+    "travelers": "المسافرون",
+    "priceBreakdown": "المبلغ وتفاصيل التسعير",
+    "basePrice": "السعر الأساسي ({count, plural, one {ليلة واحدة} two {ليلتان} few {{count} ليالٍ} other {{count} ليلة}})",
+    "serviceFee": "رسوم خدمة دارنا",
+    "totalPaid": "المبلغ المدفوع",
+    "verifiedAccount": "حساب موثّق",
+    "paymentReceived": "الدفعة المستلمة",
+    "paymentMethodLine": "طريقة الدفع: {method}",
+    "paymentMethods": {
+      "cib_edahabia": "بطاقة CIB / الذهبية",
+      "ccp_transfer": "تحويل CCP",
+      "baridimob": "بريدي موب",
+      "cash_on_arrival": "نقداً عند الوصول"
+    },
+    "labelValue": "{label}: {value}",
+    "downloadInvoice": "تحميل الفاتورة"
   },
   "reviews": {
     "title": "الإشراف على التقييمات",
@@ -462,7 +1134,66 @@
     "dismiss": "تجاهل البلاغ",
     "delete": "حذف نهائي",
     "deleteConfirmTitle": "تأكيد الحذف النهائي",
-    "deleteConfirmDesc": "هل أنت متأكد من رغبتك في حذف هذه المراجعة نهائياً؟ هذا الإجراء لا يمكن التراجع عنه."
+    "deleteConfirmDesc": "هل أنت متأكد من رغبتك في حذف هذه المراجعة نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.",
+    "kpi": {
+      "all": "جميع التقييمات",
+      "flagged": "تقييمات مبلّغ عنها",
+      "reports": "بلاغات المستخدمين",
+      "disputes": "النزاعات المفتوحة"
+    },
+    "exportReport": "تصدير تقرير التقييمات",
+    "exported": "تم تصدير تقرير التقييمات",
+    "filters": {
+      "search": "البحث في التقييمات",
+      "vertical": "الخدمة",
+      "allVerticals": "جميع الخدمات",
+      "rating": "التقييم",
+      "allRatings": "جميع التقييمات (1–5 ★)",
+      "ratingOnly5": "5 نجوم فقط",
+      "ratingStars": "{count, plural, one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
+      "rating1": "نجمة واحدة (تنبيه)",
+      "wilaya": "الولاية",
+      "allWilayas": "جميع الولايات"
+    },
+    "emptyTitle": "لم يتم العثور على أي تقييم",
+    "emptyDesc": "عدّل عوامل التصفية أو كلمات البحث.",
+    "listLabel": "التقييمات",
+    "ratingValue": "{rating} / 5",
+    "ratingAria": "التقييم {rating} من 5",
+    "openReview": "فتح تقييم {name}",
+    "quoted": "«{text}»",
+    "flagReasonInline": "السبب: {reason}",
+    "guestLabel": "الضيف: {name}",
+    "hostLabel": "المضيف: {name}",
+    "detailTitle": "التقييم رقم {id}",
+    "detailSubtitle": "{name} · {date}",
+    "ratingGiven": "التقييم الممنوح",
+    "flagReasonTitle": "سبب البلاغ",
+    "flaggedByProvider": "أبلغ عنه مقدّم الخدمة بتاريخ {date}",
+    "contextTitle": "سياق الخدمة",
+    "ctxListing": "الإعلان المعني",
+    "ctxGuest": "الضيف (الكاتب)",
+    "ctxHost": "المضيف / مقدّم الخدمة",
+    "ctxLocation": "الموقع",
+    "rulesTitle": "قواعد الإشراف",
+    "rulesText": "يمكن حذف التقييمات التشهيرية أو التي تتضمن خطاب كراهية أو بيانات اتصال شخصية دون سابق إنذار.",
+    "deleteTitle": "حذف التقييم",
+    "deleteDesc": "سيُحذف هذا التقييم من قاعدة البيانات ولن يظهر بعد الآن في صفحة الإعلان.",
+    "toast": {
+      "loadFailed": "تعذّر تحميل التقييمات",
+      "hidden": "تم إخفاء التقييم",
+      "hiddenDesc": "تمت إزالة التقييم من العرض العام.",
+      "hideFailed": "تعذّر إخفاء التقييم",
+      "restored": "تمت استعادة التقييم",
+      "restoredDesc": "أصبح التقييم مرئيًا للعموم من جديد.",
+      "restoreFailed": "تعذّرت استعادة التقييم",
+      "flagDismissed": "تم رفض البلاغ",
+      "flagDismissedDesc": "تم تأكيد مطابقة التقييم للقواعد.",
+      "dismissFailed": "تعذّر رفض البلاغ",
+      "deleted": "تم حذف التقييم",
+      "deletedDesc": "حُذف مؤقتًا ويمكن استرجاعه من سلة المحذوفات.",
+      "deleteFailed": "تعذّر الحذف"
+    }
   },
   "onboarding": {
     "title": "محدد إعدادات تسجيل المضيفين",
@@ -483,7 +1214,37 @@
     "stepDesc": "وصف الخطوة",
     "publishChanges": "نشر التحديث إلى المنصة العامة",
     "draftStatus": "تعديلات مسودة معلقة",
-    "publishedVersion": "النسخة المنشورة حالياً"
+    "publishedVersion": "النسخة المنشورة حالياً",
+    "contractVersionValue": "إصدار العقد {version}",
+    "hostTypePicker": "فئة المضيف",
+    "categoryCapped": "حد صارم من {max} صفحات",
+    "categoryMultiPage": "مسار منظم متعدد الصفحات",
+    "soloCapTitle": "قاعدة دارنا: مسار المضيفين الأفراد محدود",
+    "stepsHeading": "{hostType} ({count, plural, =0 {لا توجد خطوات} one {خطوة واحدة} two {خطوتان} few {# خطوات} many {# خطوة} other {# خطوة}})",
+    "noSteps": "لم تُضبط أي خطوة لهذه الفئة من المضيفين بعد.",
+    "stepNumber": "الخطوة {number}:",
+    "fieldsCount": "{count, plural, =0 {لا توجد حقول} one {حقل واحد} two {حقلان} few {# حقول} many {# حقلاً} other {# حقل}}",
+    "requiredToggleLabel": "خطوة إلزامية: {name}",
+    "moveUpLabel": "نقل «{name}» إلى الأعلى",
+    "moveDownLabel": "نقل «{name}» إلى الأسفل",
+    "removeStepLabel": "حذف الخطوة «{name}»",
+    "toasts": {
+      "loadFailed": "تعذّر تحميل مسارات التسجيل",
+      "soloLimitTitle": "تم بلوغ حد المضيفين الأفراد",
+      "soloLimitBody": "مسار تسجيل المضيفين الأفراد محدود بـ{max} صفحات لضمان إكماله بسرعة.",
+      "policyViolationTitle": "القاعدة غير محترمة",
+      "policyViolationBody": "لا يمكن أن يتجاوز مسار تسجيل المضيفين الأفراد {max} صفحات.",
+      "publishedTitle": "تم نشر الإصدار {version}",
+      "publishedBody": "مسار التسجيل الخاص بـ{hostType} أصبح متاحاً الآن.",
+      "publishFailed": "فشل النشر",
+      "copiedTitle": "تم النسخ",
+      "copiedBody": "تم نسخ عقد JSON إلى الحافظة."
+    },
+    "exportDialog": {
+      "title": "عقد JSON المُصدَّر لمسار التسجيل",
+      "description": "يتوافق هذا المخطط مع <code>{schema}</code>. يستخدم المكوّن <code>{flow}</code> في الموقع العام هذا العقد.",
+      "copy": "نسخ إلى الحافظة"
+    }
   },
   "categories": {
     "title": "تصنيفات المنصة والخدمات",
@@ -501,7 +1262,29 @@
     "createTitle": "إضافة تصنيف جديد",
     "createSubtitle": "تحديد مسميات التصنيف بالإنجليزية والفرنسية والعربية",
     "deleteTitle": "حذف التصنيف",
-    "deleteDesc": "هل أنت متأكد من رغبتك في حذف هذا التصنيف؟ قد يؤثر ذلك على الإعلانات المرتبطة."
+    "deleteDesc": "هل أنت متأكد من رغبتك في حذف هذا التصنيف؟ قد يؤثر ذلك على الإعلانات المرتبطة.",
+    "empty": "لا توجد تصنيفات في هذا القسم بعد.",
+    "filterLabel": "التصفية حسب القسم",
+    "placeholderEn": "مثال: Desert Glamping",
+    "placeholderFr": "مثال: Bivouac de luxe dans le désert",
+    "placeholderAr": "مثال: تخييم صحراوي فاخر",
+    "toggleActive": "تفعيل أو تعطيل {name}",
+    "deleteCategory": "حذف التصنيف {name}",
+    "toast": {
+      "loadFailed": "تعذّر تحميل التصنيفات",
+      "statusChanged": "تم تغيير حالة التصنيف",
+      "nowActive": "أصبح {name} نشطًا",
+      "nowInactive": "أصبح {name} غير نشط",
+      "toggleFailed": "تعذّر تغيير الحالة",
+      "nameRequired": "الاسم بالإنجليزية مطلوب",
+      "nameRequiredDesc": "يرجى إدخال اسم التصنيف بالإنجليزية على الأقل.",
+      "created": "تم إنشاء التصنيف",
+      "createdDesc": "تمت إضافة {name} إلى {vertical}.",
+      "createFailed": "تعذّر الإنشاء",
+      "deleted": "تم حذف التصنيف",
+      "deletedDesc": "تم حذف {name}.",
+      "deleteFailed": "تعذّر الحذف"
+    }
   },
   "promotions": {
     "title": "العروض، القسائم وأكواد الخصم",
@@ -517,7 +1300,77 @@
     "status": "الحالة",
     "actions": "الإجراءات",
     "deleteConfirmTitle": "حذف قسيمة التخفيض",
-    "deleteConfirmDesc": "هل أنت متأكد من حذف هذه القسيمة؟ لن يتمكن المسافرون من استخدامها بعد الآن."
+    "deleteConfirmDesc": "هل أنت متأكد من حذف هذه القسيمة؟ لن يتمكن المسافرون من استخدامها بعد الآن.",
+    "kpi": {
+      "created": "أكواد الخصم المُنشأة",
+      "active": "الأكواد النشطة",
+      "uses": "إجمالي الاستخدامات",
+      "featured": "الإبرازات النشطة"
+    },
+    "newCode": "كود خصم جديد",
+    "tabCoupons": "أكواد الخصم",
+    "tabFeatured": "الإبرازات (المواضع)",
+    "colCode": "الكود",
+    "colDiscount": "الخصم",
+    "colMinSpend": "الحد الأدنى للإنفاق",
+    "colUses": "الاستخدامات",
+    "colExpires": "تاريخ الانتهاء",
+    "none": "لا يوجد",
+    "usesValue": "{used} / {max}",
+    "unlimited": "∞",
+    "expired": "منتهي الصلاحية",
+    "empty": "لا توجد أكواد خصم بعد.",
+    "copyCode": "نسخ الكود {code}",
+    "copied": "تم نسخ الكود إلى الحافظة",
+    "toggleStatus": "تغيير حالة {code}",
+    "deleteCode": "حذف الكود {code}",
+    "featured": {
+      "title": "الإبرازات على الصفحة الرئيسية",
+      "subtitle": "إدارة الإعلانات المموّلة أو المُبرزة من طرف فريق الإشراف.",
+      "add": "إضافة إبراز",
+      "selectListing": "اختر إعلانًا للترويج له",
+      "placement": "الموضع: {place}",
+      "until": "حتى {date}",
+      "clicks": "{count, plural, =0 {لا نقرات} one {نقرة واحدة} two {نقرتان} few {# نقرات} many {# نقرة} other {# نقرة}}",
+      "badge": {
+        "featured": "مُبرز",
+        "favorite": "اختيار الفريق",
+        "topRenter": "أفضل مؤجّر"
+      },
+      "place": {
+        "homeHeader": "رأس الصفحة الرئيسية · الجزائر العاصمة",
+        "tours": "قسم الرحلات المنظمة",
+        "carsCarousel": "شريط السيارات الأكثر طلبًا"
+      }
+    },
+    "form": {
+      "title": "إنشاء كود خصم جديد",
+      "description": "حدّد الكود ونسبة الخصم وحدود الاستخدام.",
+      "code": "كود الخصم (بأحرف كبيرة)",
+      "codePlaceholder": "مثال: DARNA2024",
+      "type": "نوع الخصم",
+      "percentage": "نسبة مئوية (%)",
+      "fixed": "مبلغ ثابت (د.ج)",
+      "value": "قيمة الخصم",
+      "minSpend": "الحد الأدنى للإنفاق (د.ج)",
+      "maxUses": "الحد الأقصى لعدد الاستخدامات",
+      "expiresAt": "تاريخ الانتهاء",
+      "submit": "إنشاء الكود",
+      "codeMissing": "يرجى إدخال كود الخصم."
+    },
+    "toast": {
+      "loadFailed": "تعذّر تحميل العروض",
+      "statusUpdated": "تم تحديث الحالة",
+      "statusUpdatedDesc": "أصبحت حالة الكود {code}: {status}",
+      "updateFailed": "تعذّر التحديث",
+      "codeMissing": "الكود مفقود",
+      "created": "تم إنشاء كود الخصم بنجاح",
+      "createFailed": "تعذّر الإنشاء",
+      "deleted": "تم حذف كود الخصم",
+      "deleteFailed": "تعذّر الحذف"
+    },
+    "deleteTitle": "حذف كود الخصم",
+    "deleteDesc": "هل أنت متأكد من حذف الكود {code}؟ لا يمكن التراجع عن هذا الإجراء."
   },
   "reports": {
     "title": "تقارير الأعمال والتحليل البياني",
@@ -531,11 +1384,45 @@
     "kpiListings": "أسطول الإعلانات النشطة",
     "revenueReport": "تقرير صافي إيرادات المنصة",
     "occupancyReport": "تقرير الإشغال والاتجاهات بالولايات",
-    "hostsReport": "التقرير الاقتصادي لشركاء الاستضافة"
+    "hostsReport": "التقرير الاقتصادي لشركاء الاستضافة",
+    "kpiHints": {
+      "revenue": "العمولات + رسوم خدمة الحجز",
+      "gross": "إجمالي ما أُنفق على الحجوزات",
+      "occupancy": "على مستوى الإعلانات النشطة",
+      "listings": "في جميع الولايات الجزائرية"
+    },
+    "topWilayasTitle": "أبرز الولايات حسب حجم الحجوزات",
+    "rank": "رقم {rank}",
+    "staysCount": "{count, plural, one {إقامة واحدة} two {إقامتان} few {{value} إقامات} other {{value} إقامة}}",
+    "presetsTitle": "قوالب التصدير القياسية",
+    "presetsSubtitle": "تصدير منظم بنقرة واحدة للمحاسبة والامتثال الجبائي ومتابعة الأداء.",
+    "downloadAria": "تصدير CSV: {report}",
+    "presets": {
+      "monthlyFinance": {
+        "type": "مالية / تدقيق",
+        "title": "التسوية الشهرية المالية والعمولات",
+        "description": "الحجوزات الإجمالية، إيرادات العمولات، مجاميع تحويلات CCP وتفاصيل الرسم على القيمة المضافة."
+      },
+      "wilayaDemand": {
+        "type": "السوق / النمو",
+        "title": "الطلب السياحي حسب الولاية",
+        "description": "الليالي المحجوزة، أصول الضيوف ومتوسط أسعار الإقامة في الولايات الـ69."
+      },
+      "hostSolvency": {
+        "type": "المخاطر / الامتثال",
+        "title": "تدقيق ملاءة المضيفين والأرصدة المحجوزة",
+        "description": "الأرصدة السالبة، المدفوعات المعلقة والالتزامات المرتبطة بالنزاعات."
+      },
+      "tourismTax": {
+        "type": "تنظيمي",
+        "title": "التصريح بالرسم السياحي (الجزائر)",
+        "description": "ملخص رسمي وفق صيغة وزارة السياحة والصناعة التقليدية."
+      }
+    }
   },
   "auditLog": {
     "title": "سجل التدقيق الأمني للنظام",
-    "subtitle": "سجل غير قابل للتعديل يوثق جميع العمليات الإدارية، التحويلات المالية، وتغييرات الحالة.",
+    "subtitle": "سجل أمني بالإضافة فقط لجميع العمليات الإدارية وقيود الحسابات وتغييرات الحالة وعمليات الدخول وتصدير البيانات. لا يمكن تعديل القيود أو حذفها من لوحة الإدارة.",
     "actor": "الموظف المنفذ",
     "action": "الإجراء المنفذ",
     "entity": "السجل المعني",
@@ -544,7 +1431,44 @@
     "viewDiff": "عرض الفروقات",
     "filterEntity": "نوع السجل",
     "filterRole": "دور الموظف",
-    "exportCsv": "تصدير سجل التدقيق CSV"
+    "exportCsv": "تصدير سجل التدقيق CSV",
+    "entityPayout": "التحويلات",
+    "entityTeam": "فريق العمل",
+    "entityAuth": "تسجيل الدخول / الخروج",
+    "entityExport": "تصدير البيانات",
+    "appendOnlyBadge": "سجل غير قابل للتعديل",
+    "anonymous": "مجهول",
+    "loadFailed": "تعذّر تحميل سجل العمليات",
+    "searchPlaceholder": "ابحث عن إجراء أو موظف أو معرّف أو تفاصيل…",
+    "allEntities": "جميع أنواع العناصر",
+    "allRoles": "جميع الأدوار",
+    "entities": {
+      "host": "الجهات المضيفة",
+      "listing": "الإعلانات والإقامات",
+      "booking": "الحجوزات",
+      "user": "الضيوف",
+      "wallet": "المحافظ",
+      "review": "التقييمات",
+      "setting": "إعدادات المنصة",
+      "onboarding": "خطوات تسجيل المضيفين",
+      "promotion": "العروض الترويجية",
+      "payout": "الدفعات",
+      "team": "فريق العمل",
+      "auth": "تسجيل الدخول / الخروج",
+      "export": "تصدير البيانات"
+    },
+    "empty": "لا توجد عمليات مطابقة لهذه المرشحات.",
+    "viewDiffFor": "عرض تغييرات {action} على {id}",
+    "noDiff": "لا توجد تغييرات مسجلة",
+    "diff": {
+      "title": "التغييرات المسجلة: {action}",
+      "target": "العنصر: <strong>{type}</strong> ({id})",
+      "ip": "عنوان IP المسجل: {ip}",
+      "before": "قبل",
+      "after": "بعد",
+      "noBefore": "لا توجد حالة سابقة مسجلة",
+      "noAfter": "لا توجد حالة لاحقة مسجلة"
+    }
   },
   "team": {
     "title": "فريق العمل وصلاحيات الإدارة",
@@ -558,7 +1482,43 @@
     "status": "حالة الحساب",
     "actions": "الإجراءات",
     "roleMatrix": "مصفوفة الصلاحيات",
-    "saveRole": "تحديث الدور"
+    "saveRole": "تحديث الدور",
+    "inviteMissingFields": "يرجى إدخال الاسم والبريد الإلكتروني.",
+    "inviteSent": "تم إنشاء الدعوة",
+    "inviteSentHint": "{email} مدرج كمدعو. الحساب بدون كلمة مرور ولا يمكنه تسجيل الدخول حتى قبول الدعوة.",
+    "inviteFailed": "فشلت الدعوة",
+    "statusInvited": "مدعو",
+    "never": "أبداً",
+    "statusActive": "نشط",
+    "statusDeactivated": "معطّل",
+    "activate": "تفعيل",
+    "deactivate": "تعطيل",
+    "activateLabel": "تفعيل {name}",
+    "deactivateLabel": "تعطيل {name}",
+    "roleFor": "دور {name}",
+    "invitePlaceholderName": "مثال: ياسين براهيمي",
+    "roleDescriptions": {
+      "super_admin": "صلاحية كاملة على إعدادات المنصة وفريق العمل والسجل المالي.",
+      "moderator": "يتحقق من المضيفين والإعلانات والشهادات القانونية والتقييمات.",
+      "finance": "يصرف دفعات CCP ويشحن المحافظ ويحدّث العمولات.",
+      "support": "يحل نزاعات الضيوف ويلغي الحجوزات ويعالج الاستفسارات.",
+      "analyst": "وصول للقراءة فقط إلى المؤشرات والتقارير والرسوم البيانية."
+    },
+    "matrix": {
+      "title": "أدوار وصلاحيات الإدارة",
+      "pickRole": "اختر دوراً",
+      "granted": "الصلاحيات الممنوحة"
+    },
+    "toasts": {
+      "loadFailed": "تعذّر تحميل فريق العمل",
+      "roleUpdated": "تم تحديث الدور",
+      "roleUpdatedBody": "أصبح {name} الآن {role}.",
+      "roleUpdateFailed": "تعذّر تحديث الدور",
+      "statusUpdated": "تم تحديث الحالة",
+      "nowActive": "أصبح {name} نشطاً الآن.",
+      "nowDeactivated": "تم تعطيل {name}.",
+      "actionProhibited": "إجراء غير مسموح"
+    }
   },
   "settings": {
     "title": "إعدادات المنصة العامة",
@@ -571,7 +1531,45 @@
     "twoFactor": "إلزام المصادقة الثنائية (2FA) للموظفين",
     "sessionTimeout": "مهلة انتهاء الجلسة (بالدقائق)",
     "saveSettings": "حفظ إعدادات المنصة",
-    "saving": "جارٍ الحفظ..."
+    "saving": "جارٍ الحفظ...",
+    "tabs": {
+      "general": "عام",
+      "languages": "اللغات والترجمات",
+      "notifications": "الإشعارات والتنبيهات",
+      "security": "الأمان والجلسات"
+    },
+    "identity": {
+      "title": "هوية المنصة",
+      "serviceFeeHint": "تُطبَّق على المجموع الفرعي للحجز قبل اقتطاع عمولة مقدّم الخدمة.",
+      "maintenanceHint": "يقفل الوصول العام إلى المنصة مع السماح للمشرفين بالتصفح."
+    },
+    "languages": {
+      "title": "اللغات المدعومة",
+      "description": "تعمل منصة دارنا بـ{count, plural, zero {# لغة رسمية} one {لغة رسمية واحدة} two {لغتين رسميتين} few {# لغات رسمية} many {# لغة رسمية} other {# لغة رسمية}} مع دعم كامل للكتابة من اليمين إلى اليسار للعربية.",
+      "sourceOfTruth": "المرجع الأساسي",
+      "fullRtl": "دعم كامل لليمين إلى اليسار",
+      "international": "دولية",
+      "translated": "مترجمة بنسبة {percent}%"
+    },
+    "notifications": {
+      "title": "قنوات الإشعار",
+      "email": "تنبيهات البريد الإلكتروني",
+      "emailHint": "عند كل طلب اعتماد جديد",
+      "sms": "إشعارات SMS العاجلة",
+      "smsHint": "للنزاعات الحرجة والحوادث الأمنية",
+      "panel": "تنبيهات فورية في لوحة التحكم",
+      "panelHint": "جرس الإشعارات وشارات العدّ"
+    },
+    "securityPolicy": {
+      "title": "سياسة الأمان",
+      "twoFactorHint": "إلزامية لأدوار المشرف العام"
+    },
+    "toasts": {
+      "loadFailed": "تعذّر تحميل الإعدادات",
+      "saved": "تم حفظ الإعدادات",
+      "savedHint": "تم تحديث إعدادات المنصة.",
+      "saveFailed": "تعذّر حفظ الإعدادات"
+    }
   },
   "login": {
     "title": "دخول مركز التحكم الإداري",
@@ -580,6 +1578,2312 @@
     "passwordLabel": "كلمة المرور",
     "submitButton": "التحقق والدخول",
     "demoSeeds": "حسابات تجريبية مهيأة مسبقاً:",
-    "footerText": "© 2026 تقنيات دارنا الجزائر. الوصول مقصور حصرياً على الموظفين المخولين."
+    "footerText": "© 2026 تقنيات دارنا الجزائر. الوصول مقصور حصرياً على الموظفين المخولين.",
+    "errors": {
+      "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      "rateLimited": "محاولات تسجيل دخول كثيرة جدًا. يرجى الانتظار {seconds} ثانية ثم المحاولة مرة أخرى.",
+      "unexpected": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى."
+    },
+    "adminBadge": "الإدارة",
+    "demoFillLabel": "ملء الحساب التجريبي {role} ({email})"
+  },
+  "auth": {
+    "forbidden": {
+      "title": "وصول مقيد",
+      "description": "لا يملك دورك صلاحية عرض هذا القسم. تواصل مع المدير الرئيسي إذا كنت بحاجة إلى الوصول.",
+      "backHome": "العودة إلى لوحة التحكم"
+    }
+  },
+  "actions": {
+    "reasonLabel": "السبب (إلزامي)",
+    "reasonPlaceholder": "اشرح القرار — يُحفظ في سجل التدقيق.",
+    "reasonTooShort": "يرجى إدخال {min} أحرف على الأقل.",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "actionFailed": "فشل الإجراء",
+    "statusUpdated": "تم تحديث الحالة",
+    "notAllowed": "هذا الإجراء غير متاح للحالة الحالية.",
+    "rejectListingTitle": "رفض هذا الإعلان؟",
+    "suspendListingTitle": "تعليق هذا الإعلان؟",
+    "requestChangesTitle": "طلب تعديلات من المضيف؟",
+    "reject": "رفض",
+    "suspend": "تعليق",
+    "requestChanges": "طلب تعديلات",
+    "restore": "استعادة",
+    "restored": "تمت الاستعادة إلى الحالة السابقة",
+    "exportStarted": "التصدير جاهز",
+    "exportRows": "تم تصدير {count} سطر",
+    "exportFailed": "فشل التصدير",
+    "unavailable": "غير متاح بعد",
+    "unavailableHint": "هذه الميزة غير مربوطة بلوحة الإدارة بعد.",
+    "suspendHostTitle": "تعليق {name}؟",
+    "suspendHostDescription": "سيتم إخفاء إعلاناته مؤقتاً عن المسافرين.",
+    "reactivate": "إعادة التفعيل",
+    "invalidRate": "يجب أن تكون النسبة بين 0 و 100٪ مع منزلتين عشريتين كحد أقصى.",
+    "invalidAmount": "أدخل مبلغاً صحيحاً بين 1 و {max}."
+  },
+  "payments": {
+    "title": "المدفوعات والمالية",
+    "subtitle": "محافظ المضيفين، دفتر الحسابات، العمولات، التحويلات والاستردادات — جميع الأرصدة محسوبة من دفتر الحسابات.",
+    "exportLedger": "تصدير دفتر الحسابات (CSV)",
+    "exportWallets": "تصدير المحافظ (CSV)",
+    "rechargeWallet": "شحن محفظة",
+    "noWallet": "لا توجد محفظة متاحة",
+    "loadError": "تعذر تحميل البيانات المالية",
+    "kpi": {
+      "wallets": "إجمالي أرصدة المحافظ",
+      "pendingPayouts": "تحويلات قيد الانتظار",
+      "monthCommissions": "عمولات هذا الشهر",
+      "refunds": "المبالغ المستردة",
+      "negativeWallets": "محافظ برصيد سالب"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "wallets": "المحافظ",
+      "transactions": "دفتر الحسابات",
+      "commissions": "العمولات",
+      "payouts": "تحويلات المضيفين",
+      "refunds": "الاستردادات"
+    },
+    "overview": {
+      "escrow": "أموال المسافرين المحتجزة",
+      "escrowHint": "حجوزات مدفوعة مؤكدة أو محل نزاع، بعد خصم الاستردادات.",
+      "monthPayouts": "التحويلات المنفذة هذا الشهر",
+      "monthPayoutsHint": "{count, plural, zero {لم يُخصم أي تحويل من محافظ المضيفين.} one {تحويل واحد مخصوم من محافظ المضيفين.} two {تحويلان مخصومان من محافظ المضيفين.} few {{count} تحويلات مخصومة من محافظ المضيفين.} other {{count} تحويلاً مخصوماً من محافظ المضيفين.}}",
+      "monthCommissions": "صافي إيرادات العمولات",
+      "monthCommissionsHint": "العمولات المسجلة في دفتر الحسابات منذ {date}.",
+      "latest": "آخر القيود",
+      "seeAll": "عرض دفتر الحسابات كاملاً"
+    },
+    "filters": {
+      "searchWallets": "البحث باسم المضيف…",
+      "searchTransactions": "البحث بالمرجع أو المضيف أو الحجز…",
+      "hostType": "نوع المضيف",
+      "allHostTypes": "كل الأنواع",
+      "wilaya": "الولاية",
+      "allWilayas": "كل الولايات",
+      "negativeOnly": "الأرصدة السالبة فقط",
+      "txType": "نوع القيد",
+      "allTxTypes": "كل أنواع القيود"
+    },
+    "txTypes": {
+      "booking_payment": "تسوية حجز",
+      "commission_deduction": "عمولة",
+      "host_payout": "تحويل للمضيف",
+      "wallet_recharge": "شحن المحفظة",
+      "booking_refund": "استرداد حجز",
+      "adjustment": "تسوية"
+    },
+    "payoutMethods": {
+      "ccp": "الحساب البريدي الجاري (بريد الجزائر)",
+      "bank_wire": "تحويل بنكي",
+      "baridimob": "بريدي موب"
+    },
+    "cols": {
+      "date": "التاريخ",
+      "reference": "المرجع",
+      "host": "المضيف",
+      "type": "النوع",
+      "description": "الوصف",
+      "amount": "المبلغ",
+      "balanceAfter": "الرصيد بعد العملية",
+      "location": "الولاية",
+      "balance": "الرصيد",
+      "commissionsPaid": "العمولات المقتطعة",
+      "actions": "الإجراءات",
+      "requestedAt": "تاريخ الطلب",
+      "account": "الحساب",
+      "method": "الطريقة",
+      "status": "الحالة",
+      "processed": "تمت المعالجة",
+      "booking": "الحجز",
+      "guest": "المسافر",
+      "refunded": "المسترد",
+      "total": "إجمالي الحجز"
+    },
+    "recharge": "شحن",
+    "rechargeTitle": "شحن محفظة المضيف",
+    "rechargeDescription": "إضافة رصيد يدوياً لمضيف بعد إيداع بريدي أو تحويل بنكي. تُسجل العملية في دفتر الحسابات وسجل التدقيق.",
+    "rechargeHost": "المضيف",
+    "rechargeAmount": "المبلغ المضاف (د.ج)",
+    "rechargeAmountHint": "مبلغ صحيح بالدينار بين 1 و {max}.",
+    "rechargeMethod": "طريقة الدفع",
+    "rechargeMethods": {
+      "ccp": "إيداع بريدي / بريد الجزائر",
+      "bank_transfer": "تحويل بنكي",
+      "cash_guarantee": "إيداع نقدي (ضمان)"
+    },
+    "rechargeReceipt": "رقم الوصل / المرجع",
+    "rechargeReason": "السبب الداخلي",
+    "rechargeConfirm": "تأكيد الشحن",
+    "rechargeDone": "تم شحن المحفظة",
+    "invalidAmount": "أدخل مبلغاً صحيحاً بين 1 و{max}.",
+    "commissionsTitle": "نسب العمولة حسب نوع المضيف",
+    "commissionsHint": "تُطبق على السعر الأساسي عند تأكيد الحجز. من 0 إلى 100٪، بحد أقصى منزلتين عشريتين.",
+    "commissionLabels": {
+      "individual": "المضيفون الأفراد",
+      "agency": "وكالات السفر",
+      "hotel": "الفنادق",
+      "hostel": "نُزل الشباب"
+    },
+    "invalidRate": "يجب أن تكون كل نسبة بين 0 و 100 مع منزلتين عشريتين كحد أقصى.",
+    "saveRates": "حفظ نسب العمولة",
+    "ratesSaved": "تم حفظ نسب العمولة",
+    "approvePayout": "موافقة",
+    "rejectPayout": "رفض",
+    "approveTitle": "الموافقة على هذا التحويل؟",
+    "approveDescription": "سيتم خصم {amount} من محفظة {host} وتحويلها إلى {account} ({method}). لا يمكن التراجع عن هذا الإجراء.",
+    "approveConfirm": "موافقة على {amount}",
+    "payoutApproved": "تمت الموافقة على التحويل وخصم المحفظة",
+    "rejectTitle": "رفض طلب التحويل هذا؟",
+    "rejectDescription": "طلب بقيمة {amount} من {host}. لن يتم خصم المحفظة.",
+    "payoutRejected": "تم رفض طلب التحويل",
+    "processedBy": "بواسطة {name}",
+    "noPayouts": "لا توجد طلبات تحويل.",
+    "refundsTitle": "استردادات المسافرين",
+    "refundsHint": "حجوزات تم استرداد مبلغها كلياً أو جزئياً، بعد إلغاء أو حل نزاع.",
+    "noRefunds": "لا توجد استردادات بعد.",
+    "noTransactions": "لا توجد قيود مطابقة لهذه الفلاتر.",
+    "noWallets": "لا توجد محافظ مطابقة لهذه الفلاتر.",
+    "rechargeFor": "شحن محفظة {host}",
+    "approvePayoutFor": "الموافقة على تحويل {host}",
+    "rejectPayoutFor": "رفض تحويل {host}",
+    "processedOnBy": "{date} بواسطة {name}",
+    "itemLabels": {
+      "wallets": "محافظ",
+      "transactions": "قيود",
+      "refunds": "استردادات"
+    }
+  },
+  "bookingOps": {
+    "total": "إجمالي الحجز",
+    "alreadyRefunded": "تم استرداده",
+    "refundable": "قابل للاسترداد",
+    "refundTitle": "استرداد مبلغ الحجز {reference}",
+    "refundDescription": "يُعاد المبلغ للمسافر وتُخصم حصة المضيف من محفظته (قيد booking_refund).",
+    "refundAmount": "مبلغ الاسترداد (د.ج)",
+    "amountRange": "أدخل مبلغاً صحيحاً بين 1 و {max}.",
+    "partialRange": "يجب أن يكون الاسترداد الجزئي مبلغاً صحيحاً لا يقل عن 1 وأقل من {max}.",
+    "refundConfirm": "استرداد {amount}",
+    "refundDone": "تم الاسترداد",
+    "cancelTitle": "إلغاء الحجز {reference}؟",
+    "cancelDescription": "للحجوزات قيد الانتظار أو المؤكدة فقط. يتم الاسترداد بشكل منفصل.",
+    "cancelDone": "تم إلغاء الحجز",
+    "disputeTitle": "حل النزاع على {reference}",
+    "disputeDescription": "اختر النتيجة. تُسجل الاستردادات في دفتر الحسابات؛ النزاع المرفوض يعيد الحجز إلى مساره العادي.",
+    "outcome": "النتيجة",
+    "outcomes": {
+      "refund_full": "استرداد كامل",
+      "refund_partial": "استرداد جزئي",
+      "declined": "رفض المطالبة"
+    },
+    "outcomeHints": {
+      "refund_full": "استرداد كامل المبلغ المتبقي؛ يصبح الحجز مستردّاً.",
+      "refund_partial": "استرداد جزء من المبلغ؛ يعود الحجز إلى مؤكد / مكتمل.",
+      "declined": "بدون استرداد؛ يعود الحجز إلى مؤكد / مكتمل."
+    },
+    "resolutionNote": "ملاحظة الحل (إلزامية)",
+    "resolveConfirm": "حل النزاع",
+    "disputeResolved": "تم حل النزاع",
+    "cancel": "إلغاء",
+    "refund": "استرداد",
+    "resolveDispute": "حل النزاع",
+    "export": "تصدير",
+    "refundedSoFar": "المسترد حتى الآن",
+    "paymentStatus": "حالة الدفع"
+  },
+  "hostDetail": {
+    "breadcrumb": "المضيفون",
+    "financialSnapshot": "لمحة مالية",
+    "walletBalance": "رصيد المحفظة:",
+    "takeRate": "نسبة الاقتطاع:",
+    "totalBookings": "إجمالي الحجوزات:",
+    "activeFleet": "الأسطول النشط:",
+    "listingsValue": "{count, plural, zero {لا إعلانات} one {إعلان واحد} two {إعلانان} few {# إعلانات} many {# إعلانًا} other {# إعلان}}",
+    "verificationDocuments": "وثائق التحقق",
+    "uploaded": "رُفعت في {date}",
+    "viewFile": "عرض الملف",
+    "viewFileLabel": "عرض الملف {title} (يُفتح في علامة تبويب جديدة)"
+  },
+  "search": {
+    "title": "البحث الشامل وشبكة DARNA",
+    "subtitle": "ابحث في جميع كيانات المنصة.",
+    "subtitleQuery": "نتائج البحث عن «{query}»",
+    "showMap": "عرض الخريطة",
+    "showList": "عرض القائمة",
+    "searchLabel": "البحث في المنصة",
+    "placeholder": "ابحث بالعنوان أو المدينة أو مقدّم الخدمة أو الرمز…",
+    "wilayaLabel": "التصفية حسب الولاية",
+    "allWilayas": "جميع الولايات",
+    "searchFailed": "فشل البحث",
+    "tabs": {
+      "all": "جميع النتائج",
+      "stays": "الإقامات",
+      "experiences": "التجارب",
+      "trips": "الرحلات المنظمة",
+      "cars": "تأجير السيارات",
+      "providers": "مقدّمو الخدمات",
+      "users": "المستخدمون"
+    },
+    "emptyTitle": "لم يتم العثور على نتائج",
+    "emptyHint": "جرّب كلمة مفتاحية أقصر أو عدّل عوامل التصفية.",
+    "cityWilaya": "{city}، الولاية {code}",
+    "rating": "التقييم {rating} من 5",
+    "host": "المضيف: <strong>{name}</strong>",
+    "hostFallback": "مقدّم خدمة",
+    "details": "التفاصيل",
+    "detailsLabel": "تفاصيل {title}"
+  },
+  "inbox": {
+    "title": "المراسلات والتواصل",
+    "subtitle": "إدارة المحادثات مع المستخدمين والإشعارات التلقائية والقوالب متعددة اللغات.",
+    "sendNotification": "إرسال إشعار",
+    "kpi": {
+      "conversations": "المحادثات النشطة",
+      "unread": "الرسائل غير المقروءة",
+      "notificationsSent": "الإشعارات المرسلة",
+      "templates": "القوالب المُعدّة"
+    },
+    "tabs": {
+      "conversations": "المحادثات",
+      "notifications": "الإشعارات المرسلة",
+      "templates": "قوالب الرسائل (3 لغات)"
+    },
+    "roles": {
+      "individualHost": "مضيف فردي · {place}",
+      "travelAgency": "وكالة أسفار · {place}",
+      "traveler": "مسافر"
+    },
+    "searchLabel": "البحث في المحادثات",
+    "searchPlaceholder": "ابحث عن محادثة...",
+    "threadsLabel": "المحادثات",
+    "unread": "{count, plural, =0 {لا رسائل غير مقروءة} one {رسالة واحدة غير مقروءة} two {رسالتان غير مقروءتين} few {# رسائل غير مقروءة} many {# رسالة غير مقروءة} other {# رسالة غير مقروءة}}",
+    "viewProfile": "عرض الملف الشخصي",
+    "profileOpened": "تم فتح ملف المستخدم",
+    "messagesLabel": "الرسائل مع {name}",
+    "replyLabel": "الرد على {name}",
+    "replyPlaceholder": "اكتب رسالتك إلى المستخدم...",
+    "send": "إرسال الرسالة",
+    "sent": "تم إرسال الرسالة بنجاح",
+    "quickReplies": "ردود سريعة:",
+    "quick": {
+      "validatedLabel": "تم التحقق",
+      "validatedText": "تم التحقق من وثائقك بنجاح.",
+      "moreInfoLabel": "وثائق إضافية مطلوبة",
+      "moreInfoText": "يرجى تزويدنا بإثبات سكن حديث."
+    },
+    "notifications": {
+      "colDate": "التاريخ والوقت",
+      "colTitle": "عنوان الإشعار",
+      "colChannel": "القناة",
+      "colRecipients": "المستلمون",
+      "colStatus": "الحالة",
+      "channelEmailInApp": "بريد إلكتروني + داخل التطبيق",
+      "channelBroadcast": "بث داخل التطبيق",
+      "recipientHost": "{name} (مضيف)",
+      "allProviders": "جميع مقدّمي الخدمات ({count})",
+      "delivered": "تم التسليم"
+    },
+    "templates": {
+      "languages": "FR / EN / AR",
+      "bookingTitle": "تأكيد الحجز",
+      "bookingDesc": "يُرسل تلقائيًا فور تأكيد دفع الحجز.",
+      "bookingBody": "«مرحبًا {userName}، تم تأكيد حجزك {bookingId} لـ {listingTitle} من {startDate} إلى {endDate}!»",
+      "docsTitle": "طلب استكمال الملف",
+      "docsDesc": "يرسله المسؤول عند الرفض الجزئي لوثيقة مقدّم الخدمة.",
+      "docsBody": "«مرحبًا {hostName}، ملفك يحتاج إلى تحديث: {reasonText}. يرجى رفع الوثيقة المطلوبة.»"
+    },
+    "broadcast": {
+      "title": "بث إشعار",
+      "description": "إرسال إشعار فوري أو عبر البريد الإلكتروني إلى المستخدمين أو مقدّمي الخدمات.",
+      "target": "الفئة المستهدفة",
+      "targetAllUsers": "جميع المستخدمين",
+      "targetAllProviders": "جميع مقدّمي الخدمات",
+      "targetHomeHosts": "مضيفو الإقامات فقط",
+      "targetAgencies": "وكالات الأسفار",
+      "notifTitle": "عنوان الإشعار",
+      "notifTitlePlaceholder": "مثال: صيانة مبرمجة للمنصة",
+      "message": "الرسالة",
+      "messagePlaceholder": "محتوى الإشعار...",
+      "submit": "إرسال الإشعار",
+      "sent": "تم بث الإشعار إلى المستلمين"
+    }
+  },
+  "providers": {
+    "title": "التحقق من مقدّمي الخدمات",
+    "subtitle": "راجع وصادق على جميع مقدّمي الخدمات قبل نشرهم على المنصة.",
+    "settings": "إعدادات التحقق",
+    "entity": "مقدّمي خدمات",
+    "kpi": {
+      "underReview": "قيد المراجعة",
+      "approved": "شركاء معتمدون",
+      "applied": "ملفات غير مكتملة",
+      "rejected": "مرفوضة"
+    },
+    "categories": {
+      "all": "الكل",
+      "host": "المضيفون",
+      "hotel_hostel": "فنادق ونزل",
+      "travel_agency": "وكالات سياحية",
+      "experience_company": "تجارب وأنشطة",
+      "rental_agency": "وكالات كراء السيارات"
+    },
+    "cols": {
+      "provider": "مقدّم الخدمة",
+      "type": "النوع",
+      "location": "الموقع",
+      "requestedAt": "تاريخ الطلب",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "individual": "فرد",
+    "professional": "محترف",
+    "view": "عرض {name}",
+    "filters": {
+      "search": "ابحث عن مقدّم خدمة...",
+      "more": "مزيد من عوامل التصفية",
+      "type": "نوع مقدّم الخدمة",
+      "allTypes": "الكل",
+      "typeIndividual": "فرد (مضيف)",
+      "typeAgency": "وكالة أسفار / كراء",
+      "typeHotel": "فندق",
+      "typeHostel": "نزل شباب",
+      "wilaya": "المنطقة / الولاية",
+      "allWilayas": "كل الولايات",
+      "status": "الحالة",
+      "allStatuses": "جميع الحالات",
+      "underReview": "قيد الانتظار",
+      "approved": "معتمد",
+      "applied": "غير مكتمل",
+      "rejected": "مرفوض"
+    },
+    "drawer": {
+      "title": "تصفية متقدمة لمقدّمي الخدمات",
+      "completeness": "اكتمال الوثائق",
+      "completenessAll": "جميع المستويات",
+      "completenessFull": "مكتملة 100% (4/4)",
+      "completenessPartial": "وثائق جزئية",
+      "completenessMissing": "وثائق ناقصة",
+      "bookingMode": "طريقة الحجز",
+      "bookingModeAll": "جميع الطرق",
+      "bookingModeInstant": "حجز فوري",
+      "bookingModeRequest": "عند الطلب",
+      "minRating": "الحد الأدنى للتقييم",
+      "minRatingAll": "جميع التقييمات",
+      "minRatingValue": "★ {rating} فما فوق"
+    },
+    "actions": {
+      "approveDirectly": "موافقة مباشرة",
+      "unsuspend": "إلغاء التعليق / إعادة التفعيل",
+      "reject": "رفض",
+      "requestChanges": "طلب استكمال",
+      "validatePublish": "اعتماد ونشر"
+    },
+    "toast": {
+      "error": "خطأ",
+      "loadFailed": "تعذّر تحميل مقدّمي الخدمات",
+      "approved": "تم قبول الشريك ونشره",
+      "approvedDesc": "أصبح {name} نشطًا الآن على دارنا.",
+      "unsuspended": "تم إلغاء التعليق وإعادة التفعيل",
+      "unsuspendedDesc": "تمت إعادة {name} إلى الحالة النشطة.",
+      "rejected": "تم رفض الملف",
+      "rejectedDesc": "تم إرسال إشعار إلى {email}.",
+      "changesSent": "تم إرسال طلب الاستكمال",
+      "changesSentDesc": "تم إرسال الرسالة إلى مقدّم الخدمة."
+    },
+    "panel": {
+      "requestedOn": "تاريخ الطلب: {date}",
+      "tabsLabel": "تفاصيل مقدّم الخدمة",
+      "tabs": {
+        "informations": "المعلومات",
+        "photos": "الصور",
+        "documents": "الوثائق",
+        "avis": "التقييمات",
+        "activites": "الأنشطة",
+        "historique": "السجل"
+      },
+      "general": "معلومات عامة",
+      "contact": "جهة الاتصال",
+      "specs": "المواصفات",
+      "type": "النوع",
+      "wilaya": "الولاية",
+      "listings": "الإعلانات",
+      "viewOnMap": "عرض على الخريطة",
+      "newTab": "(يفتح في علامة تبويب جديدة)",
+      "description": "الوصف",
+      "descriptionText": "مقدّم خدمة مسجّل على دارنا يقدّم خدمات سياحية موثّقة في منطقة {city}. تم تقديم ملف المطابقة للموافقة الإدارية.",
+      "documentsProvided": "الوثائق المقدّمة ({count}/{total})",
+      "allDocumentsProvided": "تم تقديم جميع الوثائق",
+      "publicProfile": "عرض الملف العام",
+      "contactAction": "تواصل",
+      "tabLoaded": "تم تحميل محتوى تبويب {tab}.",
+      "tabSynced": "جميع الوثائق متزامنة مع الملف."
+    },
+    "docs": {
+      "idCard": "بطاقة التعريف",
+      "idCardFull": "بطاقة التعريف الوطنية",
+      "property": "سند الملكية",
+      "propertyFull": "سند الملكية أو عقد الإيجار",
+      "photos": "صور المكان",
+      "photosFull": "معرض الصور",
+      "rules": "النظام الداخلي",
+      "typeImage": "صورة",
+      "typePdf": "PDF",
+      "files": "{count, plural, =0 {لا ملفات} one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}",
+      "sizeMb": "{size} ميغابايت",
+      "sizeKb": "{size} كيلوبايت"
+    },
+    "rules": {
+      "title": "إعدادات التحقق من مقدّمي الخدمات",
+      "intro": "اضبط المتطلبات التنظيمية وآجال معالجة ملفات مقدّمي الخدمات.",
+      "requiredDocs": "الوثائق المطلوبة حسب الفئة:",
+      "hosts": "المضيفون: بطاقة التعريف + سند الملكية / عقد الإيجار",
+      "hotels": "الفنادق والنزل: السجل التجاري (CNRC) + الاعتماد السياحي",
+      "agencies": "وكالات الأسفار: رخصة وزارة السياحة (الفئة أ/ب)",
+      "experiences": "التجارب: شهادة/بطاقة مرشد محترف + تأمين المسؤولية المدنية",
+      "sla": "الحد الأقصى لمهلة الإشراف (مدة الرد)",
+      "slaDefault": "48 ساعة",
+      "save": "حفظ الإعدادات"
+    },
+    "contactModal": {
+      "title": "التواصل مع {name}",
+      "description": "أرسل رسالة مباشرة أو إشعارًا بخصوص ملف التحقق.",
+      "messageLabel": "الرسالة",
+      "placeholder": "اكتب رسالتك هنا...",
+      "send": "إرسال الرسالة"
+    },
+    "decision": {
+      "changesTitle": "طلب استكمال الملف من مقدّم الخدمة",
+      "rejectTitle": "سبب رفض مقدّم الخدمة",
+      "changesDesc": "حدّد الوثائق أو التوضيحات المطلوبة. سيتم إرسال بريد إلكتروني وإشعار.",
+      "rejectDesc": "حدّد السبب القانوني أو التنظيمي لرفض الملف.",
+      "placeholder": "وضّح الأسباب...",
+      "sendRequest": "إرسال الطلب",
+      "confirmReject": "تأكيد الرفض"
+    }
+  },
+  "categoryManager": {
+    "defaultItem": "فئة",
+    "back": "رجوع",
+    "add": "إضافة {item}",
+    "created": "تمت إضافة {item} بنجاح",
+    "empty": "لا توجد عناصر ({item}).",
+    "statusUpdated": "تم تحديث الحالة",
+    "nameFrRequired": "الاسم بالفرنسية مطلوب.",
+    "toggleVisibility": "تبديل ظهور {name}",
+    "visible": "ظاهرة",
+    "hidden": "مخفية",
+    "columns": {
+      "icon": "الأيقونة",
+      "nameFr": "الاسم (بالفرنسية)",
+      "nameEn": "الاسم (بالإنجليزية)",
+      "nameAr": "الاسم (بالعربية)",
+      "slug": "المعرّف في الرابط",
+      "activeListings": "الإعلانات النشطة",
+      "visibility": "الظهور"
+    },
+    "form": {
+      "nameFr": "الاسم بالفرنسية",
+      "nameFrPlaceholder": "مثال: Villa de charme",
+      "nameEn": "الاسم بالإنجليزية",
+      "nameEnPlaceholder": "مثال: Charming villa",
+      "nameAr": "الاسم بالعربية",
+      "nameArPlaceholder": "مثال: فيلا ساحرة",
+      "slug": "المعرّف في الرابط (slug)",
+      "slugPlaceholder": "مثال: villa-charme"
+    }
+  },
+  "changeRequests": {
+    "back": "رجوع",
+    "guests": "{count, plural, one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخص}}",
+    "toastApproved": "تم قبول الطلب",
+    "toastRejected": "تم رفض الطلب",
+    "toastDescription": "سيتلقى المالك إشعارًا بالتفاصيل.",
+    "host": "المضيف: {name}",
+    "before": "قبل:",
+    "after": "بعد:",
+    "approve": "قبول",
+    "reject": "رفض",
+    "approveAria": "قبول تعديل «{field}» في {listing}",
+    "rejectAria": "رفض تعديل «{field}» في {listing}",
+    "approved": "مقبول",
+    "rejected": "مرفوض",
+    "empty": "لا توجد طلبات تعديل معلّقة.",
+    "columns": {
+      "listing": "الإعلان المعني",
+      "field": "الحقل المعدّل",
+      "diff": "المقارنة (قبل / بعد)",
+      "date": "تاريخ الطلب",
+      "decision": "القرار"
+    },
+    "fields": {
+      "pricePerNight": "السعر لليلة",
+      "capacity": "سعة الاستقبال",
+      "descriptionAmenities": "الوصف والمرافق"
+    }
+  },
+  "stays": {
+    "photoAlt": "{title} — الصورة {index}",
+    "categoriesPage": {
+      "title": "فئات الإقامات",
+      "subtitle": "اضبط الفئات وأنواع العقارات المعروضة على المسافرين.",
+      "itemLabel": "فئة"
+    },
+    "changeRequestsPage": {
+      "title": "طلبات تعديل الإقامات",
+      "subtitle": "راجع واعتمد التعديلات التي يطلبها المضيفون على إعلاناتهم المنشورة."
+    },
+    "propertyTypes": {
+      "villa": "فيلا",
+      "apartment": "شقة",
+      "traditionalHouse": "منزل تقليدي",
+      "bungalow": "بنغل",
+      "chalet": "شاليه",
+      "studio": "استوديو",
+      "hotel": "فندق",
+      "hostel": "نُزُل"
+    },
+    "fields": {
+      "propertyType": "نوع العقار",
+      "category": "الفئة",
+      "capacity": "السعة",
+      "bedrooms": "الغرف",
+      "bathrooms": "الحمامات",
+      "surface": "المساحة",
+      "wilaya": "الولاية",
+      "description": "الوصف",
+      "approvalMode": "طريقة الموافقة",
+      "constructionYear": "سنة البناء",
+      "pricePerNight": "السعر لليلة"
+    },
+    "values": {
+      "guests": "{count, plural, one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}}",
+      "surface": "{value} م²",
+      "reviews": "{count, plural, =0 {(لا تقييمات)} one {(تقييم واحد)} two {(تقييمان)} few {(# تقييمات)} many {(# تقييمًا)} other {(# تقييم)}}",
+      "reviewsShort": "({count})",
+      "pricePerNight": "{price} <unit>/ ليلة</unit>",
+      "dateRange": "من {start} إلى {end}",
+      "instantBooking": "حجز فوري",
+      "onRequest": "عند الطلب"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "info": "المعلومات",
+      "photos": "الصور",
+      "amenities": "المرافق",
+      "pricing": "الأسعار والتوفر",
+      "rules": "القواعد",
+      "calendar": "التقويم",
+      "documents": "الوثائق",
+      "history": "السجل",
+      "bookings": "الحجوزات"
+    },
+    "pricing": {
+      "title": "الأسعار والخصومات",
+      "cleaningFee": "رسوم التنظيف",
+      "commission": "عمولة DARNA",
+      "commissionValue": "{rate}٪",
+      "weeklyDiscount": "خصم أسبوعي (-{rate}٪)",
+      "weeklyPrice": "{amount} / أسبوع",
+      "deposit": "مبلغ التأمين"
+    },
+    "times": {
+      "title": "المواعيد وشروط الإقامة",
+      "checkIn": "تسجيل الوصول",
+      "checkInValue": "ابتداءً من {time}",
+      "checkOut": "المغادرة",
+      "checkOutValue": "قبل {time}",
+      "minStay": "الحد الأدنى للإقامة",
+      "minStayValue": "{count, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+      "cancellation": "الإلغاء",
+      "cancellationValue": "مجاني حتى {hours} ساعة قبل الموعد"
+    },
+    "host": {
+      "title": "المضيف / المالك",
+      "viewProfile": "عرض الملف",
+      "verified": "موثّق"
+    },
+    "list": {
+      "title": "إدارة الإقامات",
+      "subtitle": "تصفّح وعدّل واعتمد جميع الإقامات المدرجة على DARNA.",
+      "export": "تصدير",
+      "add": "إضافة إقامة",
+      "searchPlaceholder": "ابحث بالعنوان أو المدينة أو المالك…",
+      "empty": "لا توجد إقامات مطابقة لهذه الفلاتر.",
+      "itemLabel": "إقامات",
+      "kpis": {
+        "total": "إجمالي الإقامات",
+        "pending": "قيد انتظار الموافقة",
+        "published": "منشورة",
+        "suspended": "معلّقة",
+        "refused": "مرفوضة"
+      },
+      "columns": {
+        "stay": "الإقامة",
+        "host": "المضيف",
+        "location": "المدينة / المنطقة",
+        "type": "النوع",
+        "price": "السعر / الليلة",
+        "rating": "التقييم",
+        "bookings": "الحجوزات"
+      },
+      "filters": {
+        "wilaya": "المنطقة / الولاية",
+        "allWilayas": "جميع الولايات",
+        "allTypes": "جميع الأنواع",
+        "allStatuses": "جميع الحالات",
+        "published": "منشور",
+        "suspended": "معلّق",
+        "refused": "مرفوض"
+      },
+      "actions": {
+        "quickPreview": "معاينة سريعة",
+        "quickPreviewOf": "معاينة سريعة لـ {title}",
+        "openFull": "فتح التفاصيل",
+        "openFullOf": "فتح الصفحة الكاملة لـ {title}",
+        "approvePublish": "موافقة ونشر",
+        "markPending": "وضع قيد المراجعة",
+        "suspend": "تعليق الإعلان",
+        "reject": "رفض الإعلان",
+        "delete": "حذف الإعلان",
+        "fullscreen": "فتح بملء الشاشة",
+        "approveDirect": "موافقة مباشرة",
+        "reviewFile": "فحص الملف",
+        "cancelSuspension": "إلغاء التعليق"
+      },
+      "toasts": {
+        "approvedTitle": "تمت الموافقة على الإقامة",
+        "approvedDescription": "تمت الموافقة على هذه الإقامة ونشرها مباشرة.",
+        "reactivatedTitle": "تمت إعادة تفعيل الإقامة",
+        "reactivatedDescription": "تمت إعادة تفعيل هذه الإقامة بنجاح.",
+        "deleted": "تم حذف الإقامة"
+      },
+      "panel": {
+        "about": "معلومات عن الإقامة",
+        "noDescription": "لم يُقدَّم وصف لهذه الإقامة.",
+        "calendarText": "تُدار التوفرات والأسعار الموسمية لهذه الإقامة.",
+        "calendarLink": "عرض التقويم الكامل"
+      },
+      "advanced": {
+        "title": "فلاتر متقدمة للإقامات",
+        "minCapacity": "الحد الأدنى للسعة",
+        "priceRange": "نطاق السعر (د.ج)",
+        "min": "الأدنى",
+        "max": "الأقصى",
+        "allModes": "جميع الطرق"
+      },
+      "confirm": {
+        "deleteTitle": "حذف هذه الإقامة؟",
+        "suspendTitle": "تعليق هذه الإقامة؟",
+        "approveTitle": "اعتماد هذه الإقامة؟",
+        "description": "أنت على وشك تغيير حالة «{title}». سيتم تسجيل هذا الإجراء في سجل التدقيق.",
+        "deleteConfirm": "حذف نهائي"
+      }
+    },
+    "detail": {
+      "notFoundTitle": "الإقامة غير موجودة",
+      "notFoundText": "الإعلان المطلوب غير موجود أو تم حذفه.",
+      "backToStays": "العودة إلى الإقامات",
+      "backToList": "العودة إلى القائمة",
+      "addedOn": "أضيف في {date}",
+      "reviewModeration": "التحقق والإشراف",
+      "previous": "الإقامة السابقة",
+      "next": "الإقامة التالية",
+      "mainImage": "الصورة الرئيسية",
+      "enlargePhoto": "تكبير الصورة {index}",
+      "morePhotos": "{count, plural, one {+صورة واحدة} two {+صورتان} few {+# صور} many {+# صورة} other {+# صورة}}",
+      "generalInfo": "معلومات عامة",
+      "guestCapacity": "سعة الاستقبال",
+      "people": "{count, plural, one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخص}}",
+      "instant": "فورية",
+      "amenitiesTitle": "المرافق ({count})",
+      "amenitiesSubtitle": "المرافق التي صرّح المضيف بتوفرها",
+      "seeAll": "عرض الكل ({count})",
+      "houseRules": "قواعد المنزل",
+      "rules": {
+        "pets": "الحيوانات الأليفة",
+        "smoking": "التدخين",
+        "parties": "الحفلات والمناسبات",
+        "children": "الأطفال",
+        "notAllowed": "غير مسموح",
+        "childFriendly": "مناسب للأطفال"
+      },
+      "validationStatus": "حالة الاعتماد",
+      "statusText": {
+        "published": "هذه الإقامة معتمدة حاليًا وظاهرة لجميع المسافرين.",
+        "pending": "هذه الإقامة في انتظار مراجعة فريق الإشراف.",
+        "attention": "هذه الإقامة تحتاج إلى اهتمامك أو تم تعليقها."
+      },
+      "approvePublish": "موافقة ونشر",
+      "requestChanges": "طلب تعديلات",
+      "reactivate": "إلغاء التعليق / إعادة التفعيل",
+      "checkpointsTitle": "نقاط للتحقق",
+      "checkpoints": {
+        "ownerDocuments": "وثائق المالك",
+        "photos": "مطابقة الصور",
+        "address": "العنوان الدقيق على الخريطة",
+        "amenities": "المرافق المصرّح بها",
+        "pricingPolicy": "الأسعار وسياسة الإلغاء",
+        "houseRules": "قواعد المنزل"
+      },
+      "checkResults": {
+        "compliant": "مطابق",
+        "verified": "تم التحقق",
+        "complete": "مكتمل"
+      },
+      "verification": {
+        "identity": "الهوية",
+        "phone": "الهاتف",
+        "email": "البريد الإلكتروني"
+      },
+      "ownerDocuments": "وثائق المالك",
+      "documents": {
+        "identity": "بطاقة الهوية",
+        "propertyTitle": "سند الملكية",
+        "proofOfAddress": "إثبات السكن"
+      },
+      "fileMeta": "{ext} • {size} م.ب",
+      "docValidated": "معتمد",
+      "docToCheck": "للتحقق",
+      "viewDocument": "عرض {name}",
+      "downloadDocument": "تنزيل {name}",
+      "download": "تنزيل",
+      "approveDialogTitle": "الموافقة على هذه الإقامة ونشرها؟",
+      "approveDialogText": "سيظهر الإعلان فورًا على DARNA ويصبح متاحًا للحجز.",
+      "toasts": {
+        "approved": "تمت الموافقة على الإقامة ونشرها",
+        "rejected": "تم رفض الإقامة",
+        "changesRequested": "تم طلب تعديلات من المضيف"
+      }
+    },
+    "review": {
+      "title": "اعتماد إقامة",
+      "subtitle": "تحقق من جميع المعلومات والوثائق قبل نشر الإعلان.",
+      "viewOnSite": "عرض على الموقع",
+      "newTab": "(يفتح في علامة تبويب جديدة)",
+      "nextStep": "التالي",
+      "steps": {
+        "info": "المعلومات",
+        "photos": "الصور",
+        "documents": "الوثائق",
+        "verification": "التحقق",
+        "decision": "القرار"
+      },
+      "idLabel": "المعرّف: <code>{id}</code>",
+      "stats": {
+        "guests": "الضيوف"
+      },
+      "ownerInfo": "معلومات المالك",
+      "viewFullProfile": "عرض الملف الكامل",
+      "memberSince": "عضو منذ {year}",
+      "ratingLabel": "التقييم:",
+      "tabs": {
+        "info": "معلومات عامة",
+        "location": "الموقع"
+      },
+      "fields": {
+        "title": "العنوان"
+      },
+      "checklistTitle": "التحقق والمطابقة",
+      "checks": {
+        "idProof": "بطاقة هوية المالك",
+        "residenceProof": "إثبات السكن",
+        "propertyTitle": "سند الملكية أو العقد",
+        "photos": "صور الإقامة",
+        "address": "العنوان على الخريطة",
+        "completeness": "اكتمال المعلومات",
+        "rules": "الالتزام بالقواعد"
+      },
+      "checkResults": {
+        "valid": "صالح",
+        "compliantPlural": "مطابقة",
+        "verified": "تم التحقق",
+        "completeFem": "مكتملة",
+        "compliant": "مطابق",
+        "toCheck": "للتحقق"
+      },
+      "inspect": "فحص",
+      "inspectItem": "فحص: {item}",
+      "notesTitle": "ملاحظات داخلية",
+      "notesHint": "مرئية فقط لمسؤولي ومشرفي DARNA.",
+      "notesReasonHint": "مطلوبة لهذا القرار (على الأقل {min} أحرف): تُرسل إلى المضيف وتُسجَّل في سجل التدقيق.",
+      "notesPlaceholder": "أضف ملاحظة للمشرفين أو سجّل عملية تحقق…",
+      "decisionTitle": "القرار",
+      "decisions": {
+        "approve": {
+          "title": "موافقة ونشر",
+          "description": "سيُنشر الإعلان فورًا على المنصة."
+        },
+        "changes": {
+          "title": "طلب تعديلات",
+          "description": "يجب على المضيف إجراء تعديلات قبل اعتماد جديد."
+        },
+        "reject": {
+          "title": "رفض",
+          "description": "سيُرفض الإعلان ويُبلَّغ المضيف بالسبب."
+        }
+      },
+      "submit": {
+        "approve": "موافقة ونشر",
+        "reject": "تأكيد الرفض",
+        "changes": "إرسال طلب التعديل"
+      },
+      "toasts": {
+        "approved": "تمت الموافقة على الإقامة ونشرها بنجاح",
+        "rejected": "تم رفض الإقامة. تم إشعار المضيف.",
+        "changesRequested": "تم إرسال طلب استكمال المعلومات إلى المالك."
+      }
+    }
+  },
+  "stayWizard": {
+    "back": "رجوع",
+    "title": "إضافة إقامة",
+    "subtitle": "املأ المعلومات خطوة بخطوة لإنشاء إعلان إقامة جديد ونشره.",
+    "draftSavedAt": "تم حفظ المسودة على الساعة {time}",
+    "saveDraft": "حفظ كمسودة",
+    "next": "التالي",
+    "previous": "السابق",
+    "cancel": "إلغاء",
+    "publish": "نشر الإقامة",
+    "required": "(مطلوب)",
+    "charCount": "({count}/{max})",
+    "locationValue": "{city}، ولاية {wilaya}",
+    "steps": {
+      "general": "معلومات عامة",
+      "location": "الموقع",
+      "amenities": "المرافق",
+      "photos": "الصور والوصف",
+      "pricing": "الأسعار والتوفر",
+      "rules": "القواعد والاعتماد"
+    },
+    "progress": {
+      "general": "معلومات عامة",
+      "locationContact": "الموقع والاتصال",
+      "amenities": "المرافق",
+      "media": "الصور والوسائط",
+      "pricing": "الأسعار والتوفر",
+      "rules": "القواعد والاعتماد"
+    },
+    "preview": {
+      "title": "معاينة الإعلان"
+    },
+    "fields": {
+      "title": "عنوان الإقامة",
+      "titlePlaceholder": "مثال: فيلا بإطلالة بانورامية ومسبح – حيدرة",
+      "propertyType": "نوع العقار",
+      "category": "الفئة",
+      "capacity": "السعة",
+      "bedrooms": "الغرف",
+      "bathrooms": "الحمامات",
+      "surface": "المساحة (م²)",
+      "host": "المضيف / المالك",
+      "shortDescription": "وصف مختصر",
+      "fullDescription": "وصف مفصّل",
+      "fullDescriptionPlaceholder": "اكتب وصفًا مفصّلًا…"
+    },
+    "propertyTypes": {
+      "villaPool": "فيلا بمسبح",
+      "luxuryApartment": "شقة راقية",
+      "traditionalHouse": "منزل تقليدي / القصبة",
+      "beachBungalow": "بنغل على شاطئ البحر",
+      "mountainChalet": "شاليه جبلي",
+      "modernStudio": "استوديو عصري",
+      "hotelSuite": "فندق / جناح",
+      "hostel": "نُزُل الشباب"
+    },
+    "categories": {
+      "home": "مسكن كامل (منزل / فيلا / شقة)",
+      "hotel": "فندق / مؤسسة",
+      "hostel": "نُزُل الشباب"
+    },
+    "hostOptions": {
+      "individualAlgiers": "{name} (فرد – الجزائر العاصمة)",
+      "agency": "{name} (وكالة)",
+      "establishment": "{name} (مؤسسة)"
+    },
+    "rules": {
+      "title": "القواعد الأساسية",
+      "pets": "الحيوانات الأليفة مسموحة",
+      "parties": "الحفلات والمناسبات",
+      "smoking": "التدخين مسموح",
+      "children": "مناسب للأطفال",
+      "checkInTime": "وقت الوصول",
+      "checkOutTime": "وقت المغادرة"
+    },
+    "location": {
+      "title": "العنوان وتحديد الموقع",
+      "wilaya": "الولاية",
+      "city": "البلدية / المدينة",
+      "address": "العنوان الدقيق",
+      "mapLabel": "الموقع على الخريطة (حرّك العلامة للتدقيق)"
+    },
+    "contact": {
+      "title": "معلومات الاتصال",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "showPublic": "عرض معلومات الاتصال العامة في الإعلان بعد الاعتماد"
+    },
+    "amenitiesStep": {
+      "title": "اختيار المرافق",
+      "subtitle": "حدد جميع المرافق والتجهيزات المتوفرة في هذه الإقامة."
+    },
+    "amenities": {
+      "wifi": "واي فاي عالي السرعة",
+      "privatePool": "مسبح خاص",
+      "airConditioning": "تكييف عكسي",
+      "kitchen": "مطبخ مجهّز",
+      "parking": "موقف سيارات آمن",
+      "tv": "تلفاز 4K",
+      "washer": "غسالة ملابس",
+      "seaView": "إطلالة على البحر",
+      "heating": "تدفئة مركزية",
+      "workspace": "مساحة عمل",
+      "jacuzzi": "جاكوزي / سبا",
+      "barbecue": "شواء خارجي"
+    },
+    "photosStep": {
+      "title": "الصور والمعرض (يُنصح بـ 5 صور على الأقل)",
+      "dropLabel": "أسقط صور الإقامة هنا",
+      "dropHint": "الصيغ المقبولة: JPG وPNG وWEBP حتى 10 م.ب لكل صورة",
+      "cover": "الغلاف",
+      "coverAlt": "صورة الغلاف"
+    },
+    "pricing": {
+      "title": "الأسعار وشروط الحجز",
+      "price": "السعر لليلة (د.ج)",
+      "cleaningFee": "رسوم التنظيف (د.ج)",
+      "deposit": "مبلغ التأمين (د.ج)",
+      "minStay": "الحد الأدنى للإقامة (ليالٍ)",
+      "bookingMode": "طريقة الحجز",
+      "modes": {
+        "instant": {
+          "title": "فوري",
+          "description": "يحجز المسافر دون انتظار."
+        },
+        "request": {
+          "title": "عند الطلب",
+          "description": "يجب على المضيف الموافقة على كل طلب."
+        }
+      }
+    },
+    "summary": {
+      "title": "ملخص قبل النشر",
+      "subtitle": "تحقق من أن جميع البيانات أدناه مكتملة ومطابقة لقواعد الإشراف في DARNA.",
+      "titleLabel": "العنوان",
+      "location": "الموقع",
+      "capacity": "السعة",
+      "capacityValue": "{guests, plural, one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}} • {bedrooms, plural, one {غرفة واحدة} two {غرفتان} few {# غرف} many {# غرفة} other {# غرفة}}",
+      "price": "السعر لليلة",
+      "amenities": "المرافق المصرّح بها",
+      "amenitiesValue": "{count, plural, =0 {لا شيء} one {مرفق واحد} two {مرفقان} few {# مرافق} many {# مرفقًا} other {# مرفق}}"
+    },
+    "errors": {
+      "summary": "{count, plural, one {يرجى تصحيح خطأ واحد قبل المتابعة:} two {يرجى تصحيح خطأين قبل المتابعة:} few {يرجى تصحيح # أخطاء قبل المتابعة:} many {يرجى تصحيح # خطأً قبل المتابعة:} other {يرجى تصحيح # خطأ قبل المتابعة:}}",
+      "titleRequired": "أدخل عنوان الإقامة.",
+      "shortDescriptionRequired": "أدخل وصفًا مختصرًا.",
+      "min": "أدخل قيمة لا تقل عن {min}.",
+      "cityRequired": "أدخل البلدية أو المدينة.",
+      "addressRequired": "أدخل العنوان الدقيق.",
+      "emailInvalid": "أدخل بريدًا إلكترونيًا صالحًا.",
+      "priceRequired": "أدخل سعرًا لليلة أكبر من 0."
+    },
+    "toasts": {
+      "draftSaved": "تم حفظ المسودة",
+      "draftSavedDescription": "تم الحفظ على الساعة {time}. يمكنك المتابعة في أي وقت.",
+      "created": "تم إنشاء الإقامة بنجاح",
+      "createdDescription": "تم حفظ الإعلان وإرساله للنشر.",
+      "photoAdded": "تمت إضافة الصورة"
+    },
+    "tips": {
+      "step1": {
+        "title": "نصائح لإعلان جيد",
+        "tip1": "اختر عنوانًا جذابًا يذكر نوع العقار وأبرز ميزاته.",
+        "tip2": "أدخل المساحة الحقيقية والعدد الدقيق للغرف والأسرّة المتاحة.",
+        "tip3": "تأكد من اختيار المالك الموثّق من دليل DARNA."
+      },
+      "step2": {
+        "title": "نصائح حول الموقع",
+        "tip1": "ضع العلامة بدقة على الخريطة لمساعدة المسافرين على تحديد الحي.",
+        "tip2": "اذكر المعالم أو أبرز مناطق الجذب على بُعد أقل من 15 دقيقة.",
+        "tip3": "يمكن إخفاء العنوان الدقيق حتى تأكيد الحجز."
+      },
+      "step3": {
+        "title": "اختيار المرافق",
+        "tip1": "تحصل الإقامات المزوّدة بالواي فاي والتكييف على حجوزات أكثر بنسبة 40٪.",
+        "tip2": "وضّح ما إذا كان موقف السيارات في المكان مجانيًا أم مدفوعًا."
+      },
+      "step4": {
+        "title": "صور ملفتة",
+        "tip1": "ارفع 5 صور على الأقل بدقة عالية وإضاءة طبيعية.",
+        "tip2": "صوّر جميع الغرف الرئيسية والإطلالة والمساحات الخارجية."
+      },
+      "step5": {
+        "title": "تسعير مثالي",
+        "tip1": "حدّد سعرًا أساسيًا يتناسب مع أسعار السوق في الولاية.",
+        "tip2": "الحجز الفوري يرفع معدل التحويل إلى أقصى حد."
+      },
+      "step6": {
+        "title": "الاعتماد النهائي",
+        "tip1": "راجع جميع قواعد المنزل.",
+        "tip2": "بمجرد الإرسال، ستُدرج الإقامة فورًا على DARNA."
+      }
+    }
+  },
+  "experiences": {
+    "title": "إدارة التجارب",
+    "subtitle": "أشرف على الأنشطة والرحلات القصيرة وورشات العمل التي يقدمها المرشدون والوكالات.",
+    "export": "تصدير",
+    "categories": "الفئات",
+    "add": "إضافة تجربة",
+    "searchPlaceholder": "ابحث بالعنوان أو المرشد أو المكان...",
+    "empty": "لا توجد تجارب مطابقة لهذه الفلاتر.",
+    "itemLabel": "تجارب",
+    "fullScreen": "ملء الشاشة",
+    "quickPreview": "معاينة سريعة",
+    "quickPreviewOf": "معاينة سريعة لـ {title}",
+    "openFullPage": "فتح الصفحة الكاملة",
+    "openFullPageOf": "فتح الصفحة الكاملة لـ {title}",
+    "reviewsCount": "({count, plural, =0 {لا توجد تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}})",
+    "locationValue": "{city}، {code}",
+    "kpi": {
+      "total": "إجمالي التجارب",
+      "pending": "بانتظار المصادقة",
+      "published": "منشورة",
+      "suspended": "معلقة",
+      "refused": "مرفوضة"
+    },
+    "columns": {
+      "experience": "التجربة",
+      "guide": "المنظم / المرشد",
+      "location": "المكان",
+      "category": "الفئة",
+      "price": "السعر",
+      "rating": "التقييم",
+      "bookings": "الحجوزات"
+    },
+    "categoryOptions": {
+      "adventure": "مغامرة",
+      "culture": "ثقافة",
+      "nature": "طبيعة",
+      "gastronomy": "فن الطبخ",
+      "sea": "بحر"
+    },
+    "filters": {
+      "wilaya": "المنطقة / الولاية",
+      "allWilayas": "جميع الولايات",
+      "category": "الفئة",
+      "allCategories": "جميع الفئات",
+      "allStatuses": "جميع الحالات"
+    },
+    "statusOptions": {
+      "pending": "بانتظار المصادقة",
+      "published": "منشورة",
+      "suspended": "معلقة",
+      "refused": "مرفوضة"
+    },
+    "menu": {
+      "approve": "موافقة / نشر",
+      "markPending": "تعيين قيد المراجعة",
+      "suspend": "تعليق النشاط",
+      "reject": "رفض النشاط"
+    },
+    "panel": {
+      "suspend": "تعليق",
+      "approveDirectly": "موافقة مباشرة",
+      "review": "فحص الملف",
+      "cancelSuspension": "إلغاء التعليق"
+    },
+    "toast": {
+      "approvedTitle": "تمت الموافقة على التجربة",
+      "approvedDescription": "تمت الموافقة على هذه التجربة ونشرها مباشرة.",
+      "reactivatedTitle": "تم إلغاء التعليق",
+      "reactivatedDescription": "تمت إعادة تفعيل هذه التجربة بنجاح."
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "info": "معلومات",
+      "photos": "الصور",
+      "calendar": "التقويم",
+      "bookings": "الحجوزات"
+    },
+    "about": {
+      "title": "حول التجربة",
+      "category": "الفئة",
+      "maxGroup": "الحد الأقصى للمجموعة",
+      "people": "{count, plural, one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخص}}",
+      "difficulty": "المستوى",
+      "difficultyModerate": "متوسط",
+      "languages": "اللغات"
+    },
+    "pricing": {
+      "title": "الأسعار والخصومات",
+      "perPerson": "/ للشخص",
+      "groupDiscount": "خصم المجموعات (أكثر من 4 أشخاص)",
+      "discountValue": "-{percent}% ({price})",
+      "commission": "عمولة DARNA",
+      "commissionIncluded": "{rate}% (مشمولة)",
+      "cancellation": "سياسة الإلغاء",
+      "cancellationFlexible": "مرنة (قبل {hours} ساعة)",
+      "prepayment": "الدفع المسبق",
+      "prepaymentSecure": "آمن 100%"
+    },
+    "schedule": {
+      "title": "المواعيد والمدة",
+      "totalDuration": "المدة الإجمالية",
+      "hours": "{count, plural, one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}",
+      "departureTimes": "أوقات الانطلاق",
+      "operatingDays": "أيام النشاط",
+      "everyDay": "كل يوم",
+      "advanceNotice": "الحجز المسبق",
+      "hoursInAdvance": "قبل {count, plural, one {ساعة واحدة} two {ساعتين} few {# ساعات} many {# ساعة} other {# ساعة}}"
+    },
+    "host": {
+      "title": "المنظم / المرشد",
+      "viewProfile": "عرض الملف",
+      "certified": "مرشد معتمد"
+    },
+    "description": {
+      "title": "الوصف",
+      "empty": "لا يوجد وصف لهذه التجربة."
+    },
+    "confirm": {
+      "deleteTitle": "حذف هذه التجربة؟",
+      "suspendTitle": "تعليق هذه التجربة؟",
+      "description": "أنت على وشك تغيير حالة «{title}». سيتم تسجيل هذا الإجراء في سجل التدقيق.",
+      "deleteLabel": "حذف",
+      "deleted": "تم حذف التجربة"
+    },
+    "categoriesPage": {
+      "title": "فئات التجارب",
+      "subtitle": "نظّم مواضيع الأنشطة (مغامرة، ثقافة، فن الطبخ، إلخ).",
+      "itemType": "فئة"
+    },
+    "changeRequestsPage": {
+      "title": "طلبات تعديل التجارب",
+      "subtitle": "صادِق على تحديثات المسارات أو الأسعار أو الشروط التي يرسلها المرشدون."
+    }
+  },
+  "experienceWizard": {
+    "title": "إضافة تجربة",
+    "subtitle": "صِف نشاطك ومساراتك وأسعارك لاستقبال المسافرين.",
+    "backToList": "العودة إلى القائمة",
+    "draftSavedAt": "تم حفظ المسودة على الساعة {time}",
+    "saveDraft": "حفظ كمسودة",
+    "next": "التالي",
+    "previous": "السابق",
+    "cancel": "إلغاء",
+    "publish": "نشر التجربة",
+    "locationValue": "{city}، ولاية {code}",
+    "steps": {
+      "general": "معلومات عامة",
+      "location": "الموقع",
+      "details": "التفاصيل والبرنامج",
+      "pricing": "الأسعار والتوفر",
+      "media": "الصور والوسائط",
+      "rules": "القواعد والمصادقة"
+    },
+    "categories": {
+      "adventure": "مغامرة ومشي",
+      "culture": "ثقافة وتاريخ",
+      "nature": "طبيعة وحياة برية",
+      "gastronomy": "فن الطبخ والمنتجات المحلية",
+      "sea": "بحر ورياضات مائية"
+    },
+    "difficultyOptions": {
+      "easy": "سهل (لجميع الفئات)",
+      "moderate": "متوسط (لياقة جيدة)",
+      "hard": "صعب (للرياضيين)",
+      "expert": "خبير (تسلق/تقني)"
+    },
+    "errors": {
+      "required": "هذا الحقل مطلوب.",
+      "groupSize": "أدخل عددًا صحيحًا بين {min} و{max}.",
+      "languages": "أضف لغة واحدة على الأقل.",
+      "price": "أدخل سعرًا أكبر من 0.",
+      "priceChild": "لا يمكن أن يكون سعر الطفل سالبًا.",
+      "summary": "{count, plural, one {حقل واحد يحتاج إلى مراجعتك.} two {حقلان يحتاجان إلى مراجعتك.} few {# حقول تحتاج إلى مراجعتك.} many {# حقلًا يحتاج إلى مراجعتك.} other {# حقل يحتاج إلى مراجعتك.}}"
+    },
+    "general": {
+      "heading": "معلومات عامة",
+      "title": "عنوان التجربة",
+      "category": "الفئة الرئيسية",
+      "subCategory": "الفئة الفرعية",
+      "duration": "المدة",
+      "durationPlaceholder": "مثال: 3 ساعات",
+      "difficulty": "مستوى الصعوبة",
+      "groupSize": "الحد الأقصى لحجم المجموعة",
+      "languages": "اللغات المقترحة",
+      "languagesPlaceholder": "أضف لغة...",
+      "shortDescription": "وصف قصير",
+      "charCount": "{count}/{max} حرفًا",
+      "fullDescription": "وصف مفصل",
+      "fullDescriptionPlaceholder": "صِف التجربة بالتفصيل...",
+      "highlights": "أبرز ما في التجربة",
+      "removeHighlight": "حذف الميزة: {item}"
+    },
+    "type": {
+      "heading": "نوع التجربة والكلمات المفتاحية",
+      "legend": "نوع التجربة",
+      "tags": "الكلمات المفتاحية (وسوم)",
+      "tagsPlaceholder": "أضف وسمًا...",
+      "options": {
+        "excursion": "نزهة / زيارة مصحوبة بمرشد",
+        "sport": "نشاط رياضي",
+        "workshop": "ورشة / درس",
+        "tasting": "تذوق / فن الطبخ",
+        "other": "تجربة أخرى"
+      }
+    },
+    "location": {
+      "heading": "العنوان والموقع",
+      "country": "البلد",
+      "countryAlgeria": "الجزائر",
+      "wilaya": "الولاية",
+      "city": "المدينة",
+      "address": "العنوان الدقيق أو نقطة الالتقاء",
+      "addressHint": "حدد الموقع الدقيق على الخريطة التفاعلية أدناه."
+    },
+    "poi": {
+      "heading": "نقاط الاهتمام القريبة (بحد أقصى {max})",
+      "add": "إضافة نقطة",
+      "newName": "نقطة جديدة",
+      "newDistance": "1 كم",
+      "newTime": "15 دقيقة",
+      "remove": "حذف نقطة الاهتمام: {name}"
+    },
+    "access": {
+      "heading": "الوصول والنقل",
+      "transportMode": "وسيلة الوصول الرئيسية",
+      "instructions": "تعليمات الوصول للمشاركين"
+    },
+    "programme": {
+      "heading": "البرنامج المفصل وما يشمله",
+      "stepTitle": "المرحلة {n}: {title}",
+      "items": {
+        "welcome": {
+          "title": "الاستقبال وإرشادات السلامة",
+          "description": "التجمع، فحص المعدات وتعليمات المسار."
+        },
+        "walk": {
+          "title": "المشي على طول الجدول",
+          "description": "مراقبة مصحوبة بمرشد للنباتات وقردة المكاك البربري."
+        },
+        "waterfall": {
+          "title": "الوصول إلى الشلال واستراحة الشاي",
+          "description": "وقت للاسترخاء، سباحة اختيارية وتذوق."
+        }
+      }
+    },
+    "pricing": {
+      "heading": "الأسعار للشخص والحجز",
+      "adult": "سعر البالغ (د.ج)",
+      "child": "سعر الطفل (د.ج)"
+    },
+    "media": {
+      "heading": "الصور والفيديو التعريفي",
+      "dropLabel": "أفلت صور التجربة هنا",
+      "hint": "الصيغ المقبولة: JPG وPNG وMP4 حتى {size} ميغابايت"
+    },
+    "review": {
+      "heading": "التحقق قبل الإرسال",
+      "activity": "النشاط",
+      "category": "الفئة",
+      "categoryValue": "{category} ({difficulty})",
+      "location": "المكان",
+      "pricePerPerson": "السعر للشخص"
+    },
+    "tips": {
+      "title": "نصائح لتجربتك",
+      "unique": "أبرز ما يجعل تجربتك فريدة في الجزائر.",
+      "equipment": "فصّل المعدات المقدمة وما يجب على المسافرين إحضاره.",
+      "photos": "الصور الحية مع المشاركين تحصد ضعف النقرات."
+    },
+    "toast": {
+      "draftSaved": "تم حفظ المسودة",
+      "draftSavedAt": "تم الحفظ على الساعة {time}.",
+      "created": "تم إنشاء التجربة بنجاح",
+      "createdDescription": "تم إرسال النشاط إلى إشراف DARNA."
+    }
+  },
+  "cars": {
+    "title": "تأجير السيارات",
+    "subtitle": "أدر أسطول السيارات المتاحة للتأجير والأسعار والوكالات الشريكة.",
+    "export": "تصدير",
+    "categories": "الفئات",
+    "add": "إضافة سيارة",
+    "searchPlaceholder": "ابحث بالعلامة أو الطراز أو الوكالة...",
+    "empty": "لم يتم العثور على أي مركبة.",
+    "itemLabel": "مركبات",
+    "fullScreen": "ملء الشاشة",
+    "quickPreview": "معاينة سريعة",
+    "quickPreviewOf": "معاينة سريعة لـ {title}",
+    "openFullPage": "فتح الصفحة الكاملة",
+    "openFullPageOf": "فتح الصفحة الكاملة لـ {title}",
+    "reviewsCount": "({count, plural, =0 {لا توجد تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}})",
+    "locationValue": "{city}، {code}",
+    "rowSpecs": "{year} • ديزل • ناقل حركة أوتوماتيكي",
+    "kpi": {
+      "total": "إجمالي المركبات",
+      "available": "متاحة",
+      "booked": "محجوزة",
+      "maintenance": "قيد الصيانة",
+      "unavailable": "غير متاحة",
+      "owners": "الوكالات والمؤجرون"
+    },
+    "columns": {
+      "vehicle": "المركبة",
+      "category": "الفئة",
+      "city": "المدينة",
+      "pricePerDay": "السعر / اليوم"
+    },
+    "categoryOptions": {
+      "suv": "رباعية الدفع وSUV",
+      "cityCar": "سيارة مدينة",
+      "sedan": "سيدان",
+      "compact": "مدمجة",
+      "utility": "نفعية"
+    },
+    "filters": {
+      "category": "الفئة",
+      "allCategories": "جميع الفئات",
+      "wilaya": "المدينة / الولاية",
+      "allCities": "جميع المدن",
+      "gearbox": "ناقل الحركة",
+      "allGearboxes": "الكل",
+      "allStatuses": "جميع الحالات"
+    },
+    "gearbox": {
+      "auto": "أوتوماتيكي",
+      "manual": "يدوي"
+    },
+    "statusOptions": {
+      "approved": "متاحة",
+      "pending": "قيد الانتظار",
+      "maintenance": "قيد الصيانة",
+      "rejected": "غير متاحة"
+    },
+    "menu": {
+      "approve": "موافقة / نشر",
+      "markPending": "تعيين قيد المراجعة",
+      "suspend": "تعليق المركبة",
+      "maintenance": "وضع الصيانة (قريبًا)",
+      "reject": "رفض المركبة"
+    },
+    "panel": {
+      "approveDirectly": "موافقة مباشرة",
+      "reactivate": "إعادة التفعيل",
+      "maintenance": "صيانة",
+      "edit": "تعديل"
+    },
+    "tabs": {
+      "details": "التفاصيل",
+      "pricing": "الأسعار",
+      "photos": "الصور",
+      "amenities": "التجهيزات",
+      "bookings": "الحجوزات"
+    },
+    "about": {
+      "title": "حول المركبة",
+      "category": "الفئة",
+      "year": "سنة الصنع",
+      "fuel": "نوع الوقود",
+      "fuelDiesel": "ديزل",
+      "transmission": "ناقل الحركة",
+      "capacity": "عدد المقاعد",
+      "seats": "{count, plural, one {مقعد واحد} two {مقعدان} few {# مقاعد} many {# مقعدًا} other {# مقعد}}",
+      "airConditioning": "التكييف",
+      "yes": "نعم"
+    },
+    "pricing": {
+      "title": "الأسعار والخصومات",
+      "perDayUnit": "/ اليوم",
+      "perDay": "{price} / اليوم",
+      "perDayDiscounted": "{price} / اليوم (-{percent}%)",
+      "weeklyDiscount": "خصم أسبوعي (-{percent}%)",
+      "monthlyDiscount": "خصم شهري (-{percent}%)",
+      "deposit": "تأمين قابل للاسترداد",
+      "mileage": "المسافة المسموحة",
+      "mileageUnlimited": "غير محدودة (ابتداءً من {days, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}})"
+    },
+    "tiers": {
+      "range": "من {min} إلى {max} أيام",
+      "over": "{min} يومًا فأكثر"
+    },
+    "schedule": {
+      "title": "مواعيد وشروط الإيجار",
+      "pickup": "وقت الاستلام",
+      "fromTime": "ابتداءً من {time}",
+      "return": "وقت الإرجاع",
+      "beforeTime": "قبل {time}",
+      "minDuration": "الحد الأدنى للمدة",
+      "minDays": "{count, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} كحد أدنى",
+      "fuelPolicy": "سياسة الوقود",
+      "fullToFull": "خزان ممتلئ مقابل خزان ممتلئ"
+    },
+    "owner": {
+      "title": "الوكالة المالكة",
+      "licensed": "وكالة تأجير سيارات معتمدة"
+    },
+    "description": {
+      "title": "الوصف",
+      "empty": "لا يوجد وصف لهذه المركبة."
+    },
+    "confirm": {
+      "deleteTitle": "حذف هذه المركبة؟",
+      "description": "أنت على وشك تغيير حالة المركبة «{title}».",
+      "deleted": "تم حذف المركبة"
+    },
+    "categoriesPage": {
+      "title": "فئات المركبات",
+      "subtitle": "اضبط الفئات (رباعية الدفع، سيارات المدينة، سيدان، نفعية).",
+      "itemType": "فئة"
+    },
+    "insurancePage": {
+      "title": "صيغ تأمين السيارات",
+      "subtitle": "أدر عقود التأمين الشامل والتحمل وخيارات التغطية.",
+      "itemType": "صيغة تأمين"
+    },
+    "pricingPage": {
+      "title": "جدول أسعار التأجير",
+      "subtitle": "اضبط الخصومات التنازلية حسب مدة الحجز (1–3 أيام، 4–7 أيام، 15 يومًا فأكثر).",
+      "itemType": "شريحة مدة"
+    }
+  },
+  "trips": {
+    "title": "الرحلات المنظمة",
+    "subtitle": "أدر الجولات السياحية والرحلات المنظمة من طرف الوكالات المعتمدة.",
+    "export": "تصدير",
+    "categories": "الفئات",
+    "add": "إضافة رحلة",
+    "searchPlaceholder": "ابحث عن رحلة أو وجهة...",
+    "empty": "لم يتم العثور على أي رحلة.",
+    "itemLabel": "رحلات",
+    "fullScreen": "ملء الشاشة",
+    "quickPreview": "معاينة سريعة",
+    "quickPreviewOf": "معاينة سريعة لـ {title}",
+    "openFullPage": "فتح الصفحة الكاملة",
+    "openFullPageOf": "فتح الصفحة الكاملة لـ {title}",
+    "reviewsCount": "({count, plural, =0 {لا توجد تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}})",
+    "locationValue": "{city}، {code}",
+    "categoryFallback": "جولة صحراوية",
+    "duration": "{days, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} / {nights, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+    "kpi": {
+      "total": "جميع الرحلات",
+      "published": "منشورة",
+      "pending": "قيد الانتظار",
+      "suspended": "معلقة",
+      "refused": "مرفوضة",
+      "drafts": "مسودات"
+    },
+    "columns": {
+      "trip": "الرحلة",
+      "destination": "الوجهة",
+      "departure": "تاريخ الانطلاق",
+      "duration": "المدة",
+      "price": "السعر"
+    },
+    "categoryOptions": {
+      "sahara": "الصحراء والجنوب",
+      "cultural": "جولة ثقافية",
+      "trekking": "مشي ومبيت في الخلاء",
+      "seaside": "إقامة ساحلية",
+      "deepSouth": "جولة الجنوب الكبير"
+    },
+    "filters": {
+      "destination": "الوجهة",
+      "allDestinations": "جميع الوجهات",
+      "category": "الفئة",
+      "allCategories": "جميع الفئات",
+      "allStatuses": "جميع الحالات"
+    },
+    "statusOptions": {
+      "published": "منشورة",
+      "pending": "قيد الانتظار",
+      "suspended": "معلقة",
+      "refused": "مرفوضة",
+      "draft": "مسودة"
+    },
+    "menu": {
+      "approve": "موافقة / نشر",
+      "markPending": "تعيين قيد المراجعة",
+      "suspend": "تعليق الرحلة",
+      "reject": "رفض الرحلة"
+    },
+    "panel": {
+      "suspend": "تعليق",
+      "approveDirectly": "موافقة مباشرة",
+      "cancelSuspension": "إلغاء التعليق",
+      "edit": "تعديل"
+    },
+    "toast": {
+      "approvedTitle": "تمت الموافقة على الرحلة",
+      "approvedDescription": "تمت الموافقة على هذه الرحلة مباشرة.",
+      "reactivatedTitle": "تم إلغاء التعليق",
+      "reactivatedDescription": "تمت إعادة تفعيل هذه الرحلة بنجاح."
+    },
+    "tabs": {
+      "details": "التفاصيل",
+      "programme": "البرنامج",
+      "photos": "الصور",
+      "bookings": "الحجوزات"
+    },
+    "about": {
+      "title": "حول الجولة",
+      "departureDate": "تاريخ الانطلاق",
+      "duration": "المدة",
+      "maxGroup": "الحد الأقصى للمجموعة",
+      "maxPeople": "{count, plural, one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخص}} كحد أقصى",
+      "difficulty": "المستوى",
+      "difficultyModerate": "متوسط"
+    },
+    "pricing": {
+      "title": "الأسعار والخصومات",
+      "perPerson": "/ للشخص",
+      "earlyBird": "خصم الحجز المبكر",
+      "discountValue": "-{percent}% ({price})",
+      "commission": "عمولة DARNA",
+      "commissionIncluded": "{rate}% (مشمولة)",
+      "deposit": "الدفعة الأولى عند الحجز",
+      "depositValue": "{percent}% عند الطلب",
+      "cancellation": "سياسة الإلغاء",
+      "cancellationValue": "استرداد حتى {days, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} قبل الانطلاق"
+    },
+    "schedule": {
+      "title": "المواعيد ونقاط الالتقاء",
+      "gathering": "التجمع",
+      "gatheringValue": "{time} (اليوم الأول)",
+      "return": "العودة المتوقعة",
+      "returnValue": "{time} (اليوم الأخير)",
+      "dailyWalk": "المشي اليومي",
+      "dailyWalkValue": "من {min} إلى {max} ساعات / يوميًا",
+      "meetingPoint": "نقطة الالتقاء",
+      "meetingPointValue": "وسط {city}"
+    },
+    "agency": {
+      "title": "الوكالة المنظمة",
+      "licensed": "وكالة سياحة وأسفار معتمدة"
+    },
+    "highlights": {
+      "title": "أبرز المميزات",
+      "bivouac": "مبيت تحت النجوم في صحراء الطاسيلي",
+      "fullBoard": "إقامة كاملة مع مرشدين طوارق محليين",
+      "transport": "تنقل مريح بسيارات رباعية الدفع مشمول"
+    },
+    "description": {
+      "title": "الوصف المفصل للجولة",
+      "empty": "لا يوجد وصف لهذه الرحلة."
+    },
+    "confirm": {
+      "deleteTitle": "حذف هذه الرحلة؟",
+      "suspendTitle": "تعليق هذه الرحلة؟",
+      "description": "أنت على وشك تغيير حالة الرحلة «{title}».",
+      "deleted": "تم حذف الرحلة"
+    },
+    "categoriesPage": {
+      "title": "فئات الرحلات المنظمة",
+      "subtitle": "أدر أنواع الجولات (الصحراء، المبيت في الخلاء، الإقامات الثقافية).",
+      "itemType": "فئة"
+    },
+    "bookingRequestsPage": {
+      "title": "طلبات حجز الرحلات",
+      "subtitle": "راجع ووافق على طلبات المشاركة في الجولات الجماعية."
+    }
+  },
+  "stats": {
+    "title": "الإحصائيات والتقارير",
+    "subtitle": "تحليل الاتجاهات، الأداء حسب النشاط، التوزيع الجغرافي والتصديرات المحاسبية.",
+    "periodLast30": "الفترة: آخر 30 يوماً",
+    "exportCsv": "تصدير CSV",
+    "generalReport": "التقرير العام لدارنا",
+    "kpi": {
+      "grossVolume": "إجمالي حجم الحجوزات",
+      "netCommissions": "صافي عمولات دارنا",
+      "confirmedBookings": "الحجوزات المؤكدة",
+      "activeWilayas": "الولايات النشطة"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "providers": "حسب نوع مقدم الخدمة",
+      "services": "حسب الخدمة",
+      "wilayas": "حسب الولاية",
+      "revenue": "الإيرادات والعمولات",
+      "reports": "التقارير والتصدير"
+    },
+    "overview": {
+      "volumeTitle": "تطور حجم الحجوزات",
+      "volumeChartLabel": "الحجم الشهري للحجوزات، من الشهر 1 إلى 12: {values}",
+      "monthShort": "ش{n}",
+      "avgGrowth": "متوسط النمو الشهري: +{value}",
+      "verticalTitle": "التوزيع حسب مجال النشاط",
+      "verticals": {
+        "stays": "الإقامات (فيلات، شقق، فنادق)",
+        "trips": "الرحلات المنظمة (جولات الجنوب والشمال)",
+        "cars": "تأجير السيارات (وكالات شريكة)",
+        "experiences": "التجارب والأنشطة المرفقة بمرشد"
+      }
+    },
+    "providers": {
+      "avgRate": "متوسط نسبة العمولة: {rate}",
+      "individual": {
+        "label": "مضيفون أفراد",
+        "count": "{count, plural, one {{value} نشط} other {{value} نشطون}}"
+      },
+      "agency": {
+        "label": "وكالات السفر",
+        "count": "{count, plural, one {{value} معتمدة} other {{value} معتمدة}}"
+      },
+      "hotel": {
+        "label": "فنادق ونُزُل",
+        "count": "{count, plural, one {{value} مصنّف} other {{value} مصنّفة}}"
+      },
+      "carRental": {
+        "label": "وكالات تأجير السيارات",
+        "count": "{count, plural, one {{value} أسطول} few {{value} أساطيل} other {{value} أسطولاً}}"
+      }
+    },
+    "services": {
+      "stays": "الإقامات",
+      "trips": "الرحلات المنظمة",
+      "cars": "السيارات",
+      "experiences": "التجارب",
+      "listingsCount": "{count, plural, one {{value} إعلان} few {{value} إعلانات} other {{value} إعلاناً}}",
+      "tripsCount": "{count, plural, one {{value} جولة} few {{value} جولات} other {{value} جولة}}",
+      "vehiclesCount": "{count, plural, one {{value} مركبة} few {{value} مركبات} other {{value} مركبة}}",
+      "activitiesCount": "{count, plural, one {{value} نشاط} few {{value} أنشطة} other {{value} نشاطاً}}",
+      "avgRating": "متوسط تقييم الضيوف: ★ {value}",
+      "fillRate": "نسبة الإشغال: {value}",
+      "availability": "المتاح: {value} جاهزة",
+      "satisfaction": "الرضا: {value} يوصون بها"
+    },
+    "wilayas": {
+      "title": "أبرز الوجهات السياحية في الجزائر",
+      "cols": {
+        "wilaya": "الولاية",
+        "listings": "الإعلانات النشطة",
+        "bookings30d": "الحجوزات (30 يوماً)",
+        "volume": "الحجم المحقق",
+        "share": "الحصة السوقية"
+      }
+    },
+    "revenue": {
+      "title": "توزيع إيرادات دارنا",
+      "subtitle": "صافي الإيرادات من عمولات المنصة، دون احتساب الأموال المحجوزة المحوّلة لمقدمي الخدمات.",
+      "items": {
+        "individual": "العمولات — المضيفون الأفراد",
+        "agency": "العمولات — وكالات السفر",
+        "carRental": "العمولات — وكالات تأجير السيارات"
+      }
+    },
+    "reports": {
+      "export": "تصدير",
+      "exportAria": "تصدير: {report}",
+      "items": {
+        "Comptabilite_Mensuelle": {
+          "title": "دفتر الأستاذ المالي الشهري",
+          "desc": "الحجوزات الإجمالية، عمولات دارنا، تسويات CCP وكشوف الرسم على القيمة المضافة."
+        },
+        "Declaration_Tourisme": {
+          "title": "التصريح الجبائي السياحي (الجزائر)",
+          "desc": "وثيقة رسمية مطابقة لمعايير وزارة السياحة والصناعة التقليدية."
+        },
+        "Audit_Solvabilite": {
+          "title": "تدقيق ملاءة مقدمي الخدمات",
+          "desc": "الأرصدة السالبة، المطالبات المفتوحة وضمانات الأموال المحجوزة."
+        },
+        "Performance_Territoriale": {
+          "title": "الأداء الجهوي وحسب الولاية",
+          "desc": "توزيع الليالي، متوسط الأسعار وأصول الضيوف."
+        }
+      }
+    }
+  },
+  "help": {
+    "title": "مركز المساعدة والتدريب في دارنا",
+    "subtitle": "أدلة تشغيلية خطوة بخطوة، تعريفات المصطلحات ودليل التنقل.",
+    "open": "فتح",
+    "kpi": {
+      "guides": "الأدلة التشغيلية",
+      "guidesValue": "{count, plural, zero {لا أدلة} one {دليل واحد} two {دليلان} few {# أدلة} many {# دليلاً} other {# دليل}}",
+      "glossary": "مسرد دارنا",
+      "glossaryValue": "{count, plural, zero {لا تعريفات} one {تعريف واحد} two {تعريفان} few {# تعريفات} many {# تعريفاً} other {# تعريف}}",
+      "migration": "أين ذهبت صفحتي؟",
+      "migrationValue": "{count, plural, zero {لا مطابقات} one {مطابقة واحدة} two {مطابقتان} few {# مطابقات} many {# مطابقة} other {# مطابقة}}"
+    },
+    "tabs": {
+      "guides": "أدلة عملية خطوة بخطوة",
+      "glossary": "مسرد المصطلحات المهنية",
+      "migration": "أين ذهبت صفحتي؟"
+    },
+    "guides": {
+      "validateProviders": {
+        "title": "كيف أعتمد أو أرفض مقدّم خدمة جديداً؟",
+        "body": "راجع وثائق الهوية أو السجل التجاري أو رخصة وكالة السفر. لكل وثيقة زر تحقق خاص بها قبل الاعتماد النهائي.",
+        "cta": "الانتقال إلى اعتماد مقدّمي الخدمات"
+      },
+      "refunds": {
+        "title": "كيف أعالج استرداد مبلغ بعد الإلغاء؟",
+        "body": "في قائمة الحجوزات، افتح اللوحة الجانبية وتحقق من سياسة الإلغاء (قبل أكثر من 48 ساعة = 100%). انقر على «استرداد» لتسجيل العملية في السجل المالي.",
+        "cta": "الانتقال إلى إدارة الحجوزات"
+      },
+      "commissions": {
+        "title": "كيف تعمل العمولات والضمان (Escrow)؟",
+        "body": "تُحتجز المبالغ التي يدفعها الضيوف في حساب ضمان حتى انتهاء الخدمة. تُقتطع العمولات (من 10% إلى 18%) تلقائياً عند تحويل المستحقات لمقدّم الخدمة.",
+        "cta": "ضبط نسب العمولات"
+      },
+      "staysVsHotels": {
+        "title": "الإقامة لدى الخواص أم الفندق / بيت الشباب؟",
+        "body": "تضم الفنادق وبيوت الشباب أنواعاً متعددة من الغرف (غرفة خاصة أو سرير في مهجع) وتُصنَّف بالنجوم أو برخصة فندقية رسمية.",
+        "cta": "عرض دليل أماكن الإقامة"
+      }
+    },
+    "glossaryTitle": "المصطلحات الرسمية لدارنا",
+    "terms": {
+      "dzd": {
+        "term": "د.ج (الدينار الجزائري)",
+        "definition": "العملة الوحيدة للتسعير والدفع على المنصة. تستخدم جميع القيود المحاسبية الدينار الجزائري."
+      },
+      "escrow": {
+        "term": "الضمان (Escrow)",
+        "definition": "آلية ضمان تحتجز المبالغ المدفوعة حتى اليوم التالي للوصول أو لبدء النشاط."
+      },
+      "individualHost": {
+        "term": "مضيف فرد (خاص)",
+        "definition": "شخص طبيعي يؤجر غرفة في منزله أو فيلا أو شقة مفروشة."
+      },
+      "travelAgency": {
+        "term": "وكالة سفر",
+        "definition": "مؤسسة مهنية حاصلة على رخصة معتمدة من وزارة السياحة لتنظيم الرحلات السياحية."
+      }
+    }
+  },
+  "whereDidItGo": {
+    "title": "أين ذهبت صفحتي السابقة؟",
+    "subtitle": "لتسهيل عملكم اليومي، بسّطنا القائمة إلى {count} أقسام رئيسية. تجدون هنا جميع الصفحات السابقة وأماكنها الجديدة.",
+    "searchLabel": "البحث في الصفحات السابقة",
+    "searchPlaceholder": "اكتب الاسم السابق للصفحة أو كلمة مفتاحية…",
+    "tableCaption": "الصفحات السابقة وأماكنها الجديدة",
+    "columns": {
+      "oldName": "الاسم السابق",
+      "newName": "الاسم الجديد",
+      "location": "المكان الجديد",
+      "why": "سبب التغيير",
+      "link": "رابط مباشر"
+    },
+    "noResults": "لا توجد صفحة تطابق «{query}».",
+    "jumpThere": "الانتقال",
+    "jumpToLabel": "الانتقال إلى {name}",
+    "items": {
+      "guests": {
+        "oldName": "المستخدمون / إدارة المستخدمين",
+        "newName": "الضيوف",
+        "location": "القائمة الرئيسية (رقم 4)",
+        "description": "أُعيدت تسميتها «الضيوف» تماشياً مع طبيعة الخدمة. لإدارة حسابات المسافرين وسجلات حجوزاتهم."
+      },
+      "onboarding": {
+        "oldName": "إعدادات التسجيل",
+        "newName": "خطوات تسجيل المضيفين",
+        "location": "القائمة > إدارة > خطوات تسجيل المضيفين",
+        "description": "تحديد الوثائق والخطوات المطلوبة لكل فئة من المضيفين (فرد، وكالة، فندق، بيت شباب) قبل تفعيل حساباتهم."
+      },
+      "auditLog": {
+        "oldName": "سجل التدقيق",
+        "newName": "سجل العمليات",
+        "location": "القائمة > إدارة > الإعدادات > سجل العمليات",
+        "description": "السجل الزمني الشامل لكافة القرارات الإدارية وشحن المحافظ والاعتمادات."
+      },
+      "money": {
+        "oldName": "الخزينة والمالية",
+        "newName": "المعاملات المالية",
+        "location": "القائمة الرئيسية (رقم 7)",
+        "description": "محافظ المضيفين، الشحن اليدوي عبر CCP / التحويل البنكي، عمولات دارنا، واعتماد الدفعات."
+      },
+      "team": {
+        "oldName": "فريق العمل والصلاحيات",
+        "newName": "فريق العمل",
+        "location": "القائمة > إدارة > الإعدادات > فريق العمل",
+        "description": "إدارة حسابات موظفي الإشراف والدعم الفني والمسؤولين الماليين."
+      },
+      "disputes": {
+        "oldName": "التحكيم في النزاعات",
+        "newName": "نزاعات الحجوزات",
+        "location": "القائمة > الحجوزات (تبويب النزاعات) أو بطاقة الرئيسية",
+        "description": "متابعة الخلافات بين الضيوف والمضيفين، ومراجعة الأدلة، واتخاذ قرار استرداد المبالغ أو صرفها."
+      }
+    }
+  },
+  "glossary": {
+    "gmv": {
+      "term": "إجمالي حجم المعاملات (GMV)",
+      "plainTerm": "المبالغ المدفوعة من الضيوف",
+      "definition": "إجمالي المبالغ المدفوعة بالدينار الجزائري من قبل الضيوف لكافة الإقامات والأنشطة.",
+      "howItIsCounted": "مجموع أسعار الليالي ورسوم التنظيف ورسوم الخدمة على الحجوزات المؤكدة."
+    },
+    "commission": {
+      "term": "إيرادات العمولة",
+      "plainTerm": "أرباح دارنا",
+      "definition": "العمولة التي تحتفظ بها دارنا لتشغيل المنصة والدعم الفني والتسويق.",
+      "howItIsCounted": "نسبة العمولة المطبقة (مثل 10% إلى 15%) على كل حجز."
+    },
+    "bookingsCount": {
+      "term": "إجمالي الحجوزات",
+      "plainTerm": "الحجوزات",
+      "definition": "العدد الإجمالي للحجوزات التي قام بها المسافرون للإقامات العائلية والفنادق ورحلات الصحراء.",
+      "howItIsCounted": "مجموع الحجوزات المؤكدة والجارية والمكتملة خلال الفترة المحددة."
+    },
+    "newHosts": {
+      "term": "المضيفون الجدد",
+      "plainTerm": "المضيفون الجدد",
+      "definition": "الشركاء الجدد في الجزائر (أفراد، وكالات سياحة، فنادق، وبيوت شباب) المنضمون إلى دارنا.",
+      "howItIsCounted": "عدد حسابات المضيفين الجديدة التي تمت مراجعتها وقبولها خلال الفترة."
+    },
+    "occupancy": {
+      "term": "نسبة الإشغال",
+      "plainTerm": "الليالي المحجوزة من الليالي المتاحة",
+      "definition": "نسبة الليالي التي كانت فيها أماكن الإقامة محجوزة فعلياً مقارنة بالليالي المتاحة.",
+      "howItIsCounted": "(الليالي المحجوزة ÷ إجمالي الليالي المتاحة) × 100."
+    },
+    "cancellationRate": {
+      "term": "نسبة الإلغاء",
+      "plainTerm": "الحجوزات الملغاة",
+      "definition": "نسبة الحجوزات التي أُلغيت قبل موعد الوصول."
+    },
+    "payout": {
+      "term": "الدفعة",
+      "plainTerm": "دفع المستحقات للمضيف",
+      "definition": "المستحقات الصافية المحولة إلى الحساب البنكي أو حساب CCP الخاص بالمضيف بعد اقتطاع عمولة دارنا."
+    },
+    "auditLog": {
+      "term": "سجل التدقيق",
+      "plainTerm": "سجل العمليات",
+      "definition": "سجل زمني دقيق لكافة القرارات الإدارية والاعتمادات وتعديلات الأرصدة."
+    },
+    "onboardingConfig": {
+      "term": "إعدادات التسجيل",
+      "plainTerm": "خطوات تسجيل المضيفين",
+      "definition": "المستندات والمعلومات المطلوبة التي يجب على المضيف تقديمها قبل اعتماد حسابه."
+    },
+    "pendingReview": {
+      "term": "قيد المراجعة",
+      "plainTerm": "في انتظار قراركم",
+      "definition": "ملف مضيف أو إعلان في انتظار مراجعة وقرار فريق الإشراف."
+    },
+    "users": {
+      "term": "المستخدمون",
+      "plainTerm": "الضيوف",
+      "definition": "المسافرون الجزائريون والأجانب الذين يحجزون الإقامات والرحلات عبر دارنا."
+    }
+  },
+  "layout": {
+    "skipToContent": "الانتقال إلى المحتوى الرئيسي",
+    "localeSwitcher": {
+      "groupLabel": "اللغة",
+      "switchTo": {
+        "en": "التبديل إلى الإنجليزية",
+        "fr": "التبديل إلى الفرنسية",
+        "ar": "التبديل إلى العربية"
+      }
+    }
+  },
+  "training": {
+    "badge": "وضع التدريب",
+    "start": "وضع التدريب",
+    "stop": "الخروج من وضع التدريب",
+    "bannerLabel": "شريط وضع التدريب",
+    "bannerMessage": "وضع التدريب مفعّل: لن تؤثر أي عملية هنا على البيانات الحقيقية. تدرّبوا بكل حرية وأمان!",
+    "exitAndReset": "الخروج وإعادة التعيين"
+  },
+  "pageHelp": {
+    "sections": {
+      "whatFor": "ما الغرض من هذه الصفحة؟",
+      "commonTasks": "المهام الشائعة خطوة بخطوة",
+      "words": "المصطلحات المستخدمة هنا",
+      "shortcuts": "اختصارات لوحة المفاتيح المفيدة"
+    },
+    "replayTour": "إعادة الجولة التعريفية ({count} خطوات)",
+    "whereDidMyPageGo": "أين ذهبت صفحتي السابقة؟ (دليل التنقل)",
+    "shortcuts": {
+      "quickSearch": "البحث السريع في أي مكان",
+      "openHelp": "فتح لوحة المساعدة هذه",
+      "closeDialog": "إغلاق النافذة أو اللوحة",
+      "quickApprove": "اعتماد سريع للعنصر المحدد",
+      "openReject": "فتح نافذة الرفض",
+      "commandSearch": "فتح البحث الشامل",
+      "toggleHelp": "إظهار لوحة المساعدة هذه أو إخفاؤها"
+    },
+    "terms": {
+      "trainingMode": {
+        "term": "وضع التدريب",
+        "definition": "بيئة تجريبية آمنة لا تؤثر فيها العمليات على البيانات الحقيقية، مثالية للتعلّم."
+      }
+    },
+    "pages": {
+      "home": {
+        "title": "مساعدة — لوحة التحكم الرئيسية",
+        "whatFor": "تمنحكم نظرة سريعة في 10 ثوانٍ على القرارات المعلقة وصحة أعمال منصة دارنا.",
+        "tasks": {
+          "reviewHosts": {
+            "title": "مراجعة طلبات انضمام المضيفين",
+            "steps": {
+              "s1": "راجعوا البطاقة الأولى تحت «يحتاج إلى انتباهكم»",
+              "s2": "اضغطوا على الزر الأخضر «مراجعة المضيفين»",
+              "s3": "تحققوا من وثائق الهوية واضغطوا على «قبول المضيف»"
+            }
+          },
+          "monthlyEarnings": {
+            "title": "الاطلاع على أرباح وحجوزات الشهر",
+            "steps": {
+              "s1": "تأكدوا من اختيار فترة «آخر 30 يومًا»",
+              "s2": "اطلعوا على البطاقات الأربع: الحجوزات، المبالغ المدفوعة من الضيوف، أرباح دارنا، المضيفون الجدد",
+              "s3": "مرّروا المؤشر فوق علامة (?) في أي بطاقة لمعرفة طريقة الحساب"
+            }
+          }
+        }
+      },
+      "approvals": {
+        "title": "مساعدة — قيد المراجعة (صندوق الاعتماد)",
+        "whatFor": "مساحتكم المركزية لاتخاذ القرار بشأن المضيفين الجدد والإعلانات المعلقة.",
+        "tasks": {
+          "approveHost": {
+            "title": "اعتماد مضيف موثوق",
+            "steps": {
+              "s1": "اضغطوا على سطر المضيف لفتح لوحة التحقق",
+              "s2": "راجعوا بطاقة التعريف الوطنية الجزائرية والوثائق السياحية",
+              "s3": "اضغطوا على الزر الأخضر «قبول المضيف»",
+              "s4": "ستظهر رسالة تأكيد مع خيار التراجع لمدة 8 ثوانٍ"
+            }
+          },
+          "rejectWithReason": {
+            "title": "الرفض مع توضيح السبب",
+            "steps": {
+              "s1": "اضغطوا على «رفض» في سطر المضيف أو الإعلان",
+              "s2": "اختاروا سببًا جاهزًا واضحًا (مثل «بطاقة هوية غير واضحة»)",
+              "s3": "أضيفوا جملة ودّية ليعرف المضيف ما يجب إعادة رفعه",
+              "s4": "اضغطوا على «تأكيد الرفض»"
+            }
+          }
+        }
+      },
+      "default": {
+        "title": "مساعدة إدارة دارنا",
+        "whatFor": "صُممت هذه الصفحة لإدارة آمنة وواضحة، ويمكنكم دائمًا التراجع عن التغييرات القابلة للعكس.",
+        "tasks": {
+          "findRecord": {
+            "title": "العثور على أي ملف بسرعة",
+            "steps": {
+              "s1": "اضغطوا على ⌘K أو انقروا على شريط البحث في الأعلى",
+              "s2": "اكتبوا اسم المضيف أو الضيف أو اسم الولاية",
+              "s3": "اضغطوا على Enter للانتقال مباشرة إلى الملف"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tour": {
+    "stepCounter": "الخطوة {current} من {total}",
+    "skip": "تخطي الجولة",
+    "back": "السابق",
+    "next": "التالي",
+    "getStarted": "ابدأ العمل",
+    "steps": {
+      "welcome": {
+        "title": "مرحبًا بكم في لوحة إدارة دارنا",
+        "description": "صُممت المنصة لتوفير إشراف مريح وآمن. افهموا نشاط دارنا في أقل من 10 ثوانٍ وأنجزوا أي مهمة في 3 نقرات أو أقل."
+      },
+      "home": {
+        "title": "1. الرئيسية والمهام العاجلة",
+        "description": "أعلى لوحة التحكم يبرز المهام العاجلة (مضيفون في انتظار الاعتماد، إعلانات للمراجعة، نزاعات). كل بطاقة تنقلكم مباشرة إلى القائمة المصفّاة بنقرة واحدة."
+      },
+      "approvals": {
+        "title": "2. صندوق «قيد المراجعة»",
+        "description": "اضغطوا على «قيد المراجعة» في الشريط الجانبي في أي وقت. تُظهر الشارة الحمراء عدد العناصر المنتظرة. افحصوا الوثائق ثم اعتمدوا أو ارفضوا مع توضيح السبب."
+      },
+      "search": {
+        "title": "3. البحث السريع في كل مكان (⌘K)",
+        "description": "اضغطوا على ⌘K أو انقروا على شريط البحث في أي وقت للانتقال فورًا إلى أي مضيف أو ضيف أو حجز أو ولاية جزائرية."
+      },
+      "help": {
+        "title": "4. اللغات والمساعدة السياقية (?)",
+        "description": "بدّلوا بين العربية (من اليمين إلى اليسار) والفرنسية والإنجليزية. اضغطوا على ? أو افتحوا المساعدة في أي صفحة للاطلاع على دليل الخطوات والمصطلحات."
+      }
+    }
+  },
+  "uiKit": {
+    "avatar": "الصورة الرمزية",
+    "required": "إلزامي",
+    "breadcrumbs": {
+      "label": "مسار التنقل",
+      "root": "الإدارة"
+    },
+    "chipInput": {
+      "placeholder": "إضافة…",
+      "add": "إضافة",
+      "remove": "حذف {value}",
+      "count": "{count} من {max} عناصر"
+    },
+    "document": {
+      "toCheck": "للتحقق",
+      "valid": "مُعتمَد",
+      "rejected": "مرفوض",
+      "missing": "مفقود",
+      "preview": "معاينة {title}",
+      "download": "تنزيل {title}",
+      "approve": "اعتماد",
+      "reject": "رفض"
+    },
+    "dropzone": {
+      "label": "رفع الملفات",
+      "hint": "PNG أو JPG أو PDF حتى 10 ميغابايت",
+      "photoAlt": "الصورة {index}",
+      "removePhoto": "حذف الصورة {index}",
+      "add": "إضافة",
+      "addMore": "إضافة ملفات أخرى"
+    },
+    "filterBar": {
+      "searchPlaceholder": "بحث…",
+      "searchLabel": "بحث",
+      "moreFilters": "مزيد من عوامل التصفية",
+      "openFilters": "فتح عوامل التصفية",
+      "filters": "عوامل التصفية",
+      "activeFilters": "عوامل التصفية النشطة:",
+      "activeFiltersLabel": "عوامل التصفية النشطة",
+      "removeFilter": "إزالة عامل التصفية {label}",
+      "clearAll": "مسح الكل",
+      "dialogTitle": "عوامل تصفية البحث",
+      "apply": "تطبيق",
+      "shortcutHint": "اضغط / للبحث",
+      "results": "{count, plural, zero {<b>{formatted}</b> نتيجة} one {<b>{formatted}</b> نتيجة} two {<b>{formatted}</b> نتيجتان} few {<b>{formatted}</b> نتائج} many {<b>{formatted}</b> نتيجة} other {<b>{formatted}</b> نتيجة}}"
+    },
+    "carousel": {
+      "enlarge": "تكبير الصورة",
+      "previous": "الصورة السابقة",
+      "next": "الصورة التالية",
+      "counter": "الصورة {current} من {total}",
+      "imageAlt": "{alt} – الصورة {current} من {total}",
+      "defaultAlt": "صورة",
+      "preview": "معاينة الصورة",
+      "closePreview": "إغلاق المعاينة"
+    },
+    "kpi": {
+      "help": "حول «{title}»",
+      "howCounted": "طريقة الحساب:"
+    },
+    "livePreview": {
+      "title": "معاينة الإعلان",
+      "live": "معاينة مباشرة",
+      "untitled": "عنوان الإعلان",
+      "sampleLocation": "حيدرة، الجزائر العاصمة",
+      "sampleRating": "{rating} ({count, plural, zero {لا تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}})"
+    },
+    "map": {
+      "selectedPoint": "النقطة المحددة",
+      "mapType": "نوع الخريطة",
+      "map": "خريطة",
+      "satellite": "قمر صناعي",
+      "zoomIn": "تكبير",
+      "zoomOut": "تصغير",
+      "clearAddress": "مسح العنوان",
+      "sampleAddress": "طاسيلي ناجر، جانت، إليزي",
+      "label": "خريطة الموقع"
+    },
+    "multiSelect": {
+      "placeholder": "اختر خيارات…",
+      "selected": "{count, plural, zero {لا شيء محدد} one {عنصر واحد محدد} two {عنصران محددان} few {# عناصر محددة} many {# عنصرًا محددًا} other {# عنصر محدد}}",
+      "clearAll": "مسح التحديد",
+      "search": "بحث…",
+      "searchLabel": "البحث في الخيارات",
+      "selectAll": "تحديد الكل ({count})",
+      "noMatches": "لا توجد نتائج مطابقة"
+    },
+    "pageHeader": {
+      "export": "تصدير",
+      "moreActions": "إجراءات إضافية"
+    },
+    "pagination": {
+      "nav": "ترقيم الصفحات",
+      "items": "عناصر",
+      "summary": "عرض <b>{start}</b> إلى <b>{end}</b> من أصل <b>{total}</b> {label}",
+      "previous": "السابق",
+      "next": "التالي",
+      "previousPage": "الصفحة السابقة",
+      "nextPage": "الصفحة التالية",
+      "firstPage": "الصفحة الأولى",
+      "lastPage": "الصفحة الأخيرة",
+      "page": "الصفحة {page}",
+      "pageOf": "الصفحة {page} من {total}",
+      "perPage": "{size} / صفحة",
+      "pageSize": "عدد العناصر في الصفحة"
+    },
+    "phone": {
+      "countryCode": "الجزائر (‎+213)"
+    },
+    "richText": {
+      "placeholder": "اكتب وصفًا مفصلًا…",
+      "toolbar": "تنسيق النص",
+      "bold": "غامق",
+      "italic": "مائل",
+      "underline": "تسطير",
+      "bulletList": "قائمة نقطية",
+      "numberedList": "قائمة مرقمة",
+      "alignStart": "محاذاة إلى البداية",
+      "alignCenter": "توسيط",
+      "charCount": "{count} من {max} حرف"
+    },
+    "checklist": {
+      "title": "تقدم الإنشاء",
+      "done": "مكتمل",
+      "current": "الخطوة الحالية"
+    },
+    "range": {
+      "min": "الأدنى",
+      "max": "الأقصى",
+      "minimum": "القيمة الدنيا",
+      "maximum": "القيمة القصوى"
+    },
+    "status": {
+      "fallback": "الحالة"
+    },
+    "stepper": {
+      "viewAll": "عرض كل الخطوات",
+      "stepOf": "الخطوة {current} من {total}",
+      "steps": "الخطوات",
+      "allSteps": "كل الخطوات",
+      "done": "مكتملة",
+      "current": "قيد التنفيذ",
+      "progress": "تقدم المعالج"
+    },
+    "tips": {
+      "title": "نصائح لإعلان ناجح"
+    },
+    "types": {
+      "host": "مضيف",
+      "hotel": "فندق",
+      "hostel": "نُزل شبابي",
+      "travelAgency": "وكالة سفر",
+      "experience": "تجربة",
+      "rentalAgency": "وكالة تأجير",
+      "aventure": "مغامرة",
+      "culture": "ثقافة",
+      "nature": "طبيعة",
+      "gastronomie": "فن الطبخ",
+      "mer": "بحر",
+      "suv": "سيارة رباعية الدفع",
+      "citadine": "سيارة مدينة",
+      "berline": "سيدان",
+      "compacte": "مدمجة",
+      "utilitaire": "مركبة نفعية",
+      "villa": "فيلا",
+      "appartement": "شقة",
+      "maison": "منزل",
+      "bungalow": "بنغل",
+      "chalet": "شاليه",
+      "studio": "استوديو"
+    },
+    "bulk": {
+      "toolbar": "إجراءات جماعية",
+      "selected": "{count, plural, zero { محدد} one { محدد} two { محددان} few { محددة} many { محددًا} other { محدد}}",
+      "selectAllMatching": "تحديد كل النتائج المطابقة ({count})",
+      "clearSelection": "مسح التحديد"
+    }
+  },
+  "ui": {
+    "closeDialog": "إغلاق النافذة",
+    "closePanel": "إغلاق اللوحة",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "typeToConfirm": "للمتابعة، اكتب <strong>{value}</strong> أدناه:",
+    "advancedFilters": "عوامل تصفية متقدمة",
+    "activeFilterCount": "{count, plural, zero {{count} نشط} one {{count} نشط} two {{count} نشطان} few {{count} نشطة} many {{count} نشطًا} other {{count} نشط}}",
+    "reset": "إعادة تعيين",
+    "applyFilters": "تطبيق عوامل التصفية",
+    "moreOptions": "خيارات إضافية",
+    "undo": "تراجع",
+    "dismissNotification": "إغلاق الإشعار",
+    "notifications": "الإشعارات"
+  },
+  "errors": {
+    "title": "حدث خطأ ما",
+    "description": "تعذّر عرض هذه الصفحة. يمكنك إعادة المحاولة أو العودة إلى لوحة التحكم. إذا استمرت المشكلة، تواصل مع الفريق التقني مع ذكر المرجع أدناه.",
+    "reference": "المرجع:",
+    "retry": "إعادة المحاولة",
+    "backToDashboard": "العودة إلى لوحة التحكم",
+    "loading": "جارٍ التحميل…",
+    "notFoundTitle": "الصفحة غير موجودة",
+    "notFoundDescription": "هذه الصفحة أو هذا العنصر غير موجود، أو تم حذفه."
+  },
+  "dataTable": {
+    "empty": "لا توجد عناصر",
+    "selectRow": "تحديد {label}",
+    "selectAll": "تحديد كل الصفوف المعروضة"
+  },
+  "meta": {
+    "titleTemplate": "%s · إدارة DARNA",
+    "defaultTitle": "إدارة DARNA",
+    "description": "لوحة إدارة منصة DARNA والإشراف عليها",
+    "titles": {
+      "dashboard": "لوحة التحكم",
+      "login": "تسجيل الدخول",
+      "approvals": "صندوق الموافقات",
+      "bookings": "الحجوزات",
+      "cars": "السيارات",
+      "cars_categories": "فئات السيارات",
+      "cars_insurance": "صيغ تأمين السيارات",
+      "cars_new": "إضافة سيارة",
+      "cars_pricing": "شرائح أسعار السيارات",
+      "categories": "الفئات",
+      "experiences": "التجارب",
+      "experiences_categories": "فئات التجارب",
+      "experiences_changerequests": "طلبات تعديل التجارب",
+      "experiences_new": "إضافة تجربة",
+      "help": "مركز المساعدة",
+      "hosts": "الشركاء والمضيفون",
+      "hostDetail": "تفاصيل المضيف",
+      "listings": "الإعلانات",
+      "listingDetail": "تفاصيل الإعلان",
+      "listingReview": "مراجعة الإعلان",
+      "messages": "الرسائل",
+      "messages_notifications": "الإشعارات",
+      "messages_templates": "قوالب الرسائل",
+      "moderation_providers": "التحقق من مقدمي الخدمات",
+      "network": "مستكشف الشبكة",
+      "payments": "المدفوعات والمالية",
+      "payments_commissions": "العمولات",
+      "payments_payouts": "التحويلات للمضيفين",
+      "payments_refunds": "المبالغ المستردة",
+      "payments_transactions": "المعاملات",
+      "payments_wallets": "محافظ المضيفين",
+      "promotions": "العروض الترويجية",
+      "promotions_featured": "الإعلانات المميزة",
+      "reports": "التقارير",
+      "reviews": "التقييمات",
+      "reviews_disputes": "النزاعات",
+      "reviews_reports": "التقييمات المُبلَّغ عنها",
+      "search": "البحث",
+      "settings": "إعدادات المنصة",
+      "settings_auditlog": "سجل التدقيق",
+      "settings_commissions": "إعدادات العمولات",
+      "settings_languages": "اللغات",
+      "settings_notifications": "إعدادات الإشعارات",
+      "settings_onboarding": "مسار تسجيل المضيفين",
+      "settings_security": "الأمان",
+      "settings_team": "الفريق والأدوار",
+      "stats": "الإحصائيات",
+      "stats_providers": "إحصائيات مقدمي الخدمات",
+      "stats_reports": "التقارير الإحصائية",
+      "stats_revenue": "الإيرادات",
+      "stats_services": "إحصائيات الخدمات",
+      "stats_wilayas": "الإحصائيات حسب الولاية",
+      "stays": "الإقامات",
+      "stays_categories": "فئات الإقامات",
+      "stays_changerequests": "طلبات تعديل الإقامات",
+      "stays_new": "إضافة إقامة",
+      "trips": "الرحلات",
+      "trips_bookingrequests": "طلبات حجز الرحلات",
+      "trips_categories": "فئات الرحلات",
+      "trips_new": "إضافة رحلة",
+      "users": "المستخدمون",
+      "users_guests": "الضيوف",
+      "wherediditgo": "أين ذهبت صفحتي؟"
+    }
   }
 }

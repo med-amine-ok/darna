@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
 import { useTranslations } from "next-intl";
+import { useDialogA11y } from "@/hook/useDialogA11y";
+import { useDestinationLabel } from "@/hook/useDestinationLabel";
 import { Listing, User, ListingVertical, Trip } from "@/types";
-import { getTripCoordinates } from "@/lib/data/trips";
+import { getTripCoordinates } from "@/lib/trip-coordinates";
+import { useShowTotalPrice } from "@/hook/useShowTotalPrice";
 import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
 import EmptyState from "@/components/EmptyState";
@@ -27,14 +29,25 @@ import {
   BrandPinIcon,
 } from "@/components/icons";
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
 // Dynamically import Leaflet map with ssr: false
+function MapLoading() {
+  const t = useTranslations("search");
+  return (
+    <div
+      role="status"
+      className="w-full h-full min-h-[450px] bg-tertiary/20 animate-pulse rounded-2xl flex items-center justify-center text-primary/70 text-sm font-semibold border border-tertiary/40"
+    >
+      {t("loadingMap")}
+    </div>
+  );
+}
+
 const SearchMap = dynamic(() => import("./SearchMap"), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full min-h-[450px] bg-tertiary/20 animate-pulse rounded-2xl flex items-center justify-center text-primary/60 text-sm font-semibold border border-tertiary/40">
-      Loading interactive map...
-    </div>
-  ),
+  loading: () => <MapLoading />,
 });
 
 interface SearchResultsClientProps {
@@ -54,12 +67,19 @@ export default function SearchResultsClient({
 }: SearchResultsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const filterModal = useFilterModal();
-  const searchModal = useSearchModal();
-  const tNav = useTranslations("nav");
+  const openFilterModal = useFilterModal((s) => s.onOpen);
+  const openSearchModal = useSearchModal((s) => s.onOpen);
   const tCommon = useTranslations("common");
+  const t = useTranslations("search");
+  const destinationLabel = useDestinationLabel();
+  const place = destination ? destinationLabel(destination) : "";
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [showTotalPrice, setShowTotalPrice] = useShowTotalPrice();
+  const hasSearchDates = Boolean(
+    (searchParams?.get("startDate") || searchParams?.get("checkIn")) &&
+      (searchParams?.get("endDate") || searchParams?.get("checkOut"))
+  );
   const initialSelectedId =
     searchParams?.get("selectedId") ||
     searchParams?.get("listingId") ||
@@ -68,6 +88,11 @@ export default function SearchResultsClient({
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [showMobileMap, setShowMobileMap] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  // Full-screen mobile map is a modal overlay: focus trap, Escape returns to the list.
+  const mobileMapOpen = showMobileMap && !isDesktop;
+  const mapOverlayRef = useDialogA11y<HTMLDivElement>(mobileMapOpen, {
+    onEscape: () => setShowMobileMap(false),
+  });
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -152,13 +177,13 @@ export default function SearchResultsClient({
   const maxPriceFilter = searchParams?.get("maxPrice");
 
   const updateQuery = useCallback(
-    (newParams: Record<string, any>) => {
-      let currentQuery: Record<string, any> = {};
+    (newParams: qs.StringifiableRecord) => {
+      let currentQuery: qs.StringifiableRecord = {};
       if (searchParams) {
         currentQuery = qs.parse(searchParams.toString());
       }
 
-      const updated: Record<string, any> = {
+      const updated: qs.StringifiableRecord = {
         ...currentQuery,
         ...newParams,
       };
@@ -184,12 +209,12 @@ export default function SearchResultsClient({
   );
 
   const verticalTabs = [
-    { id: "all", label: "All Stays & Rentals", icon: PremiumStarIcon },
-    { id: "home", label: "Homes", icon: CategoryHouseIcon },
-    { id: "hotel", label: "Hotels / Hostels", icon: CategoryHotelIcon },
-    { id: "vehicle", label: "Vehicles 4x4", icon: CategoryVehicleIcon },
-    { id: "experience", label: "Experiences", icon: BrandPinIcon },
-    { id: "trip", label: "Agency Circuits", icon: BrandCompassIcon },
+    { id: "all", label: t("tabs.all"), icon: PremiumStarIcon },
+    { id: "home", label: t("tabs.home"), icon: CategoryHouseIcon },
+    { id: "hotel", label: t("tabs.hotel"), icon: CategoryHotelIcon },
+    { id: "vehicle", label: t("tabs.vehicle"), icon: CategoryVehicleIcon },
+    { id: "experience", label: t("tabs.experience"), icon: BrandPinIcon },
+    { id: "trip", label: t("tabs.trip"), icon: BrandCompassIcon },
   ];
 
   return (
@@ -203,19 +228,23 @@ export default function SearchResultsClient({
               {/* Compact Search Pill (re-opens SearchModal) */}
               <button
                 type="button"
-                onClick={searchModal.onOpen}
-                className="flex items-center gap-2 py-1.5 px-3.5 rounded-full border border-tertiary bg-white hover:border-primary text-xs sm:text-sm font-semibold text-primary shadow-xs hover:shadow-sm transition cursor-pointer flex-shrink-0"
+                onClick={openSearchModal}
+                className={`flex items-center gap-2 py-1.5 px-3.5 rounded-full border border-tertiary bg-white hover:border-primary text-xs sm:text-sm font-semibold text-primary shadow-xs hover:shadow-sm transition cursor-pointer flex-shrink-0 ${focusRing}`}
               >
                 <BrandSearchIcon size={15} className="text-accent" />
                 <span className="truncate max-w-[140px] sm:max-w-[200px]">
-                  {destination || "Algeria"}
+                  {place || t("algeria")}
                 </span>
-                <span className="text-tertiary">|</span>
-                <span className="text-neutral-500 font-normal">Edit search</span>
+                <span className="text-tertiary" aria-hidden="true">|</span>
+                <span className="text-neutral-600 font-normal">{t("editSearch")}</span>
               </button>
 
               {/* Vertical Pills */}
-              <div className="flex items-center gap-1.5 bg-neutral-100 p-1 rounded-full flex-shrink-0">
+              <div
+                role="group"
+                aria-label={t("tabsLabel")}
+                className="flex items-center gap-1.5 bg-neutral-100 p-1 rounded-full flex-shrink-0"
+              >
                 {verticalTabs.map((tab) => {
                   const isActive =
                     (tab.id === "all" && !currentVertical) ||
@@ -225,12 +254,13 @@ export default function SearchResultsClient({
                     <button
                       key={tab.id}
                       type="button"
+                      aria-pressed={isActive}
                       onClick={() =>
                         updateQuery({
                           vertical: tab.id === "all" ? undefined : tab.id,
                         })
                       }
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer select-none ${
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer select-none ${focusRing} ${
                         isActive
                           ? "bg-primary text-white shadow-xs"
                           : "text-neutral-600 hover:text-primary hover:bg-neutral-200/60"
@@ -263,27 +293,28 @@ export default function SearchResultsClient({
               {/* Guest Favorites toggle pill */}
               <button
                 type="button"
+                aria-pressed={guestFavoriteFilter}
                 onClick={() =>
                   updateQuery({
                     isGuestFavorite: guestFavoriteFilter ? undefined : "true",
                   })
                 }
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${focusRing} ${
                   guestFavoriteFilter
                     ? "border-primary bg-primary text-white"
                     : "border-tertiary/80 bg-white text-neutral-700 hover:border-primary"
                 }`}
               >
-                Guest Favorites
+                {t("guestFavorites")}
               </button>
               {/* Extended Filters Button */}
               <button
                 type="button"
-                onClick={filterModal.onOpen}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-tertiary/80 text-xs font-bold text-primary hover:border-primary bg-white shadow-xs transition cursor-pointer"
+                onClick={openFilterModal}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-tertiary/80 text-xs font-bold text-primary hover:border-primary bg-white shadow-xs transition cursor-pointer ${focusRing}`}
               >
                 <BrandFilterIcon size={15} />
-                <span>Filters</span>
+                <span>{tCommon("filters")}</span>
               </button>
             </div>
           </div>
@@ -304,28 +335,44 @@ export default function SearchResultsClient({
               <div>
                 <h1 className="text-lg sm:text-xl font-bold text-primary">
                   {currentVertical === "trip"
-                    ? destination
-                      ? `Agency circuits & expeditions in ${destination}, Algeria`
-                      : "Agency circuits & multi-day expeditions in Algeria"
+                    ? place
+                      ? t("heading.tripsIn", { place })
+                      : t("heading.trips")
                     : currentVertical === "hotel"
-                    ? destination
-                      ? `Hotels & hostels in ${destination}, Algeria`
-                      : "Hotels & hostels in Algeria"
-                    : destination
-                    ? `Stays & rentals in ${destination}, Algeria`
-                    : "All stays, vehicles & experiences in Algeria"}
+                    ? place
+                      ? t("heading.hotelsIn", { place })
+                      : t("heading.hotels")
+                    : place
+                    ? t("heading.staysIn", { place })
+                    : t("heading.all")}
                 </h1>
-                <p className="text-xs text-neutral-500 mt-0.5">
+                <p className="text-xs text-neutral-600 mt-0.5" role="status">
                   {currentVertical === "trip"
                     ? mapBounds && searchAsMoveMap && displayTrips.length !== trips.length
-                      ? `${displayTrips.length} agency circuit${displayTrips.length === 1 ? "" : "s"} visible in map area (${trips.length} total)`
-                      : `${trips.length} verified agency circuit${trips.length === 1 ? "" : "s"} available`
+                      ? t("count.tripsInMap", { count: displayTrips.length, total: trips.length })
+                      : t("count.trips", { count: trips.length })
                     : mapBounds && searchAsMoveMap && displayListings.length !== listings.length
-                    ? `${displayListings.length} listing${displayListings.length === 1 ? "" : "s"} visible in map area (${listings.length} total)`
-                    : `Over ${listings.length} verified listings available`}
+                    ? t("count.listingsInMap", { count: displayListings.length, total: listings.length })
+                    : t("count.listings", { count: listings.length })}
                 </p>
               </div>
 
+              <div className="flex flex-col items-end gap-1.5">
+              {/* Display total price (incl. fees) for the searched dates */}
+              {currentVertical !== "trip" && (
+                <label
+                  className="flex items-center gap-2 text-xs font-medium text-neutral-600 cursor-pointer select-none"
+                  title={hasSearchDates ? undefined : t("addDatesForTotal")}
+                >
+                  <input
+                    type="checkbox"
+                    checked={showTotalPrice}
+                    onChange={(e) => setShowTotalPrice(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-accent rounded text-accent"
+                  />
+                  <span>{hasSearchDates ? t("showTotalPrice") : t("showTotalPriceAddDates")}</span>
+                </label>
+              )}
               {/* Pan Behavior Note */}
               <label className="hidden sm:flex items-center gap-2 text-xs font-medium text-neutral-600 cursor-pointer select-none">
                 <input
@@ -334,16 +381,17 @@ export default function SearchResultsClient({
                   onChange={(e) => setSearchAsMoveMap(e.target.checked)}
                   className="w-3.5 h-3.5 accent-accent rounded text-accent"
                 />
-                <span>Search as I move the map</span>
+                <span>{t("searchAsMapMoves")}</span>
               </label>
+              </div>
             </div>
 
             {/* Empty State or Listing Cards Grid */}
             {currentVertical === "trip" ? (
               displayTrips.length === 0 ? (
                 <EmptyState
-                  title="No agency circuits found in this map area"
-                  subtitle="Zoom out or pan across Algeria to discover expeditions in the Sahara, M'zab, and coast."
+                  title={t("empty.trips")}
+                  subtitle={t("empty.tripsDesc")}
                   showReset
                 />
               ) : (
@@ -360,8 +408,8 @@ export default function SearchResultsClient({
               )
             ) : displayListings.length === 0 ? (
               <EmptyState
-                title="No listings in this map area"
-                subtitle="Zoom out or pan across the map to discover listings across Algeria."
+                title={t("empty.listings")}
+                subtitle={t("empty.listingsDesc")}
                 showReset
               />
             ) : (
@@ -381,6 +429,10 @@ export default function SearchResultsClient({
 
           {/* RIGHT COLUMN: Real Interactive Map */}
           <div
+            ref={mapOverlayRef}
+            role={mobileMapOpen ? "dialog" : undefined}
+            aria-modal={mobileMapOpen ? true : undefined}
+            aria-label={mobileMapOpen ? t("mapDialogLabel") : undefined}
             className={`lg:col-span-5 xl:col-span-5 h-[calc(100dvh-150px)] sticky top-[76px] rounded-3xl overflow-hidden border border-tertiary/70 shadow-md ${
               showMobileMap ? "fixed inset-0 z-40 rounded-none border-none top-0" : "hidden lg:block"
             }`}
@@ -397,30 +449,36 @@ export default function SearchResultsClient({
               onHoverListing={(id) => setHoveredId(id)}
               onBoundsChange={(b) => setMapBounds(b)}
             />
+            {/* Close control inside the full-screen mobile map */}
+            {showMobileMap && (
+              <div className="lg:hidden absolute bottom-20 inset-x-0 z-[600] flex justify-center pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => setShowMobileMap(false)}
+                  className={`pointer-events-auto bg-primary text-white font-semibold text-xs sm:text-sm py-2.5 px-5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 select-none ${focusRing}`}
+                >
+                  <BrandListIcon size={18} />
+                  <span>{t("showList")}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 3. Floating Mobile Toggle: "Show Map" / "Show List" */}
-      <div className="lg:hidden fixed bottom-20 inset-x-0 z-50 flex justify-center pointer-events-none">
-        <button
-          type="button"
-          onClick={() => setShowMobileMap((prev) => !prev)}
-          className="pointer-events-auto bg-primary text-white font-semibold text-xs sm:text-sm py-2.5 px-5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 select-none"
-        >
-          {showMobileMap ? (
-            <>
-              <BrandListIcon size={18} />
-              <span>Show list</span>
-            </>
-          ) : (
-            <>
-              <BrandMapIcon size={18} />
-              <span>Show map</span>
-            </>
-          )}
-        </button>
-      </div>
+      {/* 3. Floating Mobile Toggle: "Show map" (the overlay has its own "Show list") */}
+      {!showMobileMap && (
+        <div className="lg:hidden fixed bottom-20 inset-x-0 z-50 flex justify-center pointer-events-none">
+          <button
+            type="button"
+            onClick={() => setShowMobileMap(true)}
+            className={`pointer-events-auto bg-primary text-white font-semibold text-xs sm:text-sm py-2.5 px-5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 select-none ${focusRing}`}
+          >
+            <BrandMapIcon size={18} />
+            <span>{t("showMap")}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

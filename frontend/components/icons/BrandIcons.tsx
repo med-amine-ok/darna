@@ -18,6 +18,8 @@ export const WelcomeArchIcon: React.FC<IconProps> = ({ size = 24, className = ""
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="3" y1="21" x2="21" y2="21" stroke="currentColor" strokeWidth="1.75" />
@@ -44,6 +46,8 @@ export const InstantBookingIcon: React.FC<IconProps> = ({ size = 24, className =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3.5 12H7" stroke="#D9C9B2" strokeWidth="1.75" />
@@ -69,6 +73,8 @@ export const RequestReviewIcon: React.FC<IconProps> = ({ size = 24, className = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3" y="5" width="18" height="15" rx="2" stroke="currentColor" strokeWidth="1.75" />
@@ -92,6 +98,8 @@ export const PremiumStarIcon: React.FC<IconProps> = ({ size = 20, className = ""
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -119,6 +127,8 @@ export const StampCasbahAlgiersIcon: React.FC<IconProps> = ({ size = 32, classNa
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
@@ -147,6 +157,8 @@ export const StampTipazaCoastIcon: React.FC<IconProps> = ({ size = 32, className
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
@@ -174,6 +186,8 @@ export const StampOranBahiaIcon: React.FC<IconProps> = ({ size = 32, className =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
@@ -200,6 +214,8 @@ export const StampConstantineBridgesIcon: React.FC<IconProps> = ({ size = 32, cl
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
@@ -229,6 +245,8 @@ export const StampTaghitOasisIcon: React.FC<IconProps> = ({ size = 32, className
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
@@ -257,6 +275,8 @@ export const StampTassiliPlateauIcon: React.FC<IconProps> = ({ size = 32, classN
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
@@ -285,6 +305,8 @@ export const GuestFavoriteIcon: React.FC<IconProps> = ({ size = 18, className = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 16.5C3.5 13 4.5 9 7 6" stroke="#6B7F5B" strokeWidth="1.3" />
@@ -311,6 +333,8 @@ export const WalletWarningIcon: React.FC<IconProps> = ({ size = 16, className = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M10.3 3.8C11 2.5 13 2.5 13.7 3.8L21.3 17.5C22 18.8 21 20.5 19.5 20.5H4.5C3 20.5 2 18.8 2.7 17.5L10.3 3.8Z" stroke="#C96F4F" strokeWidth="1.75" />
@@ -331,6 +355,8 @@ export const WalletSolventIcon: React.FC<IconProps> = ({ size = 16, className = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9" stroke="#6B7F5B" strokeWidth="1.75" />
@@ -351,6 +377,8 @@ export const BrandStarIcon: React.FC<IconProps> = ({ size = 16, className = "", 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -399,6 +427,8 @@ export const BrandSearchIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="10.5" cy="10.5" r="7" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -435,6 +465,8 @@ export const BrandHeartIcon: React.FC<IconProps & { filled?: boolean }> = ({
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      aria-hidden="true"
+      focusable="false"
       {...props}
     >
       <path
@@ -461,6 +493,8 @@ export const BrandCompassIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -489,6 +523,8 @@ export const BrandMessageIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -515,6 +551,8 @@ export const BrandUserIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="7.5" r="4" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -540,6 +578,8 @@ export const BrandBellIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M12 3V4" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -566,6 +606,8 @@ export const BrandFilterIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
@@ -590,6 +632,8 @@ export const BrandShareIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="8.5" y1="13.5" x2="15.5" y2="17.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
@@ -615,6 +659,8 @@ export const BrandMenuIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="3.5" y1="6.5" x2="20.5" y2="6.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -637,6 +683,8 @@ export const BrandCalendarIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3.5" y="4.5" width="17" height="16" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -665,6 +713,8 @@ export const BrandTagIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -689,6 +739,8 @@ export const BrandShieldIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -714,6 +766,8 @@ export const BrandGlobeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -736,6 +790,8 @@ export const BrandHomeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 10.5L12 3L21 10.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -758,6 +814,8 @@ export const BrandGridIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -782,6 +840,8 @@ export const BrandBookingsIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3.5" y="4.5" width="17" height="16" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -805,6 +865,8 @@ export const BrandBriefcaseIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3.5" y="7" width="17" height="13.5" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -829,6 +891,8 @@ export const BrandSettingsIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -854,6 +918,8 @@ export const BrandBuildingIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 21V5.5C4 4.5 4.8 3.5 5.8 3.5H18.2C19.2 3.5 20 4.5 20 5.5V21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -880,6 +946,8 @@ export const BrandUsersIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -903,6 +971,8 @@ export const BrandPlusIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -924,6 +994,8 @@ export const BrandMoreIcon: React.FC<IconProps> = ({ size = 20, className = "", 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="5" cy="12" r="1.8" fill="currentColor" />
@@ -945,6 +1017,8 @@ export const BrandMapIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M9 18.5L3 15.5V4.5L9 7.5L15 4.5L21 7.5V18.5L15 15.5L9 18.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -967,6 +1041,8 @@ export const BrandListIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="8.5" y1="6" x2="20.5" y2="6" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -990,6 +1066,8 @@ export const BrandCheckIcon: React.FC<IconProps> = ({ size = 16, strokeWidth = 2
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 12.5L9.5 18L20 6" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1008,6 +1086,8 @@ export const BrandCheckDoubleIcon: React.FC<IconProps> = ({ size = 16, strokeWid
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2 12.5L7.5 18L18 6" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1028,6 +1108,8 @@ export const BrandSendIcon: React.FC<IconProps> = ({ size = 18, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M21.5 2.5L10 14" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1048,6 +1130,8 @@ export const BrandPaperclipIcon: React.FC<IconProps> = ({ size = 18, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -1071,6 +1155,8 @@ export const BrandPinIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -1096,6 +1182,8 @@ export const BrandCloseIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1116,6 +1204,8 @@ export const BrandChevronLeftIcon: React.FC<IconProps> = ({ size = 20, strokeWid
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <polyline points="15 19 8 12 15 5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1134,6 +1224,8 @@ export const BrandChevronRightIcon: React.FC<IconProps> = ({ size = 20, strokeWi
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <polyline points="9 5 16 12 9 19" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1152,6 +1244,8 @@ export const BrandChevronDownIcon: React.FC<IconProps> = ({ size = 20, strokeWid
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <polyline points="6 9 12 15 18 9" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1170,6 +1264,8 @@ export const BrandChevronUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <polyline points="18 15 12 9 6 15" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1188,6 +1284,8 @@ export const BrandMinusIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1207,6 +1305,8 @@ export const CategoryVillaIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 20.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1229,6 +1329,8 @@ export const CategoryBeachfrontIcon: React.FC<IconProps> = ({ size = 24, strokeW
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="16.5" cy="7.5" r="3" stroke="#C96F4F" strokeWidth="1.5" />
@@ -1251,6 +1353,8 @@ export const CategoryDesertIcon: React.FC<IconProps> = ({ size = 24, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2 19.5C6.5 16.5 12 20.5 22 15.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1276,6 +1380,8 @@ export const CategoryRiadIcon: React.FC<IconProps> = ({ size = 24, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 20.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1300,6 +1406,8 @@ export const CategoryMountainIcon: React.FC<IconProps> = ({ size = 24, strokeWid
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2 20.5L9 6.5L16 20.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1323,6 +1431,8 @@ export const CategoryPoolIcon: React.FC<IconProps> = ({ size = 24, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1347,6 +1457,8 @@ export const CategoryCampingIcon: React.FC<IconProps> = ({ size = 24, strokeWidt
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2.5 20.5H21.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1370,6 +1482,8 @@ export const CategoryExpeditionsIcon: React.FC<IconProps> = ({ size = 24, stroke
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -1395,6 +1509,8 @@ export const CategoryVehicleIcon: React.FC<IconProps> = ({ size = 24, strokeWidt
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 13.5V9.5C3 8.5 3.8 7.5 4.8 7.5H14.5L18.5 11.5H21C21.8 11.5 22.5 12.2 22.5 13V15.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1422,6 +1538,8 @@ export const CategoryHouseIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2.5 10.5L12 3L21.5 10.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1444,6 +1562,8 @@ export const CategoryHotelIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1478,6 +1598,8 @@ export const BrandTrashIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="3.5" y1="6" x2="20.5" y2="6" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1502,6 +1624,8 @@ export const BrandCameraIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3.5 8.5C3.5 7.4 4.4 6.5 5.5 6.5H8.2L9.6 4.5H14.4L15.8 6.5H18.5C19.6 6.5 20.5 7.4 20.5 8.5V18.5C20.5 19.6 19.6 20.5 18.5 20.5H5.5C4.4 20.5 3.5 19.6 3.5 18.5V8.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1523,6 +1647,8 @@ export const BrandBedIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 7V20" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1545,6 +1671,8 @@ export const BrandDoorIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 21H20" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1566,6 +1694,8 @@ export const BrandAlertCircleIcon: React.FC<IconProps> = ({ size = 20, strokeWid
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1586,6 +1716,8 @@ export const BrandClockIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1606,6 +1738,8 @@ export const BrandFlagIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="4.5" y1="21.5" x2="4.5" y2="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1627,6 +1761,8 @@ export const BrandSpinnerIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={`animate-spin ${className}`}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={strokeWidth} strokeOpacity="0.2" />
@@ -1648,6 +1784,8 @@ export const BrandUploadIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 16V19.5C4 20.3 4.7 21 5.5 21H18.5C19.3 21 20 20.3 20 19.5V16" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1670,6 +1808,8 @@ export const BrandEyeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2 12C3.8 7.5 7.5 4.5 12 4.5C16.5 4.5 20.2 7.5 22 12C20.2 16.5 16.5 19.5 12 19.5C7.5 19.5 3.8 16.5 2 12Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1691,6 +1831,8 @@ export const BrandEyeOffIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M9.88 9.88C9.33 10.43 9 11.18 9 12C9 13.66 10.34 15 12 15C12.82 15 13.57 14.67 14.12 14.12" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1713,6 +1855,8 @@ export const BrandExternalLinkIcon: React.FC<IconProps> = ({ size = 18, strokeWi
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M18 13V19C18 20.1 17.1 21 16 21H5C3.9 21 3 20.1 3 19V8C3 6.9 3.9 6 5 6H11" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1735,6 +1879,8 @@ export const BrandReceiptIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 3H20V20L17.5 18.5L15 20L12 18.5L9 20L6.5 18.5L4 20V3Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1758,6 +1904,8 @@ export const BrandLockIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="4" y="10" width="16" height="11" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1780,6 +1928,8 @@ export const BrandMailIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1801,6 +1951,8 @@ export const BrandPhoneIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="5.5" y="2.5" width="13" height="19" rx="3" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1822,6 +1974,8 @@ export const BrandSparklesIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M12 2.5L13.8 8.2L19.5 10L13.8 11.8L12 17.5L10.2 11.8L4.5 10L10.2 8.2L12 2.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1844,6 +1998,8 @@ export const BrandEditIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M12 20H21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1865,6 +2021,8 @@ export const BrandTrendingUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1886,6 +2044,8 @@ export const BrandArrowRightIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1906,6 +2066,8 @@ export const BrandArrowLeftIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="20" y1="12" x2="4" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1926,6 +2088,8 @@ export const BrandArrowUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1946,6 +2110,8 @@ export const BrandArrowDownIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1967,6 +2133,8 @@ export const BrandWifiIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2.5 8C8.5 2.5 15.5 2.5 21.5 8" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -1989,6 +2157,8 @@ export const BrandSnowIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2014,6 +2184,8 @@ export const BrandKitchenIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 18.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2037,6 +2209,8 @@ export const BrandFlameIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -2061,6 +2235,8 @@ export const BrandWaterIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M2.5 8.5C5.5 7 8.5 10 12 8.5C15.5 7 18.5 10 21.5 8.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2082,6 +2258,8 @@ export const BrandCoffeeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 8H17V14C17 17 14.5 19 10.5 19C6.5 19 4 17 4 14V8Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2105,6 +2283,8 @@ export const BrandBathIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M3 12H21V16C21 18.8 18.8 21 16 21H8C5.2 21 3 18.8 3 16V12Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2128,6 +2308,8 @@ export const BrandSunIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2156,6 +2338,8 @@ export const BrandCreditCardIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2178,6 +2362,8 @@ export const BrandCashIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <rect x="2.5" y="5.5" width="19" height="13" rx="2" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2201,6 +2387,8 @@ export const BrandKeyIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="7.5" cy="14.5" r="4.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2224,6 +2412,8 @@ export const BrandThumbUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M7 10V21H3.5C2.7 21 2 20.3 2 19.5V11.5C2 10.7 2.7 10 3.5 10H7Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2244,6 +2434,8 @@ export const BrandThumbDownIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M7 14V3H3.5C2.7 3 2 3.7 2 4.5V12.5C2 13.3 2.7 14 3.5 14H7Z" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2265,6 +2457,8 @@ export const BrandDownloadIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M4 16V19.5C4 20.3 4.7 21 5.5 21H18.5C19.3 21 20 20.3 20 19.5V16" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2286,6 +2480,8 @@ export const BrandUserAddIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="9" cy="8" r="4" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2308,6 +2504,8 @@ export const BrandRefreshIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M21.5 10C20.5 5.5 16.5 2.5 12 2.5C6.8 2.5 2.5 6.8 2.5 12" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2322,7 +2520,7 @@ export const BrandRefreshIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
  * 99. Brand Google Icon (Auth Provider)
  */
 export const BrandGoogleIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...props}>
+  <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden="true" focusable="false" {...props}>
     <path
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
       fill="#4285F4"
@@ -2346,7 +2544,7 @@ export const BrandGoogleIcon: React.FC<IconProps> = ({ size = 20, className = ""
  * 100. Brand GitHub Icon (Auth Provider)
  */
 export const BrandGithubIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} {...props}>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true" focusable="false" {...props}>
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -2359,7 +2557,7 @@ export const BrandGithubIcon: React.FC<IconProps> = ({ size = 20, className = ""
  * 101. Brand Apple Icon (Auth Provider)
  */
 export const BrandAppleIcon: React.FC<IconProps> = ({ size = 20, className = "", ...props }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} {...props}>
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true" focusable="false" {...props}>
     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.93-2.85-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.93 2.74 1 .08 2.02-.49 2.63-1.24z" />
   </svg>
 );
@@ -2377,6 +2575,8 @@ export const BrandTicketIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -2402,6 +2602,8 @@ export const BrandChartIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2423,6 +2625,8 @@ export const BrandBanIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2442,6 +2646,8 @@ export const BrandCheckCircleIcon: React.FC<IconProps> = ({ size = 20, strokeWid
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2461,6 +2667,8 @@ export const BrandBadgeCheckIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path
@@ -2485,6 +2693,8 @@ export const BrandTrendingDownIcon: React.FC<IconProps> = ({ size = 20, strokeWi
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" stroke="#C96F4F" strokeWidth={strokeWidth} />
@@ -2511,6 +2721,8 @@ export const BrandDocumentTextIcon: React.FC<IconProps> = ({ size = 20, strokeWi
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
+    aria-hidden="true"
+    focusable="false"
     {...props}
   >
     <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth={strokeWidth} />

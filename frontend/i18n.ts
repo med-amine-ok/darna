@@ -1,5 +1,5 @@
 import { getRequestConfig } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { namespaces } from "./messages/namespaces";
 
 export const locales = ["en", "fr", "ar"] as const;
 export type Locale = (typeof locales)[number];
@@ -12,8 +12,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
     locale = defaultLocale;
   }
 
+  const entries = await Promise.all(
+    namespaces.map(async (ns) => [ns, (await import(`./messages/${locale}/${ns}.json`)).default] as const)
+  );
+
   return {
     locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    messages: Object.fromEntries(entries),
   };
 });

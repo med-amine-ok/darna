@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Image from "next/image";
+import { useLocale, useTranslations } from "next-intl";
+import { formatRating } from "@/lib/i18n/date-locale";
 import { Listing, User } from "@/types";
 import HeartButton from "@/components/HeartButton";
 import { toast } from "react-toastify";
+import PhotoLightbox from "./PhotoLightbox";
 import {
   GuestFavoriteIcon,
   BrandStarIcon,
   BrandShareIcon,
   BrandGridIcon,
-  BrandCloseIcon,
   BrandChevronLeftIcon,
   BrandChevronRightIcon,
 } from "@/components/icons";
@@ -20,7 +22,13 @@ interface ListingHeadProps {
   currentUser?: User | null;
 }
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
 export default function ListingHead({ listing, currentUser }: ListingHeadProps) {
+  const t = useTranslations("listing");
+  const tNav = useTranslations("nav");
+  const locale = useLocale();
   const images = Array.isArray(listing.imageSrc) ? listing.imageSrc : [listing.imageSrc];
   // Pad with images if fewer than 5 for rich bento layout
   const displayImages = [
@@ -35,14 +43,24 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [mobilePhotoIndex, setMobilePhotoIndex] = useState(0);
 
-  const handleShare = () => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Listing link copied to clipboard!");
-    } else {
-      toast.info("Link ready to share!");
+  const openLightbox = (index: number) => {
+    setActivePhotoIndex(index);
+    setIsLightboxOpen(true);
+  };
+  const closeLightbox = useCallback(() => setIsLightboxOpen(false), []);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success(t("linkCopied"));
+    } catch {
+      toast.info(t("linkReady"));
     }
   };
+
+  const total = displayImages.length;
+  const rating = formatRating(listing.rating, locale);
+  const reviewCount = listing.reviewCount ?? 0;
 
   return (
     <div className="space-y-4">
@@ -54,28 +72,39 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-neutral-600">
             <span className="flex items-center gap-1 font-bold text-primary">
-              <BrandStarIcon size={16} className="text-accent fill-accent" />
-              <span>{listing.rating?.toFixed(2) || "4.95"}</span>
+              {rating ? (
+                <>
+                  <BrandStarIcon size={16} className="text-accent fill-accent" />
+                  <span className="sr-only">{t("ratingLabel", { rating })}</span>
+                  <span aria-hidden="true">{rating}</span>
+                </>
+              ) : (
+                t("ratingNew")
+              )}
             </span>
-            <span>·</span>
-            <a
-              href="#reviews"
-              className="underline font-semibold text-primary hover:text-accent transition"
-            >
-              {listing.reviewCount || 34} reviews
-            </a>
+            {reviewCount > 0 && (
+              <>
+                <span aria-hidden="true">·</span>
+                <a
+                  href="#reviews"
+                  className={`underline font-semibold text-primary hover:text-accent-700 transition rounded ${focusRing}`}
+                >
+                  {t("reviewsCount", { count: reviewCount })}
+                </a>
+              </>
+            )}
             {listing.isGuestFavorite && (
               <>
-                <span>·</span>
+                <span aria-hidden="true">·</span>
                 <span className="bg-primary/5 text-primary text-xs font-bold px-2.5 py-0.5 rounded-full border border-tertiary inline-flex items-center gap-1.5">
                   <GuestFavoriteIcon size={14} className="text-primary" />
-                  <span>Guest favorite</span>
+                  <span>{tNav("guestFavorite")}</span>
                 </span>
               </>
             )}
-            <span>·</span>
+            <span aria-hidden="true">·</span>
             <span className="font-semibold text-neutral-700">
-              {listing.city ? `${listing.city}, Algeria` : listing.locationValue}
+              {listing.city ? t("cityCountry", { city: listing.city }) : listing.locationValue}
             </span>
           </div>
         </div>
@@ -85,178 +114,103 @@ export default function ListingHead({ listing, currentUser }: ListingHeadProps) 
           <button
             type="button"
             onClick={handleShare}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs sm:text-sm font-semibold text-primary hover:bg-neutral-100 transition cursor-pointer"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs sm:text-sm font-semibold text-primary hover:bg-neutral-100 transition cursor-pointer ${focusRing}`}
           >
             <BrandShareIcon size={18} />
-            <span>Share</span>
+            <span>{t("share")}</span>
           </button>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs sm:text-sm font-semibold text-primary hover:bg-neutral-100 transition">
             <HeartButton listingId={listing.id} currentUser={currentUser} />
-            <span>Save</span>
+            <span aria-hidden="true">{t("save")}</span>
           </div>
         </div>
       </div>
 
       {/* Desktop Bento Gallery (1 large on start, 2x2 grid on end) */}
       <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2.5 h-[420px] lg:h-[480px] rounded-3xl overflow-hidden relative group">
-        {/* Large Hero Image (col-span-2 row-span-2) */}
-        <div
-          onClick={() => {
-            setActivePhotoIndex(0);
-            setIsLightboxOpen(true);
-          }}
-          className="col-span-2 row-span-2 relative cursor-pointer overflow-hidden bg-neutral-200"
-        >
-          <Image
-            src={displayImages[0]}
-            alt={listing.title}
-            fill
-            priority
-            className="object-cover hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 1024px) 50vw, 60vw"
-          />
-        </div>
-
-        {/* 4 smaller images in 2x2 grid */}
-        {displayImages.slice(1, 5).map((imgUrl, idx) => (
-          <div
+        {displayImages.map((imgUrl, idx) => (
+          <button
             key={idx}
-            onClick={() => {
-              setActivePhotoIndex(idx + 1);
-              setIsLightboxOpen(true);
-            }}
-            className="relative cursor-pointer overflow-hidden bg-neutral-200"
+            type="button"
+            onClick={() => openLightbox(idx)}
+            aria-label={t("openPhoto", { number: idx + 1, total })}
+            className={`relative cursor-pointer overflow-hidden bg-neutral-200 ${focusRing} ${
+              idx === 0 ? "col-span-2 row-span-2" : ""
+            }`}
           >
             <Image
               src={imgUrl}
-              alt={`${listing.title} view ${idx + 2}`}
+              alt=""
               fill
+              priority={idx === 0}
               className="object-cover hover:scale-105 transition-transform duration-300"
-              sizes="25vw"
+              sizes={idx === 0 ? "(max-width: 1024px) 50vw, 640px" : "(max-width: 1024px) 25vw, 320px"}
             />
-          </div>
+          </button>
         ))}
 
         {/* "Show all photos" floating badge */}
         <button
           type="button"
-          onClick={() => {
-            setActivePhotoIndex(0);
-            setIsLightboxOpen(true);
-          }}
-          className="absolute bottom-4 end-4 z-10 bg-white/95 backdrop-blur-md text-primary font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg border border-tertiary/70 flex items-center gap-2 hover:scale-105 transition cursor-pointer"
+          onClick={() => openLightbox(0)}
+          className={`absolute bottom-4 end-4 z-10 bg-white/95 backdrop-blur-md text-primary font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-lg border border-tertiary/70 flex items-center gap-2 hover:scale-105 transition cursor-pointer ${focusRing}`}
         >
           <BrandGridIcon size={16} />
-          <span>Show all photos</span>
+          <span>{t("showAllPhotos")}</span>
         </button>
       </div>
 
-      {/* Mobile Swipeable Gallery with counter */}
+      {/* Mobile Gallery with counter */}
       <div className="md:hidden relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-neutral-200">
-        <Image
-          src={displayImages[mobilePhotoIndex]}
-          alt={listing.title}
-          fill
-          className="object-cover"
-        />
+        <button
+          type="button"
+          onClick={() => openLightbox(mobilePhotoIndex)}
+          aria-label={t("openPhoto", { number: mobilePhotoIndex + 1, total })}
+          className={`absolute inset-0 ${focusRing}`}
+        >
+          <Image
+            src={displayImages[mobilePhotoIndex]}
+            alt=""
+            fill
+            priority={mobilePhotoIndex === 0}
+            sizes="100vw"
+            className="object-cover"
+          />
+        </button>
         {/* Prev / Next mobile arrows */}
         <button
           type="button"
-          onClick={() =>
-            setMobilePhotoIndex(
-              (prev) => (prev - 1 + displayImages.length) % displayImages.length
-            )
-          }
-          className="absolute start-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md cursor-pointer"
+          aria-label={t("previousPhoto")}
+          onClick={() => setMobilePhotoIndex((prev) => (prev - 1 + total) % total)}
+          className={`absolute start-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md cursor-pointer ${focusRing}`}
         >
           <BrandChevronLeftIcon size={20} strokeWidth={2.2} className="rtl:rotate-180" />
         </button>
         <button
           type="button"
-          onClick={() =>
-            setMobilePhotoIndex((prev) => (prev + 1) % displayImages.length)
-          }
-          className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md cursor-pointer"
+          aria-label={t("nextPhoto")}
+          onClick={() => setMobilePhotoIndex((prev) => (prev + 1) % total)}
+          className={`absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-primary shadow-md cursor-pointer ${focusRing}`}
         >
           <BrandChevronRightIcon size={20} strokeWidth={2.2} className="rtl:rotate-180" />
         </button>
         {/* Photo counter */}
-        <div className="absolute bottom-3 end-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-semibold">
-          {mobilePhotoIndex + 1} / {displayImages.length}
+        <div
+          aria-live="polite"
+          className="absolute bottom-3 end-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full font-semibold"
+        >
+          {t("photoCount", { current: mobilePhotoIndex + 1, total })}
         </div>
       </div>
 
-      {/* Lightbox Modal */}
-      {isLightboxOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-[100] bg-black/95 flex flex-col justify-between p-4 sm:p-6"
-        >
-          {/* Top Bar */}
-          <div className="flex items-center justify-between text-white z-10">
-            <button
-              type="button"
-              onClick={() => setIsLightboxOpen(false)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer"
-            >
-              <BrandCloseIcon size={20} strokeWidth={2.2} />
-              <span className="text-xs sm:text-sm font-semibold">Close gallery</span>
-            </button>
-            <span className="text-xs sm:text-sm font-semibold">
-              {activePhotoIndex + 1} / {displayImages.length}
-            </span>
-          </div>
-
-          {/* Active Image */}
-          <div className="relative flex-1 w-full max-w-5xl mx-auto my-4 flex items-center justify-center">
-            <Image
-              src={displayImages[activePhotoIndex]}
-              alt={`Photo ${activePhotoIndex + 1}`}
-              fill
-              className="object-contain"
-            />
-
-            {/* Left / Right Navigation */}
-            <button
-              type="button"
-              onClick={() =>
-                setActivePhotoIndex(
-                  (prev) => (prev - 1 + displayImages.length) % displayImages.length
-                )
-              }
-              className="absolute start-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white transition cursor-pointer"
-            >
-              <BrandChevronLeftIcon size={28} strokeWidth={2.2} className="rtl:rotate-180" />
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                setActivePhotoIndex((prev) => (prev + 1) % displayImages.length)
-              }
-              className="absolute end-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-black/80 text-white transition cursor-pointer"
-            >
-              <BrandChevronRightIcon size={28} strokeWidth={2.2} className="rtl:rotate-180" />
-            </button>
-          </div>
-
-          {/* Bottom Thumbnails */}
-          <div className="flex items-center justify-center gap-2 overflow-x-auto py-2">
-            {displayImages.map((img, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setActivePhotoIndex(idx)}
-                className={`relative w-16 h-12 rounded-lg overflow-hidden border-2 transition ${
-                  idx === activePhotoIndex ? "border-accent scale-105" : "border-transparent opacity-60"
-                }`}
-              >
-                <Image src={img} alt="" fill className="object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <PhotoLightbox
+        isOpen={isLightboxOpen}
+        onClose={closeLightbox}
+        images={displayImages}
+        index={activePhotoIndex}
+        onIndexChange={setActivePhotoIndex}
+        title={listing.title}
+      />
     </div>
   );
 }

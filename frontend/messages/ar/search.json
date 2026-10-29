@@ -1,0 +1,180 @@
+{
+  "price": "السعر",
+  "instantBook": "حجز فوري",
+  "apply": "تطبيق",
+  "minPrice": "أدنى سعر",
+  "maxPrice": "أعلى سعر",
+  "perNight": "لكل ليلة",
+  "clearAllFilters": "مسح جميع عوامل التصفية",
+  "showMap": "عرض الخريطة",
+  "partialAvailabilityBadge": "متاح من {range} ضمن تواريخك",
+  "anywhereInAlgeria": "في أي مكان بالجزائر",
+  "popularDestinations": "وجهات شائعة في الجزائر",
+  "matchingDestinations": "الوجهات المطابقة",
+  "popularInAlgeria": "الأكثر رواجاً في الجزائر",
+  "noDestinationsFound": "لا توجد وجهات مطابقة لـ «{query}»",
+  "destinationMeta": "{tag} · ولاية {wilaya}",
+  "selectDates": "اختر التواريخ",
+  "clearDates": "مسح التواريخ",
+  "done": "تم",
+  "guestCount": "{count, plural, =1 {ضيف واحد} =2 {ضيفان} few {# ضيوف} many {# ضيفاً} other {# ضيف}}",
+  "passengerCount": "{count, plural, =1 {راكب واحد} =2 {راكبان} few {# ركاب} many {# راكباً} other {# راكب}}",
+  "destinations": {
+    "algiers": {
+      "name": "الجزائر العاصمة",
+      "tag": "القصبة التاريخية والخلجان الساحلية"
+    },
+    "oran": {
+      "name": "وهران",
+      "tag": "قلعة سانتا كروز والكورنيش"
+    },
+    "constantine": {
+      "name": "قسنطينة",
+      "tag": "مدينة الجسور المعلقة"
+    },
+    "tipaza": {
+      "name": "تيبازة",
+      "tag": "آثار رومانية وساحل متوسطي"
+    },
+    "tlemcen": {
+      "name": "تلمسان",
+      "tag": "فن وعمارة أندلسية"
+    },
+    "djanet": {
+      "name": "جانت",
+      "tag": "رسوم الطاسيلي ناجر الصخرية والكثبان"
+    },
+    "taghit": {
+      "name": "تاغيت",
+      "tag": "واحة العرق الغربي الكبير"
+    },
+    "ghardaia": {
+      "name": "غرداية",
+      "tag": "قصور وادي ميزاب (يونسكو)"
+    },
+    "bejaia": {
+      "name": "بجاية",
+      "tag": "رأس كاربون وجرف قورايا"
+    },
+    "annaba": {
+      "name": "عنابة",
+      "tag": "كنيسة القديس أوغسطين والشواطئ"
+    }
+  },
+  "modal": {
+    "title": "البحث في DARNA",
+    "whereTitle": "إلى أين تريد الذهاب؟",
+    "whereSubtitle": "استكشف أجمل الولايات والفيلات الساحلية ورحلات الصحراء",
+    "destinationPlaceholder": "ابحث عن وجهة (مثل تيبازة، الجزائر، جانت)…",
+    "whenTitle": "متى ستسافر؟",
+    "whenSubtitle": "اختر تواريخ إقامتك أو تجربتك أو استئجار المركبة",
+    "whoTitle": "من سيأتي؟",
+    "whoSubtitle": "أضف الضيوف أو الركاب لرحلتك",
+    "guests": "الضيوف",
+    "guestsSubtitle": "مجموع البالغين والأطفال",
+    "rooms": "الغرف / المساحات",
+    "roomsSubtitle": "كم عدد غرف النوم أو الغرف المنفصلة؟",
+    "bathrooms": "الحمامات",
+    "bathroomsSubtitle": "الحد الأدنى لعدد الحمامات"
+  },
+  "bar": {
+    "home": {
+      "whereTitle": "أين",
+      "wherePlaceholder": "ابحث عن وجهات",
+      "whenTitle": "متى",
+      "whenPlaceholder": "أضف تواريخ",
+      "whoTitle": "الضيوف",
+      "whoPlaceholder": "إضافة ضيوف",
+      "whoSubtitle": "13 سنة فما فوق"
+    },
+    "hotel": {
+      "whereTitle": "أين",
+      "wherePlaceholder": "مدينة أو اسم فندق أو نُزل",
+      "whenTitle": "متى",
+      "whenPlaceholder": "أضف تواريخ",
+      "whoTitle": "الغرف والضيوف",
+      "whoPlaceholder": "أضف الغرف والضيوف",
+      "whoSubtitle": "الغرف والبالغون والأطفال"
+    },
+    "vehicle": {
+      "whereTitle": "مكان الاستلام",
+      "wherePlaceholder": "مطار أو مدينة",
+      "whenTitle": "تواريخ الإيجار",
+      "whenPlaceholder": "تاريخا الاستلام والإرجاع",
+      "whoTitle": "الركاب",
+      "whoPlaceholder": "المقاعد والركاب",
+      "whoSubtitle": "عدد المقاعد المطلوبة"
+    },
+    "experience": {
+      "whereTitle": "المنطقة",
+      "wherePlaceholder": "استكشف الأنشطة في…",
+      "whenTitle": "متى",
+      "whenPlaceholder": "اختر تاريخ التجربة",
+      "whoTitle": "حجم المجموعة",
+      "whoPlaceholder": "عدد المشاركين",
+      "whoSubtitle": "عدد الحاضرين"
+    },
+    "trip": {
+      "whereTitle": "الجولة / المنطقة",
+      "wherePlaceholder": "الصحراء، الأطلس، الساحل…",
+      "whenTitle": "تواريخ الرحلة",
+      "whenPlaceholder": "تواريخ الانطلاق",
+      "whoTitle": "المسافرون",
+      "whoPlaceholder": "عدد المشاركين",
+      "whoSubtitle": "جميع الأعمار مرحب بها"
+    }
+  },
+  "loadingMap": "جارٍ تحميل الخريطة التفاعلية…",
+  "algeria": "الجزائر",
+  "editSearch": "تعديل البحث",
+  "tabsLabel": "نوع الإقامة",
+  "tabs": {
+    "all": "كل الإقامات والتأجير",
+    "home": "المنازل",
+    "hotel": "فنادق / نُزل",
+    "vehicle": "مركبات رباعية الدفع",
+    "experience": "التجارب",
+    "trip": "جولات الوكالات"
+  },
+  "guestFavorites": "المفضّلة لدى الضيوف",
+  "heading": {
+    "tripsIn": "جولات ورحلات الوكالات في {place}، الجزائر",
+    "trips": "جولات الوكالات والرحلات متعددة الأيام في الجزائر",
+    "hotelsIn": "فنادق ونُزل في {place}، الجزائر",
+    "hotels": "فنادق ونُزل في الجزائر",
+    "staysIn": "إقامات وتأجير في {place}، الجزائر",
+    "all": "كل الإقامات والمركبات والتجارب في الجزائر"
+  },
+  "count": {
+    "tripsInMap": "{count, plural, =0 {لا توجد جولات} =1 {جولة واحدة} =2 {جولتان} few {# جولات} many {# جولة} other {# جولة}} ظاهرة في منطقة الخريطة ({total} إجمالاً)",
+    "trips": "{count, plural, =0 {لا توجد جولات وكالات موثّقة متاحة} =1 {جولة وكالة موثّقة واحدة متاحة} =2 {جولتان موثّقتان متاحتان} few {# جولات موثّقة متاحة} many {# جولة موثّقة متاحة} other {# جولة موثّقة متاحة}}",
+    "listingsInMap": "{count, plural, =0 {لا توجد إعلانات} =1 {إعلان واحد} =2 {إعلانان} few {# إعلانات} many {# إعلاناً} other {# إعلان}} ظاهرة في منطقة الخريطة ({total} إجمالاً)",
+    "listings": "{count, plural, =0 {لا توجد إعلانات موثّقة متاحة} =1 {إعلان موثّق واحد متاح} =2 {إعلانان موثّقان متاحان} few {# إعلانات موثّقة متاحة} many {# إعلاناً موثّقاً متاحاً} other {# إعلان موثّق متاح}}"
+  },
+  "addDatesForTotal": "أضف التواريخ لعرض السعر الإجمالي",
+  "showTotalPrice": "عرض السعر الإجمالي",
+  "showTotalPriceAddDates": "عرض السعر الإجمالي (أضف التواريخ)",
+  "searchAsMapMoves": "البحث عند تحريك الخريطة",
+  "empty": {
+    "trips": "لا توجد جولات وكالات في هذه المنطقة",
+    "tripsDesc": "صغّر الخريطة أو حرّكها لاكتشاف رحلات في الصحراء وميزاب والساحل.",
+    "listings": "لا توجد إعلانات في هذه المنطقة",
+    "listingsDesc": "صغّر الخريطة أو حرّكها لاكتشاف إعلانات في كل أنحاء الجزائر."
+  },
+  "showList": "عرض القائمة",
+  "mapDialogLabel": "خريطة النتائج",
+  "map": {
+    "pinLabel": "{title}، {price}",
+    "clusterLabel": "{count, plural, =1 {مكان واحد هنا} =2 {مكانان هنا} few {# أماكن هنا} many {# مكاناً هنا} other {# مكان هنا}}، كبّر الخريطة",
+    "previewLabel": "المكان المحدد",
+    "closePreview": "إغلاق المعاينة",
+    "tripDuration": "{days} أيام / {nights} ليالٍ",
+    "verifiedAgency": "وكالة موثّقة",
+    "maxGroup": "الحد الأقصى {count}"
+  },
+  "meta": {
+    "title": "ابحث عن إقامات وتجارب ومركبات في الجزائر",
+    "titleIn": "إقامات وتأجير في {place}",
+    "description": "قارن بين المنازل والفنادق والجولات المصحوبة بمرشدين واستئجار سيارات الدفع الرباعي في كل أنحاء الجزائر على خريطة تفاعلية، بالأسعار بالدينار الجزائري."
+  }
+}

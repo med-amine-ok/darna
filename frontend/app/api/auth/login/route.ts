@@ -1,64 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateUser } from "@/lib/data/auth";
+import { verifyCredentials } from "@/lib/data/auth";
+import { startSession } from "@/lib/server/session";
+import { isTrustedJsonRequest } from "@/lib/server/request-guard";
+import { actionFail } from "@/lib/action-result";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { email, password, name } = body;
+  if (!isTrustedJsonRequest(request)) {
+    return NextResponse.json(actionFail("INVALID_INPUT"), { status: 400 });
+  }
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  try {
+    const body = await request.json().catch(() => null);
+    const email = typeof body?.email === "string" ? body.email : "";
+    const password = typeof body?.password === "string" ? body.password : "";
+
+    if (!email || !password) {
+      return NextResponse.json(actionFail("INVALID_CREDENTIALS"), { status: 400 });
     }
 
-    const user = await authenticateUser(email, name);
+    const user = await verifyCredentials(email, password);
+    if (!user) {
+      return NextResponse.json(actionFail("INVALID_CREDENTIALS"), { status: 401 });
+    }
+
+    await startSession(user);
 
     const res = NextResponse.json({
       success: true,
-      user,
+      user: { id: user.id, name: user.name, hostType: user.hostType ?? null },
     });
-
-    // 1 year persistent session cookie
-    res.cookies.set("darna_user_id", user.id, {
+    // UI preference only (not identity): which workspace to show by default.
+    res.cookies.set("darna_mode", user.hostType ? "host" : "traveler", {
       path: "/",
       maxAge: 31536000,
       sameSite: "lax",
     });
-
-    if (user.hostType) {
-      res.cookies.set("darna_host_type", user.hostType, {
-        path: "/",
-        maxAge: 31536000,
-        sameSite: "lax",
-      });
-      res.cookies.set("darna_mode", "host", {
-        path: "/",
-        maxAge: 31536000,
-        sameSite: "lax",
-      });
-      if (user.organizationId) {
-        res.cookies.set("darna_agency_id", user.organizationId, {
-          path: "/",
-          maxAge: 31536000,
-          sameSite: "lax",
-        });
-      } else {
-        res.cookies.delete("darna_agency_id");
-      }
-    } else {
-      res.cookies.set("darna_mode", "traveler", {
-        path: "/",
-        maxAge: 31536000,
-        sameSite: "lax",
-      });
-    }
-
     return res;
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.message || "Authentication failed" },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("[auth/login] failed", error);
+    return NextResponse.json(actionFail("SERVER_ERROR"), { status: 500 });
   }
 }

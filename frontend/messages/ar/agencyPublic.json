@@ -1,0 +1,34 @@
+{
+  "propertiesManaged": "عقارات مدارة",
+  "contactAgency": "التواصل مع الوكالة",
+  "team": "فريق الضيافة والإدارة",
+  "metaTitleFallback": "ملف الوكالة",
+  "metaDescription": "اكتشف أماكن الإقامة والمركبات والتجارب التي تقدمها {name} على دارنا.",
+  "logoAlt": "شعار {name}",
+  "pendingVerification": "قيد التحقق",
+  "verified": {
+    "agency": "وكالة موثّقة",
+    "hotel": "فندق موثّق",
+    "hostel": "نُزُل موثّق"
+  },
+  "reviewTitle": "مراجعة المطابقة جارية",
+  "reviewBody": "ما زالت دارنا تتحقق من السجل التجاري لهذه المؤسسة.",
+  "teamMembers": "أعضاء الفريق",
+  "rating": "التقييم",
+  "noRating": "جديد",
+  "reviewsReceived": "التقييمات المستلمة",
+  "memberCount": "{count, plural, =0 {لا أعضاء} one {عضو واحد} two {عضوان} few {# أعضاء} many {# عضوًا} other {# عضو}}",
+  "roles": {
+    "owner": "المالك",
+    "admin": "مسؤول",
+    "manager": "مدير"
+  },
+  "contactNote": {
+    "agency": "يمكنك مراسلة هذه الوكالة عبر دارنا بعد إتمام حجز.",
+    "hotel": "يمكنك مراسلة هذا الفندق عبر دارنا بعد إتمام حجز.",
+    "hostel": "يمكنك مراسلة هذا النُّزُل عبر دارنا بعد إتمام حجز."
+  },
+  "listingsBy": "أماكن إقامة ومركبات وتجارب من {name}",
+  "listingCount": "{count, plural, =0 {لا توجد إعلانات} one {إعلان واحد} two {إعلانان} few {# إعلانات} many {# إعلانًا} other {# إعلان}}",
+  "noListings": "لم تنشر هذه الوكالة أي إعلانات بعد."
+}

@@ -1,0 +1,34 @@
+{
+  "propertiesManaged": "Biens gérés",
+  "contactAgency": "Contacter l'agence",
+  "team": "Équipe d'accueil & gestion",
+  "metaTitleFallback": "Profil de l'agence",
+  "metaDescription": "Découvrez les hébergements, véhicules et expériences proposés par {name} sur DARNA.",
+  "logoAlt": "Logo de {name}",
+  "pendingVerification": "Vérification en cours",
+  "verified": {
+    "agency": "Agence vérifiée",
+    "hotel": "Hôtel vérifié",
+    "hostel": "Auberge vérifiée"
+  },
+  "reviewTitle": "Contrôle de conformité en cours",
+  "reviewBody": "DARNA vérifie encore le registre du commerce de cette organisation.",
+  "teamMembers": "Membres de l'équipe",
+  "rating": "Note",
+  "noRating": "Nouveau",
+  "reviewsReceived": "Avis reçus",
+  "memberCount": "{count, plural, one {# membre} other {# membres}}",
+  "roles": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "manager": "Gestionnaire"
+  },
+  "contactNote": {
+    "agency": "Vous pourrez écrire à cette agence via DARNA dès que vous aurez une réservation.",
+    "hotel": "Vous pourrez écrire à cet hôtel via DARNA dès que vous aurez une réservation.",
+    "hostel": "Vous pourrez écrire à cette auberge via DARNA dès que vous aurez une réservation."
+  },
+  "listingsBy": "Hébergements, véhicules et expériences de {name}",
+  "listingCount": "{count, plural, =0 {Aucune annonce} one {# annonce} other {# annonces}}",
+  "noListings": "Cette agence n'a encore publié aucune annonce."
+}

@@ -1,9 +1,9 @@
-import { Metadata } from "next";
+import { guardPage } from "@/lib/auth/page-guard";
 import NetworkClient from "./NetworkClient";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Network Explorer",
-};
+export const generateMetadata = pageMetadata("network");
+
 
 interface Props {
   params: {
@@ -11,6 +11,9 @@ interface Props {
   };
 }
 
-export default function NetworkPage({ params }: Props) {
+export default async function NetworkPage({ params }: Props) {
+  const denied = await guardPage("listings.view");
+  if (denied) return denied;
+
   return <NetworkClient locale={params.locale} />;
 }

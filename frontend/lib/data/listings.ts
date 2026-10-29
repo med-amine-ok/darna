@@ -1,23 +1,26 @@
 // TODO: replace with Supabase query
+import "server-only";
 import { Listing, ListingVertical, SearchParams } from "@/types";
-import { mockListings } from "@/lib/mock-data/listings";
-import { getReservations } from "./reservations";
+import { newId } from "@/lib/ids";
+import { isDateKey, normalizeDateKey } from "@/lib/booking/dates";
+import { quoteListingBooking, roomTypePrice } from "@/lib/booking/pricing";
+import { isListingFreeForRange } from "./reservations";
+import { priceOverridesFor } from "./calendar";
+import { clone, delay, removeWhere } from "./_store";
+import { sanitizeListingInput } from "./_sanitize";
+import { listingsTable as listingsStore } from "./_tables";
 
-const g = globalThis as unknown as { __darna_listings__?: Listing[] };
-if (!g.__darna_listings__) {
-  g.__darna_listings__ = [...mockListings];
+/** Only active listings are public and bookable. */
+export function isPublicListing(listing: Pick<Listing, "status">): boolean {
+  return listing.status === "active";
 }
-let listingsStore: Listing[] = g.__darna_listings__;
 
 export async function getListings(params?: SearchParams): Promise<Listing[]> {
   // Simulate realistic network latency for skeletons/loading states
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await delay(60);
 
-  // Ensure mockListings additions are present
-  listingsStore = Array.from(new Map([...mockListings, ...listingsStore].map((item) => [item.id, item])).values());
-  g.__darna_listings__ = listingsStore;
-
-  let results = [...listingsStore];
+  // Public reads only ever return published (active) listings.
+  let results = clone(listingsStore.filter(isPublicListing));
 
   if (!params) return results;
 
@@ -126,156 +129,173 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
     );
   }
 
-  // Date range overlap matching logic (Section 6)
-  const rawSearchStart = params.startDate || params.checkIn;
-  const rawSearchEnd = params.endDate || params.checkOut;
+  // Date range matching (half-open [checkIn, checkOut) date keys).
+  const searchStart = normalizeDateKey(params.startDate || params.checkIn);
+  const searchEnd = normalizeDateKey(params.endDate || params.checkOut);
 
-  if (rawSearchStart && rawSearchEnd) {
-    const sStart = new Date(rawSearchStart);
-    const sEnd = new Date(rawSearchEnd);
+  if (searchStart && searchEnd && searchStart < searchEnd) {
+    results = results
+      .map((item): Listing | null => {
+        const from = item.availableFrom && isDateKey(item.availableFrom) ? item.availableFrom : null;
+        const to = item.availableTo && isDateKey(item.availableTo) ? item.availableTo : null;
+        if (!from && !to) return item;
 
-    if (!isNaN(sStart.getTime()) && !isNaN(sEnd.getTime()) && sStart < sEnd) {
-      results = results
-        .map((item) => {
-          if (item.availableFrom && item.availableTo) {
-            const lStart = new Date(item.availableFrom);
-            const lEnd = new Date(item.availableTo);
+        // availableTo is the last possible checkout date.
+        const overlapStart = from && from > searchStart ? from : searchStart;
+        const overlapEnd = to && to < searchEnd ? to : searchEnd;
+        if (overlapStart >= overlapEnd) return null; // no overlap at all
 
-            if (!isNaN(lStart.getTime()) && !isNaN(lEnd.getTime())) {
-              // Calculate overlap window: [overlapStart, overlapEnd]
-              const overlapStartTime = Math.max(lStart.getTime(), sStart.getTime());
-              const overlapEndTime = Math.min(lEnd.getTime(), sEnd.getTime());
-
-              // Valid overlap exists if start < end
-              if (overlapStartTime < overlapEndTime) {
-                const overlapStart = new Date(overlapStartTime);
-                const overlapEnd = new Date(overlapEndTime);
-
-                // Is it a partial overlap? (listing does not cover full searched interval)
-                const isPartial =
-                  lStart.getTime() > sStart.getTime() || lEnd.getTime() < sEnd.getTime();
-
-                return {
-                  ...item,
-                  matchedAvailability: {
-                    isPartial,
-                    overlapStart: overlapStart.toISOString().split("T")[0],
-                    overlapEnd: overlapEnd.toISOString().split("T")[0],
-                    listingAvailableFrom: item.availableFrom,
-                    listingAvailableTo: item.availableTo,
-                    searchedStart: rawSearchStart,
-                    searchedEnd: rawSearchEnd,
-                  },
-                };
-              } else {
-                // Zero overlap: completely outside the listing's availability window
-                return null;
-              }
+        const isPartial = overlapStart !== searchStart || overlapEnd !== searchEnd;
+        return isPartial
+          ? {
+              ...item,
+              matchedAvailability: {
+                isPartial,
+                overlapStart,
+                overlapEnd,
+                listingAvailableFrom: item.availableFrom || "",
+                listingAvailableTo: item.availableTo || "",
+                searchedStart: searchStart,
+                searchedEnd: searchEnd,
+              },
             }
-          }
-
-          // If listing does not specify fixed bounds, it has full standard availability
-          return item;
-        })
-        .filter((item): item is Listing => item !== null);
-
-      // Exclude listings that have confirmed reservations overlapping with searched interval
-      const confirmedReservations = await getReservations({ status: "confirmed" });
-      results = results.filter((listing) => {
-        const hasBooking = confirmedReservations.some((r) => {
-          if (r.listingId !== listing.id) return false;
-          const rStart = new Date(r.startDate).getTime();
-          const rEnd = new Date(r.endDate).getTime();
-          return sStart.getTime() < rEnd && sEnd.getTime() > rStart;
+          : item;
+      })
+      .filter((item): item is Listing => item !== null)
+      // Drop listings booked or blocked on the searched nights (back-to-back is fine).
+      .filter((item) => {
+        const start = item.matchedAvailability?.overlapStart ?? searchStart;
+        const end = item.matchedAvailability?.overlapEnd ?? searchEnd;
+        return isListingFreeForRange(item, start, end);
+      })
+      // Server-computed total for the "Show total price" display option.
+      .map((item) => {
+        const start = item.matchedAvailability?.overlapStart ?? searchStart;
+        const end = item.matchedAvailability?.overlapEnd ?? searchEnd;
+        const quote = quoteListingBooking({
+          listing: item,
+          startDate: start,
+          endDate: item.category === "experience" ? start : end,
+          guestCount: Math.max(1, Number(guestCount) || 1),
+          // Cards show "from" prices: quote the cheapest room type.
+          selectedRoomTypeId: item.roomTypes?.length
+            ? [...item.roomTypes].sort((a, b) => roomTypePrice(a) - roomTypePrice(b))[0].id
+            : undefined,
+          unitCount: 1,
+          priceOverrides: item.roomTypes?.length ? undefined : priceOverridesFor(item.id),
         });
-        return !hasBooking;
+        return { ...item, quotedTotal: quote.total };
       });
-    }
   }
 
   return results;
 }
 
+/** Raw lookup (any status) — for ownership checks and owner pages. */
 export async function getListingById(id: string): Promise<Listing | null> {
-  // Simulate network latency
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  return listingsStore.find((l) => l.id === id) || null;
+  await delay(40);
+  const listing = listingsStore.find((l) => l.id === id);
+  return listing ? clone(listing) : null;
+}
+
+/**
+ * Public lookup: only active listings, except that owners still see their
+ * own drafts (pass `canSeeUnpublished` after an ownership check).
+ */
+export async function getPublicListingById(
+  id: string,
+  canSeeUnpublished?: (listing: Listing) => boolean
+): Promise<Listing | null> {
+  const listing = await getListingById(id);
+  if (!listing) return null;
+  if (isPublicListing(listing)) return listing;
+  return canSeeUnpublished?.(listing) ? listing : null;
 }
 
 export async function getFeaturedListings(vertical?: ListingVertical): Promise<Listing[]> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  return listingsStore.filter(
-    (l) => l.featured && (!vertical || l.category === vertical)
+  await delay(40);
+  return clone(listingsStore.filter((l) => isPublicListing(l) && l.featured && (!vertical || l.category === vertical)));
+}
+
+/** Listings owned by an individual host (hostUserId) or by an organization. */
+export async function getHostListings(owner: { userId?: string; organizationId?: string }): Promise<Listing[]> {
+  await delay(40);
+  return clone(
+    listingsStore.filter((l) =>
+      owner.organizationId
+        ? l.organizationId === owner.organizationId
+        : Boolean(owner.userId) && l.hostUserId === owner.userId && !l.organizationId
+    )
   );
 }
 
-export async function getHostListings(hostIdOrOrgId: string): Promise<Listing[]> {
-  await new Promise((resolve) => setTimeout(resolve, 90));
-  return listingsStore.filter(
-    (l) => l.hostUserId === hostIdOrOrgId || l.organizationId === hostIdOrOrgId
-  );
+export interface ListingOwner {
+  hostUserId: string;
+  organizationId?: string | null;
+  businessCategory?: "agency" | "hotel" | "hostel";
 }
 
-export async function createListing(data: Partial<Listing>): Promise<Listing> {
-  await new Promise((resolve) => setTimeout(resolve, 150));
+/**
+ * Creates a listing. Ownership, id, timestamps and stats are set here on the
+ * server; everything else goes through the field whitelist.
+ */
+export async function createListing(owner: ListingOwner, input: unknown): Promise<Listing> {
+  await delay(60);
+  const id = newId("lst");
+  const data = sanitizeListingInput(input, id);
+  const now = new Date().toISOString();
+
   const newListing: Listing = {
-    id: `lst_${Date.now()}`,
-    title: data.title || "Untitled Algerian Stay",
-    description: data.description || "",
-    category: data.category || "home",
-    type: data.type || "Villa",
-    ownerType: data.ownerType || "individual",
-    hostUserId: data.hostUserId || "usr_amina",
-    organizationId: data.organizationId || null,
-    status: data.status || "active",
-    price: data.price || 15000,
-    imageSrc: data.imageSrc && data.imageSrc.length > 0 ? data.imageSrc : ["/assets/hero.jpg"],
-    createdAt: new Date().toISOString(),
-    locationValue: data.locationValue || data.city || "Algiers",
-    city: data.city || "Algiers",
+    title: "Untitled Algerian Stay",
+    description: "",
+    category: "home",
+    type: "Villa",
+    price: 15000,
+    imageSrc: ["/assets/hero.jpg"],
+    locationValue: data.city || "Algiers",
+    city: "Algiers",
+    latlng: [36.7538, 3.0588],
+    guestCount: 4,
+    bedroomCount: 2,
+    roomCount: 3,
+    bathroomCount: 2,
+    amenities: [],
+    houseRules: [],
+    cancellationPolicy: "flexible",
+    instantBook: true,
+    status: "active",
+    ...data,
+    // Server-controlled fields — never taken from the client.
+    id,
+    ownerType: owner.organizationId ? "organization" : "individual",
+    hostUserId: owner.hostUserId,
+    organizationId: owner.organizationId || null,
+    businessCategory: owner.businessCategory,
     country: "Algeria",
-    latlng: data.latlng || [36.7538, 3.0588],
-    guestCount: data.guestCount || 4,
-    bedroomCount: data.bedroomCount || 2,
-    roomCount: data.roomCount || 3,
-    bathroomCount: data.bathroomCount || 2,
-    amenities: data.amenities || ["wifi", "air_conditioning", "kitchen", "free_parking"],
-    houseRules: data.houseRules || ["No smoking", "Families welcome"],
-    cancellationPolicy: data.cancellationPolicy || "flexible",
-    instantBook: data.instantBook ?? true,
-    rating: 5.0,
+    createdAt: now,
+    updatedAt: now,
+    rating: undefined,
     reviewCount: 0,
     bookingsCount: 0,
-    ...data,
+    featured: false,
+    isGuestFavorite: false,
   };
 
-  listingsStore = [newListing, ...listingsStore];
-  g.__darna_listings__ = listingsStore;
-  if (!mockListings.some((l) => l.id === newListing.id)) {
-    mockListings.unshift(newListing);
-  }
-  return newListing;
+  listingsStore.unshift(newListing);
+  return clone(newListing);
 }
 
-export async function updateListing(
-  id: string,
-  data: Partial<Listing>
-): Promise<Listing | null> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  const idx = listingsStore.findIndex((l) => l.id === id);
-  if (idx !== -1) {
-    listingsStore[idx] = {
-      ...listingsStore[idx],
-      ...data,
-    };
-    return listingsStore[idx];
-  }
-  return null;
+/** Applies a whitelisted patch (see sanitizeListingInput). */
+export async function updateListing(id: string, input: unknown): Promise<Listing | null> {
+  await delay(40);
+  const listing = listingsStore.find((l) => l.id === id);
+  if (!listing) return null;
+  Object.assign(listing, sanitizeListingInput(input, id), { updatedAt: new Date().toISOString() });
+  return clone(listing);
 }
 
+/** Removes the listing from the store for good (it is not re-seeded on later reads). */
 export async function deleteListing(id: string): Promise<boolean> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  const beforeLen = listingsStore.length;
-  listingsStore = listingsStore.filter((l) => l.id !== id);
-  return listingsStore.length < beforeLen;
+  await delay(40);
+  return removeWhere(listingsStore, (l) => l.id === id) > 0;
 }

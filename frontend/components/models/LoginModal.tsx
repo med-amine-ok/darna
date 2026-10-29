@@ -3,11 +3,11 @@
 import React, { useCallback, useState } from "react";
 import { useLoginModal } from "@/hook/useLoginModal";
 import { useRegisterModal } from "@/hook/useRegisterModal";
-import { useRouter } from "@/navigation";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { BrandGoogleIcon, BrandGithubIcon } from "@/components/icons";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
+import { useActionError } from "@/hook/useActionError";
 
 import Button from "@/components/Button";
 import Heading from "@/components/Heading";
@@ -16,10 +16,11 @@ import Modal from "./Modal";
 import Logo from "@/components/navbar/Logo";
 
 export default function LoginModal() {
-  const router = useRouter();
-  const tNav = useTranslations("nav");
-  const loginModal = useLoginModal();
-  const registerModal = useRegisterModal();
+  const t = useTranslations("modals.login");
+  const errorText = useActionError();
+  const isLoginOpen = useLoginModal((s) => s.isOpen);
+  const closeLogin = useLoginModal((s) => s.onClose);
+  const openRegister = useRegisterModal((s) => s.onOpen);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -45,49 +46,32 @@ export default function LoginModal() {
         }),
       });
 
+      const result = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error("Login failed");
+        toast.error(errorText(result, t("genericError")));
+        return;
       }
 
-      const result = await res.json();
-      const userName = result.user?.name || "Traveler";
-      toast.success(`Welcome back, ${userName}!`);
-      loginModal.onClose();
+      const userName = typeof result.user?.name === "string" ? result.user.name : "";
+      toast.success(userName ? t("welcomeBackName", { name: userName }) : t("success"));
+      closeLogin();
       window.location.reload();
     } catch {
-      toast.error("Invalid credentials. Please try again.");
+      toast.error(t("genericError"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOAuthLogin = async (provider: string) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: `guest.${provider.toLowerCase()}@darna.dz`,
-          name: `${provider} Traveler`,
-        }),
-      });
-      if (res.ok) {
-        toast.success(`Connected via ${provider}!`);
-        loginModal.onClose();
-        window.location.reload();
-      }
-    } catch {
-      toast.error(`Could not sign in with ${provider}`);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleOAuthLogin = (provider: string) => {
+    // Social sign-in is not available yet in the mock backend.
+    toast.info(t("oauthComingSoon", { provider }));
   };
 
   const toggle = useCallback(() => {
-    loginModal.onClose();
-    registerModal.onOpen();
-  }, [loginModal, registerModal]);
+    closeLogin();
+    openRegister();
+  }, [closeLogin, openRegister]);
 
   const bodyContent = (
     <div className="flex flex-col gap-4">
@@ -95,13 +79,15 @@ export default function LoginModal() {
         <Logo variant="vertical" interactive={false} />
       </div>
       <Heading
-        title="Welcome to DARNA"
-        subtitle="Log in to manage bookings, wishlists, and host settings"
+        title={t("title")}
+        subtitle={t("subtitle")}
         center
       />
       <Input
         id="email"
-        label="Email"
+        label={t("email")}
+        type="email"
+        autoComplete="email"
         disabled={isLoading}
         register={register}
         errors={errors}
@@ -110,7 +96,8 @@ export default function LoginModal() {
       <Input
         id="password"
         type="password"
-        label="Password"
+        label={t("password")}
+        autoComplete="current-password"
         disabled={isLoading}
         register={register}
         errors={errors}
@@ -124,25 +111,26 @@ export default function LoginModal() {
       <hr className="border-tertiary/40" />
       <Button
         outline
-        label="Continue with Google"
+        label={t("continueGoogle")}
         icon={BrandGoogleIcon}
         onClick={() => handleOAuthLogin("Google")}
       />
       <Button
         outline
-        label="Continue with GitHub"
+        label={t("continueGithub")}
         icon={BrandGithubIcon}
         onClick={() => handleOAuthLogin("GitHub")}
       />
-      <div className="text-neutral-500 text-center mt-3 font-normal text-sm">
+      <div className="text-neutral-600 text-center mt-3 font-normal text-sm">
         <div>
-          First time using DARNA?{" "}
-          <span
+          {t("firstTime")}{" "}
+          <button
+            type="button"
             onClick={toggle}
-            className="text-primary font-semibold cursor-pointer hover:underline"
+            className="text-primary font-semibold cursor-pointer hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
-            Create an account
-          </span>
+            {t("createAccount")}
+          </button>
         </div>
       </div>
     </div>
@@ -151,10 +139,10 @@ export default function LoginModal() {
   return (
     <Modal
       disabled={isLoading}
-      isOpen={loginModal.isOpen}
-      title={tNav("login") || "Log in"}
-      actionLabel="Continue"
-      onClose={loginModal.onClose}
+      isOpen={isLoginOpen}
+      title={t("modalTitle")}
+      actionLabel={t("continue")}
+      onClose={closeLogin}
       onSubmit={handleSubmit(onSubmit)}
       body={bodyContent}
       footer={footerContent}

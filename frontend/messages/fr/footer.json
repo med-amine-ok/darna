@@ -1,0 +1,31 @@
+{
+  "support": "Assistance",
+  "helpCenter": "Centre d'aide",
+  "darnaCover": "Protection DARNA Cover",
+  "antiDiscrimination": "Lutte contre la discrimination",
+  "accessibility": "Accompagnement des personnes handicapées",
+  "cancellation": "Options d'annulation",
+  "hosting": "Accueil & partenaires",
+  "hostHome": "Proposer votre logement sur DARNA",
+  "hostVehicle": "Proposer votre 4x4 ou voiture",
+  "hostExperience": "Proposer une expérience au Sahara",
+  "hostResources": "Ressources pour les hôtes",
+  "exploreAlgeria": "Découvrir l'Algérie",
+  "destinations": {
+    "Algiers": "Alger & ses baies",
+    "Oran": "Oran & la côte ouest",
+    "Djanet": "Expéditions Tassili & Djanet",
+    "Constantine": "Constantine, la ville des ponts",
+    "Taghit": "Dunes et oasis de Taghit"
+  },
+  "about": "DARNA",
+  "aboutDarna": "À propos de DARNA",
+  "emergency": "Assistance d'urgence",
+  "legal": "Mentions légales",
+  "privacy": "Confidentialité",
+  "terms": "Conditions",
+  "sitemap": "Plan du site",
+  "companyDetails": "Informations sur l'entreprise",
+  "copyright": "© {year} DARNA, Inc.",
+  "currency": "DZD – Dinar algérien"
+}

@@ -1,0 +1,90 @@
+{
+  "metaTitle": "Centre d'aide",
+  "metaDescription": "Réponses sur les réservations, les paiements CIB et Edahabia, les circuits dans le Sahara et l'accueil de voyageurs sur DARNA, et moyens de contacter notre équipe d'assistance.",
+  "eyebrow": "Centre d'aide et assistance DARNA",
+  "heroTitle": "Comment pouvons-nous vous aider pour votre voyage en Algérie ?",
+  "heroSubtitle": "Trouvez des réponses sur les réservations, les paiements CIB/Edahabia, les permis pour le Sahara et l'accueil de voyageurs",
+  "searchLabel": "Rechercher dans les articles d'aide",
+  "searchPlaceholder": "Rechercher un article (ex. remboursement CIB, arrivée, permis Sahara)...",
+  "categoriesLabel": "Rubriques d'aide",
+  "categories": {
+    "all": "Toutes les rubriques",
+    "booking": "Réservations",
+    "account": "Compte et vérification",
+    "payments": "Paiements et remboursements",
+    "safety": "Confiance et sécurité en Algérie",
+    "hosting": "Accueillir sur DARNA"
+  },
+  "faqTitle": "Questions fréquentes",
+  "articleCount": "{count, plural, =0 {Aucun article} one {# article} other {# articles}}",
+  "noResults": "Aucun article ne correspond à « {query} ». Essayez un autre mot-clé ou contactez l'assistance ci-dessous.",
+  "helpful": "Cet article vous a-t-il été utile ?",
+  "helpfulYes": "Oui",
+  "helpfulNo": "Non",
+  "feedbackThanks": "Merci pour votre avis !",
+  "articles": {
+    "art_01": {
+      "title": "Comment annuler une réservation et être remboursé en Algérie ?",
+      "snippet": "Les conditions d'annulation sont Flexibles, Modérées ou Strictes.",
+      "content": "Vous pouvez annuler votre réservation directement depuis la page Voyages. Les séjours aux conditions Flexibles donnent droit à un remboursement intégral (hors frais de traitement mineurs) en cas d'annulation jusqu'à 48 heures avant l'arrivée. Les remboursements sur cartes CIB et Edahabia sont crédités sous 3 à 5 jours ouvrés auprès de votre banque émettrice."
+    },
+    "art_02": {
+      "title": "Quels moyens de paiement algériens DARNA accepte-t-il ?",
+      "snippet": "DARNA accepte les cartes interbancaires CIB (SATIM), la carte Edahabia d'Algérie Poste et les cartes internationales.",
+      "content": "DARNA accepte les cartes de paiement nationales via la passerelle interbancaire SATIM : cartes CIB de toutes les banques publiques et privées algériennes (BNA, BEA, CPA, BDL, BADR, Gulf Bank, Natixis, Société Générale) et cartes Edahabia d'Algérie Poste. Les voyageurs de la diaspora et internationaux peuvent aussi payer par Visa et Mastercard en euros ou en dollars US."
+    },
+    "art_03": {
+      "title": "Comment fonctionne la vérification d'identité pour les voyageurs algériens ?",
+      "snippet": "La vérification protège hôtes et voyageurs grâce à la pièce d'identité biométrique algérienne.",
+      "content": "Pour favoriser la sécurité et la confiance, les hôtes peuvent exiger une vérification d'identité. Vous pouvez téléverser une photo de votre carte nationale d'identité biométrique (CNIBE) ou de votre passeport algérien. Notre vérification automatique contrôle les hologrammes de sécurité et chiffre votre document selon des normes de confidentialité strictes."
+    },
+    "art_04": {
+      "title": "Les circuits en 4x4 et expéditions dans le Sahara sont-ils encadrés par des guides locaux agréés ?",
+      "snippet": "Toutes les expéditions sahariennes travaillent avec des guides touaregs ou sahariens agréés.",
+      "content": "Oui. À Djanet (Tassili n'Ajjer), Tamanrasset (Hoggar) ou Taghit (Grand Erg occidental), toutes les expériences agréées et les locations de 4x4 avec chauffeur respectent les consignes de sécurité touristique algériennes et la réglementation des parcs nationaux."
+    },
+    "art_05": {
+      "title": "Comment publier ma villa, mon appartement ou ma voiture de location sur DARNA ?",
+      "snippet": "Devenez hôte en 10 minutes, avec localisation instantanée par wilaya.",
+      "content": "Sélectionnez « Devenir hôte » en haut de n'importe quelle page pour ouvrir l'outil de création d'annonce. Choisissez le type d'annonce (logement, véhicule ou expérience), indiquez votre wilaya et votre ville, ajoutez des photos haute résolution, fixez votre prix par nuit en dinars algériens (DZD) et publiez. Votre annonce est aussitôt visible partout en Algérie et dans le monde."
+    },
+    "art_06": {
+      "title": "Puis-je réserver une location de véhicule ou un transfert aéroport avec DARNA ?",
+      "snippet": "DARNA propose SUV, berlines et 4x4 prêts pour le désert auprès d'hôtes vérifiés.",
+      "content": "Oui ! DARNA propose des locations de véhicules auprès d'agences vérifiées et de particuliers à l'aéroport Houari-Boumediene d'Alger, à l'aéroport Ahmed-Ben-Bella d'Oran, à Constantine et dans les villes d'accès au Sud. Vous pouvez choisir le kilométrage illimité, la livraison à l'aéroport ou un chauffeur lors du paiement."
+    }
+  },
+  "form": {
+    "title": "Besoin d'aide supplémentaire ? Contactez l'assistance DARNA",
+    "subtitle": "Notre équipe algérienne multilingue est disponible 7 jours sur 7 pour vos réservations et votre activité d'hôte.",
+    "fixErrors": "Veuillez remplir tous les champs obligatoires.",
+    "name": "Nom complet",
+    "namePlaceholder": "Votre nom",
+    "nameRequired": "Saisissez votre nom.",
+    "email": "Adresse e-mail",
+    "emailPlaceholder": "nom@exemple.dz",
+    "emailRequired": "Saisissez votre adresse e-mail.",
+    "topic": "Sujet",
+    "topics": {
+      "booking": "Problème de réservation",
+      "payments": "Question sur un paiement CIB / Edahabia",
+      "host": "Assistance hôte et vérification",
+      "safety": "Confiance et sécurité",
+      "other": "Demande générale"
+    },
+    "message": "Votre message",
+    "messagePlaceholder": "Décrivez votre problème en précisant votre réservation...",
+    "messageRequired": "Saisissez un message.",
+    "submit": "Envoyer le message à l'assistance",
+    "sending": "Envoi en cours...",
+    "sent": "Message envoyé ! Un conseiller DARNA vous répondra sous 2 heures."
+  },
+  "channels": {
+    "title": "Nous contacter directement",
+    "hotline": "Ligne d'assistance en Algérie",
+    "hotlineHours": "Disponible de 08 h à 20 h (heure d'Alger)",
+    "email": "Assistance par e-mail",
+    "emailResponse": "Délai de réponse moyen : moins de 2 heures",
+    "urgentNote": "Pour une urgence à l'arrivée, hôtes et voyageurs peuvent aussi échanger instantanément dans l'onglet <strong>Messages</strong>."
+  }
+}

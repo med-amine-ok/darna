@@ -1,78 +1,65 @@
 // TODO: replace with Supabase query
+import "server-only";
 import { Conversation, Message } from "@/types";
-import { mockConversations, mockMessages } from "@/lib/mock-data/conversations";
-import { mockListings } from "@/lib/mock-data/listings";
-import { mockUsers } from "@/lib/mock-data/users";
+import { newId } from "@/lib/ids";
+import { clone, delay } from "./_store";
+import { conversationsTable, listingsTable, messagesTable, usersTable } from "./_tables";
 
-let conversationsStore: Conversation[] = [...mockConversations];
-let messagesStore: Message[] = [...mockMessages];
+function withRelations(conv: Conversation, viewerId: string): Conversation {
+  const otherId = conv.participants.find((p) => p !== viewerId) || conv.participants[0];
+  const other = usersTable.find((u) => u.id === otherId);
+  return clone({
+    ...conv,
+    listing: listingsTable.find((l) => l.id === conv.listingId),
+    // Public fields only — never the other participant's email/phone.
+    otherUser: other
+      ? { id: other.id, name: other.name, image: other.image, role: other.role }
+      : conv.otherUser,
+  });
+}
 
 export async function getConversations(userId: string): Promise<Conversation[]> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  return conversationsStore
+  await delay(40);
+  return conversationsTable
     .filter((c) => c.participants.includes(userId))
-    .map((conv) => {
-      const otherId = conv.participants.find((p) => p !== userId) || conv.participants[0];
-      const otherUserObj = mockUsers.find((u) => u.id === otherId);
-      return {
-        ...conv,
-        listing: mockListings.find((l) => l.id === conv.listingId),
-        otherUser: otherUserObj
-          ? {
-              id: otherUserObj.id,
-              name: otherUserObj.name,
-              image: otherUserObj.image,
-              role: otherUserObj.role,
-            }
-          : conv.otherUser,
-      };
-    });
+    .map((c) => withRelations(c, userId));
 }
 
-export async function getConversationById(id: string, viewerId?: string): Promise<Conversation | null> {
-  await new Promise((resolve) => setTimeout(resolve, 70));
-  const conv = conversationsStore.find((c) => c.id === id);
-  if (!conv) return null;
-  const otherId = viewerId
-    ? conv.participants.find((p) => p !== viewerId) || conv.participants[0]
-    : conv.participants[1];
-  const otherUserObj = otherId ? mockUsers.find((u) => u.id === otherId) : null;
-
-  return {
-    ...conv,
-    listing: mockListings.find((l) => l.id === conv.listingId),
-    otherUser: otherUserObj
-      ? {
-          id: otherUserObj.id,
-          name: otherUserObj.name,
-          image: otherUserObj.image,
-          role: otherUserObj.role,
-        }
-      : conv.otherUser,
-  };
+/** Returns the conversation only if `viewerId` is a participant. */
+export async function getConversationForParticipant(
+  id: string,
+  viewerId: string
+): Promise<Conversation | null> {
+  await delay(30);
+  const conv = conversationsTable.find((c) => c.id === id);
+  if (!conv || !conv.participants.includes(viewerId)) return null;
+  return withRelations(conv, viewerId);
 }
 
+export async function isConversationParticipant(conversationId: string, userId: string): Promise<boolean> {
+  const conv = conversationsTable.find((c) => c.id === conversationId);
+  return Boolean(conv && conv.participants.includes(userId));
+}
+
+/** Callers must check participation first (see isConversationParticipant). */
 export async function getMessages(conversationId: string): Promise<Message[]> {
-  await new Promise((resolve) => setTimeout(resolve, 60));
-  return messagesStore.filter((m) => m.conversationId === conversationId);
+  await delay(30);
+  return clone(messagesTable.filter((m) => m.conversationId === conversationId));
 }
 
 export async function sendMessage(data: {
   conversationId: string;
   senderId: string;
-  receiverId?: string;
   text: string;
-}): Promise<Message> {
-  await new Promise((resolve) => setTimeout(resolve, 75));
+}): Promise<Message | null> {
+  await delay(40);
 
-  const conv = conversationsStore.find((c) => c.id === data.conversationId);
-  const receiverId =
-    data.receiverId ||
-    conv?.participants.find((p) => p !== data.senderId) ||
-    "usr_host";
+  const conv = conversationsTable.find((c) => c.id === data.conversationId);
+  if (!conv || !conv.participants.includes(data.senderId)) return null;
+  const receiverId = conv.participants.find((p) => p !== data.senderId) || data.senderId;
 
   const newMsg: Message = {
-    id: `msg_${Date.now()}`,
+    id: newId("msg"),
     conversationId: data.conversationId,
     senderId: data.senderId,
     receiverId,
@@ -81,29 +68,53 @@ export async function sendMessage(data: {
     read: false,
   };
 
-  messagesStore = [...messagesStore, newMsg];
-
-  // Update conversation last message
-  if (conv) {
-    conv.lastMessage = data.text;
-    conv.lastMessageAt = newMsg.createdAt;
+  messagesTable.push(newMsg);
+  conv.lastMessage = data.text;
+  conv.lastMessageAt = newMsg.createdAt;
+  if (conv.unreadCount) {
+    conv.unreadCount[receiverId] = (conv.unreadCount[receiverId] || 0) + 1;
   }
 
-  return newMsg;
+  return clone(newMsg);
 }
 
-export async function markConversationAsRead(
-  conversationId: string,
-  userId: string
-): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  messagesStore = messagesStore.map((m) =>
-    m.conversationId === conversationId && m.receiverId === userId
-      ? { ...m, read: true }
-      : m
-  );
-  const conv = conversationsStore.find((c) => c.id === conversationId);
-  if (conv && conv.unreadCount) {
-    conv.unreadCount[userId] = 0;
+export async function markConversationAsRead(conversationId: string, userId: string): Promise<void> {
+  await delay(20);
+  for (const m of messagesTable) {
+    if (m.conversationId === conversationId && m.receiverId === userId) m.read = true;
   }
+  const conv = conversationsTable.find((c) => c.id === conversationId);
+  if (conv && conv.unreadCount) conv.unreadCount[userId] = 0;
+}
+
+/**
+ * Returns the existing conversation between two users about a listing, or
+ * creates an empty one. Callers derive both participants server-side.
+ */
+export async function findOrCreateConversation(params: {
+  userId: string;
+  otherUserId: string;
+  listingId?: string | null;
+}): Promise<Conversation> {
+  await delay(30);
+  const listingId = params.listingId ?? null;
+  let conv = conversationsTable.find(
+    (c) =>
+      c.participants.includes(params.userId) &&
+      c.participants.includes(params.otherUserId) &&
+      (c.listingId ?? null) === listingId
+  );
+  if (!conv) {
+    conv = {
+      id: newId("conv"),
+      participants: [params.userId, params.otherUserId],
+      listingId,
+      lastMessage: null,
+      lastMessageAt: null,
+      unreadCount: { [params.userId]: 0, [params.otherUserId]: 0 },
+      createdAt: new Date().toISOString(),
+    };
+    conversationsTable.unshift(conv);
+  }
+  return withRelations(conv, params.userId);
 }

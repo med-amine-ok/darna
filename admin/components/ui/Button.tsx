@@ -33,15 +33,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         "bg-primary text-white hover:bg-[#232C24] active:bg-[#1A221B] shadow-xs focus-visible:ring-primary",
       secondary:
-        "bg-secondary text-white hover:bg-[#5C6E4E] active:bg-[#4E5E42] shadow-xs focus-visible:ring-secondary",
+        "bg-secondary-700 text-white hover:bg-secondary-800 active:bg-secondary-900 shadow-xs focus-visible:ring-secondary-700",
       outline:
         "border border-tertiary/80 text-primary bg-white hover:bg-darnaBg/80 active:bg-darnaBg shadow-2xs focus-visible:ring-primary",
       ghost:
         "text-primary hover:bg-neutral-100 active:bg-neutral-200 focus-visible:ring-primary",
       danger:
-        "bg-accent text-white hover:bg-[#B65634] active:bg-[#974426] shadow-xs focus-visible:ring-accent",
+        "bg-accent-600 text-white hover:bg-accent-700 active:bg-accent-800 shadow-xs focus-visible:ring-accent-600",
       dangerOutline:
-        "border border-accent text-accent bg-transparent hover:bg-accent/10 active:bg-accent/20 shadow-2xs focus-visible:ring-accent",
+        "border border-accent text-accent-700 bg-transparent hover:bg-accent/10 active:bg-accent/20 shadow-2xs focus-visible:ring-accent-600",
     };
 
     const sizeStyles = {
@@ -54,11 +54,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+          <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden="true" />
         ) : (
           leftIcon && <span className="shrink-0">{leftIcon}</span>
         )}

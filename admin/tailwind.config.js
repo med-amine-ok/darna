@@ -1,3 +1,5 @@
+const defaultColors = require("tailwindcss/colors");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -8,6 +10,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // neutral-500 darkened from #737373 so small helper text stays >= 4.5:1 on the beige
+        // page background (#F8F6EE) — WCAG 2.2 AA 1.4.3.
+        neutral: { ...defaultColors.neutral, 500: "#6B6B6B" },
         // Earthy Minimal Palette
         primary: {
           DEFAULT: "#2E3A2F",

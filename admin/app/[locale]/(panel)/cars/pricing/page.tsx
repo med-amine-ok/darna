@@ -1,13 +1,22 @@
+import { getTranslations } from "next-intl/server";
+import { guardPage } from "@/lib/auth/page-guard";
 import CategoriesManagerClient from "@/components/management/CategoriesManagerClient";
+import { pageMetadata } from "@/lib/metadata";
 
-export default function CarPricingPage() {
+export const generateMetadata = pageMetadata("cars_pricing");
+
+export default async function CarPricingPage() {
+  const denied = await guardPage("listings.view");
+  if (denied) return denied;
+  const t = await getTranslations("cars");
+
   return (
     <CategoriesManagerClient
-      title="Grille tarifaire des locations"
-      subtitle="Configurez les remises dégressives selon la durée de réservation (1-3j, 4-7j, +15j)."
+      title={t("pricingPage.title")}
+      subtitle={t("pricingPage.subtitle")}
       backRoute="/cars"
       defaultVertical="vehicle"
-      itemTypeLabel="paliers de durée"
+      itemTypeLabel={t("pricingPage.itemType")}
     />
   );
 }

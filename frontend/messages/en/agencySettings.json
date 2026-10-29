@@ -1,0 +1,52 @@
+{
+  "title": "Agency Settings",
+  "subtitle": "Manage company profile, contact details, and organization preferences.",
+  "verificationPending": "Verification pending",
+  "dangerZone": "Danger Zone",
+  "disbandAgency": "Disband / Delete Agency",
+  "backToHost": "Back to host overview",
+  "viewPublicProfile": "View public profile",
+  "opensInNewTab": "(opens in a new tab)",
+  "verification": {
+    "label": "Compliance & verification status",
+    "verified": "Verified tourism agency",
+    "description": "Verified agencies receive the DARNA Partner seal and better visibility with diaspora travelers."
+  },
+  "form": {
+    "title": "Organization information",
+    "name": "Agency name",
+    "rcNumber": "Trade Register number (RC)",
+    "email": "Business email",
+    "phone": "Business phone (+213)",
+    "address": "Headquarters address",
+    "teamSize": "Team size",
+    "teamSize1": "1 person (sole proprietorship)",
+    "teamSizeRange": "{min}–{max} employees",
+    "teamSizeOver": "{min}+ employees",
+    "description": "Agency bio & public description",
+    "approvalMode": "Agency booking policy (approval mode)",
+    "instantTitle": "Instant booking",
+    "instantDesc": "Stays and vehicles are confirmed instantly, without manual review.",
+    "requestTitle": "Agency review (24h)",
+    "requestDesc": "Your staff checks licences and deposit details before accepting.",
+    "readOnly": "Only the owner or an admin can edit these settings.",
+    "saving": "Saving…",
+    "save": "Save agency profile"
+  },
+  "danger": {
+    "description": "Deactivating this agency workspace revokes access for all team members and unpublishes every listing under {name}. Individual host listings are kept.",
+    "confirmTitle": "Confirm agency deactivation",
+    "confirmMessage": "Deactivating your agency will unpublish all its properties and vehicles, revoke your team's access and close your DARNA business workspace.",
+    "confirmPrompt": "To confirm, type the exact organization name: <strong>{name}</strong>",
+    "confirmButton": "Deactivate agency",
+    "cancelButton": "Keep workspace"
+  },
+  "toasts": {
+    "saved": "Agency profile updated.",
+    "savedReverify": "Profile saved. Your legal details changed, so verification is pending again.",
+    "saveFailed": "Couldn't update the agency profile.",
+    "nameMismatch": "Type the exact organization name to confirm.",
+    "deactivated": "Agency workspace deactivated.",
+    "deleteFailed": "Couldn't deactivate the agency."
+  }
+}

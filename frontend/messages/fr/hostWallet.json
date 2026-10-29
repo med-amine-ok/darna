@@ -1,0 +1,48 @@
+{
+  "title": "Portefeuille Prépayé Hôte & Solde",
+  "currentBalance": "Solde Actuel du Dépôt",
+  "applicableCommission": "Commission Applicable",
+  "rechargeProcess": "Processus de Recharge",
+  "statementHistory": "Relevé & Historique",
+  "negativeNoticeAmount": "Action requise : solde hôte négatif ({amount})",
+  "overdue": "En retard",
+  "negativeBody": "Les commissions prélevées par la plateforme dépassent actuellement votre dépôt prépayé. Veuillez effectuer un virement CCP ou bancaire à l’administration de DARNA pour reconstituer votre dépôt et éviter la suspension temporaire des réservations sur vos annonces.",
+  "ccpAccount": "Compte CCP :",
+  "baridiMobRip": "RIP BaridiMob :",
+  "adminSupport": "Support administratif :",
+  "ledgerSubtitle": "Registre du dépôt prépayé de commissions (taux de la plateforme : {rate})",
+  "deficit": "Dépôt déficitaire",
+  "solvent": "Actif et solvable",
+  "deductedPer": {
+    "individual": "Prélevée à chaque réservation confirmée (taux hôte particulier)",
+    "agency": "Prélevée à chaque réservation confirmée (taux agence)",
+    "hotel": "Prélevée à chaque réservation confirmée (taux hôtel)",
+    "hostel": "Prélevée à chaque réservation confirmée (taux auberge)"
+  },
+  "offlineTransfer": "Virement CCP / bancaire hors ligne",
+  "creditedManually": "Crédité manuellement par les administrateurs après validation du reçu",
+  "howItWorksTitle": "Fonctionnement du solde hôte DARNA :",
+  "howItWorksBody": "Conformément aux pratiques bancaires algériennes, la commission est prélevée sur votre dépôt hors ligne et non sur des versements automatiques des voyageurs. Pour recharger votre solde, effectuez un virement via BaridiMob ou CCP et envoyez le reçu au support.",
+  "statementTitle": "Relevé des transactions de l’hôte",
+  "statementSubtitle": "Registre non modifiable des dépôts et des commissions sur réservations",
+  "closeStatement": "Fermer le relevé",
+  "netBalance": "Solde net actuel",
+  "takeRate": "Taux de commission",
+  "filterLabel": "Filtrer les transactions",
+  "filters": {
+    "all": "Toute l’activité",
+    "recharge": "Dépôts (+)",
+    "commission": "Commissions (−)"
+  },
+  "table": {
+    "caption": "Transactions du portefeuille",
+    "date": "Date",
+    "activity": "Activité",
+    "amount": "Montant",
+    "reference": "Référence"
+  },
+  "deposit": "Dépôt",
+  "commission": "Commission",
+  "bookingRef": "Réservation : {id}",
+  "noTransactions": "Aucune transaction à afficher."
+}

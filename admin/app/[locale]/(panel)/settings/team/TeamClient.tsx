@@ -1,24 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Users,
-  Shield,
-  UserPlus,
-  CheckCircle,
-  XCircle,
-  Lock,
-  Mail,
-  ShieldAlert,
-  ChevronRight,
-  Info,
-} from "lucide-react";
+import { Shield, UserPlus, CheckCircle } from "lucide-react";
 import {
   listTeamMembers,
   updateMemberRole,
   toggleMemberActive,
-} from "@/lib/data/team";
+  inviteMember,
+} from "@/lib/actions/team";
+import { unwrap } from "@/lib/actions/result";
+import { useCan, useCurrentAdmin } from "@/components/auth/AdminSessionProvider";
 import { AdminUser, AdminRole } from "@/lib/types";
 import { ROLE_PERMISSIONS } from "@/lib/permissions";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +21,15 @@ import { formatDate } from "@/lib/utils/format";
 interface Props {
   locale: string;
 }
+
+const ROLE_KEYS: AdminRole[] = ["super_admin", "moderator", "finance", "support", "analyst"];
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+const FIELD_CLASS =
+  "w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function TeamClient({ locale }: Props) {
   const t = useTranslations("team");
@@ -46,76 +47,88 @@ export default function TeamClient({ locale }: Props) {
   const [inviteRole, setInviteRole] = useState<AdminRole>("support");
 
   const { success, error, warning } = useToast();
+  const can = useCan();
+  const canManageTeam = can("team.manage");
+  const currentAdminId = useCurrentAdmin()?.id;
+  const inviteNameId = useId();
+  const inviteEmailId = useId();
+  const inviteRoleId = useId();
+  const inviteErrorId = useId();
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const list = await listTeamMembers();
+      const list = unwrap(await listTeamMembers());
       setMembers(list);
-    } catch (err: any) {
-      error("Failed to load staff team", err.message);
+    } catch (err) {
+      error(t("toasts.loadFailed"), errorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [error]);
+  }, [error, t]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const handleRoleChange = async (userId: string, newRole: AdminRole) => {
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
     try {
-      const updated = await updateMemberRole(userId, newRole, actor);
-      success("Role Updated", `${updated.name} is now ${newRole}.`);
+      const updated = unwrap(await updateMemberRole(userId, newRole));
+      success(t("toasts.roleUpdated"), t("toasts.roleUpdatedBody", { name: updated.name, role: tRoles(newRole) }));
       loadData();
-    } catch (err: any) {
-      error("Cannot update role", err.message);
+    } catch (err) {
+      error(t("toasts.roleUpdateFailed"), errorMessage(err));
     }
   };
 
   const handleToggleActive = async (user: AdminUser) => {
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
     try {
-      const updated = await toggleMemberActive(user.id, actor);
-      success("Status Updated", `${user.name} is now ${updated.isActive ? "active" : "deactivated"}.`);
+      const updated = unwrap(await toggleMemberActive(user.id));
+      success(
+        t("toasts.statusUpdated"),
+        updated.isActive
+          ? t("toasts.nowActive", { name: user.name })
+          : t("toasts.nowDeactivated", { name: user.name })
+      );
       loadData();
-    } catch (err: any) {
-      error("Action prohibited", err.message);
+    } catch (err) {
+      error(t("toasts.actionProhibited"), errorMessage(err));
     }
   };
 
-  const handleInvite = () => {
+  /** Creates a real (mock) INVITED account on the server: inactive, no password until accepted. */
+  const handleInvite = async () => {
     if (!inviteName.trim() || !inviteEmail.trim()) {
-      error("Missing fields", "Please fill name and email.");
+      setInviteError(t("inviteMissingFields"));
+      error(t("inviteMissingFields"));
       return;
     }
-
-    const newStaff: AdminUser = {
-      id: `adm_${Date.now()}`,
-      email: inviteEmail.trim().toLowerCase(),
-      name: inviteName.trim(),
-      role: inviteRole,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString(),
-      permissions: ROLE_PERMISSIONS[inviteRole],
-    };
-
-    setMembers([...members, newStaff]);
-    success("Invitation Sent", `Staff invitation link generated for ${inviteEmail}.`);
-    setInviteModalOpen(false);
-    setInviteName("");
-    setInviteEmail("");
+    setInviteError(null);
+    try {
+      const created = unwrap(
+        await inviteMember({ name: inviteName.trim(), email: inviteEmail.trim(), role: inviteRole })
+      );
+      setMembers((prev) => [...prev, created]);
+      success(t("inviteSent"), t("inviteSentHint", { email: created.email }));
+      setInviteModalOpen(false);
+      setInviteName("");
+      setInviteEmail("");
+    } catch (err) {
+      error(t("inviteFailed"), errorMessage(err));
+    }
   };
 
-  const roles: { key: AdminRole; label: string; desc: string }[] = [
-    { key: "super_admin", label: tRoles("super_admin"), desc: "Full authority over platform settings, team, and financial ledger." },
-    { key: "moderator", label: tRoles("moderator"), desc: "Verifies hosts, listings, legal certificates, and reviews." },
-    { key: "finance", label: tRoles("finance"), desc: "Disburses CCP payouts, recharges wallets, and updates commissions." },
-    { key: "support", label: tRoles("support"), desc: "Resolves guest disputes, cancels bookings, and manages inquiries." },
-    { key: "analyst", label: tRoles("analyst"), desc: "Read-only access to business intelligence, reports, and charts." },
-  ];
+  const roles = ROLE_KEYS.map((key) => ({
+    key,
+    label: tRoles(key),
+    desc: t(`roleDescriptions.${key}`),
+  }));
+
+  const closeInvite = () => {
+    setInviteModalOpen(false);
+    setInviteError(null);
+  };
 
   return (
     <div className="space-y-6 text-start">
@@ -135,7 +148,7 @@ export default function TeamClient({ locale }: Props) {
             onClick={() => setPermissionModalOpen(true)}
             className="text-xs font-bold"
           >
-            <Shield className="w-3.5 h-3.5 me-1.5 text-secondary" />
+            <Shield className="w-3.5 h-3.5 me-1.5 text-secondary" aria-hidden="true" />
             {t("roleMatrix")}
           </Button>
 
@@ -143,9 +156,10 @@ export default function TeamClient({ locale }: Props) {
             variant="primary"
             size="sm"
             onClick={() => setInviteModalOpen(true)}
+            disabled={!canManageTeam}
             className="text-xs font-bold"
           >
-            <UserPlus className="w-3.5 h-3.5 me-1.5" />
+            <UserPlus className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
             {t("inviteMember")}
           </Button>
         </div>
@@ -157,18 +171,18 @@ export default function TeamClient({ locale }: Props) {
           <table className="w-full text-xs text-start">
             <thead className="bg-darnaBg/60 border-b border-tertiary/60 text-neutral-600 text-xs font-semibold">
               <tr>
-                <th className="py-3 px-4 text-start">{t("name")}</th>
-                <th className="py-3 px-4 text-start">{t("email")}</th>
-                <th className="py-3 px-4 text-start">{t("role")}</th>
-                <th className="py-3 px-4 text-start">{t("lastLogin")}</th>
-                <th className="py-3 px-4 text-start">{tCommon("status")}</th>
-                <th className="py-3 px-4 text-end">{tCommon("actions")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("name")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("email")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("role")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("lastLogin")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{tCommon("status")}</th>
+                <th scope="col" className="py-3 px-4 text-end">{tCommon("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-tertiary/40">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-neutral-400">
+                  <td colSpan={6} className="py-8 text-center text-neutral-500">
                     {tCommon("loading")}
                   </td>
                 </tr>
@@ -177,12 +191,15 @@ export default function TeamClient({ locale }: Props) {
                   <tr key={u.id} className="hover:bg-darnaBg/20 transition-colors">
                     <td className="py-3 px-4 font-bold text-primary">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-secondary/15 text-secondary flex items-center justify-center font-bold text-xs uppercase">
+                        <div
+                          aria-hidden="true"
+                          className="w-7 h-7 rounded-full bg-secondary/15 text-secondary-700 flex items-center justify-center font-bold text-xs uppercase"
+                        >
                           {u.name.slice(0, 2)}
                         </div>
                         <div>
                           <div>{u.name}</div>
-                          <div className="text-[10px] text-neutral-400 font-mono font-normal">
+                          <div className="text-[10px] text-neutral-500 font-mono font-normal">
                             {u.id}
                           </div>
                         </div>
@@ -191,9 +208,11 @@ export default function TeamClient({ locale }: Props) {
                     <td className="py-3 px-4 text-neutral-600">{u.email}</td>
                     <td className="py-3 px-4">
                       <select
+                        aria-label={t("roleFor", { name: u.name })}
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value as AdminRole)}
-                        className="py-1 px-2.5 rounded-lg border border-tertiary/80 text-xs font-semibold bg-white text-primary focus:outline-none focus:border-secondary"
+                        disabled={!canManageTeam || u.id === currentAdminId}
+                        className="py-1 px-2.5 rounded-lg border border-tertiary/80 text-xs font-semibold bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 disabled:opacity-60"
                       >
                         {roles.map((r) => (
                           <option key={r.key} value={r.key}>
@@ -203,27 +222,30 @@ export default function TeamClient({ locale }: Props) {
                       </select>
                     </td>
                     <td className="py-3 px-4 text-neutral-500">
-                      {formatDate(u.lastLoginAt, locale)}
+                      {u.lastLoginAt ? formatDate(u.lastLoginAt, locale) : t("never")}
                     </td>
                     <td className="py-3 px-4">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           u.isActive
-                            ? "bg-secondary/15 text-secondary"
-                            : "bg-neutral-100 text-neutral-400"
+                            ? "bg-secondary/15 text-secondary-700"
+                            : "bg-neutral-100 text-neutral-600"
                         }`}
                       >
-                        {u.isActive ? "Active" : "Deactivated"}
+                        {u.status === "invited" ? t("statusInvited") : u.isActive ? t("statusActive") : t("statusDeactivated")}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-end">
+                      {canManageTeam && u.id !== currentAdminId && u.status !== "invited" && (
                       <button
                         type="button"
                         onClick={() => handleToggleActive(u)}
-                        className="text-xs font-semibold text-neutral-500 hover:text-primary underline cursor-pointer"
+                        aria-label={u.isActive ? t("deactivateLabel", { name: u.name }) : t("activateLabel", { name: u.name })}
+                        className="text-xs font-semibold text-neutral-600 hover:text-primary underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                       >
-                        {u.isActive ? "Deactivate" : "Activate"}
+                        {u.isActive ? t("deactivate") : t("activate")}
                       </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -237,19 +259,25 @@ export default function TeamClient({ locale }: Props) {
       <Dialog
         isOpen={permissionModalOpen}
         onClose={() => setPermissionModalOpen(false)}
-        title="Admin Roles & Permissions Matrix"
+        title={t("matrix.title")}
         size="lg"
       >
         <div className="space-y-4 text-start">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/40">
+          <div
+            className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/40"
+            role="group"
+            aria-label={t("matrix.pickRole")}
+          >
             {roles.map((r) => (
               <button
                 key={r.key}
+                type="button"
+                aria-pressed={selectedRoleForMatrix === r.key}
                 onClick={() => setSelectedRoleForMatrix(r.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
                   selectedRoleForMatrix === r.key
                     ? "bg-primary text-white"
-                    : "text-neutral-500 hover:text-primary hover:bg-neutral-100"
+                    : "text-neutral-600 hover:text-primary hover:bg-neutral-100"
                 }`}
               >
                 {r.label}
@@ -262,18 +290,19 @@ export default function TeamClient({ locale }: Props) {
           </p>
 
           <div className="border border-tertiary/70 rounded-xl overflow-hidden bg-darnaBg/30 p-3 max-h-72 overflow-y-auto">
-            <h4 className="text-xs font-bold text-primary mb-2">Granted Permission Scopes:</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <h3 className="text-xs font-bold text-primary mb-2">{t("matrix.granted")}</h3>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ROLE_PERMISSIONS[selectedRoleForMatrix].map((perm) => (
-                <div
+                <li
                   key={perm}
-                  className="p-2 rounded-lg bg-white border border-tertiary/60 text-[11px] font-mono text-secondary flex items-center gap-1.5"
+                  dir="ltr"
+                  className="p-2 rounded-lg bg-white border border-tertiary/60 text-[11px] font-mono text-secondary-700 flex items-center gap-1.5"
                 >
-                  <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                  <CheckCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   <span>{perm}</span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           <div className="flex justify-end pt-2">
@@ -283,7 +312,7 @@ export default function TeamClient({ locale }: Props) {
               onClick={() => setPermissionModalOpen(false)}
               className="text-xs"
             >
-              Close
+              {tCommon("close")}
             </Button>
           </div>
         </div>
@@ -292,45 +321,72 @@ export default function TeamClient({ locale }: Props) {
       {/* INVITE STAFF MODAL */}
       <Dialog
         isOpen={inviteModalOpen}
-        onClose={() => setInviteModalOpen(false)}
+        onClose={closeInvite}
         title={t("inviteMember")}
         size="md"
       >
-        <div className="space-y-4 text-start">
+        <form
+          className="space-y-4 text-start"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleInvite();
+          }}
+        >
+          {inviteError && (
+            <p
+              id={inviteErrorId}
+              role="alert"
+              className="p-2.5 rounded-xl bg-accent/10 border border-accent/30 text-xs font-medium text-accent-700"
+            >
+              {inviteError}
+            </p>
+          )}
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor={inviteNameId} className="block text-xs font-bold text-primary mb-1">
               {t("name")}
             </label>
             <input
+              id={inviteNameId}
               type="text"
+              required
+              autoComplete="off"
               value={inviteName}
               onChange={(e) => setInviteName(e.target.value)}
-              placeholder="e.g. Yacine Brahimi"
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              placeholder={t("invitePlaceholderName")}
+              aria-invalid={inviteError && !inviteName.trim() ? true : undefined}
+              aria-describedby={inviteError && !inviteName.trim() ? inviteErrorId : undefined}
+              className={FIELD_CLASS}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor={inviteEmailId} className="block text-xs font-bold text-primary mb-1">
               {t("email")}
             </label>
             <input
+              id={inviteEmailId}
               type="email"
+              required
+              autoComplete="off"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="yacine@darna.dz"
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              aria-invalid={inviteError && !inviteEmail.trim() ? true : undefined}
+              aria-describedby={inviteError && !inviteEmail.trim() ? inviteErrorId : undefined}
+              className={FIELD_CLASS}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor={inviteRoleId} className="block text-xs font-bold text-primary mb-1">
               {t("role")}
             </label>
             <select
+              id={inviteRoleId}
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as AdminRole)}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              className={FIELD_CLASS}
             >
               {roles.map((r) => (
                 <option key={r.key} value={r.key}>
@@ -342,22 +398,23 @@ export default function TeamClient({ locale }: Props) {
 
           <div className="flex items-center justify-end gap-2 pt-2">
             <Button
+              type="button"
               variant="outline"
               size="sm"
-              onClick={() => setInviteModalOpen(false)}
+              onClick={closeInvite}
             >
               {tCommon("cancel")}
             </Button>
             <Button
+              type="submit"
               variant="primary"
               size="sm"
-              onClick={handleInvite}
               className="font-bold text-xs"
             >
               {t("inviteMember")}
             </Button>
           </div>
-        </div>
+        </form>
       </Dialog>
     </div>
   );

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useRouter, usePathname } from "@/navigation";
+import { useRouter, usePathname, Link } from "@/navigation";
 import {
   Compass,
   CheckCircle,
@@ -16,10 +16,6 @@ import {
   ExternalLink,
   MapPin,
   Star,
-  Users,
-  Calendar,
-  Layers,
-  Sparkles,
   ShieldCheck,
   Tag,
   Maximize2,
@@ -28,32 +24,50 @@ import {
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip, KpiCardItem } from "@/components/ui/KpiStrip";
 import { FilterBar } from "@/components/ui/FilterBar";
-import { FilterDrawer } from "@/components/ui/FilterDrawer";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
 import { SplitView } from "@/components/ui/SplitView";
 import { DetailPanel } from "@/components/ui/DetailPanel";
 import { ImageCarousel } from "@/components/ui/ImageCarousel";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { TypePill } from "@/components/ui/TypePill";
 import { InfoTile } from "@/components/ui/InfoTile";
 import { Tabs } from "@/components/ui/Tabs";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useToast } from "@/components/ui/Toast";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { listListings, approveListing, suspendListing, restoreListing, updateListingStatus } from "@/lib/data/listings";
+import { listListings, approveListing, updateListingStatus } from "@/lib/actions/listings";
+import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
+import { formatDzd, formatNumber, intlLocale } from "@/lib/utils/format";
+import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
 
-const EXPERIENCE_CATEGORIES = ["Aventure", "Culture", "Nature", "Gastronomie", "Mer"];
+// value = filter value (unchanged), labelKey = translation key under experiences.categoryOptions
+const EXPERIENCE_CATEGORIES = [
+  { value: "aventure", labelKey: "adventure" },
+  { value: "culture", labelKey: "culture" },
+  { value: "nature", labelKey: "nature" },
+  { value: "gastronomie", labelKey: "gastronomy" },
+  { value: "mer", labelKey: "sea" },
+] as const;
+
+const errorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 export default function ExperiencesListClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
+  const t = useTranslations("experiences");
+  const tCommon = useTranslations("common");
+  const tActions = useTranslations("actions");
+  const tVerticals = useTranslations("verticals");
+  const tHostTypes = useTranslations("hostTypes");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const can = useCan();
 
   const currentStatus = searchParams.get("status") || "all";
   const normalizeStatusKey = (s?: string | null) => {
@@ -78,9 +92,9 @@ export default function ExperiencesListClient() {
   const [selectedWilaya, setSelectedWilaya] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(initialPage);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [selectedExpId, setSelectedExpId] = useState<string | null>(selectedExpIdFromUrl);
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [, setIsFilterDrawerOpen] = useState(false);
   const [panelTab, setPanelTab] = useState("overview");
 
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
@@ -101,31 +115,34 @@ export default function ExperiencesListClient() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await listListings({
+      const res = unwrap(await listListings({
         status: currentStatus,
         vertical: "experience",
         wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
         search: searchQuery || undefined,
         page,
         pageSize,
-      });
+      }));
       setData(res.rows);
       setTotal(res.total);
       setTotalPages(res.totalPages || Math.ceil(res.total / pageSize));
       setFacets(res.facets || {});
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentStatus, selectedWilaya, searchQuery, page, pageSize, addToast, tCommon]);
 
+  // selectedCategory is not sent to the server yet; changing it still refreshes the list.
   useEffect(() => {
     fetchData();
-  }, [currentStatus, selectedWilaya, selectedCategory, page, pageSize, searchQuery]);
+  }, [fetchData, selectedCategory]);
+
+  const statusActions = useListingStatusActions(() => fetchData());
 
   const selectedExp = data.find((e) => e.id === selectedExpId) || null;
 
@@ -139,6 +156,14 @@ export default function ExperiencesListClient() {
     updateUrl({ selected: null });
   };
 
+  const formatRating = (rating: number) =>
+    new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
+
+  const formatTime = (hour: number, minute: number) =>
+    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(
+      new Date(2000, 0, 1, hour, minute)
+    );
+
   // KPI Strip (Mockup 07: 238 Total · 46 En attente · 162 Publiées · 18 Suspendues · 12 Refusées)
   const statusFacets = facets["status"] || {};
   const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
@@ -146,35 +171,35 @@ export default function ExperiencesListClient() {
   const kpis: KpiCardItem[] = [
     {
       id: "all",
-      label: "Total des expériences",
+      label: t("kpi.total"),
       value: totalCount || 238,
       icon: <Compass className="w-5 h-5" />,
       colorVariant: "neutral",
     },
     {
       id: "pending",
-      label: "En attente de validation",
+      label: t("kpi.pending"),
       value: statusFacets["pending"] ?? statusFacets["pending_review"] ?? 46,
       icon: <Clock className="w-5 h-5" />,
       colorVariant: "warning",
     },
     {
       id: "published",
-      label: "Publiées",
+      label: t("kpi.published"),
       value: statusFacets["published"] ?? statusFacets["approved"] ?? 162,
       icon: <CheckCircle className="w-5 h-5" />,
       colorVariant: "success",
     },
     {
       id: "suspended",
-      label: "Suspendues",
+      label: t("kpi.suspended"),
       value: statusFacets["suspended"] ?? 18,
       icon: <PauseCircle className="w-5 h-5" />,
       colorVariant: "neutral",
     },
     {
       id: "refused",
-      label: "Refusées",
+      label: t("kpi.refused"),
       value: statusFacets["refused"] ?? statusFacets["rejected"] ?? 12,
       icon: <XCircle className="w-5 h-5" />,
       colorVariant: "danger",
@@ -185,27 +210,32 @@ export default function ExperiencesListClient() {
   const columns: Column<Listing>[] = [
     {
       key: "exp",
-      header: "Expérience",
+      header: t("columns.experience"),
       render: (row) => (
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
             <Image
               src={row.imageSrc?.[0] || "/placeholder-experience.jpg"}
-              alt={row.title}
+              alt=""
               fill
+              sizes="48px"
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
-            <div
-              className="font-medium text-[#2E3A2F] truncate text-sm hover:underline cursor-pointer"
-              onClick={() => handleSelectExp(row)}
+            <button
+              type="button"
+              className="block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectExp(row);
+              }}
             >
               {row.title}
-            </div>
-            <div className="text-xs text-[#2E3A2F]/60 flex items-center gap-1.5 mt-0.5">
+            </button>
+            <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5 mt-0.5">
               <span>{row.formattedId || `#EXP${row.id.replace("lst_", "").padStart(4, "0")}`}</span>
-              <span>•</span>
+              <span aria-hidden="true">•</span>
               <span className="capitalize">{row.propertyType}</span>
             </div>
           </div>
@@ -214,151 +244,127 @@ export default function ExperiencesListClient() {
     },
     {
       key: "guide",
-      header: "Organisateur / Guide",
+      header: t("columns.guide"),
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
+          <div aria-hidden="true" className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
             {row.hostName.charAt(0)}
           </div>
           <div className="min-w-0">
             <div className="text-xs font-medium text-[#2E3A2F] truncate">{row.hostName}</div>
-            <div className="text-[11px] text-[#2E3A2F]/60 capitalize">{row.hostType}</div>
+            <div className="text-[11px] text-[#2E3A2F]/70">{tHostTypes(row.hostType)}</div>
           </div>
         </div>
       ),
     },
     {
       key: "location",
-      header: "Lieu",
+      header: t("columns.location"),
       render: (row) => (
         <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" />
-          <span className="truncate">{row.city}, {row.wilayaCode}</span>
+          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" aria-hidden="true" />
+          <span className="truncate">{t("locationValue", { city: row.city, code: row.wilayaCode })}</span>
         </div>
       ),
     },
     {
       key: "category",
-      header: "Catégorie",
+      header: t("columns.category"),
       render: (row) => (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE5D9] text-[#2E3A2F] border border-[#D9C9B2]/50">
-          <Tag className="w-3 h-3 text-[#6B7F5B]" />
-          <span>{row.propertyType || "Aventure"}</span>
+          <Tag className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />
+          <span>{row.propertyType || t("categoryOptions.adventure")}</span>
         </span>
       ),
     },
     {
       key: "price",
-      header: "Prix (DZD)",
+      header: t("columns.price"),
       render: (row) => (
         <div className="text-xs font-medium text-[#2E3A2F]">
-          {row.price.toLocaleString("fr-FR")} DZD
+          {formatDzd(row.price, locale)}
         </div>
       ),
     },
     {
       key: "status",
-      header: "Statut",
+      header: tCommon("status"),
       render: (row) => <StatusPill status={row.status} />,
     },
     {
       key: "rating",
-      header: "Note",
+      header: t("columns.rating"),
       render: (row) => (
         <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-          <span className="font-medium">{row.rating.toFixed(1)}</span>
-          <span className="text-[#2E3A2F]/60">({row.reviewsCount})</span>
+          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
+          <span className="font-medium">{formatRating(row.rating)}</span>
+          <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: row.reviewsCount })}</span>
         </div>
       ),
     },
     {
       key: "bookings",
-      header: "Réservations",
+      header: t("columns.bookings"),
       render: (row) => (
-        <span className="text-xs font-medium text-[#2E3A2F]">{row.bookingsCount}</span>
+        <span className="text-xs font-medium text-[#2E3A2F]">{formatNumber(row.bookingsCount, locale)}</span>
       ),
     },
     {
       key: "actions",
-      header: "Actions",
+      header: tCommon("actions"),
       className: "text-end",
       render: (row) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
+            type="button"
             onClick={() => handleSelectExp(row)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title={locale === "ar" ? "معاينة سريعة" : locale === "en" ? "Quick preview" : "Aperçu rapide"}
+            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            title={t("quickPreview")}
+            aria-label={t("quickPreviewOf", { title: row.title })}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={() => router.push(`/experiences/${row.id}`)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title={locale === "ar" ? "فتح التفاصيل" : locale === "en" ? "View full page" : "Consulter"}
+            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            title={t("openFullPage")}
+            aria-label={t("openFullPageOf", { title: row.title })}
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
           </button>
           <DropdownMenu
             items={[
               {
-                label: locale === "ar" ? "معاينة سريعة" : locale === "en" ? "Quick preview" : "Aperçu rapide",
+                label: t("quickPreview"),
                 icon: <Eye className="w-3.5 h-3.5" />,
                 onClick: () => handleSelectExp(row),
               },
               {
-                label: locale === "ar" ? "موافقة ونشر (Approved)" : locale === "en" ? "Approve / Publish" : "Approuver / Publier",
+                label: t("menu.approve"),
                 icon: <CheckCircle className="w-3.5 h-3.5 text-secondary" />,
-                disabled: row.status === "approved" || row.status === "published",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "approved");
-                  addToast({
-                    title: locale === "ar" ? "تمت الموافقة على النشاط" : locale === "en" ? "Experience approved" : "Expérience approuvée",
-                    variant: "success",
-                  });
-                  fetchData();
-                },
+                disabled: !statusActions.allowed(row, "approved"),
+                onClick: () => statusActions.changeStatus(row, "approved"),
               },
               {
-                label: locale === "ar" ? "تعيين قيد المراجعة (Pending)" : locale === "en" ? "Mark as Pending Review" : "Mettre en attente",
+                label: t("menu.markPending"),
                 icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
-                disabled: row.status === "pending" || row.status === "pending_review",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "pending_review");
-                  addToast({
-                    title: locale === "ar" ? "تم وضع النشاط قيد المراجعة" : locale === "en" ? "Experience marked pending" : "Expérience mise en attente",
-                    variant: "info",
-                  });
-                  fetchData();
-                },
+                disabled: !statusActions.allowed(row, "pending_review"),
+                onClick: () => statusActions.changeStatus(row, "pending_review"),
               },
               {
-                label: locale === "ar" ? "تعليق النشاط (Suspend)" : locale === "en" ? "Suspend Experience" : "Suspendre l'activité",
+                label: t("menu.suspend"),
                 icon: <PauseCircle className="w-3.5 h-3.5 text-amber-700" />,
-                disabled: row.status === "suspended",
+                disabled: !statusActions.allowed(row, "suspended"),
                 variant: "danger",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "suspended");
-                  addToast({
-                    title: locale === "ar" ? "تم تعليق النشاط" : locale === "en" ? "Experience suspended" : "Expérience suspendue",
-                    variant: "warning",
-                  });
-                  fetchData();
-                },
+                onClick: () => statusActions.changeStatus(row, "suspended"),
               },
               {
-                label: locale === "ar" ? "رفض النشاط (Reject)" : locale === "en" ? "Reject Experience" : "Refuser l'activité",
-                icon: <XCircle className="w-3.5 h-3.5 text-accent" />,
-                disabled: row.status === "rejected" || row.status === "refused",
+                label: t("menu.reject"),
+                icon: <XCircle className="w-3.5 h-3.5 text-accent-700" />,
+                disabled: !statusActions.allowed(row, "rejected"),
                 variant: "danger",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "rejected");
-                  addToast({
-                    title: locale === "ar" ? "تم رفض النشاط" : locale === "en" ? "Experience rejected" : "Expérience refusée",
-                    variant: "warning",
-                  });
-                  fetchData();
-                },
+                onClick: () => statusActions.changeStatus(row, "rejected"),
               },
             ]}
           />
@@ -371,29 +377,39 @@ export default function ExperiencesListClient() {
     <div className="space-y-6">
       {/* 1. Page Header (Mockup 07: Exporter, Catégories, + Ajouter une expérience) */}
       <PageHeader
-        title="Gestion des expériences"
-        subtitle="Supervisez les activités, excursions et ateliers proposés par les guides et agences."
+        title={t("title")}
+        subtitle={t("subtitle")}
         actions={[
+          ...(statusActions.canExport
+            ? [{
+                label: t("export"),
+                icon: <Download className="w-4 h-4" />,
+                onClick: () =>
+                  statusActions.exportCsv({
+                    status: currentStatus,
+                    vertical: "experience",
+                    wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+                    search: searchQuery || undefined,
+                  }),
+                variant: "outline" as const,
+              }]
+            : []),
           {
-            label: "Exporter",
-            icon: <Download className="w-4 h-4" />,
-            onClick: () => {
-              addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
-            },
-            variant: "outline",
-          },
-          {
-            label: "Catégories",
+            label: t("categories"),
             icon: <Tag className="w-4 h-4" />,
             onClick: () => router.push("/experiences/categories"),
             variant: "outline",
           },
-          {
-            label: "Ajouter une expérience",
-            icon: <Plus className="w-4 h-4" />,
-            onClick: () => router.push("/experiences/new"),
-            variant: "primary",
-          },
+          ...(can("listings.approve")
+            ? [
+                {
+                  label: t("add"),
+                  icon: <Plus className="w-4 h-4" />,
+                  onClick: () => router.push("/experiences/new"),
+                  variant: "primary" as const,
+                },
+              ]
+            : []),
         ]}
       />
 
@@ -408,7 +424,7 @@ export default function ExperiencesListClient() {
 
       {/* 3. Filter Bar (Mockup 07) */}
       <FilterBar
-        searchPlaceholder="Rechercher par titre, guide, lieu..."
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={searchQuery}
         onSearchChange={(q) => {
           setSearchQuery(q);
@@ -417,10 +433,10 @@ export default function ExperiencesListClient() {
         selects={[
           {
             id: "wilaya",
-            label: "Région / Wilaya",
+            label: t("filters.wilaya"),
             value: selectedWilaya,
             options: [
-              { value: "all", label: locale === "ar" ? "جميع الولايات" : locale === "en" ? "All wilayas" : "Toutes les wilayas" },
+              { value: "all", label: t("filters.allWilayas") },
               ...WILAYAS.map((w) => ({ value: w.code, label: getWilayaLabel(w, locale) })),
             ],
             onChange: (val) => {
@@ -430,11 +446,11 @@ export default function ExperiencesListClient() {
           },
           {
             id: "category",
-            label: "Catégorie",
+            label: t("filters.category"),
             value: selectedCategory,
             options: [
-              { value: "all", label: "Toutes les catégories" },
-              ...EXPERIENCE_CATEGORIES.map((c) => ({ value: c.toLowerCase(), label: c })),
+              { value: "all", label: t("filters.allCategories") },
+              ...EXPERIENCE_CATEGORIES.map((c) => ({ value: c.value, label: t(`categoryOptions.${c.labelKey}`) })),
             ],
             onChange: (val) => {
               setSelectedCategory(val);
@@ -443,14 +459,14 @@ export default function ExperiencesListClient() {
           },
           {
             id: "status",
-            label: "Statut",
+            label: tCommon("status"),
             value: normalizedStatus,
             options: [
-              { value: "all", label: "Tous les statuts" },
-              { value: "pending", label: "En attente de validation" },
-              { value: "published", label: "Publiée" },
-              { value: "suspended", label: "Suspendue" },
-              { value: "refused", label: "Refusée" },
+              { value: "all", label: t("filters.allStatuses") },
+              { value: "pending", label: t("statusOptions.pending") },
+              { value: "published", label: t("statusOptions.published") },
+              { value: "suspended", label: t("statusOptions.suspended") },
+              { value: "refused", label: t("statusOptions.refused") },
             ],
             onChange: (val) => {
               updateUrl({ status: val === "all" ? null : val, page: "1" });
@@ -479,7 +495,7 @@ export default function ExperiencesListClient() {
               selectedRowId={selectedExpId || undefined}
               onRowClick={handleSelectExp}
               isLoading={isLoading}
-              emptyMessage="Aucune expérience trouvée avec ces filtres."
+              emptyMessage={t("empty")}
               selection={{
                 selectedIds: selectedRowIds,
                 onSelectionChange: setSelectedRowIds,
@@ -495,7 +511,7 @@ export default function ExperiencesListClient() {
                 }}
                 pageSize={pageSize}
                 totalItems={total}
-                itemLabel="expériences"
+                itemLabel={t("itemLabel")}
               />
             </div>
           </div>
@@ -510,84 +526,105 @@ export default function ExperiencesListClient() {
               statusBadge={<StatusPill status={selectedExp.status} />}
               actions={
                 <button
+                  type="button"
                   onClick={() => router.push(`/experiences/${selectedExp.id}`)}
-                  className="p-1 text-[#2E3A2F]/60 hover:text-[#2E3A2F] rounded"
-                  title="Plein écran"
+                  className="p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  title={t("fullScreen")}
+                  aria-label={t("fullScreen")}
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <Maximize2 className="w-4 h-4" aria-hidden="true" />
                 </button>
               }
               footer={
                 <div className="flex items-center justify-between gap-2 w-full flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(selectedExp.status === "approved" || selectedExp.status === "published") ? (
+                    {(selectedExp.status === "approved" || selectedExp.status === "published") ? (statusActions.allowed(selectedExp, "suspended") &&
                       <button
-                        onClick={() => setConfirmAction({ type: "suspend", exp: selectedExp })}
-                        className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        type="button"
+                        onClick={() => statusActions.changeStatus(selectedExp, "suspended")}
+                        className="px-3 py-1.5 text-xs font-medium text-[#7A5A26] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
                       >
-                        {locale === "ar" ? "تعليق" : locale === "en" ? "Suspend" : "Suspendre"}
+                        {t("panel.suspend")}
                       </button>
                     ) : (selectedExp.status === "pending_review" || selectedExp.status === "pending") ? (
                       <>
+                        {can("listings.approve") && (
                         <button
+                          type="button"
                           onClick={async () => {
                             try {
-                              await approveListing(selectedExp.id, { id: "usr_superadmin", name: "Super Admin", role: "super_admin" });
+                              unwrap(await approveListing(selectedExp.id));
                               addToast({
-                                title: locale === "ar" ? "تمت الموافقة" : locale === "en" ? "Experience approved" : "Expérience approuvée",
-                                description: locale === "ar" ? "تمت الموافقة على هذه التجربة ونشرها مباشرة" : locale === "en" ? "This experience has been approved directly" : "Cette expérience a été approuvée directement.",
+                                title: t("toast.approvedTitle"),
+                                description: t("toast.approvedDescription"),
                                 variant: "success",
                               });
                               fetchData();
-                            } catch (err: any) {
-                              addToast({ title: "Erreur", description: err.message, variant: "danger" });
+                            } catch (err: unknown) {
+                              addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#6B7F5B] hover:bg-[#5a6b4c] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5a6b4c] hover:bg-[#4a5a3e] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
                         >
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>{locale === "ar" ? "موافقة مباشرة" : locale === "en" ? "Approve directly" : "Approuver directement"}</span>
+                          <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>{t("panel.approveDirectly")}</span>
                         </button>
+                        )}
                         <button
+                          type="button"
                           onClick={() => router.push(`/experiences/${selectedExp.id}/review`)}
                           className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
                         >
-                          {locale === "ar" ? "فحص الملف" : locale === "en" ? "Review file" : "Examiner"}
+                          {t("panel.review")}
                         </button>
                       </>
-                    ) : (selectedExp.status === "suspended" || selectedExp.status === "rejected" || selectedExp.status === "refused") ? (
+                    ) : (selectedExp.status === "suspended" || selectedExp.status === "rejected" || selectedExp.status === "refused") ? (statusActions.allowed(selectedExp, selectedExp.status === "suspended" ? "approved" : "pending_review") &&
                       <button
+                        type="button"
                         onClick={async () => {
                           try {
-                            await restoreListing(selectedExp.id, { id: "usr_superadmin", name: "Super Admin", role: "super_admin" });
+                            unwrap(await updateListingStatus(selectedExp.id, selectedExp.status === "suspended" ? "approved" : "pending_review"));
                             addToast({
-                              title: locale === "ar" ? "تم إلغاء التعليق" : locale === "en" ? "Suspension lifted" : "Suspension annulée",
-                              description: locale === "ar" ? "تمت إعادة تفعيل هذه التجربة بنجاح" : locale === "en" ? "This experience has been reactivated" : "L'expérience a été réactivée avec succès.",
+                              title: t("toast.reactivatedTitle"),
+                              description: t("toast.reactivatedDescription"),
                               variant: "success",
                             });
                             fetchData();
-                          } catch (err: any) {
-                            addToast({ title: "Erreur", description: err.message, variant: "danger" });
+                          } catch (err: unknown) {
+                            addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                           }
                         }}
                         className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg flex items-center gap-1.5 transition-colors"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                        <span>{locale === "ar" ? "إلغاء التعليق" : locale === "en" ? "Cancel suspension" : "Annuler la suspension"}</span>
+                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <span>{t("panel.cancelSuspension")}</span>
                       </button>
                     ) : null}
+                    {statusActions.canRestore(selectedExp) && (
+                      <button
+                        type="button"
+                        onClick={() => statusActions.restore(selectedExp)}
+                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg transition-colors"
+                      >
+                        {tActions("restore")}
+                      </button>
+                    )}
+                    {statusActions.canDelete(selectedExp) && (
                     <button
+                      type="button"
                       onClick={() => setConfirmAction({ type: "delete", exp: selectedExp })}
-                      className="px-3 py-1.5 text-xs font-medium text-[#C96F4F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 text-xs font-medium text-[#A4532F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
                     >
-                      {locale === "ar" ? "حذف" : locale === "en" ? "Delete" : "Supprimer"}
+                      {tCommon("delete")}
                     </button>
+                    )}
                   </div>
                   <button
+                    type="button"
                     onClick={() => router.push(`/experiences/${selectedExp.id}`)}
                     className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
                   >
-                    Modifier
+                    {tCommon("edit")}
                   </button>
                 </div>
               }
@@ -600,23 +637,23 @@ export default function ExperiencesListClient() {
 
                 <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="font-semibold">{selectedExp.rating.toFixed(1)}</span>
-                    <span className="text-[#2E3A2F]/60">({selectedExp.reviewsCount} avis)</span>
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
+                    <span className="font-semibold">{formatRating(selectedExp.rating)}</span>
+                    <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: selectedExp.reviewsCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#6B7F5B] font-medium">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{selectedExp.city}, {selectedExp.wilayaCode}</span>
+                  <div className="flex items-center gap-1 text-[#4F5F43] font-medium">
+                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{t("locationValue", { city: selectedExp.city, code: selectedExp.wilayaCode })}</span>
                   </div>
                 </div>
 
                 <Tabs
                   items={[
-                    { id: "overview", label: "Aperçu" },
-                    { id: "info", label: "Informations" },
-                    { id: "photos", label: "Photos" },
-                    { id: "calendar", label: "Calendrier" },
-                    { id: "bookings", label: "Réservations" },
+                    { id: "overview", label: t("tabs.overview") },
+                    { id: "info", label: t("tabs.info") },
+                    { id: "photos", label: t("tabs.photos") },
+                    { id: "calendar", label: t("tabs.calendar") },
+                    { id: "bookings", label: t("tabs.bookings") },
                   ]}
                   activeId={panelTab}
                   onChange={setPanelTab}
@@ -627,64 +664,69 @@ export default function ExperiencesListClient() {
                     {/* About Section */}
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-2">
-                        {locale === "ar" ? "حول التجربة (About)" : locale === "en" ? "About This Experience" : "À propos de l'expérience"}
+                        {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoTile label={locale === "ar" ? "الفئة" : locale === "en" ? "Category" : "Catégorie"} value={selectedExp.category || "Culture & Découverte"} />
-                        <InfoTile label={locale === "ar" ? "حجم الفوج" : locale === "en" ? "Max Group" : "Taille max"} value={`${selectedExp.guestCapacity} pers.`} />
-                        <InfoTile label={locale === "ar" ? "المستوى" : locale === "en" ? "Difficulty" : "Niveau"} value="Modéré" />
-                        <InfoTile label={locale === "ar" ? "اللغات" : locale === "en" ? "Languages" : "Langues"} value="FR, AR, EN" />
+                        <InfoTile label={t("about.category")} value={selectedExp.category ? tVerticals(selectedExp.category) : t("categoryOptions.culture")} />
+                        <InfoTile label={t("about.maxGroup")} value={t("about.people", { count: selectedExp.guestCapacity })} />
+                        <InfoTile label={t("about.difficulty")} value={t("about.difficultyModerate")} />
+                        <InfoTile label={t("about.languages")} value="FR, AR, EN" />
                       </div>
                     </div>
 
-                    {/* Price & Discounts Section (Price & Disc) */}
+                    {/* Price & Discounts Section */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
                       <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
-                        <span>{locale === "ar" ? "الأسعار والخصومات (Price & Disc)" : locale === "en" ? "Pricing & Discounts" : "Tarification & Remises"}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">{selectedExp.price.toLocaleString("fr-FR")} DZD <span className="text-[10px] text-[#2E3A2F]/60">/ {locale === "ar" ? "شخص" : locale === "en" ? "person" : "personne"}</span></span>
+                        <span>{t("pricing.title")}</span>
+                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                          {formatDzd(selectedExp.price, locale)}{" "}
+                          <span className="text-[10px] text-[#2E3A2F]/70">{t("pricing.perPerson")}</span>
+                        </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "خصم المجموعات" : locale === "en" ? "Group Discount" : "Remise groupe (>4 pers)"}</span>
-                          <span className="font-medium text-[#6B7F5B]">-10% ({Math.round(selectedExp.price * 0.9).toLocaleString("fr-FR")} DZD)</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.groupDiscount")}</span>
+                          <span className="font-medium text-[#4F5F43]">
+                            {t("pricing.discountValue", { percent: DISCOUNTS.group, price: formatDzd(applyDiscount(selectedExp.price, DISCOUNTS.group), locale) })}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "عمولة المنصة" : locale === "en" ? "Commission" : "Commission DARNA"}</span>
-                          <span className="font-medium text-[#6B7F5B]">12% ({locale === "ar" ? "مشمولة" : locale === "en" ? "included" : "incluse"})</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.commission")}</span>
+                          <span className="font-medium text-[#4F5F43]">{t("pricing.commissionIncluded", { rate: 12 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "سياسة الإلغاء" : locale === "en" ? "Cancellation" : "Politique d'annulation"}</span>
-                          <span className="font-medium text-[#2E3A2F]">Flexible (24h avant)</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.cancellation")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("pricing.cancellationFlexible", { hours: 24 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "الدفع المسبق" : locale === "en" ? "Prepayment" : "Acompte requis"}</span>
-                          <span className="font-medium text-[#2E3A2F]">100% sécurisé</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.prepayment")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("pricing.prepaymentSecure")}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Time & Schedule Section (Time) */}
+                    {/* Time & Schedule Section */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
                       <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#6B7F5B]" />
-                        <span>{locale === "ar" ? "المواعيد والمدة الزمنية (Time)" : locale === "en" ? "Times & Schedule" : "Horaires & Durée"}</span>
+                        <Clock className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+                        <span>{t("schedule.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "المدة الإجمالية" : locale === "en" ? "Total Duration" : "Durée totale"}</span>
-                          <span className="font-medium text-[#2E3A2F]">3 heures</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.totalDuration")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("schedule.hours", { count: 3 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "أوقات الانطلاق" : locale === "en" ? "Departure Times" : "Créneaux de départ"}</span>
-                          <span className="font-medium text-[#2E3A2F]">09h00 / 14h30</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.departureTimes")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{formatTime(9, 0)} / {formatTime(14, 30)}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "أيام النشاط" : locale === "en" ? "Operating Days" : "Jours d'activité"}</span>
-                          <span className="font-medium text-[#2E3A2F]">Tous les jours</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.operatingDays")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("schedule.everyDay")}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "الحد الأدنى للحجز المسبق" : locale === "en" ? "Advance Notice" : "Réservation anticipée"}</span>
-                          <span className="font-medium text-[#6B7F5B]">24 heures à l'avance</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.advanceNotice")}</span>
+                          <span className="font-medium text-[#4F5F43]">{t("schedule.hoursInAdvance", { count: 24 })}</span>
                         </div>
                       </div>
                     </div>
@@ -692,35 +734,38 @@ export default function ExperiencesListClient() {
                     {/* Host Card */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
                       <div className="text-xs font-semibold text-[#2E3A2F] mb-2 flex items-center justify-between">
-                        <span>{locale === "ar" ? "المنظم / المرشد" : locale === "en" ? "Organizer / Guide" : "Organisateur / Guide"}</span>
-                        <span className="text-[11px] text-[#6B7F5B] cursor-pointer hover:underline">
-                          {locale === "ar" ? "عرض الملف" : locale === "en" ? "View profile" : "Voir le profil"}
-                        </span>
+                        <span>{t("host.title")}</span>
+                        <Link
+                          href={`/hosts/${selectedExp.hostId}`}
+                          className="text-[11px] text-[#4F5F43] hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                        >
+                          {t("host.viewProfile")}
+                        </Link>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
+                        <div aria-hidden="true" className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
                           {selectedExp.hostName.charAt(0)}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-[#2E3A2F]">{selectedExp.hostName}</div>
-                          <div className="text-xs text-[#2E3A2F]/60 capitalize flex items-center gap-1.5">
-                            <span>{selectedExp.hostType}</span>
-                            <span>•</span>
-                            <span className="text-[#6B7F5B] flex items-center gap-0.5">
-                              <ShieldCheck className="w-3 h-3" /> {locale === "ar" ? "مرشد معتمد" : locale === "en" ? "Certified Guide" : "Guide certifié"}
+                          <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5">
+                            <span>{tHostTypes(selectedExp.hostType)}</span>
+                            <span aria-hidden="true">•</span>
+                            <span className="text-[#4F5F43] flex items-center gap-0.5">
+                              <ShieldCheck className="w-3 h-3" aria-hidden="true" /> {t("host.certified")}
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Description Section (Disc) */}
+                    {/* Description Section */}
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
-                        {locale === "ar" ? "الوصف الكامل (Description)" : locale === "en" ? "Description" : "Description"}
+                        {t("description.title")}
                       </h4>
                       <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
-                        {selectedExp.description || (locale === "ar" ? "لا يوجد وصف متوفر" : "Aucune description fournie pour cette expérience.")}
+                        {selectedExp.description || t("description.empty")}
                       </p>
                     </div>
                   </div>
@@ -737,29 +782,20 @@ export default function ExperiencesListClient() {
           isOpen={true}
           title={
             confirmAction.type === "delete"
-              ? "Supprimer cette expérience ?"
-              : "Suspendre cette expérience ?"
+              ? t("confirm.deleteTitle")
+              : t("confirm.suspendTitle")
           }
-          description={`Vous êtes sur le point de modifier le statut de "${confirmAction.exp.title}". Cette action sera consignée dans le journal d'audit.`}
-          confirmLabel={confirmAction.type === "delete" ? "Supprimer définitivement" : "Confirmer"}
+          description={t("confirm.description", { title: confirmAction.exp.title })}
+          confirmLabel={confirmAction.type === "delete" ? t("confirm.deleteLabel") : tCommon("confirm")}
           variant={confirmAction.type === "delete" ? "danger" : "primary"}
           onConfirm={async () => {
-            if (confirmAction.type === "delete") {
-              addToast({ title: "Expérience supprimée", variant: "warning" });
-            } else {
-              await suspendListing(confirmAction.exp.id, "Suspension administrative", {
-                id: "usr_admin",
-                name: "Admin",
-                role: "super_admin",
-              });
-              addToast({ title: "Expérience suspendue", variant: "info" });
-            }
-            setConfirmAction(null);
-            fetchData();
+            const ok = await statusActions.remove(confirmAction.exp, t("confirm.deleted"));
+            if (ok) setConfirmAction(null);
           }}
           onCancel={() => setConfirmAction(null)}
         />
       )}
+      {statusActions.dialog}
     </div>
   );
 }

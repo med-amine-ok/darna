@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   Host,
   Listing,
@@ -18,6 +20,7 @@ import {
   ListingVertical,
 } from "@/lib/types";
 import { WILAYAS } from "@/lib/utils/wilayas";
+import { DEFAULT_COMMISSION_RATES, computeBookingAmounts } from "@/lib/pricing";
 
 // Simple LCG pseudo-random number generator for deterministic seed
 function createRng(seed: number) {
@@ -138,12 +141,7 @@ export function generateSeedData() {
       businessName = HOSTEL_NAMES[(i - 1) % HOSTEL_NAMES.length] + ` (#${i})`;
     }
 
-    const defaultCommissions: Record<HostType, number> = {
-      individual: 12.0,
-      agency: 15.0,
-      hotel: 18.0,
-      hostel: 10.0,
-    };
+    const defaultCommissions: Record<HostType, number> = DEFAULT_COMMISSION_RATES;
 
     const isOverridden = rng() < 0.15;
     const commissionRate = isOverridden
@@ -211,6 +209,7 @@ export function generateSeedData() {
       reviewsCount: randomInt(4, 95),
       listingsCount: hostType === "individual" ? randomInt(1, 4) : randomInt(3, 16),
       bookingsCount: randomInt(8, 140),
+      // Placeholder: overwritten below with the balance derived from the ledger.
       walletBalance: randomInt(-15000, 380000),
       commissionRate,
       isCommissionOverridden: isOverridden,
@@ -363,12 +362,13 @@ export function generateSeedData() {
       statusRoll < 0.97 ? "disputed" : "refunded";
 
     const nights = randomInt(1, 7);
-    const basePrice = listing.price * nights;
-    const serviceFee = Math.round(basePrice * 0.07);
-    const totalAmount = basePrice + serviceFee;
+    const basePrice = Math.round(listing.price * nights);
     const commRate = host.commissionRate;
-    const commAmount = Math.round(basePrice * (commRate / 100));
-    const hostPayout = basePrice - commAmount;
+    const amounts = computeBookingAmounts(basePrice, commRate);
+    const serviceFee = amounts.serviceFeeDzd;
+    const totalAmount = amounts.totalAmountDzd;
+    const commAmount = amounts.commissionAmountDzd;
+    const hostPayout = amounts.hostPayoutDzd;
 
     const checkInOffset = randomInt(-120, 60);
     const checkIn = new Date(Date.now() + checkInOffset * 86400000);
@@ -402,6 +402,7 @@ export function generateSeedData() {
       commissionAmountDzd: commAmount,
       hostPayoutDzd: hostPayout,
       paymentStatus: status === "refunded" ? "refunded" : status === "pending" ? "pending" : "paid",
+      refundedAmountDzd: status === "refunded" ? totalAmount : 0,
       paymentMethod: randomItem(["cib_edahabia", "baridimob", "ccp_transfer"]),
       createdAt: new Date(checkIn.getTime() - randomInt(5, 30) * 86400000).toISOString(),
       disputeReason: status === "disputed" ? "Discrepancy regarding arrival check-in access." : undefined,
@@ -451,10 +452,10 @@ export function generateSeedData() {
   }
 
   // 6. Generate ≥ 1,550 Wallet Transactions
-  // Strict Ledger Rule: balances derived from transactions only!
-  const transactions: WalletTransaction[] = [];
-  const hostBalances: Record<string, number> = {};
-  hosts.forEach((h) => (hostBalances[h.id] = 0));
+  // Strict Ledger Rule: balances derived from transactions only. Entries are
+  // drafted first, then sorted chronologically so that each balanceAfter is
+  // the running balance at that point in time.
+  const drafts: Omit<WalletTransaction, "balanceAfter" | "id" | "reference">[] = [];
 
   for (let i = 1; i <= 1550; i++) {
     const host = randomItem(hosts);
@@ -485,23 +486,39 @@ export function generateSeedData() {
       desc = `Offline bank transfer credited by Admin (Ref: SATIM-DEP-${randomInt(10000, 99999)})`;
     }
 
-    hostBalances[host.id] = (hostBalances[host.id] || 0) + amount;
-
-    transactions.push({
-      id: `tx_${i.toString().padStart(4, "0")}`,
+    drafts.push({
       walletId: `wlt_${host.id}`,
       hostId: host.id,
       hostName: host.businessName || host.ownerName,
       hostType: host.hostType,
       type,
       amount,
-      balanceAfter: hostBalances[host.id],
-      reference: `TXN-DZ-${(10000 + i).toString()}`,
       description: desc,
       bookingRef: type === "booking_payment" ? `DAR-2026-${randomInt(1000, 9999)}` : undefined,
-      createdAt: new Date(Date.now() - randomInt(0, 180) * 86400000).toISOString(),
+      createdAt: new Date(Date.now() - randomInt(0, 180) * 86400000 - randomInt(0, 86399) * 1000).toISOString(),
     });
   }
+
+  drafts.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const hostBalances: Record<string, number> = {};
+  hosts.forEach((h) => (hostBalances[h.id] = 0));
+  const chronological: WalletTransaction[] = drafts.map((d, idx) => {
+    hostBalances[d.hostId] = (hostBalances[d.hostId] || 0) + d.amount;
+    const n = idx + 1;
+    return {
+      ...d,
+      id: `tx_${n.toString().padStart(4, "0")}`,
+      reference: `TXN-DZ-${(10000 + n).toString()}`,
+      balanceAfter: hostBalances[d.hostId],
+    };
+  });
+  // Store newest first (the order every ledger view displays).
+  const transactions: WalletTransaction[] = chronological.reverse();
+
+  // Host profiles show the ledger-derived balance, never an independent number.
+  hosts.forEach((h) => {
+    h.walletBalance = hostBalances[h.id] || 0;
+  });
 
   // Create Wallets using strictly derived balances
   const wallets: HostWallet[] = hosts.map((h) => {
@@ -555,6 +572,48 @@ export function generateSeedData() {
     });
   }
 
+  // 8. Payout requests (hosts asking to withdraw their wallet balance)
+  const payouts: PayoutRequest[] = [];
+  const methods: PayoutRequest["payoutMethod"][] = ["ccp", "bank_wire", "baridimob"];
+  const payoutHosts = hosts.filter((h) => h.status === "approved").slice(0, 14);
+  payoutHosts.forEach((h, idx) => {
+    const balance = hostBalances[h.id] || 0;
+    const method = methods[idx % methods.length];
+    const accountDetails: PayoutRequest["accountDetails"] =
+      method === "ccp"
+        ? { ccpRip: `00799999${randomInt(1000, 9999)}${randomInt(100000, 999999)}${randomInt(10, 99)}` }
+        : method === "bank_wire"
+          ? { rib: `00200${randomInt(100, 999)}${randomInt(1000000, 9999999)}${randomInt(10000, 99999)}` }
+          : { phone: `+213 ${randomItem(["5", "6", "7"])}${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)}` };
+    // Most pending requests fit the balance; a couple deliberately exceed it
+    // so the "insufficient balance" guard is visible in the demo.
+    const status: PayoutRequest["status"] = idx < 9 ? "pending" : idx < 12 ? "approved" : "rejected";
+    const exceeds = status === "pending" && idx % 4 === 3;
+    const amountDzd =
+      exceeds || balance <= 10000
+        ? Math.max(10000, Math.round(Math.abs(balance) + randomInt(20000, 80000)))
+        : Math.round(Math.min(balance, randomInt(15000, 250000)) / 100) * 100;
+    const requestedAt = new Date(Date.now() - randomInt(1, 12) * 86400000).toISOString();
+    payouts.push({
+      id: `pay_${(idx + 1).toString().padStart(3, "0")}`,
+      hostId: h.id,
+      hostName: h.businessName || h.ownerName,
+      hostType: h.hostType,
+      amountDzd,
+      payoutMethod: method,
+      accountDetails,
+      status,
+      requestedAt,
+      ...(status !== "pending"
+        ? {
+            processedAt: new Date(new Date(requestedAt).getTime() + 86400000).toISOString(),
+            processedBy: "DARNA Administrator",
+            rejectionReason: status === "rejected" ? "Account holder name does not match host identity" : undefined,
+          }
+        : {}),
+    });
+  });
+
   return {
     users,
     hosts,
@@ -564,5 +623,6 @@ export function generateSeedData() {
     wallets,
     transactions,
     auditEntries,
+    payouts,
   };
 }

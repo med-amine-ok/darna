@@ -1,33 +1,101 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Settings,
-  Shield,
-  Globe,
-  Bell,
-  Lock,
-  User,
-  Sliders,
-  CheckCircle,
-  AlertTriangle,
-  Server,
-  Save,
-  Languages,
-  Clock,
-  ShieldCheck,
-} from "lucide-react";
-import { getPlatformSettings, updatePlatformSettings } from "@/lib/data/settings";
-import { PlatformSettings } from "@/lib/types";
+import { Bell, Save, Languages, ShieldCheck, Sliders } from "lucide-react";
+import { getPlatformSettings, updatePlatformSettings } from "@/lib/actions/settings";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Tabs } from "@/components/ui/Tabs";
-import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { formatNumber } from "@/lib/utils/format";
 
 export interface SettingsClientProps {
   locale: string;
   initialTab?: "general" | "languages" | "notifications" | "security";
+}
+
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
+const INPUT_CLASS = `text-xs rounded-xl border border-tertiary/70 p-2.5 text-primary font-bold focus:outline-none focus:border-secondary ${FOCUS_RING}`;
+
+/** Supported UI languages — names are autonyms, shown as-is in every locale. */
+const LANGUAGES: { code: "fr" | "ar" | "en"; autonym: string; badgeKey: string; badgeClass: string }[] = [
+  {
+    code: "fr",
+    autonym: "Français (FR)",
+    badgeKey: "languages.sourceOfTruth",
+    badgeClass: "bg-secondary/15 text-secondary-700",
+  },
+  {
+    code: "ar",
+    autonym: "العربية (AR)",
+    badgeKey: "languages.fullRtl",
+    badgeClass: "bg-primary/10 text-primary",
+  },
+  {
+    code: "en",
+    autonym: "English (EN)",
+    badgeKey: "languages.international",
+    badgeClass: "bg-neutral-100 text-neutral-600",
+  },
+];
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+/** Accessible on/off switch: a real checkbox exposed as role="switch". */
+function SwitchRow({
+  label,
+  hint,
+  checked,
+  onChange,
+  emphasized,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  /** Larger text, used when the switch is the only control of its card. */
+  emphasized?: boolean;
+}) {
+  const id = useId();
+  const hintId = `${id}-hint`;
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <label
+          htmlFor={id}
+          className={`font-bold text-primary block cursor-pointer ${emphasized ? "text-sm" : "text-xs"}`}
+        >
+          {label}
+        </label>
+        <p id={hintId} className={`text-neutral-500 mt-0.5 ${emphasized ? "text-xs" : "text-[11px]"}`}>
+          {hint}
+        </p>
+      </div>
+      <span className="relative inline-flex items-center shrink-0">
+        <input
+          id={id}
+          type="checkbox"
+          role="switch"
+          aria-checked={checked}
+          aria-describedby={hintId}
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="sr-only peer"
+        />
+        <label
+          htmlFor={id}
+          aria-hidden="true"
+          className="w-11 h-6 bg-neutral-300 rounded-full cursor-pointer relative transition-colors peer-focus:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-accent-600 peer-focus-visible:ring-offset-2 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary-700"
+        />
+      </span>
+    </div>
+  );
 }
 
 export default function SettingsClient({
@@ -35,11 +103,11 @@ export default function SettingsClient({
   initialTab = "general",
 }: SettingsClientProps) {
   const t = useTranslations("settings");
-  const tCommon = useTranslations("common");
   const [activeTab, setActiveTab] = useState<string>(initialTab);
-  const [settings, setSettings] = useState<PlatformSettings | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const platformNameId = useId();
+  const serviceFeeId = useId();
+  const sessionTimeoutId = useId();
 
   // Form states
   const [platformName, setPlatformName] = useState("DARNA");
@@ -54,23 +122,20 @@ export default function SettingsClient({
   const [instantBookingNotifications, setInstantBookingNotifications] = useState(true);
 
   const { success, error } = useToast();
+  const can = useCan();
 
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
-      const data = await getPlatformSettings();
-      setSettings(data);
+      const data = unwrap(await getPlatformSettings());
       setPlatformName(data.platformName);
       setServiceFeePercent(data.serviceFeePercent ?? data.guestServiceFeePercent ?? 5);
       setMaintenanceMode(data.maintenanceMode);
       setTwoFactorEnabled(data.security?.twoFactorRequired || false);
       setSessionTimeoutMinutes(data.security?.sessionTimeoutMinutes || 120);
-    } catch (err: any) {
-      error("Erreur de chargement", err.message);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      error(t("toasts.loadFailed"), errorMessage(err));
     }
-  }, [error]);
+  }, [error, t]);
 
   useEffect(() => {
     loadData();
@@ -78,10 +143,9 @@ export default function SettingsClient({
 
   const handleSave = async () => {
     setSaving(true);
-    const actor = { id: "adm_01", name: "Admin", role: "super_admin" as const };
     try {
-      const updated = await updatePlatformSettings(
-        {
+      unwrap(
+        await updatePlatformSettings({
           platformName,
           serviceFeePercent,
           maintenanceMode,
@@ -89,14 +153,11 @@ export default function SettingsClient({
             sessionTimeoutMinutes,
             twoFactorRequired: twoFactorEnabled,
           },
-        },
-        actor
+        })
       );
-
-      setSettings(updated);
-      success("Paramètres enregistrés", "La configuration de la plateforme a été mise à jour.");
-    } catch (err: any) {
-      error("Échec de sauvegarde", err.message);
+      success(t("toasts.saved"), t("toasts.savedHint"));
+    } catch (err) {
+      error(t("toasts.saveFailed"), errorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -106,23 +167,27 @@ export default function SettingsClient({
     <div className="max-w-4xl space-y-6 text-start">
       <PageHeader
         title={t("title")}
-        subtitle="Configurez le nom de la plateforme, la sécurité, les langues et les règles globales."
-        actions={[
-          {
-            label: saving ? "Enregistrement..." : "Enregistrer les modifications",
-            icon: <Save className="w-4 h-4" />,
-            variant: "primary",
-            onClick: handleSave,
-          },
-        ]}
+        subtitle={t("subtitle")}
+        actions={
+          can("settings.manage")
+            ? [
+                {
+                  label: saving ? t("saving") : t("saveSettings"),
+                  icon: <Save className="w-4 h-4" aria-hidden="true" />,
+                  variant: "primary",
+                  onClick: handleSave,
+                },
+              ]
+            : []
+        }
       />
 
       <Tabs
         items={[
-          { id: "general", label: "Général", icon: <Sliders className="w-4 h-4" /> },
-          { id: "languages", label: "Langues & traductions", icon: <Languages className="w-4 h-4" /> },
-          { id: "notifications", label: "Notifications & alertes", icon: <Bell className="w-4 h-4" /> },
-          { id: "security", label: "Sécurité & sessions", icon: <ShieldCheck className="w-4 h-4" /> },
+          { id: "general", label: t("tabs.general"), icon: <Sliders className="w-4 h-4" aria-hidden="true" /> },
+          { id: "languages", label: t("tabs.languages"), icon: <Languages className="w-4 h-4" aria-hidden="true" /> },
+          { id: "notifications", label: t("tabs.notifications"), icon: <Bell className="w-4 h-4" aria-hidden="true" /> },
+          { id: "security", label: t("tabs.security"), icon: <ShieldCheck className="w-4 h-4" aria-hidden="true" /> },
         ]}
         activeId={activeTab}
         onChange={setActiveTab}
@@ -131,185 +196,151 @@ export default function SettingsClient({
       {/* General Settings */}
       {activeTab === "general" && (
         <div className="space-y-4">
-          <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-            <h3 className="font-bold text-primary text-base">Identité de la plateforme</h3>
+          <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+            <h2 className="font-bold text-primary text-base">{t("identity.title")}</h2>
 
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">Nom public de la plateforme</label>
+              <label htmlFor={platformNameId} className="block text-xs font-bold text-primary mb-1">
+                {t("platformName")}
+              </label>
               <input
+                id={platformNameId}
                 type="text"
                 value={platformName}
                 onChange={(e) => setPlatformName(e.target.value)}
-                className="w-full text-xs rounded-xl border border-tertiary/70 p-2.5 bg-darnaBg/30 text-primary font-bold focus:outline-none focus:border-secondary"
+                className={`w-full bg-darnaBg/30 ${INPUT_CLASS}`}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                Frais de service voyageur par défaut (%)
+              <label htmlFor={serviceFeeId} className="block text-xs font-bold text-primary mb-1">
+                {t("serviceFee")}
               </label>
               <input
+                id={serviceFeeId}
                 type="number"
                 min="0"
                 max="25"
                 value={serviceFeePercent}
                 onChange={(e) => setServiceFeePercent(Number(e.target.value))}
-                className="w-32 text-xs rounded-xl border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
+                aria-describedby={`${serviceFeeId}-hint`}
+                className={`w-32 font-mono ${INPUT_CLASS}`}
               />
-              <p className="text-[11px] text-neutral-400 mt-1">
-                Appliqué au sous-total des réservations avant prélèvement de la commission prestataire.
+              <p id={`${serviceFeeId}-hint`} className="text-[11px] text-neutral-500 mt-1">
+                {t("identity.serviceFeeHint")}
               </p>
             </div>
-          </div>
+          </section>
 
-          <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-primary text-sm">Mode maintenance</h4>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Verrouille l'accès public au marketplace tout en permettant aux administrateurs de naviguer.
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={maintenanceMode}
-                  onChange={(e) => setMaintenanceMode(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
-              </label>
-            </div>
-          </div>
+          <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-3">
+            <SwitchRow
+              emphasized
+              label={t("maintenance")}
+              hint={t("identity.maintenanceHint")}
+              checked={maintenanceMode}
+              onChange={setMaintenanceMode}
+            />
+          </section>
         </div>
       )}
 
       {/* Languages */}
       {activeTab === "languages" && (
-        <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-          <h3 className="font-bold text-primary text-base">Langues prises en charge</h3>
-          <p className="text-xs text-neutral-500">
-            La plateforme DARNA fonctionne en 3 langues officielles avec support RTL complet pour l'arabe.
-          </p>
+        <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+          <h2 className="font-bold text-primary text-base">{t("languages.title")}</h2>
+          <p className="text-xs text-neutral-500">{t("languages.description", { count: LANGUAGES.length })}</p>
 
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40">
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-xs text-primary">Français (FR)</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary/15 text-secondary">
-                  Source de vérité
+          <ul className="space-y-3 pt-2">
+            {LANGUAGES.map((lang) => (
+              <li
+                key={lang.code}
+                className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    lang={lang.code}
+                    dir={lang.code === "ar" ? "rtl" : "ltr"}
+                    className="font-bold text-xs text-primary"
+                  >
+                    {lang.autonym}
+                  </span>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${lang.badgeClass}`}>
+                    {t(lang.badgeKey)}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-secondary-700">
+                  {t("languages.translated", { percent: formatNumber(100, locale) })}
                 </span>
-              </div>
-              <span className="text-xs font-semibold text-secondary">100% traduit</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40">
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-xs text-primary">العربية (AR)</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  RTL complet
-                </span>
-              </div>
-              <span className="text-xs font-semibold text-secondary">100% traduit</span>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40">
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-xs text-primary">English (EN)</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600">
-                  International
-                </span>
-              </div>
-              <span className="text-xs font-semibold text-secondary">100% traduit</span>
-            </div>
-          </div>
-        </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {/* Notifications */}
       {activeTab === "notifications" && (
-        <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-          <h3 className="font-bold text-primary text-base">Canaux de notification</h3>
-          <div className="space-y-3 pt-1">
-            <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-              <div>
-                <span className="font-bold text-xs text-primary block">Alertes par email</span>
-                <span className="text-[11px] text-neutral-400">Pour chaque nouvelle demande de validation</span>
-              </div>
-              <input
-                type="checkbox"
+        <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+          <h2 className="font-bold text-primary text-base">{t("notifications.title")}</h2>
+          <div className="pt-1 divide-y divide-neutral-100">
+            <div className="py-3">
+              <SwitchRow
+                label={t("notifications.email")}
+                hint={t("notifications.emailHint")}
                 checked={emailAlerts}
-                onChange={(e) => setEmailAlerts(e.target.checked)}
-                className="w-4 h-4 text-secondary rounded cursor-pointer"
+                onChange={setEmailAlerts}
               />
             </div>
-
-            <div className="flex items-center justify-between py-2 border-b border-neutral-100">
-              <div>
-                <span className="font-bold text-xs text-primary block">Notifications SMS urgentes</span>
-                <span className="text-[11px] text-neutral-400">Pour les litiges critiques et incidents de sécurité</span>
-              </div>
-              <input
-                type="checkbox"
+            <div className="py-3">
+              <SwitchRow
+                label={t("notifications.sms")}
+                hint={t("notifications.smsHint")}
                 checked={smsAlerts}
-                onChange={(e) => setSmsAlerts(e.target.checked)}
-                className="w-4 h-4 text-secondary rounded cursor-pointer"
+                onChange={setSmsAlerts}
               />
             </div>
-
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <span className="font-bold text-xs text-primary block">Alertes temps réel dans le panneau</span>
-                <span className="text-[11px] text-neutral-400">Cloche de notification et badges de comptage</span>
-              </div>
-              <input
-                type="checkbox"
+            <div className="py-3">
+              <SwitchRow
+                label={t("notifications.panel")}
+                hint={t("notifications.panelHint")}
                 checked={instantBookingNotifications}
-                onChange={(e) => setInstantBookingNotifications(e.target.checked)}
-                className="w-4 h-4 text-secondary rounded cursor-pointer"
+                onChange={setInstantBookingNotifications}
               />
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Security */}
       {activeTab === "security" && (
-        <div className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-          <h3 className="font-bold text-primary text-base">Politique de sécurité</h3>
+        <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
+          <h2 className="font-bold text-primary text-base">{t("securityPolicy.title")}</h2>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-primary mb-1">
-                Délai d'expiration de session administrateur (minutes)
+              <label htmlFor={sessionTimeoutId} className="block text-xs font-bold text-primary mb-1">
+                {t("sessionTimeout")}
               </label>
               <input
+                id={sessionTimeoutId}
                 type="number"
                 min="15"
                 max="480"
                 value={sessionTimeoutMinutes}
                 onChange={(e) => setSessionTimeoutMinutes(Number(e.target.value))}
-                className="w-32 text-xs rounded-xl border border-tertiary/70 p-2.5 font-mono font-bold text-primary focus:outline-none focus:border-secondary"
+                className={`w-32 font-mono ${INPUT_CLASS}`}
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
-              <div>
-                <span className="font-bold text-xs text-primary block">Authentification à deux facteurs (2FA)</span>
-                <span className="text-[11px] text-neutral-400">Obligatoire pour les rôles Super Administrateur</span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={twoFactorEnabled}
-                  onChange={(e) => setTwoFactorEnabled(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
-              </label>
+            <div className="pt-4 border-t border-neutral-100">
+              <SwitchRow
+                label={t("twoFactor")}
+                hint={t("securityPolicy.twoFactorHint")}
+                checked={twoFactorEnabled}
+                onChange={setTwoFactorEnabled}
+              />
             </div>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

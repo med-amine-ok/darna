@@ -15,12 +15,12 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variants = {
     primary: "bg-primary text-white",
-    secondary: "bg-secondary text-white",
-    accent: "bg-accent text-white",
+    secondary: "bg-secondary-700 text-white",
+    accent: "bg-accent-600 text-white",
     tertiary: "bg-tertiary text-primary",
     outline: "border border-tertiary text-primary bg-transparent",
-    danger: "bg-accent/15 text-accent border border-accent/25",
-    success: "bg-secondary/15 text-secondary border border-secondary/25",
+    danger: "bg-accent/15 text-accent-700 border border-accent/25",
+    success: "bg-secondary/15 text-secondary-800 border border-secondary/25",
     warning: "bg-amber-100 text-amber-800 border border-amber-200",
   };
 

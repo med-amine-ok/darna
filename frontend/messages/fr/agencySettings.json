@@ -1,0 +1,52 @@
+{
+  "title": "Paramètres de l'agence",
+  "subtitle": "Gérez le profil de votre société, vos contacts et vos préférences d'organisation.",
+  "verificationPending": "Vérification en attente",
+  "dangerZone": "Zone dangereuse",
+  "disbandAgency": "Dissoudre / Supprimer l'agence",
+  "backToHost": "Retour à l'espace hôte",
+  "viewPublicProfile": "Voir le profil public",
+  "opensInNewTab": "(s'ouvre dans un nouvel onglet)",
+  "verification": {
+    "label": "Conformité et statut de vérification",
+    "verified": "Agence de tourisme vérifiée",
+    "description": "Les agences vérifiées obtiennent le label Partenaire DARNA et une meilleure visibilité auprès des voyageurs de la diaspora."
+  },
+  "form": {
+    "title": "Informations de l'organisation",
+    "name": "Nom de l'agence",
+    "rcNumber": "Numéro du Registre du commerce (RC)",
+    "email": "E-mail professionnel",
+    "phone": "Téléphone professionnel (+213)",
+    "address": "Adresse du siège",
+    "teamSize": "Taille de l'équipe",
+    "teamSize1": "1 personne (entreprise individuelle)",
+    "teamSizeRange": "{min} à {max} employés",
+    "teamSizeOver": "Plus de {min} employés",
+    "description": "Présentation et description publique de l'agence",
+    "approvalMode": "Politique de réservation de l'agence (mode d'approbation)",
+    "instantTitle": "Réservation instantanée",
+    "instantDesc": "Séjours et véhicules confirmés immédiatement, sans validation manuelle.",
+    "requestTitle": "Validation par l'agence (24 h)",
+    "requestDesc": "Votre équipe vérifie les permis et la caution avant d'accepter.",
+    "readOnly": "Seul le propriétaire ou un administrateur peut modifier ces paramètres.",
+    "saving": "Enregistrement…",
+    "save": "Enregistrer le profil de l'agence"
+  },
+  "danger": {
+    "description": "La désactivation de cet espace agence retire l'accès à tous les membres de l'équipe et dépublie toutes les annonces de {name}. Les annonces d'hôtes particuliers sont conservées.",
+    "confirmTitle": "Confirmer la désactivation de l'agence",
+    "confirmMessage": "La désactivation de votre agence dépubliera tous ses logements et véhicules, retirera l'accès de votre équipe et fermera votre espace professionnel DARNA.",
+    "confirmPrompt": "Pour confirmer, saisissez le nom exact de l'organisation : <strong>{name}</strong>",
+    "confirmButton": "Désactiver l'agence",
+    "cancelButton": "Conserver l'espace"
+  },
+  "toasts": {
+    "saved": "Profil de l'agence mis à jour.",
+    "savedReverify": "Profil enregistré. Vos informations légales ont changé : la vérification est de nouveau en attente.",
+    "saveFailed": "Impossible de mettre à jour le profil de l'agence.",
+    "nameMismatch": "Saisissez le nom exact de l'organisation pour confirmer.",
+    "deactivated": "Espace agence désactivé.",
+    "deleteFailed": "Impossible de désactiver l'agence."
+  }
+}

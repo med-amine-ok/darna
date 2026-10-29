@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
+import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, Minus, HelpCircle } from "lucide-react";
 
 export interface KpiCardProps {
@@ -38,6 +39,8 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   isPositiveDelta,
   subtitle,
 }) => {
+  const t = useTranslations("uiKit.kpi");
+  const tooltipId = useId();
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Compute effective comparison values (backward compatible with delta/subtitle)
@@ -71,7 +74,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
     effectiveVariant === "good"
       ? "bg-secondary/15 text-[#2E3A2F] border-secondary/30"
       : effectiveVariant === "bad"
-      ? "bg-[#C96F4F]/15 text-[#C96F4F] border-[#C96F4F]/30"
+      ? "bg-[#C96F4F]/15 text-accent-700 border-[#C96F4F]/30"
       : "bg-neutral-100 text-neutral-700 border-neutral-200";
 
   const sparklineStroke =
@@ -100,21 +103,28 @@ export const KpiCard: React.FC<KpiCardProps> = ({
                   type="button"
                   onMouseEnter={() => setShowTooltip(true)}
                   onMouseLeave={() => setShowTooltip(false)}
+                  onFocus={() => setShowTooltip(true)}
+                  onBlur={() => setShowTooltip(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setShowTooltip(false);
+                  }}
                   onClick={() => setShowTooltip(!showTooltip)}
-                  className="text-neutral-400 hover:text-neutral-700 p-0.5 rounded transition cursor-pointer"
-                  aria-label={`Help about ${title}`}
+                  className="text-neutral-500 hover:text-neutral-700 p-0.5 rounded transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  aria-label={t("help", { title })}
+                  aria-expanded={showTooltip}
+                  aria-describedby={showTooltip ? tooltipId : undefined}
                 >
-                  <HelpCircle className="w-3.5 h-3.5" />
+                  <HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
 
                 {showTooltip && (
-                  <div className="absolute start-0 bottom-full mb-2 w-64 p-3 rounded-2xl bg-[#1C241D] text-white text-[11px] shadow-2xl border border-[#3A493B] z-50 animate-in fade-in zoom-in-95 pointer-events-none">
+                  <div id={tooltipId} role="tooltip" className="absolute start-0 bottom-full mb-2 w-64 p-3 rounded-2xl bg-[#1C241D] text-white text-[11px] shadow-2xl border border-[#3A493B] z-50 animate-in fade-in zoom-in-95 pointer-events-none">
                     <p className="font-medium leading-relaxed">
                       {helpTooltip.definition}
                     </p>
                     {helpTooltip.howItIsCounted && (
                       <p className="mt-1.5 pt-1.5 border-t border-[#3A493B] text-neutral-300 text-[10px]">
-                        <span className="font-bold text-tertiary">Calcul : </span>
+                        <span className="font-bold text-tertiary">{t("howCounted")} </span>
                         {helpTooltip.howItIsCounted}
                       </p>
                     )}
@@ -125,7 +135,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
           </div>
 
           {icon && (
-            <div className="w-8 h-8 rounded-xl bg-darnaBg border border-tertiary/70 flex items-center justify-center text-primary shrink-0">
+            <div aria-hidden="true" className="w-8 h-8 rounded-xl bg-darnaBg border border-tertiary/70 flex items-center justify-center text-primary shrink-0">
               {icon}
             </div>
           )}
@@ -144,11 +154,11 @@ export const KpiCard: React.FC<KpiCardProps> = ({
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${badgeClasses}`}
           >
             {effectiveDirection === "up" ? (
-              <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+              <TrendingUp className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             ) : effectiveDirection === "down" ? (
-              <TrendingDown className="w-3.5 h-3.5 shrink-0" />
+              <TrendingDown className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             ) : (
-              <Minus className="w-3.5 h-3.5 shrink-0" />
+              <Minus className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             )}
             <span>{effectiveSentence}</span>
           </span>
@@ -156,7 +166,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
 
         {/* Minimal Sparkline */}
         {sparklineData.length > 1 && (
-          <div className="w-16 h-6 shrink-0 opacity-80">
+          <div className="w-16 h-6 shrink-0 opacity-80" aria-hidden="true">
             <svg
               viewBox={`0 0 ${width} ${height}`}
               className="w-full h-full overflow-visible"

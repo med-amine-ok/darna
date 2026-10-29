@@ -1,39 +1,33 @@
-import { cookies } from "next/headers";
-import { getCurrentUser } from "@/lib/data/auth";
-import { getHostListings, getListings } from "@/lib/data/listings";
+import { hostPageMetadata } from "@/components/host/hostMetadata";
+import { requireHostContext, hostOwnerKey } from "@/lib/server/host-context";
+import { getHostListings } from "@/lib/data/listings";
 import { getReservations } from "@/lib/data/reservations";
+import { getOverridesForListings } from "@/lib/data/calendar";
 import HostCalendarClient from "@/components/host/HostCalendarClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function HostCalendarPage() {
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
-  const cookieHostType = cookieStore.get("darna_host_type")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+export function generateMetadata({ params }: { params: { locale: string } }) {
+  return hostPageMetadata(params.locale, "calendar");
+}
 
-  const effectiveHostType = currentUser?.hostType || cookieHostType;
-  const isAgency = effectiveHostType === "agency";
+export default async function HostCalendarPage({ params }: { params: { locale: string } }) {
+  const ctx = await requireHostContext(params?.locale || "en", "/host/calendar");
+  const owner = hostOwnerKey(ctx);
 
-  const hostId = currentUser?.id || "usr_amina";
-  const orgId = isAgency ? (currentUser?.organizationId || cookieAgencyId) : undefined;
-
-  let [userListings, reservations] = await Promise.all([
-    getHostListings(orgId || hostId),
-    getReservations({ hostId, organizationId: orgId }),
+  const [hostListings, reservations] = await Promise.all([
+    getHostListings(owner),
+    getReservations({ hostId: owner.userId, organizationId: owner.organizationId }),
   ]);
 
-  if (!userListings || userListings.length === 0) {
-    const allListings = await getListings();
-    userListings = allListings.slice(0, 3);
-  }
+  const overrides = await getOverridesForListings(hostListings.map((l) => l.id));
 
   return (
     <HostCalendarClient
-      hostListings={userListings}
+      hostListings={hostListings}
       reservations={reservations}
-      currentUser={currentUser}
+      currentUser={ctx.user}
+      overrides={overrides}
     />
   );
 }

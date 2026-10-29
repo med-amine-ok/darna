@@ -1,8 +1,18 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { Listing, ListingStatus, ListingVertical, PaginatedResult } from "@/lib/types";
+import { Listing, ListingStatus, PaginatedResult, AdminActor, Permission } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
-import { logAudit } from "./audit";
+import {
+  canTransitionListing,
+  isValidReason,
+  normalizeListingStatus,
+  LISTING_STATUSES_REQUIRING_REASON,
+  type CanonicalListingStatus,
+} from "@/lib/domain/transitions";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { logAudit, logExport } from "./audit";
+import { DomainError, ValidationError } from "./errors";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -205,144 +215,152 @@ export async function getListingById(id: string): Promise<Listing | null> {
   return listing ? { ...listing } : null;
 }
 
-export async function approveListing(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Listing> {
-  assertCan(actor.role, "listings.approve");
-  await delay(200);
-
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
-  const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status: "approved",
-  };
-
-  await logAudit(
-    actor,
-    "LISTING_APPROVE",
-    "listing",
-    id,
-    `Approved listing: ${prev.title}`,
-    prev,
-    store.listings[idx]
+/** Full filtered listing list (all pages) as CSV; audited. */
+export async function exportListings(params: ListingFilterParams, actor: AdminActor): Promise<CsvExport> {
+  const result = await listListings({ ...params, page: 1, pageSize: Number.MAX_SAFE_INTEGER });
+  const rows = result.rows;
+  const csv = toCsv(
+    ["ID", "Title", "Vertical", "Property Type", "Host", "Host Type", "Status", "Price (DZD)", "Wilaya", "City", "Capacity", "Rating", "Reviews", "Bookings", "Featured", "Reported", "Created"],
+    rows.map((l) => [
+      l.formattedId || l.id, l.title, l.category, l.propertyType, l.hostName, l.hostType, l.status, l.price,
+      l.wilayaCode, l.city, l.guestCapacity, l.rating, l.reviewsCount, l.bookingsCount, l.isFeatured, l.isReported, l.createdAt,
+    ])
   );
-
-  return store.listings[idx];
+  await logExport(actor, "listings", rows.length, { ...params });
+  return { filename: `darna_listings_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
 }
 
-export async function rejectListing(
-  id: string,
-  reason: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Listing> {
-  assertCan(actor.role, "listings.reject");
-  await delay(200);
-
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
-  const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status: "rejected",
-    adminNotes: [...store.listings[idx].adminNotes, `Rejected: ${reason}`],
-  };
-
-  await logAudit(
-    actor,
-    "LISTING_REJECT",
-    "listing",
-    id,
-    `Rejected listing ${prev.title}: ${reason}`,
-    prev,
-    store.listings[idx]
-  );
-
-  return store.listings[idx];
+function permissionForListingTarget(status: CanonicalListingStatus): Permission {
+  switch (status) {
+    case "rejected":
+      return "listings.reject";
+    case "suspended":
+    case "archived":
+      return "listings.suspend";
+    case "deleted":
+      return "listings.delete";
+    default:
+      return "listings.approve";
+  }
 }
 
-export async function requestChangesListing(
+/**
+ * Single guarded entry point for listing status changes: permission for the
+ * target status, mandatory reason (reject / suspend / request changes), and
+ * the allowed-transition map. Soft delete remembers the previous status.
+ */
+async function transitionListing(
   id: string,
-  notes: string,
-  actor: { id: string; name: string; role: any }
+  target: ListingStatus,
+  actor: AdminActor,
+  opts: { reason?: string; auditAction: string; notePrefix?: string }
 ): Promise<Listing> {
-  assertCan(actor.role, "listings.approve");
+  const to = normalizeListingStatus(target);
+  assertCan(actor.role, permissionForListingTarget(to));
+  if (LISTING_STATUSES_REQUIRING_REASON.includes(to) && !isValidReason(opts.reason)) {
+    throw new ValidationError(`A reason is required to move a listing to ${to}`);
+  }
   await delay(200);
 
   const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
+  if (idx === -1) throw new DomainError("Listing not found");
   const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status: "changes_requested",
-    adminNotes: [...store.listings[idx].adminNotes, `Changes requested: ${notes}`],
+  if (!canTransitionListing(prev.status, to)) {
+    throw new DomainError(`Cannot move a listing from ${prev.status} to ${to}`);
+  }
+
+  const next: Listing = {
+    ...prev,
+    status: to,
+    statusBeforeDelete: to === "deleted" ? prev.status : prev.statusBeforeDelete,
+    updatedAt: new Date().toISOString(),
+    adminNotes: opts.reason?.trim()
+      ? [...prev.adminNotes, `${opts.notePrefix ?? to}: ${opts.reason.trim()}`]
+      : prev.adminNotes,
   };
+  store.listings[idx] = next;
 
   await logAudit(
     actor,
-    "LISTING_REQUEST_CHANGES",
+    opts.auditAction,
     "listing",
     id,
-    `Requested changes on listing ${prev.title}: ${notes}`,
-    prev,
-    store.listings[idx]
+    `Listing "${prev.title}": ${prev.status} -> ${to}${opts.reason?.trim() ? ` (${opts.reason.trim()})` : ""}`,
+    { status: prev.status },
+    { status: to }
   );
 
-  return store.listings[idx];
+  return { ...next };
 }
 
-export async function suspendListing(
-  id: string,
-  reason: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Listing> {
-  assertCan(actor.role, "listings.suspend");
+export async function approveListing(id: string, actor: AdminActor): Promise<Listing> {
+  return transitionListing(id, "approved", actor, { auditAction: "LISTING_APPROVE" });
+}
+
+export async function rejectListing(id: string, reason: string, actor: AdminActor): Promise<Listing> {
+  return transitionListing(id, "rejected", actor, { reason, auditAction: "LISTING_REJECT", notePrefix: "Rejected" });
+}
+
+export async function requestChangesListing(id: string, notes: string, actor: AdminActor): Promise<Listing> {
+  return transitionListing(id, "changes_requested", actor, {
+    reason: notes,
+    auditAction: "LISTING_REQUEST_CHANGES",
+    notePrefix: "Changes requested",
+  });
+}
+
+export async function suspendListing(id: string, reason: string, actor: AdminActor): Promise<Listing> {
+  return transitionListing(id, "suspended", actor, { reason, auditAction: "LISTING_SUSPEND", notePrefix: "Suspended" });
+}
+
+export async function deleteListing(id: string, actor: AdminActor): Promise<Listing> {
+  return transitionListing(id, "deleted", actor, { auditAction: "LISTING_DELETE" });
+}
+
+/** deleted → the status the listing had before deletion (pending_review if unknown). */
+export async function restoreListing(id: string, actor: AdminActor): Promise<Listing> {
+  assertCan(actor.role, "listings.delete");
   await delay(200);
 
   const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
+  if (idx === -1) throw new DomainError("Listing not found");
   const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status: "suspended",
-    adminNotes: [...store.listings[idx].adminNotes, `Suspended: ${reason}`],
-  };
+  if (prev.status !== "deleted") throw new DomainError(`Only deleted listings can be restored (status ${prev.status})`);
+
+  const restored: ListingStatus =
+    prev.statusBeforeDelete && prev.statusBeforeDelete !== "deleted" ? prev.statusBeforeDelete : "pending_review";
+  const next: Listing = { ...prev, status: restored, statusBeforeDelete: undefined, updatedAt: new Date().toISOString() };
+  store.listings[idx] = next;
 
   await logAudit(
     actor,
-    "LISTING_SUSPEND",
+    "LISTING_RESTORE",
     "listing",
     id,
-    `Suspended listing ${prev.title}: ${reason}`,
-    prev,
-    store.listings[idx]
+    `Restored listing "${prev.title}" to ${restored}`,
+    { status: prev.status },
+    { status: restored }
   );
 
-  return store.listings[idx];
+  return { ...next };
 }
 
 export async function featureListing(
   id: string,
   isFeatured: boolean,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<Listing> {
   assertCan(actor.role, "listings.feature");
   await delay(200);
 
   const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
+  if (idx === -1) throw new DomainError("Listing not found");
 
   const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    isFeatured,
-  };
+  if (isFeatured && normalizeListingStatus(prev.status) !== "approved") {
+    throw new DomainError("Only approved listings can be featured");
+  }
+  store.listings[idx] = { ...prev, isFeatured };
 
   await logAudit(
     actor,
@@ -350,95 +368,20 @@ export async function featureListing(
     "listing",
     id,
     `${isFeatured ? "Featured" : "Unfeatured"} listing: ${prev.title}`,
-    prev,
-    store.listings[idx]
+    { isFeatured: prev.isFeatured },
+    { isFeatured }
   );
 
-  return store.listings[idx];
+  return { ...store.listings[idx] };
 }
 
-export async function deleteListing(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Listing> {
-  assertCan(actor.role, "listings.delete");
-  await delay(200);
-
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
-  const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status: "deleted",
-  };
-
-  await logAudit(
-    actor,
-    "LISTING_DELETE",
-    "listing",
-    id,
-    `Soft-deleted listing: ${prev.title}`,
-    prev,
-    store.listings[idx]
-  );
-
-  return store.listings[idx];
-}
-
-export async function restoreListing(
-  id: string,
-  actor: { id: string; name: string; role: any }
-): Promise<Listing> {
-  assertCan(actor.role, "listings.delete");
-  await delay(200);
-
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
-  const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status: "approved",
-  };
-
-  await logAudit(
-    actor,
-    "LISTING_RESTORE",
-    "listing",
-    id,
-    `Restored listing: ${prev.title}`,
-    prev,
-    store.listings[idx]
-  );
-
-  return store.listings[idx];
-}
-
+/** Generic status change used by the vertical list pages (same guards as above). */
 export async function updateListingStatus(
   id: string,
   status: ListingStatus,
-  actor: { id: string; name: string; role: any } = { id: "usr_admin", name: "Admin", role: "super_admin" }
+  actor: AdminActor,
+  reason?: string
 ): Promise<Listing> {
-  await delay(200);
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new Error("Listing not found");
-
-  const prev = { ...store.listings[idx] };
-  store.listings[idx] = {
-    ...store.listings[idx],
-    status,
-  };
-
-  await logAudit(
-    actor,
-    "LISTING_STATUS_CHANGE",
-    "listing",
-    id,
-    `Changed listing status from ${prev.status} to ${status}: ${prev.title}`,
-    prev,
-    store.listings[idx]
-  );
-
-  return store.listings[idx];
+  if (normalizeListingStatus(status) === "deleted") return deleteListing(id, actor);
+  return transitionListing(id, status, actor, { reason, auditAction: "LISTING_STATUS_CHANGE" });
 }

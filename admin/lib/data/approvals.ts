@@ -1,3 +1,4 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
 import { ModerationCase } from "@/lib/types";

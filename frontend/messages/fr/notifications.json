@@ -1,0 +1,15 @@
+{
+  "metaTitle": "Notifications",
+  "title": "Notifications",
+  "unreadCount": "{count, plural, one {Vous avez # notification non lue} other {Vous avez # notifications non lues}}",
+  "allCaughtUp": "Vous êtes à jour !",
+  "markAllRead": "Tout marquer comme lu",
+  "allMarkedRead": "Toutes les notifications ont été marquées comme lues.",
+  "updateFailed": "Impossible de mettre à jour vos notifications. Veuillez réessayer.",
+  "emptyTitle": "Aucune notification",
+  "emptyBody": "Vos confirmations de réservation, messages d'hôtes et alertes de prix apparaîtront ici.",
+  "today": "Aujourd'hui",
+  "earlier": "Plus tôt",
+  "justNow": "À l'instant",
+  "unread": "Non lue"
+}

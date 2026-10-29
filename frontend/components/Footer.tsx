@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import Container from "@/components/Container";
-import FooterColumn from "@/components/FooterColumn";
+import FooterColumn, { type FooterLink } from "@/components/FooterColumn";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname, Link } from "@/navigation";
 import { BrandChevronDownIcon, BrandGlobeIcon } from "@/components/icons";
 
+const linkFocus =
+  "rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
+const destinations = ["Algiers", "Oran", "Djanet", "Constantine", "Taghit"] as const;
+
 export default function Footer() {
-  const tNav = useTranslations("nav");
+  const t = useTranslations("footer");
   const locale = useLocale();
   const pathname = usePathname();
+  const baseId = useId();
   const [openSections, setOpenSections] = useState<number[]>([]);
 
   if (
@@ -27,45 +33,38 @@ export default function Footer() {
     );
   };
 
-  const sections = [
+  const sections: { title: string; links: FooterLink[] }[] = [
     {
-      title: "Support",
+      title: t("support"),
       links: [
-        { label: "Help Center" },
-        { label: "DARNA Cover Protection" },
-        { label: "Anti-discrimination" },
-        { label: "Disability support" },
-        { label: "Cancellation options" },
+        { label: t("helpCenter"), href: "/help" },
+        { label: t("darnaCover"), href: "/help" },
+        { label: t("antiDiscrimination"), href: "/help" },
+        { label: t("accessibility"), href: "/help" },
+        { label: t("cancellation"), href: "/help" },
       ],
     },
     {
-      title: "Hosting & Partners",
+      title: t("hosting"),
       links: [
-        { label: "DARNA your home", href: "/become-a-host" },
-        { label: "List your 4x4 or car", href: "/become-a-host" },
-        { label: "Host a Sahara experience", href: "/become-a-host" },
-        { label: "Hosting resources", href: "/become-a-host" },
-        { label: "Community forum", href: "/become-a-host" },
+        { label: t("hostHome"), href: "/become-a-host" },
+        { label: t("hostVehicle"), href: "/become-a-host" },
+        { label: t("hostExperience"), href: "/become-a-host" },
+        { label: t("hostResources"), href: "/help" },
       ],
     },
     {
-      title: "Explore Algeria",
-      links: [
-        { label: "Algiers & Coastal Bays" },
-        { label: "Oran & Western Coast" },
-        { label: "Tassili & Djanet Expeditions" },
-        { label: "Constantine Suspension Bridges" },
-        { label: "Taghit Dunes & Oases" },
-      ],
+      title: t("exploreAlgeria"),
+      links: destinations.map((destination) => ({
+        label: t(`destinations.${destination}`),
+        href: { pathname: "/search", query: { destination } },
+      })),
     },
     {
-      title: "DARNA",
+      title: t("about"),
       links: [
-        { label: "About DARNA" },
-        { label: "Newsroom" },
-        { label: "Careers" },
-        { label: "Investors" },
-        { label: "Emergency response" },
+        { label: t("aboutDarna"), href: "/help" },
+        { label: t("emergency"), href: "/help" },
       ],
     },
   ];
@@ -75,12 +74,8 @@ export default function Footer() {
       <Container className="py-8 sm:py-12">
         {/* Desktop Multi-Column Grid */}
         <div className="hidden md:grid grid-cols-2 md:grid-cols-4 gap-8 pb-10 border-b border-tertiary/50">
-          {sections.map((section, idx) => (
-            <FooterColumn
-              key={idx}
-              title={section.title}
-              links={section.links}
-            />
+          {sections.map((section) => (
+            <FooterColumn key={section.title} title={section.title} links={section.links} />
           ))}
         </div>
 
@@ -88,37 +83,37 @@ export default function Footer() {
         <div className="md:hidden divide-y divide-tertiary/40 border-b border-tertiary/40 pb-4 mb-4">
           {sections.map((section, idx) => {
             const isOpen = openSections.includes(idx);
+            const panelId = `${baseId}-footer-${idx}`;
             return (
-              <div key={idx} className="py-2.5">
-                <button
-                  type="button"
-                  onClick={() => toggleSection(idx)}
-                  className="w-full min-h-[44px] flex items-center justify-between font-bold text-primary text-sm py-2 cursor-pointer touch-manipulation select-none"
-                >
-                  <span>{section.title}</span>
-                  <BrandChevronDownIcon
-                    size={20}
-                    className={`text-neutral-500 transition-transform duration-200 ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+              <div key={section.title} className="py-2.5">
+                <h2>
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(idx)}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    className={`w-full min-h-[44px] flex items-center justify-between font-bold text-primary text-sm py-2 cursor-pointer touch-manipulation select-none ${linkFocus}`}
+                  >
+                    <span>{section.title}</span>
+                    <BrandChevronDownIcon
+                      size={20}
+                      aria-hidden="true"
+                      className={`text-neutral-500 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                </h2>
                 {isOpen && (
-                  <ul className="pt-2 pb-2 space-y-2.5 text-sm ps-1 animate-in fade-in duration-150">
-                    {section.links.map((link, linkIdx) => (
-                      <li key={linkIdx}>
-                        {"href" in link && link.href ? (
-                          <Link
-                            href={link.href as string}
-                            className="hover:underline cursor-pointer text-neutral-600 hover:text-primary block py-0.5"
-                          >
-                            {link.label}
-                          </Link>
-                        ) : (
-                          <span className="hover:underline cursor-pointer text-neutral-600 hover:text-primary block py-0.5">
-                            {link.label}
-                          </span>
-                        )}
+                  <ul id={panelId} className="pt-2 pb-2 space-y-2.5 text-sm ps-1 animate-in fade-in duration-150">
+                    {section.links.map((link) => (
+                      <li key={link.label}>
+                        <Link
+                          href={link.href}
+                          className={`hover:underline text-neutral-600 hover:text-primary block py-0.5 ${linkFocus}`}
+                        >
+                          {link.label}
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -129,28 +124,43 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2">
-            <span>© {new Date().getFullYear()} DARNA, Inc.</span>
-            <span>·</span>
-            <span className="hover:underline cursor-pointer">Privacy</span>
-            <span>·</span>
-            <span className="hover:underline cursor-pointer">Terms</span>
-            <span>·</span>
-            <span className="hover:underline cursor-pointer">Sitemap</span>
-            <span>·</span>
-            <span className="hover:underline cursor-pointer">Company details</span>
-          </div>
+        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-neutral-600">
+          <nav aria-label={t("legal")}>
+            <ul className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2">
+              <li>{t("copyright", { year: new Date().getFullYear() })}</li>
+              <li aria-hidden="true">·</li>
+              <li>
+                <Link href="/help" className={`hover:underline ${linkFocus}`}>
+                  {t("privacy")}
+                </Link>
+              </li>
+              <li aria-hidden="true">·</li>
+              <li>
+                <Link href="/help" className={`hover:underline ${linkFocus}`}>
+                  {t("terms")}
+                </Link>
+              </li>
+              <li aria-hidden="true">·</li>
+              <li>
+                <a href="/sitemap.xml" className={`hover:underline ${linkFocus}`}>
+                  {t("sitemap")}
+                </a>
+              </li>
+              <li aria-hidden="true">·</li>
+              <li>
+                <Link href="/help" className={`hover:underline ${linkFocus}`}>
+                  {t("companyDetails")}
+                </Link>
+              </li>
+            </ul>
+          </nav>
 
           <div className="flex items-center gap-5 font-semibold text-primary">
-            <span className="flex items-center gap-1.5 hover:underline cursor-pointer">
-              <BrandGlobeIcon size={16} />
+            <span className="flex items-center gap-1.5">
+              <BrandGlobeIcon size={16} aria-hidden="true" />
               <span className="uppercase">{locale}</span>
             </span>
-            <span className="flex items-center gap-1">
-              <span>د.ج</span>
-              <span>DZD</span>
-            </span>
+            <span>{t("currency")}</span>
           </div>
         </div>
       </Container>

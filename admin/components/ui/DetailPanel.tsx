@@ -2,6 +2,7 @@
 
 import React from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { StatusPill } from "./StatusPill";
 
 export interface DetailPanelProps {
@@ -35,6 +36,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
   onTabChange,
   className = "",
 }) => {
+  const t = useTranslations("ui");
   if (isOpen === false) return null;
 
   const renderedStatusBadge = statusBadge || (status ? <StatusPill status={status as any} size="sm" /> : null);
@@ -63,11 +65,10 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-neutral-400 hover:text-neutral-700 hover:bg-neutral-200/70 transition cursor-pointer"
-                title="Fermer"
-                aria-label="Fermer le panneau"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/70 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                aria-label={t("closePanel")}
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -76,13 +77,15 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
 
       {/* Tabs if provided */}
       {tabs && tabs.length > 0 && (
-        <div className="flex items-center gap-1 border-b border-neutral-100 px-4 bg-white shrink-0 overflow-x-auto scrollbar-none">
+        <div role="tablist" className="flex items-center gap-1 border-b border-neutral-100 px-4 bg-white shrink-0 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => onTabChange && onTabChange(tab.id)}
                 className={`py-2.5 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
                   isActive

@@ -1,3 +1,4 @@
+import "server-only";
 import { Listing } from "@/types";
 
 export const mockListings: Listing[] = [
@@ -11,6 +12,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_amina",
     status: "active",
+    cleaningFee: 4000,
+    minNights: 2,
+    maxNights: 30,
+    advanceNoticeDays: 1,
+    checkInTime: "15:00",
+    checkOutTime: "11:00",
     price: 18500, // DZD / night
     originalPrice: 22000,
     imageSrc: [
@@ -48,6 +55,12 @@ export const mockListings: Listing[] = [
     ownerType: "organization",
     organizationId: "org_atlas_escapes",
     status: "active",
+    cleaningFee: 3000,
+    minNights: 1,
+    maxNights: 28,
+    advanceNoticeDays: 0,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     price: 14000,
     imageSrc: [
       "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb",
@@ -84,6 +97,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_karim",
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 0,
+    checkInTime: "15:00",
+    checkOutTime: "11:00",
     price: 8500,
     originalPrice: 10000,
     imageSrc: [
@@ -120,6 +139,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_amina",
     status: "active",
+    cleaningFee: 3500,
+    minNights: 2,
+    maxNights: 30,
+    advanceNoticeDays: 1,
+    checkInTime: "15:00",
+    checkOutTime: "11:00",
     price: 12500,
     originalPrice: 15000,
     imageSrc: [
@@ -157,6 +182,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_karim",
     status: "active",
+    cleaningFee: 3000,
+    minNights: 2,
+    maxNights: 21,
+    advanceNoticeDays: 2,
+    checkInTime: "16:00",
+    checkOutTime: "11:00",
     price: 11000,
     imageSrc: [
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
@@ -192,6 +223,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_amina",
     status: "active",
+    cleaningFee: 4500,
+    minNights: 2,
+    maxNights: 30,
+    advanceNoticeDays: 1,
+    checkInTime: "15:00",
+    checkOutTime: "11:00",
     price: 16500,
     imageSrc: [
       "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
@@ -225,6 +262,12 @@ export const mockListings: Listing[] = [
     ownerType: "organization",
     organizationId: "org_atlas_escapes",
     status: "active",
+    cleaningFee: 2500,
+    minNights: 1,
+    maxNights: 14,
+    advanceNoticeDays: 1,
+    checkInTime: "14:00",
+    checkOutTime: "10:00",
     price: 13500,
     imageSrc: [
       "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb",
@@ -262,6 +305,12 @@ export const mockListings: Listing[] = [
     ownerType: "organization",
     organizationId: "org_atlas_escapes",
     status: "active",
+    cleaningFee: 2000,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 1,
+    checkInTime: "09:00",
+    checkOutTime: "18:00",
     price: 16000, // Daily rate in DZD
     originalPrice: 19000,
     imageSrc: [
@@ -300,6 +349,12 @@ export const mockListings: Listing[] = [
     ownerType: "organization",
     organizationId: "org_atlas_escapes",
     status: "active",
+    cleaningFee: 2000,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 1,
+    checkInTime: "09:00",
+    checkOutTime: "18:00",
     price: 21000,
     imageSrc: [
       "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b",
@@ -335,6 +390,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_karim",
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 0,
+    checkInTime: "09:00",
+    checkOutTime: "18:00",
     price: 8500,
     imageSrc: [
       "https://images.unsplash.com/photo-1549399542-7e3f8b79c341",
@@ -370,6 +431,12 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_amina",
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 0,
+    checkInTime: "09:00",
+    checkOutTime: "18:00",
     price: 6500,
     imageSrc: [
       "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d",
@@ -409,6 +476,10 @@ export const mockListings: Listing[] = [
     ownerType: "organization",
     organizationId: "org_atlas_escapes",
     status: "active",
+    cleaningFee: 0,
+    advanceNoticeDays: 3,
+    checkInTime: "08:00",
+    checkOutTime: "18:00",
     price: 32000, // Per person in DZD
     originalPrice: 36000,
     imageSrc: [
@@ -443,6 +514,10 @@ export const mockListings: Listing[] = [
     ownerType: "organization",
     organizationId: "org_atlas_escapes",
     status: "active",
+    cleaningFee: 0,
+    advanceNoticeDays: 1,
+    checkInTime: "16:00",
+    checkOutTime: "21:00",
     price: 9500,
     imageSrc: [
       "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9",
@@ -475,6 +550,10 @@ export const mockListings: Listing[] = [
     ownerType: "individual",
     hostUserId: "usr_amina",
     status: "active",
+    cleaningFee: 0,
+    advanceNoticeDays: 1,
+    checkInTime: "10:00",
+    checkOutTime: "14:00",
     price: 6800,
     imageSrc: [
       "https://images.unsplash.com/photo-1555396273-367ea4eb4db5",
@@ -513,6 +592,12 @@ export const mockListings: Listing[] = [
     businessCategory: "hotel",
     hotelStarRating: 5,
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 0,
+    checkInTime: "14:00",
+    checkOutTime: "12:00",
     price: 18000, // starting from lowest room type price
     imageSrc: [
       "https://images.unsplash.com/photo-1566073771259-6a8506099945",
@@ -595,6 +680,12 @@ export const mockListings: Listing[] = [
     organizationId: "org_casbah_hostel",
     businessCategory: "hostel",
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 14,
+    advanceNoticeDays: 0,
+    checkInTime: "14:00",
+    checkOutTime: "11:00",
     price: 3500, // starting from lowest per-bed price
     imageSrc: [
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5",
@@ -673,6 +764,12 @@ export const mockListings: Listing[] = [
     businessCategory: "hotel",
     hotelStarRating: 5,
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 30,
+    advanceNoticeDays: 0,
+    checkInTime: "15:00",
+    checkOutTime: "12:00",
     price: 24000,
     imageSrc: [
       "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb",
@@ -738,6 +835,12 @@ export const mockListings: Listing[] = [
     organizationId: "org_taghit_hostel",
     businessCategory: "hostel",
     status: "active",
+    cleaningFee: 0,
+    minNights: 1,
+    maxNights: 14,
+    advanceNoticeDays: 0,
+    checkInTime: "13:00",
+    checkOutTime: "10:00",
     price: 3200,
     imageSrc: [
       "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9",

@@ -1,0 +1,100 @@
+{
+  "title": "Équipe de l'agence",
+  "subtitle": "Gérez les collaborateurs, les rôles et les autorisations de gestion immobilière.",
+  "inviteTeammate": "Inviter un collaborateur",
+  "activeMembers": "Membres actifs",
+  "pendingInvites": "Invitations en attente",
+  "resend": "Renvoyer",
+  "cancel": "Annuler",
+  "remove": "Supprimer",
+  "roleOwner": "Propriétaire",
+  "roleAdmin": "Administrateur",
+  "roleManager": "Gestionnaire",
+  "roleManagerStaff": "Gestionnaire / personnel",
+  "organizationOwner": "Propriétaire de l'organisation",
+  "backToHost": "Retour à l'espace hôte",
+  "logoAlt": "Logo de {name}",
+  "verifiedAgency": "Agence de tourisme algérienne vérifiée",
+  "verificationPending": "Vérification en attente",
+  "rcLabel": "Registre du commerce (RC) :",
+  "inviteNotAllowed": "Seul le propriétaire ou un administrateur peut inviter des membres.",
+  "invitedOn": "Invité le {date}",
+  "kpi": {
+    "totalRoster": "Effectif total",
+    "permissionModel": "Modèle d'autorisations",
+    "threeTier": "Accès à 3 niveaux"
+  },
+  "table": {
+    "title": "Membres de l'équipe et niveaux d'accès",
+    "count": "{count, plural, =0 {Aucun membre pour l'instant} one {# membre inscrit} other {# membres inscrits}}",
+    "colMember": "Membre",
+    "colRole": "Rôle",
+    "colStatus": "Statut",
+    "colDate": "Arrivée / invitation",
+    "colActions": "Actions",
+    "roleFor": "Rôle de {name}",
+    "rolesOwnerOnly": "Seul le propriétaire peut modifier les rôles"
+  },
+  "status": {
+    "active": "Actif",
+    "pending": "Invitation en attente"
+  },
+  "actions": {
+    "resendFor": "Renvoyer l'invitation à {name}",
+    "makeOwner": "Nommer propriétaire",
+    "makeOwnerFor": "Nommer {name} propriétaire",
+    "revoke": "Retirer l'accès",
+    "revokeFor": "Retirer l'accès de {name}"
+  },
+  "matrix": {
+    "title": "Les 3 niveaux d'autorisation expliqués",
+    "owner": {
+      "title": "1. Propriétaire",
+      "description": "Contrôle juridique et financier complet. Reçoit les versements CCP / BNA, configure les paramètres de l'agence et gère la facturation."
+    },
+    "admin": {
+      "title": "2. Administrateur",
+      "description": "Gestion des annonces et de la flotte. Peut créer et modifier des annonces, ajuster les prix, gérer le calendrier et inviter des membres."
+    },
+    "manager": {
+      "title": "3. Gestionnaire / personnel",
+      "description": "Opérations quotidiennes. Peut consulter les réservations, écrire aux voyageurs, coordonner les arrivées et départs et vérifier les disponibilités."
+    }
+  },
+  "invite": {
+    "title": "Inviter un membre de l'équipe",
+    "close": "Fermer",
+    "emailLabel": "E-mail professionnel",
+    "emailPlaceholder": "collegue@agence.dz",
+    "emailRequired": "Saisissez une adresse e-mail professionnelle valide.",
+    "nameLabel": "Nom complet (facultatif)",
+    "namePlaceholder": "ex. Sarah Touati",
+    "roleLabel": "Rôle attribué",
+    "managerHint": "Réservations et messagerie voyageurs",
+    "adminHint": "Annonces, flotte et gestion de l'équipe",
+    "sending": "Envoi…",
+    "send": "Envoyer l'invitation"
+  },
+  "removeDialog": {
+    "title": "Retirer l'accès à l'équipe",
+    "message": "Retirer {name} de {organization} ? Cette personne perdra immédiatement l'accès au tableau de bord, au calendrier et aux réservations de l'agence.",
+    "cancel": "Garder le membre"
+  },
+  "transferDialog": {
+    "title": "Transférer la propriété",
+    "message": "Nommer {name} propriétaire de {organization} ? Vous deviendrez administrateur.",
+    "confirm": "Transférer la propriété",
+    "cancel": "Annuler"
+  },
+  "toasts": {
+    "inviteSent": "Invitation envoyée à {email}.",
+    "inviteFailed": "Impossible d'envoyer l'invitation.",
+    "roleUpdated": "Rôle mis à jour : {role}.",
+    "roleFailed": "Impossible de mettre à jour le rôle.",
+    "ownerCannotBeRemoved": "Le propriétaire de l'organisation ne peut pas être retiré.",
+    "memberRemoved": "Accès du membre retiré.",
+    "removeFailed": "Impossible de retirer le membre.",
+    "resendComingSoon": "L'envoi d'invitations par e-mail arrive bientôt. En attendant, transmettez l'invitation directement à {email}.",
+    "ownershipTransferred": "Propriété transférée."
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
@@ -17,7 +17,6 @@ import {
   ExternalLink,
   MapPin,
   Calendar,
-  Users,
   Star,
   Tag,
   Check,
@@ -27,7 +26,6 @@ import {
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip, KpiCardItem } from "@/components/ui/KpiStrip";
 import { FilterBar } from "@/components/ui/FilterBar";
-import { FilterDrawer } from "@/components/ui/FilterDrawer";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
 import { SplitView } from "@/components/ui/SplitView";
@@ -36,22 +34,46 @@ import { ImageCarousel } from "@/components/ui/ImageCarousel";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { InfoTile } from "@/components/ui/InfoTile";
 import { Tabs } from "@/components/ui/Tabs";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useToast } from "@/components/ui/Toast";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { listListings, approveListing, suspendListing, restoreListing, updateListingStatus } from "@/lib/data/listings";
+import { listListings, approveListing, updateListingStatus } from "@/lib/actions/listings";
+import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
+import { formatDate, formatDzd, intlLocale } from "@/lib/utils/format";
+import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
 
-const TRIP_CATEGORIES = ["Sahara & Sud", "Circuit Culturel", "Randonnée & Bivouac", "Séjour Balnéaire", "Circuit Grand Sud"];
+// value = filter value (unchanged), labelKey = translation key under trips.categoryOptions
+const TRIP_CATEGORIES = [
+  { value: "sahara & sud", labelKey: "sahara" },
+  { value: "circuit culturel", labelKey: "cultural" },
+  { value: "randonnée & bivouac", labelKey: "trekking" },
+  { value: "séjour balnéaire", labelKey: "seaside" },
+  { value: "circuit grand sud", labelKey: "deepSouth" },
+] as const;
+
+// Mock schedule shown until trips carry real departure data.
+const MOCK_DEPARTURE = "2024-11-15";
+
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
+const errorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 export default function TripsListClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
+  const t = useTranslations("trips");
+  const tCommon = useTranslations("common");
+  const tActions = useTranslations("actions");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const can = useCan();
 
   const currentStatus = searchParams.get("status") || "all";
   const normalizeStatusKey = (s?: string | null) => {
@@ -76,9 +98,9 @@ export default function TripsListClient() {
   const [selectedWilaya, setSelectedWilaya] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(initialPage);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(selectedTripIdFromUrl);
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [, setIsFilterDrawerOpen] = useState(false);
   const [panelTab, setPanelTab] = useState("details");
 
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
@@ -99,33 +121,36 @@ export default function TripsListClient() {
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await listListings({
+      const res = unwrap(await listListings({
         status: currentStatus,
         vertical: "trip",
         wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
         search: searchQuery || undefined,
         page,
         pageSize,
-      });
+      }));
       setData(res.rows);
       setTotal(res.total);
       setTotalPages(res.totalPages || Math.ceil(res.total / pageSize));
       setFacets(res.facets || {});
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentStatus, selectedWilaya, searchQuery, page, pageSize, addToast, tCommon]);
 
+  // selectedCategory is not sent to the server yet; changing it still refreshes the list.
   useEffect(() => {
     fetchData();
-  }, [currentStatus, selectedWilaya, selectedCategory, page, pageSize, searchQuery]);
+  }, [fetchData, selectedCategory]);
 
-  const selectedTrip = data.find((t) => t.id === selectedTripId) || null;
+  const statusActions = useListingStatusActions(() => fetchData());
+
+  const selectedTrip = data.find((trip) => trip.id === selectedTripId) || null;
 
   const handleSelectTrip = (trip: Listing) => {
     setSelectedTripId(trip.id);
@@ -137,6 +162,17 @@ export default function TripsListClient() {
     updateUrl({ selected: null });
   };
 
+  const formatRating = (rating: number) =>
+    new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
+
+  const formatTime = (hour: number, minute: number) =>
+    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(
+      new Date(2000, 0, 1, hour, minute)
+    );
+
+  const departureLabel = formatDate(MOCK_DEPARTURE, locale);
+  const durationLabel = t("duration", { days: 5, nights: 4 });
+
   // KPI Strip (Mockup 02: 156 Tous · 98 Publiés · 24 En attente · 12 Suspendus · 8 Refusés · 14 Brouillons)
   const statusFacets = facets["status"] || {};
   const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
@@ -144,42 +180,42 @@ export default function TripsListClient() {
   const kpis: KpiCardItem[] = [
     {
       id: "all",
-      label: "Tous les voyages",
+      label: t("kpi.total"),
       value: totalCount || 156,
       icon: <Plane className="w-5 h-5" />,
       colorVariant: "neutral",
     },
     {
       id: "published",
-      label: "Publiés",
+      label: t("kpi.published"),
       value: statusFacets["published"] ?? statusFacets["approved"] ?? 98,
       icon: <CheckCircle className="w-5 h-5" />,
       colorVariant: "success",
     },
     {
       id: "pending",
-      label: "En attente",
+      label: t("kpi.pending"),
       value: statusFacets["pending"] ?? statusFacets["pending_review"] ?? 24,
       icon: <Clock className="w-5 h-5" />,
       colorVariant: "warning",
     },
     {
       id: "suspended",
-      label: "Suspendus",
+      label: t("kpi.suspended"),
       value: statusFacets["suspended"] ?? 12,
       icon: <PauseCircle className="w-5 h-5" />,
       colorVariant: "neutral",
     },
     {
       id: "refused",
-      label: "Refusés",
+      label: t("kpi.refused"),
       value: statusFacets["refused"] ?? statusFacets["rejected"] ?? 8,
       icon: <XCircle className="w-5 h-5" />,
       colorVariant: "danger",
     },
     {
       id: "draft",
-      label: "Brouillons",
+      label: t("kpi.drafts"),
       value: statusFacets["draft"] ?? 14,
       icon: <FileEdit className="w-5 h-5" />,
       colorVariant: "neutral",
@@ -200,26 +236,31 @@ export default function TripsListClient() {
     },
     {
       key: "trip",
-      header: "Voyage",
+      header: t("columns.trip"),
       render: (row) => (
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
             <Image
               src={row.imageSrc?.[0] || "/placeholder-trip.jpg"}
-              alt={row.title}
+              alt=""
               fill
+              sizes="48px"
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
-            <div
-              className="font-medium text-[#2E3A2F] truncate text-sm hover:underline cursor-pointer"
-              onClick={() => handleSelectTrip(row)}
+            <button
+              type="button"
+              className={`block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded ${FOCUS_RING}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectTrip(row);
+              }}
             >
               {row.title}
-            </div>
-            <div className="text-xs text-[#2E3A2F]/60 capitalize mt-0.5">
-              {row.propertyType || "Circuit Sahara"}
+            </button>
+            <div className="text-xs text-[#2E3A2F]/70 capitalize mt-0.5">
+              {row.propertyType || t("categoryFallback")}
             </div>
           </div>
         </div>
@@ -227,123 +268,99 @@ export default function TripsListClient() {
     },
     {
       key: "destination",
-      header: "Destination",
+      header: t("columns.destination"),
       render: (row) => (
         <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" />
-          <span className="truncate">{row.city}, {row.wilayaCode}</span>
+          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" aria-hidden="true" />
+          <span className="truncate">{t("locationValue", { city: row.city, code: row.wilayaCode })}</span>
         </div>
       ),
     },
     {
       key: "departure",
-      header: "Date de départ",
-      render: (row) => (
+      header: t("columns.departure"),
+      render: () => (
         <div className="text-xs text-[#2E3A2F] flex items-center gap-1">
-          <Calendar className="w-3.5 h-3.5 text-[#2E3A2F]/50" />
-          <span>15 nov. 2024</span>
+          <Calendar className="w-3.5 h-3.5 text-[#2E3A2F]/50" aria-hidden="true" />
+          <span>{departureLabel}</span>
         </div>
       ),
     },
     {
       key: "duration",
-      header: "Durée",
-      render: (row) => <span className="text-xs text-[#2E3A2F]">5 jours / 4 nuits</span>,
+      header: t("columns.duration"),
+      render: () => <span className="text-xs text-[#2E3A2F]">{durationLabel}</span>,
     },
     {
       key: "price",
-      header: "Prix (DZD)",
+      header: t("columns.price"),
       render: (row) => (
         <div className="text-xs font-semibold text-[#2E3A2F]">
-          {row.price.toLocaleString("fr-FR")} DZD
+          {formatDzd(row.price, locale)}
         </div>
       ),
     },
     {
       key: "status",
-      header: "Statut",
+      header: tCommon("status"),
       render: (row) => <StatusPill status={row.status} />,
     },
     {
       key: "actions",
-      header: "Actions",
+      header: tCommon("actions"),
       className: "text-end",
       render: (row) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
+            type="button"
             onClick={() => handleSelectTrip(row)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title={locale === "ar" ? "معاينة سريعة" : locale === "en" ? "Quick preview" : "Aperçu rapide"}
+            className={`p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors ${FOCUS_RING}`}
+            title={t("quickPreview")}
+            aria-label={t("quickPreviewOf", { title: row.title })}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={() => router.push(`/trips/${row.id}`)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title={locale === "ar" ? "فتح التفاصيل" : locale === "en" ? "View full page" : "Consulter"}
+            className={`p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors ${FOCUS_RING}`}
+            title={t("openFullPage")}
+            aria-label={t("openFullPageOf", { title: row.title })}
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
           </button>
           <DropdownMenu
             items={[
               {
-                label: locale === "ar" ? "معاينة سريعة" : locale === "en" ? "Quick preview" : "Aperçu rapide",
+                label: t("quickPreview"),
                 icon: <Eye className="w-3.5 h-3.5" />,
                 onClick: () => handleSelectTrip(row),
               },
               {
-                label: locale === "ar" ? "موافقة ونشر (Approved)" : locale === "en" ? "Approve / Publish" : "Approuver / Publier",
+                label: t("menu.approve"),
                 icon: <CheckCircle className="w-3.5 h-3.5 text-secondary" />,
-                disabled: row.status === "approved" || row.status === "published",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "approved");
-                  addToast({
-                    title: locale === "ar" ? "تمت الموافقة على الرحلة" : locale === "en" ? "Trip approved" : "Voyage approuvé",
-                    variant: "success",
-                  });
-                  fetchData();
-                },
+                disabled: !statusActions.allowed(row, "approved"),
+                onClick: () => statusActions.changeStatus(row, "approved"),
               },
               {
-                label: locale === "ar" ? "تعيين قيد المراجعة (Pending)" : locale === "en" ? "Mark as Pending Review" : "Mettre en attente",
+                label: t("menu.markPending"),
                 icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
-                disabled: row.status === "pending" || row.status === "pending_review",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "pending_review");
-                  addToast({
-                    title: locale === "ar" ? "تم وضع الرحلة قيد المراجعة" : locale === "en" ? "Trip marked pending" : "Voyage mis en attente",
-                    variant: "info",
-                  });
-                  fetchData();
-                },
+                disabled: !statusActions.allowed(row, "pending_review"),
+                onClick: () => statusActions.changeStatus(row, "pending_review"),
               },
               {
-                label: locale === "ar" ? "تعليق الرحلة (Suspend)" : locale === "en" ? "Suspend Trip" : "Suspendre le voyage",
+                label: t("menu.suspend"),
                 icon: <PauseCircle className="w-3.5 h-3.5 text-amber-700" />,
-                disabled: row.status === "suspended",
+                disabled: !statusActions.allowed(row, "suspended"),
                 variant: "danger",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "suspended");
-                  addToast({
-                    title: locale === "ar" ? "تم تعليق الرحلة" : locale === "en" ? "Trip suspended" : "Voyage suspendu",
-                    variant: "warning",
-                  });
-                  fetchData();
-                },
+                onClick: () => statusActions.changeStatus(row, "suspended"),
               },
               {
-                label: locale === "ar" ? "رفض الرحلة (Reject)" : locale === "en" ? "Reject Trip" : "Refuser le voyage",
-                icon: <XCircle className="w-3.5 h-3.5 text-accent" />,
-                disabled: row.status === "rejected" || row.status === "refused",
+                label: t("menu.reject"),
+                icon: <XCircle className="w-3.5 h-3.5 text-accent-700" />,
+                disabled: !statusActions.allowed(row, "rejected"),
                 variant: "danger",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "rejected");
-                  addToast({
-                    title: locale === "ar" ? "تم رفض الرحلة" : locale === "en" ? "Trip rejected" : "Voyage refusé",
-                    variant: "warning",
-                  });
-                  fetchData();
-                },
+                onClick: () => statusActions.changeStatus(row, "rejected"),
               },
             ]}
           />
@@ -356,33 +373,45 @@ export default function TripsListClient() {
     <div className="space-y-6">
       {/* 1. Page Header (Mockup 02: Exporter, Catégories, + Ajouter un voyage) */}
       <PageHeader
-        title="Voyages organisés"
-        subtitle="Gérez les circuits touristiques et voyages organisés par les agences agréées."
+        title={t("title")}
+        subtitle={t("subtitle")}
         actions={
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => {
-                addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
-              }}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
+              type="button"
+              disabled={!statusActions.canExport}
+              title={statusActions.canExport ? undefined : tActions("notAllowed")}
+              onClick={() =>
+                statusActions.exportCsv({
+                  status: currentStatus,
+                  vertical: "trip",
+                  wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+                  search: searchQuery || undefined,
+                })
+              }
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`}
             >
-              <Download className="w-4 h-4" />
-              <span>Exporter</span>
+              <Download className="w-4 h-4" aria-hidden="true" />
+              <span>{t("export")}</span>
             </button>
             <button
+              type="button"
               onClick={() => router.push("/trips/categories")}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm ${FOCUS_RING}`}
             >
-              <Tag className="w-4 h-4" />
-              <span>Catégories</span>
+              <Tag className="w-4 h-4" aria-hidden="true" />
+              <span>{t("categories")}</span>
             </button>
+            {can("listings.approve") && (
             <button
+              type="button"
               onClick={() => router.push("/trips/new")}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm"
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm ${FOCUS_RING}`}
             >
-              <Plus className="w-4 h-4" />
-              <span>Ajouter un voyage</span>
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              <span>{t("add")}</span>
             </button>
+            )}
           </div>
         }
       />
@@ -398,7 +427,7 @@ export default function TripsListClient() {
 
       {/* 3. Filter Bar (Mockup 02) */}
       <FilterBar
-        searchPlaceholder="Rechercher un voyage, une destination..."
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={searchQuery}
         onSearchChange={(q) => {
           setSearchQuery(q);
@@ -407,10 +436,10 @@ export default function TripsListClient() {
         selects={[
           {
             id: "wilaya",
-            label: "Destination",
+            label: t("filters.destination"),
             value: selectedWilaya,
             options: [
-              { value: "all", label: locale === "ar" ? "جميع الوجهات" : locale === "en" ? "All destinations" : "Toutes les destinations" },
+              { value: "all", label: t("filters.allDestinations") },
               ...WILAYAS.map((w) => ({ value: w.code, label: getWilayaLabel(w, locale) })),
             ],
             onChange: (val) => {
@@ -420,11 +449,11 @@ export default function TripsListClient() {
           },
           {
             id: "category",
-            label: "Catégorie",
+            label: t("filters.category"),
             value: selectedCategory,
             options: [
-              { value: "all", label: "Toutes les catégories" },
-              ...TRIP_CATEGORIES.map((c) => ({ value: c.toLowerCase(), label: c })),
+              { value: "all", label: t("filters.allCategories") },
+              ...TRIP_CATEGORIES.map((c) => ({ value: c.value, label: t(`categoryOptions.${c.labelKey}`) })),
             ],
             onChange: (val) => {
               setSelectedCategory(val);
@@ -433,15 +462,15 @@ export default function TripsListClient() {
           },
           {
             id: "status",
-            label: "Statut",
+            label: tCommon("status"),
             value: normalizedStatus,
             options: [
-              { value: "all", label: "Tous les statuts" },
-              { value: "published", label: "Publié" },
-              { value: "pending", label: "En attente" },
-              { value: "suspended", label: "Suspendu" },
-              { value: "refused", label: "Refusé" },
-              { value: "draft", label: "Brouillon" },
+              { value: "all", label: t("filters.allStatuses") },
+              { value: "published", label: t("statusOptions.published") },
+              { value: "pending", label: t("statusOptions.pending") },
+              { value: "suspended", label: t("statusOptions.suspended") },
+              { value: "refused", label: t("statusOptions.refused") },
+              { value: "draft", label: t("statusOptions.draft") },
             ],
             onChange: (val) => {
               updateUrl({ status: val === "all" ? null : val, page: "1" });
@@ -466,11 +495,11 @@ export default function TripsListClient() {
             <DataTable
               columns={columns}
               data={data}
-              keyExtractor={(t) => t.id}
+              keyExtractor={(trip) => trip.id}
               selectedRowId={selectedTripId || undefined}
               onRowClick={handleSelectTrip}
               isLoading={isLoading}
-              emptyMessage="Aucun voyage trouvé."
+              emptyMessage={t("empty")}
               selection={{
                 selectedIds: selectedRowIds,
                 onSelectionChange: setSelectedRowIds,
@@ -486,7 +515,7 @@ export default function TripsListClient() {
                 }}
                 pageSize={pageSize}
                 totalItems={total}
-                itemLabel="voyages"
+                itemLabel={t("itemLabel")}
               />
             </div>
           </div>
@@ -501,78 +530,96 @@ export default function TripsListClient() {
               statusBadge={<StatusPill status={selectedTrip.status} />}
               actions={
                 <button
+                  type="button"
                   onClick={() => router.push(`/trips/${selectedTrip.id}`)}
-                  className="p-1 text-[#2E3A2F]/60 hover:text-[#2E3A2F] rounded"
-                  title="Plein écran"
+                  className={`p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded ${FOCUS_RING}`}
+                  title={t("fullScreen")}
+                  aria-label={t("fullScreen")}
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <Maximize2 className="w-4 h-4" aria-hidden="true" />
                 </button>
               }
               footer={
                 <div className="flex items-center justify-between gap-2 w-full flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(selectedTrip.status === "approved" || selectedTrip.status === "published") ? (
+                    {(selectedTrip.status === "approved" || selectedTrip.status === "published") ? (statusActions.allowed(selectedTrip, "suspended") &&
                       <button
-                        onClick={() => setConfirmAction({ type: "suspend", trip: selectedTrip })}
-                        className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        type="button"
+                        onClick={() => statusActions.changeStatus(selectedTrip, "suspended")}
+                        className="px-3 py-1.5 text-xs font-medium text-[#7A5A26] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
                       >
-                        {locale === "ar" ? "تعليق" : locale === "en" ? "Suspend" : "Suspendre"}
+                        {t("panel.suspend")}
                       </button>
                     ) : (selectedTrip.status === "pending_review" || selectedTrip.status === "pending") ? (
-                      <>
+                      can("listings.approve") && <>
                         <button
+                          type="button"
                           onClick={async () => {
                             try {
-                              await approveListing(selectedTrip.id, { id: "usr_superadmin", name: "Super Admin", role: "super_admin" });
+                              unwrap(await approveListing(selectedTrip.id));
                               addToast({
-                                title: locale === "ar" ? "تمت الموافقة" : locale === "en" ? "Trip approved" : "Voyage approuvé",
-                                description: locale === "ar" ? "تمت الموافقة على هذا الرحلة مباشرة" : locale === "en" ? "This trip has been approved directly" : "Ce voyage a été approuvé directement.",
+                                title: t("toast.approvedTitle"),
+                                description: t("toast.approvedDescription"),
                                 variant: "success",
                               });
                               fetchData();
-                            } catch (err: any) {
-                              addToast({ title: "Erreur", description: err.message, variant: "danger" });
+                            } catch (err: unknown) {
+                              addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#6B7F5B] hover:bg-[#5a6b4c] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5a6b4c] hover:bg-[#4a5a3e] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
                         >
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>{locale === "ar" ? "موافقة مباشرة" : locale === "en" ? "Approve directly" : "Approuver directement"}</span>
+                          <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>{t("panel.approveDirectly")}</span>
                         </button>
                       </>
-                    ) : (selectedTrip.status === "suspended" || selectedTrip.status === "rejected" || selectedTrip.status === "refused") ? (
+                    ) : (selectedTrip.status === "suspended" || selectedTrip.status === "rejected" || selectedTrip.status === "refused") ? (statusActions.allowed(selectedTrip, selectedTrip.status === "suspended" ? "approved" : "pending_review") &&
                       <button
+                        type="button"
                         onClick={async () => {
                           try {
-                            await restoreListing(selectedTrip.id, { id: "usr_superadmin", name: "Super Admin", role: "super_admin" });
+                            unwrap(await updateListingStatus(selectedTrip.id, selectedTrip.status === "suspended" ? "approved" : "pending_review"));
                             addToast({
-                              title: locale === "ar" ? "تم إلغاء التعليق" : locale === "en" ? "Suspension lifted" : "Suspension annulée",
-                              description: locale === "ar" ? "تمت إعادة تفعيل هذه الرحلة بنجاح" : locale === "en" ? "This trip has been reactivated" : "Le voyage a été réactivé avec succès.",
+                              title: t("toast.reactivatedTitle"),
+                              description: t("toast.reactivatedDescription"),
                               variant: "success",
                             });
                             fetchData();
-                          } catch (err: any) {
-                            addToast({ title: "Erreur", description: err.message, variant: "danger" });
+                          } catch (err: unknown) {
+                            addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                           }
                         }}
                         className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg flex items-center gap-1.5 transition-colors"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                        <span>{locale === "ar" ? "إلغاء التعليق" : locale === "en" ? "Cancel suspension" : "Annuler la suspension"}</span>
+                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <span>{t("panel.cancelSuspension")}</span>
                       </button>
                     ) : null}
+                    {statusActions.canRestore(selectedTrip) && (
+                      <button
+                        type="button"
+                        onClick={() => statusActions.restore(selectedTrip)}
+                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg transition-colors"
+                      >
+                        {tActions("restore")}
+                      </button>
+                    )}
+                    {statusActions.canDelete(selectedTrip) && (
                     <button
+                      type="button"
                       onClick={() => setConfirmAction({ type: "delete", trip: selectedTrip })}
-                      className="px-3 py-1.5 text-xs font-medium text-[#C96F4F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 text-xs font-medium text-[#A4532F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
                     >
-                      {locale === "ar" ? "حذف" : locale === "en" ? "Delete" : "Supprimer"}
+                      {tCommon("delete")}
                     </button>
+                    )}
                   </div>
                   <button
+                    type="button"
                     onClick={() => router.push(`/trips/${selectedTrip.id}`)}
                     className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
                   >
-                    Modifier le voyage
+                    {t("panel.edit")}
                   </button>
                 </div>
               }
@@ -585,22 +632,22 @@ export default function TripsListClient() {
 
                 <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                    <span className="font-semibold">{selectedTrip.rating.toFixed(1)}</span>
-                    <span className="text-[#2E3A2F]/60">({selectedTrip.reviewsCount} avis)</span>
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
+                    <span className="font-semibold">{formatRating(selectedTrip.rating)}</span>
+                    <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: selectedTrip.reviewsCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#6B7F5B] font-medium">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{selectedTrip.city}, {selectedTrip.wilayaCode}</span>
+                  <div className="flex items-center gap-1 text-[#4F5F43] font-medium">
+                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{t("locationValue", { city: selectedTrip.city, code: selectedTrip.wilayaCode })}</span>
                   </div>
                 </div>
 
                 <Tabs
                   items={[
-                    { id: "details", label: "Détails" },
-                    { id: "programme", label: "Programme" },
-                    { id: "photos", label: "Photos" },
-                    { id: "bookings", label: "Réservations" },
+                    { id: "details", label: t("tabs.details") },
+                    { id: "programme", label: t("tabs.programme") },
+                    { id: "photos", label: t("tabs.photos") },
+                    { id: "bookings", label: t("tabs.bookings") },
                   ]}
                   activeId={panelTab}
                   onChange={setPanelTab}
@@ -611,105 +658,104 @@ export default function TripsListClient() {
                     {/* About This Trip */}
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-2">
-                        {locale === "ar" ? "حول الرحلة الاستكشافية (About)" : locale === "en" ? "About This Trip" : "À propos du circuit"}
+                        {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoTile label={locale === "ar" ? "تاريخ الانطلاق" : locale === "en" ? "Departure Date" : "Date de départ"} value="15 nov. 2024" />
-                        <InfoTile label={locale === "ar" ? "المدة" : locale === "en" ? "Duration" : "Durée"} value="5 jours / 4 nuits" />
-                        <InfoTile label={locale === "ar" ? "السعة القصوى" : locale === "en" ? "Max Group" : "Taille max"} value="Max 12 pers." />
-                        <InfoTile label={locale === "ar" ? "المستوى" : locale === "en" ? "Difficulty" : "Niveau"} value="Modéré" />
+                        <InfoTile label={t("about.departureDate")} value={departureLabel} />
+                        <InfoTile label={t("about.duration")} value={durationLabel} />
+                        <InfoTile label={t("about.maxGroup")} value={t("about.maxPeople", { count: 12 })} />
+                        <InfoTile label={t("about.difficulty")} value={t("about.difficultyModerate")} />
                       </div>
                     </div>
 
-                    {/* Price & Discounts Section (Price & Disc) */}
+                    {/* Price & Discounts Section */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
                       <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
-                        <span>{locale === "ar" ? "الأسعار والخصومات (Price & Disc)" : locale === "en" ? "Pricing & Discounts" : "Tarification & Remises"}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">{selectedTrip.price.toLocaleString("fr-FR")} DZD <span className="text-[10px] text-[#2E3A2F]/60">/ {locale === "ar" ? "فرد" : locale === "en" ? "person" : "pers."}</span></span>
+                        <span>{t("pricing.title")}</span>
+                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                          {formatDzd(selectedTrip.price, locale)}{" "}
+                          <span className="text-[10px] text-[#2E3A2F]/70">{t("pricing.perPerson")}</span>
+                        </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "خصم الحجز المبكر" : locale === "en" ? "Early Bird Disc." : "Remise Early Bird"}</span>
-                          <span className="font-medium text-[#6B7F5B]">-10% ({Math.round(selectedTrip.price * 0.9).toLocaleString("fr-FR")} DZD)</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.earlyBird")}</span>
+                          <span className="font-medium text-[#4F5F43]">
+                            {t("pricing.discountValue", { percent: DISCOUNTS.group, price: formatDzd(applyDiscount(selectedTrip.price, DISCOUNTS.group), locale) })}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "عمولة المنصة" : locale === "en" ? "Commission" : "Commission DARNA"}</span>
-                          <span className="font-medium text-[#6B7F5B]">12% ({locale === "ar" ? "مشمولة" : locale === "en" ? "included" : "incluse"})</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.commission")}</span>
+                          <span className="font-medium text-[#4F5F43]">{t("pricing.commissionIncluded", { rate: 12 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "الدفعة الأولى المطلوبة" : locale === "en" ? "Deposit Required" : "Acompte à la réservation"}</span>
-                          <span className="font-medium text-[#2E3A2F]">30% à la commande</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.deposit")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("pricing.depositValue", { percent: 30 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "سياسة الإلغاء" : locale === "en" ? "Cancellation" : "Politique d'annulation"}</span>
-                          <span className="font-medium text-[#2E3A2F]">Remboursement à 7 j</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.cancellation")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("pricing.cancellationValue", { days: 7 })}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Time & Schedule Section (Time) */}
+                    {/* Time & Schedule Section */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
                       <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#6B7F5B]" />
-                        <span>{locale === "ar" ? "الجدول الزمني ومواعيد التجمع (Time)" : locale === "en" ? "Times & Schedule" : "Horaires & Rendez-vous"}</span>
+                        <Clock className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+                        <span>{t("schedule.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "التجمع والانطلاق" : locale === "en" ? "Gathering / Departure" : "Rassemblement"}</span>
-                          <span className="font-medium text-[#2E3A2F]">07h30 (Jour 1)</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.gathering")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("schedule.gatheringValue", { time: formatTime(7, 30) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "موعد العودة التقريبي" : locale === "en" ? "Return Time" : "Retour estimé"}</span>
-                          <span className="font-medium text-[#2E3A2F]">18h00 (Dernier jour)</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.return")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("schedule.returnValue", { time: formatTime(18, 0) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "مدة المسير اليومي" : locale === "en" ? "Daily Walk Duration" : "Marche quotidienne"}</span>
-                          <span className="font-medium text-[#2E3A2F]">3 à 4 heures / jour</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.dailyWalk")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("schedule.dailyWalkValue", { min: 3, max: 4 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "نقطة الالتقاء" : locale === "en" ? "Meeting Point" : "Point de rencontre"}</span>
-                          <span className="font-medium text-[#6B7F5B]">{selectedTrip.city} Centre</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("schedule.meetingPoint")}</span>
+                          <span className="font-medium text-[#4F5F43]">{t("schedule.meetingPointValue", { city: selectedTrip.city })}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
                       <div className="text-xs font-semibold text-[#2E3A2F] mb-1">
-                        {locale === "ar" ? "الوكالة المنظمة" : locale === "en" ? "Organizing Agency" : "Agence organisatrice"}
+                        {t("agency.title")}
                       </div>
                       <div className="text-sm font-medium text-[#2E3A2F]">{selectedTrip.hostName}</div>
-                      <div className="text-xs text-[#6B7F5B] flex items-center gap-1 mt-0.5">
-                        <CheckCircle className="w-3.5 h-3.5" /> {locale === "ar" ? "وكالة سياحية معتمدة" : locale === "en" ? "Licensed Tourism Agency" : "Agence de voyages agréée"}
+                      <div className="text-xs text-[#4F5F43] flex items-center gap-1 mt-0.5">
+                        <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("agency.licensed")}
                       </div>
                     </div>
 
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
-                        {locale === "ar" ? "أبرز مميزات الرحلة" : locale === "en" ? "Trip Highlights" : "Points forts"}
+                        {t("highlights.title")}
                       </h4>
-                      <div className="space-y-1.5 text-xs text-[#2E3A2F]">
-                        <div className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                          <span>{locale === "ar" ? "مبيت وإقامة تحت نجوم صحراء الطاسيلي" : "Bivouac étoilé dans le désert du Tassili"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                          <span>{locale === "ar" ? "إطعام كامل مع مرشدين محليين متخصصين" : "Pension complète & guides touaregs locaux"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                          <span>{locale === "ar" ? "تنقل بسيارات رباعية الدفع مريحة ومجهزة" : "Transport 4x4 tout confort inclus"}</span>
-                        </div>
-                      </div>
+                      <ul className="space-y-1.5 text-xs text-[#2E3A2F]">
+                        {(["bivouac", "fullBoard", "transport"] as const).map((key) => (
+                          <li key={key} className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                            <span>{t(`highlights.${key}`)}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
 
-                    {/* Description Section (Disc) */}
+                    {/* Description Section */}
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
-                        {locale === "ar" ? "الوصف الكامل للرحلة (Description)" : locale === "en" ? "Full Trip Description" : "Description détaillée du circuit"}
+                        {t("description.title")}
                       </h4>
                       <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
-                        {selectedTrip.description || (locale === "ar" ? "لا يوجد وصف متوفر" : "Aucune description fournie pour ce voyage.")}
+                        {selectedTrip.description || t("description.empty")}
                       </p>
                     </div>
                   </div>
@@ -723,26 +769,17 @@ export default function TripsListClient() {
       {confirmAction && (
         <ConfirmDialog
           isOpen={true}
-          title={confirmAction.type === "delete" ? "Supprimer ce voyage ?" : "Suspendre ce voyage ?"}
-          description={`Vous allez modifier le statut du voyage "${confirmAction.trip.title}".`}
+          title={confirmAction.type === "delete" ? t("confirm.deleteTitle") : t("confirm.suspendTitle")}
+          description={t("confirm.description", { title: confirmAction.trip.title })}
           variant={confirmAction.type === "delete" ? "danger" : "primary"}
           onConfirm={async () => {
-            if (confirmAction.type === "delete") {
-              addToast({ title: "Voyage supprimé", variant: "warning" });
-            } else {
-              await suspendListing(confirmAction.trip.id, "Suspension administrative", {
-                id: "usr_admin",
-                name: "Admin",
-                role: "super_admin",
-              });
-              addToast({ title: "Voyage suspendu", variant: "info" });
-            }
-            setConfirmAction(null);
-            fetchData();
+            const ok = await statusActions.remove(confirmAction.trip, t("confirm.deleted"));
+            if (ok) setConfirmAction(null);
           }}
           onCancel={() => setConfirmAction(null)}
         />
       )}
+      {statusActions.dialog}
     </div>
   );
 }

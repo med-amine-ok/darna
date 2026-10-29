@@ -85,6 +85,10 @@ module.exports = {
           red: "#C94A4A",
           amber: "#D9822B",
           green: "#4A8B5C",
+          // Aliases used by form components (text-status-error etc.)
+          error: "#B23B3B",
+          warning: "#A85F12",
+          success: "#3D7A4E",
         },
       },
       fontFamily: {
@@ -100,6 +104,7 @@ module.exports = {
           "sans-serif",
         ],
         arabic: [
+          "var(--font-arabic)",
           "Tajawal",
           "IBM Plex Sans Arabic",
           "system-ui",
@@ -107,12 +112,19 @@ module.exports = {
           "sans-serif",
         ],
       },
+      fontSize: {
+        md: ["1rem", { lineHeight: "1.5rem" }],
+      },
+      backdropBlur: {
+        xs: "2px",
+      },
       borderRadius: {
         "4xl": "2rem",
       },
       boxShadow: {
         "2xs": "0 1px 2px 0 rgba(46, 58, 47, 0.04)",
         "xs": "0 1px 2px 0 rgba(46, 58, 47, 0.05)",
+        "darna-sm": "0 1px 4px 0 rgba(46, 58, 47, 0.06)",
         darna: "0 2px 10px 0 rgba(46, 58, 47, 0.06)",
         "darna-card": "0 2px 8px -2px rgba(46, 58, 47, 0.06), 0 6px 18px -4px rgba(46, 58, 47, 0.05)",
         "darna-hover": "0 10px 25px -4px rgba(46, 58, 47, 0.12), 0 4px 10px -2px rgba(46, 58, 47, 0.06)",

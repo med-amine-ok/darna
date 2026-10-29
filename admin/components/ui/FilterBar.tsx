@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search, SlidersHorizontal, RotateCcw, X, Check } from "lucide-react";
+import React, { useId, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Search, SlidersHorizontal, RotateCcw, X } from "lucide-react";
 import { Dialog } from "./Dialog";
+import { formatNumber } from "@/lib/utils/format";
 
 export interface FilterOption {
   value: string;
@@ -38,29 +40,37 @@ export interface FilterBarProps {
   children?: React.ReactNode;
 }
 
+const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
 export const FilterBar: React.FC<FilterBarProps> = ({
   searchQuery,
   searchValue,
   onSearchChange,
-  searchPlaceholder = "Rechercher...",
+  searchPlaceholder,
   selects = [],
   onOpenDrawer,
   onOpenAdvanced,
-  drawerButtonLabel = "Plus de filtres",
+  drawerButtonLabel,
   hasActiveFilters = false,
   onReset,
   activeChips = [],
   children,
 }) => {
+  const t = useTranslations("uiKit.filterBar");
+  const tUi = useTranslations("ui");
+  const locale = useLocale();
+  const uid = useId();
   const query = searchValue !== undefined ? searchValue : (searchQuery || "");
   const openDrawerAction = onOpenAdvanced || onOpenDrawer;
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const placeholder = searchPlaceholder ?? t("searchPlaceholder");
 
   // Count active non-"all" selects
   const activeSelectsCount = selects.filter(
     (s) => s.value && s.value !== "all" && s.value !== ""
   ).length;
   const totalActiveCount = activeSelectsCount + (hasActiveFilters ? 1 : 0);
+  const activeCountLabel = tUi("activeFilterCount", { count: totalActiveCount });
 
   const handleOpenMobileFilters = () => {
     if (openDrawerAction) {
@@ -77,52 +87,58 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Search Input Row with Mobile Filter Button */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <div className="relative flex-1 min-w-0 flex items-center">
-            <Search className="w-4 h-4 text-neutral-400 absolute start-3 pointer-events-none shrink-0" />
+            <Search className="w-4 h-4 text-neutral-400 absolute start-3 pointer-events-none shrink-0" aria-hidden="true" />
             <input
               type="text"
               value={query}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="w-full ps-9 pe-3 py-2 bg-neutral-50/70 hover:bg-neutral-50 border border-tertiary-200 rounded-xl text-base sm:text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-primary focus:bg-white transition min-h-[44px] sm:min-h-[38px]"
+              placeholder={placeholder}
+              aria-label={placeholder || t("searchLabel")}
+              className="w-full ps-9 pe-3 py-2 bg-neutral-50/70 hover:bg-neutral-50 border border-tertiary-200 rounded-xl text-base sm:text-xs text-neutral-800 placeholder-neutral-500 focus:outline-none focus:border-primary focus:bg-white focus-visible:ring-2 focus-visible:ring-accent-600/40 transition min-h-[44px] sm:min-h-[38px]"
             />
           </div>
 
-          {/* Mobile "Filtres" trigger button (< md) */}
+          {/* Mobile "Filters" trigger button (< md) */}
           <button
             type="button"
             onClick={handleOpenMobileFilters}
-            className="md:hidden inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-tertiary-300 rounded-xl bg-white hover:bg-neutral-50 text-xs font-bold text-primary min-h-[44px] shrink-0 active:scale-95 shadow-xs transition"
-            aria-label="Ouvrir les filtres"
+            aria-haspopup="dialog"
+            className={`md:hidden inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-tertiary-300 rounded-xl bg-white hover:bg-neutral-50 text-xs font-bold text-primary min-h-[44px] shrink-0 active:scale-95 shadow-xs transition ${focusRing}`}
           >
-            <SlidersHorizontal className="w-4 h-4 text-secondary" />
-            <span>Filtres</span>
+            <SlidersHorizontal className="w-4 h-4 text-secondary" aria-hidden="true" />
+            <span>{t("filters")}</span>
             {totalActiveCount > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-secondary text-white text-[10px] font-bold flex items-center justify-center">
-                {totalActiveCount}
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-secondary-700 text-white text-[10px] font-bold flex items-center justify-center">
+                <span aria-hidden="true">{formatNumber(totalActiveCount, locale)}</span>
+                <span className="sr-only">{activeCountLabel}</span>
               </span>
             )}
           </button>
         </div>
 
         {/* Labeled Selects (Desktop: inline md:flex, Mobile: inside sheet) */}
-        {selects.map((sel) => (
-          <div key={sel.id} className="hidden md:flex flex-col min-w-[150px]">
-            <label className="text-[11px] font-semibold text-neutral-500 mb-1 leading-none ps-0.5">
-              {sel.label}
-            </label>
-            <select
-              value={sel.value}
-              onChange={(e) => sel.onChange(e.target.value)}
-              className="w-full px-3 py-2 bg-neutral-50/70 hover:bg-neutral-50 border border-tertiary-200 rounded-xl text-xs text-neutral-800 font-medium focus:outline-none focus:border-primary focus:bg-white transition cursor-pointer min-h-[38px]"
-            >
-              {sel.options.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
+        {selects.map((sel) => {
+          const selectId = `${uid}-${sel.id}`;
+          return (
+            <div key={sel.id} className="hidden md:flex flex-col min-w-[150px]">
+              <label htmlFor={selectId} className="text-[11px] font-semibold text-neutral-500 mb-1 leading-none ps-0.5">
+                {sel.label}
+              </label>
+              <select
+                id={selectId}
+                value={sel.value}
+                onChange={(e) => sel.onChange(e.target.value)}
+                className="w-full px-3 py-2 bg-neutral-50/70 hover:bg-neutral-50 border border-tertiary-200 rounded-xl text-xs text-neutral-800 font-medium focus:outline-none focus:border-primary focus:bg-white focus-visible:ring-2 focus-visible:ring-accent-600/40 transition cursor-pointer min-h-[38px]"
+              >
+                {sel.options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })}
 
         {/* Custom Actions / Slots */}
         {children && <div className="hidden md:flex items-center gap-2">{children}</div>}
@@ -132,13 +148,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <button
             type="button"
             onClick={openDrawerAction}
-            className="hidden md:inline-flex items-center justify-center gap-2 px-3.5 py-2 border border-tertiary-200 hover:border-tertiary-300 rounded-xl bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer shrink-0 min-h-[38px]"
+            aria-haspopup="dialog"
+            className={`hidden md:inline-flex items-center justify-center gap-2 px-3.5 py-2 border border-tertiary-200 hover:border-tertiary-300 rounded-xl bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer shrink-0 min-h-[38px] ${focusRing}`}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-500" />
-            <span>{drawerButtonLabel}</span>
+            <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-500" aria-hidden="true" />
+            <span>{drawerButtonLabel ?? t("moreFilters")}</span>
             {totalActiveCount > 0 && (
-              <span className="min-w-[16px] h-4 px-1 rounded-full bg-secondary text-white text-[9px] font-bold flex items-center justify-center">
-                {totalActiveCount}
+              <span className="min-w-[16px] h-4 px-1 rounded-full bg-secondary-700 text-white text-[9px] font-bold flex items-center justify-center">
+                <span aria-hidden="true">{formatNumber(totalActiveCount, locale)}</span>
+                <span className="sr-only">{activeCountLabel}</span>
               </span>
             )}
           </button>
@@ -149,19 +167,23 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <button
             type="button"
             onClick={onReset}
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-accent hover:text-accent-700 hover:bg-accent/10 rounded-xl transition cursor-pointer shrink-0 min-h-[38px]"
+            className={`hidden md:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-accent-700 hover:text-accent-800 hover:bg-accent/10 rounded-xl transition cursor-pointer shrink-0 min-h-[38px] ${focusRing}`}
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Réinitialiser</span>
+            <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>{tUi("reset")}</span>
           </button>
         )}
       </div>
 
       {/* Active Chips Row (Horizontal Scroll on mobile) */}
       {(activeChips.length > 0 || (hasActiveFilters && onReset)) && (
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1 border-t border-neutral-100 pb-0.5">
-          <span className="text-[11px] font-medium text-neutral-400 shrink-0">
-            Filtres actifs :
+        <div
+          role="group"
+          aria-label={t("activeFiltersLabel")}
+          className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1 border-t border-neutral-100 pb-0.5"
+        >
+          <span className="text-[11px] font-medium text-neutral-500 shrink-0" aria-hidden="true">
+            {t("activeFilters")}
           </span>
 
           {activeChips.map((chip) => (
@@ -173,10 +195,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 type="button"
                 onClick={chip.onRemove}
-                className="hover:text-primary p-0.5"
-                title="Supprimer le filtre"
+                className="hover:text-primary p-0.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                title={t("removeFilter", { label: chip.label })}
+                aria-label={t("removeFilter", { label: chip.label })}
               >
-                <X className="w-3 h-3" />
+                <X className="w-3 h-3" aria-hidden="true" />
               </button>
             </span>
           ))}
@@ -185,10 +208,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <button
               type="button"
               onClick={onReset}
-              className="md:hidden inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:underline ms-auto shrink-0"
+              className="md:hidden inline-flex items-center gap-1 text-[11px] font-bold text-accent-700 hover:underline ms-auto shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>Effacer tout</span>
+              <RotateCcw className="w-3 h-3" aria-hidden="true" />
+              <span>{t("clearAll")}</span>
             </button>
           )}
         </div>
@@ -199,7 +222,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <Dialog
           isOpen={isMobileFiltersOpen}
           onClose={() => setIsMobileFiltersOpen(false)}
-          title="Filtres de recherche"
+          title={t("dialogTitle")}
           footer={
             <div className="flex items-center justify-between w-full gap-2">
               {onReset && (
@@ -209,38 +232,44 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     onReset();
                     setIsMobileFiltersOpen(false);
                   }}
-                  className="px-3 py-2 text-xs font-bold text-accent hover:underline"
+                  className={`px-3 py-2 text-xs font-bold text-accent-700 hover:underline rounded-lg ${focusRing}`}
                 >
-                  Réinitialiser
+                  {tUi("reset")}
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs shadow-xs"
+                className={`px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs shadow-xs ${focusRing}`}
               >
-                Appliquer
+                {t("apply")}
               </button>
             </div>
           }
         >
           <div className="space-y-4 py-2">
-            {selects.map((sel) => (
-              <div key={sel.id} className="space-y-1.5">
-                <label className="block text-xs font-bold text-primary">{sel.label}</label>
-                <select
-                  value={sel.value}
-                  onChange={(e) => sel.onChange(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-neutral-50 border border-tertiary-300 rounded-xl text-base text-neutral-800 font-medium focus:outline-none focus:border-primary"
-                >
-                  {sel.options.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+            {selects.map((sel) => {
+              const selectId = `${uid}-m-${sel.id}`;
+              return (
+                <div key={sel.id} className="space-y-1.5">
+                  <label htmlFor={selectId} className="block text-xs font-bold text-primary">
+                    {sel.label}
+                  </label>
+                  <select
+                    id={selectId}
+                    value={sel.value}
+                    onChange={(e) => sel.onChange(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-neutral-50 border border-tertiary-300 rounded-xl text-base text-neutral-800 font-medium focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600/40"
+                  >
+                    {sel.options.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })}
           </div>
         </Dialog>
       )}

@@ -1,24 +1,15 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
-import { useRouter, usePathname } from "@/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import React, { useId, useState, useTransition } from "react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import {
   Building,
   User,
   Bed,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  RotateCcw,
   ShieldCheck,
-  CreditCard,
-  Percent,
-  SlidersHorizontal,
-  Download,
-  Trash2,
   Eye,
   FileCheck,
+  MoreVertical,
 } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 import { DataTable, Column } from "@/components/data-table/DataTable";
@@ -29,7 +20,6 @@ import { BulkBar } from "@/components/data-table/BulkBar";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Drawer } from "@/components/ui/Drawer";
@@ -37,20 +27,26 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RangeSlider } from "@/components/ui/RangeSlider";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { useToast } from "@/components/ui/Toast";
-import { Host, HostType, HostStatus, PaginatedResult } from "@/lib/types";
-import { WILAYAS, getWilayaName, getWilayasByRegion } from "@/lib/utils/wilayas";
-import { formatDzd, formatDate, formatNumber } from "@/lib/utils/format";
+import { Host, PaginatedResult } from "@/lib/types";
+import { WILAYAS, getWilayaLabel, getWilayaName, getWilayasByRegion } from "@/lib/utils/wilayas";
+import { formatDzd, formatDate, formatNumber, intlLocale } from "@/lib/utils/format";
 import {
   listHosts,
   approveHost,
-  rejectHost,
   suspendHost,
   unsuspendHost,
   deleteHost,
   restoreHost,
   overrideCommission,
-} from "@/lib/data/hosts";
-import { rechargeWallet } from "@/lib/data/finance";
+} from "@/lib/actions/hosts";
+import { rechargeWallet } from "@/lib/actions/finance";
+import { exportHosts } from "@/lib/actions/hosts";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { downloadCsv } from "@/lib/utils/download";
+import { canHostAction } from "@/lib/domain/transitions";
+import { isValidCommissionRate, isValidDzdAmount, MAX_RECHARGE_DZD } from "@/lib/pricing";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 
 export interface HostsClientProps {
   initialData: PaginatedResult<Host>;
@@ -58,18 +54,39 @@ export interface HostsClientProps {
   initialStatus: string;
 }
 
+type DetailTab = "overview" | "documents" | "listings" | "bookings" | "money" | "history";
+
+const SELECT_CLASS =
+  "w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 cursor-pointer";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export default function HostsClient({
   initialData,
   initialHostType,
   initialStatus,
 }: HostsClientProps) {
-  const router = useRouter();
   const locale = useLocale() as "en" | "fr" | "ar";
   const t = useTranslations("hosts");
   const tCommon = useTranslations("common");
   const tHostTypes = useTranslations("hostTypes");
+  const tStatus = useTranslations("status");
+  const format = useFormatter();
+  const uid = useId();
   const { success, error, info } = useToast();
+  const tActions = useTranslations("actions");
+  const [suspendTarget, setSuspendTarget] = useState<Host | null>(null);
+  const can = useCan();
   const [isPending, startTransition] = useTransition();
+
+  const formatRate = (rate: number) =>
+    new Intl.NumberFormat(intlLocale(locale), { style: "percent", maximumFractionDigits: 2 }).format(rate / 100);
+  const formatRating = (rating: number) =>
+    new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
+  const statusLabel = (value: string) => (tStatus.has(value) ? tStatus(value) : value);
+  const hostTypeLabel = (value: string) => (tHostTypes.has(value) ? tHostTypes(value) : value);
+  const verificationLabel = (value: string) =>
+    t.has(`verification.${value}`) ? t(`verification.${value}`) : value;
 
   // State
   const [data, setData] = useState<PaginatedResult<Host>>(initialData);
@@ -83,7 +100,7 @@ export default function HostsClient({
   const [onlyNegative, setOnlyNegative] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
-  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
+  const [density] = useState<"comfortable" | "compact">("comfortable");
 
   // Selection & Bulk
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -91,7 +108,7 @@ export default function HostsClient({
   // Drawers & Modals
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [detailHost, setDetailHost] = useState<Host | null>(null);
-  const [activeDetailTab, setActiveDetailTab] = useState<"overview" | "documents" | "listings" | "bookings" | "money" | "history">("overview");
+  const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("overview");
 
   // Dialogs
   const [confirmState, setConfirmState] = useState<{
@@ -114,10 +131,23 @@ export default function HostsClient({
   const [rechargeAmount, setRechargeAmount] = useState<number>(50000);
   const [rechargeRef, setRechargeRef] = useState<string>("");
 
+  const ids = {
+    wilaya: `${uid}-wilaya`,
+    status: `${uid}-status`,
+    verification: `${uid}-verification`,
+    approvalMode: `${uid}-approval-mode`,
+    rate: `${uid}-rate`,
+    rateError: `${uid}-rate-error`,
+    amount: `${uid}-amount`,
+    amountError: `${uid}-amount-error`,
+    receipt: `${uid}-receipt`,
+    tabPanel: `${uid}-detail-panel`,
+  };
+
   // Refetch data when filters change
   const fetchData = async (overrideParams: Record<string, any> = {}) => {
     startTransition(async () => {
-      const res = await listHosts({
+      const res = unwrap(await listHosts({
         hostType: overrideParams.hostType ?? hostType,
         status: overrideParams.status ?? status,
         search: overrideParams.search ?? search,
@@ -127,7 +157,7 @@ export default function HostsClient({
         onlyNegativeBalance: overrideParams.onlyNegative ?? onlyNegative,
         page: overrideParams.page ?? currentPage,
         pageSize: overrideParams.pageSize ?? pageSize,
-      });
+      }));
       setData(res);
     });
   };
@@ -146,23 +176,31 @@ export default function HostsClient({
   // Active filter chips calculation
   const activeChips: ActiveFilterItem[] = [];
   if (status !== "all") {
-    activeChips.push({ key: "status", label: "Status", valueDisplay: status });
+    activeChips.push({ key: "status", label: t("chips.status"), valueDisplay: statusLabel(status) });
   }
   if (selectedWilayas.length > 0) {
     activeChips.push({
       key: "wilayas",
-      label: "Wilayas",
-      valueDisplay: `${selectedWilayas.length} selected`,
+      label: t("chips.wilayas"),
+      valueDisplay: t("chips.wilayasSelected", { count: selectedWilayas.length }),
     });
   }
   if (verification !== "all") {
-    activeChips.push({ key: "verification", label: "Verification", valueDisplay: verification });
+    activeChips.push({
+      key: "verification",
+      label: t("chips.verification"),
+      valueDisplay: verificationLabel(verification),
+    });
   }
   if (approvalMode !== "all") {
-    activeChips.push({ key: "approvalMode", label: "Booking Mode", valueDisplay: approvalMode });
+    activeChips.push({
+      key: "approvalMode",
+      label: t("chips.bookingMode"),
+      valueDisplay: t.has(`approvalModes.${approvalMode}`) ? t(`approvalModes.${approvalMode}`) : approvalMode,
+    });
   }
   if (onlyNegative) {
-    activeChips.push({ key: "negative", label: "Balance", valueDisplay: "Negative only" });
+    activeChips.push({ key: "negative", label: t("chips.balance"), valueDisplay: t("chips.negativeOnly") });
   }
 
   const handleRemoveChip = (key: string) => {
@@ -208,66 +246,78 @@ export default function HostsClient({
     setSelectedWilayas(regionalCodes);
   };
 
+  const openDetail = (h: Host) => {
+    setDetailHost(h);
+    setOverrideRateInput(h.commissionRate);
+  };
+
   // Actions
   const handleApprove = (host: Host) => {
     setConfirmState({
       isOpen: true,
-      title: `Approve ${host.ownerName}`,
-      description: `This will grant active marketplace permissions to ${host.businessName || host.ownerName} (${host.hostType}).`,
+      title: t("confirm.approveTitle", { name: host.ownerName }),
+      description: t("confirm.approveDescription", {
+        name: host.businessName || host.ownerName,
+        type: hostTypeLabel(host.hostType),
+      }),
       variant: "primary",
-      confirmLabel: "Approve Host",
+      confirmLabel: t("confirm.approveConfirm"),
       action: async () => {
         try {
-          const updated = await approveHost(host.id, { id: "adm_01", name: "Admin", role: "super_admin" });
-          success(`Approved host ${host.ownerName}`, undefined, () => {
-            // Undo action
-            suspendHost(host.id, "Undo approve", { id: "adm_01", name: "Admin", role: "super_admin" }).then(() => fetchData());
-          });
+          const updated = unwrap(await approveHost(host.id));
+          success(t("toasts.approved", { name: host.ownerName }));
           setDetailHost(updated);
           fetchData();
         } catch (e: any) {
-          error(e.message || "Failed to approve host");
+          error(t("toasts.approveFailed"), e.message);
         }
       },
     });
   };
 
-  const handleSuspend = (host: Host) => {
-    setConfirmState({
-      isOpen: true,
-      title: `Suspend Host Account`,
-      description: `Are you sure you want to suspend ${host.businessName || host.ownerName}? Their listings will be temporarily hidden from travelers.`,
-      variant: "danger",
-      confirmLabel: "Suspend Host",
-      action: async () => {
-        try {
-          const updated = await suspendHost(host.id, "Violation of platform terms", { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Suspended host ${host.ownerName}`, undefined);
-          setDetailHost(updated);
-          fetchData();
-        } catch (e: any) {
-          error(e.message || "Failed to suspend host");
-        }
-      },
-    });
+  // Suspension requires a written reason (enforced server-side too).
+  const handleSuspend = (host: Host) => setSuspendTarget(host);
+
+  const confirmSuspend = async (reason: string) => {
+    if (!suspendTarget) return;
+    try {
+      const updated = unwrap(await suspendHost(suspendTarget.id, reason));
+      info(t("toasts.suspended", { name: suspendTarget.ownerName }), undefined);
+      if (detailHost?.id === updated.id) setDetailHost(updated);
+      setSuspendTarget(null);
+      fetchData();
+    } catch (e: any) {
+      error(tActions("actionFailed"), e.message);
+    }
+  };
+
+  const runHostAction = async (fn: () => Promise<any>, label: string) => {
+    try {
+      const updated = unwrap(await fn()) as Host;
+      success(label);
+      if (detailHost?.id === updated.id) setDetailHost(updated);
+      fetchData();
+    } catch (e: any) {
+      error(tActions("actionFailed"), e.message);
+    }
   };
 
   const handleDelete = (host: Host) => {
     setConfirmState({
       isOpen: true,
-      title: `Permanent Deletion Confirmation`,
-      description: `Soft delete host record ${host.businessName || host.ownerName}. To confirm, please type the host owner's full name below.`,
+      title: t("confirm.deleteTitle"),
+      description: t("confirm.deleteDescription", { name: host.businessName || host.ownerName }),
       variant: "danger",
-      confirmLabel: "Delete Host",
+      confirmLabel: t("confirm.deleteConfirm"),
       requireTypedConfirmation: host.ownerName,
       action: async () => {
         try {
-          await deleteHost(host.id, { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Deleted host ${host.ownerName}`);
+          unwrap(await deleteHost(host.id));
+          info(t("toasts.deleted", { name: host.ownerName }));
           setDetailHost(null);
           fetchData();
         } catch (e: any) {
-          error(e.message || "Failed to delete host");
+          error(t("toasts.deleteFailed"), e.message);
         }
       },
     });
@@ -275,53 +325,62 @@ export default function HostsClient({
 
   const handleSaveCommission = async () => {
     if (!detailHost) return;
+    if (!isValidCommissionRate(overrideRateInput)) {
+      error(tActions("actionFailed"), tActions("invalidRate"));
+      return;
+    }
     try {
-      const updated = await overrideCommission(detailHost.id, overrideRateInput, { id: "adm_01", name: "Admin", role: "super_admin" });
-      success(`Updated commission rate to ${overrideRateInput}%`);
+      const updated = unwrap(await overrideCommission(detailHost.id, overrideRateInput));
+      success(t("toasts.commissionUpdated", { rate: formatRate(overrideRateInput) }));
       setDetailHost(updated);
       fetchData();
     } catch (e: any) {
-      error(e.message || "Failed to update commission");
+      error(t("toasts.commissionFailed"), e.message);
     }
   };
 
   const handleRechargeSubmit = async () => {
-    if (!detailHost || rechargeAmount <= 0) return;
+    if (!detailHost) return;
+    if (!isValidDzdAmount(rechargeAmount, 1, MAX_RECHARGE_DZD)) {
+      error(tActions("actionFailed"), tActions("invalidAmount", { max: formatDzd(MAX_RECHARGE_DZD, locale) }));
+      return;
+    }
     try {
-      const res = await rechargeWallet({
+      const res = unwrap(await rechargeWallet({
         hostId: detailHost.id,
         amount: rechargeAmount,
         method: "ccp_transfer",
+        // Stored in the ledger/audit trail — intentionally not localized.
         reason: "Admin portal offline top-up",
-        receiptReference: rechargeRef || `REC-${Date.now().toString().slice(-6)}`,
-        actor: { id: "adm_01", name: "Admin", role: "super_admin" },
-      });
-      success(`Credited ${formatDzd(rechargeAmount, locale)} to host wallet`);
+        receiptReference: rechargeRef.trim(),
+      }));
+      success(t("toasts.recharged", { amount: formatDzd(rechargeAmount, locale) }));
       setDetailHost({ ...detailHost, walletBalance: res.newBalance });
       fetchData();
     } catch (e: any) {
-      error(e.message || "Failed to recharge wallet");
+      error(t("toasts.rechargeFailed"), e.message);
     }
   };
 
   // Export CSV
-  const handleExportCsv = () => {
-    const headers = "ID,Name,Business,Type,Wilaya,Status,Listings,Bookings,Rating,Balance_DZD,Commission_Rate\n";
-    const rows = data.rows
-      .map(
-        (h) =>
-          `"${h.id}","${h.ownerName}","${h.businessName || ""}","${h.hostType}","${h.wilayaCode}","${h.status}",${h.listingsCount},${h.bookingsCount},${h.rating},${h.walletBalance},${h.commissionRate}%`
-      )
-      .join("\n");
-    const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `DARNA-Hosts-${hostType}-${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    success("Filtered hosts CSV exported successfully");
+  const handleExportCsv = async () => {
+    try {
+      const res = unwrap(
+        await exportHosts({
+          hostType,
+          status,
+          search,
+          wilayaCode: selectedWilayas.length > 0 ? selectedWilayas : undefined,
+          verificationStatus: verification,
+          approvalMode: approvalMode !== "all" ? (approvalMode as any) : undefined,
+          onlyNegativeBalance: onlyNegative,
+        })
+      );
+      downloadCsv(res.filename, res.csv);
+      success(tActions("exportStarted"), tActions("exportRows", { count: res.rowCount }));
+    } catch (e: any) {
+      error(tActions("exportFailed"), e.message);
+    }
   };
 
   // Columns definition
@@ -337,32 +396,13 @@ export default function HostsClient({
             <span className="block font-bold text-primary truncate leading-tight">
               {h.businessName || h.ownerName}
             </span>
-            <span className="block text-[11px] text-neutral-400 truncate leading-snug">
+            <span className="block text-[11px] text-neutral-500 truncate leading-snug">
               {h.email}
             </span>
           </div>
         </div>
       ),
     },
-    // {
-    //   key: "hostType",
-    //   header: t("category"),
-    //   render: (h) => (
-    //     <Badge
-    //       variant={
-    //         h.hostType === "agency"
-    //           ? "accent"
-    //           : h.hostType === "hotel"
-    //           ? "primary"
-    //           : h.hostType === "hostel"
-    //           ? "tertiary"
-    //           : "secondary"
-    //       }
-    //     >
-    //       {tHostTypes.has(h.hostType) ? tHostTypes(h.hostType) : h.hostType}
-    //     </Badge>
-    //   ),
-    // },
     {
       key: "wilayaCode",
       header: t("wilaya"),
@@ -384,19 +424,19 @@ export default function HostsClient({
     },
     {
       key: "verificationStatus",
-      header: "Documents",
+      header: t("documentsColumn"),
       render: (h) => (
         <span
           className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
             h.verificationStatus === "verified"
-              ? "text-secondary"
+              ? "text-secondary-700"
               : h.verificationStatus === "pending"
               ? "text-[#8C682E]"
-              : "text-accent"
+              : "text-accent-700"
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          {h.verificationStatus}
+          <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+          {verificationLabel(h.verificationStatus)}
         </span>
       ),
     },
@@ -405,14 +445,14 @@ export default function HostsClient({
       header: t("listingsCount"),
       align: "center",
       sortable: true,
-      render: (h) => <span className="font-bold tabular-nums">{h.listingsCount}</span>,
+      render: (h) => <span className="font-bold tabular-nums">{formatNumber(h.listingsCount, locale)}</span>,
     },
     {
       key: "bookingsCount",
       header: t("bookingsCount"),
       align: "center",
       sortable: true,
-      render: (h) => <span className="font-bold tabular-nums">{h.bookingsCount}</span>,
+      render: (h) => <span className="font-bold tabular-nums">{formatNumber(h.bookingsCount, locale)}</span>,
     },
     {
       key: "rating",
@@ -420,8 +460,8 @@ export default function HostsClient({
       align: "center",
       sortable: true,
       render: (h) => (
-        <span className="font-semibold text-amber-600 tabular-nums">
-          ★ {h.rating.toFixed(1)}
+        <span className="font-semibold text-amber-700 tabular-nums">
+          <span aria-hidden="true">★</span> {formatRating(h.rating)}
         </span>
       ),
     },
@@ -433,7 +473,7 @@ export default function HostsClient({
       render: (h) => (
         <span
           className={`font-mono font-bold tabular-nums ${
-            h.walletBalance < 0 ? "text-accent" : "text-primary"
+            h.walletBalance < 0 ? "text-accent-700" : "text-primary"
           }`}
         >
           {formatDzd(h.walletBalance, locale)}
@@ -446,9 +486,9 @@ export default function HostsClient({
       align: "right",
       render: (h) => (
         <span className="text-xs font-semibold tabular-nums text-neutral-600">
-          {h.commissionRate}%
+          {formatRate(h.commissionRate)}
           {h.isCommissionOverridden && (
-            <span className="text-[10px] text-accent ms-1 font-bold">★</span>
+            <span className="text-[10px] text-accent-700 ms-1 font-bold" aria-hidden="true">★</span>
           )}
         </span>
       ),
@@ -458,8 +498,9 @@ export default function HostsClient({
       header: tCommon("actions"),
       align: "right",
       render: (h) => (
+        // Stops row-click propagation only; the buttons inside are the interactive elements.
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          {h.status === "under_review" || h.status === "applied" ? (
+          {(h.status === "under_review" || h.status === "applied") && can("hosts.approve") ? (
             <Button
               variant="secondary"
               size="sm"
@@ -472,47 +513,97 @@ export default function HostsClient({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                setDetailHost(h);
-                setOverrideRateInput(h.commissionRate);
-              }}
+              onClick={() => openDetail(h)}
               className="text-[11px] py-1 px-2 text-neutral-600"
             >
-              <Eye className="w-3.5 h-3.5 me-1" /> {t("viewDetails")}
+              <Eye className="w-3.5 h-3.5 me-1" aria-hidden="true" /> {t("viewDetails")}
             </Button>
           )}
 
           <DropdownMenu
+            trigger={
+              <button
+                type="button"
+                aria-label={t("moreActions", { name: h.businessName || h.ownerName })}
+                aria-haspopup="menu"
+                className="p-1.5 rounded-lg text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              >
+                <MoreVertical className="w-4 h-4" aria-hidden="true" />
+              </button>
+            }
             items={[
               {
                 label: t("viewDetails"),
-                onClick: () => {
-                  setDetailHost(h);
-                  setOverrideRateInput(h.commissionRate);
-                },
+                onClick: () => openDetail(h),
               },
-              {
-                label: t("approveHost"),
-                onClick: () => handleApprove(h),
-                disabled: h.status === "approved",
-              },
-              {
-                label: t("suspendHost"),
-                onClick: () => handleSuspend(h),
-                variant: "danger",
-                disabled: h.status === "suspended",
-              },
-              {
-                label: t("deleteHost"),
-                onClick: () => handleDelete(h),
-                variant: "danger",
-              },
+              ...(can("hosts.approve")
+                ? [{
+                    label: t("approveHost"),
+                    onClick: () => handleApprove(h),
+                    disabled: !canHostAction(h.status, "approve"),
+                  }]
+                : []),
+              ...(can("hosts.suspend")
+                ? [{
+                    label: t("suspendHost"),
+                    onClick: () => handleSuspend(h),
+                    variant: "danger" as const,
+                    disabled: !canHostAction(h.status, "suspend"),
+                  }]
+                : []),
+              ...(can("hosts.suspend") && canHostAction(h.status, "unsuspend")
+                ? [{
+                    label: tActions("reactivate"),
+                    onClick: () => runHostAction(() => unsuspendHost(h.id), tActions("statusUpdated")),
+                  }]
+                : []),
+              ...(can("hosts.delete") && canHostAction(h.status, "restore")
+                ? [{
+                    label: tActions("restore"),
+                    onClick: () => runHostAction(() => restoreHost(h.id), tActions("restored")),
+                  }]
+                : []),
+              ...(can("hosts.delete")
+                ? [{
+                    label: t("deleteHost"),
+                    onClick: () => handleDelete(h),
+                    variant: "danger" as const,
+                    disabled: !canHostAction(h.status, "delete"),
+                  }]
+                : []),
             ]}
           />
         </div>
       ),
     },
   ];
+
+  const detailTabs: { id: DetailTab; label: string }[] = detailHost
+    ? [
+        { id: "overview", label: t("drawer.tabs.overview") },
+        { id: "documents", label: t("drawer.tabs.documents", { count: detailHost.documents.length }) },
+        { id: "listings", label: t("drawer.tabs.listings", { count: detailHost.listingsCount }) },
+        { id: "bookings", label: t("drawer.tabs.bookings", { count: detailHost.bookingsCount }) },
+        { id: "money", label: t("drawer.tabs.money") },
+        { id: "history", label: t("drawer.tabs.history") },
+      ]
+    : [];
+
+  const handleDetailTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const isRtl = locale === "ar";
+    const next = e.key === (isRtl ? "ArrowLeft" : "ArrowRight");
+    const prev = e.key === (isRtl ? "ArrowRight" : "ArrowLeft");
+    if (!next && !prev && e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    const last = detailTabs.length - 1;
+    const target =
+      e.key === "Home" ? 0 : e.key === "End" ? last : next ? (index === last ? 0 : index + 1) : index === 0 ? last : index - 1;
+    setActiveDetailTab(detailTabs[target].id);
+    const tabEl = document.getElementById(`${uid}-tab-${detailTabs[target].id}`);
+    tabEl?.focus();
+  };
+
+  const now = Date.now();
 
   return (
     <div className="space-y-6 text-start">
@@ -532,10 +623,10 @@ export default function HostsClient({
       <Tabs
         tabs={[
           { id: "all", label: t("allPartners"), count: data.facets?.hostType?.all },
-          { id: "individual", label: t("individualTab"), count: data.facets?.hostType?.individual, icon: <User className="w-3.5 h-3.5" /> },
-          { id: "agency", label: t("agencyTab"), count: data.facets?.hostType?.agency, icon: <Building className="w-3.5 h-3.5" /> },
-          { id: "hotel", label: t("hotelTab"), count: data.facets?.hostType?.hotel, icon: <Building className="w-3.5 h-3.5" /> },
-          { id: "hostel", label: t("hostelTab"), count: data.facets?.hostType?.hostel, icon: <Bed className="w-3.5 h-3.5" /> },
+          { id: "individual", label: t("individualTab"), count: data.facets?.hostType?.individual, icon: <User className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "agency", label: t("agencyTab"), count: data.facets?.hostType?.agency, icon: <Building className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "hotel", label: t("hotelTab"), count: data.facets?.hostType?.hotel, icon: <Building className="w-3.5 h-3.5" aria-hidden="true" /> },
+          { id: "hostel", label: t("hostelTab"), count: data.facets?.hostType?.hostel, icon: <Bed className="w-3.5 h-3.5" aria-hidden="true" /> },
         ]}
         activeTab={hostType}
         onChange={handleTabChange}
@@ -550,7 +641,7 @@ export default function HostsClient({
         onOpenFilterDrawer={() => setIsFilterDrawerOpen(true)}
         totalResults={data.total}
         resultsLabel={t("allPartners")}
-        onExport={handleExportCsv}
+        onExport={can("reports.export") ? handleExportCsv : undefined}
       />
 
       {/* Active Filter Chips */}
@@ -579,10 +670,7 @@ export default function HostsClient({
         isAllSelected={selectedIds.length > 0 && selectedIds.length === data.rows.length}
         isLoading={isPending}
         density={density}
-        onRowClick={(h) => {
-          setDetailHost(h);
-          setOverrideRateInput(h.commissionRate);
-        }}
+        onRowClick={openDetail}
       />
 
       {/* Server-Side Pagination */}
@@ -608,34 +696,38 @@ export default function HostsClient({
         totalFilteredCount={data.total}
         onClearSelection={() => setSelectedIds([])}
         actions={[
-          {
+          ...(can("hosts.approve") ? [{
             id: "bulk_approve",
-            label: "Approve Selected",
-            variant: "secondary",
+            label: t("bulk.approveSelected"),
+            variant: "secondary" as const,
             onClick: () => {
               setConfirmState({
                 isOpen: true,
-                title: `Bulk Approve ${selectedIds.length} Hosts`,
-                description: "This will approve all selected host accounts immediately.",
+                title: t("confirm.bulkApproveTitle", { count: selectedIds.length }),
+                description: t("confirm.bulkApproveDescription"),
                 variant: "primary",
-                confirmLabel: "Approve All Selected",
+                confirmLabel: t("confirm.bulkApproveConfirm"),
                 action: async () => {
-                  for (const id of selectedIds) {
-                    await approveHost(id, { id: "adm_01", name: "Admin", role: "super_admin" });
+                  try {
+                    for (const id of selectedIds) {
+                      unwrap(await approveHost(id));
+                    }
+                    success(t("toasts.bulkApproved", { count: selectedIds.length }));
+                    setSelectedIds([]);
+                  } catch (e: any) {
+                    error(t("toasts.bulkApproveFailed"), e.message);
                   }
-                  success(`Bulk approved ${selectedIds.length} hosts`);
-                  setSelectedIds([]);
                   fetchData();
                 },
               });
             },
-          },
-          {
+          }] : []),
+          ...(can("reports.export") ? [{
             id: "bulk_export",
-            label: "Export Selected",
-            variant: "outline",
+            label: t("bulk.exportSelected"),
+            variant: "outline" as const,
             onClick: handleExportCsv,
-          },
+          }] : []),
         ]}
       />
 
@@ -648,28 +740,46 @@ export default function HostsClient({
         onApply={() => fetchData({ page: 1 })}
       >
         {/* Wilaya Filter (All 69 Wilayas) */}
-        <div className="space-y-2">
+        <div className="space-y-2" role="group" aria-labelledby={ids.wilaya}>
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-primary">Wilaya (Province)</label>
-            <div className="flex items-center gap-1 text-[10px] text-secondary font-bold">
-              <button type="button" onClick={() => handleSelectRegion("north")} className="hover:underline">
-                North
+            <span id={ids.wilaya} className="block text-xs font-bold text-primary">
+              {t("filters.wilaya")}
+            </span>
+            <div
+              className="flex items-center gap-1 text-[10px] text-secondary-700 font-bold"
+              role="group"
+              aria-label={t("filters.regionShortcuts")}
+            >
+              <button
+                type="button"
+                onClick={() => handleSelectRegion("north")}
+                className="hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              >
+                {t("filters.north")}
               </button>
-              <span>·</span>
-              <button type="button" onClick={() => handleSelectRegion("high_plateaus")} className="hover:underline">
-                High Plateaus
+              <span aria-hidden="true">·</span>
+              <button
+                type="button"
+                onClick={() => handleSelectRegion("high_plateaus")}
+                className="hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              >
+                {t("filters.highPlateaus")}
               </button>
-              <span>·</span>
-              <button type="button" onClick={() => handleSelectRegion("south")} className="hover:underline">
-                South
+              <span aria-hidden="true">·</span>
+              <button
+                type="button"
+                onClick={() => handleSelectRegion("south")}
+                className="hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              >
+                {t("filters.south")}
               </button>
             </div>
           </div>
           <MultiSelect
-            placeholder="Select Algerian wilayas..."
+            placeholder={t("filters.wilayaPlaceholder")}
             options={WILAYAS.map((w) => ({
               value: w.code,
-              label: `${w.code} - ${w.nameEn}`,
+              label: getWilayaLabel(w, locale),
             }))}
             selectedValues={selectedWilayas}
             onChange={setSelectedWilayas}
@@ -678,55 +788,64 @@ export default function HostsClient({
 
         {/* Status Lifecycle */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-primary">Partner Status</label>
+          <label htmlFor={ids.status} className="block text-xs font-bold text-primary">
+            {t("filters.partnerStatus")}
+          </label>
           <select
+            id={ids.status}
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+            className={SELECT_CLASS}
           >
-            <option value="all">All Statuses</option>
-            <option value="applied">Applied (New)</option>
-            <option value="under_review">Under Review</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="suspended">Suspended</option>
-            <option value="banned">Banned</option>
+            <option value="all">{t("filters.allStatuses")}</option>
+            <option value="applied">{t("filters.appliedNew")}</option>
+            <option value="under_review">{tStatus("under_review")}</option>
+            <option value="approved">{tStatus("approved")}</option>
+            <option value="rejected">{tStatus("rejected")}</option>
+            <option value="suspended">{tStatus("suspended")}</option>
+            <option value="banned">{tStatus("banned")}</option>
           </select>
         </div>
 
         {/* Verification Status */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-primary">Document Verification</label>
+          <label htmlFor={ids.verification} className="block text-xs font-bold text-primary">
+            {t("filters.documentVerification")}
+          </label>
           <select
+            id={ids.verification}
             value={verification}
             onChange={(e) => setVerification(e.target.value)}
-            className="w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+            className={SELECT_CLASS}
           >
-            <option value="all">All Documents</option>
-            <option value="verified">Complete & Verified</option>
-            <option value="pending">Pending Document Review</option>
-            <option value="missing">Missing Documents</option>
-            <option value="expired">Expired Documents</option>
+            <option value="all">{t("filters.allDocuments")}</option>
+            <option value="verified">{t("filters.docsVerified")}</option>
+            <option value="pending">{t("filters.docsPending")}</option>
+            <option value="missing">{t("filters.docsMissing")}</option>
+            <option value="expired">{t("filters.docsExpired")}</option>
           </select>
         </div>
 
         {/* Booking Approval Mode */}
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-primary">Booking Approval Mode</label>
+          <label htmlFor={ids.approvalMode} className="block text-xs font-bold text-primary">
+            {t("filters.approvalMode")}
+          </label>
           <select
+            id={ids.approvalMode}
             value={approvalMode}
             onChange={(e) => setApprovalMode(e.target.value)}
-            className="w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+            className={SELECT_CLASS}
           >
-            <option value="all">Any Mode</option>
-            <option value="instant">Instant Booking</option>
-            <option value="request">Manual Host Request</option>
+            <option value="all">{t("filters.anyMode")}</option>
+            <option value="instant">{t("approvalModes.instant")}</option>
+            <option value="request">{t("approvalModes.request")}</option>
           </select>
         </div>
 
         {/* Price Range Slider */}
         <RangeSlider
-          label="Price Range (DZD)"
+          label={t("filters.priceRange")}
           min={0}
           max={100000}
           step={2000}
@@ -742,141 +861,175 @@ export default function HostsClient({
           onClose={() => setDetailHost(null)}
           size="lg"
           title={detailHost.businessName || detailHost.ownerName}
-          subtitle={`${detailHost.hostType.toUpperCase()} in ${detailHost.city} · ID: ${detailHost.id}`}
+          subtitle={t("drawer.subtitle", {
+            type: hostTypeLabel(detailHost.hostType),
+            city: detailHost.city,
+            id: detailHost.id,
+          })}
           footer={
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setDetailHost(null)}>
-                Close
+                {tCommon("close")}
               </Button>
               {detailHost.status !== "approved" ? (
-                <Button variant="primary" size="sm" onClick={() => handleApprove(detailHost)}>
-                  Approve Host
-                </Button>
+                can("hosts.approve") && canHostAction(detailHost.status, "approve") && (
+                  <Button variant="primary" size="sm" onClick={() => handleApprove(detailHost)}>
+                    {t("drawer.approveHost")}
+                  </Button>
+                )
               ) : (
-                <Button variant="danger" size="sm" onClick={() => handleSuspend(detailHost)}>
-                  Suspend Host
-                </Button>
+                can("hosts.suspend") && (
+                  <Button variant="danger" size="sm" onClick={() => handleSuspend(detailHost)}>
+                    {t("drawer.suspendHost")}
+                  </Button>
+                )
               )}
             </div>
           }
         >
           {/* Drawer Tabs (Exactly 6 Miller 7±2 compliant tabs) */}
-          <div className="flex items-center gap-1.5 border-b border-neutral-100 pb-2 overflow-x-auto">
-            {[
-              { id: "overview", label: "Overview" },
-              { id: "documents", label: `Documents (${detailHost.documents.length})` },
-              { id: "listings", label: `Listings (${detailHost.listingsCount})` },
-              { id: "bookings", label: `Bookings (${detailHost.bookingsCount})` },
-              { id: "money", label: "Money" },
-              { id: "history", label: "History" },
-            ].map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setActiveDetailTab(t.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 ${
-                  activeDetailTab === t.id
-                    ? "bg-primary text-white"
-                    : "text-neutral-500 hover:text-primary hover:bg-neutral-100"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          <div
+            role="tablist"
+            aria-label={t("drawer.sections")}
+            className="flex items-center gap-1.5 border-b border-neutral-100 pb-2 overflow-x-auto"
+          >
+            {detailTabs.map((tab, index) => {
+              const selected = activeDetailTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  id={`${uid}-tab-${tab.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={ids.tabPanel}
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => setActiveDetailTab(tab.id)}
+                  onKeyDown={(e) => handleDetailTabKeyDown(e, index)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+                    selected
+                      ? "bg-primary text-white"
+                      : "text-neutral-500 hover:text-primary hover:bg-neutral-100"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
+          <div
+            id={ids.tabPanel}
+            role="tabpanel"
+            aria-labelledby={`${uid}-tab-${activeDetailTab}`}
+            className="pt-1"
+          >
           {activeDetailTab === "overview" && (
             <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-darnaBg/40 border border-tertiary/50">
+              <dl className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-darnaBg/40 border border-tertiary/50">
                 <div>
-                  <span className="text-neutral-400 block">Owner Name</span>
-                  <span className="font-bold text-primary">{detailHost.ownerName}</span>
+                  <dt className="text-neutral-500 block">{t("drawer.overview.ownerName")}</dt>
+                  <dd className="font-bold text-primary">{detailHost.ownerName}</dd>
                 </div>
                 <div>
-                  <span className="text-neutral-400 block">Business Name</span>
-                  <span className="font-bold text-primary">{detailHost.businessName || "Individual Partner"}</span>
+                  <dt className="text-neutral-500 block">{t("drawer.overview.businessName")}</dt>
+                  <dd className="font-bold text-primary">{detailHost.businessName || t("drawer.overview.individualPartner")}</dd>
                 </div>
                 <div>
-                  <span className="text-neutral-400 block">Email</span>
-                  <span className="font-bold text-primary">{detailHost.email}</span>
+                  <dt className="text-neutral-500 block">{t("drawer.overview.email")}</dt>
+                  <dd className="font-bold text-primary break-all">{detailHost.email}</dd>
                 </div>
                 <div>
-                  <span className="text-neutral-400 block">Phone</span>
-                  <span className="font-bold text-primary">{detailHost.phone}</span>
+                  <dt className="text-neutral-500 block">{t("drawer.overview.phone")}</dt>
+                  <dd className="font-bold text-primary" dir="ltr">{detailHost.phone}</dd>
                 </div>
                 <div>
-                  <span className="text-neutral-400 block">Wilaya</span>
-                  <span className="font-bold text-primary">{getWilayaName(detailHost.wilayaCode, locale)}</span>
+                  <dt className="text-neutral-500 block">{t("drawer.overview.wilaya")}</dt>
+                  <dd className="font-bold text-primary">{getWilayaName(detailHost.wilayaCode, locale)}</dd>
                 </div>
                 <div>
-                  <span className="text-neutral-400 block">Wallet Balance</span>
-                  <span className={`font-mono font-bold ${detailHost.walletBalance < 0 ? "text-accent" : "text-primary"}`}>
+                  <dt className="text-neutral-500 block">{t("drawer.overview.walletBalance")}</dt>
+                  <dd className={`font-mono font-bold ${detailHost.walletBalance < 0 ? "text-accent-700" : "text-primary"}`}>
                     {formatDzd(detailHost.walletBalance, locale)}
-                  </span>
+                  </dd>
                 </div>
-              </div>
+              </dl>
 
               {detailHost.agencyMetadata && (
                 <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
-                  <h4 className="font-bold text-primary">Agency & Staff Details</h4>
-                  <div className="grid grid-cols-3 gap-2">
+                  <h4 className="font-bold text-primary">{t("drawer.overview.agencyTitle")}</h4>
+                  <dl className="grid grid-cols-3 gap-2">
                     <div>
-                      <span className="text-neutral-400 block">Team Size</span>
-                      <span className="font-bold">{detailHost.agencyMetadata.teamSize} staff</span>
+                      <dt className="text-neutral-500 block">{t("drawer.overview.teamSize")}</dt>
+                      <dd className="font-bold">
+                        {t("drawer.overview.teamSizeValue", { count: detailHost.agencyMetadata.teamSize })}
+                      </dd>
                     </div>
                     <div>
-                      <span className="text-neutral-400 block">License No.</span>
-                      <span className="font-bold font-mono">{detailHost.agencyMetadata.licenseNumber}</span>
+                      <dt className="text-neutral-500 block">{t("drawer.overview.licenseNo")}</dt>
+                      <dd className="font-bold font-mono">{detailHost.agencyMetadata.licenseNumber}</dd>
                     </div>
                     <div>
-                      <span className="text-neutral-400 block">Offers Trips</span>
-                      <span className="font-bold text-secondary">Yes</span>
+                      <dt className="text-neutral-500 block">{t("drawer.overview.offersTrips")}</dt>
+                      <dd className="font-bold text-secondary-700">
+                        {detailHost.agencyMetadata.hasTrips ? t("drawer.overview.yes") : t("drawer.overview.no")}
+                      </dd>
                     </div>
-                  </div>
+                  </dl>
                 </div>
               )}
 
               {detailHost.hotelMetadata && (
                 <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
-                  <h4 className="font-bold text-primary">Hotel Classification</h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <h4 className="font-bold text-primary">{t("drawer.overview.hotelTitle")}</h4>
+                  <dl className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-neutral-400 block">Stars</span>
-                      <span className="font-bold text-amber-600">{"★".repeat(detailHost.hotelMetadata.starRating)}</span>
+                      <dt className="text-neutral-500 block">{t("drawer.overview.stars")}</dt>
+                      <dd className="font-bold text-amber-700">
+                        <span aria-hidden="true">{"★".repeat(detailHost.hotelMetadata.starRating)}</span>
+                        <span className="sr-only">
+                          {t("drawer.overview.starsValue", { count: detailHost.hotelMetadata.starRating })}
+                        </span>
+                      </dd>
                     </div>
                     <div>
-                      <span className="text-neutral-400 block">Total Rooms</span>
-                      <span className="font-bold">{detailHost.hotelMetadata.roomCount} Rooms</span>
+                      <dt className="text-neutral-500 block">{t("drawer.overview.totalRooms")}</dt>
+                      <dd className="font-bold">
+                        {t("drawer.overview.roomsValue", { count: detailHost.hotelMetadata.roomCount })}
+                      </dd>
                     </div>
-                  </div>
+                  </dl>
                 </div>
               )}
 
               {/* Internal Moderator Notes */}
               <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
-                <h4 className="font-bold text-primary">Internal Notes</h4>
+                <h4 className="font-bold text-primary">{t("drawer.overview.internalNotes")}</h4>
                 <p className="text-neutral-600 text-[11px] leading-relaxed">
-                  Verified Algerian tourism operator. Identity documents matched against national records. Contact phone verified via SMS dispatch.
+                  {t("drawer.overview.internalNotesText")}
                 </p>
               </div>
             </div>
           )}
 
           {activeDetailTab === "documents" && (
-            <div className="space-y-3 text-xs">
+            <ul className="space-y-3 text-xs">
               {detailHost.documents.map((doc) => (
-                <div
+                <li
                   key={doc.id}
                   className="p-3.5 rounded-2xl bg-white border border-tertiary/60 flex items-center justify-between gap-3 shadow-2xs"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
-                      <FileCheck className="w-5 h-5" />
+                      <FileCheck className="w-5 h-5" aria-hidden="true" />
                     </div>
                     <div>
                       <span className="font-bold text-primary block">{doc.title}</span>
-                      <span className="text-[11px] text-neutral-400">
-                        Uploaded {formatDate(doc.uploadedAt, locale)} · Status: {doc.status}
+                      <span className="text-[11px] text-neutral-500">
+                        {t("drawer.documents.meta", {
+                          date: formatDate(doc.uploadedAt, locale),
+                          status: statusLabel(doc.status),
+                        })}
                       </span>
                     </div>
                   </div>
@@ -885,42 +1038,45 @@ export default function HostsClient({
                     href={doc.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1 rounded-lg border border-tertiary/70 text-primary font-bold hover:bg-darnaBg/70 transition"
+                    aria-label={t("drawer.documents.viewFileLabel", { title: doc.title })}
+                    className="px-3 py-1 rounded-lg border border-tertiary/70 text-primary font-bold hover:bg-darnaBg/70 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                   >
-                    View File
+                    {t("drawer.documents.viewFile")}
                   </a>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
 
           {activeDetailTab === "listings" && (
             <div className="space-y-3 text-xs">
               <div className="p-4 rounded-2xl bg-darnaBg/50 border border-tertiary/60 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-primary block">Active Listings Fleet</span>
-                  <span className="text-[11px] text-neutral-500">{detailHost.listingsCount} properties registered</span>
+                  <span className="font-bold text-primary block">{t("drawer.listings.activeFleet")}</span>
+                  <span className="text-[11px] text-neutral-500">
+                    {t("drawer.listings.registered", { count: detailHost.listingsCount })}
+                  </span>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-secondary/15 text-secondary font-bold text-[11px]">
-                  Published
+                <span className="px-2.5 py-1 rounded-full bg-secondary/15 text-secondary-700 font-bold text-[11px]">
+                  {tStatus("published")}
                 </span>
               </div>
               <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
-                <span className="font-semibold text-neutral-700 block">Catalog Sub-sections:</span>
-                <div className="grid grid-cols-3 gap-2 text-center">
+                <span className="font-semibold text-neutral-700 block">{t("drawer.listings.subsections")}</span>
+                <dl className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
-                    <span className="text-neutral-400 block text-[10px]">Stays / Homes</span>
-                    <strong className="text-primary text-sm">{Math.ceil(detailHost.listingsCount * 0.6)}</strong>
+                    <dt className="text-neutral-500 block text-[10px]">{t("drawer.listings.stays")}</dt>
+                    <dd className="text-primary text-sm font-bold">{formatNumber(Math.ceil(detailHost.listingsCount * 0.6), locale)}</dd>
                   </div>
                   <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
-                    <span className="text-neutral-400 block text-[10px]">Hotel Rooms</span>
-                    <strong className="text-primary text-sm">{Math.floor(detailHost.listingsCount * 0.3)}</strong>
+                    <dt className="text-neutral-500 block text-[10px]">{t("drawer.listings.hotelRooms")}</dt>
+                    <dd className="text-primary text-sm font-bold">{formatNumber(Math.floor(detailHost.listingsCount * 0.3), locale)}</dd>
                   </div>
                   <div className="p-2.5 rounded-xl bg-neutral-50 border border-neutral-100">
-                    <span className="text-neutral-400 block text-[10px]">Trips & Tours</span>
-                    <strong className="text-primary text-sm">{Math.max(1, Math.floor(detailHost.listingsCount * 0.1))}</strong>
+                    <dt className="text-neutral-500 block text-[10px]">{t("drawer.listings.trips")}</dt>
+                    <dd className="text-primary text-sm font-bold">{formatNumber(Math.max(1, Math.floor(detailHost.listingsCount * 0.1)), locale)}</dd>
                   </div>
-                </div>
+                </dl>
               </div>
             </div>
           )}
@@ -929,11 +1085,13 @@ export default function HostsClient({
             <div className="space-y-3 text-xs">
               <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-primary">Guest Reservations</span>
-                  <span className="font-bold text-secondary font-mono">{detailHost.bookingsCount} completed stays</span>
+                  <span className="font-bold text-primary">{t("drawer.bookings.title")}</span>
+                  <span className="font-bold text-secondary-700 font-mono">
+                    {t("drawer.bookings.completed", { count: detailHost.bookingsCount })}
+                  </span>
                 </div>
                 <p className="text-[11px] text-neutral-500">
-                  Reliable track record. Average check-in confirmation within 24 minutes.
+                  {t("drawer.bookings.trackRecord")}
                 </p>
               </div>
             </div>
@@ -944,60 +1102,89 @@ export default function HostsClient({
               {/* Wallet Summary */}
               <div className="p-4 rounded-2xl bg-darnaBg/50 border border-tertiary/60 flex items-center justify-between">
                 <div>
-                  <span className="text-neutral-500 block text-[11px]">Current Wallet Balance</span>
+                  <span className="text-neutral-500 block text-[11px]">{t("drawer.money.currentBalance")}</span>
                   <span className="text-xl font-bold font-mono text-primary">
                     {formatDzd(detailHost.walletBalance, locale)}
                   </span>
                 </div>
                 <span className="text-xs text-neutral-500">
-                  Rate: <strong>{detailHost.commissionRate}%</strong>
+                  {t.rich("drawer.money.rate", {
+                    rate: formatRate(detailHost.commissionRate),
+                    strong: (chunks) => <strong>{chunks}</strong>,
+                  })}
                 </span>
               </div>
 
               {/* Commission Override */}
               <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
-                <h4 className="font-bold text-primary">Platform Commission Rate</h4>
+                <h4 className="font-bold text-primary">
+                  <label htmlFor={ids.rate}>{t("drawer.money.commissionTitle")}</label>
+                </h4>
                 <div className="flex items-center gap-3">
                   <input
+                    id={ids.rate}
                     type="number"
                     min={0}
-                    max={50}
-                    step={0.5}
+                    max={100}
+                    step={0.01}
+                    aria-invalid={!isValidCommissionRate(overrideRateInput)}
+                    aria-describedby={!isValidCommissionRate(overrideRateInput) ? ids.rateError : undefined}
                     value={overrideRateInput}
                     onChange={(e) => setOverrideRateInput(Number(e.target.value))}
-                    className="w-24 p-2 rounded-xl border border-tertiary/80 text-sm font-bold font-mono text-primary"
+                    className="w-24 p-2 rounded-xl border border-tertiary/80 text-sm font-bold font-mono text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600"
                   />
-                  <span className="font-bold text-sm">%</span>
-                  <Button variant="primary" size="sm" onClick={handleSaveCommission}>
-                    Save Override
+                  <span className="font-bold text-sm" aria-hidden="true">%</span>
+                  <Button variant="primary" size="sm" onClick={handleSaveCommission} disabled={!can("hosts.commission_override")}>
+                    {t("drawer.money.saveOverride")}
                   </Button>
                 </div>
+                {!isValidCommissionRate(overrideRateInput) && (
+                  <p id={ids.rateError} className="text-[11px] font-semibold text-accent-700">
+                    {tActions("invalidRate")}
+                  </p>
+                )}
               </div>
 
               {/* Recharge Form */}
               <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-3">
-                <h4 className="font-bold text-primary">Credit Partner Wallet (Offline Top-Up)</h4>
+                <h4 className="font-bold text-primary">{t("drawer.money.rechargeTitle")}</h4>
                 <div>
-                  <label className="block text-neutral-500 font-semibold mb-1">Amount (DZD)</label>
+                  <label htmlFor={ids.amount} className="block text-neutral-600 font-semibold mb-1">
+                    {t("drawer.money.amount")}
+                  </label>
                   <input
+                    id={ids.amount}
                     type="number"
+                    min={1}
+                    max={MAX_RECHARGE_DZD}
+                    step={1}
+                    aria-invalid={!isValidDzdAmount(rechargeAmount, 1, MAX_RECHARGE_DZD)}
+                    aria-describedby={!isValidDzdAmount(rechargeAmount, 1, MAX_RECHARGE_DZD) ? ids.amountError : undefined}
                     value={rechargeAmount}
                     onChange={(e) => setRechargeAmount(Number(e.target.value))}
-                    className="w-full p-2 rounded-xl border border-tertiary/80 text-sm font-bold font-mono text-primary"
+                    className="w-full p-2 rounded-xl border border-tertiary/80 text-sm font-bold font-mono text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600"
                   />
+                  {!isValidDzdAmount(rechargeAmount, 1, MAX_RECHARGE_DZD) && (
+                    <p id={ids.amountError} className="mt-1 text-[11px] font-semibold text-accent-700">
+                      {tActions("invalidAmount", { max: formatDzd(MAX_RECHARGE_DZD, locale) })}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-neutral-500 font-semibold mb-1">Receipt / Wire Reference</label>
+                  <label htmlFor={ids.receipt} className="block text-neutral-600 font-semibold mb-1">
+                    {t("drawer.money.receiptRef")}
+                  </label>
                   <input
+                    id={ids.receipt}
                     type="text"
                     value={rechargeRef}
                     onChange={(e) => setRechargeRef(e.target.value)}
-                    placeholder="e.g. BNA-VIR-891244"
-                    className="w-full p-2 rounded-xl border border-tertiary/80 text-xs text-primary"
+                    placeholder={t("drawer.money.receiptPlaceholder")}
+                    className="w-full p-2 rounded-xl border border-tertiary/80 text-xs text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600"
                   />
                 </div>
-                <Button variant="secondary" size="md" className="w-full" onClick={handleRechargeSubmit}>
-                  Credit Wallet
+                <Button variant="secondary" size="md" className="w-full" onClick={handleRechargeSubmit} disabled={!can("wallets.recharge") || !isValidDzdAmount(rechargeAmount, 1, MAX_RECHARGE_DZD) || !rechargeRef.trim()}>
+                  {t("drawer.money.creditWallet")}
                 </Button>
               </div>
             </div>
@@ -1006,24 +1193,25 @@ export default function HostsClient({
           {activeDetailTab === "history" && (
             <div className="space-y-3 text-xs">
               <div className="p-4 rounded-2xl bg-white border border-tertiary/60 space-y-2">
-                <h4 className="font-bold text-primary">Partner History of Actions</h4>
-                <div className="divide-y divide-neutral-100 text-[11px]">
-                  <div className="py-2 flex justify-between">
-                    <span className="text-neutral-700">Account verified by Nadia</span>
-                    <span className="text-neutral-400">2 days ago</span>
-                  </div>
-                  <div className="py-2 flex justify-between">
-                    <span className="text-neutral-700">Identity document approved</span>
-                    <span className="text-neutral-400">3 days ago</span>
-                  </div>
-                  <div className="py-2 flex justify-between">
-                    <span className="text-neutral-700">Partner application submitted</span>
-                    <span className="text-neutral-400">5 days ago</span>
-                  </div>
-                </div>
+                <h4 className="font-bold text-primary">{t("drawer.history.title")}</h4>
+                <ul className="divide-y divide-neutral-100 text-[11px]">
+                  <li className="py-2 flex justify-between gap-3">
+                    <span className="text-neutral-700">{t("drawer.history.verifiedBy", { name: "Nadia" })}</span>
+                    <span className="text-neutral-500">{format.relativeTime(now - 2 * DAY_MS, now)}</span>
+                  </li>
+                  <li className="py-2 flex justify-between gap-3">
+                    <span className="text-neutral-700">{t("drawer.history.idApproved")}</span>
+                    <span className="text-neutral-500">{format.relativeTime(now - 3 * DAY_MS, now)}</span>
+                  </li>
+                  <li className="py-2 flex justify-between gap-3">
+                    <span className="text-neutral-700">{t("drawer.history.applicationSubmitted")}</span>
+                    <span className="text-neutral-500">{format.relativeTime(now - 5 * DAY_MS, now)}</span>
+                  </li>
+                </ul>
               </div>
             </div>
           )}
+          </div>
         </Drawer>
       )}
 
@@ -1040,6 +1228,14 @@ export default function HostsClient({
         variant={confirmState.variant}
         confirmLabel={confirmState.confirmLabel}
         requireTypedConfirmation={confirmState.requireTypedConfirmation}
+      />
+      <ReasonDialog
+        isOpen={!!suspendTarget}
+        title={tActions("suspendHostTitle", { name: suspendTarget?.businessName || suspendTarget?.ownerName || "" })}
+        description={tActions("suspendHostDescription")}
+        confirmLabel={tActions("suspend")}
+        onCancel={() => setSuspendTarget(null)}
+        onConfirm={confirmSuspend}
       />
     </div>
   );

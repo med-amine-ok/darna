@@ -1,12 +1,18 @@
-import { cookies } from "next/headers";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Container from "@/components/Container";
-import { getCurrentUser } from "@/lib/data/auth";
-import { getListings } from "@/lib/data/listings";
+import { getSessionUser } from "@/lib/server/session";
+import { getHostListings } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
 import UserProfileClient from "@/components/profile/UserProfileClient";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "profile" });
+  return { title: t("metaTitle"), robots: { index: false, follow: false } };
+}
 
 export default async function ProfilePage({
   params,
@@ -14,18 +20,14 @@ export default async function ProfilePage({
   params: { locale: string };
 }) {
   const locale = params?.locale || "en";
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+  const currentUser = await getSessionUser();
 
   if (!currentUser) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/profile`);
   }
 
-  const allListings = await getListings();
-  const userListings = allListings.filter(
-    (l) => l.hostUserId === currentUser.id
-  );
+  // The owner sees all of their own listings, drafts included.
+  const userListings = await getHostListings({ userId: currentUser.id });
   const reviews = await getReviewsByUserId(currentUser.id);
 
   return (

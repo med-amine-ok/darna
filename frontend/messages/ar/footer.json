@@ -1,0 +1,31 @@
+{
+  "support": "الدعم",
+  "helpCenter": "مركز المساعدة",
+  "darnaCover": "حماية DARNA Cover",
+  "antiDiscrimination": "مكافحة التمييز",
+  "accessibility": "دعم ذوي الإعاقة",
+  "cancellation": "خيارات الإلغاء",
+  "hosting": "الاستضافة والشركاء",
+  "hostHome": "اعرض منزلك على DARNA",
+  "hostVehicle": "اعرض سيارتك أو مركبتك رباعية الدفع",
+  "hostExperience": "نظّم تجربة في الصحراء",
+  "hostResources": "موارد المضيفين",
+  "exploreAlgeria": "اكتشف الجزائر",
+  "destinations": {
+    "Algiers": "الجزائر العاصمة وخلجانها",
+    "Oran": "وهران والساحل الغربي",
+    "Djanet": "رحلات الطاسيلي وجانت",
+    "Constantine": "قسنطينة مدينة الجسور",
+    "Taghit": "كثبان وواحات تاغيت"
+  },
+  "about": "DARNA",
+  "aboutDarna": "عن DARNA",
+  "emergency": "الاستجابة للطوارئ",
+  "legal": "المعلومات القانونية",
+  "privacy": "الخصوصية",
+  "terms": "الشروط",
+  "sitemap": "خريطة الموقع",
+  "companyDetails": "معلومات الشركة",
+  "copyright": "© {year} DARNA, Inc.",
+  "currency": "د.ج – الدينار الجزائري"
+}

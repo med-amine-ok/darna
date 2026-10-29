@@ -1,16 +1,10 @@
-import { Metadata } from "next";
-import TeamClient from "./TeamClient";
+import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-export const metadata: Metadata = {
-  title: "Staff Team & Roles",
-};
-
-interface Props {
-  params: {
-    locale: string;
-  };
-}
-
-export default function TeamPage({ params }: Props) {
-  return <TeamClient locale={params.locale} />;
+/** Legacy duplicate route — canonical page is /settings/team. */
+export default function TeamRedirect({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  redirectToCanonical("/settings/team", searchParams);
 }

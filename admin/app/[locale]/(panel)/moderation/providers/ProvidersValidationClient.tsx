@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
@@ -14,16 +14,12 @@ import {
   MapPin,
   ExternalLink,
   MessageSquare,
-  Eye,
   Check,
-  AlertTriangle,
-  RotateCcw,
   Sparkles,
   Phone,
   Mail,
   Home,
   Building2,
-  Bed,
   Plane,
   Compass,
   Car,
@@ -41,11 +37,28 @@ import { ImageCarousel } from "@/components/ui/ImageCarousel";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { TypePill } from "@/components/ui/TypePill";
 import { DocumentTile } from "@/components/ui/DocumentTile";
+import { Dialog } from "@/components/ui/Dialog";
 import { useToast } from "@/components/ui/Toast";
-import { useLocale } from "next-intl";
-import { listHosts, approveHost, rejectHost, unsuspendHost } from "@/lib/data/hosts";
-import { Host, ProviderCategory, HostStatus } from "@/lib/types";
-import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+import { useLocale, useTranslations } from "next-intl";
+import { listHosts, approveHost, rejectHost, unsuspendHost } from "@/lib/actions/hosts";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
+import { Host } from "@/lib/types";
+import { WILAYAS, getWilayaLabel, type Wilaya } from "@/lib/utils/wilayas";
+import { canHostAction, MIN_REASON_LENGTH } from "@/lib/domain/transitions";
+import { formatDate, formatNumber, intlLocale } from "@/lib/utils/format";
+
+const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+const PANEL_TABS = ["informations", "photos", "documents", "avis", "activites", "historique"] as const;
+
+function wilayaName(w: Wilaya, locale: string) {
+  return locale === "ar" ? w.nameAr : locale === "en" ? w.nameEn : w.nameFr || w.name;
+}
+
+// Public guest/host site (the frontend app), for "view public profile" links.
+const FRONTEND_URL = (process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 export default function ProvidersValidationClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
@@ -53,6 +66,11 @@ export default function ProvidersValidationClient() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const can = useCan();
+  const t = useTranslations("providers");
+  const tActions = useTranslations("actions");
+  const tCommon = useTranslations("common");
+  const tHostTypes = useTranslations("hostTypes");
 
   // URL state
   const isModeration = pathname.includes("/moderation");
@@ -77,20 +95,20 @@ export default function ProvidersValidationClient() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isValidationRulesOpen, setIsValidationRulesOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [selectedDocToView, setSelectedDocToView] = useState<any | null>(null);
+  const [selectedDocToView, setSelectedDocToView] = useState<{ title: string; url: string } | null>(null);
 
   // Rejection / Changes modal
   const [decisionModal, setDecisionModal] = useState<"reject" | "changes" | null>(null);
   const [decisionReason, setDecisionReason] = useState("");
 
   // Panel active tab
-  const [panelTab, setPanelTab] = useState("informations");
+  const [panelTab, setPanelTab] = useState<(typeof PANEL_TABS)[number]>("informations");
 
   // Fetch data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await listHosts({
+      const res = unwrap(await listHosts({
         category: currentCategory !== "all" ? currentCategory : undefined,
         status: currentStatus !== "all" ? currentStatus : undefined,
         hostType: selectedType !== "all" ? selectedType : undefined,
@@ -98,7 +116,7 @@ export default function ProvidersValidationClient() {
         search: searchQuery,
         page,
         pageSize,
-      });
+      }));
 
       setData(res.rows);
       setTotal(res.total);
@@ -106,19 +124,19 @@ export default function ProvidersValidationClient() {
       if (res.facets) setFacets(res.facets);
 
       // Select first item if none selected and data exists
-      if (!selectedHostId && res.rows.length > 0) {
-        setSelectedHostId(res.rows[0].id);
+      if (res.rows.length > 0) {
+        setSelectedHostId((prev) => prev ?? res.rows[0].id);
       }
     } catch (err) {
-      console.error(err);
+      addToast({ title: t("toast.loadFailed"), description: errMsg(err), variant: "danger" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentCategory, currentStatus, selectedType, selectedWilaya, searchQuery, page, pageSize, addToast, t]);
 
   useEffect(() => {
     fetchData();
-  }, [currentCategory, currentStatus, selectedType, selectedWilaya, page, pageSize]);
+  }, [fetchData]);
 
   // Sync selectedHostId with URL
   const handleSelectHost = (id: string) => {
@@ -153,14 +171,15 @@ export default function ProvidersValidationClient() {
   };
 
   const selectedHost = data.find((h) => h.id === selectedHostId) || (data.length > 0 ? data[0] : null);
+  const hostDisplayName = (h: Host) => h.businessName || h.ownerName;
 
   // KPI Items
   const kpiItems: KpiCardItem[] = [
     {
       id: "under_review",
       value: facets.status?.under_review ?? 0,
-      label: locale === "ar" ? "قيد المراجعة" : locale === "en" ? "Pending validation" : "En attente de validation",
-      icon: <Clock className="w-5 h-5 text-amber-700" />,
+      label: t("kpi.underReview"),
+      icon: <Clock className="w-5 h-5 text-amber-700" aria-hidden="true" />,
       iconBg: "tertiary",
       isActive: currentStatus === "under_review",
       onClick: () => handleKpiClick("under_review"),
@@ -168,8 +187,8 @@ export default function ProvidersValidationClient() {
     {
       id: "approved",
       value: facets.status?.approved ?? 0,
-      label: locale === "ar" ? "شركاء معتمدون" : locale === "en" ? "Approved providers" : "Prestataires validés",
-      icon: <CheckCircle className="w-5 h-5 text-secondary-800" />,
+      label: t("kpi.approved"),
+      icon: <CheckCircle className="w-5 h-5 text-secondary-800" aria-hidden="true" />,
       iconBg: "secondary",
       isActive: currentStatus === "approved",
       onClick: () => handleKpiClick("approved"),
@@ -177,8 +196,8 @@ export default function ProvidersValidationClient() {
     {
       id: "applied",
       value: facets.status?.applied ?? 0,
-      label: locale === "ar" ? "ملفات غير مكتملة" : locale === "en" ? "To complete" : "À compléter",
-      icon: <FileText className="w-5 h-5 text-primary-800" />,
+      label: t("kpi.applied"),
+      icon: <FileText className="w-5 h-5 text-primary-800" aria-hidden="true" />,
       iconBg: "primary",
       isActive: currentStatus === "applied",
       onClick: () => handleKpiClick("applied"),
@@ -186,8 +205,8 @@ export default function ProvidersValidationClient() {
     {
       id: "rejected",
       value: facets.status?.rejected ?? 0,
-      label: locale === "ar" ? "مرفوضة" : locale === "en" ? "Rejected" : "Refusés",
-      icon: <XCircle className="w-5 h-5 text-accent-800" />,
+      label: t("kpi.rejected"),
+      icon: <XCircle className="w-5 h-5 text-accent-800" aria-hidden="true" />,
       iconBg: "accent",
       isActive: currentStatus === "rejected",
       onClick: () => handleKpiClick("rejected"),
@@ -198,39 +217,39 @@ export default function ProvidersValidationClient() {
   const categoryTabs: TabItem[] = [
     {
       id: "all",
-      label: locale === "ar" ? "الكل" : locale === "en" ? "All" : "Tous",
+      label: t("categories.all"),
       count: facets.category?.all ?? total,
-      icon: <Sparkles className="w-4 h-4 text-primary" />,
+      icon: <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />,
     },
     {
       id: "host",
-      label: locale === "ar" ? "المضيفون" : locale === "en" ? "Hosts" : "Hôtes",
+      label: t("categories.host"),
       count: facets.category?.host ?? 0,
-      icon: <Home className="w-4 h-4 text-primary-600" />,
+      icon: <Home className="w-4 h-4 text-primary-600" aria-hidden="true" />,
     },
     {
       id: "hotel_hostel",
-      label: locale === "ar" ? "فنادق ونزل" : locale === "en" ? "Hotels & Hostels" : "Hôtels & Hostels",
+      label: t("categories.hotel_hostel"),
       count: facets.category?.hotel_hostel ?? 0,
-      icon: <Building2 className="w-4 h-4 text-secondary-600" />,
+      icon: <Building2 className="w-4 h-4 text-secondary-600" aria-hidden="true" />,
     },
     {
       id: "travel_agency",
-      label: locale === "ar" ? "وكالات سياحية" : locale === "en" ? "Travel agencies" : "Agences de voyages",
+      label: t("categories.travel_agency"),
       count: facets.category?.travel_agency ?? 0,
-      icon: <Plane className="w-4 h-4 text-amber-600" />,
+      icon: <Plane className="w-4 h-4 text-amber-600 rtl:-scale-x-100" aria-hidden="true" />,
     },
     {
       id: "experience_company",
-      label: locale === "ar" ? "تجارب وأنشطة" : locale === "en" ? "Experiences" : "Expériences",
+      label: t("categories.experience_company"),
       count: facets.category?.experience_company ?? 0,
-      icon: <Compass className="w-4 h-4 text-emerald-600" />,
+      icon: <Compass className="w-4 h-4 text-emerald-600" aria-hidden="true" />,
     },
     {
       id: "rental_agency",
-      label: locale === "ar" ? "وكالات كراء السيارات" : locale === "en" ? "Rental agencies" : "Agences de location",
+      label: t("categories.rental_agency"),
       count: facets.category?.rental_agency ?? 0,
-      icon: <Car className="w-4 h-4 text-sky-600" />,
+      icon: <Car className="w-4 h-4 text-sky-600" aria-hidden="true" />,
     },
   ];
 
@@ -238,24 +257,25 @@ export default function ProvidersValidationClient() {
   const columns: Column<Host>[] = [
     {
       key: "ownerName",
-      header: "Prestataire",
+      header: t("cols.provider"),
       sortable: true,
       render: (h) => (
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-neutral-100 border border-tertiary-200 shrink-0 relative">
             <Image
               src="/assets/template.jpeg"
-              alt={h.ownerName}
+              alt=""
               fill
+              sizes="40px"
               className="object-cover"
             />
           </div>
           <div className="flex flex-col min-w-0">
             <span className="font-bold text-primary truncate leading-tight">
-              {h.businessName || h.ownerName}
+              {hostDisplayName(h)}
             </span>
-            <span className="text-[11px] text-neutral-400 truncate mt-0.5">
-              {h.businessName ? h.ownerName : "Particulier"}
+            <span className="text-[11px] text-neutral-500 truncate mt-0.5">
+              {h.businessName ? h.ownerName : t("individual")}
             </span>
           </div>
         </div>
@@ -263,40 +283,42 @@ export default function ProvidersValidationClient() {
     },
     {
       key: "providerCategory",
-      header: "Type",
-      render: (h) => <TypePill type={(h as any).providerCategory || h.hostType} size="sm" />,
+      header: t("cols.type"),
+      render: (h) => (
+        <TypePill type={(h as Host & { providerCategory?: string }).providerCategory || h.hostType} size="sm" />
+      ),
     },
     {
       key: "wilayaCode",
-      header: "Localisation",
+      header: t("cols.location"),
       render: (h) => {
         const w = WILAYAS.find((item) => item.code === h.wilayaCode);
         return (
           <span className="inline-flex items-center gap-1 text-neutral-600">
-            <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" />
-            <span className="truncate">{w ? w.nameFr : h.city}</span>
+            <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
+            <span className="truncate">{w ? wilayaName(w, locale) : h.city}</span>
           </span>
         );
       },
     },
     {
       key: "joinedAt",
-      header: "Date de demande",
+      header: t("cols.requestedAt"),
       sortable: true,
       render: (h) => (
         <span className="text-neutral-600 tabular-nums">
-          {new Date(h.joinedAt).toLocaleDateString("fr-FR")}
+          {formatDate(h.joinedAt, locale)}
         </span>
       ),
     },
     {
       key: "status",
-      header: "Statut",
+      header: t("cols.status"),
       render: (h) => <StatusPill status={h.status} size="sm" />,
     },
     {
       key: "actions",
-      header: "Actions",
+      header: t("cols.actions"),
       align: "right",
       render: (h) => (
         <button
@@ -305,10 +327,11 @@ export default function ProvidersValidationClient() {
             e.stopPropagation();
             handleSelectHost(h.id);
           }}
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 hover:text-primary transition"
-          title="Consulter"
+          className={`p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-primary transition ${FOCUS_RING}`}
+          title={t("view", { name: hostDisplayName(h) })}
+          aria-label={t("view", { name: hostDisplayName(h) })}
         >
-          <MoreHorizontal className="w-4 h-4" />
+          <MoreHorizontal className="w-4 h-4" aria-hidden="true" />
         </button>
       ),
     },
@@ -318,30 +341,30 @@ export default function ProvidersValidationClient() {
   const handleApprove = async () => {
     if (!selectedHost) return;
     try {
-      await approveHost(selectedHost.id, { id: "usr_admin", name: "Admin", role: "super_admin" });
+      unwrap(await approveHost(selectedHost.id));
       addToast({
-        title: locale === "ar" ? "تم قبول الشريك ونشره" : locale === "en" ? "Provider approved and published" : "Prestataire validé et publié",
-        description: `${selectedHost.businessName || selectedHost.ownerName} ${locale === "ar" ? "أصبح نشطاً الآن على دارنا" : locale === "en" ? "is now active on DARNA." : "est maintenant actif sur DARNA."}`,
+        title: t("toast.approved"),
+        description: t("toast.approvedDesc", { name: hostDisplayName(selectedHost) }),
         variant: "success",
       });
       fetchData();
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err) {
+      addToast({ title: t("toast.error"), description: errMsg(err), variant: "danger" });
     }
   };
 
   const handleUnsuspend = async () => {
     if (!selectedHost) return;
     try {
-      await unsuspendHost(selectedHost.id, { id: "usr_admin", name: "Admin", role: "super_admin" });
+      unwrap(await unsuspendHost(selectedHost.id));
       addToast({
-        title: locale === "ar" ? "تم إلغاء التعليق وإعادة التفعيل" : locale === "en" ? "Suspension canceled / Restored" : "Suspension annulée / Prestataire réactivé",
-        description: `${selectedHost.businessName || selectedHost.ownerName} ${locale === "ar" ? "تمت إعادته إلى الحالة النشطة" : locale === "en" ? "has been restored to active status." : "a été réactivé avec succès."}`,
+        title: t("toast.unsuspended"),
+        description: t("toast.unsuspendedDesc", { name: hostDisplayName(selectedHost) }),
         variant: "success",
       });
       fetchData();
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err) {
+      addToast({ title: t("toast.error"), description: errMsg(err), variant: "danger" });
     }
   };
 
@@ -349,38 +372,38 @@ export default function ProvidersValidationClient() {
     if (!selectedHost) return;
     try {
       if (decisionModal === "reject") {
-        await rejectHost(selectedHost.id, decisionReason || "Dossier non conforme", { id: "usr_admin", name: "Admin", role: "super_admin" });
+        unwrap(await rejectHost(selectedHost.id, decisionReason.trim()));
         addToast({
-          title: "Dossier refusé",
-          description: `Notification envoyée à ${selectedHost.email}.`,
+          title: t("toast.rejected"),
+          description: t("toast.rejectedDesc", { email: selectedHost.email }),
           variant: "warning",
         });
       } else {
         addToast({
-          title: "Demande de compléments envoyée",
-          description: `Message transmis au prestataire.`,
+          title: t("toast.changesSent"),
+          description: t("toast.changesSentDesc"),
           variant: "info",
         });
       }
       setDecisionModal(null);
       setDecisionReason("");
       fetchData();
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err) {
+      addToast({ title: t("toast.error"), description: errMsg(err), variant: "danger" });
     }
   };
 
   const filterSelects: FilterSelect[] = [
     {
       id: "type",
-      label: "Type de prestataire",
+      label: t("filters.type"),
       value: selectedType,
       options: [
-        { value: "all", label: "Tous" },
-        { value: "individual", label: "Particulier (Hôte)" },
-        { value: "agency", label: "Agence de voyage / location" },
-        { value: "hotel", label: "Hôtel" },
-        { value: "hostel", label: "Auberge de jeunesse" },
+        { value: "all", label: t("filters.allTypes") },
+        { value: "individual", label: t("filters.typeIndividual") },
+        { value: "agency", label: t("filters.typeAgency") },
+        { value: "hotel", label: t("filters.typeHotel") },
+        { value: "hostel", label: t("filters.typeHostel") },
       ],
       onChange: (v) => {
         setSelectedType(v);
@@ -389,11 +412,11 @@ export default function ProvidersValidationClient() {
     },
     {
       id: "wilaya",
-      label: "Région / Wilaya",
+      label: t("filters.wilaya"),
       value: selectedWilaya,
       options: [
-        { value: "all", label: locale === "ar" ? "كل الولايات" : locale === "en" ? "All wilayas" : "Toutes les wilayas" },
-        ...WILAYAS.map((w) => ({ value: w.code, label: `${w.code} - ${getWilayaLabel(w, locale)}` })),
+        { value: "all", label: t("filters.allWilayas") },
+        ...WILAYAS.map((w) => ({ value: w.code, label: getWilayaLabel(w, locale) })),
       ],
       onChange: (v) => {
         setSelectedWilaya(v);
@@ -402,14 +425,14 @@ export default function ProvidersValidationClient() {
     },
     {
       id: "status",
-      label: "Statut",
+      label: t("filters.status"),
       value: currentStatus,
       options: [
-        { value: "all", label: "Tous les statuts" },
-        { value: "under_review", label: "En attente" },
-        { value: "approved", label: "Validé" },
-        { value: "applied", label: "À compléter" },
-        { value: "rejected", label: "Refusé" },
+        { value: "all", label: t("filters.allStatuses") },
+        { value: "under_review", label: t("filters.underReview") },
+        { value: "approved", label: t("filters.approved") },
+        { value: "applied", label: t("filters.applied") },
+        { value: "rejected", label: t("filters.rejected") },
       ],
       onChange: (v) => {
         handleKpiClick(v);
@@ -417,16 +440,31 @@ export default function ProvidersValidationClient() {
     },
   ];
 
+  const reasonTooShort = decisionReason.trim().length < MIN_REASON_LENGTH;
+  const showReasonHint = decisionReason.length > 0 && reasonTooShort;
+
+  const onPanelTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const forward = document.dir === "rtl" ? "ArrowLeft" : "ArrowRight";
+    const backward = document.dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+    let next = -1;
+    if (e.key === forward) next = (index + 1) % PANEL_TABS.length;
+    else if (e.key === backward) next = (index - 1 + PANEL_TABS.length) % PANEL_TABS.length;
+    if (next < 0) return;
+    e.preventDefault();
+    setPanelTab(PANEL_TABS[next]);
+    document.getElementById(`provider-tab-${PANEL_TABS[next]}`)?.focus();
+  };
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
       <PageHeader
-        title="Validation des prestataires"
-        subtitle="Vérifiez et validez tous les prestataires avant leur publication sur la plateforme."
+        title={t("title")}
+        subtitle={t("subtitle")}
         actions={[
           {
-            label: "Paramètres de validation",
-            icon: <Settings className="w-4 h-4 text-neutral-500" />,
+            label: t("settings"),
+            icon: <Settings className="w-4 h-4 text-neutral-500" aria-hidden="true" />,
             onClick: () => setIsValidationRulesOpen(true),
             variant: "outline",
           },
@@ -453,10 +491,10 @@ export default function ProvidersValidationClient() {
           setSearchQuery(q);
           setPage(1);
         }}
-        searchPlaceholder="Rechercher un prestataire..."
+        searchPlaceholder={t("filters.search")}
         selects={filterSelects}
         onOpenDrawer={() => setIsFilterDrawerOpen(true)}
-        drawerButtonLabel="Plus de filtres"
+        drawerButtonLabel={t("filters.more")}
         hasActiveFilters={
           searchQuery !== "" || selectedType !== "all" || selectedWilaya !== "all" || currentStatus !== "under_review"
         }
@@ -468,7 +506,7 @@ export default function ProvidersValidationClient() {
         }}
       />
 
-      {/* Split-View: Data Table + Right Detail Panel */}
+      {/* Split-View: Data Table + Detail Panel */}
       <SplitView
         isPanelOpen={Boolean(selectedHostId && selectedHost)}
         tableContent={
@@ -489,7 +527,7 @@ export default function ProvidersValidationClient() {
               pageSize={pageSize}
               onPageChange={setPage}
               onPageSizeChange={setPageSize}
-              entityName="prestataires"
+              entityName={t("entity")}
             />
           </div>
         }
@@ -499,48 +537,56 @@ export default function ProvidersValidationClient() {
               footer={
                 <div className="flex items-center justify-between gap-2 w-full flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(selectedHost.status === "under_review" || selectedHost.status === "applied") && (
+                    {canHostAction(selectedHost.status, "approve") && can("hosts.approve") && (
                       <button
                         type="button"
                         onClick={handleApprove}
-                        className="px-3.5 py-2 rounded-xl bg-secondary hover:bg-secondary-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                        className={`px-3.5 py-2 rounded-xl bg-secondary-700 hover:bg-secondary-800 text-white text-xs font-bold transition shadow-xs cursor-pointer ${FOCUS_RING}`}
                       >
-                        {locale === "ar" ? "موافقة مباشرة" : locale === "en" ? "Approve directly" : "Approuver directement"}
+                        {t("actions.approveDirectly")}
                       </button>
                     )}
-                    {(selectedHost.status === "suspended" || selectedHost.status === "banned" || selectedHost.status === "rejected") && (
+                    {canHostAction(selectedHost.status, "unsuspend") && can("hosts.suspend") && (
                       <button
                         type="button"
                         onClick={handleUnsuspend}
-                        className="px-3.5 py-2 rounded-xl border border-secondary text-secondary bg-secondary/10 hover:bg-secondary/20 text-xs font-semibold transition cursor-pointer"
+                        className={`px-3.5 py-2 rounded-xl border border-secondary text-secondary-800 bg-secondary/10 hover:bg-secondary/20 text-xs font-semibold transition cursor-pointer ${FOCUS_RING}`}
                       >
-                        {locale === "ar" ? "إلغاء التعليق / تفعيل" : locale === "en" ? "Cancel suspension / Reactivate" : "Annuler la suspension / Réactiver"}
+                        {t("actions.unsuspend")}
                       </button>
                     )}
+                    {can("hosts.reject") && canHostAction(selectedHost.status, "reject") && (
                     <button
                       type="button"
                       onClick={() => setDecisionModal("reject")}
-                      className="px-3.5 py-2 rounded-xl border border-accent/40 text-accent hover:bg-accent/10 text-xs font-semibold transition cursor-pointer"
+                      className={`px-3.5 py-2 rounded-xl border border-accent/40 text-accent-700 hover:bg-accent/10 text-xs font-semibold transition cursor-pointer ${FOCUS_RING}`}
                     >
-                      {locale === "ar" ? "رفض" : locale === "en" ? "Reject" : "Refuser"}
+                      {t("actions.reject")}
                     </button>
+                    )}
 
+                    {can("hosts.reject") && (
                     <button
                       type="button"
-                      onClick={() => setDecisionModal("changes")}
-                      className="px-3.5 py-2 rounded-xl border border-amber-300 bg-amber-50/70 text-amber-900 hover:bg-amber-100 text-xs font-semibold transition cursor-pointer"
+                      disabled
+                      aria-disabled="true"
+                      title={tActions("unavailableHint")}
+                      className="px-3.5 py-2 rounded-xl border border-amber-300 bg-amber-50/40 text-amber-900/50 text-xs font-semibold cursor-not-allowed"
                     >
-                      {locale === "ar" ? "طلب استكمال" : locale === "en" ? "Request changes" : "Demander des compléments"}
+                      {t("actions.requestChanges")}
                     </button>
+                    )}
                   </div>
 
+                  {can("hosts.approve") && canHostAction(selectedHost.status, "approve") && (
                   <button
                     type="button"
                     onClick={handleApprove}
-                    className="px-4 py-2 rounded-xl bg-[#2E3A2F] hover:bg-[#242e25] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                    className={`px-4 py-2 rounded-xl bg-[#2E3A2F] hover:bg-[#242e25] text-white text-xs font-bold transition shadow-xs cursor-pointer ${FOCUS_RING}`}
                   >
-                    {locale === "ar" ? "اعتماد ونشر" : locale === "en" ? "Validate & publish" : "Valider et publier"}
+                    {t("actions.validatePublish")}
                   </button>
+                  )}
                 </div>
               }
             >
@@ -549,92 +595,99 @@ export default function ProvidersValidationClient() {
                 images={["/assets/template.jpeg"]}
                 statusBadge={<StatusPill status={selectedHost.status} size="sm" />}
                 onClose={handleClosePanel}
-                alt={selectedHost.businessName || selectedHost.ownerName}
+                alt={hostDisplayName(selectedHost)}
               />
 
               {/* Title & Metadata Badges */}
               <div className="px-4 pt-1 space-y-2">
                 <div>
                   <h3 className="text-base font-bold text-primary leading-tight">
-                    {selectedHost.businessName || selectedHost.ownerName}
+                    {hostDisplayName(selectedHost)}
                   </h3>
                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                     <span className="px-2 py-0.5 rounded-md bg-primary-50 text-primary-800 border border-primary-200 text-[10px] font-semibold">
-                      {selectedHost.businessName ? "Professionnel" : "Particulier"}
+                      {selectedHost.businessName ? t("professional") : t("individual")}
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600 text-[10px] font-medium">
-                      <MapPin className="w-3 h-3 text-secondary" />
+                      <MapPin className="w-3 h-3 text-secondary" aria-hidden="true" />
                       <span>{selectedHost.city}</span>
                     </span>
-                    <span className="text-[10px] text-neutral-400 font-medium">
-                      Demandé le {new Date(selectedHost.joinedAt).toLocaleDateString("fr-FR")}
+                    <span className="text-[10px] text-neutral-500 font-medium">
+                      {t("panel.requestedOn", { date: formatDate(selectedHost.joinedAt, locale) })}
                     </span>
                   </div>
                 </div>
 
                 {/* Detail Tabs */}
                 <div className="border-b border-neutral-100 pt-1">
-                  <div className="flex items-center gap-3 overflow-x-auto text-xs font-semibold text-neutral-500 py-1">
-                    {[
-                      { id: "informations", label: "Informations" },
-                      { id: "photos", label: "Photos" },
-                      { id: "documents", label: "Documents" },
-                      { id: "avis", label: "Avis" },
-                      { id: "activites", label: "Activités" },
-                      { id: "historique", label: "Historique" },
-                    ].map((tab) => (
+                  <div
+                    role="tablist"
+                    aria-label={t("panel.tabsLabel")}
+                    className="flex items-center gap-3 overflow-x-auto text-xs font-semibold text-neutral-500 py-1"
+                  >
+                    {PANEL_TABS.map((tabId, index) => (
                       <button
-                        key={tab.id}
+                        key={tabId}
+                        id={`provider-tab-${tabId}`}
                         type="button"
-                        onClick={() => setPanelTab(tab.id)}
-                        className={`pb-1.5 whitespace-nowrap transition cursor-pointer ${
-                          panelTab === tab.id
+                        role="tab"
+                        aria-selected={panelTab === tabId}
+                        aria-controls="provider-tabpanel"
+                        tabIndex={panelTab === tabId ? 0 : -1}
+                        onClick={() => setPanelTab(tabId)}
+                        onKeyDown={(e) => onPanelTabKeyDown(e, index)}
+                        className={`pb-1.5 whitespace-nowrap transition cursor-pointer rounded-t ${FOCUS_RING} ${
+                          panelTab === tabId
                             ? "text-primary border-b-2 border-primary"
                             : "hover:text-primary"
                         }`}
                       >
-                        {tab.label}
+                        {t(`panel.tabs.${tabId}`)}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Panel Tab Content */}
+                <div id="provider-tabpanel" role="tabpanel" aria-labelledby={`provider-tab-${panelTab}`}>
                 {panelTab === "informations" && (
                   <div className="space-y-3.5 pt-1">
-                    {/* Informations générales Card */}
+                    {/* General information card */}
                     <div className="p-3.5 rounded-xl border border-tertiary-200/80 bg-neutral-50/60 space-y-3">
-                      <h4 className="text-xs font-bold text-primary">Informations générales</h4>
+                      <h4 className="text-xs font-bold text-primary">{t("panel.general")}</h4>
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="space-y-1.5">
-                          <span className="text-[10px] text-neutral-400 font-bold uppercase">
-                            Contact
+                          <span className="text-[10px] text-neutral-500 font-bold uppercase">
+                            {t("panel.contact")}
                           </span>
                           <p className="font-semibold text-primary">{selectedHost.ownerName}</p>
                           <p className="text-neutral-600 flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-neutral-400" />
-                            <span>{selectedHost.phone}</span>
+                            <Phone className="w-3 h-3 text-neutral-400" aria-hidden="true" />
+                            <span dir="ltr">{selectedHost.phone}</span>
                           </p>
                           <p className="text-neutral-600 flex items-center gap-1 truncate">
-                            <Mail className="w-3 h-3 text-neutral-400" />
-                            <span className="truncate">{selectedHost.email}</span>
+                            <Mail className="w-3 h-3 text-neutral-400" aria-hidden="true" />
+                            <span className="truncate" dir="ltr">{selectedHost.email}</span>
                           </p>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <span className="text-[10px] text-neutral-400 font-bold uppercase">
-                            Spécifications
+                        <dl className="space-y-1.5">
+                          <span className="text-[10px] text-neutral-500 font-bold uppercase block">
+                            {t("panel.specs")}
                           </span>
-                          <p className="text-neutral-600">
-                            Type: <strong className="text-primary capitalize">{selectedHost.hostType}</strong>
-                          </p>
-                          <p className="text-neutral-600">
-                            Wilaya: <strong className="text-primary">{selectedHost.city}</strong>
-                          </p>
-                          <p className="text-neutral-600">
-                            Annonces: <strong className="text-primary">{selectedHost.listingsCount}</strong>
-                          </p>
-                        </div>
+                          <div className="text-neutral-600 flex gap-1">
+                            <dt>{t("panel.type")}:</dt>
+                            <dd className="font-bold text-primary">{tHostTypes(selectedHost.hostType)}</dd>
+                          </div>
+                          <div className="text-neutral-600 flex gap-1">
+                            <dt>{t("panel.wilaya")}:</dt>
+                            <dd className="font-bold text-primary">{selectedHost.city}</dd>
+                          </div>
+                          <div className="text-neutral-600 flex gap-1">
+                            <dt>{t("panel.listings")}:</dt>
+                            <dd className="font-bold text-primary">{formatNumber(selectedHost.listingsCount, locale)}</dd>
+                          </div>
+                        </dl>
                       </div>
 
                       <a
@@ -643,65 +696,66 @@ export default function ProvidersValidationClient() {
                         )}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary hover:underline pt-1"
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-800 hover:underline pt-1 rounded ${FOCUS_RING}`}
                       >
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span>Voir sur la carte</span>
+                        <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>{t("panel.viewOnMap")}</span>
+                        <span className="sr-only">{t("panel.newTab")}</span>
                       </a>
                     </div>
 
                     {/* Description */}
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-primary">Description</h4>
+                      <h4 className="text-xs font-bold text-primary">{t("panel.description")}</h4>
                       <p className="text-xs text-neutral-600 leading-relaxed">
-                        Prestataire enregistré sur DARNA proposant des prestations touristiques
-                        vérifiées dans la région de {selectedHost.city}. Dossier de conformité soumis
-                        pour approbation administrative.
+                        {t("panel.descriptionText", { city: selectedHost.city })}
                       </p>
                     </div>
 
-                    {/* Documents fournis 4/4 Checklist */}
+                    {/* Documents checklist */}
                     <div className="space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-primary">Documents fournis (4/4)</h4>
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-bold text-primary">
+                          {t("panel.documentsProvided", { count: 4, total: 4 })}
+                        </h4>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-[10px] font-bold">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                          <span>Tous les documents sont fournis</span>
+                          <Check className="w-3 h-3 stroke-[3]" aria-hidden="true" />
+                          <span>{t("panel.allDocumentsProvided")}</span>
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
                         <DocumentTile
                           id="doc_cin"
-                          title="Carte d'identité"
-                          type="Image"
-                          fileSize="2.4 Mo"
+                          title={t("docs.idCard")}
+                          type={t("docs.typeImage")}
+                          fileSize={t("docs.sizeMb", { size: formatNumber(2.4, locale) })}
                           status="valid"
-                          onView={() => setSelectedDocToView({ title: "Carte d'identité nationale", url: "/assets/template.jpeg" })}
+                          onView={() => setSelectedDocToView({ title: t("docs.idCardFull"), url: "/assets/template.jpeg" })}
                         />
                         <DocumentTile
                           id="doc_prop"
-                          title="Titre de propriété"
-                          type="PDF"
-                          fileSize="1.1 Mo"
+                          title={t("docs.property")}
+                          type={t("docs.typePdf")}
+                          fileSize={t("docs.sizeMb", { size: formatNumber(1.1, locale) })}
                           status="valid"
-                          onView={() => setSelectedDocToView({ title: "Titre de propriété ou bail", url: "/assets/template.jpeg" })}
+                          onView={() => setSelectedDocToView({ title: t("docs.propertyFull"), url: "/assets/template.jpeg" })}
                         />
                         <DocumentTile
                           id="doc_photos"
-                          title="Photos du lieu"
-                          type="12 fichiers"
-                          fileSize="18 Mo"
+                          title={t("docs.photos")}
+                          type={t("docs.files", { count: 12 })}
+                          fileSize={t("docs.sizeMb", { size: formatNumber(18, locale) })}
                           status="valid"
-                          onView={() => setSelectedDocToView({ title: "Galerie de photos", url: "/assets/template.jpeg" })}
+                          onView={() => setSelectedDocToView({ title: t("docs.photosFull"), url: "/assets/template.jpeg" })}
                         />
                         <DocumentTile
                           id="doc_reglement"
-                          title="Règlement intérieur"
-                          type="PDF"
-                          fileSize="540 Ko"
+                          title={t("docs.rules")}
+                          type={t("docs.typePdf")}
+                          fileSize={t("docs.sizeKb", { size: formatNumber(540, locale) })}
                           status="valid"
-                          onView={() => setSelectedDocToView({ title: "Règlement intérieur", url: "/assets/template.jpeg" })}
+                          onView={() => setSelectedDocToView({ title: t("docs.rules"), url: "/assets/template.jpeg" })}
                         />
                       </div>
                     </div>
@@ -709,32 +763,34 @@ export default function ProvidersValidationClient() {
                     {/* Quick profile actions */}
                     <div className="grid grid-cols-2 gap-2 pt-1">
                       <a
-                        href={`http://localhost:3000/hosts/${selectedHost.id}`}
+                        href={`${FRONTEND_URL}/${locale}/users/${selectedHost.id}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-tertiary-300 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition"
+                        className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-tertiary-300 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition ${FOCUS_RING}`}
                       >
-                        <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
-                        <span>Voir le profil public</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-neutral-400 rtl:-scale-x-100" aria-hidden="true" />
+                        <span>{t("panel.publicProfile")}</span>
+                        <span className="sr-only">{t("panel.newTab")}</span>
                       </a>
                       <button
                         type="button"
                         onClick={() => setIsContactModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-tertiary-300 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition"
+                        className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-tertiary-300 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition ${FOCUS_RING}`}
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-neutral-400" />
-                        <span>Contacter</span>
+                        <MessageSquare className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                        <span>{t("panel.contactAction")}</span>
                       </button>
                     </div>
                   </div>
                 )}
 
                 {panelTab !== "informations" && (
-                  <div className="py-8 text-center text-xs text-neutral-400 space-y-1">
-                    <p>Contenu de l'onglet {panelTab} chargé.</p>
-                    <p className="text-[11px] text-neutral-400">Toutes les pièces sont synchronisées avec le dossier.</p>
+                  <div className="py-8 text-center text-xs text-neutral-500 space-y-1">
+                    <p>{t("panel.tabLoaded", { tab: t(`panel.tabs.${panelTab}`) })}</p>
+                    <p className="text-[11px] text-neutral-500">{t("panel.tabSynced")}</p>
                   </div>
                 )}
+                </div>
               </div>
             </DetailPanel>
           ) : null
@@ -745,7 +801,7 @@ export default function ProvidersValidationClient() {
       <FilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
-        title="Filtres avancés des prestataires"
+        title={t("drawer.title")}
         hasActiveFilters={selectedType !== "all" || selectedWilaya !== "all"}
         onReset={() => {
           setSelectedType("all");
@@ -756,221 +812,211 @@ export default function ProvidersValidationClient() {
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label className="font-semibold text-neutral-700 block mb-1">
-              Complétude des documents
+            <label htmlFor="providers-completeness" className="font-semibold text-neutral-700 block mb-1">
+              {t("drawer.completeness")}
             </label>
-            <select className="w-full p-2.5 rounded-xl border border-tertiary-200">
-              <option value="all">Tous les niveaux</option>
-              <option value="complete">100% complets (4/4)</option>
-              <option value="partial">Documents partiels</option>
-              <option value="missing">Pièces manquantes</option>
+            <select id="providers-completeness" className="w-full p-2.5 rounded-xl border border-tertiary-200">
+              <option value="all">{t("drawer.completenessAll")}</option>
+              <option value="complete">{t("drawer.completenessFull")}</option>
+              <option value="partial">{t("drawer.completenessPartial")}</option>
+              <option value="missing">{t("drawer.completenessMissing")}</option>
             </select>
           </div>
 
           <div>
-            <label className="font-semibold text-neutral-700 block mb-1">
-              Mode de réservation
+            <label htmlFor="providers-booking-mode" className="font-semibold text-neutral-700 block mb-1">
+              {t("drawer.bookingMode")}
             </label>
-            <select className="w-full p-2.5 rounded-xl border border-tertiary-200">
-              <option value="all">Tous les modes</option>
-              <option value="instant">Réservation instantanée</option>
-              <option value="request">Sur demande</option>
+            <select id="providers-booking-mode" className="w-full p-2.5 rounded-xl border border-tertiary-200">
+              <option value="all">{t("drawer.bookingModeAll")}</option>
+              <option value="instant">{t("drawer.bookingModeInstant")}</option>
+              <option value="request">{t("drawer.bookingModeRequest")}</option>
             </select>
           </div>
 
           <div>
-            <label className="font-semibold text-neutral-700 block mb-1">
-              Note minimale
+            <label htmlFor="providers-min-rating" className="font-semibold text-neutral-700 block mb-1">
+              {t("drawer.minRating")}
             </label>
-            <select className="w-full p-2.5 rounded-xl border border-tertiary-200">
-              <option value="0">Toutes les notes</option>
-              <option value="4.5">★ 4.5 et plus</option>
-              <option value="4.0">★ 4.0 et plus</option>
+            <select id="providers-min-rating" className="w-full p-2.5 rounded-xl border border-tertiary-200">
+              <option value="0">{t("drawer.minRatingAll")}</option>
+              <option value="4.5">
+                {t("drawer.minRatingValue", { rating: formatNumber(4.5, locale) })}
+              </option>
+              <option value="4.0">
+                {t("drawer.minRatingValue", {
+                  rating: new Intl.NumberFormat(intlLocale(locale), {
+                    minimumFractionDigits: 1,
+                  }).format(4),
+                })}
+              </option>
             </select>
           </div>
         </div>
       </FilterDrawer>
 
       {/* Validation Rules Settings Modal */}
-      {isValidationRulesOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-tertiary-200 max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-              <div className="flex items-center gap-2">
-                <Settings className="w-5 h-5 text-secondary" />
-                <h3 className="font-bold text-sm text-primary">Paramètres de validation des prestataires</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsValidationRulesOpen(false)}
-                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700"
-              >
-                ✕
-              </button>
-            </div>
+      <Dialog
+        isOpen={isValidationRulesOpen}
+        onClose={() => setIsValidationRulesOpen(false)}
+        title={t("rules.title")}
+        description={t("rules.intro")}
+        size="lg"
+        footer={
+          <button
+            type="button"
+            onClick={() => setIsValidationRulesOpen(false)}
+            className={`px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold ${FOCUS_RING}`}
+          >
+            {t("rules.save")}
+          </button>
+        }
+      >
+        <div className="space-y-3 text-xs text-neutral-600">
+          <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2">
+            <span className="font-bold text-primary block">{t("rules.requiredDocs")}</span>
+            <ul className="list-disc ps-4 space-y-1 text-neutral-600">
+              <li>{t("rules.hosts")}</li>
+              <li>{t("rules.hotels")}</li>
+              <li>{t("rules.agencies")}</li>
+              <li>{t("rules.experiences")}</li>
+            </ul>
+          </div>
 
-            <div className="space-y-3 text-xs text-neutral-600">
-              <p>
-                Configurez les exigences réglementaires et les délais de traitement des dossiers de prestataires.
-              </p>
-
-              <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2">
-                <span className="font-bold text-primary block">Documents requis par catégorie:</span>
-                <ul className="list-disc ps-4 space-y-1 text-neutral-600">
-                  <li>Hôtes: Carte d'identité + Titre de propriété / bail</li>
-                  <li>Hôtels & Hostels: Registre de commerce CNRC + Agrément touristique</li>
-                  <li>Agences de voyages: Licence Ministère du Tourisme (Catégorie A/B)</li>
-                  <li>Expériences: Diplôme/Carte de guide professionnel + Assurance RC</li>
-                </ul>
-              </div>
-
-              <div>
-                <label className="font-semibold text-neutral-700 block mb-1">
-                  SLA de modération maximale (délai de réponse)
-                </label>
-                <input
-                  type="text"
-                  defaultValue="48 heures"
-                  className="w-full p-2 rounded-xl border border-tertiary-200 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setIsValidationRulesOpen(false)}
-                className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold"
-              >
-                Enregistrer les paramètres
-              </button>
-            </div>
+          <div>
+            <label htmlFor="providers-sla" className="font-semibold text-neutral-700 block mb-1">
+              {t("rules.sla")}
+            </label>
+            <input
+              id="providers-sla"
+              type="text"
+              defaultValue={t("rules.slaDefault")}
+              className="w-full p-2 rounded-xl border border-tertiary-200 text-xs"
+            />
           </div>
         </div>
-      )}
+      </Dialog>
 
       {/* Contact Provider Modal */}
-      {isContactModalOpen && selectedHost && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-tertiary-200 max-w-md w-full p-5 shadow-2xl space-y-4">
-            <h3 className="font-bold text-sm text-primary">
-              Contacter {selectedHost.ownerName}
-            </h3>
-            <p className="text-xs text-neutral-500">
-              Envoyer un message direct ou une notification concernant le dossier de validation.
-            </p>
-            <textarea
-              rows={4}
-              placeholder="Écrivez votre message ici..."
-              className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary resize-none"
-            />
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsContactModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  addToast({ title: "Message envoyé", description: "Le prestataire a reçu votre communication.", variant: "success" });
-                  setIsContactModalOpen(false);
-                }}
-                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold"
-              >
-                Envoyer le message
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        isOpen={isContactModalOpen && !!selectedHost}
+        onClose={() => setIsContactModalOpen(false)}
+        title={selectedHost ? t("contactModal.title", { name: selectedHost.ownerName }) : undefined}
+        description={t("contactModal.description")}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsContactModalOpen(false)}
+              className={`px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600 ${FOCUS_RING}`}
+            >
+              {tCommon("cancel")}
+            </button>
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              title={tActions("unavailableHint")}
+              className="px-4 py-2 rounded-xl bg-primary/40 text-white text-xs font-bold cursor-not-allowed"
+            >
+              {t("contactModal.send")}
+            </button>
+          </>
+        }
+      >
+        <label htmlFor="providers-contact-message" className="sr-only">
+          {t("contactModal.messageLabel")}
+        </label>
+        <textarea
+          id="providers-contact-message"
+          rows={4}
+          placeholder={t("contactModal.placeholder")}
+          className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
+        />
+      </Dialog>
 
       {/* Decision Reason Modal */}
-      {decisionModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl border border-tertiary-200 max-w-md w-full p-5 shadow-2xl space-y-4">
-            <h3 className="font-bold text-sm text-primary">
-              {decisionModal === "changes"
-                ? "Demander des compléments au prestataire"
-                : "Motif de refus du prestataire"}
-            </h3>
-            <p className="text-xs text-neutral-500">
-              {decisionModal === "changes"
-                ? "Indiquez les pièces ou précisions requises. Un email et une notification seront envoyés."
-                : "Spécifiez la raison légale ou réglementaire du rejet du dossier."}
-            </p>
-            <textarea
-              rows={4}
-              value={decisionReason}
-              onChange={(e) => setDecisionReason(e.target.value)}
-              placeholder="Précisez les motifs..."
-              className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary resize-none"
-            />
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setDecisionModal(null)}
-                className="px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDecision}
-                disabled={!decisionReason.trim()}
-                className={`px-4 py-2 rounded-xl text-xs font-bold text-white transition ${
-                  decisionModal === "changes" ? "bg-amber-600" : "bg-accent"
-                } ${!decisionReason.trim() ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                {decisionModal === "changes" ? "Envoyer la demande" : "Confirmer le refus"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Document Lightbox / Viewer Modal */}
-      {selectedDocToView && (
-        <div
-          onClick={() => setSelectedDocToView(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-2xl space-y-4"
+      <Dialog
+        isOpen={!!decisionModal}
+        onClose={() => setDecisionModal(null)}
+        title={decisionModal === "changes" ? t("decision.changesTitle") : t("decision.rejectTitle")}
+        description={decisionModal === "changes" ? t("decision.changesDesc") : t("decision.rejectDesc")}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setDecisionModal(null)}
+              className={`px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600 ${FOCUS_RING}`}
+            >
+              {tCommon("cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDecision}
+              disabled={reasonTooShort}
+              className={`px-4 py-2 rounded-xl text-xs font-bold text-white transition ${FOCUS_RING} ${
+                decisionModal === "changes" ? "bg-amber-700 hover:bg-amber-800" : "bg-accent-600 hover:bg-accent-700"
+              } ${reasonTooShort ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            >
+              {decisionModal === "changes" ? t("decision.sendRequest") : t("decision.confirmReject")}
+            </button>
+          </>
+        }
+      >
+        <div>
+          <label htmlFor="providers-decision-reason" className="block text-xs font-semibold text-neutral-700 mb-1">
+            {tActions("reasonLabel")}
+          </label>
+          <textarea
+            id="providers-decision-reason"
+            rows={4}
+            required
+            aria-required="true"
+            aria-invalid={showReasonHint || undefined}
+            aria-describedby="providers-decision-reason-hint"
+            value={decisionReason}
+            onChange={(e) => setDecisionReason(e.target.value)}
+            placeholder={t("decision.placeholder")}
+            className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
+          />
+          <p
+            id="providers-decision-reason-hint"
+            className={`mt-1 text-[11px] ${showReasonHint ? "text-accent-700" : "text-neutral-500"}`}
+            aria-live="polite"
           >
-            <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-              <h3 className="font-bold text-sm text-primary">{selectedDocToView.title}</h3>
-              <button
-                type="button"
-                onClick={() => setSelectedDocToView(null)}
-                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="relative h-80 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
-              <Image
-                src={selectedDocToView.url}
-                alt={selectedDocToView.title}
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedDocToView(null)}
-                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
+            {tActions("reasonTooShort", { min: MIN_REASON_LENGTH })}
+          </p>
         </div>
-      )}
+      </Dialog>
+
+      {/* Document Viewer Modal */}
+      <Dialog
+        isOpen={!!selectedDocToView}
+        onClose={() => setSelectedDocToView(null)}
+        title={selectedDocToView?.title}
+        size="xl"
+        footer={
+          <button
+            type="button"
+            onClick={() => setSelectedDocToView(null)}
+            className={`px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold ${FOCUS_RING}`}
+          >
+            {tCommon("close")}
+          </button>
+        }
+      >
+        {selectedDocToView && (
+          <div className="relative h-80 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
+            <Image
+              src={selectedDocToView.url}
+              alt={selectedDocToView.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 672px"
+              className="object-contain"
+            />
+          </div>
+        )}
+      </Dialog>
     </div>
   );
 }

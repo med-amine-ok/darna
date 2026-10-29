@@ -12,6 +12,21 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ label, checked, indeterminate, onChange, className = "", id, ...props }, ref) => {
     const generatedId = React.useId();
     const checkboxId = id || generatedId;
+    const innerRef = React.useRef<HTMLInputElement | null>(null);
+
+    // Native "mixed" state so assistive tech announces partially-selected groups.
+    React.useEffect(() => {
+      if (innerRef.current) innerRef.current.indeterminate = Boolean(indeterminate && !checked);
+    }, [indeterminate, checked]);
+
+    const setRefs = React.useCallback(
+      (node: HTMLInputElement | null) => {
+        innerRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
+      },
+      [ref]
+    );
 
     return (
       <label
@@ -21,15 +36,16 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         <div className="relative flex items-center justify-center">
           <input
             id={checkboxId}
-            ref={ref}
+            ref={setRefs}
             type="checkbox"
             checked={checked}
             onChange={onChange}
-            className="sr-only"
+            className="sr-only peer"
             {...props}
           />
           <div
-            className={`w-4 h-4 rounded-md border transition-all flex items-center justify-center shadow-2xs ${
+            aria-hidden="true"
+            className={`w-4 h-4 rounded-md border transition-all flex items-center justify-center shadow-2xs peer-focus-visible:ring-2 peer-focus-visible:ring-accent-600 peer-focus-visible:ring-offset-2 peer-disabled:opacity-50 ${
               checked || indeterminate
                 ? "bg-primary border-primary text-white"
                 : "border-tertiary/90 bg-white hover:border-secondary"
@@ -74,9 +90,10 @@ export const Switch: React.FC<SwitchProps> = ({
         type="button"
         role="switch"
         aria-checked={checked}
+        disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 ${
-          checked ? "bg-secondary" : "bg-neutral-300"
+        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+          checked ? "bg-secondary-700" : "bg-neutral-300"
         }`}
       >
         <span

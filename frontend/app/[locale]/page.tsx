@@ -1,11 +1,12 @@
-import { cookies } from "next/headers";
-import { getCurrentUser } from "@/lib/data/auth";
+import { getSessionUser } from "@/lib/server/session";
 import { getListings, getFeaturedListings } from "@/lib/data/listings";
 import { getVehicles } from "@/lib/data/vehicles";
 import { getExperiences } from "@/lib/data/experiences";
 import { getTrips } from "@/lib/data/trips";
 
-import Navbar from "@/components/navbar/Navbar";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { localeAlternates, OG_LOCALE } from "@/lib/site";
 import HomeHero from "@/components/home/HomeHero";
 import ListingCarouselSection from "@/components/home/ListingCarouselSection";
 import ListingCard from "@/components/listing/ListingCard";
@@ -13,9 +14,10 @@ import TripCard from "@/components/trips/TripCard";
 import Container from "@/components/Container";
 import EmptyState from "@/components/EmptyState";
 import { Link } from "@/navigation";
-import { BrandCompassIcon } from "@/components/icons";
+import { BrandArrowRightIcon, BrandCompassIcon } from "@/components/icons";
 
 interface HomePageProps {
+  params: { locale: string };
   searchParams: {
     category?: string;
     vertical?: "home" | "experience" | "vehicle" | "trip";
@@ -23,10 +25,27 @@ interface HomePageProps {
   };
 }
 
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+export async function generateMetadata({ params: { locale }, searchParams }: HomePageProps): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: "homeHero" });
+  const isFiltered = Boolean(searchParams?.category || searchParams?.vertical || searchParams?.destination);
+  return {
+    title: { absolute: t("meta.title") },
+    description: t("meta.description"),
+    alternates: localeAlternates(locale, ""),
+    openGraph: {
+      title: t("meta.title"),
+      description: t("meta.description"),
+      locale: OG_LOCALE[locale] ?? "en_US",
+      type: "website",
+    },
+    // Filtered variations of the home feed are not separate pages for search engines.
+    ...(isFiltered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
+
+export default async function HomePage({ params: { locale }, searchParams }: HomePageProps) {
+  const t = await getTranslations({ locale, namespace: "homeHero" });
+  const currentUser = await getSessionUser();
 
   // If a specific category chip is active
   const categoryFilter = searchParams?.category;
@@ -68,7 +87,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const isTripVertical = categoryFilter === "Trips & Circuits" || searchParams?.vertical === "trip";
 
   return (
-    <main className="relative min-h-[100dvh] flex flex-col bg-darnaBg overflow-x-hidden">
+    <div className="relative min-h-[100dvh] flex flex-col bg-darnaBg overflow-x-hidden">
       {/* Authentic Algerian Hero Section */}
       <HomeHero />
 
@@ -79,19 +98,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
-                  Curated Agency Trips & Circuits
-                </h1>
-                <p className="text-sm text-neutral-500 mt-1">
-                  Showing {agencyTrips.length} multi-day guided expeditions by verified Algerian travel agencies
+                <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+                  {t("sections.tripsGridTitle")}
+                </h2>
+                <p className="text-sm text-neutral-600 mt-1">
+                  {t("sections.tripsGridCount", { count: agencyTrips.length })}
                 </p>
               </div>
             </div>
 
             {agencyTrips.length === 0 ? (
               <EmptyState
-                title="No agency trips found"
-                subtitle="Try selecting another destination or clear filters."
+                title={t("sections.noTrips")}
+                subtitle={t("sections.noTripsDesc")}
                 showReset
               />
             ) : (
@@ -111,19 +130,19 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
-                  {categoryFilter} in Algeria
-                </h1>
-                <p className="text-sm text-neutral-500 mt-1">
-                  Showing {filteredListings.length} authentic properties and experiences
+                <h2 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">
+                  {t("sections.categoryTitle", { category: categoryFilter })}
+                </h2>
+                <p className="text-sm text-neutral-600 mt-1">
+                  {t("sections.categoryCount", { count: filteredListings.length })}
                 </p>
               </div>
             </div>
 
             {filteredListings.length === 0 ? (
               <EmptyState
-                title="No listings found for this category"
-                subtitle="Try selecting another category or clear your filter to browse all stays."
+                title={t("sections.noCategoryListings")}
+                subtitle={t("sections.noCategoryListingsDesc")}
                 showReset
               />
             ) : (
@@ -143,9 +162,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <>
             {/* Section 1: Popular Homes in Algiers & Coastal Escapes */}
             <ListingCarouselSection
-              title="Popular homes in Algiers & the Mediterranean coast"
-              subtitle="Restored Ottoman Riads, cliffside sea-view villas, and city penthouses"
-              badge="Guest favorites in Algiers, Tipaza & Oran"
+              title={t("sections.homesTitle")}
+              subtitle={t("sections.homesSubtitle")}
+              badge={t("sections.homesBadge")}
               listings={homeListings}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=home"
@@ -153,9 +172,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
             {/* Section 2: Desert & Sahara Expeditions */}
             <ListingCarouselSection
-              title="Desert & Saharan Expeditions"
-              subtitle="Guided treks through Tassili n'Ajjer, golden dunes of Taghit, and ancient M'zab ksars"
-              badge="Top rated experiences in the Algerian Sahara"
+              title={t("sections.experiencesTitle")}
+              subtitle={t("sections.experiencesSubtitle")}
+              badge={t("sections.experiencesBadge")}
               listings={experienceListings}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=experience"
@@ -165,22 +184,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="space-y-6 pt-4">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-tertiary/60 pb-4">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wider mb-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary-700 text-xs font-bold uppercase tracking-wider mb-2">
                     <BrandCompassIcon size={14} />
-                    <span>Exclusive Agency Expeditions</span>
+                    <span>{t("sections.agencyBadge")}</span>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-serif font-black text-primary">
-                    Agency-Curated Multi-Day Trips & Circuits
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-primary">
+                    {t("sections.agencyTitle")}
                   </h2>
-                  <p className="text-xs sm:text-sm text-neutral-600 mt-1">
-                    Licensed Algerian tourism agencies organizing guided all-inclusive circuits across the Sahara, Atlas, and Mediterranean coast.
-                  </p>
+                  <p className="text-xs sm:text-sm text-neutral-600 mt-1">{t("sections.agencySubtitle")}</p>
                 </div>
                 <Link
                   href="/search?vertical=trip"
-                  className="text-xs font-bold text-primary hover:text-secondary flex items-center gap-1 underline underline-offset-4"
+                  className="text-xs font-bold text-primary hover:text-secondary-700 flex items-center gap-1 underline underline-offset-4 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                 >
-                  Browse all circuits →
+                  {t("sections.browseAllCircuits")}
+                  <BrandArrowRightIcon size={14} className="rtl:rotate-180" />
                 </Link>
               </div>
 
@@ -198,9 +216,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             {/* Section 4: Hotels, Palaces & Heritage Hostels */}
             {hotelAndHostelListings.length > 0 && (
               <ListingCarouselSection
-                title="Hotels, Palaces & Backpacker Hostels"
-                subtitle="From prestigious 5-star botanical palaces to vibrant Medina rooftops and desert dunes"
-                badge="Multiple room types, instant booking"
+                title={t("sections.hotelsTitle")}
+                subtitle={t("sections.hotelsSubtitle")}
+                badge={t("sections.hotelsBadge")}
                 listings={hotelAndHostelListings}
                 currentUser={currentUser}
                 viewMoreHref="/search?propertyType=Hotel"
@@ -209,9 +227,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
             {/* Section 5: All-Terrain Vehicles & 4x4s */}
             <ListingCarouselSection
-              title="Explore vehicles for your Algerian road trip"
-              subtitle="Dune-ready Toyota 4x4s, rugged mountain crossovers, and city hatchbacks"
-              badge="Comprehensive insurance & unlimited mileage options"
+              title={t("sections.vehiclesTitle")}
+              subtitle={t("sections.vehiclesSubtitle")}
+              badge={t("sections.vehiclesBadge")}
               listings={vehicleListings}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=vehicle"
@@ -219,8 +237,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
             {/* Section 5: Available This Weekend */}
             <ListingCarouselSection
-              title="Available this weekend across Algeria"
-              subtitle="Instant book stays with five-star verified local hosts"
+              title={t("sections.weekendTitle")}
+              subtitle={t("sections.weekendSubtitle")}
               listings={featuredListings}
               currentUser={currentUser}
               viewMoreHref="/search?instantBook=true"
@@ -228,6 +246,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </>
         )}
       </Container>
-    </main>
+    </div>
   );
 }

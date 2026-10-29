@@ -1,0 +1,107 @@
+{
+  "title": "Paramètres hôte et préférences de versement",
+  "subtitle": "Configurez vos versements bancaires algériens (CCP / RIB), vos règles de réservation, votre identité d'hôte et vos canaux de communication.",
+  "tabs": {
+    "ariaLabel": "Sections des paramètres hôte",
+    "payouts": "Comptes de versement et historique",
+    "identity": "Type d'hôte et statut juridique",
+    "defaults": "Réservations par défaut",
+    "notifications": "Communication avec les voyageurs"
+  },
+  "channels": {
+    "CCP": "Algérie Poste CCP",
+    "BNA": "Banque Nationale d'Algérie (BNA)",
+    "BEA": "Banque Extérieure d'Algérie (BEA)"
+  },
+  "channelsShort": {
+    "CCP": "CCP",
+    "BNA": "BNA",
+    "BEA": "BEA"
+  },
+  "payouts": {
+    "title": "Comptes de versement algériens (DZD)",
+    "description": "Vos revenus sont versés automatiquement en dinars algériens (DZD) 24 heures après l'arrivée du voyageur.",
+    "add": "Ajouter un moyen de versement",
+    "badgeCcp": "CCP",
+    "badgeRib": "RIB",
+    "defaultBadge": "Versement par défaut",
+    "setDefault": "Définir par défaut",
+    "setDefaultFor": "Définir {method} comme versement par défaut",
+    "ccpDetails": "{number} Clé {key}",
+    "ribDetails": "RIB : {number}",
+    "holderFallback": "Hôte"
+  },
+  "history": {
+    "title": "Historique des versements",
+    "description": "Tous les virements sont traités via Algérie Poste CCP ou la compensation interbancaire de la BNA.",
+    "colDate": "Date",
+    "colReference": "Référence",
+    "colMethod": "Mode de virement",
+    "colAmount": "Montant",
+    "colStatus": "Statut",
+    "statusTransferred": "Versé"
+  },
+  "identity": {
+    "title": "Type de compte hôte et vérification",
+    "description": "Gérez votre inscription d'hôte particulier ou les justificatifs de votre agence de tourisme.",
+    "currentStatus": "Statut actuel",
+    "individualHost": "Hôte particulier certifié",
+    "verifiedAgency": "Agence vérifiée • RC : {rc}",
+    "individualVerified": "Carte nationale d'identité algérienne (CNI) vérifiée",
+    "manageTeam": "Gérer l'équipe de l'agence",
+    "upgrade": "Passer à un espace agence",
+    "complianceTitle": "Conformité légale en Algérie",
+    "complianceBody": "Les activités d'hébergement sur DARNA respectent la réglementation algérienne en matière de tourisme et de fiscalité. Les hôtes particuliers sont enregistrés comme auto-entrepreneurs ou particuliers. Les agences doivent fournir leur numéro de Registre du commerce (RC) et leur numéro d'identification fiscale (NIF)."
+  },
+  "defaults": {
+    "title": "Paramètres de réservation globaux",
+    "description": "Définissez des règles standard qui s'appliquent à vos annonces actuelles et futures.",
+    "approvalModeLabel": "Mode d'approbation des réservations par défaut",
+    "instantTitle": "Confirmation instantanée",
+    "instantDesc": "Les voyageurs réservent automatiquement, sans validation de l'hôte. Conversion maximale et réservations immédiates.",
+    "requestTitle": "Validation par l'hôte (sous 24 h)",
+    "requestDesc": "Vous examinez le profil et le message du voyageur avant de confirmer. Une réponse sous 24 h est requise.",
+    "advanceNoticeLabel": "Délai de prévenance requis",
+    "advanceSameDay": "Réservation le jour même autorisée",
+    "advanceDays": "{count, plural, one {Au moins # jour avant l'arrivée} other {Au moins # jours avant l'arrivée}}",
+    "prepTimeLabel": "Temps de préparation entre deux séjours",
+    "prepNone": "Aucun (arrivée le jour même autorisée)",
+    "prepOneNight": "Bloquer 1 nuit entre deux réservations",
+    "checkInLabel": "Heure d'arrivée standard",
+    "checkOutLabel": "Heure de départ standard",
+    "cancellationLabel": "Conditions d'annulation par défaut",
+    "cancellationFlexible": "Flexibles : remboursement intégral jusqu'à 1 jour avant l'arrivée",
+    "cancellationModerate": "Modérées : remboursement intégral jusqu'à 5 jours avant l'arrivée",
+    "cancellationStrict": "Strictes : remboursement intégral jusqu'à 14 jours avant l'arrivée, 50 % de 13 à 7 jours",
+    "save": "Enregistrer les paramètres"
+  },
+  "notifications": {
+    "title": "Communication avec les voyageurs et alertes SMS",
+    "description": "Configurez les messages de bienvenue automatiques et les alertes mobiles sur les réseaux algériens (Mobilis, Djezzy, Ooredoo).",
+    "smsTitle": "Alertes SMS de réservation",
+    "smsDesc": "Recevez un SMS instantané lorsqu'un voyageur réserve ou annule sur votre annonce.",
+    "emailTitle": "Notifications par e-mail",
+    "emailDesc": "Recevez les résumés des demandes et un récapitulatif hebdomadaire de vos revenus.",
+    "welcomeLabel": "Message de bienvenue automatique (envoyé dès la confirmation de la réservation)",
+    "welcomeDefault": "Salam alaykoum ! Merci d'avoir réservé votre séjour chez nous en Algérie. Nous avons hâte de vous accueillir. N'hésitez pas à nous indiquer votre heure d'arrivée prévue.",
+    "save": "Enregistrer les préférences"
+  },
+  "addPayout": {
+    "title": "Ajouter un compte de versement algérien",
+    "close": "Fermer",
+    "channelLabel": "Canal de versement",
+    "ccpNumberLabel": "Numéro de compte (CCP)",
+    "ccpKeyLabel": "Clé",
+    "ribLabel": "RIB bancaire à 20 chiffres",
+    "errorRequired": "Veuillez saisir votre numéro de compte.",
+    "cancel": "Annuler",
+    "save": "Enregistrer le compte"
+  },
+  "toasts": {
+    "payoutAdded": "Moyen de versement ajouté.",
+    "defaultPayoutUpdated": "Compte de versement par défaut mis à jour.",
+    "defaultsSaved": "Paramètres de réservation et mode d'approbation enregistrés.",
+    "agencyUpgradeRequested": "Demande de passage en agence envoyée. Notre équipe vérifiera votre Registre du commerce (RC).",
+    "communicationSaved": "Préférences de communication enregistrées."
+  }
+}

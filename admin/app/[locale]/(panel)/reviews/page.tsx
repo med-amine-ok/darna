@@ -1,9 +1,9 @@
-import { Metadata } from "next";
+import { guardPage } from "@/lib/auth/page-guard";
 import ReviewsClient from "./ReviewsClient";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Guest & Host Reviews",
-};
+export const generateMetadata = pageMetadata("reviews");
+
 
 interface Props {
   params: {
@@ -11,6 +11,9 @@ interface Props {
   };
 }
 
-export default function ReviewsPage({ params }: Props) {
+export default async function ReviewsPage({ params }: Props) {
+  const denied = await guardPage("reviews.view");
+  if (denied) return denied;
+
   return <ReviewsClient locale={params.locale} />;
 }

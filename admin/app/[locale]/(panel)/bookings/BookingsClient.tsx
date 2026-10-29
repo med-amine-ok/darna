@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
@@ -8,46 +8,43 @@ import {
   Calendar,
   Download,
   FileText,
-  Plus,
   Eye,
-  ExternalLink,
   MapPin,
-  Clock,
   Printer,
-  MoreHorizontal,
   Home,
   Compass,
   Plane,
   Car,
-  User,
   Phone,
-  Mail,
   ShieldCheck,
-  CreditCard,
-  MessageSquare,
-  AlertTriangle,
-  RotateCcw,
-  CheckCircle2,
-  XCircle,
-  Maximize2,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Tabs, TabItem } from "@/components/ui/Tabs";
 import { FilterBar } from "@/components/ui/FilterBar";
-import { FilterDrawer } from "@/components/ui/FilterDrawer";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
 import { SplitView } from "@/components/ui/SplitView";
 import { DetailPanel } from "@/components/ui/DetailPanel";
-import { ImageCarousel } from "@/components/ui/ImageCarousel";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { InfoTile } from "@/components/ui/InfoTile";
 import { useToast } from "@/components/ui/Toast";
-import { useLocale } from "next-intl";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { listBookings, cancelBooking, refundBooking } from "@/lib/data/bookings";
-import { Booking, BookingStatus, ListingVertical } from "@/lib/types";
-import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+import { useLocale, useTranslations } from "next-intl";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { RefundDialog, DisputeDialog } from "@/components/features/bookings/BookingMoneyDialogs";
+import {
+  listBookings,
+  cancelBooking,
+  refundBooking,
+  resolveDispute,
+  exportBookings,
+} from "@/lib/actions/bookings";
+import { formatDzd, formatDate, intlLocale } from "@/lib/utils/format";
+import { downloadCsv } from "@/lib/utils/download";
+import { canCancelBooking, canRefundBooking, refundedSoFar } from "@/lib/domain/transitions";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
+import { Booking } from "@/lib/types";
+import { WILAYAS, getWilayaLabel, getWilayaName } from "@/lib/utils/wilayas";
 
 export interface BookingsClientProps {
   initialStatus?: string;
@@ -63,6 +60,14 @@ export default function BookingsClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const can = useCan();
+  const tOps = useTranslations("bookingOps");
+  const tActions = useTranslations("actions");
+  const t = useTranslations("bookings");
+  const tStatus = useTranslations("status");
+  const tCommon = useTranslations("common");
+  const shortDate = (d: string | Date) =>
+    new Intl.DateTimeFormat(intlLocale(locale), { day: "numeric", month: "short" }).format(new Date(d));
 
   const currentVertical = searchParams.get("vertical") || initialVertical || "all";
   const currentStatus = searchParams.get("status") || initialStatus || "all";
@@ -85,9 +90,38 @@ export default function BookingsClient({
 
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
-    type: "cancel" | "refund";
+    type: "cancel" | "refund" | "dispute";
     booking: Booking;
   } | null>(null);
+
+  const actionError = (err: unknown) =>
+    addToast({
+      title: tActions("actionFailed"),
+      description: err instanceof Error ? err.message : String(err),
+      variant: "danger",
+    });
+
+  const handleExport = async () => {
+    try {
+      let vertParam = currentVertical;
+      if (vertParam === "stays") vertParam = "home";
+      if (vertParam === "experiences") vertParam = "experience";
+      if (vertParam === "trips") vertParam = "trip";
+      if (vertParam === "cars") vertParam = "vehicle";
+      const res = unwrap(
+        await exportBookings({
+          status: currentStatus,
+          vertical: vertParam !== "all" ? vertParam : undefined,
+          wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+          search: searchQuery || undefined,
+        })
+      );
+      downloadCsv(res.filename, res.csv);
+      addToast({ title: tActions("exportStarted"), description: tActions("exportRows", { count: res.rowCount }), variant: "info" });
+    } catch (err) {
+      addToast({ title: tActions("exportFailed"), description: err instanceof Error ? err.message : String(err), variant: "danger" });
+    }
+  };
 
   const updateUrl = (newParams: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -101,7 +135,7 @@ export default function BookingsClient({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Map vertical query to ListingVertical if needed
@@ -111,28 +145,32 @@ export default function BookingsClient({
       if (vertParam === "trips") vertParam = "trip";
       if (vertParam === "cars") vertParam = "vehicle";
 
-      const res = await listBookings({
+      const res = unwrap(await listBookings({
         status: currentStatus,
         vertical: vertParam !== "all" ? vertParam : undefined,
         wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
         search: searchQuery || undefined,
         page,
         pageSize,
-      });
+      }));
       setData(res.rows);
       setTotal(res.total);
       setTotalPages(res.totalPages || Math.ceil(res.total / pageSize));
       setFacets(res.facets || {});
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err) {
+      addToast({
+        title: tCommon("error"),
+        description: err instanceof Error ? err.message : String(err),
+        variant: "danger",
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentVertical, currentStatus, selectedWilaya, page, pageSize, searchQuery, addToast, tCommon]);
 
   useEffect(() => {
     fetchData();
-  }, [currentVertical, currentStatus, selectedWilaya, page, pageSize, searchQuery]);
+  }, [fetchData]);
 
   const selectedBooking = data.find((b) => b.id === selectedBookingId) || null;
 
@@ -148,37 +186,42 @@ export default function BookingsClient({
 
   // Vertical tabs with counts (Mockup 11: Toutes 1,248 · Hébergements 642 · Expériences 238 · Voyages 156 · Voitures 212)
   const verticalTabs: TabItem[] = [
-    { id: "all", label: "Toutes", count: 1248 },
-    { id: "stays", label: "Hébergements", count: 642, icon: <Home className="w-3.5 h-3.5" /> },
-    { id: "experiences", label: "Expériences", count: 238, icon: <Compass className="w-3.5 h-3.5" /> },
-    { id: "trips", label: "Voyages organisés", count: 156, icon: <Plane className="w-3.5 h-3.5" /> },
-    { id: "cars", label: "Voitures", count: 212, icon: <Car className="w-3.5 h-3.5" /> },
+    { id: "all", label: t("verticalTabs.all"), count: 1248 },
+    { id: "stays", label: t("verticalTabs.stays"), count: 642, icon: <Home className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "experiences", label: t("verticalTabs.experiences"), count: 238, icon: <Compass className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "trips", label: t("verticalTabs.trips"), count: 156, icon: <Plane className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "cars", label: t("verticalTabs.cars"), count: 212, icon: <Car className="w-3.5 h-3.5" aria-hidden="true" /> },
   ];
 
   // Table columns (Mockup 11)
   const columns: Column<Booking>[] = [
     {
       key: "booking",
-      header: "Réservation",
+      header: t("cols.booking"),
       render: (row) => (
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
             <Image
               src={row.listingImage || "/placeholder-booking.jpg"}
-              alt={row.listingTitle}
+              alt=""
               fill
+              sizes="48px"
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
-            <div
-              className="font-medium text-[#2E3A2F] text-xs font-mono hover:underline cursor-pointer"
-              onClick={() => handleSelectBooking(row)}
+            <button
+              type="button"
+              className="font-medium text-[#2E3A2F] text-xs font-mono hover:underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectBooking(row);
+              }}
             >
               {row.reference || `#R${row.id.replace("bkg_", "").padStart(4, "0")}`}
-            </div>
-            <div className="text-[11px] text-[#2E3A2F]/60 mt-0.5">
-              {new Date(row.checkInDate).toLocaleDateString("fr-FR")}
+            </button>
+            <div className="text-[11px] text-[#2E3A2F]/70 mt-0.5">
+              {formatDate(row.checkInDate, locale)}
             </div>
           </div>
         </div>
@@ -186,7 +229,7 @@ export default function BookingsClient({
     },
     {
       key: "guest",
-      header: "Client",
+      header: t("guest"),
       render: (row) => (
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
@@ -194,26 +237,26 @@ export default function BookingsClient({
           </div>
           <div className="min-w-0">
             <div className="text-xs font-medium text-[#2E3A2F] truncate">{row.guestName}</div>
-            <div className="text-[11px] text-[#2E3A2F]/60 truncate">{row.guestEmail}</div>
+            <div className="text-[11px] text-[#2E3A2F]/70 truncate">{row.guestEmail}</div>
           </div>
         </div>
       ),
     },
     {
       key: "type",
-      header: "Type",
+      header: t("cols.type"),
       render: (row) => {
-        let label = "Hébergement";
-        let icon = <Home className="w-3 h-3 text-[#6B7F5B]" />;
+        let label = t("types.home");
+        let icon = <Home className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
         if (row.vertical === "experience") {
-          label = "Expérience";
-          icon = <Compass className="w-3 h-3 text-[#6B7F5B]" />;
+          label = t("types.experience");
+          icon = <Compass className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
         } else if (row.vertical === "trip") {
-          label = "Voyage";
-          icon = <Plane className="w-3 h-3 text-[#6B7F5B]" />;
+          label = t("types.trip");
+          icon = <Plane className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
         } else if (row.vertical === "vehicle") {
-          label = "Voiture";
-          icon = <Car className="w-3 h-3 text-[#6B7F5B]" />;
+          label = t("types.vehicle");
+          icon = <Car className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
         }
         return (
           <span className="inline-flex items-center gap-1 text-xs text-[#2E3A2F] font-medium">
@@ -225,64 +268,68 @@ export default function BookingsClient({
     },
     {
       key: "details",
-      header: "Détails",
+      header: t("cols.details"),
       render: (row) => (
         <div className="min-w-0">
           <div className="text-xs font-medium text-[#2E3A2F] truncate max-w-[180px]">
             {row.listingTitle}
           </div>
-          <div className="text-[11px] text-[#2E3A2F]/60 flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-[#6B7F5B]" />
-            <span>Wilaya {row.wilayaCode}</span>
+          <div className="text-[11px] text-[#2E3A2F]/70 flex items-center gap-1">
+            <MapPin className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />
+            <span>{getWilayaName(row.wilayaCode, locale)}</span>
           </div>
         </div>
       ),
     },
     {
       key: "dates",
-      header: "Dates",
+      header: t("cols.dates"),
       render: (row) => (
         <div className="text-xs text-[#2E3A2F]">
-          <div>{new Date(row.checkInDate).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} - {new Date(row.checkOutDate).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</div>
-          <div className="text-[11px] text-[#2E3A2F]/60">{row.nightsCount} nuits</div>
+          <div>{t("dateRange", { from: shortDate(row.checkInDate), to: shortDate(row.checkOutDate) })}</div>
+          <div className="text-[11px] text-[#2E3A2F]/70">{t("nights", { count: row.nightsCount })}</div>
         </div>
       ),
     },
     {
       key: "amount",
-      header: "Montant",
+      header: t("cols.amount"),
       render: (row) => (
         <div className="text-xs font-semibold text-[#2E3A2F]">
-          {row.totalAmountDzd.toLocaleString("fr-FR")} DZD
+          {formatDzd(row.totalAmountDzd, locale)}
         </div>
       ),
     },
     {
       key: "status",
-      header: "Statut",
+      header: tCommon("status"),
       render: (row) => <StatusPill status={row.status} />,
     },
     {
       key: "actions",
-      header: "Actions",
+      header: t("actions"),
       className: "text-end",
       render: (row) => (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
+            type="button"
             onClick={() => handleSelectBooking(row)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title="Aperçu rapide"
+            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            title={t("quickView")}
+            aria-label={t("quickViewOf", { reference: row.reference || row.id })}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
-            onClick={() => {
-              addToast({ title: "Facture téléchargée", variant: "info" });
-            }}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title="Facture"
+            type="button"
+            disabled
+            aria-disabled="true"
+            className="p-1.5 rounded-lg text-[#2E3A2F]/30 cursor-not-allowed"
+            title={tActions("unavailableHint")}
+            aria-label={t("invoiceUnavailable")}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       ),
@@ -293,28 +340,24 @@ export default function BookingsClient({
     <div className="space-y-6">
       {/* 1. Page Header (Mockup 11: Exporter, Rapport, + Nouvelle réservation) */}
       <PageHeader
-        title="Gestion des réservations"
-        subtitle="Suivez l'état des réservations, les paiements reçus et les demandes d'annulation."
+        title={t("pageTitle")}
+        subtitle={t("pageSubtitle")}
         actions={[
+          ...(can("reports.export")
+            ? [
+                {
+                  label: tOps("export"),
+                  icon: <Download className="w-4 h-4" aria-hidden="true" />,
+                  onClick: handleExport,
+                  variant: "outline" as const,
+                },
+              ]
+            : []),
           {
-            label: "Exporter",
-            icon: <Download className="w-4 h-4" />,
-            onClick: () => {
-              addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
-            },
-            variant: "outline",
-          },
-          {
-            label: "Rapport",
-            icon: <FileText className="w-4 h-4" />,
+            label: t("report"),
+            icon: <FileText className="w-4 h-4" aria-hidden="true" />,
             onClick: () => router.push("/stats"),
             variant: "outline",
-          },
-          {
-            label: "Nouvelle réservation",
-            icon: <Plus className="w-4 h-4" />,
-            onClick: () => addToast({ title: "Création manuelle", description: "Ouvre le formulaire de réservation assistée.", variant: "info" }),
-            variant: "primary",
           },
         ]}
       />
@@ -331,14 +374,14 @@ export default function BookingsClient({
         />
 
         <div className="hidden sm:flex items-center gap-2 text-xs text-[#2E3A2F]/70">
-          <Calendar className="w-4 h-4 text-[#6B7F5B]" />
-          <span>01/03/2024 – 31/03/2024</span>
+          <Calendar className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+          <span>{t("dateRange", { from: formatDate("2024-03-01", locale), to: formatDate("2024-03-31", locale) })}</span>
         </div>
       </div>
 
       {/* 3. Filter Bar (Mockup 11) */}
       <FilterBar
-        searchPlaceholder="Rechercher par numéro, nom, email..."
+        searchPlaceholder={t("searchPlaceholder")}
         searchValue={searchQuery}
         onSearchChange={(q) => {
           setSearchQuery(q);
@@ -347,15 +390,14 @@ export default function BookingsClient({
         selects={[
           {
             id: "status",
-            label: "Statut",
+            label: tCommon("status"),
             value: currentStatus,
             options: [
-              { value: "all", label: "Tous les statuts" },
-              { value: "confirmed", label: "Confirmée" },
-              { value: "pending", label: "En attente" },
-              { value: "completed", label: "Terminée" },
-              { value: "cancelled", label: "Annulée" },
-              { value: "refunded", label: "Remboursée" },
+              { value: "all", label: t("allStatuses") },
+              ...(["confirmed", "pending", "completed", "cancelled", "disputed", "refunded"] as const).map((s) => ({
+                value: s,
+                label: tStatus(s),
+              })),
             ],
             onChange: (val) => {
               updateUrl({ status: val === "all" ? null : val, page: "1" });
@@ -363,11 +405,11 @@ export default function BookingsClient({
           },
           {
             id: "wilaya",
-            label: "Région / Wilaya",
+            label: t("wilayaFilter"),
             value: selectedWilaya,
             options: [
-              { value: "all", label: locale === "ar" ? "كل الولايات" : locale === "en" ? "All wilayas" : "Toutes les wilayas" },
-              ...WILAYAS.map((w) => ({ value: w.code, label: `${w.code} - ${getWilayaLabel(w, locale)}` })),
+              { value: "all", label: t("allWilayas") },
+              ...WILAYAS.map((w) => ({ value: w.code, label: getWilayaLabel(w, locale) })),
             ],
             onChange: (val) => {
               setSelectedWilaya(val);
@@ -396,7 +438,7 @@ export default function BookingsClient({
               selectedRowId={selectedBookingId || undefined}
               onRowClick={handleSelectBooking}
               isLoading={isLoading}
-              emptyMessage="Aucune réservation trouvée."
+              emptyMessage={t("empty")}
               selection={{
                 selectedIds: selectedRowIds,
                 onSelectionChange: setSelectedRowIds,
@@ -412,7 +454,7 @@ export default function BookingsClient({
                 }}
                 pageSize={pageSize}
                 totalItems={total}
-                itemLabel="réservations"
+                itemLabel={t("itemLabel")}
               />
             </div>
           </div>
@@ -423,44 +465,60 @@ export default function BookingsClient({
               isOpen={true}
               onClose={handleClosePanel}
               title={selectedBooking.reference || `#R${selectedBooking.id}`}
-              subtitle={`Réservé le ${new Date(selectedBooking.checkInDate).toLocaleDateString("fr-FR")}`}
+              subtitle={t("bookedOn", { date: formatDate(selectedBooking.checkInDate, locale) })}
               statusBadge={<StatusPill status={selectedBooking.status} />}
               actions={
                 <div className="flex items-center gap-1">
                   <button
+                    type="button"
                     onClick={() => window.print()}
-                    className="p-1 text-[#2E3A2F]/60 hover:text-[#2E3A2F] rounded"
-                    title="Imprimer la réservation"
+                    className="p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    title={t("print")}
+                    aria-label={t("print")}
                   >
-                    <Printer className="w-4 h-4" />
+                    <Printer className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               }
               footer={
                 <div className="flex items-center justify-between gap-2 w-full">
-                  <div className="flex items-center gap-2">
-                    {selectedBooking.status !== "cancelled" && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {canCancelBooking(selectedBooking) && can("bookings.cancel") && (
                       <button
+                        type="button"
                         onClick={() => setConfirmModal({ type: "cancel", booking: selectedBooking })}
-                        className="px-3 py-1.5 text-xs font-medium text-[#C96F4F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                        className="px-3 py-1.5 text-xs font-medium text-accent-700 border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
                       >
-                        Annuler
+                        {tOps("cancel")}
                       </button>
                     )}
-                    {selectedBooking.status === "cancelled" && (
+                    {selectedBooking.status !== "disputed" && canRefundBooking(selectedBooking) && can("bookings.refund") && (
                       <button
+                        type="button"
                         onClick={() => setConfirmModal({ type: "refund", booking: selectedBooking })}
                         className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
                       >
-                        Rembourser
+                        {tOps("refund")}
+                      </button>
+                    )}
+                    {selectedBooking.status === "disputed" && can("bookings.dispute") && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmModal({ type: "dispute", booking: selectedBooking })}
+                        className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                      >
+                        {tOps("resolveDispute")}
                       </button>
                     )}
                   </div>
                   <button
-                    onClick={() => addToast({ title: "Modification de dates", variant: "info" })}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    title={tActions("unavailableHint")}
+                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F]/40 rounded-lg cursor-not-allowed"
                   >
-                    Modifier la réservation
+                    {t("editBooking")}
                   </button>
                 </div>
               }
@@ -471,6 +529,7 @@ export default function BookingsClient({
                     src={selectedBooking.listingImage || "/placeholder-booking.jpg"}
                     alt={selectedBooking.listingTitle}
                     fill
+                    sizes="(min-width: 1024px) 420px, 100vw"
                     className="object-cover"
                   />
                 </div>
@@ -478,17 +537,17 @@ export default function BookingsClient({
                 <div className="border-b border-[#D9C9B2]/40 pb-3">
                   <h4 className="font-bold text-sm text-[#2E3A2F]">{selectedBooking.listingTitle}</h4>
                   <div className="flex items-center gap-1 text-xs text-[#6B7F5B] mt-0.5">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>Wilaya {selectedBooking.wilayaCode}</span>
+                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>{getWilayaName(selectedBooking.wilayaCode, locale)}</span>
                   </div>
                 </div>
 
                 <Tabs
                   items={[
-                    { id: "details", label: "Détails" },
-                    { id: "guest", label: "Client" },
-                    { id: "payment", label: "Paiement" },
-                    { id: "messages", label: "Messages" },
+                    { id: "details", label: t("panelTabs.details") },
+                    { id: "guest", label: t("panelTabs.guest") },
+                    { id: "payment", label: t("panelTabs.payment") },
+                    { id: "messages", label: t("panelTabs.messages") },
                   ]}
                   activeId={panelTab}
                   onChange={setPanelTab}
@@ -497,29 +556,35 @@ export default function BookingsClient({
                 {panelTab === "details" && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-2">
-                      <InfoTile label="Arrivée" value={new Date(selectedBooking.checkInDate).toLocaleDateString("fr-FR")} />
-                      <InfoTile label="Départ" value={new Date(selectedBooking.checkOutDate).toLocaleDateString("fr-FR")} />
-                      <InfoTile label="Durée" value={`${selectedBooking.nightsCount} nuits`} />
-                      <InfoTile label="Voyageurs" value={`${selectedBooking.guestsCount} personnes`} />
+                      <InfoTile label={t("checkIn")} value={formatDate(selectedBooking.checkInDate, locale)} />
+                      <InfoTile label={t("checkOut")} value={formatDate(selectedBooking.checkOutDate, locale)} />
+                      <InfoTile label={t("duration")} value={t("nights", { count: selectedBooking.nightsCount })} />
+                      <InfoTile label={t("travelers")} value={t("guestsCount", { count: selectedBooking.guestsCount })} />
                     </div>
 
                     {/* Breakdown */}
                     <div className="p-3.5 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-2">
                       <div className="font-semibold text-[#2E3A2F] pb-1 border-b border-[#D9C9B2]/40">
-                        Montant et détails tarifaires
+                        {t("priceBreakdown")}
                       </div>
                       <div className="flex justify-between text-[#2E3A2F]/70">
-                        <span>Tarif de base ({selectedBooking.nightsCount} nuits)</span>
-                        <span>{selectedBooking.basePriceDzd.toLocaleString("fr-FR")} DZD</span>
+                        <span>{t("basePrice", { count: selectedBooking.nightsCount })}</span>
+                        <span>{formatDzd(selectedBooking.basePriceDzd, locale)}</span>
                       </div>
                       <div className="flex justify-between text-[#2E3A2F]/70">
-                        <span>Frais de service DARNA</span>
-                        <span>{selectedBooking.serviceFeeDzd.toLocaleString("fr-FR")} DZD</span>
+                        <span>{t("serviceFee")}</span>
+                        <span>{formatDzd(selectedBooking.serviceFeeDzd, locale)}</span>
                       </div>
                       <div className="flex justify-between font-bold text-sm text-[#2E3A2F] pt-1.5 border-t border-[#D9C9B2]/40">
-                        <span>Total payé</span>
-                        <span className="text-[#6B7F5B]">{selectedBooking.totalAmountDzd.toLocaleString("fr-FR")} DZD</span>
+                        <span>{t("totalPaid")}</span>
+                        <span className="text-secondary-700">{formatDzd(selectedBooking.totalAmountDzd, locale)}</span>
                       </div>
+                      {refundedSoFar(selectedBooking) > 0 && (
+                        <div className="flex justify-between text-accent-700">
+                          <span>{tOps("refundedSoFar")}</span>
+                          <span>-{formatDzd(refundedSoFar(selectedBooking), locale)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -532,17 +597,17 @@ export default function BookingsClient({
                       </div>
                       <div>
                         <div className="text-sm font-medium text-[#2E3A2F]">{selectedBooking.guestName}</div>
-                        <div className="text-xs text-[#2E3A2F]/60">{selectedBooking.guestEmail}</div>
+                        <div className="text-xs text-[#2E3A2F]/70">{selectedBooking.guestEmail}</div>
                       </div>
                     </div>
                     <div className="text-xs text-[#2E3A2F] pt-2 border-t border-[#D9C9B2]/40 space-y-1">
                       <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                        <span>{selectedBooking.guestPhone || "+213 555 12 34 56"}</span>
+                        <Phone className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <span dir="ltr">{selectedBooking.guestPhone || "+213 555 12 34 56"}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                        <span>Compte vérifié</span>
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <span>{t("verifiedAccount")}</span>
                       </div>
                     </div>
                   </div>
@@ -551,19 +616,32 @@ export default function BookingsClient({
                 {panelTab === "payment" && (
                   <div className="p-3.5 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-3">
                     <div className="flex items-center justify-between pb-2 border-b border-[#D9C9B2]/40">
-                      <span className="font-semibold text-[#2E3A2F]">Paiement reçu</span>
-                      <span className="font-bold text-secondary">{selectedBooking.totalAmountDzd.toLocaleString("fr-FR")} DZD</span>
+                      <span className="font-semibold text-[#2E3A2F]">{t("paymentReceived")}</span>
+                      <span className="font-bold text-primary">{formatDzd(selectedBooking.totalAmountDzd, locale)}</span>
                     </div>
                     <div className="space-y-1 text-[#2E3A2F]/70">
-                      <p>Mode: Carte CIB / Edahabia</p>
-                      <p>Date: {new Date(selectedBooking.checkInDate).toLocaleDateString("fr-FR")}</p>
-                      <p>Statut: Réglé avec succès</p>
+                      <p>{t("paymentMethodLine", { method: t(`paymentMethods.${selectedBooking.paymentMethod}`) })}</p>
+                      <p className="flex items-center gap-2">
+                        {t("labelValue", { label: tOps("paymentStatus"), value: "" })}
+                        <StatusPill status={selectedBooking.paymentStatus} size="sm" />
+                      </p>
+                      {refundedSoFar(selectedBooking) > 0 && (
+                        <p>
+                          {t("labelValue", {
+                            label: tOps("refundedSoFar"),
+                            value: formatDzd(refundedSoFar(selectedBooking), locale),
+                          })}
+                        </p>
+                      )}
                     </div>
                     <button
-                      onClick={() => addToast({ title: "Téléchargement de la facture PDF", variant: "info" })}
-                      className="w-full mt-2 py-2 bg-white border border-[#D9C9B2] rounded-lg font-medium text-xs text-[#2E3A2F] hover:bg-[#F8F6EE]"
+                      type="button"
+                      disabled
+                      aria-disabled="true"
+                      title={tActions("unavailableHint")}
+                      className="w-full mt-2 py-2 bg-white border border-[#D9C9B2] rounded-lg font-medium text-xs text-[#2E3A2F]/40 cursor-not-allowed"
                     >
-                      Télécharger la facture
+                      {t("downloadInvoice")}
                     </button>
                   </div>
                 )}
@@ -573,31 +651,57 @@ export default function BookingsClient({
         }
       />
 
-      {confirmModal && (
-        <ConfirmDialog
-          isOpen={true}
-          title={
-            confirmModal.type === "cancel"
-              ? "Annuler cette réservation ?"
-              : "Rembourser cette réservation ?"
-          }
-          description={`Vous vous apprêtez à ${confirmModal.type === "cancel" ? "annuler" : "rembourser"} la réservation ${confirmModal.booking.reference}.`}
-          variant={confirmModal.type === "cancel" ? "danger" : "primary"}
-          onConfirm={async () => {
-            const actor = { id: "usr_admin", name: "Admin", role: "super_admin" };
-            if (confirmModal.type === "cancel") {
-              await cancelBooking(confirmModal.booking.id, "Annulation administrative", actor);
-              addToast({ title: "Réservation annulée", variant: "warning" });
-            } else {
-              await refundBooking(confirmModal.booking.id, confirmModal.booking.totalAmountDzd, "Remboursement suite à annulation", actor);
-              addToast({ title: "Remboursement exécuté", variant: "info" });
-            }
+      <ReasonDialog
+        isOpen={confirmModal?.type === "cancel"}
+        title={tOps("cancelTitle", { reference: confirmModal?.booking.reference ?? "" })}
+        description={tOps("cancelDescription")}
+        confirmLabel={tOps("cancel")}
+        onCancel={() => setConfirmModal(null)}
+        onConfirm={async (reason) => {
+          if (!confirmModal) return;
+          try {
+            unwrap(await cancelBooking(confirmModal.booking.id, reason));
+            addToast({ title: tOps("cancelDone"), variant: "warning" });
             setConfirmModal(null);
             fetchData();
-          }}
-          onCancel={() => setConfirmModal(null)}
-        />
-      )}
+          } catch (err) {
+            actionError(err);
+          }
+        }}
+      />
+
+      <RefundDialog
+        booking={confirmModal?.type === "refund" ? confirmModal.booking : null}
+        onCancel={() => setConfirmModal(null)}
+        onConfirm={async (amount, reason) => {
+          if (!confirmModal) return;
+          try {
+            unwrap(await refundBooking(confirmModal.booking.id, amount, reason));
+            addToast({ title: tOps("refundDone"), description: formatDzd(amount, locale), variant: "info" });
+            setConfirmModal(null);
+            fetchData();
+          } catch (err) {
+            actionError(err);
+          }
+        }}
+      />
+
+      <DisputeDialog
+        booking={confirmModal?.type === "dispute" ? confirmModal.booking : null}
+        canRefund={can("bookings.refund")}
+        onCancel={() => setConfirmModal(null)}
+        onConfirm={async (outcome, note, amount) => {
+          if (!confirmModal) return;
+          try {
+            unwrap(await resolveDispute(confirmModal.booking.id, outcome, note, amount));
+            addToast({ title: tOps("disputeResolved"), variant: "info" });
+            setConfirmModal(null);
+            fetchData();
+          } catch (err) {
+            actionError(err);
+          }
+        }}
+      />
     </div>
   );
 }

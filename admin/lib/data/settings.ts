@@ -1,6 +1,7 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { PlatformSettings } from "@/lib/types";
+import { PlatformSettings, AdminActor } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
 import { logAudit } from "./audit";
 
@@ -13,7 +14,7 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
 
 export async function updatePlatformSettings(
   updates: Partial<PlatformSettings>,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<PlatformSettings> {
   assertCan(actor.role, "settings.manage");
   await delay(200);

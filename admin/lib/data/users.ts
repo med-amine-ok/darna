@@ -1,6 +1,7 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { GuestUser, GuestStatus, PaginatedResult } from "@/lib/types";
+import { GuestUser, GuestStatus, PaginatedResult, AdminActor } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
 import { logAudit } from "./audit";
 
@@ -132,7 +133,7 @@ export async function getUserById(id: string): Promise<GuestUser | null> {
 export async function suspendUser(
   id: string,
   reason: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<GuestUser> {
   assertCan(actor.role, "users.suspend");
   await delay(200);
@@ -162,7 +163,7 @@ export async function suspendUser(
 
 export async function unsuspendUser(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<GuestUser> {
   assertCan(actor.role, "users.suspend");
   await delay(200);
@@ -192,7 +193,7 @@ export async function unsuspendUser(
 export async function banUser(
   id: string,
   reason: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<GuestUser> {
   assertCan(actor.role, "users.ban");
   await delay(200);
@@ -222,7 +223,7 @@ export async function banUser(
 
 export async function deleteUser(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<GuestUser> {
   assertCan(actor.role, "users.delete");
   await delay(200);
@@ -251,7 +252,7 @@ export async function deleteUser(
 
 export async function restoreUser(
   id: string,
-  actor: { id: string; name: string; role: any } = { id: "adm_01", name: "Admin", role: "super_admin" }
+  actor: AdminActor
 ): Promise<GuestUser> {
   assertCan(actor.role, "users.delete");
   await delay(200);
@@ -281,7 +282,7 @@ export async function restoreUser(
 export async function updateUserStatus(
   id: string,
   status: GuestStatus,
-  actor: { id: string; name: string; role: any } = { id: "adm_01", name: "Admin", role: "super_admin" }
+  actor: AdminActor
 ): Promise<GuestUser> {
   await delay(200);
   const idx = store.users.findIndex((u) => u.id === id);

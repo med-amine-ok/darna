@@ -138,7 +138,10 @@
       "security": "Sécurité",
       "team": "Équipe & rôles",
       "auditLog": "Journal d'audit"
-    }
+    },
+    "more": "Plus",
+    "openMenu": "Ouvrir le menu de navigation complet",
+    "quickNavigation": "Navigation rapide"
   },
   "sidebar": {
     "overview": "Aperçu",
@@ -147,7 +150,16 @@
     "configuration": "Configuration",
     "system": "Système & Gouvernance",
     "adminBadge": "Centre de Contrôle",
-    "version": "Plateforme DARNA v2.4"
+    "version": "Plateforme DARNA v2.4",
+    "consoleTitle": "Console d’administration DARNA",
+    "tagline": "Voyagez en Algérie",
+    "expandSidebar": "Déplier la barre latérale",
+    "collapseSidebar": "Replier la barre latérale",
+    "toggleSection": "{section} : afficher ou masquer les sous-pages",
+    "mainNavigation": "Navigation principale",
+    "menuLabel": "Menu de navigation",
+    "closeMenu": "Fermer le menu de navigation",
+    "pendingBadge": "{count, plural, one {# élément en attente} other {# éléments en attente}}"
   },
   "header": {
     "searchPlaceholder": "Rechercher ou taper une commande...",
@@ -159,7 +171,42 @@
     "trainingMode": "Mode entraînement",
     "trainingActive": "Entraînement actif",
     "simpleView": "Vue simple",
-    "detailedView": "Vue détaillée"
+    "detailedView": "Vue détaillée",
+    "openNavigation": "Ouvrir le menu de navigation",
+    "openCommandPalette": "Ouvrir la palette de commandes (⌘K)",
+    "searchLabel": "Rechercher sur la plateforme",
+    "searchPlaceholders": {
+      "trips": "Rechercher un voyage, une destination, un organisateur...",
+      "stays": "Rechercher un hébergement, un hôte, une ville...",
+      "experiences": "Rechercher une expérience, un guide, une ville...",
+      "cars": "Rechercher une voiture, une ville, une catégorie...",
+      "bookings": "Rechercher une réservation, un client, un hébergement...",
+      "moderation": "Rechercher un prestataire, une agence, un hôtel...",
+      "default": "Rechercher un hébergement, un voyage, une expérience, une agence, un hôtel, une voiture..."
+    },
+    "markAllRead": "Tout marquer comme lu",
+    "unread": "Non lue",
+    "accountMenu": "{name}, menu du compte",
+    "adminFallback": "Admin",
+    "language": "Langue",
+    "myProfileSecurity": "Mon profil & sécurité",
+    "guidedTour": "Visite guidée",
+    "helpCenter": "Centre d’aide",
+    "sampleNotifications": {
+      "newValidation": {
+        "title": "Nouvelle demande de validation",
+        "description": "Villa les Oliviers (Ahmed Benali) à Tizi Ouzou"
+      },
+      "tripPending": {
+        "title": "Voyage en attente d’approbation",
+        "description": "Expédition Tassili n’Ajjer par Sahara Tours"
+      },
+      "reviewReported": {
+        "title": "Signalement d’avis client",
+        "description": "Commentaire signalé sur Hôtel El Aurassi"
+      }
+    },
+    "notificationsUnread": "{count, plural, one {# notification non lue} other {# notifications non lues}}"
   },
   "commandPalette": {
     "placeholder": "Rechercher une entité, hôte, wilaya ou commande...",
@@ -172,7 +219,16 @@
       "users": "Voyageurs & Utilisateurs",
       "bookings": "Réservations",
       "actions": "Commandes Rapides"
-    }
+    },
+    "title": "Palette de commandes",
+    "inputLabel": "Rechercher des éléments et des commandes",
+    "clear": "Effacer la recherche",
+    "resultsLabel": "Résultats de recherche",
+    "noResultsFor": "Aucun résultat pour « {query} »",
+    "typeToSearch": "Commencez à saisir pour rechercher.",
+    "navigateHint": "Naviguer <kbd>↑</kbd> <kbd>↓</kbd>",
+    "selectHint": "Ouvrir <kbd>↵</kbd>",
+    "tipLabel": "Astuce :"
   },
   "status": {
     "applied": "Candidature",
@@ -195,7 +251,12 @@
     "flagged": "Signalé",
     "hidden": "Masqué",
     "active": "Actif",
-    "disabled": "Désactivé"
+    "disabled": "Désactivé",
+    "partially_refunded": "Partiellement remboursée",
+    "paid": "Payée",
+    "processed": "Traité",
+    "invited": "Invité",
+    "failed": "Échoué"
   },
   "roles": {
     "super_admin": "Super Administrateur",
@@ -272,9 +333,9 @@
     "kpiMoneyPaid": "Argent payé par les voyageurs",
     "kpiEarnings": "Revenus de DARNA",
     "kpiNewHosts": "Nouveaux hôtes",
-    "comparisonMore": "{percent}% de plus que la période précédente",
-    "comparisonFewer": "{percent}% de moins que la période précédente",
-    "comparisonSame": "Identique à la période précédente",
+    "comparisonMore": "{percent} % de plus que {period}",
+    "comparisonFewer": "{percent} % de moins que {period}",
+    "comparisonSame": "Identique à {period}",
     "chartBookingsTitle": "Les réservations sont en hausse de 12% ce mois-ci",
     "chartWilayasTitle": "Oran, Alger et Tipaza génèrent le plus de réservations",
     "viewAsTable": "Afficher en tableau",
@@ -287,7 +348,82 @@
     "moreDetails": "Détails avancés",
     "hideDetails": "Masquer les détails",
     "simpleView": "Vue simple",
-    "detailedView": "Vue détaillée"
+    "detailedView": "Vue détaillée",
+    "greetingNeutral": "Bonjour, {name}",
+    "greetingAfternoon": "Bon après-midi, {name}",
+    "greetingEvening": "Bonsoir, {name}",
+    "needsAttentionTitle": "Nécessite votre attention",
+    "needsAttentionHint": "Décidez en 1 clic",
+    "attentionCards": {
+      "hosts": "Hôtes en attente d'approbation",
+      "listings": "Annonces à vérifier",
+      "reviews": "Avis signalés par des voyageurs",
+      "bookings": "Demandes de plus de 24 h et litiges"
+    },
+    "waitingDays": "{count, plural, one {{value} jour} other {{value} jours}}",
+    "howDoingTitle": "Comment se porte DARNA ?",
+    "howDoingSubtitle": "Indicateurs clés expliqués en langage clair, sans abréviations.",
+    "periodSwitchLabel": "Période",
+    "comparisonPeriods": {
+      "today": "la veille",
+      "7d": "les 7 jours précédents",
+      "30d": "les 30 jours précédents"
+    },
+    "chartBookingsSubtitle": "Nombre quotidien de réservations confirmées cette semaine",
+    "chartTooltipBookings": "{count, plural, one {{value} réservation} other {{value} réservations}}",
+    "chartWilayasSubtitle": "Wilayas avec le plus de séjours confirmés ce mois-ci",
+    "wilayaColumn": "Wilaya",
+    "staysCount": "{count, plural, one {{value} séjour} other {{value} séjours}}",
+    "moreDetailsSubtitle": "Statistiques avancées par type de partenaire, catégorie d'hébergement et taux d'occupation",
+    "expand": "Déplier",
+    "collapse": "Replier",
+    "tiersTitle": "Performance financière par type de partenaire",
+    "tier": {
+      "total": "Total : <b>{value}</b>",
+      "darna": "DARNA : <b>{value}</b>",
+      "bookings": "Réservations : <b>{value}</b>",
+      "commissionValue": "{amount} ({rate} %)"
+    },
+    "avgResponseTitle": "Temps de réponse moyen",
+    "avgResponseValue": "{minutes} min",
+    "avgResponseHint": "Délai moyen de confirmation des demandes de réservation par les hôtes",
+    "checklist": {
+      "title": "Guide de démarrage",
+      "subtitle": "{count, plural, one {{count} étape simple pour maîtriser les fonctions clés de DARNA Admin.} other {{count} étapes simples pour maîtriser les fonctions clés de DARNA Admin.}}",
+      "progress": "{done} / {total}",
+      "dismiss": "Masquer ce guide",
+      "markDone": "Marquer comme fait : {task}",
+      "goToPage": "Ouvrir la page",
+      "items": {
+        "review_host": {
+          "title": "Examiner un dossier d'hôte en attente",
+          "desc": "Vérifiez la pièce d'identité et les documents touristiques dans la boîte de validation."
+        },
+        "approve_listing": {
+          "title": "Valider une annonce de séjour ou de circuit",
+          "desc": "Vérifiez les photos, le tarif en DZD et les règles du séjour avant publication."
+        },
+        "find_guest": {
+          "title": "Trouver un voyageur dans l'annuaire",
+          "desc": "Recherchez par numéro de téléphone, e-mail ou historique de réservations."
+        },
+        "recharge_wallet": {
+          "title": "Consulter les portefeuilles des hôtes",
+          "desc": "Consultez les soldes, les virements et les recharges de portefeuille."
+        },
+        "switch_language": {
+          "title": "Découvrir les langues (FR / AR / EN)",
+          "desc": "Testez l'affichage arabe de droite à gauche et le format du dinar algérien."
+        }
+      }
+    },
+    "whatChanged": {
+      "ariaLabel": "Information sur les nouveautés de l'interface",
+      "title": "Nouveau : une navigation simplifiée en 7 rubriques clés",
+      "description": "Moins d'options, plus de rapidité : les pages secondaires sont regroupées sous « Gérer ».",
+      "guideLink": "Où est passée mon ancienne page ?",
+      "dismiss": "Masquer ce bandeau"
+    }
   },
   "hosts": {
     "title": "Partenaires & Hôtes",
@@ -312,7 +448,149 @@
     "viewDetails": "Voir",
     "suspendHost": "Suspendre le Partenaire",
     "deleteHost": "Supprimer le Partenaire",
-    "exportSuccess": "Export CSV des hôtes filtrés réussi"
+    "exportSuccess": "Export CSV des hôtes filtrés réussi",
+    "documentsColumn": "Documents",
+    "moreActions": "Plus d'actions pour {name}",
+    "verification": {
+      "verified": "Vérifiés",
+      "pending": "En attente",
+      "missing": "Manquants",
+      "expired": "Expirés"
+    },
+    "approvalModes": {
+      "instant": "Réservation instantanée",
+      "request": "Demande manuelle à l'hôte"
+    },
+    "chips": {
+      "status": "Statut",
+      "wilayas": "Wilayas",
+      "wilayasSelected": "{count, plural, one {# sélectionnée} other {# sélectionnées}}",
+      "verification": "Vérification",
+      "bookingMode": "Mode de réservation",
+      "balance": "Solde",
+      "negativeOnly": "Négatif uniquement"
+    },
+    "confirm": {
+      "approveTitle": "Approuver {name} ?",
+      "approveDescription": "Cette action accordera les droits actifs sur la place de marché à {name} ({type}).",
+      "approveConfirm": "Approuver l'hôte",
+      "deleteTitle": "Confirmer la suppression",
+      "deleteDescription": "La fiche de l'hôte {name} sera supprimée (suppression réversible). Pour confirmer, saisissez le nom complet du propriétaire ci-dessous.",
+      "deleteConfirm": "Supprimer l'hôte",
+      "bulkApproveTitle": "Approbation groupée : {count, plural, one {# hôte} other {# hôtes}}",
+      "bulkApproveDescription": "Tous les comptes hôtes sélectionnés seront approuvés immédiatement.",
+      "bulkApproveConfirm": "Approuver la sélection"
+    },
+    "toasts": {
+      "approved": "Hôte {name} approuvé",
+      "approveFailed": "Impossible d'approuver l'hôte",
+      "suspended": "Hôte {name} suspendu",
+      "deleted": "Hôte {name} supprimé",
+      "deleteFailed": "Impossible de supprimer l'hôte",
+      "commissionUpdated": "Taux de commission mis à jour : {rate}",
+      "commissionFailed": "Impossible de mettre à jour la commission",
+      "recharged": "{amount} crédités sur le portefeuille de l'hôte",
+      "rechargeFailed": "Impossible de créditer le portefeuille",
+      "bulkApproved": "{count, plural, one {# hôte approuvé} other {# hôtes approuvés}}",
+      "bulkApproveFailed": "Impossible d'approuver les hôtes sélectionnés"
+    },
+    "bulk": {
+      "approveSelected": "Approuver la sélection",
+      "exportSelected": "Exporter la sélection"
+    },
+    "filters": {
+      "wilaya": "Wilaya (province)",
+      "regionShortcuts": "Sélection par région",
+      "north": "Nord",
+      "highPlateaus": "Hauts Plateaux",
+      "south": "Sud",
+      "wilayaPlaceholder": "Sélectionner des wilayas…",
+      "partnerStatus": "Statut du partenaire",
+      "allStatuses": "Tous les statuts",
+      "appliedNew": "Candidature (nouvelle)",
+      "documentVerification": "Vérification des documents",
+      "allDocuments": "Tous les documents",
+      "docsVerified": "Complets et vérifiés",
+      "docsPending": "En attente de vérification",
+      "docsMissing": "Documents manquants",
+      "docsExpired": "Documents expirés",
+      "approvalMode": "Mode d'approbation des réservations",
+      "anyMode": "Tous les modes",
+      "priceRange": "Fourchette de prix (DZD)"
+    },
+    "drawer": {
+      "subtitle": "{type} à {city} · ID : {id}",
+      "approveHost": "Approuver l'hôte",
+      "suspendHost": "Suspendre l'hôte",
+      "sections": "Sections du détail de l'hôte",
+      "tabs": {
+        "overview": "Aperçu",
+        "documents": "Documents ({count})",
+        "listings": "Annonces ({count})",
+        "bookings": "Réservations ({count})",
+        "money": "Finances",
+        "history": "Historique"
+      },
+      "overview": {
+        "ownerName": "Nom du propriétaire",
+        "businessName": "Raison sociale",
+        "individualPartner": "Partenaire particulier",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "wilaya": "Wilaya",
+        "walletBalance": "Solde du portefeuille",
+        "agencyTitle": "Agence et équipe",
+        "teamSize": "Taille de l'équipe",
+        "teamSizeValue": "{count, plural, one {# employé} other {# employés}}",
+        "licenseNo": "N° de licence",
+        "offersTrips": "Propose des circuits",
+        "yes": "Oui",
+        "no": "Non",
+        "hotelTitle": "Classement de l'hôtel",
+        "stars": "Étoiles",
+        "starsValue": "{count, plural, one {# étoile} other {# étoiles}}",
+        "totalRooms": "Nombre de chambres",
+        "roomsValue": "{count, plural, one {# chambre} other {# chambres}}",
+        "internalNotes": "Notes internes",
+        "internalNotesText": "Opérateur touristique algérien vérifié. Pièces d'identité rapprochées des registres nationaux. Téléphone de contact vérifié par SMS."
+      },
+      "documents": {
+        "meta": "Téléversé le {date} · Statut : {status}",
+        "viewFile": "Voir le fichier",
+        "viewFileLabel": "Voir le fichier {title} (nouvel onglet)"
+      },
+      "listings": {
+        "activeFleet": "Annonces actives",
+        "registered": "{count, plural, one {# bien enregistré} other {# biens enregistrés}}",
+        "subsections": "Sous-sections du catalogue",
+        "stays": "Séjours / maisons",
+        "hotelRooms": "Chambres d'hôtel",
+        "trips": "Circuits et excursions"
+      },
+      "bookings": {
+        "title": "Réservations des voyageurs",
+        "completed": "{count, plural, one {# séjour terminé} other {# séjours terminés}}",
+        "trackRecord": "Historique fiable. Confirmation d'arrivée en 24 minutes en moyenne."
+      },
+      "money": {
+        "currentBalance": "Solde actuel du portefeuille",
+        "rate": "Taux : <strong>{rate}</strong>",
+        "commissionTitle": "Taux de commission de la plateforme",
+        "commissionInput": "Taux de commission (%)",
+        "saveOverride": "Enregistrer le taux",
+        "rechargeTitle": "Créditer le portefeuille (recharge hors ligne)",
+        "amount": "Montant (DZD)",
+        "receiptRef": "Référence du reçu / virement",
+        "receiptPlaceholder": "ex. BNA-VIR-891244",
+        "creditWallet": "Créditer le portefeuille"
+      },
+      "history": {
+        "title": "Historique des actions du partenaire",
+        "verifiedBy": "Compte vérifié par {name}",
+        "idApproved": "Pièce d'identité approuvée",
+        "applicationSubmitted": "Candidature partenaire soumise"
+      }
+    }
   },
   "listings": {
     "title": "Parc d'Annonces & Séjours",
@@ -334,7 +612,108 @@
     "moderationChecklist": "Liste de Contrôle Modération",
     "approveAction": "Approuver l'Annonce",
     "requestChanges": "Demander des Modifications",
-    "rejectAction": "Rejeter l'Annonce"
+    "rejectAction": "Rejeter l'Annonce",
+    "viewModeLabel": "Mode d'affichage",
+    "featuredBadge": "En vedette",
+    "byHost": "par {host} ({type})",
+    "cityHost": "{city} · Hôte : {host}",
+    "itemLabel": "annonces",
+    "columns": {
+      "wilaya": "Wilaya",
+      "rating": "Note",
+      "bookings": "Réservations"
+    },
+    "filters": {
+      "wilayas": "Wilayas",
+      "wilayasSelected": "{count, plural, one {# sélectionnée} other {# sélectionnées}}",
+      "wilayaPlaceholder": "Sélectionner des wilayas…",
+      "priceRange": "Fourchette de prix (DZD)"
+    },
+    "toasts": {
+      "loadFailed": "Impossible de charger les annonces",
+      "approved": "Annonce approuvée : {title}",
+      "approveFailed": "Échec de l'approbation de l'annonce",
+      "changesRequested": "Modifications demandées pour {title}",
+      "requestChangesFailed": "Échec de la demande de modifications",
+      "featured": "Mise en avant sur la page d'accueil",
+      "unfeatured": "Annonce retirée de la mise en avant",
+      "featureFailed": "Échec de la mise en avant",
+      "deleted": "Annonce supprimée : {title}",
+      "deleteFailed": "Échec de la suppression de l'annonce"
+    },
+    "dialogs": {
+      "approveDescription": "Publier {title} directement dans le catalogue public des voyageurs.",
+      "deleteTitle": "Confirmer la suppression",
+      "deleteDescription": "Supprimer l'annonce {title}. Pour confirmer, saisissez son titre exact ci-dessous.",
+      "deleteConfirm": "Supprimer l'annonce"
+    },
+    "menu": {
+      "feature": "Mettre en avant sur l'accueil",
+      "unfeature": "Retirer de la mise en avant",
+      "approve": "Approuver et publier",
+      "markPending": "Mettre en attente de validation",
+      "suspend": "Suspendre l'annonce",
+      "reject": "Refuser l'annonce",
+      "delete": "Supprimer l'annonce"
+    },
+    "grid": {
+      "openLabel": "Ouvrir la modération de {title}",
+      "bookings": "{count, plural, one {# réservation} other {# réservations}}",
+      "moderate": "Modérer"
+    },
+    "bulk": {
+      "approve": "Approuver la sélection",
+      "approveTitle": "Approuver {count, plural, one {# annonce} other {# annonces}} ?",
+      "approveDescription": "Publier toutes les annonces sélectionnées dans le catalogue des voyageurs.",
+      "approveFailed": "Échec de l'approbation groupée",
+      "approved": "{count, plural, one {# annonce approuvée} other {# annonces approuvées}}",
+      "export": "Exporter la sélection"
+    },
+    "checklist": {
+      "photosOk": "Photos réalistes et de qualité",
+      "locationAccurate": "Wilaya et coordonnées exactes",
+      "priceReasonable": "Prix cohérent avec la médiane de la wilaya",
+      "policiesPresent": "Politique d'annulation présente",
+      "descriptionAppropriate": "Description appropriée"
+    },
+    "detail": {
+      "subtitle": "{type} · {city} · ID : {id}",
+      "nightlyPrice": "Prix par nuit",
+      "medianBenchmark": "Médiane de la wilaya",
+      "medianValue": "≈ {amount}",
+      "pricingTitle": "Tarification & remises",
+      "commission": "Commission DARNA",
+      "commissionValue": "{rate} %",
+      "weeklyDiscount": "Remise hebdomadaire",
+      "weeklyDiscountValue": "-{rate} % ({amount} / semaine)",
+      "cleaningFee": "Frais de ménage",
+      "deposit": "Caution",
+      "timesTitle": "Horaires & conditions de séjour",
+      "checkIn": "Arrivée",
+      "checkInValue": "À partir de {time}",
+      "checkOut": "Départ",
+      "checkOutValue": "Avant {time}",
+      "minStay": "Séjour minimum",
+      "nights": "{count, plural, one {# nuit} other {# nuits}}",
+      "cancellation": "Annulation",
+      "cancellationValue": "Gratuite jusqu'à {hours} h avant",
+      "description": "Description",
+      "amenities": "Équipements"
+    },
+    "revision": {
+      "title": "Modifications demandées à l'hôte",
+      "placeholder": "Ex. : Merci d'ajouter des photos nettes de la salle de bain et de préciser l'emplacement exact du parking.",
+      "send": "Envoyer la demande"
+    },
+    "map": {
+      "title": "Carte interactive de l'Algérie",
+      "pins": "{count, plural, one {# repère} other {# repères}}",
+      "pinLabel": "{title}, {price}",
+      "legend": "* Repères répartis dans les wilayas, du Tell côtier au plateau saharien.",
+      "cityHost": "{city} · Hôte : {host}",
+      "rating": "Note :",
+      "moderate": "Modérer cette annonce"
+    }
   },
   "approvals": {
     "title": "Boîte de Réception Centrale de Modération",
@@ -359,12 +738,118 @@
     "allVerticals": "Toutes les verticales",
     "allWilayas": "Toutes les 69 wilayas",
     "allWaitingTimes": "Tous les délais",
-    "urgentWaiting": "Urgent (> SLA)",
+    "urgentWaiting": "Urgent (SLA dépassé)",
     "normalWaiting": "Standard",
     "showingResults": "{shown} sur {total} éléments affichés",
     "resetFilters": "Réinitialiser les filtres",
     "noMatchesTitle": "Aucun élément en attente correspondant",
-    "noMatchesSubtitle": "Essayez de modifier votre catégorie, wilaya ou recherche pour afficher des éléments."
+    "noMatchesSubtitle": "Essayez de modifier votre catégorie, wilaya ou recherche pour afficher des éléments.",
+    "pendingBadge": "{count} en attente (SLA)",
+    "tabsLabel": "Files de modération",
+    "shortcuts": {
+      "title": "Raccourcis :",
+      "navigate": "naviguer",
+      "approve": "approuver",
+      "reject": "refuser"
+    },
+    "search": {
+      "label": "Rechercher dans la file",
+      "hosts": "Rechercher par hôte, entreprise, ID, ville...",
+      "listings": "Rechercher par titre d'annonce, hôte, ville, ID...",
+      "default": "Rechercher des éléments en attente...",
+      "clear": "Effacer la recherche"
+    },
+    "filterChip": "{label} : {value}",
+    "quoted": "« {text} »",
+    "removeFilter": "Retirer le filtre : {label}",
+    "bulk": {
+      "selected": "{count, plural, one {# élément sélectionné} other {# éléments sélectionnés}}",
+      "clear": "Effacer",
+      "approve": "Approuver la sélection ({count})"
+    },
+    "selectAll": "Tout sélectionner ({count})",
+    "selectItem": "Sélectionner {title}",
+    "sortedBy": "Tri : les plus anciennes soumissions d'abord (priorité SLA)",
+    "caughtUpTitle": "Tout est à jour !",
+    "caughtUpDesc": "Aucun élément en attente de modération dans cette file. Bravo pour garder la plateforme sûre et vérifiée.",
+    "waitingDays": "En attente : {count, plural, one {# jour} other {# jours}}",
+    "submitted": "Soumis le {date}",
+    "approveItem": "Approuver {title} (A)",
+    "rejectItem": "Refuser {title} (R)",
+    "inspectItem": "Examiner {title}",
+    "typeLabel": {
+      "host": "Examen d'hôte",
+      "listing": "Examen d'annonce",
+      "document": "Examen de document",
+      "review": "Modération d'avis",
+      "dispute": "Examen de litige"
+    },
+    "typeName": {
+      "host": "l'hôte",
+      "listing": "l'annonce",
+      "document": "le document",
+      "review": "l'avis",
+      "dispute": "le litige"
+    },
+    "closeDetail": "Fermer les détails",
+    "detail": {
+      "businessOwner": "Entreprise / propriétaire",
+      "category": "Catégorie",
+      "wilaya": "Wilaya",
+      "phone": "Téléphone",
+      "nif": "Registre de commerce / NIF",
+      "na": "N/D",
+      "host": "Hôte",
+      "vertical": "Catégorie / verticale",
+      "nightlyPrice": "Prix par nuit",
+      "cityWilaya": "Ville & wilaya",
+      "wilayaCity": "{wilaya} ({city})",
+      "approvalMode": "Mode d'approbation",
+      "approvalModes": {
+        "instant": "Instantané",
+        "request": "Sur demande"
+      },
+      "reportedContent": "Contenu signalé",
+      "flaggedByCommunity": "Signalé par la communauté",
+      "reason": "Motif : {reason}",
+      "offensiveDefault": "Propos offensants",
+      "disputedBooking": "Réservation en litige",
+      "bookingRef": "Référence de réservation",
+      "disputeAmount": "Montant contesté"
+    },
+    "emptyDetail": "Sélectionnez un élément dans la liste ou appuyez sur <kbd>J</kbd> pour afficher les détails.",
+    "reject": {
+      "title": "Refuser {type} : {title}",
+      "intro": "Un motif de refus formel est obligatoire. Le demandeur recevra une notification avec cette explication.",
+      "templateLabel": "Modèle de motif standard",
+      "noteLabel": "Détails supplémentaires / note à l'hôte (facultatif)",
+      "notePlaceholder": "ex : Merci de renvoyer le registre de commerce avec un cachet 2026 valide.",
+      "withNote": "{template} — Note : {note}",
+      "templates": {
+        "registration": "Document d'immatriculation commerciale ou fiscale incomplet",
+        "photos": "Les photos de l'annonce contiennent des filigranes promotionnels ou sont de faible résolution",
+        "pricing": "Les tarifs ne respectent pas les références du marché régional",
+        "idExpired": "Pièce d'identité expirée ou photo illisible",
+        "address": "L'adresse du bien ne peut pas être vérifiée via le cadastre",
+        "hateSpeech": "L'avis contient des propos haineux ou injurieux interdits",
+        "other": "Autre non-conformité réglementaire"
+      }
+    },
+    "toast": {
+      "loadFailed": "Échec du chargement de la file de modération",
+      "approved": "Approuvé : {title}",
+      "approvedDesc": "Action enregistrée et consignée dans le journal d'audit",
+      "undoRequested": "Annulation demandée",
+      "undoDesc": "Approbation annulée, élément renvoyé dans la file d'examen",
+      "approveFailed": "Échec de l'approbation",
+      "rejected": "Refusé : {title}",
+      "rejectedDesc": "Motif envoyé à l'utilisateur : « {reason} »",
+      "rejectFailed": "Échec du refus",
+      "bulkApproved": "{count, plural, one {# élément approuvé} other {# éléments approuvés}}",
+      "bulkApprovedDesc": "Toutes les entités vérifiées ont été mises à jour et les notifications programmées.",
+      "bulkFailed": "L'approbation groupée a rencontré un problème",
+      "disputeFailed": "Échec de la résolution du litige"
+    }
   },
   "finance": {
     "title": "Trésorerie Financière",
@@ -392,7 +877,36 @@
     "priceRange": "Fourchette de Prix (DZD)",
     "resultsFound": "Offres Disponibles sur le Marché",
     "listView": "Vue Liste",
-    "mapView": "Carte Interactive"
+    "mapView": "Carte Interactive",
+    "liveMirror": "Miroir du marché en direct",
+    "viewMode": "Mode d'affichage",
+    "verticalsLabel": "Catégories d'annonces",
+    "where": "Où en Algérie",
+    "wherePlaceholder": "Ville, oasis ou site…",
+    "wilaya": "Wilaya (69 wilayas)",
+    "allWilayas": "Les 69 wilayas",
+    "guestsCapacity": "Voyageurs / capacité",
+    "hostType": "Type d'hôte",
+    "allCategories": "Toutes les catégories",
+    "unitPriceRange": "Fourchette de prix par nuit / unité",
+    "mapCount": "{count, plural, one {# annonce affichée sur la carte de l’Algérie} other {# annonces affichées sur la carte de l’Algérie}}",
+    "foundCount": "{count, plural, one {<strong>#</strong> annonce correspondante sur le réseau} other {<strong>#</strong> annonces correspondantes sur le réseau}}",
+    "emptyTitle": "Aucune correspondance exacte sur le réseau",
+    "emptyHint": "Élargissez la fourchette de prix ou explorez une autre wilaya.",
+    "wilayaCity": "Wilaya {code} · {city}",
+    "host": "Hôte : <strong>{name}</strong>",
+    "photoAlt": "Photo de {title}",
+    "inspect": "Inspecter",
+    "inspectLabel": "Inspecter {title}",
+    "approve": "Approuver",
+    "suspend": "Suspendre",
+    "searchFailed": "La recherche a échoué",
+    "approved": "Annonce approuvée",
+    "approvedDescription": "Elle est désormais en ligne et réservable sur le réseau.",
+    "approveFailed": "L'approbation a échoué",
+    "suspended": "Annonce suspendue",
+    "suspendedDescription": "Elle a été retirée de la recherche du marché.",
+    "suspendFailed": "La suspension a échoué"
   },
   "users": {
     "title": "Voyageurs & Utilisateurs",
@@ -415,7 +929,103 @@
     "delete": "Supprimer l'utilisateur",
     "flaggedOnly": "Signalés uniquement",
     "filterTitle": "Filtrage avancé des utilisateurs",
-    "filterSubtitle": "Affiner les comptes voyageurs par statut, rôle et vérification"
+    "filterSubtitle": "Affiner les comptes voyageurs par statut, rôle et vérification",
+    "resultsLabel": "utilisateurs",
+    "wilaya": "Wilaya",
+    "location": "Localisation",
+    "quickView": "Aperçu rapide de {name}",
+    "moreActions": "Plus d'actions pour {name}",
+    "roles": {
+      "guest": "Voyageur",
+      "host": "Hôte",
+      "both": "Voyageur & Hôte"
+    },
+    "kpis": {
+      "all": "Tous les utilisateurs",
+      "active": "Comptes actifs",
+      "guests": "Voyageurs",
+      "suspended": "Comptes suspendus",
+      "banned": "Comptes bannis"
+    },
+    "menu": {
+      "viewProfile": "Voir le profil",
+      "markActive": "Activer / approuver",
+      "markPending": "Mettre en attente",
+      "suspendAccount": "Suspendre le compte",
+      "banAccount": "Bannir le compte"
+    },
+    "confirm": {
+      "suspendTitle": "Suspendre ce compte utilisateur ?",
+      "suspendDescription": "{name} sera temporairement suspendu et ne pourra plus réserver ni publier d'avis.",
+      "suspendConfirm": "Suspendre l'utilisateur",
+      "banTitle": "Bannir définitivement cet utilisateur ?",
+      "banDescription": "{name} sera définitivement banni de la plateforme DARNA.",
+      "banConfirm": "Bannir l'utilisateur",
+      "deleteTitle": "Supprimer cet utilisateur ?",
+      "deleteDescription": "Le compte de {name} sera supprimé (suppression réversible). Saisissez le nom de l'utilisateur pour confirmer.",
+      "deleteConfirm": "Supprimer le compte"
+    },
+    "toasts": {
+      "suspended": "Utilisateur {name} suspendu",
+      "suspendFailed": "Impossible de suspendre l'utilisateur",
+      "banned": "Utilisateur {name} banni",
+      "banFailed": "Impossible de bannir l'utilisateur",
+      "deleted": "Utilisateur {name} supprimé",
+      "deleteFailed": "Impossible de supprimer l'utilisateur",
+      "resetSent": "Lien de réinitialisation envoyé à {email}",
+      "markedActive": "Compte activé avec succès",
+      "markedPending": "Compte placé en attente",
+      "exportReady": "Export des utilisateurs généré"
+    },
+    "detail": {
+      "subtitle": "ID : #{id} · {email}",
+      "tabs": {
+        "profile": "Profil",
+        "bookings": "Réservations",
+        "reviews": "Avis",
+        "payments": "Paiements",
+        "activity": "Activité"
+      },
+      "resetPassword": "Mot de passe",
+      "suspend": "Suspendre",
+      "ban": "Bannir",
+      "joinedOn": "Inscrit le {date}",
+      "financialTitle": "Métriques financières et dépenses",
+      "totalSpent": "Dépenses totales",
+      "walletBalance": "Portefeuille",
+      "avgBooking": "Panier moyen",
+      "activityTitle": "Historique et activité",
+      "registeredOn": "Date d'inscription",
+      "lastActive": "Dernière connexion",
+      "aboutTitle": "À propos du compte et vérification",
+      "userRole": "Rôle",
+      "language": "Langue préférée",
+      "bookings": "Réservations",
+      "bookingsValue": "{count, plural, one {# réservation} other {# réservations}}",
+      "reviewsFavs": "Avis et favoris",
+      "reviewsFavsValue": "{reviews, plural, one {# avis} other {# avis}} · {favs, plural, one {# favori} other {# favoris}}",
+      "identityStatus": "Statut d'identité",
+      "idVerified": "Vérifié (CNI conforme)",
+      "idPending": "En attente de vérification",
+      "bioTitle": "Bio et description du profil",
+      "bioText": "Voyageur vérifié sur la plateforme DARNA, passionné par les hébergements authentiques et les circuits sahariens. Excellent historique sans aucun litige.",
+      "nights": "{count, plural, one {# nuit} other {# nuits}}",
+      "days": "{count, plural, one {# jour} other {# jours}}",
+      "dateRange": "{start} – {end} · {duration}",
+      "cardPayment": "Paiement CIB / Edahabia",
+      "transaction": "Transaction {ref}",
+      "login": "Connexion au compte",
+      "loginMeta": "Aujourd'hui à {time} (IP : {ip})",
+      "bookingMade": "Réservation effectuée {ref}",
+      "rating": "Note de {rating} sur 5"
+    },
+    "filters": {
+      "allStatuses": "Tous les statuts",
+      "allRoles": "Tous les rôles",
+      "guestOnly": "Voyageurs uniquement",
+      "guestAndHost": "Voyageur & Hôte",
+      "allWilayas": "Toutes les wilayas"
+    }
   },
   "bookings": {
     "title": "Réservations & Séjours",
@@ -440,7 +1050,69 @@
     "refundBooking": "Effectuer un remboursement",
     "cancelBooking": "Annuler la réservation",
     "filterTitle": "Filtres avancés des réservations",
-    "filterSubtitle": "Filtrer par verticale financière, statut de litige et dates"
+    "filterSubtitle": "Filtrer par verticale financière, statut de litige et dates",
+    "pageTitle": "Gestion des réservations",
+    "pageSubtitle": "Suivez l'état des réservations, les paiements reçus et les demandes d'annulation.",
+    "report": "Rapport",
+    "verticalTabs": {
+      "all": "Toutes",
+      "stays": "Hébergements",
+      "experiences": "Expériences",
+      "trips": "Voyages organisés",
+      "cars": "Voitures"
+    },
+    "types": {
+      "home": "Hébergement",
+      "experience": "Expérience",
+      "trip": "Voyage",
+      "vehicle": "Voiture"
+    },
+    "cols": {
+      "booking": "Réservation",
+      "type": "Type",
+      "details": "Détails",
+      "dates": "Dates",
+      "amount": "Montant"
+    },
+    "dateRange": "{from} – {to}",
+    "nights": "{count, plural, one {{count} nuit} other {{count} nuits}}",
+    "guestsCount": "{count, plural, one {{count} personne} other {{count} personnes}}",
+    "quickView": "Aperçu rapide",
+    "quickViewOf": "Aperçu rapide de la réservation {reference}",
+    "invoiceUnavailable": "Facture (pas encore disponible)",
+    "allStatuses": "Tous les statuts",
+    "wilayaFilter": "Région / wilaya",
+    "allWilayas": "Toutes les wilayas",
+    "empty": "Aucune réservation trouvée.",
+    "itemLabel": "réservations",
+    "bookedOn": "Réservé le {date}",
+    "print": "Imprimer la réservation",
+    "editBooking": "Modifier la réservation",
+    "panelTabs": {
+      "details": "Détails",
+      "guest": "Client",
+      "payment": "Paiement",
+      "messages": "Messages"
+    },
+    "checkIn": "Arrivée",
+    "checkOut": "Départ",
+    "duration": "Durée",
+    "travelers": "Voyageurs",
+    "priceBreakdown": "Montant et détails tarifaires",
+    "basePrice": "Tarif de base ({count, plural, one {{count} nuit} other {{count} nuits}})",
+    "serviceFee": "Frais de service DARNA",
+    "totalPaid": "Total payé",
+    "verifiedAccount": "Compte vérifié",
+    "paymentReceived": "Paiement reçu",
+    "paymentMethodLine": "Mode : {method}",
+    "paymentMethods": {
+      "cib_edahabia": "Carte CIB / Edahabia",
+      "ccp_transfer": "Virement CCP",
+      "baridimob": "BaridiMob",
+      "cash_on_arrival": "Espèces à l'arrivée"
+    },
+    "labelValue": "{label} : {value}",
+    "downloadInvoice": "Télécharger la facture"
   },
   "reviews": {
     "title": "Modération des Avis",
@@ -462,7 +1134,66 @@
     "dismiss": "Ignorer le signalement",
     "delete": "Supprimer définitivement",
     "deleteConfirmTitle": "Confirmer la suppression définitive",
-    "deleteConfirmDesc": "Êtes-vous sûr de vouloir supprimer définitivement cet avis ? Cette action est irréversible."
+    "deleteConfirmDesc": "Êtes-vous sûr de vouloir supprimer définitivement cet avis ? Cette action est irréversible.",
+    "kpi": {
+      "all": "Tous les avis",
+      "flagged": "Avis signalés",
+      "reports": "Signalements d'utilisateurs",
+      "disputes": "Litiges ouverts"
+    },
+    "exportReport": "Exporter le rapport d'avis",
+    "exported": "Rapport des avis exporté",
+    "filters": {
+      "search": "Rechercher des avis",
+      "vertical": "Service",
+      "allVerticals": "Tous les services",
+      "rating": "Note",
+      "allRatings": "Toutes les notes (1–5 ★)",
+      "ratingOnly5": "5 étoiles uniquement",
+      "ratingStars": "{count, plural, one {# étoile} other {# étoiles}}",
+      "rating1": "1 étoile (alerte)",
+      "wilaya": "Wilaya",
+      "allWilayas": "Toutes les wilayas"
+    },
+    "emptyTitle": "Aucun avis trouvé",
+    "emptyDesc": "Modifiez vos filtres ou termes de recherche.",
+    "listLabel": "Avis",
+    "ratingValue": "{rating} / 5",
+    "ratingAria": "Noté {rating} sur 5",
+    "openReview": "Ouvrir l'avis de {name}",
+    "quoted": "« {text} »",
+    "flagReasonInline": "Motif : {reason}",
+    "guestLabel": "Voyageur : {name}",
+    "hostLabel": "Hôte : {name}",
+    "detailTitle": "Avis n° {id}",
+    "detailSubtitle": "{name} · {date}",
+    "ratingGiven": "Note attribuée",
+    "flagReasonTitle": "Motif du signalement",
+    "flaggedByProvider": "Signalé par le prestataire le {date}",
+    "contextTitle": "Contexte de la prestation",
+    "ctxListing": "Annonce concernée",
+    "ctxGuest": "Voyageur (auteur)",
+    "ctxHost": "Hôte / prestataire",
+    "ctxLocation": "Localisation",
+    "rulesTitle": "Règles de modération",
+    "rulesText": "Les avis diffamatoires, contenant des propos haineux ou des coordonnées personnelles peuvent être supprimés sans délai.",
+    "deleteTitle": "Supprimer l'avis",
+    "deleteDesc": "Cet avis sera supprimé de la base et ne figurera plus sur la fiche de l'annonce.",
+    "toast": {
+      "loadFailed": "Erreur de chargement des avis",
+      "hidden": "Avis masqué",
+      "hiddenDesc": "L'avis a été retiré de la publication publique.",
+      "hideFailed": "Erreur lors du masquage",
+      "restored": "Avis rétabli",
+      "restoredDesc": "L'avis est de nouveau visible publiquement.",
+      "restoreFailed": "Erreur lors du rétablissement",
+      "flagDismissed": "Signalement rejeté",
+      "flagDismissedDesc": "L'avis est confirmé conforme.",
+      "dismissFailed": "Erreur de signalement",
+      "deleted": "Avis supprimé",
+      "deletedDesc": "Supprimé temporairement. Récupérable dans la corbeille.",
+      "deleteFailed": "Échec de suppression"
+    }
   },
   "onboarding": {
     "title": "Configurateur d'Intégration des Hôtes",
@@ -483,7 +1214,37 @@
     "stepDesc": "Description de l'étape",
     "publishChanges": "Publier la Version sur le Marché",
     "draftStatus": "Modifications Brouillon en Attente",
-    "publishedVersion": "Actuellement en Ligne sur le Marché"
+    "publishedVersion": "Actuellement en Ligne sur le Marché",
+    "contractVersionValue": "Version du contrat {version}",
+    "hostTypePicker": "Catégorie d'hôte",
+    "categoryCapped": "Limite stricte de {max} pages",
+    "categoryMultiPage": "Parcours structuré sur plusieurs pages",
+    "soloCapTitle": "Règle DARNA : parcours des particuliers plafonné",
+    "stepsHeading": "{hostType} ({count, plural, one {# étape} other {# étapes}})",
+    "noSteps": "Aucune étape n'est encore configurée pour cette catégorie d'hôte.",
+    "stepNumber": "Étape {number} :",
+    "fieldsCount": "{count, plural, one {# champ} other {# champs}}",
+    "requiredToggleLabel": "Étape obligatoire : {name}",
+    "moveUpLabel": "Monter « {name} »",
+    "moveDownLabel": "Descendre « {name} »",
+    "removeStepLabel": "Supprimer l'étape « {name} »",
+    "toasts": {
+      "loadFailed": "Impossible de charger les parcours d'inscription",
+      "soloLimitTitle": "Limite des particuliers atteinte",
+      "soloLimitBody": "Le parcours d'inscription des particuliers est limité à {max} pages pour rester rapide à compléter.",
+      "policyViolationTitle": "Règle non respectée",
+      "policyViolationBody": "Le parcours d'inscription des particuliers ne peut pas dépasser {max} pages.",
+      "publishedTitle": "Version {version} publiée",
+      "publishedBody": "Le parcours d'inscription pour {hostType} est désormais en ligne.",
+      "publishFailed": "Échec de la publication",
+      "copiedTitle": "Copié",
+      "copiedBody": "Le contrat JSON a été copié dans le presse-papiers."
+    },
+    "exportDialog": {
+      "title": "Contrat JSON d'inscription exporté",
+      "description": "Ce schéma typé respecte <code>{schema}</code>. Le composant <code>{flow}</code> du site public utilise ce contrat.",
+      "copy": "Copier dans le presse-papiers"
+    }
   },
   "categories": {
     "title": "Taxonomies & Catégories d'Équipements",
@@ -501,7 +1262,29 @@
     "createTitle": "Ajouter une nouvelle catégorie",
     "createSubtitle": "Définir les noms de catégories en anglais, français et arabe",
     "deleteTitle": "Supprimer la catégorie",
-    "deleteDesc": "Êtes-vous certain de vouloir supprimer cette catégorie ? Cela peut impacter les annonces existantes."
+    "deleteDesc": "Êtes-vous certain de vouloir supprimer cette catégorie ? Cela peut impacter les annonces existantes.",
+    "empty": "Aucune catégorie dans cette verticale pour le moment.",
+    "filterLabel": "Filtrer par verticale",
+    "placeholderEn": "ex. Desert Glamping",
+    "placeholderFr": "ex. Bivouac de luxe dans le désert",
+    "placeholderAr": "ex. تخييم صحراوي فاخر",
+    "toggleActive": "Activer ou désactiver {name}",
+    "deleteCategory": "Supprimer la catégorie {name}",
+    "toast": {
+      "loadFailed": "Échec du chargement des catégories",
+      "statusChanged": "Statut de la catégorie modifié",
+      "nowActive": "{name} est maintenant active",
+      "nowInactive": "{name} est maintenant inactive",
+      "toggleFailed": "Échec du changement de statut",
+      "nameRequired": "Nom anglais requis",
+      "nameRequiredDesc": "Veuillez saisir au moins un nom de catégorie en anglais.",
+      "created": "Catégorie créée",
+      "createdDesc": "{name} a été ajoutée à {vertical}.",
+      "createFailed": "Échec de la création",
+      "deleted": "Catégorie supprimée",
+      "deletedDesc": "{name} a été supprimée.",
+      "deleteFailed": "Échec de la suppression"
+    }
   },
   "promotions": {
     "title": "Promotions, Bons & Codes de Réduction",
@@ -517,7 +1300,77 @@
     "status": "Statut",
     "actions": "Actions",
     "deleteConfirmTitle": "Supprimer le bon de promotion",
-    "deleteConfirmDesc": "Êtes-vous certain de vouloir supprimer ce bon ? Il ne pourra plus être utilisé par les voyageurs."
+    "deleteConfirmDesc": "Êtes-vous certain de vouloir supprimer ce bon ? Il ne pourra plus être utilisé par les voyageurs.",
+    "kpi": {
+      "created": "Codes promo créés",
+      "active": "Codes actifs",
+      "uses": "Utilisations totales",
+      "featured": "Mises en avant actives"
+    },
+    "newCode": "Nouveau code promo",
+    "tabCoupons": "Codes promo",
+    "tabFeatured": "Mises en avant (placements)",
+    "colCode": "Code",
+    "colDiscount": "Réduction",
+    "colMinSpend": "Dépense min.",
+    "colUses": "Utilisations",
+    "colExpires": "Expiration",
+    "none": "Aucun",
+    "usesValue": "{used} / {max}",
+    "unlimited": "∞",
+    "expired": "Expiré",
+    "empty": "Aucun code promo pour le moment.",
+    "copyCode": "Copier le code {code}",
+    "copied": "Code copié dans le presse-papier",
+    "toggleStatus": "Changer le statut de {code}",
+    "deleteCode": "Supprimer le code {code}",
+    "featured": {
+      "title": "Mises en avant sur la page d'accueil",
+      "subtitle": "Gérez les annonces sponsorisées ou mises en vedette par la modération.",
+      "add": "Ajouter une mise en avant",
+      "selectListing": "Sélectionnez une annonce à promouvoir",
+      "placement": "Placement : {place}",
+      "until": "Jusqu'au {date}",
+      "clicks": "{count, plural, one {# clic} other {# clics}}",
+      "badge": {
+        "featured": "En vedette",
+        "favorite": "Coup de cœur",
+        "topRenter": "Top loueur"
+      },
+      "place": {
+        "homeHeader": "En-tête page d'accueil · Alger",
+        "tours": "Rubrique voyages organisés",
+        "carsCarousel": "Carrousel voitures populaires"
+      }
+    },
+    "form": {
+      "title": "Créer un nouveau code promo",
+      "description": "Configurez le code, le taux de réduction et les limites d'utilisation.",
+      "code": "Code promo (en majuscules)",
+      "codePlaceholder": "ex : DARNA2024",
+      "type": "Type de réduction",
+      "percentage": "Pourcentage (%)",
+      "fixed": "Montant fixe (DZD)",
+      "value": "Valeur de la réduction",
+      "minSpend": "Dépense min. (DZD)",
+      "maxUses": "Nombre max. d'utilisations",
+      "expiresAt": "Date d'expiration",
+      "submit": "Créer le code",
+      "codeMissing": "Veuillez saisir un code promotionnel."
+    },
+    "toast": {
+      "loadFailed": "Erreur de chargement",
+      "statusUpdated": "Statut mis à jour",
+      "statusUpdatedDesc": "Le code {code} est désormais {status}",
+      "updateFailed": "Échec de la mise à jour",
+      "codeMissing": "Code manquant",
+      "created": "Code promo créé avec succès",
+      "createFailed": "Création échouée",
+      "deleted": "Code promo supprimé",
+      "deleteFailed": "Échec de suppression"
+    },
+    "deleteTitle": "Supprimer le code promotionnel",
+    "deleteDesc": "Êtes-vous sûr de vouloir supprimer le code {code} ? Cette action est irréversible."
   },
   "reports": {
     "title": "Rapports & Intelligence d'Affaires",
@@ -531,11 +1384,45 @@
     "kpiListings": "Parc d'annonces actives",
     "revenueReport": "Rapport des revenus nets",
     "occupancyReport": "Rapport d'occupation par wilaya",
-    "hostsReport": "Rapport économique des partenaires hôtes"
+    "hostsReport": "Rapport économique des partenaires hôtes",
+    "kpiHints": {
+      "revenue": "Commissions + frais de service des réservations",
+      "gross": "Total dépensé en réservations",
+      "occupancy": "Sur l'ensemble des annonces actives",
+      "listings": "Dans toutes les wilayas d'Algérie"
+    },
+    "topWilayasTitle": "Top des wilayas par volume de réservations",
+    "rank": "n° {rank}",
+    "staysCount": "{count, plural, one {{value} séjour} other {{value} séjours}}",
+    "presetsTitle": "Exports standards prédéfinis",
+    "presetsSubtitle": "Exports structurés en un clic pour la comptabilité, la conformité fiscale et le suivi des performances.",
+    "downloadAria": "Exporter en CSV : {report}",
+    "presets": {
+      "monthlyFinance": {
+        "type": "Finance / audit",
+        "title": "Règlement mensuel financier et des commissions",
+        "description": "Réservations brutes, revenus de commission, totaux des versements CCP et détail de la TVA."
+      },
+      "wilayaDemand": {
+        "type": "Marketplace / croissance",
+        "title": "Demande touristique par wilaya",
+        "description": "Nuitées réservées, origine des voyageurs et prix moyens des séjours dans les 69 wilayas."
+      },
+      "hostSolvency": {
+        "type": "Risque / conformité",
+        "title": "Audit de solvabilité et des soldes séquestres des hôtes",
+        "description": "Soldes négatifs, décaissements en attente et passifs liés aux litiges."
+      },
+      "tourismTax": {
+        "type": "Réglementaire",
+        "title": "Déclaration de la taxe touristique (Algérie)",
+        "description": "Synthèse officielle au format du ministère du Tourisme et de l'Artisanat."
+      }
+    }
   },
   "auditLog": {
     "title": "Journal d'Audit du Système",
-    "subtitle": "Registre de sécurité immuable de toutes les actions administratives, écritures comptables et statuts.",
+    "subtitle": "Registre de sécurité en ajout seul de toutes les actions administratives, écritures comptables, changements de statut, connexions et exports de données. Les entrées ne peuvent être ni modifiées ni supprimées depuis le back-office.",
     "actor": "Agent Administrateur",
     "action": "Action Exécutée",
     "entity": "Enregistrement Concerné",
@@ -544,7 +1431,44 @@
     "viewDiff": "Voir le différentiel",
     "filterEntity": "Type d'entité",
     "filterRole": "Rôle de l'administrateur",
-    "exportCsv": "Exporter l'audit en CSV"
+    "exportCsv": "Exporter l'audit en CSV",
+    "entityPayout": "Virements",
+    "entityTeam": "Équipe",
+    "entityAuth": "Connexion / déconnexion",
+    "entityExport": "Exports de données",
+    "appendOnlyBadge": "Journal inaltérable",
+    "anonymous": "Anonyme",
+    "loadFailed": "Impossible de charger l'historique",
+    "searchPlaceholder": "Rechercher une action, un membre, un identifiant ou un détail…",
+    "allEntities": "Tous les types d'éléments",
+    "allRoles": "Tous les rôles",
+    "entities": {
+      "host": "Organisations hôtes",
+      "listing": "Annonces & hébergements",
+      "booking": "Réservations",
+      "user": "Voyageurs",
+      "wallet": "Portefeuilles",
+      "review": "Avis",
+      "setting": "Paramètres de la plateforme",
+      "onboarding": "Étapes d'inscription des hôtes",
+      "promotion": "Promotions",
+      "payout": "Versements",
+      "team": "Équipe",
+      "auth": "Connexion / déconnexion",
+      "export": "Exports de données"
+    },
+    "empty": "Aucune entrée ne correspond à ces filtres.",
+    "viewDiffFor": "Voir les modifications de {action} sur {id}",
+    "noDiff": "Aucune modification enregistrée",
+    "diff": {
+      "title": "Modifications enregistrées : {action}",
+      "target": "Élément : <strong>{type}</strong> ({id})",
+      "ip": "IP enregistrée : {ip}",
+      "before": "Avant",
+      "after": "Après",
+      "noBefore": "Aucun état antérieur enregistré",
+      "noAfter": "Aucun état ultérieur enregistré"
+    }
   },
   "team": {
     "title": "Équipe & Permissions Administratives",
@@ -558,7 +1482,43 @@
     "status": "Statut du compte",
     "actions": "Actions",
     "roleMatrix": "Matrice des permissions",
-    "saveRole": "Modifier le rôle"
+    "saveRole": "Modifier le rôle",
+    "inviteMissingFields": "Veuillez renseigner le nom et l'e-mail.",
+    "inviteSent": "Invitation créée",
+    "inviteSentHint": "{email} apparaît comme invité. Le compte n'a pas de mot de passe et ne peut pas se connecter tant que l'invitation n'est pas acceptée.",
+    "inviteFailed": "Échec de l'invitation",
+    "statusInvited": "Invité",
+    "never": "Jamais",
+    "statusActive": "Actif",
+    "statusDeactivated": "Désactivé",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "activateLabel": "Activer {name}",
+    "deactivateLabel": "Désactiver {name}",
+    "roleFor": "Rôle de {name}",
+    "invitePlaceholderName": "ex. Yacine Brahimi",
+    "roleDescriptions": {
+      "super_admin": "Autorité complète sur les paramètres de la plateforme, l'équipe et le grand livre financier.",
+      "moderator": "Vérifie les hôtes, les annonces, les certificats légaux et les avis.",
+      "finance": "Effectue les versements CCP, recharge les portefeuilles et met à jour les commissions.",
+      "support": "Résout les litiges des voyageurs, annule des réservations et traite les demandes.",
+      "analyst": "Accès en lecture seule aux indicateurs, rapports et graphiques."
+    },
+    "matrix": {
+      "title": "Rôles et permissions d'administration",
+      "pickRole": "Choisir un rôle",
+      "granted": "Permissions accordées"
+    },
+    "toasts": {
+      "loadFailed": "Impossible de charger l'équipe",
+      "roleUpdated": "Rôle mis à jour",
+      "roleUpdatedBody": "{name} est désormais {role}.",
+      "roleUpdateFailed": "Impossible de modifier le rôle",
+      "statusUpdated": "Statut mis à jour",
+      "nowActive": "{name} est désormais actif.",
+      "nowDeactivated": "{name} a été désactivé.",
+      "actionProhibited": "Action non autorisée"
+    }
   },
   "settings": {
     "title": "Paramètres de la Plateforme",
@@ -571,7 +1531,45 @@
     "twoFactor": "Exiger l'authentification à deux facteurs (2FA) pour le personnel",
     "sessionTimeout": "Expiration de session (minutes)",
     "saveSettings": "Enregistrer les Paramètres",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "tabs": {
+      "general": "Général",
+      "languages": "Langues & traductions",
+      "notifications": "Notifications & alertes",
+      "security": "Sécurité & sessions"
+    },
+    "identity": {
+      "title": "Identité de la plateforme",
+      "serviceFeeHint": "Appliqué au sous-total des réservations avant prélèvement de la commission prestataire.",
+      "maintenanceHint": "Verrouille l'accès public à la marketplace tout en permettant aux administrateurs de naviguer."
+    },
+    "languages": {
+      "title": "Langues prises en charge",
+      "description": "La plateforme DARNA fonctionne en {count, plural, one {# langue officielle} other {# langues officielles}}, avec une prise en charge complète de l'écriture de droite à gauche pour l'arabe.",
+      "sourceOfTruth": "Source de vérité",
+      "fullRtl": "RTL complet",
+      "international": "International",
+      "translated": "{percent} % traduit"
+    },
+    "notifications": {
+      "title": "Canaux de notification",
+      "email": "Alertes par e-mail",
+      "emailHint": "Pour chaque nouvelle demande de validation",
+      "sms": "Notifications SMS urgentes",
+      "smsHint": "Pour les litiges critiques et les incidents de sécurité",
+      "panel": "Alertes en temps réel dans le panneau",
+      "panelHint": "Cloche de notification et badges de comptage"
+    },
+    "securityPolicy": {
+      "title": "Politique de sécurité",
+      "twoFactorHint": "Obligatoire pour les rôles Super Administrateur"
+    },
+    "toasts": {
+      "loadFailed": "Erreur de chargement des paramètres",
+      "saved": "Paramètres enregistrés",
+      "savedHint": "La configuration de la plateforme a été mise à jour.",
+      "saveFailed": "Échec de l'enregistrement"
+    }
   },
   "login": {
     "title": "Connexion Centre de Contrôle",
@@ -580,6 +1578,2312 @@
     "passwordLabel": "Mot de Passe",
     "submitButton": "S'authentifier & Accéder",
     "demoSeeds": "Comptes Démo Préconfigurés :",
-    "footerText": "© 2026 DARNA Technologies DZ. Accès restreint au personnel habilité."
+    "footerText": "© 2026 DARNA Technologies DZ. Accès restreint au personnel habilité.",
+    "errors": {
+      "invalidCredentials": "E-mail ou mot de passe incorrect.",
+      "rateLimited": "Trop de tentatives de connexion. Veuillez patienter {seconds} secondes puis réessayer.",
+      "unexpected": "Une erreur est survenue lors de la connexion. Veuillez réessayer."
+    },
+    "adminBadge": "Admin",
+    "demoFillLabel": "Remplir avec le compte démo {role} ({email})"
+  },
+  "auth": {
+    "forbidden": {
+      "title": "Accès restreint",
+      "description": "Votre rôle ne vous permet pas de consulter cette section. Contactez un Super Administrateur si vous avez besoin d’un accès.",
+      "backHome": "Retour au tableau de bord"
+    }
+  },
+  "actions": {
+    "reasonLabel": "Motif (obligatoire)",
+    "reasonPlaceholder": "Expliquez la décision — elle est conservée dans le journal d'audit.",
+    "reasonTooShort": "Veuillez saisir au moins {min} caractères.",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "actionFailed": "Échec de l'action",
+    "statusUpdated": "Statut mis à jour",
+    "notAllowed": "Cette action n'est pas disponible pour le statut actuel.",
+    "rejectListingTitle": "Refuser cette annonce ?",
+    "suspendListingTitle": "Suspendre cette annonce ?",
+    "requestChangesTitle": "Demander des modifications à l'hôte ?",
+    "reject": "Refuser",
+    "suspend": "Suspendre",
+    "requestChanges": "Demander des modifications",
+    "restore": "Restaurer",
+    "restored": "Restauré à son statut précédent",
+    "exportStarted": "Export prêt",
+    "exportRows": "{count} lignes exportées",
+    "exportFailed": "Échec de l'export",
+    "unavailable": "Pas encore disponible",
+    "unavailableHint": "Cette fonctionnalité n'est pas encore reliée au back-office.",
+    "suspendHostTitle": "Suspendre {name} ?",
+    "suspendHostDescription": "Ses annonces seront temporairement masquées aux voyageurs.",
+    "reactivate": "Réactiver",
+    "invalidRate": "Le taux doit être compris entre 0 et 100 % avec au plus 2 décimales.",
+    "invalidAmount": "Saisissez un montant entier entre 1 et {max}."
+  },
+  "payments": {
+    "title": "Paiements & Finances",
+    "subtitle": "Portefeuilles prestataires, grand livre, commissions, virements et remboursements — tous les soldes sont calculés à partir du grand livre.",
+    "exportLedger": "Exporter le grand livre (CSV)",
+    "exportWallets": "Exporter les portefeuilles (CSV)",
+    "rechargeWallet": "Recharger un portefeuille",
+    "noWallet": "Aucun portefeuille disponible",
+    "loadError": "Impossible de charger les données financières",
+    "kpi": {
+      "wallets": "Total des portefeuilles",
+      "pendingPayouts": "Virements en attente",
+      "monthCommissions": "Commissions du mois",
+      "refunds": "Remboursements effectués",
+      "negativeWallets": "Portefeuilles négatifs"
+    },
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "wallets": "Portefeuilles",
+      "transactions": "Grand livre",
+      "commissions": "Commissions",
+      "payouts": "Virements prestataires",
+      "refunds": "Remboursements"
+    },
+    "overview": {
+      "escrow": "Fonds voyageurs détenus",
+      "escrowHint": "Réservations payées confirmées ou en litige, nettes des remboursements.",
+      "monthPayouts": "Virements exécutés ce mois",
+      "monthPayoutsHint": "{count, plural, one {{count} virement débité des portefeuilles.} other {{count} virements débités des portefeuilles.}}",
+      "monthCommissions": "Revenus nets de commissions",
+      "monthCommissionsHint": "Commissions enregistrées dans le grand livre depuis le {date}.",
+      "latest": "Dernières écritures",
+      "seeAll": "Voir tout le grand livre"
+    },
+    "filters": {
+      "searchWallets": "Rechercher un prestataire…",
+      "searchTransactions": "Rechercher par référence, prestataire, réservation…",
+      "hostType": "Type de prestataire",
+      "allHostTypes": "Tous les types",
+      "wilaya": "Wilaya",
+      "allWilayas": "Toutes les wilayas",
+      "negativeOnly": "Soldes négatifs uniquement",
+      "txType": "Type d'écriture",
+      "allTxTypes": "Tous les types d'écriture"
+    },
+    "txTypes": {
+      "booking_payment": "Règlement de réservation",
+      "commission_deduction": "Commission",
+      "host_payout": "Virement prestataire",
+      "wallet_recharge": "Recharge du portefeuille",
+      "booking_refund": "Remboursement de réservation",
+      "adjustment": "Ajustement"
+    },
+    "payoutMethods": {
+      "ccp": "CCP (Algérie Poste)",
+      "bank_wire": "Virement bancaire",
+      "baridimob": "BaridiMob"
+    },
+    "cols": {
+      "date": "Date",
+      "reference": "Référence",
+      "host": "Prestataire",
+      "type": "Type",
+      "description": "Description",
+      "amount": "Montant",
+      "balanceAfter": "Solde après",
+      "location": "Wilaya",
+      "balance": "Solde",
+      "commissionsPaid": "Commissions prélevées",
+      "actions": "Actions",
+      "requestedAt": "Demandé le",
+      "account": "Compte",
+      "method": "Mode",
+      "status": "Statut",
+      "processed": "Traité",
+      "booking": "Réservation",
+      "guest": "Voyageur",
+      "refunded": "Remboursé",
+      "total": "Total réservation"
+    },
+    "recharge": "Recharger",
+    "rechargeTitle": "Recharger le portefeuille prestataire",
+    "rechargeDescription": "Créditer manuellement un prestataire après un versement CCP ou un virement bancaire. Le crédit est inscrit au grand livre et au journal d'audit.",
+    "rechargeHost": "Prestataire",
+    "rechargeAmount": "Montant à créditer (DZD)",
+    "rechargeAmountHint": "Montant entier en DZD entre 1 et {max}.",
+    "rechargeMethod": "Mode de règlement",
+    "rechargeMethods": {
+      "ccp": "Versement CCP / Algérie Poste",
+      "bank_transfer": "Virement bancaire",
+      "cash_guarantee": "Dépôt d'espèces (garantie)"
+    },
+    "rechargeReceipt": "Numéro de reçu / référence",
+    "rechargeReason": "Motif interne",
+    "rechargeConfirm": "Confirmer la recharge",
+    "rechargeDone": "Portefeuille rechargé",
+    "invalidAmount": "Saisissez un montant entier entre 1 et {max}.",
+    "commissionsTitle": "Taux de commission par type de prestataire",
+    "commissionsHint": "Appliqués au prix de base lors de la confirmation d'une réservation. 0 à 100 %, 2 décimales maximum.",
+    "commissionLabels": {
+      "individual": "Hôtes particuliers",
+      "agency": "Agences de voyages",
+      "hotel": "Hôtels",
+      "hostel": "Auberges de jeunesse"
+    },
+    "invalidRate": "Chaque taux doit être compris entre 0 et 100 avec au plus 2 décimales.",
+    "saveRates": "Enregistrer les taux de commission",
+    "ratesSaved": "Taux de commission enregistrés",
+    "approvePayout": "Valider",
+    "rejectPayout": "Refuser",
+    "approveTitle": "Valider ce virement ?",
+    "approveDescription": "{amount} seront débités du portefeuille de {host} et versés sur {account} ({method}). Cette action est irréversible.",
+    "approveConfirm": "Valider {amount}",
+    "payoutApproved": "Virement validé et portefeuille débité",
+    "rejectTitle": "Refuser cette demande de virement ?",
+    "rejectDescription": "Demande de {amount} de {host}. Le portefeuille n'est pas débité.",
+    "payoutRejected": "Demande de virement refusée",
+    "processedBy": "par {name}",
+    "noPayouts": "Aucune demande de virement.",
+    "refundsTitle": "Remboursements voyageurs",
+    "refundsHint": "Réservations remboursées totalement ou partiellement, suite à une annulation ou à la résolution d'un litige.",
+    "noRefunds": "Aucun remboursement pour l'instant.",
+    "noTransactions": "Aucune écriture ne correspond à ces filtres.",
+    "noWallets": "Aucun portefeuille ne correspond à ces filtres.",
+    "rechargeFor": "Recharger le portefeuille de {host}",
+    "approvePayoutFor": "Approuver le versement de {host}",
+    "rejectPayoutFor": "Rejeter le versement de {host}",
+    "processedOnBy": "{date} par {name}",
+    "itemLabels": {
+      "wallets": "portefeuilles",
+      "transactions": "écritures",
+      "refunds": "remboursements"
+    }
+  },
+  "bookingOps": {
+    "total": "Total de la réservation",
+    "alreadyRefunded": "Déjà remboursé",
+    "refundable": "Remboursable",
+    "refundTitle": "Rembourser la réservation {reference}",
+    "refundDescription": "Le voyageur est remboursé et la part de l'hôte est débitée de son portefeuille (écriture booking_refund).",
+    "refundAmount": "Montant du remboursement (DZD)",
+    "amountRange": "Saisissez un montant entier entre 1 et {max}.",
+    "partialRange": "Un remboursement partiel doit être un montant entier d'au moins 1 et inférieur à {max}.",
+    "refundConfirm": "Rembourser {amount}",
+    "refundDone": "Remboursement effectué",
+    "cancelTitle": "Annuler la réservation {reference} ?",
+    "cancelDescription": "Uniquement pour les réservations en attente ou confirmées. Le remboursement se fait séparément.",
+    "cancelDone": "Réservation annulée",
+    "disputeTitle": "Résoudre le litige sur {reference}",
+    "disputeDescription": "Choisissez l'issue. Les remboursements sont inscrits au grand livre ; un litige rejeté remet la réservation dans son cycle normal.",
+    "outcome": "Issue",
+    "outcomes": {
+      "refund_full": "Remboursement total",
+      "refund_partial": "Remboursement partiel",
+      "declined": "Rejeter la réclamation"
+    },
+    "outcomeHints": {
+      "refund_full": "Rembourse tout le montant restant ; la réservation passe à remboursée.",
+      "refund_partial": "Rembourse une partie ; la réservation revient à confirmée / terminée.",
+      "declined": "Aucun remboursement ; la réservation revient à confirmée / terminée."
+    },
+    "resolutionNote": "Note de résolution (obligatoire)",
+    "resolveConfirm": "Résoudre le litige",
+    "disputeResolved": "Litige résolu",
+    "cancel": "Annuler",
+    "refund": "Rembourser",
+    "resolveDispute": "Résoudre le litige",
+    "export": "Exporter",
+    "refundedSoFar": "Déjà remboursé",
+    "paymentStatus": "Statut du paiement"
+  },
+  "hostDetail": {
+    "breadcrumb": "Hôtes",
+    "financialSnapshot": "Aperçu financier",
+    "walletBalance": "Solde du portefeuille :",
+    "takeRate": "Taux de prélèvement :",
+    "totalBookings": "Total des réservations :",
+    "activeFleet": "Parc actif :",
+    "listingsValue": "{count, plural, one {# annonce} other {# annonces}}",
+    "verificationDocuments": "Documents de vérification",
+    "uploaded": "Téléversé le {date}",
+    "viewFile": "Voir le fichier",
+    "viewFileLabel": "Voir le fichier {title} (nouvel onglet)"
+  },
+  "search": {
+    "title": "Recherche globale & réseau DARNA",
+    "subtitle": "Recherchez à travers toutes les entités de la plateforme.",
+    "subtitleQuery": "Résultats pour « {query} »",
+    "showMap": "Afficher la carte",
+    "showList": "Afficher la liste",
+    "searchLabel": "Rechercher sur la plateforme",
+    "placeholder": "Rechercher par titre, ville, prestataire, code…",
+    "wilayaLabel": "Filtrer par wilaya",
+    "allWilayas": "Toutes les wilayas",
+    "searchFailed": "La recherche a échoué",
+    "tabs": {
+      "all": "Tous les résultats",
+      "stays": "Hébergements",
+      "experiences": "Expériences",
+      "trips": "Voyages organisés",
+      "cars": "Location de voitures",
+      "providers": "Prestataires",
+      "users": "Utilisateurs"
+    },
+    "emptyTitle": "Aucun résultat trouvé",
+    "emptyHint": "Essayez avec un mot-clé plus court ou modifiez vos filtres.",
+    "cityWilaya": "{city}, wilaya {code}",
+    "rating": "Note de {rating} sur 5",
+    "host": "Hôte : <strong>{name}</strong>",
+    "hostFallback": "Prestataire",
+    "details": "Détails",
+    "detailsLabel": "Détails de {title}"
+  },
+  "inbox": {
+    "title": "Messagerie & communications",
+    "subtitle": "Gérez les échanges avec les utilisateurs, notifications automatiques et modèles multilingues.",
+    "sendNotification": "Envoyer une notification",
+    "kpi": {
+      "conversations": "Conversations actives",
+      "unread": "Messages non lus",
+      "notificationsSent": "Notifications envoyées",
+      "templates": "Modèles configurés"
+    },
+    "tabs": {
+      "conversations": "Conversations",
+      "notifications": "Notifications envoyées",
+      "templates": "Modèles de messages (3 langues)"
+    },
+    "roles": {
+      "individualHost": "Hôte particulier · {place}",
+      "travelAgency": "Agence de voyage · {place}",
+      "traveler": "Voyageur"
+    },
+    "searchLabel": "Rechercher des conversations",
+    "searchPlaceholder": "Rechercher une conversation...",
+    "threadsLabel": "Conversations",
+    "unread": "{count, plural, one {# message non lu} other {# messages non lus}}",
+    "viewProfile": "Voir le profil",
+    "profileOpened": "Fiche utilisateur ouverte",
+    "messagesLabel": "Messages avec {name}",
+    "replyLabel": "Répondre à {name}",
+    "replyPlaceholder": "Écrivez votre message à l'utilisateur...",
+    "send": "Envoyer le message",
+    "sent": "Message envoyé avec succès",
+    "quickReplies": "Réponses rapides :",
+    "quick": {
+      "validatedLabel": "Validation OK",
+      "validatedText": "Vos documents ont été validés avec succès.",
+      "moreInfoLabel": "Complément requis",
+      "moreInfoText": "Merci de nous fournir un justificatif de domicile récent."
+    },
+    "notifications": {
+      "colDate": "Date & heure",
+      "colTitle": "Titre de la notification",
+      "colChannel": "Canal",
+      "colRecipients": "Destinataires",
+      "colStatus": "Statut",
+      "channelEmailInApp": "Email + in-app",
+      "channelBroadcast": "Diffusion in-app",
+      "recipientHost": "{name} (hôte)",
+      "allProviders": "Tous les prestataires ({count})",
+      "delivered": "Délivrée"
+    },
+    "templates": {
+      "languages": "FR / EN / AR",
+      "bookingTitle": "Confirmation de réservation",
+      "bookingDesc": "Envoyé automatiquement dès confirmation du paiement d'une réservation.",
+      "bookingBody": "« Bonjour {userName}, votre réservation {bookingId} pour {listingTitle} du {startDate} au {endDate} est confirmée ! »",
+      "docsTitle": "Demande de compléments de dossier",
+      "docsDesc": "Envoyé par l'administrateur lors du rejet partiel d'un justificatif prestataire.",
+      "docsBody": "« Bonjour {hostName}, votre dossier nécessite une mise à jour : {reasonText}. Merci de déposer le document requis. »"
+    },
+    "broadcast": {
+      "title": "Diffuser une notification",
+      "description": "Envoyer une notification push ou email ciblée aux utilisateurs ou prestataires.",
+      "target": "Cible des destinataires",
+      "targetAllUsers": "Tous les utilisateurs",
+      "targetAllProviders": "Tous les prestataires",
+      "targetHomeHosts": "Hôtes hébergements uniquement",
+      "targetAgencies": "Agences de voyages",
+      "notifTitle": "Titre de la notification",
+      "notifTitlePlaceholder": "ex : Maintenance planifiée de la plateforme",
+      "message": "Message",
+      "messagePlaceholder": "Contenu de la notification...",
+      "submit": "Envoyer la notification",
+      "sent": "Notification diffusée aux destinataires"
+    }
+  },
+  "providers": {
+    "title": "Validation des prestataires",
+    "subtitle": "Vérifiez et validez tous les prestataires avant leur publication sur la plateforme.",
+    "settings": "Paramètres de validation",
+    "entity": "prestataires",
+    "kpi": {
+      "underReview": "En attente de validation",
+      "approved": "Prestataires validés",
+      "applied": "À compléter",
+      "rejected": "Refusés"
+    },
+    "categories": {
+      "all": "Tous",
+      "host": "Hôtes",
+      "hotel_hostel": "Hôtels & auberges",
+      "travel_agency": "Agences de voyages",
+      "experience_company": "Expériences",
+      "rental_agency": "Agences de location"
+    },
+    "cols": {
+      "provider": "Prestataire",
+      "type": "Type",
+      "location": "Localisation",
+      "requestedAt": "Date de demande",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "individual": "Particulier",
+    "professional": "Professionnel",
+    "view": "Consulter {name}",
+    "filters": {
+      "search": "Rechercher un prestataire...",
+      "more": "Plus de filtres",
+      "type": "Type de prestataire",
+      "allTypes": "Tous",
+      "typeIndividual": "Particulier (hôte)",
+      "typeAgency": "Agence de voyage / location",
+      "typeHotel": "Hôtel",
+      "typeHostel": "Auberge de jeunesse",
+      "wilaya": "Région / wilaya",
+      "allWilayas": "Toutes les wilayas",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "underReview": "En attente",
+      "approved": "Validé",
+      "applied": "À compléter",
+      "rejected": "Refusé"
+    },
+    "drawer": {
+      "title": "Filtres avancés des prestataires",
+      "completeness": "Complétude des documents",
+      "completenessAll": "Tous les niveaux",
+      "completenessFull": "100 % complets (4/4)",
+      "completenessPartial": "Documents partiels",
+      "completenessMissing": "Pièces manquantes",
+      "bookingMode": "Mode de réservation",
+      "bookingModeAll": "Tous les modes",
+      "bookingModeInstant": "Réservation instantanée",
+      "bookingModeRequest": "Sur demande",
+      "minRating": "Note minimale",
+      "minRatingAll": "Toutes les notes",
+      "minRatingValue": "★ {rating} et plus"
+    },
+    "actions": {
+      "approveDirectly": "Approuver directement",
+      "unsuspend": "Annuler la suspension / réactiver",
+      "reject": "Refuser",
+      "requestChanges": "Demander des compléments",
+      "validatePublish": "Valider et publier"
+    },
+    "toast": {
+      "error": "Erreur",
+      "loadFailed": "Échec du chargement des prestataires",
+      "approved": "Prestataire validé et publié",
+      "approvedDesc": "{name} est maintenant actif sur DARNA.",
+      "unsuspended": "Suspension annulée / prestataire réactivé",
+      "unsuspendedDesc": "{name} a été réactivé avec succès.",
+      "rejected": "Dossier refusé",
+      "rejectedDesc": "Notification envoyée à {email}.",
+      "changesSent": "Demande de compléments envoyée",
+      "changesSentDesc": "Message transmis au prestataire."
+    },
+    "panel": {
+      "requestedOn": "Demandé le {date}",
+      "tabsLabel": "Détails du prestataire",
+      "tabs": {
+        "informations": "Informations",
+        "photos": "Photos",
+        "documents": "Documents",
+        "avis": "Avis",
+        "activites": "Activités",
+        "historique": "Historique"
+      },
+      "general": "Informations générales",
+      "contact": "Contact",
+      "specs": "Spécifications",
+      "type": "Type",
+      "wilaya": "Wilaya",
+      "listings": "Annonces",
+      "viewOnMap": "Voir sur la carte",
+      "newTab": "(s'ouvre dans un nouvel onglet)",
+      "description": "Description",
+      "descriptionText": "Prestataire enregistré sur DARNA proposant des prestations touristiques vérifiées dans la région de {city}. Dossier de conformité soumis pour approbation administrative.",
+      "documentsProvided": "Documents fournis ({count}/{total})",
+      "allDocumentsProvided": "Tous les documents sont fournis",
+      "publicProfile": "Voir le profil public",
+      "contactAction": "Contacter",
+      "tabLoaded": "Contenu de l'onglet {tab} chargé.",
+      "tabSynced": "Toutes les pièces sont synchronisées avec le dossier."
+    },
+    "docs": {
+      "idCard": "Carte d'identité",
+      "idCardFull": "Carte d'identité nationale",
+      "property": "Titre de propriété",
+      "propertyFull": "Titre de propriété ou bail",
+      "photos": "Photos du lieu",
+      "photosFull": "Galerie de photos",
+      "rules": "Règlement intérieur",
+      "typeImage": "Image",
+      "typePdf": "PDF",
+      "files": "{count, plural, one {# fichier} other {# fichiers}}",
+      "sizeMb": "{size} Mo",
+      "sizeKb": "{size} Ko"
+    },
+    "rules": {
+      "title": "Paramètres de validation des prestataires",
+      "intro": "Configurez les exigences réglementaires et les délais de traitement des dossiers de prestataires.",
+      "requiredDocs": "Documents requis par catégorie :",
+      "hosts": "Hôtes : carte d'identité + titre de propriété / bail",
+      "hotels": "Hôtels & auberges : registre de commerce CNRC + agrément touristique",
+      "agencies": "Agences de voyages : licence du ministère du Tourisme (catégorie A/B)",
+      "experiences": "Expériences : diplôme/carte de guide professionnel + assurance RC",
+      "sla": "SLA de modération maximale (délai de réponse)",
+      "slaDefault": "48 heures",
+      "save": "Enregistrer les paramètres"
+    },
+    "contactModal": {
+      "title": "Contacter {name}",
+      "description": "Envoyer un message direct ou une notification concernant le dossier de validation.",
+      "messageLabel": "Message",
+      "placeholder": "Écrivez votre message ici...",
+      "send": "Envoyer le message"
+    },
+    "decision": {
+      "changesTitle": "Demander des compléments au prestataire",
+      "rejectTitle": "Motif de refus du prestataire",
+      "changesDesc": "Indiquez les pièces ou précisions requises. Un email et une notification seront envoyés.",
+      "rejectDesc": "Spécifiez la raison légale ou réglementaire du rejet du dossier.",
+      "placeholder": "Précisez les motifs...",
+      "sendRequest": "Envoyer la demande",
+      "confirmReject": "Confirmer le refus"
+    }
+  },
+  "categoryManager": {
+    "defaultItem": "catégorie",
+    "back": "Retour",
+    "add": "Ajouter : {item}",
+    "created": "Nouvel élément ajouté ({item})",
+    "empty": "Aucun élément trouvé ({item}).",
+    "statusUpdated": "Statut mis à jour",
+    "nameFrRequired": "Le nom en français est requis.",
+    "toggleVisibility": "Changer la visibilité de {name}",
+    "visible": "Visible",
+    "hidden": "Masquée",
+    "columns": {
+      "icon": "Icône",
+      "nameFr": "Nom (français)",
+      "nameEn": "Nom (anglais)",
+      "nameAr": "Nom (arabe)",
+      "slug": "Slug URL",
+      "activeListings": "Annonces actives",
+      "visibility": "Visibilité"
+    },
+    "form": {
+      "nameFr": "Nom en français",
+      "nameFrPlaceholder": "Ex. : Villa de charme",
+      "nameEn": "Nom en anglais",
+      "nameEnPlaceholder": "Ex. : Charming villa",
+      "nameAr": "Nom en arabe",
+      "nameArPlaceholder": "Ex. : فيلا ساحرة",
+      "slug": "Identifiant URL (slug)",
+      "slugPlaceholder": "Ex. : villa-charme"
+    }
+  },
+  "changeRequests": {
+    "back": "Retour",
+    "guests": "{count, plural, one {# personne} other {# personnes}}",
+    "toastApproved": "Demande validée",
+    "toastRejected": "Demande refusée",
+    "toastDescription": "Le propriétaire recevra une notification avec les détails.",
+    "host": "Hôte : {name}",
+    "before": "Avant :",
+    "after": "Après :",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "approveAria": "Approuver la modification « {field} » de {listing}",
+    "rejectAria": "Refuser la modification « {field} » de {listing}",
+    "approved": "Approuvé",
+    "rejected": "Refusé",
+    "empty": "Aucune demande de modification en attente.",
+    "columns": {
+      "listing": "Annonce concernée",
+      "field": "Champ modifié",
+      "diff": "Comparaison (avant / après)",
+      "date": "Date de demande",
+      "decision": "Décision"
+    },
+    "fields": {
+      "pricePerNight": "Prix par nuit",
+      "capacity": "Capacité d'accueil",
+      "descriptionAmenities": "Description & équipements"
+    }
+  },
+  "stays": {
+    "photoAlt": "{title} — photo {index}",
+    "categoriesPage": {
+      "title": "Catégories d'hébergements",
+      "subtitle": "Configurez les catégories et types de propriétés affichés aux voyageurs.",
+      "itemLabel": "catégorie"
+    },
+    "changeRequestsPage": {
+      "title": "Demandes de modification d'hébergements",
+      "subtitle": "Examinez et validez les modifications demandées par les hôtes sur leurs annonces publiées."
+    },
+    "propertyTypes": {
+      "villa": "Villa",
+      "apartment": "Appartement",
+      "traditionalHouse": "Maison traditionnelle",
+      "bungalow": "Bungalow",
+      "chalet": "Chalet",
+      "studio": "Studio",
+      "hotel": "Hôtel",
+      "hostel": "Auberge"
+    },
+    "fields": {
+      "propertyType": "Type de logement",
+      "category": "Catégorie",
+      "capacity": "Capacité",
+      "bedrooms": "Chambres",
+      "bathrooms": "Salles de bain",
+      "surface": "Surface",
+      "wilaya": "Wilaya",
+      "description": "Description",
+      "approvalMode": "Mode d'approbation",
+      "constructionYear": "Année de construction",
+      "pricePerNight": "Prix par nuit"
+    },
+    "values": {
+      "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
+      "surface": "{value} m²",
+      "reviews": "{count, plural, one {(# avis)} other {(# avis)}}",
+      "reviewsShort": "({count})",
+      "pricePerNight": "{price} <unit>/ nuit</unit>",
+      "dateRange": "Du {start} au {end}",
+      "instantBooking": "Réservation instantanée",
+      "onRequest": "Sur demande"
+    },
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "info": "Informations",
+      "photos": "Photos",
+      "amenities": "Équipements",
+      "pricing": "Tarifs et disponibilité",
+      "rules": "Règles",
+      "calendar": "Calendrier",
+      "documents": "Documents",
+      "history": "Historique",
+      "bookings": "Réservations"
+    },
+    "pricing": {
+      "title": "Tarification & remises",
+      "cleaningFee": "Frais de ménage",
+      "commission": "Commission DARNA",
+      "commissionValue": "{rate} %",
+      "weeklyDiscount": "Remise hebdomadaire (-{rate} %)",
+      "weeklyPrice": "{amount} / semaine",
+      "deposit": "Caution"
+    },
+    "times": {
+      "title": "Horaires & durées de séjour",
+      "checkIn": "Arrivée",
+      "checkInValue": "À partir de {time}",
+      "checkOut": "Départ",
+      "checkOutValue": "Avant {time}",
+      "minStay": "Séjour minimum",
+      "minStayValue": "{count, plural, one {# nuit} other {# nuits}}",
+      "cancellation": "Annulation",
+      "cancellationValue": "Gratuite jusqu'à {hours} h avant"
+    },
+    "host": {
+      "title": "Hôte / propriétaire",
+      "viewProfile": "Voir le profil",
+      "verified": "Vérifié"
+    },
+    "list": {
+      "title": "Gestion des hébergements",
+      "subtitle": "Consultez, modifiez et validez tous les hébergements répertoriés sur DARNA.",
+      "export": "Exporter",
+      "add": "Ajouter un hébergement",
+      "searchPlaceholder": "Rechercher par titre, ville, propriétaire…",
+      "empty": "Aucun hébergement trouvé avec ces filtres.",
+      "itemLabel": "hébergements",
+      "kpis": {
+        "total": "Total des hébergements",
+        "pending": "En attente de validation",
+        "published": "Publiés",
+        "suspended": "Suspendus",
+        "refused": "Refusés"
+      },
+      "columns": {
+        "stay": "Hébergement",
+        "host": "Hôte",
+        "location": "Ville / région",
+        "type": "Type",
+        "price": "Prix / nuit",
+        "rating": "Note",
+        "bookings": "Réservations"
+      },
+      "filters": {
+        "wilaya": "Région / wilaya",
+        "allWilayas": "Toutes les wilayas",
+        "allTypes": "Tous les types",
+        "allStatuses": "Tous les statuts",
+        "published": "Publié",
+        "suspended": "Suspendu",
+        "refused": "Refusé"
+      },
+      "actions": {
+        "quickPreview": "Aperçu rapide",
+        "quickPreviewOf": "Aperçu rapide de {title}",
+        "openFull": "Consulter",
+        "openFullOf": "Ouvrir la fiche complète de {title}",
+        "approvePublish": "Approuver / publier",
+        "markPending": "Mettre en attente",
+        "suspend": "Suspendre l'annonce",
+        "reject": "Refuser l'annonce",
+        "delete": "Supprimer",
+        "fullscreen": "Plein écran",
+        "approveDirect": "Approuver directement",
+        "reviewFile": "Examiner le dossier",
+        "cancelSuspension": "Annuler la suspension"
+      },
+      "toasts": {
+        "approvedTitle": "Hébergement approuvé",
+        "approvedDescription": "Cet hébergement a été approuvé directement.",
+        "reactivatedTitle": "Hébergement réactivé",
+        "reactivatedDescription": "L'hébergement a été réactivé avec succès.",
+        "deleted": "Hébergement supprimé"
+      },
+      "panel": {
+        "about": "À propos de ce logement",
+        "noDescription": "Aucune description fournie pour cet hébergement.",
+        "calendarText": "Disponibilités et tarifs saisonniers gérés pour cet hébergement.",
+        "calendarLink": "Consulter le calendrier complet"
+      },
+      "advanced": {
+        "title": "Filtres avancés des hébergements",
+        "minCapacity": "Capacité minimale",
+        "priceRange": "Fourchette de prix (DZD)",
+        "min": "Min",
+        "max": "Max",
+        "allModes": "Tous les modes"
+      },
+      "confirm": {
+        "deleteTitle": "Supprimer cet hébergement ?",
+        "suspendTitle": "Suspendre cet hébergement ?",
+        "approveTitle": "Valider cet hébergement ?",
+        "description": "Vous êtes sur le point de modifier le statut de « {title} ». Cette action sera consignée dans le journal d'audit.",
+        "deleteConfirm": "Supprimer définitivement"
+      }
+    },
+    "detail": {
+      "notFoundTitle": "Hébergement introuvable",
+      "notFoundText": "L'annonce demandée n'existe pas ou a été supprimée.",
+      "backToStays": "Retour aux hébergements",
+      "backToList": "Retour à la liste",
+      "addedOn": "Ajouté le {date}",
+      "reviewModeration": "Vérification & modération",
+      "previous": "Hébergement précédent",
+      "next": "Hébergement suivant",
+      "mainImage": "Image principale",
+      "enlargePhoto": "Agrandir la photo {index}",
+      "morePhotos": "{count, plural, one {+# photo} other {+# photos}}",
+      "generalInfo": "Informations générales",
+      "guestCapacity": "Capacité d'accueil",
+      "people": "{count, plural, one {# personne} other {# personnes}}",
+      "instant": "Instantanée",
+      "amenitiesTitle": "Équipements ({count})",
+      "amenitiesSubtitle": "Équipements déclarés disponibles par l'hôte",
+      "seeAll": "Voir tous ({count})",
+      "houseRules": "Règles de la maison",
+      "rules": {
+        "pets": "Animaux",
+        "smoking": "Fumeurs",
+        "parties": "Fêtes & événements",
+        "children": "Enfants",
+        "notAllowed": "Non autorisé",
+        "childFriendly": "Adapté aux enfants"
+      },
+      "validationStatus": "Statut de validation",
+      "statusText": {
+        "published": "Cet hébergement est actuellement validé et visible publiquement par tous les voyageurs.",
+        "pending": "Cet hébergement est en attente d'examen par l'équipe de modération.",
+        "attention": "Cet hébergement nécessite votre attention ou a été suspendu."
+      },
+      "approvePublish": "Approuver et publier",
+      "requestChanges": "Demander des modifications",
+      "reactivate": "Annuler la suspension / réactiver",
+      "checkpointsTitle": "Points à vérifier",
+      "checkpoints": {
+        "ownerDocuments": "Documents du propriétaire",
+        "photos": "Conformité des photos",
+        "address": "Adresse exacte sur la carte",
+        "amenities": "Équipements déclarés",
+        "pricingPolicy": "Tarifs et politique d'annulation",
+        "houseRules": "Règles de la maison"
+      },
+      "checkResults": {
+        "compliant": "Conforme",
+        "verified": "Vérifiée",
+        "complete": "Complet"
+      },
+      "verification": {
+        "identity": "Identité",
+        "phone": "Téléphone",
+        "email": "E-mail"
+      },
+      "ownerDocuments": "Documents du propriétaire",
+      "documents": {
+        "identity": "Pièce d'identité",
+        "propertyTitle": "Titre de propriété",
+        "proofOfAddress": "Justificatif de domicile"
+      },
+      "fileMeta": "{ext} • {size} Mo",
+      "docValidated": "Validé",
+      "docToCheck": "À vérifier",
+      "viewDocument": "Voir {name}",
+      "downloadDocument": "Télécharger {name}",
+      "download": "Télécharger",
+      "approveDialogTitle": "Approuver et publier cet hébergement ?",
+      "approveDialogText": "L'annonce sera immédiatement visible sur DARNA et ouverte aux réservations.",
+      "toasts": {
+        "approved": "Hébergement approuvé et publié",
+        "rejected": "Hébergement refusé",
+        "changesRequested": "Modifications demandées à l'hôte"
+      }
+    },
+    "review": {
+      "title": "Validation d'un hébergement",
+      "subtitle": "Vérifiez toutes les informations et documents avant de publier l'annonce.",
+      "viewOnSite": "Voir sur le site",
+      "newTab": "(s'ouvre dans un nouvel onglet)",
+      "nextStep": "Suivant",
+      "steps": {
+        "info": "Informations",
+        "photos": "Photos",
+        "documents": "Documents",
+        "verification": "Vérification",
+        "decision": "Décision"
+      },
+      "idLabel": "ID : <code>{id}</code>",
+      "stats": {
+        "guests": "Voyageurs"
+      },
+      "ownerInfo": "Informations sur le propriétaire",
+      "viewFullProfile": "Voir le profil complet",
+      "memberSince": "Membre depuis {year}",
+      "ratingLabel": "Note :",
+      "tabs": {
+        "info": "Informations générales",
+        "location": "Localisation"
+      },
+      "fields": {
+        "title": "Titre"
+      },
+      "checklistTitle": "Vérification et conformité",
+      "checks": {
+        "idProof": "Pièce d'identité du propriétaire",
+        "residenceProof": "Justificatif de domicile",
+        "propertyTitle": "Titre de propriété ou contrat",
+        "photos": "Photos de l'hébergement",
+        "address": "Adresse sur la carte",
+        "completeness": "Informations complètes",
+        "rules": "Conformité aux règles"
+      },
+      "checkResults": {
+        "valid": "Valide",
+        "compliantPlural": "Conformes",
+        "verified": "Vérifiée",
+        "completeFem": "Complète",
+        "compliant": "Conforme",
+        "toCheck": "À vérifier"
+      },
+      "inspect": "Examiner",
+      "inspectItem": "Examiner : {item}",
+      "notesTitle": "Notes internes",
+      "notesHint": "Visible uniquement par les administrateurs et modérateurs de DARNA.",
+      "notesReasonHint": "Obligatoire pour cette décision (au moins {min} caractères) : transmis à l'hôte et consigné dans le journal d'audit.",
+      "notesPlaceholder": "Ajouter une remarque pour les modérateurs ou consigner une vérification…",
+      "decisionTitle": "Décision",
+      "decisions": {
+        "approve": {
+          "title": "Approuver et publier",
+          "description": "L'annonce sera immédiatement publiée sur la plateforme."
+        },
+        "changes": {
+          "title": "Demander des modifications",
+          "description": "L'hôte devra apporter des modifications avant une nouvelle validation."
+        },
+        "reject": {
+          "title": "Refuser",
+          "description": "L'annonce sera refusée et l'hôte en sera informé avec le motif."
+        }
+      },
+      "submit": {
+        "approve": "Approuver et publier",
+        "reject": "Confirmer le refus",
+        "changes": "Envoyer la demande de modification"
+      },
+      "toasts": {
+        "approved": "Hébergement approuvé et publié avec succès",
+        "rejected": "Hébergement refusé. Notification transmise à l'hôte.",
+        "changesRequested": "Demande de compléments envoyée au propriétaire."
+      }
+    }
+  },
+  "stayWizard": {
+    "back": "Retour",
+    "title": "Ajouter un hébergement",
+    "subtitle": "Remplissez les informations étape par étape pour créer et publier une nouvelle annonce d'hébergement.",
+    "draftSavedAt": "Brouillon enregistré à {time}",
+    "saveDraft": "Enregistrer en brouillon",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "cancel": "Annuler",
+    "publish": "Publier l'hébergement",
+    "required": "(obligatoire)",
+    "charCount": "({count}/{max})",
+    "locationValue": "{city}, wilaya de {wilaya}",
+    "steps": {
+      "general": "Informations générales",
+      "location": "Localisation",
+      "amenities": "Équipements",
+      "photos": "Photos et description",
+      "pricing": "Tarifs et disponibilité",
+      "rules": "Règles et validation"
+    },
+    "progress": {
+      "general": "Informations générales",
+      "locationContact": "Localisation & contact",
+      "amenities": "Équipements",
+      "media": "Photos & médias",
+      "pricing": "Tarifs & disponibilité",
+      "rules": "Règles & validation"
+    },
+    "preview": {
+      "title": "Aperçu de l'annonce"
+    },
+    "fields": {
+      "title": "Titre de l'hébergement",
+      "titlePlaceholder": "Ex. : Villa panoramique avec piscine – Hydra",
+      "propertyType": "Type de logement",
+      "category": "Catégorie",
+      "capacity": "Capacité",
+      "bedrooms": "Chambres",
+      "bathrooms": "Salles de bain",
+      "surface": "Surface (m²)",
+      "host": "Hôte / propriétaire",
+      "shortDescription": "Description courte",
+      "fullDescription": "Description détaillée",
+      "fullDescriptionPlaceholder": "Rédigez une description détaillée…"
+    },
+    "propertyTypes": {
+      "villaPool": "Villa avec piscine",
+      "luxuryApartment": "Appartement haut standing",
+      "traditionalHouse": "Maison traditionnelle / Casbah",
+      "beachBungalow": "Bungalow bord de mer",
+      "mountainChalet": "Chalet de montagne",
+      "modernStudio": "Studio moderne",
+      "hotelSuite": "Hôtel / suite",
+      "hostel": "Auberge de jeunesse"
+    },
+    "categories": {
+      "home": "Logement entier (maison / villa / appartement)",
+      "hotel": "Hôtel / établissement",
+      "hostel": "Auberge de jeunesse"
+    },
+    "hostOptions": {
+      "individualAlgiers": "{name} (particulier – Alger)",
+      "agency": "{name} (agence)",
+      "establishment": "{name} (établissement)"
+    },
+    "rules": {
+      "title": "Règles principales",
+      "pets": "Animaux autorisés",
+      "parties": "Fêtes & événements",
+      "smoking": "Fumer autorisé",
+      "children": "Adapté aux enfants",
+      "checkInTime": "Heure d'arrivée",
+      "checkOutTime": "Heure de départ"
+    },
+    "location": {
+      "title": "Adresse et géolocalisation",
+      "wilaya": "Wilaya",
+      "city": "Commune / ville",
+      "address": "Adresse exacte",
+      "mapLabel": "Position sur la carte (déplacez le repère pour affiner)"
+    },
+    "contact": {
+      "title": "Coordonnées du contact",
+      "phone": "Numéro de téléphone",
+      "email": "Adresse e-mail",
+      "showPublic": "Afficher le contact public sur l'annonce après validation"
+    },
+    "amenitiesStep": {
+      "title": "Sélection des équipements",
+      "subtitle": "Cochez tous les équipements et commodités inclus dans cet hébergement."
+    },
+    "amenities": {
+      "wifi": "Wifi haute vitesse",
+      "privatePool": "Piscine privée",
+      "airConditioning": "Climatisation réversible",
+      "kitchen": "Cuisine équipée",
+      "parking": "Parking sécurisé",
+      "tv": "Télévision 4K",
+      "washer": "Lave-linge",
+      "seaView": "Vue sur mer",
+      "heating": "Chauffage central",
+      "workspace": "Espace de travail",
+      "jacuzzi": "Jacuzzi / spa",
+      "barbecue": "Barbecue extérieur"
+    },
+    "photosStep": {
+      "title": "Photos et galerie (min. 5 photos recommandées)",
+      "dropLabel": "Déposez les photos de l'hébergement ici",
+      "dropHint": "Formats acceptés : JPG, PNG, WEBP jusqu'à 10 Mo par photo",
+      "cover": "Couverture",
+      "coverAlt": "Photo de couverture"
+    },
+    "pricing": {
+      "title": "Tarifs et conditions de réservation",
+      "price": "Prix par nuit (DZD)",
+      "cleaningFee": "Frais de ménage (DZD)",
+      "deposit": "Caution exigée (DZD)",
+      "minStay": "Séjour minimum (nuits)",
+      "bookingMode": "Mode de réservation",
+      "modes": {
+        "instant": {
+          "title": "Instantanée",
+          "description": "Le voyageur réserve sans attente."
+        },
+        "request": {
+          "title": "Sur demande",
+          "description": "L'hôte doit valider chaque demande."
+        }
+      }
+    },
+    "summary": {
+      "title": "Récapitulatif avant publication",
+      "subtitle": "Vérifiez que toutes les données ci-dessous sont complètes et conformes aux règles de modération DARNA.",
+      "titleLabel": "Titre",
+      "location": "Localisation",
+      "capacity": "Capacité",
+      "capacityValue": "{guests, plural, one {# voyageur} other {# voyageurs}} • {bedrooms, plural, one {# chambre} other {# chambres}}",
+      "price": "Tarif par nuit",
+      "amenities": "Équipements déclarés",
+      "amenitiesValue": "{count, plural, one {# sélectionné} other {# sélectionnés}}"
+    },
+    "errors": {
+      "summary": "{count, plural, one {# erreur à corriger} other {# erreurs à corriger}} avant de continuer :",
+      "titleRequired": "Saisissez le titre de l'hébergement.",
+      "shortDescriptionRequired": "Saisissez une description courte.",
+      "min": "Saisissez une valeur d'au moins {min}.",
+      "cityRequired": "Saisissez la commune ou la ville.",
+      "addressRequired": "Saisissez l'adresse exacte.",
+      "emailInvalid": "Saisissez une adresse e-mail valide.",
+      "priceRequired": "Saisissez un prix par nuit supérieur à 0."
+    },
+    "toasts": {
+      "draftSaved": "Brouillon sauvegardé",
+      "draftSavedDescription": "Enregistré à {time}. Vous pouvez reprendre à tout moment.",
+      "created": "Hébergement créé avec succès",
+      "createdDescription": "L'annonce a été enregistrée et envoyée pour publication.",
+      "photoAdded": "Photo ajoutée"
+    },
+    "tips": {
+      "step1": {
+        "title": "Conseils pour une bonne annonce",
+        "tip1": "Choisissez un titre accrocheur qui mentionne le type de logement et son atout clé.",
+        "tip2": "Renseignez la surface réelle et le nombre exact de chambres et lits disponibles.",
+        "tip3": "Assurez-vous de sélectionner le propriétaire vérifié dans le répertoire DARNA."
+      },
+      "step2": {
+        "title": "Conseils de localisation",
+        "tip1": "Positionnez le repère précisément sur la carte pour aider les voyageurs à situer le quartier.",
+        "tip2": "Indiquez les points de repère ou attractions majeures à moins de 15 minutes.",
+        "tip3": "L'adresse exacte peut être protégée jusqu'à la confirmation de réservation."
+      },
+      "step3": {
+        "title": "Sélection des équipements",
+        "tip1": "Les hébergements avec Wifi et climatisation reçoivent 40 % de réservations en plus.",
+        "tip2": "Indiquez si le stationnement est gratuit ou payant sur place."
+      },
+      "step4": {
+        "title": "Photos percutantes",
+        "tip1": "Téléchargez au moins 5 photos haute résolution avec éclairage naturel.",
+        "tip2": "Prenez en photo toutes les pièces principales, la vue et l'extérieur."
+      },
+      "step5": {
+        "title": "Tarification optimale",
+        "tip1": "Fixez un tarif de base adapté aux prix du marché de la wilaya.",
+        "tip2": "La réservation instantanée maximise le taux de conversion."
+      },
+      "step6": {
+        "title": "Validation finale",
+        "tip1": "Vérifiez l'ensemble des règles de la maison.",
+        "tip2": "Une fois soumis, l'hébergement sera immédiatement indexé sur DARNA."
+      }
+    }
+  },
+  "experiences": {
+    "title": "Gestion des expériences",
+    "subtitle": "Supervisez les activités, excursions et ateliers proposés par les guides et agences.",
+    "export": "Exporter",
+    "categories": "Catégories",
+    "add": "Ajouter une expérience",
+    "searchPlaceholder": "Rechercher par titre, guide, lieu...",
+    "empty": "Aucune expérience trouvée avec ces filtres.",
+    "itemLabel": "expériences",
+    "fullScreen": "Plein écran",
+    "quickPreview": "Aperçu rapide",
+    "quickPreviewOf": "Aperçu rapide de {title}",
+    "openFullPage": "Ouvrir la fiche complète",
+    "openFullPageOf": "Ouvrir la fiche complète de {title}",
+    "reviewsCount": "({count, plural, one {# avis} other {# avis}})",
+    "locationValue": "{city}, {code}",
+    "kpi": {
+      "total": "Total des expériences",
+      "pending": "En attente de validation",
+      "published": "Publiées",
+      "suspended": "Suspendues",
+      "refused": "Refusées"
+    },
+    "columns": {
+      "experience": "Expérience",
+      "guide": "Organisateur / Guide",
+      "location": "Lieu",
+      "category": "Catégorie",
+      "price": "Prix",
+      "rating": "Note",
+      "bookings": "Réservations"
+    },
+    "categoryOptions": {
+      "adventure": "Aventure",
+      "culture": "Culture",
+      "nature": "Nature",
+      "gastronomy": "Gastronomie",
+      "sea": "Mer"
+    },
+    "filters": {
+      "wilaya": "Région / Wilaya",
+      "allWilayas": "Toutes les wilayas",
+      "category": "Catégorie",
+      "allCategories": "Toutes les catégories",
+      "allStatuses": "Tous les statuts"
+    },
+    "statusOptions": {
+      "pending": "En attente de validation",
+      "published": "Publiée",
+      "suspended": "Suspendue",
+      "refused": "Refusée"
+    },
+    "menu": {
+      "approve": "Approuver / Publier",
+      "markPending": "Mettre en attente",
+      "suspend": "Suspendre l’activité",
+      "reject": "Refuser l’activité"
+    },
+    "panel": {
+      "suspend": "Suspendre",
+      "approveDirectly": "Approuver directement",
+      "review": "Examiner le dossier",
+      "cancelSuspension": "Annuler la suspension"
+    },
+    "toast": {
+      "approvedTitle": "Expérience approuvée",
+      "approvedDescription": "Cette expérience a été approuvée et publiée directement.",
+      "reactivatedTitle": "Suspension annulée",
+      "reactivatedDescription": "L’expérience a été réactivée avec succès."
+    },
+    "tabs": {
+      "overview": "Aperçu",
+      "info": "Informations",
+      "photos": "Photos",
+      "calendar": "Calendrier",
+      "bookings": "Réservations"
+    },
+    "about": {
+      "title": "À propos de l’expérience",
+      "category": "Catégorie",
+      "maxGroup": "Taille max",
+      "people": "{count, plural, one {# personne} other {# personnes}}",
+      "difficulty": "Niveau",
+      "difficultyModerate": "Modéré",
+      "languages": "Langues"
+    },
+    "pricing": {
+      "title": "Tarification & remises",
+      "perPerson": "/ personne",
+      "groupDiscount": "Remise groupe (>4 pers.)",
+      "discountValue": "-{percent} % ({price})",
+      "commission": "Commission DARNA",
+      "commissionIncluded": "{rate} % (incluse)",
+      "cancellation": "Politique d’annulation",
+      "cancellationFlexible": "Flexible ({hours} h avant)",
+      "prepayment": "Acompte requis",
+      "prepaymentSecure": "100 % sécurisé"
+    },
+    "schedule": {
+      "title": "Horaires & durée",
+      "totalDuration": "Durée totale",
+      "hours": "{count, plural, one {# heure} other {# heures}}",
+      "departureTimes": "Créneaux de départ",
+      "operatingDays": "Jours d’activité",
+      "everyDay": "Tous les jours",
+      "advanceNotice": "Réservation anticipée",
+      "hoursInAdvance": "{count, plural, one {# heure} other {# heures}} à l’avance"
+    },
+    "host": {
+      "title": "Organisateur / Guide",
+      "viewProfile": "Voir le profil",
+      "certified": "Guide certifié"
+    },
+    "description": {
+      "title": "Description",
+      "empty": "Aucune description fournie pour cette expérience."
+    },
+    "confirm": {
+      "deleteTitle": "Supprimer cette expérience ?",
+      "suspendTitle": "Suspendre cette expérience ?",
+      "description": "Vous êtes sur le point de modifier le statut de « {title} ». Cette action sera consignée dans le journal d’audit.",
+      "deleteLabel": "Supprimer",
+      "deleted": "Expérience supprimée"
+    },
+    "categoriesPage": {
+      "title": "Catégories d’expériences",
+      "subtitle": "Organisez les thématiques d’activités (Aventure, Culture, Gastronomie, etc.).",
+      "itemType": "catégorie"
+    },
+    "changeRequestsPage": {
+      "title": "Demandes de modification d’expériences",
+      "subtitle": "Validez les mises à jour de parcours, de tarifs ou de conditions soumises par les guides."
+    }
+  },
+  "experienceWizard": {
+    "title": "Ajouter une expérience",
+    "subtitle": "Décrivez votre activité, vos parcours et les tarifs pour accueillir les voyageurs.",
+    "backToList": "Retour à la liste",
+    "draftSavedAt": "Brouillon enregistré à {time}",
+    "saveDraft": "Enregistrer en brouillon",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "cancel": "Annuler",
+    "publish": "Publier l’expérience",
+    "locationValue": "{city}, wilaya {code}",
+    "steps": {
+      "general": "Informations générales",
+      "location": "Localisation",
+      "details": "Détails & programme",
+      "pricing": "Tarifs & disponibilités",
+      "media": "Photos & médias",
+      "rules": "Règles & validation"
+    },
+    "categories": {
+      "adventure": "Aventure & randonnée",
+      "culture": "Culture & histoire",
+      "nature": "Nature & faune",
+      "gastronomy": "Gastronomie & terroir",
+      "sea": "Mer & activités nautiques"
+    },
+    "difficultyOptions": {
+      "easy": "Facile (tous publics)",
+      "moderate": "Modéré (bonne condition)",
+      "hard": "Difficile (sportifs)",
+      "expert": "Expert (alpinisme/technique)"
+    },
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "groupSize": "Saisissez un nombre entier entre {min} et {max}.",
+      "languages": "Ajoutez au moins une langue.",
+      "price": "Saisissez un prix supérieur à 0.",
+      "priceChild": "Le tarif enfant ne peut pas être négatif.",
+      "summary": "{count, plural, one {# champ nécessite votre attention.} other {# champs nécessitent votre attention.}}"
+    },
+    "general": {
+      "heading": "Informations générales",
+      "title": "Titre de l’expérience",
+      "category": "Catégorie principale",
+      "subCategory": "Sous-catégorie",
+      "duration": "Durée",
+      "durationPlaceholder": "Ex. : 3 heures",
+      "difficulty": "Niveau de difficulté",
+      "groupSize": "Taille max du groupe",
+      "languages": "Langues proposées",
+      "languagesPlaceholder": "Ajouter une langue...",
+      "shortDescription": "Description courte",
+      "charCount": "{count}/{max} caractères",
+      "fullDescription": "Description détaillée",
+      "fullDescriptionPlaceholder": "Décrivez l’expérience en détail...",
+      "highlights": "Points forts de l’expérience",
+      "removeHighlight": "Supprimer le point fort : {item}"
+    },
+    "type": {
+      "heading": "Type d’expérience & mots-clés",
+      "legend": "Type d’expérience",
+      "tags": "Mots-clés (tags)",
+      "tagsPlaceholder": "Ajouter un tag...",
+      "options": {
+        "excursion": "Excursion / visite guidée",
+        "sport": "Activité sportive",
+        "workshop": "Atelier / cours",
+        "tasting": "Dégustation / gastronomie",
+        "other": "Autre expérience"
+      }
+    },
+    "location": {
+      "heading": "Adresse et localisation",
+      "country": "Pays",
+      "countryAlgeria": "Algérie",
+      "wilaya": "Wilaya",
+      "city": "Ville",
+      "address": "Adresse exacte ou point de rencontre",
+      "addressHint": "Sélectionnez l’emplacement exact sur la carte interactive ci-dessous."
+    },
+    "poi": {
+      "heading": "Points d’intérêt à proximité (max. {max})",
+      "add": "Ajouter un point",
+      "newName": "Nouveau point",
+      "newDistance": "1 km",
+      "newTime": "15 min",
+      "remove": "Supprimer le point d’intérêt : {name}"
+    },
+    "access": {
+      "heading": "Accès et transport",
+      "transportMode": "Moyen d’accès principal",
+      "instructions": "Instructions d’accès pour les participants"
+    },
+    "programme": {
+      "heading": "Programme détaillé & inclusions",
+      "stepTitle": "Étape {n} : {title}",
+      "items": {
+        "welcome": {
+          "title": "Accueil et briefing sécurité",
+          "description": "Rassemblement, vérification du matériel et consignes de parcours."
+        },
+        "walk": {
+          "title": "Marche le long du ruisseau",
+          "description": "Observation guidée de la flore et des singes magots."
+        },
+        "waterfall": {
+          "title": "Arrivée à la cascade & pause thé",
+          "description": "Moment de détente, baignade optionnelle et dégustation."
+        }
+      }
+    },
+    "pricing": {
+      "heading": "Tarifs par personne & réservation",
+      "adult": "Tarif adulte (DZD)",
+      "child": "Tarif enfant (DZD)"
+    },
+    "media": {
+      "heading": "Photos et vidéo de présentation",
+      "dropLabel": "Déposez les photos de l’expérience ici",
+      "hint": "Formats acceptés : JPG, PNG, MP4 jusqu’à {size} Mo"
+    },
+    "review": {
+      "heading": "Vérification avant soumission",
+      "activity": "Activité",
+      "category": "Catégorie",
+      "categoryValue": "{category} ({difficulty})",
+      "location": "Lieu",
+      "pricePerPerson": "Prix par personne"
+    },
+    "tips": {
+      "title": "Conseils pour votre expérience",
+      "unique": "Mettez en avant ce qui rend votre expérience unique en Algérie.",
+      "equipment": "Détaillez le matériel fourni et ce que les voyageurs doivent apporter.",
+      "photos": "Les photos en action avec des participants obtiennent 2 fois plus de clics."
+    },
+    "toast": {
+      "draftSaved": "Brouillon sauvegardé",
+      "draftSavedAt": "Enregistré à {time}.",
+      "created": "Expérience créée avec succès",
+      "createdDescription": "L’activité a été soumise à la modération DARNA."
+    }
+  },
+  "cars": {
+    "title": "Location de voitures",
+    "subtitle": "Gérez le parc automobile disponible à la location, les tarifs et les agences partenaires.",
+    "export": "Exporter",
+    "categories": "Catégories",
+    "add": "Ajouter une voiture",
+    "searchPlaceholder": "Rechercher par marque, modèle, agence...",
+    "empty": "Aucun véhicule trouvé.",
+    "itemLabel": "véhicules",
+    "fullScreen": "Plein écran",
+    "quickPreview": "Aperçu rapide",
+    "quickPreviewOf": "Aperçu rapide de {title}",
+    "openFullPage": "Ouvrir la fiche complète",
+    "openFullPageOf": "Ouvrir la fiche complète de {title}",
+    "reviewsCount": "({count, plural, one {# avis} other {# avis}})",
+    "locationValue": "{city}, {code}",
+    "rowSpecs": "{year} • Diesel • Boîte auto",
+    "kpi": {
+      "total": "Total des véhicules",
+      "available": "Disponibles",
+      "booked": "Réservées",
+      "maintenance": "En maintenance",
+      "unavailable": "Indisponibles",
+      "owners": "Agences & loueurs"
+    },
+    "columns": {
+      "vehicle": "Véhicule",
+      "category": "Catégorie",
+      "city": "Ville",
+      "pricePerDay": "Prix / jour"
+    },
+    "categoryOptions": {
+      "suv": "SUV & 4x4",
+      "cityCar": "Citadine",
+      "sedan": "Berline",
+      "compact": "Compacte",
+      "utility": "Utilitaire"
+    },
+    "filters": {
+      "category": "Catégorie",
+      "allCategories": "Toutes les catégories",
+      "wilaya": "Ville / Wilaya",
+      "allCities": "Toutes les villes",
+      "gearbox": "Boîte de vitesses",
+      "allGearboxes": "Toutes",
+      "allStatuses": "Tous les statuts"
+    },
+    "gearbox": {
+      "auto": "Automatique",
+      "manual": "Manuelle"
+    },
+    "statusOptions": {
+      "approved": "Disponible",
+      "pending": "En attente",
+      "maintenance": "En maintenance",
+      "rejected": "Indisponible"
+    },
+    "menu": {
+      "approve": "Approuver / Publier",
+      "markPending": "Mettre en attente",
+      "suspend": "Suspendre le véhicule",
+      "maintenance": "Mode maintenance (bientôt)",
+      "reject": "Refuser le véhicule"
+    },
+    "panel": {
+      "approveDirectly": "Approuver directement",
+      "reactivate": "Réactiver",
+      "maintenance": "Maintenance",
+      "edit": "Modifier"
+    },
+    "tabs": {
+      "details": "Détails",
+      "pricing": "Tarifs",
+      "photos": "Photos",
+      "amenities": "Équipements",
+      "bookings": "Réservations"
+    },
+    "about": {
+      "title": "À propos du véhicule",
+      "category": "Catégorie",
+      "year": "Année",
+      "fuel": "Carburant",
+      "fuelDiesel": "Diesel",
+      "transmission": "Transmission",
+      "capacity": "Capacité",
+      "seats": "{count, plural, one {# place} other {# places}}",
+      "airConditioning": "Climatisation",
+      "yes": "Oui"
+    },
+    "pricing": {
+      "title": "Tarification & remises",
+      "perDayUnit": "/ jour",
+      "perDay": "{price} / jour",
+      "perDayDiscounted": "{price} / jour (-{percent} %)",
+      "weeklyDiscount": "Remise semaine (-{percent} %)",
+      "monthlyDiscount": "Remise mensuelle (-{percent} %)",
+      "deposit": "Caution remboursable",
+      "mileage": "Kilométrage",
+      "mileageUnlimited": "Illimité (à partir de {days, plural, one {# jour} other {# jours}})"
+    },
+    "tiers": {
+      "range": "{min}–{max} jours",
+      "over": "{min} jours et plus"
+    },
+    "schedule": {
+      "title": "Horaires & conditions de location",
+      "pickup": "Heure de prise",
+      "fromTime": "À partir de {time}",
+      "return": "Heure de retour",
+      "beforeTime": "Avant {time}",
+      "minDuration": "Durée minimale",
+      "minDays": "{count, plural, one {# jour} other {# jours}} minimum",
+      "fuelPolicy": "Politique carburant",
+      "fullToFull": "Plein à plein"
+    },
+    "owner": {
+      "title": "Agence propriétaire",
+      "licensed": "Agence de location agréée"
+    },
+    "description": {
+      "title": "Description",
+      "empty": "Aucune description fournie pour ce véhicule."
+    },
+    "confirm": {
+      "deleteTitle": "Supprimer ce véhicule ?",
+      "description": "Vous allez modifier le statut du véhicule « {title} ».",
+      "deleted": "Véhicule supprimé"
+    },
+    "categoriesPage": {
+      "title": "Catégories de véhicules",
+      "subtitle": "Configurez les segments (SUV, citadines, berlines, utilitaires).",
+      "itemType": "catégorie"
+    },
+    "insurancePage": {
+      "title": "Formules d’assurance automobile",
+      "subtitle": "Gérez les contrats d’assurance tous risques, franchise et options de couverture.",
+      "itemType": "formule d’assurance"
+    },
+    "pricingPage": {
+      "title": "Grille tarifaire des locations",
+      "subtitle": "Configurez les remises dégressives selon la durée de réservation (1–3 j, 4–7 j, 15 j et plus).",
+      "itemType": "palier de durée"
+    }
+  },
+  "trips": {
+    "title": "Voyages organisés",
+    "subtitle": "Gérez les circuits touristiques et voyages organisés par les agences agréées.",
+    "export": "Exporter",
+    "categories": "Catégories",
+    "add": "Ajouter un voyage",
+    "searchPlaceholder": "Rechercher un voyage, une destination...",
+    "empty": "Aucun voyage trouvé.",
+    "itemLabel": "voyages",
+    "fullScreen": "Plein écran",
+    "quickPreview": "Aperçu rapide",
+    "quickPreviewOf": "Aperçu rapide de {title}",
+    "openFullPage": "Ouvrir la fiche complète",
+    "openFullPageOf": "Ouvrir la fiche complète de {title}",
+    "reviewsCount": "({count, plural, one {# avis} other {# avis}})",
+    "locationValue": "{city}, {code}",
+    "categoryFallback": "Circuit Sahara",
+    "duration": "{days, plural, one {# jour} other {# jours}} / {nights, plural, one {# nuit} other {# nuits}}",
+    "kpi": {
+      "total": "Tous les voyages",
+      "published": "Publiés",
+      "pending": "En attente",
+      "suspended": "Suspendus",
+      "refused": "Refusés",
+      "drafts": "Brouillons"
+    },
+    "columns": {
+      "trip": "Voyage",
+      "destination": "Destination",
+      "departure": "Date de départ",
+      "duration": "Durée",
+      "price": "Prix"
+    },
+    "categoryOptions": {
+      "sahara": "Sahara & Sud",
+      "cultural": "Circuit culturel",
+      "trekking": "Randonnée & bivouac",
+      "seaside": "Séjour balnéaire",
+      "deepSouth": "Circuit Grand Sud"
+    },
+    "filters": {
+      "destination": "Destination",
+      "allDestinations": "Toutes les destinations",
+      "category": "Catégorie",
+      "allCategories": "Toutes les catégories",
+      "allStatuses": "Tous les statuts"
+    },
+    "statusOptions": {
+      "published": "Publié",
+      "pending": "En attente",
+      "suspended": "Suspendu",
+      "refused": "Refusé",
+      "draft": "Brouillon"
+    },
+    "menu": {
+      "approve": "Approuver / Publier",
+      "markPending": "Mettre en attente",
+      "suspend": "Suspendre le voyage",
+      "reject": "Refuser le voyage"
+    },
+    "panel": {
+      "suspend": "Suspendre",
+      "approveDirectly": "Approuver directement",
+      "cancelSuspension": "Annuler la suspension",
+      "edit": "Modifier"
+    },
+    "toast": {
+      "approvedTitle": "Voyage approuvé",
+      "approvedDescription": "Ce voyage a été approuvé directement.",
+      "reactivatedTitle": "Suspension annulée",
+      "reactivatedDescription": "Le voyage a été réactivé avec succès."
+    },
+    "tabs": {
+      "details": "Détails",
+      "programme": "Programme",
+      "photos": "Photos",
+      "bookings": "Réservations"
+    },
+    "about": {
+      "title": "À propos du circuit",
+      "departureDate": "Date de départ",
+      "duration": "Durée",
+      "maxGroup": "Taille max",
+      "maxPeople": "Max {count, plural, one {# personne} other {# personnes}}",
+      "difficulty": "Niveau",
+      "difficultyModerate": "Modéré"
+    },
+    "pricing": {
+      "title": "Tarification & remises",
+      "perPerson": "/ personne",
+      "earlyBird": "Remise réservation anticipée",
+      "discountValue": "-{percent} % ({price})",
+      "commission": "Commission DARNA",
+      "commissionIncluded": "{rate} % (incluse)",
+      "deposit": "Acompte à la réservation",
+      "depositValue": "{percent} % à la commande",
+      "cancellation": "Politique d’annulation",
+      "cancellationValue": "Remboursement jusqu’à {days, plural, one {# jour} other {# jours}} avant"
+    },
+    "schedule": {
+      "title": "Horaires & rendez-vous",
+      "gathering": "Rassemblement",
+      "gatheringValue": "{time} (jour 1)",
+      "return": "Retour estimé",
+      "returnValue": "{time} (dernier jour)",
+      "dailyWalk": "Marche quotidienne",
+      "dailyWalkValue": "{min} à {max} heures / jour",
+      "meetingPoint": "Point de rencontre",
+      "meetingPointValue": "{city} centre"
+    },
+    "agency": {
+      "title": "Agence organisatrice",
+      "licensed": "Agence de voyages agréée"
+    },
+    "highlights": {
+      "title": "Points forts",
+      "bivouac": "Bivouac étoilé dans le désert du Tassili",
+      "fullBoard": "Pension complète & guides touaregs locaux",
+      "transport": "Transport 4x4 tout confort inclus"
+    },
+    "description": {
+      "title": "Description détaillée du circuit",
+      "empty": "Aucune description fournie pour ce voyage."
+    },
+    "confirm": {
+      "deleteTitle": "Supprimer ce voyage ?",
+      "suspendTitle": "Suspendre ce voyage ?",
+      "description": "Vous allez modifier le statut du voyage « {title} ».",
+      "deleted": "Voyage supprimé"
+    },
+    "categoriesPage": {
+      "title": "Catégories de voyages organisés",
+      "subtitle": "Gérez les types de circuits (Sahara, bivouac, séjours culturels).",
+      "itemType": "catégorie"
+    },
+    "bookingRequestsPage": {
+      "title": "Demandes de réservation de voyages",
+      "subtitle": "Examinez et approuvez les demandes de participation aux circuits de groupe."
+    }
+  },
+  "stats": {
+    "title": "Statistiques & rapports",
+    "subtitle": "Analyses de tendance, performances par vertical, répartition territoriale et exports comptables.",
+    "periodLast30": "Période : 30 derniers jours",
+    "exportCsv": "Exporter CSV",
+    "generalReport": "Rapport général DARNA",
+    "kpi": {
+      "grossVolume": "Volume d'affaires brut",
+      "netCommissions": "Commissions nettes DARNA",
+      "confirmedBookings": "Réservations confirmées",
+      "activeWilayas": "Wilayas actives"
+    },
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "providers": "Par type de prestataire",
+      "services": "Par service",
+      "wilayas": "Par wilaya",
+      "revenue": "Revenus & commissions",
+      "reports": "Rapports & exports"
+    },
+    "overview": {
+      "volumeTitle": "Évolution du volume de réservations",
+      "volumeChartLabel": "Volume mensuel de réservations, mois 1 à 12 : {values}",
+      "monthShort": "M{n}",
+      "avgGrowth": "Croissance mensuelle moyenne : +{value}",
+      "verticalTitle": "Répartition par vertical d'activité",
+      "verticals": {
+        "stays": "Hébergements (villas, appartements, hôtels)",
+        "trips": "Voyages organisés (circuits Sud & Nord)",
+        "cars": "Location de voitures (agences partenaires)",
+        "experiences": "Expériences & activités guidées"
+      }
+    },
+    "providers": {
+      "avgRate": "Taux de commission moyen : {rate}",
+      "individual": {
+        "label": "Hôtes particuliers",
+        "count": "{count, plural, one {{value} actif} other {{value} actifs}}"
+      },
+      "agency": {
+        "label": "Agences de voyages",
+        "count": "{count, plural, one {{value} certifiée} other {{value} certifiées}}"
+      },
+      "hotel": {
+        "label": "Hôtels & auberges",
+        "count": "{count, plural, one {{value} classé} other {{value} classés}}"
+      },
+      "carRental": {
+        "label": "Agences de location auto",
+        "count": "{count, plural, one {{value} flotte} other {{value} flottes}}"
+      }
+    },
+    "services": {
+      "stays": "Hébergements",
+      "trips": "Voyages organisés",
+      "cars": "Voitures",
+      "experiences": "Expériences",
+      "listingsCount": "{count, plural, one {{value} annonce} other {{value} annonces}}",
+      "tripsCount": "{count, plural, one {{value} circuit} other {{value} circuits}}",
+      "vehiclesCount": "{count, plural, one {{value} véhicule} other {{value} véhicules}}",
+      "activitiesCount": "{count, plural, one {{value} activité} other {{value} activités}}",
+      "avgRating": "Note moyenne des voyageurs : ★ {value}",
+      "fillRate": "Taux de remplissage : {value}",
+      "availability": "Disponibilité : {value} prêts",
+      "satisfaction": "Satisfaction : {value} recommandent"
+    },
+    "wilayas": {
+      "title": "Top des destinations touristiques en Algérie",
+      "cols": {
+        "wilaya": "Wilaya",
+        "listings": "Annonces actives",
+        "bookings30d": "Réservations (30 jours)",
+        "volume": "Volume généré",
+        "share": "Part de marché"
+      }
+    },
+    "revenue": {
+      "title": "Ventilation des revenus DARNA",
+      "subtitle": "Revenus nets issus des commissions de la plateforme, hors fonds séquestres reversés aux prestataires.",
+      "items": {
+        "individual": "Commissions — hôtes particuliers",
+        "agency": "Commissions — agences de voyages",
+        "carRental": "Commissions — loueurs de voitures"
+      }
+    },
+    "reports": {
+      "export": "Exporter",
+      "exportAria": "Exporter : {report}",
+      "items": {
+        "Comptabilite_Mensuelle": {
+          "title": "Grand livre financier mensuel",
+          "desc": "Réservations brutes, commissions DARNA, règlements CCP et décomptes de TVA."
+        },
+        "Declaration_Tourisme": {
+          "title": "Déclaration fiscale touristique (Algérie)",
+          "desc": "Document officiel conforme aux normes du ministère du Tourisme et de l'Artisanat."
+        },
+        "Audit_Solvabilite": {
+          "title": "Audit de solvabilité des prestataires",
+          "desc": "Soldes négatifs, réclamations ouvertes et garanties séquestres."
+        },
+        "Performance_Territoriale": {
+          "title": "Performance régionale et par wilaya",
+          "desc": "Répartition des nuitées, prix moyens et origines des voyageurs."
+        }
+      }
+    }
+  },
+  "help": {
+    "title": "Centre d'aide & formation DARNA",
+    "subtitle": "Guides opérationnels pas à pas, définitions métiers et guide de navigation.",
+    "open": "Ouvrir",
+    "kpi": {
+      "guides": "Guides opérationnels",
+      "guidesValue": "{count, plural, one {# fiche} other {# fiches}}",
+      "glossary": "Glossaire DARNA",
+      "glossaryValue": "{count, plural, one {# définition} other {# définitions}}",
+      "migration": "Où est passée ma page ?",
+      "migrationValue": "{count, plural, one {# correspondance} other {# correspondances}}"
+    },
+    "tabs": {
+      "guides": "Guides pratiques pas à pas",
+      "glossary": "Glossaire des termes métiers",
+      "migration": "Où est passée ma page ?"
+    },
+    "guides": {
+      "validateProviders": {
+        "title": "Comment valider ou refuser un nouveau prestataire ?",
+        "body": "Consultez les pièces d'identité, le registre de commerce ou la licence d'agence de voyage. Chaque document dispose d'un bouton de vérification individuelle avant l'approbation définitive.",
+        "cta": "Accéder à la validation des prestataires"
+      },
+      "refunds": {
+        "title": "Comment traiter un remboursement suite à une annulation ?",
+        "body": "Dans la liste des réservations, ouvrez le panneau latéral et vérifiez la politique d'annulation (plus de 48 h avant = 100 %). Cliquez sur « Rembourser » pour enregistrer la ligne au grand livre.",
+        "cta": "Accéder à la gestion des réservations"
+      },
+      "commissions": {
+        "title": "Comment fonctionnent les commissions et le séquestre ?",
+        "body": "Les fonds versés par les voyageurs sont conservés sous séquestre jusqu'à la fin de la prestation. Les commissions (10 % à 18 %) sont automatiquement retenues lors du virement au prestataire.",
+        "cta": "Configurer les taux de commission"
+      },
+      "staysVsHotels": {
+        "title": "Hébergement particulier ou hôtel / auberge ?",
+        "body": "Les hôtels et auberges de jeunesse disposent de plusieurs types de chambres (chambre privée ou lit en dortoir) et sont classés par étoiles ou par licence hôtelière officielle.",
+        "cta": "Voir le catalogue des hébergements"
+      }
+    },
+    "glossaryTitle": "Terminologie officielle DARNA",
+    "terms": {
+      "dzd": {
+        "term": "DZD (dinar algérien)",
+        "definition": "Monnaie unique de tarification et de versement sur la plateforme. Toutes les écritures comptables utilisent le DZD."
+      },
+      "escrow": {
+        "term": "Séquestre",
+        "definition": "Mécanisme de garantie qui retient les montants payés jusqu'au lendemain de l'arrivée ou du début de l'activité."
+      },
+      "individualHost": {
+        "term": "Hôte individuel (particulier)",
+        "definition": "Personne physique louant une chambre chez l'habitant, une villa ou un appartement meublé."
+      },
+      "travelAgency": {
+        "term": "Agence de voyage",
+        "definition": "Structure professionnelle titulaire d'une licence agréée par le ministère du Tourisme pour organiser des circuits."
+      }
+    }
+  },
+  "whereDidItGo": {
+    "title": "Où est passée mon ancienne page ?",
+    "subtitle": "Pour vous faire gagner du temps, la navigation est simplifiée à {count} rubriques principales. Retrouvez ici tous les anciens accès et leur nouvel emplacement.",
+    "searchLabel": "Rechercher une ancienne page",
+    "searchPlaceholder": "Tapez l'ancien nom de la page ou un mot-clé…",
+    "tableCaption": "Anciennes pages et leur nouvel emplacement",
+    "columns": {
+      "oldName": "Ancien nom",
+      "newName": "Nouveau nom",
+      "location": "Nouvel emplacement",
+      "why": "Pourquoi ce changement ?",
+      "link": "Accès direct"
+    },
+    "noResults": "Aucune page ne correspond à « {query} ».",
+    "jumpThere": "Y aller",
+    "jumpToLabel": "Aller à {name}",
+    "items": {
+      "guests": {
+        "oldName": "Utilisateurs / Gestion des utilisateurs",
+        "newName": "Voyageurs",
+        "location": "Menu principal (n° 4)",
+        "description": "Renommé « Voyageurs » pour parler le langage du terrain. Permet de consulter les comptes voyageurs et leurs réservations."
+      },
+      "onboarding": {
+        "oldName": "Configuration de l'onboarding",
+        "newName": "Étapes d'inscription des hôtes",
+        "location": "Menu > Gérer > Étapes d'inscription des hôtes",
+        "description": "Configurez les pièces d'identité et étapes requises pour chaque type d'hôte (particulier, agence, hôtel, auberge)."
+      },
+      "auditLog": {
+        "oldName": "Journal d'audit",
+        "newName": "Historique des actions",
+        "location": "Menu > Gérer > Paramètres > Historique des actions",
+        "description": "Historique complet de toutes les décisions de modération, validations et recharges de portefeuilles."
+      },
+      "money": {
+        "oldName": "Trésorerie & finance",
+        "newName": "Finances",
+        "location": "Menu principal (n° 7)",
+        "description": "Portefeuilles des hôtes, recharges manuelles CCP / virement, commissions DARNA et validation des versements."
+      },
+      "team": {
+        "oldName": "Équipe & rôles",
+        "newName": "Équipe",
+        "location": "Menu > Gérer > Paramètres > Équipe",
+        "description": "Gestion des comptes modérateurs, agents de support et responsables financiers."
+      },
+      "disputes": {
+        "oldName": "Arbitrage des litiges",
+        "newName": "Litiges de réservations",
+        "location": "Menu > Réservations (onglet Litiges) ou carte d'accueil",
+        "description": "Résoudre les conflits de séjour entre hôtes et voyageurs par un remboursement ou le maintien du versement."
+      }
+    }
+  },
+  "glossary": {
+    "gmv": {
+      "term": "GMV / Volume brut",
+      "plainTerm": "Argent payé par les voyageurs",
+      "definition": "Le montant total en dinars algériens réglé par les voyageurs pour leurs séjours et activités.",
+      "howItIsCounted": "Somme des tarifs de nuitées, frais de ménage et frais de service sur les réservations confirmées."
+    },
+    "commission": {
+      "term": "Revenus de commission",
+      "plainTerm": "Revenus de DARNA",
+      "definition": "La commission conservée par DARNA pour faire fonctionner le service, le support et la promotion.",
+      "howItIsCounted": "Pourcentage de commission (ex. 10 % à 15 %) appliqué à chaque réservation."
+    },
+    "bookingsCount": {
+      "term": "Total des réservations",
+      "plainTerm": "Réservations",
+      "definition": "Nombre total de séjours réservés par les voyageurs (villas, hôtels ou circuits).",
+      "howItIsCounted": "Total des réservations confirmées, en cours ou terminées sur la période choisie."
+    },
+    "newHosts": {
+      "term": "Nouveaux hôtes",
+      "plainTerm": "Nouveaux hôtes",
+      "definition": "Nouveaux partenaires algériens (particuliers, agences, hôtels, auberges) ayant rejoint la plateforme.",
+      "howItIsCounted": "Nombre de nouveaux profils d'hôtes validés durant la période sélectionnée."
+    },
+    "occupancy": {
+      "term": "Taux d'occupation",
+      "plainTerm": "Nuits réservées sur les nuits disponibles",
+      "definition": "Pourcentage des nuits ouvertes au calendrier qui ont effectivement fait l'objet d'un séjour.",
+      "howItIsCounted": "(Nuits réservées ÷ total des nuits ouvertes à la réservation) × 100."
+    },
+    "cancellationRate": {
+      "term": "Taux d'annulation",
+      "plainTerm": "Réservations annulées",
+      "definition": "Proportion des réservations annulées avant l'arrivée du voyageur."
+    },
+    "payout": {
+      "term": "Versement",
+      "plainTerm": "Versement à l'hôte",
+      "definition": "Fonds nets versés sur le compte bancaire ou CCP du partenaire après déduction de la commission DARNA."
+    },
+    "auditLog": {
+      "term": "Journal d'audit",
+      "plainTerm": "Historique des actions",
+      "definition": "Relevé chronologique et infalsifiable de toutes les décisions prises par l'équipe d'administration."
+    },
+    "onboardingConfig": {
+      "term": "Configuration de l'onboarding",
+      "plainTerm": "Étapes d'inscription des hôtes",
+      "definition": "La liste des documents et informations que chaque catégorie d'hôte doit fournir avant la mise en ligne."
+    },
+    "pendingReview": {
+      "term": "En attente de vérification",
+      "plainTerm": "En attente de votre décision",
+      "definition": "Un dossier ou une annonce en attente de vérification par un modérateur."
+    },
+    "users": {
+      "term": "Utilisateurs",
+      "plainTerm": "Voyageurs",
+      "definition": "Voyageurs algériens et internationaux qui réservent des séjours et circuits sur DARNA."
+    }
+  },
+  "layout": {
+    "skipToContent": "Aller au contenu principal",
+    "localeSwitcher": {
+      "groupLabel": "Langue",
+      "switchTo": {
+        "en": "Passer en anglais",
+        "fr": "Passer en français",
+        "ar": "Passer en arabe"
+      }
+    }
+  },
+  "training": {
+    "badge": "Mode entraînement",
+    "start": "Mode entraînement",
+    "stop": "Quitter le mode entraînement",
+    "bannerLabel": "Bannière du mode entraînement",
+    "bannerMessage": "Mode entraînement actif : aucune action effectuée ici n’affecte les vraies données. Entraînez-vous en toute sécurité !",
+    "exitAndReset": "Quitter et réinitialiser"
+  },
+  "pageHelp": {
+    "sections": {
+      "whatFor": "À quoi sert cette page ?",
+      "commonTasks": "Tâches courantes",
+      "words": "Vocabulaire employé ici",
+      "shortcuts": "Raccourcis clavier utiles"
+    },
+    "replayTour": "Relancer la visite guidée ({count} étapes)",
+    "whereDidMyPageGo": "Où est passée mon ancienne page ? (Guide)",
+    "shortcuts": {
+      "quickSearch": "Recherche rapide partout",
+      "openHelp": "Ouvrir ce panneau d’aide",
+      "closeDialog": "Fermer la fenêtre ou le panneau",
+      "quickApprove": "Approuver rapidement l’élément sélectionné",
+      "openReject": "Ouvrir la fenêtre de refus",
+      "commandSearch": "Ouvrir la recherche globale",
+      "toggleHelp": "Afficher ou masquer cette aide"
+    },
+    "terms": {
+      "trainingMode": {
+        "term": "Mode entraînement",
+        "definition": "Un environnement d’essai où vos actions n’altèrent pas les vraies données. Idéal pour apprendre."
+      }
+    },
+    "pages": {
+      "home": {
+        "title": "Aide — Tableau de bord",
+        "whatFor": "Vous offre une vue claire en 10 secondes sur les validations en attente et la santé de DARNA.",
+        "tasks": {
+          "reviewHosts": {
+            "title": "Examiner les candidatures d’hôtes",
+            "steps": {
+              "s1": "Regardez la première carte de « Nécessite votre attention »",
+              "s2": "Cliquez sur le bouton vert « Examiner les hôtes »",
+              "s3": "Vérifiez les pièces d’identité et cliquez sur « Approuver l’hôte »"
+            }
+          },
+          "monthlyEarnings": {
+            "title": "Vérifier les revenus et réservations du mois",
+            "steps": {
+              "s1": "Vérifiez que le filtre de période est sur « 30 derniers jours »",
+              "s2": "Consultez les 4 cartes : Réservations, Argent payé par les voyageurs, Revenus de DARNA, Nouveaux hôtes",
+              "s3": "Survolez l’icône (?) d’une carte pour voir le mode de calcul"
+            }
+          }
+        }
+      },
+      "approvals": {
+        "title": "Aide — À vérifier (boîte de validation)",
+        "whatFor": "Votre espace centralisé pour valider ou refuser les nouveaux hôtes et les annonces en attente.",
+        "tasks": {
+          "approveHost": {
+            "title": "Approuver un hôte vérifié",
+            "steps": {
+              "s1": "Cliquez sur la ligne de l’hôte pour ouvrir son volet de vérification",
+              "s2": "Vérifiez sa carte d’identité algérienne et ses documents professionnels",
+              "s3": "Cliquez sur le bouton vert « Approuver l’hôte »",
+              "s4": "Un message de confirmation s’affiche avec l’option Annuler pendant 8 secondes"
+            }
+          },
+          "rejectWithReason": {
+            "title": "Refuser avec un motif explicatif",
+            "steps": {
+              "s1": "Cliquez sur « Refuser » sur la ligne de l’hôte ou de l’annonce",
+              "s2": "Choisissez un motif prédéfini (ex. : « Pièce d’identité illisible »)",
+              "s3": "Ajoutez un message bienveillant pour indiquer à l’hôte quoi renvoyer",
+              "s4": "Cliquez sur « Confirmer le refus »"
+            }
+          }
+        }
+      },
+      "default": {
+        "title": "Aide DARNA Admin",
+        "whatFor": "Cette interface est conçue pour une administration simple et sûre. Vous pouvez toujours annuler les modifications réversibles.",
+        "tasks": {
+          "findRecord": {
+            "title": "Retrouver n’importe quel élément rapidement",
+            "steps": {
+              "s1": "Appuyez sur ⌘K ou cliquez sur la barre de recherche en haut",
+              "s2": "Tapez un nom d’hôte, de voyageur ou une wilaya",
+              "s3": "Appuyez sur Entrée pour y accéder immédiatement"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tour": {
+    "stepCounter": "Étape {current} sur {total}",
+    "skip": "Passer la visite",
+    "back": "Précédent",
+    "next": "Suivant",
+    "getStarted": "C’est parti !",
+    "steps": {
+      "welcome": {
+        "title": "Bienvenue sur la console d’administration DARNA",
+        "description": "Conçue pour une modération simple et sereine. Comprenez l’état de DARNA en moins de 10 secondes et accédez à chaque tâche en 3 clics ou moins."
+      },
+      "home": {
+        "title": "1. Accueil & ce qui nécessite votre attention",
+        "description": "Le haut de l’accueil regroupe vos priorités du jour (hôtes en attente, annonces à vérifier, litiges). Chaque carte vous mène directement à la file filtrée en un clic."
+      },
+      "approvals": {
+        "title": "2. Boîte de validation « À vérifier »",
+        "description": "Le menu « À vérifier » centralise toutes les demandes en attente, avec un badge de décompte. Examinez les pièces justificatives, puis approuvez ou refusez avec un motif clair."
+      },
+      "search": {
+        "title": "3. Recherche rapide partout (⌘K)",
+        "description": "Appuyez sur ⌘K ou cliquez sur la barre de recherche pour trouver immédiatement un hôte, un voyageur, une réservation ou une wilaya."
+      },
+      "help": {
+        "title": "4. Multilingue & aide contextuelle (?)",
+        "description": "Passez en français, en arabe (de droite à gauche) ou en anglais. Appuyez sur ? ou ouvrez l’aide sur n’importe quelle page pour voir le mode d’emploi et les définitions."
+      }
+    }
+  },
+  "uiKit": {
+    "avatar": "Avatar",
+    "required": "obligatoire",
+    "breadcrumbs": {
+      "label": "Fil d’Ariane",
+      "root": "Admin"
+    },
+    "chipInput": {
+      "placeholder": "Ajouter…",
+      "add": "Ajouter",
+      "remove": "Supprimer {value}",
+      "count": "{count} sur {max} éléments"
+    },
+    "document": {
+      "toCheck": "À vérifier",
+      "valid": "Validé",
+      "rejected": "Refusé",
+      "missing": "Manquant",
+      "preview": "Aperçu de {title}",
+      "download": "Télécharger {title}",
+      "approve": "Valider",
+      "reject": "Refuser"
+    },
+    "dropzone": {
+      "label": "Téléverser des fichiers",
+      "hint": "PNG, JPG ou PDF jusqu’à 10 Mo",
+      "photoAlt": "Photo {index}",
+      "removePhoto": "Supprimer la photo {index}",
+      "add": "Ajouter",
+      "addMore": "Ajouter d’autres fichiers"
+    },
+    "filterBar": {
+      "searchPlaceholder": "Rechercher…",
+      "searchLabel": "Rechercher",
+      "moreFilters": "Plus de filtres",
+      "openFilters": "Ouvrir les filtres",
+      "filters": "Filtres",
+      "activeFilters": "Filtres actifs :",
+      "activeFiltersLabel": "Filtres actifs",
+      "removeFilter": "Retirer le filtre {label}",
+      "clearAll": "Tout effacer",
+      "dialogTitle": "Filtres de recherche",
+      "apply": "Appliquer",
+      "shortcutHint": "Appuyez sur / pour rechercher",
+      "results": "{count, plural, one {<b>{formatted}</b> résultat} other {<b>{formatted}</b> résultats}}"
+    },
+    "carousel": {
+      "enlarge": "Agrandir l’image",
+      "previous": "Image précédente",
+      "next": "Image suivante",
+      "counter": "Image {current} sur {total}",
+      "imageAlt": "{alt} – image {current} sur {total}",
+      "defaultAlt": "Image",
+      "preview": "Aperçu de l’image",
+      "closePreview": "Fermer l’aperçu"
+    },
+    "kpi": {
+      "help": "À propos de « {title} »",
+      "howCounted": "Calcul :"
+    },
+    "livePreview": {
+      "title": "Aperçu de l’annonce",
+      "live": "Aperçu direct",
+      "untitled": "Titre de l’annonce",
+      "sampleLocation": "Hydra, Alger",
+      "sampleRating": "{rating} ({count, plural, one {# avis} other {# avis}})"
+    },
+    "map": {
+      "selectedPoint": "Point sélectionné",
+      "mapType": "Type de carte",
+      "map": "Carte",
+      "satellite": "Satellite",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "clearAddress": "Effacer l’adresse",
+      "sampleAddress": "Tassili n'Ajjer, Djanet, Illizi",
+      "label": "Carte de localisation"
+    },
+    "multiSelect": {
+      "placeholder": "Sélectionner des options…",
+      "selected": "{count, plural, one {# sélectionné} other {# sélectionnés}}",
+      "clearAll": "Effacer la sélection",
+      "search": "Rechercher…",
+      "searchLabel": "Rechercher une option",
+      "selectAll": "Tout sélectionner ({count})",
+      "noMatches": "Aucun résultat"
+    },
+    "pageHeader": {
+      "export": "Exporter",
+      "moreActions": "Plus d’actions"
+    },
+    "pagination": {
+      "nav": "Pagination",
+      "items": "éléments",
+      "summary": "Affichage de <b>{start}</b> à <b>{end}</b> sur <b>{total}</b> {label}",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "previousPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "firstPage": "Première page",
+      "lastPage": "Dernière page",
+      "page": "Page {page}",
+      "pageOf": "Page {page} sur {total}",
+      "perPage": "{size} / page",
+      "pageSize": "Éléments par page"
+    },
+    "phone": {
+      "countryCode": "Algérie (+213)"
+    },
+    "richText": {
+      "placeholder": "Rédigez une description détaillée…",
+      "toolbar": "Mise en forme du texte",
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "bulletList": "Liste à puces",
+      "numberedList": "Liste numérotée",
+      "alignStart": "Aligner au début",
+      "alignCenter": "Centrer",
+      "charCount": "{count} sur {max} caractères"
+    },
+    "checklist": {
+      "title": "Progression de la création",
+      "done": "Terminé",
+      "current": "Étape en cours"
+    },
+    "range": {
+      "min": "Min",
+      "max": "Max",
+      "minimum": "Valeur minimale",
+      "maximum": "Valeur maximale"
+    },
+    "status": {
+      "fallback": "Statut"
+    },
+    "stepper": {
+      "viewAll": "Voir toutes les étapes",
+      "stepOf": "Étape {current} sur {total}",
+      "steps": "Étapes",
+      "allSteps": "Toutes les étapes",
+      "done": "Terminé",
+      "current": "En cours",
+      "progress": "Progression de l’assistant"
+    },
+    "tips": {
+      "title": "Conseils pour une bonne annonce"
+    },
+    "types": {
+      "host": "Hôte",
+      "hotel": "Hôtel",
+      "hostel": "Auberge",
+      "travelAgency": "Agence de voyage",
+      "experience": "Expérience",
+      "rentalAgency": "Agence de location",
+      "aventure": "Aventure",
+      "culture": "Culture",
+      "nature": "Nature",
+      "gastronomie": "Gastronomie",
+      "mer": "Mer",
+      "suv": "SUV",
+      "citadine": "Citadine",
+      "berline": "Berline",
+      "compacte": "Compacte",
+      "utilitaire": "Utilitaire",
+      "villa": "Villa",
+      "appartement": "Appartement",
+      "maison": "Maison",
+      "bungalow": "Bungalow",
+      "chalet": "Chalet",
+      "studio": "Studio"
+    },
+    "bulk": {
+      "toolbar": "Actions groupées",
+      "selected": "{count, plural, one { sélectionné} other { sélectionnés}}",
+      "selectAllMatching": "Sélectionner les {count} résultats correspondants",
+      "clearSelection": "Effacer la sélection"
+    }
+  },
+  "ui": {
+    "closeDialog": "Fermer la fenêtre",
+    "closePanel": "Fermer le panneau",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "typeToConfirm": "Pour continuer, saisissez <strong>{value}</strong> ci-dessous :",
+    "advancedFilters": "Filtres avancés",
+    "activeFilterCount": "{count, plural, one {{count} actif} other {{count} actifs}}",
+    "reset": "Réinitialiser",
+    "applyFilters": "Appliquer les filtres",
+    "moreOptions": "Plus d’options",
+    "undo": "Annuler l’action",
+    "dismissNotification": "Fermer la notification",
+    "notifications": "Notifications"
+  },
+  "errors": {
+    "title": "Une erreur est survenue",
+    "description": "Cette page n’a pas pu s’afficher. Vous pouvez réessayer ou revenir au tableau de bord. Si le problème persiste, contactez l’équipe technique en indiquant la référence ci-dessous.",
+    "reference": "Référence :",
+    "retry": "Réessayer",
+    "backToDashboard": "Retour au tableau de bord",
+    "loading": "Chargement…",
+    "notFoundTitle": "Page introuvable",
+    "notFoundDescription": "Cette page ou cet élément n’existe pas, ou il a été supprimé."
+  },
+  "dataTable": {
+    "empty": "Aucun élément trouvé",
+    "selectRow": "Sélectionner {label}",
+    "selectAll": "Sélectionner toutes les lignes affichées"
+  },
+  "meta": {
+    "titleTemplate": "%s · DARNA Admin",
+    "defaultTitle": "DARNA Admin",
+    "description": "Console d’administration et de modération de la plateforme DARNA",
+    "titles": {
+      "dashboard": "Tableau de bord",
+      "login": "Connexion",
+      "approvals": "File de validation",
+      "bookings": "Réservations",
+      "cars": "Voitures",
+      "cars_categories": "Catégories de voitures",
+      "cars_insurance": "Formules d’assurance",
+      "cars_new": "Ajouter une voiture",
+      "cars_pricing": "Paliers tarifaires des voitures",
+      "categories": "Catégories",
+      "experiences": "Expériences",
+      "experiences_categories": "Catégories d’expériences",
+      "experiences_changerequests": "Demandes de modification des expériences",
+      "experiences_new": "Ajouter une expérience",
+      "help": "Centre d’aide",
+      "hosts": "Partenaires et hôtes",
+      "hostDetail": "Fiche de l’hôte",
+      "listings": "Annonces",
+      "listingDetail": "Détail de l’annonce",
+      "listingReview": "Examen de l’annonce",
+      "messages": "Messages",
+      "messages_notifications": "Notifications",
+      "messages_templates": "Modèles de messages",
+      "moderation_providers": "Validation des prestataires",
+      "network": "Explorateur du réseau",
+      "payments": "Paiements et finances",
+      "payments_commissions": "Commissions",
+      "payments_payouts": "Versements",
+      "payments_refunds": "Remboursements",
+      "payments_transactions": "Transactions",
+      "payments_wallets": "Portefeuilles des hôtes",
+      "promotions": "Promotions",
+      "promotions_featured": "Annonces mises en avant",
+      "reports": "Rapports",
+      "reviews": "Avis",
+      "reviews_disputes": "Litiges",
+      "reviews_reports": "Avis signalés",
+      "search": "Recherche",
+      "settings": "Paramètres de la plateforme",
+      "settings_auditlog": "Journal d’audit",
+      "settings_commissions": "Paramètres des commissions",
+      "settings_languages": "Langues",
+      "settings_notifications": "Paramètres des notifications",
+      "settings_onboarding": "Parcours d’inscription des hôtes",
+      "settings_security": "Sécurité",
+      "settings_team": "Équipe et rôles",
+      "stats": "Statistiques",
+      "stats_providers": "Statistiques des prestataires",
+      "stats_reports": "Rapports statistiques",
+      "stats_revenue": "Revenus",
+      "stats_services": "Statistiques par service",
+      "stats_wilayas": "Statistiques par wilaya",
+      "stays": "Hébergements",
+      "stays_categories": "Catégories d’hébergements",
+      "stays_changerequests": "Demandes de modification des hébergements",
+      "stays_new": "Ajouter un hébergement",
+      "trips": "Voyages",
+      "trips_bookingrequests": "Demandes de réservation de voyages",
+      "trips_categories": "Catégories de voyages",
+      "trips_new": "Ajouter un voyage",
+      "users": "Utilisateurs",
+      "users_guests": "Voyageurs",
+      "wherediditgo": "Où est passée ma page ?"
+    }
   }
 }

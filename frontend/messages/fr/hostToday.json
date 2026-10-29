@@ -1,0 +1,57 @@
+{
+  "eyebrowAgency": "Centre de pilotage de l’agence",
+  "eyebrowIndividual": "Tableau de bord hôte",
+  "greeting": "Marhaba, {name} !",
+  "hostFallback": "Hôte",
+  "subtitle": "Votre point quotidien sur les arrivées, les demandes en attente et les performances de réservation.",
+  "createListing": "Créer une annonce",
+  "performanceTitle": "Aperçu des performances",
+  "periodLabel": "Période",
+  "period": {
+    "month": "Ce mois-ci",
+    "30days": "30 derniers jours",
+    "year": "Depuis le début de l’année"
+  },
+  "kpi": {
+    "grossEarnings": "Revenus bruts de l’hôte",
+    "earningsTrend": "{change} par rapport à la période précédente (≈ {eur})",
+    "occupancyRate": "Taux d’occupation",
+    "occupancyNote": "{booked} nuits réservées sur {available} disponibles",
+    "activeBookings": "Réservations actives",
+    "activeBookingsNote": "Séjours et locations de véhicules confirmés",
+    "overallRating": "Note globale",
+    "ratingNote": "{count, plural, =0 {Aucun avis pour le moment} one {Sur # avis de voyageur} other {Sur # avis de voyageurs}}",
+    "earningsEur": "≈ {eur}"
+  },
+  "pendingTitle": "Action requise : demandes de réservation en attente ({count})",
+  "requestFor": "Demande de réservation pour {title}",
+  "requestDetails": "Dates : <strong>{dates}</strong> · {guests, plural, one {# voyageur} other {# voyageurs}} · Versement : <strong>{payout}</strong>",
+  "acceptRequest": "Accepter la demande",
+  "toast": {
+    "accepted": "Réservation acceptée. Le voyageur a été confirmé.",
+    "declined": "Réservation refusée.",
+    "updateFailed": "Impossible de mettre à jour le statut de la réservation."
+  },
+  "todayTitle": "Séjours et arrivées du jour",
+  "noCheckIns": "Aucune arrivée prévue aujourd’hui.",
+  "checkInAt": "Arrivée à {time}",
+  "stayDetails": "{count, plural, one {# voyageur} other {# voyageurs}} · Arrivée confirmée",
+  "currentlyHosting": "Séjours en cours ({count})",
+  "stayEnds": "Fin du séjour le {date}",
+  "inHouse": "Sur place",
+  "recentReviews": "Avis récents des voyageurs",
+  "noReviews": "Aucun avis pour le moment.",
+  "quickActions": "Actions rapides",
+  "quick": {
+    "calendar": "Bloquer des dates ou ajuster les prix",
+    "listings": "Gérer vos annonces ({count})",
+    "messages": "Consulter les messages des voyageurs",
+    "payout": "Compte de versement et RIB"
+  },
+  "tip": {
+    "eyebrow": "Conseil aux hôtes algériens",
+    "title": "L’hiver, c’est la haute saison au Sahara",
+    "body": "La demande d’expéditions et de locations de 4x4 autour de Djanet et Taghit culmine entre novembre et mars. Ajustez les prix de votre calendrier en conséquence.",
+    "cta": "Ouvrir le calendrier des prix"
+  }
+}

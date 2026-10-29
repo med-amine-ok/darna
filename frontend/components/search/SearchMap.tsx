@@ -4,8 +4,11 @@ import React, { useEffect, useMemo, useState, useRef, useCallback } from "react"
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import Image from "next/image";
-import { useRouter } from "@/navigation";
-import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { formatDzd } from "@/lib/currency";
+import { formatRating, intlLocale } from "@/lib/i18n/date-locale";
+import { priceSuffixKey } from "@/components/listing/cardLabels";
 import {
   BrandCloseIcon,
   BrandChevronLeftIcon,
@@ -18,9 +21,10 @@ import {
   BrandPinIcon,
 } from "@/components/icons";
 import { Listing, User, Trip, ListingVertical } from "@/types";
-import { getTripCoordinates } from "@/lib/data/trips";
+import { getTripCoordinates } from "@/lib/trip-coordinates";
 import HeartButton from "@/components/HeartButton";
 import PriceDisplay from "@/components/common/PriceDisplay";
+import { useShowTotalPrice } from "@/hook/useShowTotalPrice";
 import "leaflet/dist/leaflet.css";
 
 export interface MapBounds {
@@ -69,7 +73,12 @@ function getDistanceKm(coord1: [number, number], coord2: [number, number]): numb
   return R * c;
 }
 
-export function isValidLatLng(coords: any): coords is [number, number] {
+/** Escapes text interpolated into Leaflet divIcon HTML strings. */
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
+}
+
+export function isValidLatLng(coords: unknown): coords is [number, number] {
   if (!coords || !Array.isArray(coords) || coords.length !== 2) return false;
   const lat = Number(coords[0]);
   const lng = Number(coords[1]);
@@ -260,7 +269,7 @@ function MapController({
     const container = map.getContainer();
     if (!container || typeof ResizeObserver === "undefined") return;
 
-    let resizeTimer: any = null;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
@@ -342,7 +351,7 @@ function MapController({
         }
       }
     } catch (err) {
-      console.warn("Map fly navigation prevented invalid coordinate:", err);
+      void err; // Invalid coordinate: skip the fly animation.
     }
   }, [map, center, zoom, bounds, selectedCoords, mapFocus]);
 
@@ -391,6 +400,21 @@ interface SearchMapProps {
   className?: string;
 }
 
+/** Star + average rating, or "New" when the item has no rating yet. */
+function InlineRating({ rating }: { rating?: number }) {
+  const locale = useLocale();
+  const t = useTranslations("listing");
+  const value = formatRating(rating, locale);
+  if (!value) return <>{t("ratingNew")}</>;
+  return (
+    <>
+      <BrandStarIcon size={13} className="fill-accent text-accent" />
+      <span className="sr-only">{t("ratingLabel", { rating: value })}</span>
+      <span aria-hidden="true">{value}</span>
+    </>
+  );
+}
+
 export default function SearchMap({
   listings = [],
   trips = [],
@@ -407,7 +431,11 @@ export default function SearchMap({
   className = "w-full h-full",
 }: SearchMapProps) {
   const router = useRouter();
-  const tNav = useTranslations("nav");
+  const [showTotalPrice] = useShowTotalPrice();
+  const locale = useLocale();
+  const t = useTranslations("search.map");
+  const tListing = useTranslations("listing");
+  const tCommon = useTranslations("common");
 
   const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const [internalHoveredId, setInternalHoveredId] = useState<string | null>(null);
@@ -463,6 +491,24 @@ export default function SearchMap({
     setDragOffset(0);
   }, [activeItem?.data.id]);
 
+  // Escape closes the floating preview card.
+  useEffect(() => {
+    if (!activeItem) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setClickedCardId(null);
+      onSelectListing?.(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [activeItem, onSelectListing]);
+
+  const activeItemHref = activeItem
+    ? activeItem.type === "listing"
+      ? `/listings/${activeItem.data.id}`
+      : `/trips/${activeItem.data.id}`
+    : null;
+
   // Pointer drag swiping handlers
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -502,6 +548,12 @@ export default function SearchMap({
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {}
+
+    // A plain tap on the photo opens the item (keyboard users use the title link).
+    const target = e.target as HTMLElement;
+    if (!hasDraggedRef.current && activeItemHref && !target.closest("button")) {
+      router.push(activeItemHref);
+    }
 
     dragStartX.current = null;
     setIsDragging(false);
@@ -603,7 +655,7 @@ export default function SearchMap({
             id: listing.id,
             type: "listing",
             data: listing,
-            price: listing.price,
+            price: showTotalPrice && typeof listing.quotedTotal === "number" ? listing.quotedTotal : listing.price,
             coords: [Number(listing.latlng[0]), Number(listing.latlng[1])],
             title: listing.title,
             rating: listing.rating,
@@ -635,7 +687,7 @@ export default function SearchMap({
     }
 
     return list;
-  }, [listings, trips, showListings, showTrips]);
+  }, [listings, trips, showListings, showTrips, showTotalPrice]);
 
   // Individual items with micro-offset for overlapping properties (< 0.0006 deg)
   const renderedItems = useMemo(() => {
@@ -714,15 +766,21 @@ export default function SearchMap({
     return result;
   }, [activeMapItems]);
 
+  const compactNumber = new Intl.NumberFormat(intlLocale(locale), {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  });
+
   const createPriceIcon = (
     price: number,
     isSelected: boolean,
     isHovered: boolean,
-    isTrip: boolean = false
+    isTrip: boolean = false,
+    title: string = ""
   ) => {
     const active = isSelected || isHovered;
-    const formattedDzd =
-      price >= 1000 ? `${(price / 1000).toFixed(price % 1000 === 0 ? 0 : 1)}k DZD` : `${price} DZD`;
+    const formattedDzd = `${compactNumber.format(price)} ${tCommon("currencySymbol")}`;
+    const srLabel = escapeHtml(t("pinLabel", { title, price: formatDzd(price, locale) }));
 
     const tripBadge = isTrip
       ? `<svg class="w-3 h-3 ${
@@ -733,8 +791,7 @@ export default function SearchMap({
     return L.divIcon({
       className: `custom-price-pin !bg-transparent !border-none ${active ? "is-active" : ""}`,
       html: `
-        <button 
-          type="button"
+        <span
           class="price-pin-btn cursor-pointer font-extrabold text-[11.5px] px-3 py-1.5 rounded-full flex items-center gap-1.5 justify-center whitespace-nowrap select-none border transition-all ${
             active
               ? "bg-[#2E3A2F] text-white border-[#C96F4F] ring-2 ring-[#C96F4F]/40 shadow-xl"
@@ -742,8 +799,9 @@ export default function SearchMap({
           }"
         >
           ${tripBadge}
-          <span class="tracking-tight">${formattedDzd}</span>
-        </button>
+          <span class="sr-only">${srLabel}</span>
+          <span class="tracking-tight" aria-hidden="true">${formattedDzd}</span>
+        </span>
       `,
       iconSize: [isTrip ? 88 : 74, 30],
       iconAnchor: [isTrip ? 44 : 37, 15],
@@ -760,13 +818,12 @@ export default function SearchMap({
     return L.divIcon({
       className: `custom-cluster-pin !bg-transparent !border-none ${active ? "is-active" : ""}`,
       html: `
-        <button 
-          type="button"
-          class="cluster-pin-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center font-black text-xs text-white shadow-md bg-[#C96F4F] hover:bg-[#B55F40] ring-2 ring-white/90 transition-transform duration-200"
-          aria-label="${count} properties"
+        <span
+          class="cluster-pin-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white shadow-md bg-[#B65634] hover:bg-[#974426] ring-2 ring-white/90 transition-transform duration-200"
         >
-          <span>${count}</span>
-        </button>
+          <span class="sr-only">${escapeHtml(t("clusterLabel", { count }))}</span>
+          <span aria-hidden="true">${count}</span>
+        </span>
       `,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
@@ -837,7 +894,7 @@ export default function SearchMap({
               <Marker
                 key={item.id}
                 position={item.displayCoords as L.LatLngExpression}
-                icon={createPriceIcon(item.price, isSelected, isHovered, item.type === "trip")}
+                icon={createPriceIcon(item.price, isSelected, isHovered, item.type === "trip", item.title)}
                 zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 1}
                 eventHandlers={{
                   click: () => {
@@ -868,7 +925,7 @@ export default function SearchMap({
                 <Marker
                   key={item.id}
                   position={cluster.center as L.LatLngExpression}
-                  icon={createPriceIcon(item.price, isSelected, isHovered, item.type === "trip")}
+                  icon={createPriceIcon(item.price, isSelected, isHovered, item.type === "trip", item.title)}
                   zIndexOffset={isSelected ? 1000 : isHovered ? 900 : 1}
                   eventHandlers={{
                     click: () => {
@@ -970,7 +1027,7 @@ export default function SearchMap({
                     <Marker
                       key={item.id}
                       position={displayCoords as L.LatLngExpression}
-                      icon={createPriceIcon(item.price, itemSelected, itemHovered, item.type === "trip")}
+                      icon={createPriceIcon(item.price, itemSelected, itemHovered, item.type === "trip", item.title)}
                       zIndexOffset={itemSelected ? 1000 : itemHovered ? 900 : 700}
                       eventHandlers={{
                         click: () => {
@@ -998,20 +1055,9 @@ export default function SearchMap({
       {/* Floating Preview Card - Strictly appears on CLICK with smooth motion */}
       {activeItem && (
         <div
+          role="region"
+          aria-label={t("previewLabel")}
           className="absolute bottom-5 inset-x-4 sm:inset-x-auto sm:start-5 z-[500] sm:w-84 bg-white rounded-2xl shadow-2xl border border-tertiary/70 overflow-hidden select-none transition-all duration-300 ease-out transform animate-in fade-in zoom-in-95 slide-in-from-bottom-5"
-          onClick={(e) => {
-            if (hasDraggedRef.current) {
-              e.stopPropagation();
-              e.preventDefault();
-              hasDraggedRef.current = false;
-              return;
-            }
-            if (activeItem.type === "listing") {
-              router.push(`/listings/${activeItem.data.id}`);
-            } else {
-              router.push(`/trips/${activeItem.data.id}`);
-            }
-          }}
         >
           {/* Card Image with Mouse Drag & Touch Swipe Slider */}
           <div
@@ -1033,8 +1079,9 @@ export default function SearchMap({
             >
               <Image
                 src={previewImages[previewImageIndex] || "/assets/template.jpeg"}
-                alt={activeItem.data.title}
+                alt=""
                 fill
+                sizes="336px"
                 draggable={false}
                 className="object-cover pointer-events-none select-none group-hover/card:scale-105 transition-transform duration-300"
               />
@@ -1043,13 +1090,13 @@ export default function SearchMap({
             {/* Close Preview Button */}
             <button
               type="button"
-              aria-label="Close preview"
+              aria-label={t("closePreview")}
               onClick={(e) => {
                 e.stopPropagation();
                 setClickedCardId(null);
                 onSelectListing?.(null);
               }}
-              className="absolute top-2.5 start-2.5 z-20 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-md transition cursor-pointer"
+              className="absolute top-2.5 start-2.5 z-20 w-7 h-7 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-md transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
               <BrandCloseIcon size={16} strokeWidth={2.2} />
             </button>
@@ -1063,7 +1110,10 @@ export default function SearchMap({
               <div className="absolute top-2.5 end-2.5 z-20 flex items-center gap-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
                 <BrandCalendarIcon size={11} strokeWidth={2} className="text-secondary" />
                 <span>
-                  {activeItem.data.durationDays}D / {Math.max(1, activeItem.data.durationDays - 1)}N
+                  {t("tripDuration", {
+                    days: activeItem.data.durationDays,
+                    nights: Math.max(1, activeItem.data.durationDays - 1),
+                  })}
                 </span>
               </div>
             )}
@@ -1073,7 +1123,7 @@ export default function SearchMap({
               <div className="absolute bottom-2.5 start-2.5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/60 backdrop-blur-md text-white text-[11px] font-semibold max-w-[80%] truncate">
                 <BrandCheckIcon size={12} strokeWidth={2.5} className="text-emerald-400 shrink-0" />
                 <span className="truncate">
-                  {activeItem.data.organization?.name || "Verified Agency"}
+                  {activeItem.data.organization?.name || t("verifiedAgency")}
                 </span>
               </div>
             )}
@@ -1083,7 +1133,7 @@ export default function SearchMap({
               <>
                 <button
                   type="button"
-                  aria-label="Previous image"
+                  aria-label={tListing("previousPhoto")}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -1091,25 +1141,28 @@ export default function SearchMap({
                       (prev) => (prev - 1 + previewImages.length) % previewImages.length
                     );
                   }}
-                  className="absolute top-1/2 -translate-y-1/2 start-2 z-20 w-6 h-6 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-xs transition cursor-pointer"
+                  className="absolute top-1/2 -translate-y-1/2 start-2 z-20 w-6 h-6 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-xs transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                 >
                   <BrandChevronLeftIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
                 </button>
                 <button
                   type="button"
-                  aria-label="Next image"
+                  aria-label={tListing("nextPhoto")}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                     setPreviewImageIndex((prev) => (prev + 1) % previewImages.length);
                   }}
-                  className="absolute top-1/2 -translate-y-1/2 end-2 z-20 w-6 h-6 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-xs transition cursor-pointer"
+                  className="absolute top-1/2 -translate-y-1/2 end-2 z-20 w-6 h-6 bg-white/85 hover:bg-white rounded-full flex items-center justify-center text-primary shadow-xs transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                 >
                   <BrandChevronRightIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
                 </button>
 
                 {/* Carousel Pagination Dots */}
-                <div className="absolute bottom-2.5 inset-x-0 flex justify-center items-center gap-1.5 z-20 pointer-events-none">
+                <div
+                  aria-hidden="true"
+                  className="absolute bottom-2.5 inset-x-0 flex justify-center items-center gap-1.5 z-20 pointer-events-none"
+                >
                   {previewImages.map((_, idx) => (
                     <div
                       key={idx}
@@ -1126,7 +1179,7 @@ export default function SearchMap({
           </div>
 
           {/* Details */}
-          <div className="p-3.5 space-y-1 cursor-pointer">
+          <div className="relative p-3.5 space-y-1 cursor-pointer">
             {activeItem.type === "listing" ? (
               <>
                 <div className="flex items-center justify-between gap-2">
@@ -1136,30 +1189,38 @@ export default function SearchMap({
                       strokeWidth={2}
                       className="text-accent shrink-0"
                     />
-                    <span className="truncate">
-                      {activeItem.data.city ? `${activeItem.data.city}, Algeria` : activeItem.data.title}
-                    </span>
+                    <Link href={activeItemHref ?? "/"} className="truncate rounded after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-accent-600">
+                      <span className="sr-only">{activeItem.data.title} – </span>
+                      {activeItem.data.city
+                        ? tListing("cityCountry", { city: activeItem.data.city })
+                        : activeItem.data.title}
+                    </Link>
                   </h4>
                   <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
-                    <BrandStarIcon size={13} className="fill-accent text-accent" />
-                    <span>{activeItem.data.rating?.toFixed(2) || "4.95"}</span>
+                    <InlineRating rating={activeItem.data.rating} />
                   </span>
                 </div>
 
-                <p className="text-xs text-neutral-500 font-normal truncate">
+                <p className="text-xs text-neutral-600 font-normal truncate">
                   {activeItem.data.title}
                 </p>
 
                 <div className="pt-1">
                   <PriceDisplay
-                    price={activeItem.data.price}
-                    originalPrice={activeItem.data.originalPrice}
+                    price={
+                      showTotalPrice && typeof activeItem.data.quotedTotal === "number"
+                        ? activeItem.data.quotedTotal
+                        : activeItem.data.price
+                    }
+                    originalPrice={
+                      showTotalPrice && typeof activeItem.data.quotedTotal === "number"
+                        ? undefined
+                        : activeItem.data.originalPrice
+                    }
                     period={
-                      activeItem.data.category === "vehicle"
-                        ? "/ day"
-                        : activeItem.data.category === "experience"
-                        ? "/ person"
-                        : "/ night"
+                      showTotalPrice && typeof activeItem.data.quotedTotal === "number"
+                        ? tListing("priceSuffix.total")
+                        : tListing(priceSuffixKey(activeItem.data))
                     }
                     priceClassName="font-bold text-sm text-primary"
                   />
@@ -1170,11 +1231,13 @@ export default function SearchMap({
                 <div className="flex items-center justify-between gap-2">
                   <h4 className="font-bold text-sm text-primary truncate flex items-center gap-1">
                     <BrandCompassIcon size={14} className="text-secondary shrink-0" />
-                    <span className="truncate">{activeItem.data.city}, Algeria</span>
+                    <Link href={activeItemHref ?? "/"} className="truncate rounded after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-accent-600">
+                      <span className="sr-only">{activeItem.data.title} – </span>
+                      {tListing("cityCountry", { city: activeItem.data.city })}
+                    </Link>
                   </h4>
                   <span className="flex items-center gap-1 text-xs font-semibold text-neutral-800 flex-shrink-0">
-                    <BrandStarIcon size={13} className="fill-accent text-accent" />
-                    <span>{activeItem.data.rating?.toFixed(2) || "4.98"}</span>
+                    <InlineRating rating={activeItem.data.rating} />
                   </span>
                 </div>
 
@@ -1185,12 +1248,12 @@ export default function SearchMap({
                 <div className="pt-1 flex items-baseline justify-between gap-2">
                   <PriceDisplay
                     price={activeItem.data.pricePerPerson}
-                    period="/ person"
+                    period={tListing("priceSuffix.person")}
                     priceClassName="font-bold text-sm text-primary"
                   />
-                  <span className="text-[10px] text-neutral-500 font-medium flex items-center gap-1">
+                  <span className="text-[10px] text-neutral-600 font-medium flex items-center gap-1">
                     <BrandUsersIcon size={12} strokeWidth={1.8} />
-                    <span>Max {activeItem.data.maxGroupSize}</span>
+                    <span>{t("maxGroup", { count: activeItem.data.maxGroupSize })}</span>
                   </span>
                 </div>
               </>
@@ -1200,28 +1263,30 @@ export default function SearchMap({
       )}
 
       {/* Layer Switcher */}
-      <div className="absolute top-4 end-4 z-[400] flex items-center bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-md border border-tertiary/70 text-xs font-semibold">
+      <div role="group" aria-label={tCommon("mapType")} className="absolute top-4 end-4 z-[400] flex items-center bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-md border border-tertiary/70 text-xs font-semibold">
         <button
           type="button"
           onClick={() => setMapType("roadmap")}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+          aria-pressed={mapType === "roadmap"}
+          className={`px-3 py-1.5 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
             mapType === "roadmap"
               ? "bg-primary text-white shadow-xs"
               : "text-neutral-700 hover:bg-neutral-100"
           }`}
         >
-          Map
+          {tCommon("mapView")}
         </button>
         <button
           type="button"
           onClick={() => setMapType("satellite")}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+          aria-pressed={mapType === "satellite"}
+          className={`px-3 py-1.5 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
             mapType === "satellite"
               ? "bg-primary text-white shadow-xs"
               : "text-neutral-700 hover:bg-neutral-100"
           }`}
         >
-          Satellite
+          {tCommon("satelliteView")}
         </button>
       </div>
     </div>

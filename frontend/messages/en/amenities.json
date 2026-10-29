@@ -1,0 +1,15 @@
+{
+  "wifi": "Wifi",
+  "tv": "TV",
+  "kitchen": "Kitchen",
+  "washer": "Washer",
+  "freeParking": "Free parking",
+  "airConditioning": "Air conditioning",
+  "dedicatedWorkspace": "Dedicated workspace",
+  "pool": "Pool",
+  "hotTub": "Hot tub",
+  "patio": "Patio",
+  "seaView": "Sea view",
+  "fireplace": "Fireplace",
+  "courtyard": "Courtyard"
+}

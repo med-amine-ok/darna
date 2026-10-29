@@ -1,0 +1,450 @@
+{
+  "step1Title": "Lequel de ces logements décrit le mieux votre bien ?",
+  "step1Subtitle": "Choisissez la catégorie de votre séjour, véhicule ou expérience en Algérie.",
+  "step2Title": "Où se situe votre logement ?",
+  "step2Subtitle": "Votre adresse n'est partagée avec les voyageurs qu'après la confirmation de leur réservation.",
+  "step3Title": "Partagez quelques détails essentiels",
+  "step3Subtitle": "Vous pourrez ajouter plus de détails, comme les types de lits, plus tard.",
+  "step4Title": "Indiquez aux voyageurs ce que votre logement propose",
+  "step4Subtitle": "Vous pourrez ajouter des équipements supplémentaires après la publication.",
+  "step5Title": "Ajoutez des photos de votre logement",
+  "step5Subtitle": "Téléchargez au moins une photo de haute qualité pour mettre en valeur votre espace.",
+  "step7Title": "À présent, fixez votre prix",
+  "step7Subtitle": "Vous pourrez le modifier à tout moment depuis votre tableau de bord hôte.",
+  "guests": "Voyageurs",
+  "bedrooms": "Chambres",
+  "beds": "Lits",
+  "bathrooms": "Salles de bain",
+  "city": "Ville / quartier",
+  "cityPlaceholder": "ex. Tipaza Ville, Didouche Mourad",
+  "titlePlaceholder": "ex. Villa en bord de mer à Chenoua avec piscine privée",
+  "descPlaceholder": "Décrivez l'ambiance, la vue et les caractéristiques uniques de votre logement...",
+  "coverPhoto": "Couverture",
+  "addPhoto": "Ajouter une photo",
+  "saveAndExit": "Enregistrer et quitter",
+  "discard": "Abandonner les modifications",
+  "keepEditing": "Continuer la modification",
+  "exitModalTitle": "Quitter la création de l’annonce ?",
+  "exitModalDesc": "Vos modifications ne sont pas enregistrées. Enregistrez un brouillon pour reprendre plus tard, ou abandonnez votre saisie.",
+  "reviewTitle": "Vérifiez votre annonce avant de la publier",
+  "reviewSubtitle": "Voici ce que verront les voyageurs sur DARNA.",
+  "publishListing": "Publier votre annonce sur DARNA",
+  "pricePerNight": "Prix par nuit (DZD)",
+  "draftSaved": "Progression enregistrée en brouillon dans votre navigateur.",
+  "addPhotoUrlPlaceholder": "Collez l'URL de l'image (https://...)",
+  "step": "Étape {current} sur {total}",
+  "hostTypeTitle": "Comment souhaitez-vous héberger sur DARNA ?",
+  "hostTypeSubtitle": "Choisissez le modèle d’accueil qui correspond le mieux à vos biens, votre flotte ou votre établissement en Algérie.",
+  "individualTitle": "Hôte particulier",
+  "individualDesc": "Vous êtes un particulier qui loue sa villa, son appartement dans la Casbah, sa tente saharienne ou son 4x4. Espace de gestion simple et dédié.",
+  "agencyTitle": "Agence de tourisme / Flotte",
+  "agencyDesc": "Agence de voyage agréée, organisateur d’excursions ou loueur de véhicules avec personnel, circuits de plusieurs jours et gestion de flotte.",
+  "businessName": "Nom de l'agence / entreprise",
+  "businessNamePlaceholder": "ex. Algiers Prestige Stays SARL",
+  "regNumber": "Numéro de registre du commerce / NIF",
+  "regNumberPlaceholder": "ex. DZ-16-0982419-A",
+  "contactEmail": "E-mail professionnel de contact",
+  "contactPhone": "Téléphone professionnel de contact",
+  "header": {
+    "logoAlt": "Accueil DARNA",
+    "becomeHost": "Devenir hôte",
+    "agency": "Inscription agence",
+    "hotel": "Inscription hôtel",
+    "hostel": "Inscription auberge",
+    "progress": "Progression de l’inscription"
+  },
+  "nav": {
+    "chooseAccountType": "Choisir le type de compte",
+    "selectHostMode": "Choisissez votre mode d’accueil"
+  },
+  "hostType": {
+    "eyebrow": "Étape 1 sur 2 · Type de compte partenaire",
+    "individual": {
+      "badge": "Hôte solo",
+      "cta": "Continuer en tant que particulier"
+    },
+    "agency": {
+      "badge": "Agence & flotte",
+      "cta": "Créer l’espace agence"
+    },
+    "hotel": {
+      "badge": "Hôtel & resort",
+      "title": "Hôtel & resort",
+      "desc": "Hôtel de charme, palais historique ou resort de luxe. Gérez plusieurs types de chambres, l’accueil à la réception et un calendrier à fort volume.",
+      "cta": "Inscrire mon hôtel"
+    },
+    "hostel": {
+      "badge": "Auberge & lits",
+      "title": "Auberge & communauté",
+      "desc": "Dortoirs partagés, réservation au lit, chambres privées, cuisine commune, casiers et ambiance conviviale de routards.",
+      "cta": "Inscrire mon auberge"
+    }
+  },
+  "intro": {
+    "eyebrow": "Aperçu",
+    "title": "Commencer sur DARNA, c’est simple",
+    "subtitle": "Rejoignez des milliers d’hôtes chaleureux qui partagent la culture, les côtes et les expéditions sahariennes de l’Algérie.",
+    "step1Title": "Parlez-nous de votre logement",
+    "step1Desc": "Indiquez l’emplacement, le type de bien et la capacité d’accueil.",
+    "step2Title": "Faites-le briller",
+    "step2Desc": "Ajoutez au moins 4 photos, des équipements et un titre authentique.",
+    "step3Title": "Fixez votre prix et publiez",
+    "step3Desc": "Choisissez votre prix par nuit en DZD et accueillez vos premiers voyageurs.",
+    "getStarted": "Commencer"
+  },
+  "categories": {
+    "villa": "Villa",
+    "casbahHouse": "Maison traditionnelle de la Casbah",
+    "seasideApartment": "Appartement en bord de mer",
+    "saharanKsar": "Ksar saharien",
+    "desertCamp": "Campement dans le désert",
+    "landCruiser": "4x4 Land Cruiser",
+    "saharaExpedition": "Expédition 4x4 au Sahara",
+    "casbahTour": "Visite architecturale de la Casbah"
+  },
+  "verticals": {
+    "home": "Hébergement",
+    "vehicle": "Véhicule",
+    "experience": "Expérience"
+  },
+  "placement": {
+    "title": "De quel type d’espace disposeront les voyageurs ?",
+    "subtitle": "Sélectionnez le niveau d’intimité dont profiteront les voyageurs.",
+    "entire": {
+      "title": "Un logement entier",
+      "desc": "Les voyageurs disposent de tout le logement, avec entrée et équipements privés."
+    },
+    "private": {
+      "title": "Une chambre privée",
+      "desc": "Les voyageurs ont leur propre chambre ; la cuisine ou le patio peuvent être partagés."
+    },
+    "shared": {
+      "title": "Une chambre partagée",
+      "desc": "Les voyageurs dorment dans un espace commun ou un dortoir avec d’autres personnes."
+    }
+  },
+  "location": {
+    "wilaya": "Wilaya",
+    "street": "Adresse",
+    "exactStreet": "Adresse exacte",
+    "streetPlaceholder": "ex. 14 Route de la Corniche",
+    "mapLabel": "Position sur la carte",
+    "mapPreview": "Aperçu de la carte de la wilaya sélectionnée"
+  },
+  "wilayas": {
+    "algiers": "Alger",
+    "oran": "Oran",
+    "constantine": "Constantine",
+    "tipaza": "Tipaza",
+    "djanet": "Djanet (Sahara)",
+    "taghit": "Taghit (Béchar)",
+    "bejaia": "Béjaïa",
+    "ghardaia": "Ghardaïa (M’zab)",
+    "tlemcen": "Tlemcen",
+    "annaba": "Annaba"
+  },
+  "capacity": {
+    "guestsHint": "Combien de voyageurs peuvent séjourner confortablement ?",
+    "bedroomsHint": "Combien de chambres sont disponibles ?",
+    "bedsHint": "À combien de lits les voyageurs ont-ils accès ?",
+    "bathroomsHint": "Combien de salles de bain (complètes ou d’appoint) ?",
+    "summary": "Résumé : {guests} · {bedrooms} · {beds} · {bathrooms}"
+  },
+  "counts": {
+    "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
+    "bedrooms": "{count, plural, one {# chambre} other {# chambres}}",
+    "beds": "{count, plural, one {# lit} other {# lits}}",
+    "bathrooms": "{count, plural, one {# salle de bain} other {# salles de bain}}"
+  },
+  "amenities": {
+    "wifi": "Wi-Fi rapide",
+    "air_conditioning": "Climatisation",
+    "kitchen": "Cuisine équipée",
+    "free_parking": "Parking gratuit sur place",
+    "sea_view": "Vue sur la Méditerranée",
+    "traditional_patio": "Patio central traditionnel",
+    "pool": "Piscine privée",
+    "sahara_fireplace": "Feu de camp et cheminée sahariens"
+  },
+  "photos": {
+    "title": "Ajoutez des photos de votre logement en Algérie",
+    "subtitle": "Il faut au moins 4 photos pour publier. Des photos de qualité augmentent les réservations de 40 %.",
+    "orgTitle": "Ajoutez des photos de l’établissement",
+    "hotelSubtitle": "Ajoutez des photos de la façade, du hall, des installations et des extérieurs de votre hôtel (4 minimum).",
+    "hostelSubtitle": "Ajoutez des photos de la façade, des espaces communs, du toit-terrasse et de l’ambiance de votre auberge (4 minimum).",
+    "photoAlt": "Photo du logement {number}",
+    "removeLabel": "Supprimer la photo {number}",
+    "urlLabel": "Ajouter une photo par URL",
+    "presetsLabel": "Photos suggérées :",
+    "addPreset": "Ajouter la photo suggérée : {name}",
+    "added": "Photo ajoutée à la galerie !",
+    "minOne": "Votre galerie doit contenir au moins une photo.",
+    "presets": {
+      "tipazaVilla": "Villa des ruines de Tipaza",
+      "oranSeaside": "Front de mer d’Oran",
+      "constantineBridges": "Ponts de Constantine",
+      "casbahTerrace": "Terrasse de la Casbah",
+      "grandLobby": "Grand hall",
+      "seasideSuite": "Suite vue mer",
+      "historicCourtyard": "Cour historique",
+      "poolPatio": "Piscine & patio",
+      "rooftopLounge": "Salon sur le toit",
+      "saharanOasis": "Oasis saharienne",
+      "socialArea": "Espace commun"
+    }
+  },
+  "titleStep": {
+    "title": "Donnons maintenant un titre à votre logement",
+    "subtitle": "Les titres courts qui mettent en avant ce qui rend votre logement unique sont les plus efficaces.",
+    "label": "Titre de l’annonce",
+    "tip": "Soyez accrocheur et descriptif",
+    "ideas": "Besoin d’idées ? Choisissez un exemple :",
+    "suggestions": {
+      "chenoua": "Villa de luxe en bord de mer à Chenoua avec piscine privée",
+      "casbah": "Toit-terrasse restauré dans la Casbah avec vue sur la baie",
+      "tassili": "Campement du Tassili sous les étoiles du Sahara"
+    },
+    "default": "Superbe villa méditerranéenne avec jardin privé"
+  },
+  "descriptionStep": {
+    "title": "Rédigez votre description",
+    "subtitle": "Partagez ce qui rend votre logement unique, les sites algériens à proximité et votre sens de l’accueil.",
+    "label": "Description de l’annonce",
+    "tip": "Mentionnez le parking, la terrasse, la vue ou les marchés proches",
+    "default": "Découvrez la chaleur de l’hospitalité algérienne dans cette résidence privée et paisible. Profitez de la brise marine, d’un patio central baigné de soleil et du confort moderne, à quelques minutes de la côte."
+  },
+  "charCount": "{count}/{max} caractères",
+  "pricing": {
+    "preview": "{amount} par nuit",
+    "eurEquivalent": "Soit environ {amount} par nuit",
+    "breakdown": "Estimation des revenus",
+    "base": "Prix de base par nuit",
+    "commission": "Commission DARNA ({rate} %)",
+    "payout": "Votre revenu net"
+  },
+  "booking": {
+    "title": "Choisissez vos paramètres de réservation",
+    "subtitle": "Définissez comment les voyageurs réservent et vos conditions d’annulation.",
+    "instantBook": "Réservation instantanée",
+    "instantBookDesc": "Les voyageurs qualifiés réservent immédiatement, sans attendre la confirmation de l’hôte.",
+    "cancellation": "Conditions d’annulation",
+    "flexible": {
+      "label": "Flexibles",
+      "desc": "Remboursement intégral jusqu’à 1 jour avant"
+    },
+    "moderate": {
+      "label": "Modérées",
+      "desc": "Remboursement intégral jusqu’à 5 jours avant"
+    },
+    "strict": {
+      "label": "Strictes",
+      "desc": "Remboursement intégral jusqu’à 14 jours avant"
+    }
+  },
+  "review": {
+    "eyebrow": "Dernière étape",
+    "location": "{city}, {wilaya}, Algérie",
+    "perNight": "par nuit ({eur})",
+    "editLocation": "Modifier l’emplacement",
+    "editPhotos": "Modifier les photos ({count})",
+    "editPrice": "Modifier le prix",
+    "publishing": "Publication de l’annonce...",
+    "published": "Félicitations ! Votre annonce est maintenant en ligne sur DARNA.",
+    "empty": "—"
+  },
+  "bookingMode": {
+    "title": "Comment souhaitez-vous accepter les réservations ?",
+    "recommended": "Recommandé",
+    "manualReview": "Validation manuelle",
+    "instant": "Réservation instantanée",
+    "request": "Demande de réservation",
+    "hotelInstantDesc": "Les voyageurs réservent les chambres disponibles immédiatement, sans attendre de confirmation. Recommandé pour les hôtels.",
+    "hotelRequestDesc": "Chaque demande de réservation doit être confirmée manuellement par la réception sous 24 heures.",
+    "hostelInstant": "Réservation instantanée de lit",
+    "hostelInstantDesc": "Les routards réservent immédiatement et reçoivent l’accès à l’auberge sans attendre. Idéal pour un bon taux d’occupation.",
+    "hostelRequestDesc": "La réception de l’auberge examine chaque demande et l’accepte sous 24 heures."
+  },
+  "team": {
+    "emailLabel": "E-mail du membre {number}",
+    "roleLabel": "Rôle du membre {number}",
+    "optional": "Cette étape est facultative. Vous pourrez inviter votre équipe à tout moment.",
+    "addTeammate": "Ajouter un collaborateur",
+    "addHotelMember": "Ajouter un membre de l’équipe",
+    "addCrewMember": "Ajouter un membre de l’équipe",
+    "roles": {
+      "agencyManager": "Gestionnaire",
+      "agencyAdmin": "Administrateur",
+      "hotelManager": "Réceptionniste / gestionnaire",
+      "hotelAdmin": "Directeur général de l’hôtel",
+      "hostelManager": "Équipe d’accueil / bénévole",
+      "hostelAdmin": "Gérant de l’auberge"
+    }
+  },
+  "org": {
+    "commercialRegister": "Registre du commerce (RC)",
+    "taxId": "Numéro d’identification fiscale (NIF)",
+    "regPlaceholder": "DZ-ALG-2024-B-04192",
+    "taxIdPlaceholder": "002316098765432",
+    "phonePlaceholder": "+213 21 69 21 21",
+    "registerSummary": "Registre du commerce",
+    "bookingModeSummary": "Mode de réservation",
+    "location": "Emplacement"
+  },
+  "hotel": {
+    "s1": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Identité de l’établissement",
+      "title": "Parlez-nous de votre hôtel ou resort",
+      "subtitle": "Indiquez le nom officiel de l’établissement et son classement hôtelier en Algérie."
+    },
+    "s2": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Détails & services",
+      "title": "Immatriculation, horaires & équipements"
+    },
+    "s3": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Emplacement",
+      "title": "Où se situe votre hôtel ?",
+      "subtitle": "Indiquez votre emplacement pour que les voyageurs trouvent votre hôtel sur la carte interactive."
+    },
+    "s4": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Galerie"
+    },
+    "s5": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Politique de réservation"
+    },
+    "s6": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Équipe de réception",
+      "title": "Invitez votre équipe de réception et de réservation",
+      "subtitle": "Facultatif. Vous pourrez ajouter des réceptionnistes et des gestionnaires à tout moment."
+    },
+    "s7": {
+      "eyebrow": "Hôtel – étape {current} sur {total} · Confirmation finale",
+      "title": "Vérifiez et inscrivez votre hôtel"
+    },
+    "name": "Nom de l’hôtel / du resort",
+    "namePlaceholder": "ex. El Djazair Grand Palace Hôtel",
+    "stars": "Classement par étoiles",
+    "starCount": "{count, plural, one {# étoile} other {# étoiles}}",
+    "checkIn": "Heure d’arrivée",
+    "checkOut": "Heure de départ",
+    "email": "E-mail des réservations",
+    "emailPlaceholder": "reservations@hoteldjazair.dz",
+    "phone": "Téléphone de la réception",
+    "amenitiesLabel": "Équipements de l’établissement",
+    "amenities": {
+      "breakfast": "Petit-déjeuner buffet",
+      "pool": "Piscine",
+      "spa": "Spa & hammam",
+      "wifi": "Wi-Fi haut débit",
+      "valet": "Voiturier",
+      "conference": "Salle de conférence",
+      "reception_24_7": "Réception 24 h/24",
+      "shuttle": "Navette aéroport"
+    },
+    "cityPlaceholder": "ex. Hydra, Didouche Mourad",
+    "streetPlaceholder": "ex. 24 avenue Souidani Boudjemaa",
+    "invitePlaceholder": "reception@hoteldjazair.dz",
+    "review": {
+      "name": "Nom de l’établissement",
+      "classification": "Classement",
+      "totalRooms": "Nombre de chambres",
+      "rooms": "{count, plural, one {# chambre} other {# chambres}}"
+    },
+    "notice": {
+      "title": "Inscription de l’hôtel terminée",
+      "body": "Votre espace hôtel sera activé immédiatement. Vous pourrez définir les types de chambres et les tarifs par nuit depuis votre extranet hôte."
+    },
+    "registering": "Inscription de l’hôtel...",
+    "register": "Créer l’espace hôtel",
+    "success": "Espace hôtel enregistré ! Il est en attente de vérification — vous pouvez commencer à configurer votre établissement."
+  },
+  "hostel": {
+    "s1": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Identité de l’établissement",
+      "title": "Parlez-nous de votre auberge",
+      "subtitle": "Indiquez le nom et l’emplacement de votre auberge en Algérie."
+    },
+    "s2": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Détails & règles",
+      "title": "Immatriculation & règlement de l’auberge"
+    },
+    "s3": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Emplacement",
+      "title": "Où se situe votre auberge ?",
+      "subtitle": "Indiquez votre emplacement pour que les routards trouvent facilement votre auberge sur la carte."
+    },
+    "s4": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Galerie"
+    },
+    "s5": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Politique de réservation"
+    },
+    "s6": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Équipe",
+      "title": "Invitez votre équipe et vos bénévoles"
+    },
+    "s7": {
+      "eyebrow": "Auberge – étape {current} sur {total} · Confirmation finale",
+      "title": "Vérifiez et inscrivez votre auberge"
+    },
+    "name": "Nom de l’auberge",
+    "namePlaceholder": "ex. Auberge Casbah Héritage",
+    "addressLabel": "Adresse et ville",
+    "addressPlaceholder": "ex. 12 rue Sidi Ramdane, Casbah, Alger",
+    "email": "E-mail de l’auberge",
+    "emailPlaceholder": "hello@casbahhostel.dz",
+    "phone": "Téléphone de la réception / WhatsApp",
+    "regPlaceholder": "DZ-ALG-2024-B-07114",
+    "taxIdPlaceholder": "002416098877112",
+    "phonePlaceholder": "+213 21 73 88 19",
+    "curfew": "Couvre-feu",
+    "curfewDefault": "Pas de couvre-feu · accès par carte 24 h/24",
+    "age": "Conditions d’âge",
+    "ageDefault": "Tous âges bienvenus (18 ans minimum en dortoir)",
+    "facilitiesLabel": "Équipements de l’auberge",
+    "facilities": {
+      "lockers": "Casiers individuels",
+      "shared_kitchen": "Cuisine commune",
+      "rooftop": "Toit-terrasse convivial",
+      "coworking": "Espace de coworking",
+      "luggage_storage": "Bagagerie gratuite",
+      "breakfast": "Petit-déjeuner de l’auberge"
+    },
+    "cityPlaceholder": "ex. Casbah, Bab El Oued",
+    "streetPlaceholder": "ex. 12 rue Sidi Ramdane, Casbah",
+    "invitePlaceholder": "crew@casbahhostel.dz",
+    "review": {
+      "name": "Nom de l’auberge",
+      "totalBeds": "Nombre de lits",
+      "beds": "{total, plural, one {# lit} other {# lits}} ({dorm} en dortoir, {private} privatifs)"
+    },
+    "notice": {
+      "title": "Profil de l’auberge prêt",
+      "body": "Votre espace auberge sera actif immédiatement. Vous pourrez gérer les tarifs par lit, la répartition des dortoirs et les arrivées."
+    },
+    "registering": "Inscription de l’auberge...",
+    "register": "Créer l’espace auberge",
+    "success": "Espace auberge enregistré ! Il est en attente de vérification — vous pouvez commencer à configurer votre établissement."
+  },
+  "customStep": {
+    "additionalInfo": "Informations complémentaires",
+    "selectOption": "Sélectionnez une option..."
+  },
+  "errors": {
+    "generic": "Une erreur s’est produite. Veuillez réessayer.",
+    "cityAddress": "Veuillez indiquer une ville et une adresse.",
+    "title": "Veuillez saisir un titre accrocheur pour votre annonce.",
+    "titlePrice": "Veuillez saisir un titre et un prix par nuit entier compris entre {min} et {max}.",
+    "minPhotos": "Veuillez ajouter au moins 4 photos de l’établissement.",
+    "orgName": "Veuillez saisir la raison sociale.",
+    "orgReg": "Veuillez saisir le numéro de registre du commerce (RC).",
+    "orgEmail": "Veuillez saisir un e-mail professionnel valide.",
+    "orgPhone": "Veuillez saisir un numéro de téléphone professionnel.",
+    "orgAddress": "Veuillez saisir l’adresse de l’entreprise.",
+    "contactDetails": "Veuillez saisir le numéro de registre, un e-mail valide et un numéro de téléphone.",
+    "hotelName": "Veuillez saisir le nom de votre hôtel.",
+    "hotelAddress": "Veuillez saisir l’adresse de l’hôtel.",
+    "hostelName": "Veuillez saisir le nom de votre auberge.",
+    "hostelAddress": "Veuillez saisir l’adresse de l’auberge."
+  },
+  "discarded": "Modifications non enregistrées abandonnées."
+}

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
+import { useLocale, useTranslations } from "next-intl";
 import { Listing } from "@/lib/types";
-import { formatDzd } from "@/lib/utils/format";
-import { MapPin, Star, Building } from "lucide-react";
+import { formatDzd, intlLocale } from "@/lib/utils/format";
+import { MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export interface ListingsMapViewProps {
@@ -14,7 +15,14 @@ export interface ListingsMapViewProps {
 }
 
 export default function ListingsMapView({ listings, onSelectListing }: ListingsMapViewProps) {
+  const t = useTranslations("listings.map");
+  const tVerticals = useTranslations("verticals");
+  const locale = useLocale();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(listings[0] || null);
+  const compact = new Intl.NumberFormat(intlLocale(locale), {
+    notation: "compact",
+    maximumFractionDigits: 0,
+  });
 
   return (
     <div className="relative w-full h-[600px] rounded-3xl overflow-hidden border border-tertiary/70 shadow-darna-card bg-[#E5E0D5] flex flex-col md:flex-row text-start">
@@ -25,18 +33,19 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
         {/* Top Floating Controls */}
         <div className="relative z-10 flex items-center justify-between gap-3 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-tertiary/70 shadow-xs max-w-sm">
           <div className="flex items-center gap-2 text-xs font-bold text-primary">
-            <MapPin className="w-4 h-4 text-accent" />
-            <span>Interactive Algerian Territory Map</span>
+            <MapPin className="w-4 h-4 text-accent" aria-hidden="true" />
+            <span id="listings-map-title">{t("title")}</span>
           </div>
-          <span className="text-[11px] font-bold text-secondary tabular-nums">
-            {listings.length} Pins
+          <span className="text-[11px] font-bold text-secondary-700 tabular-nums">
+            {t("pins", { count: listings.length })}
           </span>
         </div>
 
         {/* Pins Cluster Visualization across Algeria Coordinates */}
-        <div className="relative flex-1 w-full my-4">
-          {listings.slice(0, 30).map((l, idx) => {
-            // Project lat/lng (Algeria roughly 19-37°N, -8-12°E) to relative percent
+        <div className="relative flex-1 w-full my-4" role="group" aria-labelledby="listings-map-title">
+          {listings.slice(0, 30).map((l) => {
+            // Project lat/lng (Algeria roughly 19-37°N, -8-12°E) to relative percent.
+            // Geographic projection: intentionally physical `left` (west → east), not mirrored in RTL.
             const latPercent = Math.max(10, Math.min(90, ((37 - l.coordinates.lat) / 18) * 100));
             const lngPercent = Math.max(10, Math.min(90, ((l.coordinates.lng + 8) / 20) * 100));
             const isSelected = selectedListing?.id === l.id;
@@ -50,19 +59,21 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
                   onSelectListing?.(l);
                 }}
                 style={{ top: `${latPercent}%`, left: `${lngPercent}%` }}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 group transition-transform ${
+                className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 group transition-transform rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
                   isSelected ? "scale-125 z-30" : "hover:scale-115"
                 }`}
                 title={l.title}
+                aria-label={t("pinLabel", { title: l.title, price: formatDzd(l.price, locale) })}
+                aria-pressed={isSelected}
               >
                 <div
                   className={`px-2 py-1 rounded-full text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 ${
                     isSelected
-                      ? "bg-accent text-white ring-2 ring-white"
-                      : "bg-white text-primary hover:bg-secondary hover:text-white border border-tertiary/80"
+                      ? "bg-accent-600 text-white ring-2 ring-white"
+                      : "bg-white text-primary hover:bg-secondary-700 hover:text-white border border-tertiary/80"
                   }`}
                 >
-                  <span className="tabular-nums">{Math.round(l.price / 1000)}k</span>
+                  <span className="tabular-nums" dir="ltr">{compact.format(l.price)}</span>
                 </div>
               </button>
             );
@@ -70,8 +81,8 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
         </div>
 
         {/* Territory Guide */}
-        <div className="relative z-10 text-[10px] text-neutral-400">
-          * Pins distributed across Algerian wilayas from Coastal Tell to Sahara Plateau.
+        <div className="relative z-10 text-[10px] text-neutral-600">
+          {t("legend")}
         </div>
       </div>
 
@@ -84,10 +95,11 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
                 src={selectedListing.imageSrc[0] || "/assets/house.png"}
                 alt={selectedListing.title}
                 fill
+                sizes="(min-width: 768px) 320px, 100vw"
                 className="object-cover"
               />
               <span className="absolute top-2 start-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-black/60 text-white backdrop-blur-xs">
-                {selectedListing.category}
+                {tVerticals.has(selectedListing.category) ? tVerticals(selectedListing.category) : selectedListing.category}
               </span>
             </div>
 
@@ -95,15 +107,16 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
               {selectedListing.title}
             </h4>
             <p className="text-xs text-neutral-500 mt-1">
-              {selectedListing.city} · Host: {selectedListing.hostName}
+              {t("cityHost", { city: selectedListing.city, host: selectedListing.hostName })}
             </p>
 
             <div className="mt-3 flex items-center justify-between text-xs">
               <span className="font-bold font-mono text-primary text-sm">
-                {formatDzd(selectedListing.price)}
+                {formatDzd(selectedListing.price, locale)}
               </span>
-              <span className="font-semibold text-amber-600 flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span className="font-semibold text-amber-700 flex items-center gap-1">
+                <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" aria-hidden="true" />
+                <span className="sr-only">{t("rating")}</span>
                 {selectedListing.rating.toFixed(1)}
               </span>
             </div>
@@ -115,7 +128,7 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
             onClick={() => onSelectListing?.(selectedListing)}
             className="w-full mt-4"
           >
-            Moderate Listing Details
+            {t("moderate")}
           </Button>
         </div>
       )}

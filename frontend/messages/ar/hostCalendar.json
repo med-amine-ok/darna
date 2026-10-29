@@ -1,0 +1,87 @@
+{
+  "empty": {
+    "title": "لا توجد إعلانات لإدارتها بعد",
+    "body": "أنشئ إعلانك الأول لتدير هنا توفره والتواريخ المحجوبة وأسعار الليلة.",
+    "cta": "إنشاء إعلان"
+  },
+  "title": "التقويم والتوفر",
+  "subtitle": "أدر التوفر في الوقت الفعلي، واحجب تواريخ الصيانة، وحدد أسعارًا موسمية مخصصة.",
+  "viewSwitcherLabel": "عرض التقويم",
+  "previous": "{view, select, month {الشهر السابق} week {الأسبوع السابق} day {اليوم السابق} other {السنة السابقة}}",
+  "next": "{view, select, month {الشهر التالي} week {الأسبوع التالي} day {اليوم التالي} other {السنة التالية}}",
+  "propertyLabel": "العقار",
+  "allProperties": "كل العقارات ({count})",
+  "listingOption": "{title} ({city})",
+  "unitLabel": "الوحدة",
+  "allUnits": "كل الوحدات ({count})",
+  "unitOption": "{name} ({unit, select, bed {{count, plural, zero {لا أسرّة} one {سرير واحد} two {سريران} few {# أسرّة} many {# سريرًا} other {# سرير}}} other {{count, plural, zero {لا غرف} one {غرفة واحدة} two {غرفتان} few {# غرف} many {# غرفة} other {# غرفة}}}})",
+  "listingLegend": "ألوان الإعلانات",
+  "untitledListing": "إعلان",
+  "guestFallback": "ضيف",
+  "status": {
+    "blocked": "محجوب",
+    "booked": "محجوز",
+    "available": "متاح"
+  },
+  "moreBookings": "+{count} أخرى",
+  "dayCellLabel": "{date}: {status}",
+  "dayCellLabelWithPrice": "{date}: {status}، {price} لليلة",
+  "weekCellLabel": "{listing} – {date}: {status}، {price} لليلة",
+  "bookingTitle": "{guest} – {listing}",
+  "dayView": {
+    "eyebrow": "الجدول اليومي للعمليات",
+    "block": "حجب هذا اليوم",
+    "unblock": "إلغاء حجب هذا اليوم",
+    "arrivingToday": "الضيوف الواصلون اليوم",
+    "slots": {
+      "morning": {
+        "title": "نظرة صباحية",
+        "desc": "التحقق من جاهزية العقار والتنظيف"
+      },
+      "checkout": {
+        "title": "المغادرة المعتادة",
+        "desc": "مغادرة ضيوف الإقامات السابقة"
+      },
+      "turnover": {
+        "title": "تجهيز الغرف والتنظيف",
+        "desc": "التعقيم وتحضير البياضات النظيفة"
+      },
+      "checkin": {
+        "title": "بدء فترة وصول الضيوف",
+        "desc": "تسليم المفاتيح واستقبال الضيوف"
+      },
+      "evening": {
+        "title": "خدمة المساء",
+        "desc": "مساعدة الضيوف والتذكير بساعات الهدوء"
+      }
+    }
+  },
+  "guestLine": "{name} ({count, plural, zero {بدون ضيوف} one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}})",
+  "yearView": {
+    "viewMonth": "عرض الشهر",
+    "viewMonthLabel": "عرض {month}"
+  },
+  "dialog": {
+    "eyebrow": "إعدادات التاريخ",
+    "property": "العقار",
+    "availability": "التوفر",
+    "blockedDesc": "مخفي من نتائج بحث المسافرين",
+    "availableDesc": "متاح للحجز",
+    "unblock": "إلغاء الحجب",
+    "block": "حجب التاريخ",
+    "priceTitle": "السعر لهذا التاريخ",
+    "defaultRate": "السعر الافتراضي: {price} لليلة. اتركه فارغًا لإعادة الضبط.",
+    "priceInputLabel": "سعر الليلة لهذا التاريخ",
+    "saveRate": "حفظ السعر",
+    "reservationsOnDate": "الحجوزات في هذا التاريخ"
+  },
+  "toast": {
+    "dateBlocked": "تم حجب التاريخ عن الحجوزات",
+    "dateReopened": "أُعيد فتح التاريخ للحجوزات",
+    "dateUpdateFailed": "تعذّر تحديث هذا التاريخ. يُرجى المحاولة مرة أخرى.",
+    "priceInvalid": "أدخل عددًا صحيحًا بين {min} و{max}، أو اتركه فارغًا لإعادة الضبط.",
+    "priceReset": "تمت استعادة السعر العادي للإعلان.",
+    "priceSet": "تم تحديد سعر الليلة بـ {price}",
+    "priceSaveFailed": "تعذّر حفظ هذا السعر. يُرجى المحاولة مرة أخرى."
+  }
+}

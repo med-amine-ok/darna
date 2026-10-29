@@ -1,7 +1,7 @@
 import { test, expect, Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
-import { SignJWT } from "jose";
+import { createSessionToken } from "../helpers/session";
 
 export const LOCALES = ["fr", "en", "ar"] as const;
 
@@ -32,21 +32,8 @@ export const VIEWPORT_CONFIGS = [
   { id: "desktop_1280", width: 1280, height: 720, isMobile: false },
 ];
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.ADMIN_AUTH_SECRET || "darna-admin-super-secure-secret-key-2026-dz"
-);
-
 async function createValidSessionToken() {
-  return await new SignJWT({
-    userId: "adm_01",
-    email: "admin@darna.dz",
-    name: "DARNA Administrator",
-    role: "super_admin",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("8h")
-    .sign(SECRET_KEY);
+  return await createSessionToken();
 }
 
 interface Finding {

@@ -40,7 +40,7 @@ export default function Button({
   } else {
     // primary default = accent terracotta
     styleClasses =
-      "bg-accent text-white hover:bg-accent/90 border-transparent shadow-sm";
+      "bg-accent-600 text-white hover:bg-accent-700 border-transparent shadow-sm";
   }
 
   return (
@@ -65,6 +65,10 @@ export default function Button({
         active:-translate-y-[1px]
         min-h-[44px]
         cursor-pointer
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-accent-600
+        focus-visible:ring-offset-2
         ${styleClasses}
         ${small ? "py-1.5 text-sm font-normal border" : "py-3 text-base font-semibold"}
         ${className}

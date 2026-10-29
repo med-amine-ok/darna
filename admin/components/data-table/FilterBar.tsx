@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef } from "react";
 import { Search, SlidersHorizontal, Download } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
 
 export interface FilterBarProps {
@@ -33,8 +34,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   className = "",
 }) => {
   const t = useTranslations("common");
+  const tKit = useTranslations("uiKit.filterBar");
+  const tUi = useTranslations("ui");
+  const locale = useLocale();
   const placeholder = searchPlaceholder || t("search");
-  const labelResults = resultsLabel || t("results");
+  const labelResults = resultsLabel;
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard shortcut '/' to focus search
@@ -56,18 +60,22 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           {/* Search Box */}
           <div className="relative min-w-0 w-full sm:w-auto sm:min-w-[240px] max-w-sm flex-1">
-            <Search className="w-4 h-4 text-neutral-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-neutral-400 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
             <input
               ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={placeholder}
-              className="w-full text-base sm:text-xs min-h-[44px] sm:min-h-[38px] bg-white rounded-xl ps-9 pe-8 py-2 border border-tertiary/70 text-primary placeholder:text-neutral-400 shadow-2xs focus:outline-none focus:ring-2 focus:ring-secondary/40 focus:border-secondary transition"
+              aria-label={placeholder}
+              aria-keyshortcuts="/"
+              className="w-full text-base sm:text-xs min-h-[44px] sm:min-h-[38px] bg-white rounded-xl ps-9 pe-8 py-2 border border-tertiary/70 text-primary placeholder:text-neutral-500 shadow-2xs focus:outline-none focus:ring-2 focus:ring-accent-600/40 focus:border-secondary transition"
             />
             {/* Shortcut hint */}
             {!searchQuery && (
-              <span className="hidden sm:inline-block absolute end-2.5 top-1/2 -translate-y-1/2 text-[10px] text-neutral-400 font-mono px-1 py-0.5 rounded border border-neutral-200 bg-neutral-50 pointer-events-none">
+              <span className="hidden sm:inline-block absolute end-2.5 top-1/2 -translate-y-1/2 text-[10px] text-neutral-500 font-mono px-1 py-0.5 rounded border border-neutral-200 bg-neutral-50 pointer-events-none"
+                aria-hidden="true"
+              >
                 /
               </span>
             )}
@@ -81,14 +89,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <Button
               variant="outline"
               size="sm"
-              leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" />}
+              leftIcon={<SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />}
               onClick={onOpenFilterDrawer}
               className="text-xs font-semibold"
             >
               {t("filters")}
               {activeFilterCount > 0 && (
-                <span className="ms-1 px-1.5 py-0.2 rounded-full bg-secondary text-white text-[10px] font-bold tabular-nums">
-                  {activeFilterCount}
+                <span className="ms-1 px-1.5 py-0.5 rounded-full bg-secondary-700 text-white text-[10px] font-bold tabular-nums">
+                  <span aria-hidden="true">{formatNumber(activeFilterCount, locale)}</span>
+                  <span className="sr-only">{tUi("activeFilterCount", { count: activeFilterCount })}</span>
                 </span>
               )}
             </Button>
@@ -98,8 +107,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         {/* Right Side: Result Count & Actions */}
         <div className="flex items-center gap-3 self-end lg:self-auto shrink-0">
           {totalResults !== undefined && (
-            <span className="text-xs font-semibold text-neutral-500 tabular-nums">
-              <strong className="text-primary font-bold">{totalResults}</strong> {labelResults}
+            <span className="text-xs font-semibold text-neutral-500 tabular-nums" aria-live="polite">
+              {resultsLabel ? (
+                <>
+                  <strong className="text-primary font-bold">{formatNumber(totalResults, locale)}</strong> {labelResults}
+                </>
+              ) : (
+                tKit.rich("results", {
+                  count: totalResults,
+                  formatted: formatNumber(totalResults, locale),
+                  b: (chunks) => <strong className="text-primary font-bold">{chunks}</strong>,
+                })
+              )}
             </span>
           )}
 
@@ -107,9 +126,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <Button
               variant="outline"
               size="sm"
-              leftIcon={<Download className="w-3.5 h-3.5" />}
+              leftIcon={<Download className="w-3.5 h-3.5" aria-hidden="true" />}
               onClick={onExport}
-              title={t("export")}
               className="text-xs"
             >
               {t("export")}

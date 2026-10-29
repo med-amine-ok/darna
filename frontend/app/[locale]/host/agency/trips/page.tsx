@@ -1,42 +1,25 @@
-import { cookies } from "next/headers";
-import { getCurrentUser } from "@/lib/data/auth";
-import { getOrganizationById } from "@/lib/data/organizations";
-import { getTrips } from "@/lib/data/trips";
+import { hostPageMetadata } from "@/components/host/hostMetadata";
 import { redirect } from "next/navigation";
+import { requireHostContext } from "@/lib/server/host-context";
+import { getTrips } from "@/lib/data/trips";
 import AgencyTripsClient from "@/components/host/agency/AgencyTripsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function AgencyTripsPage({
-  params,
-}: {
-  params: { locale: string };
-}) {
+export function generateMetadata({ params }: { params: { locale: string } }) {
+  return hostPageMetadata(params.locale, "agencyTrips");
+}
+
+export default async function AgencyTripsPage({ params }: { params: { locale: string } }) {
   const locale = params?.locale || "en";
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const cookieAgencyId = cookieStore.get("darna_agency_id")?.value;
-  const cookieHostType = cookieStore.get("darna_host_type")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+  const ctx = await requireHostContext(locale, "/host/agency/trips");
 
-  const effectiveHostType = currentUser?.hostType || cookieHostType;
-
-  // Enforce Agency Exclusivity: Non-agency hosts are not permitted
-  if (effectiveHostType !== "agency") {
+  // Trips are an agency-only product
+  if (ctx.hostType !== "agency" || !ctx.organization) {
     redirect(`/${locale}/host/listings`);
   }
 
-  const orgId = currentUser?.organizationId || cookieAgencyId || "org_atlas_escapes";
-  const [organization, trips] = await Promise.all([
-    getOrganizationById(orgId),
-    getTrips({ organizationId: orgId, status: "all" }),
-  ]);
+  const trips = await getTrips({ organizationId: ctx.organization.id, status: "all" });
 
-  return (
-    <AgencyTripsClient
-      initialTrips={trips}
-      currentUser={currentUser}
-      organization={organization}
-    />
-  );
+  return <AgencyTripsClient initialTrips={trips} currentUser={ctx.user} organization={ctx.organization} />;
 }

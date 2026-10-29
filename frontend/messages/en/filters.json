@@ -1,0 +1,22 @@
+{
+  "priceRange": "Price range",
+  "priceRangeSubtitle": "Nightly or daily rates across Algerian stays and rentals",
+  "minimum": "Minimum",
+  "maximum": "Maximum",
+  "roomsAndBeds": "Rooms and spaces",
+  "bedrooms": "Bedrooms",
+  "bedroomsSubtitle": "Minimum number of dedicated bedrooms",
+  "bathrooms": "Bathrooms",
+  "bathroomsSubtitle": "Private or shared bathrooms",
+  "propertyType": "Property type",
+  "apartment": "Apartment",
+  "hotel": "Hotel",
+  "amenities": "Amenities & features",
+  "anyStayType": "Any stay type",
+  "entireHome": "Entire home",
+  "privateRoom": "Private room",
+  "hotelResort": "Hotel & resort",
+  "hostelDorms": "Youth hostel & dorms",
+  "villa": "Villa",
+  "riad": "Historic riad & ksar"
+}

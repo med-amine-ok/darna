@@ -1,43 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useCallback, useTransition } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
 import {
   Home,
-  Building2,
-  Bed,
   CheckCircle,
   Clock,
   XCircle,
-  AlertTriangle,
   RotateCcw,
-  Sparkles,
   Download,
   Plus,
   Eye,
-  MoreHorizontal,
   MapPin,
   Calendar,
-  Users,
-  Bath,
   Maximize2,
-  Phone,
-  Mail,
   ShieldCheck,
   Star,
   ExternalLink,
-  Edit,
   Trash2,
-  Copy,
   PauseCircle,
-  PlayCircle,
-  SlidersHorizontal,
+  ArrowRight,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip, KpiCardItem } from "@/components/ui/KpiStrip";
-import { FilterBar, FilterSelect } from "@/components/ui/FilterBar";
+import { FilterBar } from "@/components/ui/FilterBar";
 import { FilterDrawer } from "@/components/ui/FilterDrawer";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
@@ -47,33 +35,53 @@ import { ImageCarousel } from "@/components/ui/ImageCarousel";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { TypePill } from "@/components/ui/TypePill";
 import { InfoTile } from "@/components/ui/InfoTile";
-import { useLocale } from "next-intl";
-import { Tabs, TabItem } from "@/components/ui/Tabs";
+import { useLocale, useTranslations } from "next-intl";
+import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { listListings, approveListing, rejectListing, suspendListing, restoreListing, updateListingStatus } from "@/lib/data/listings";
-import { Listing, ListingStatus, HostType } from "@/lib/types";
+import { listListings, approveListing, updateListingStatus } from "@/lib/actions/listings";
+import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
+import { formatDate, formatDzd } from "@/lib/utils/format";
+import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
+import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
 
-const PROPERTY_TYPES = [
-  "Villa",
-  "Appartement",
-  "Maison traditionnelle",
-  "Bungalow",
-  "Chalet",
-  "Studio",
-  "Hôtel",
-  "Hostel",
+/** Filter values (kept as before) → translation key under `stays.propertyTypes`. */
+const PROPERTY_TYPES: { value: string; key: string }[] = [
+  { value: "villa", key: "villa" },
+  { value: "appartement", key: "apartment" },
+  { value: "maison traditionnelle", key: "traditionalHouse" },
+  { value: "bungalow", key: "bungalow" },
+  { value: "chalet", key: "chalet" },
+  { value: "studio", key: "studio" },
+  { value: "hôtel", key: "hotel" },
+  { value: "hostel", key: "hostel" },
 ];
+
+const HOST_TYPE_KEYS = ["individual", "agency", "hotel", "hostel"];
+
+function errorMessage(err: unknown): string | undefined {
+  return err instanceof Error ? err.message : undefined;
+}
+
+const iconBtn =
+  "p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function StaysListClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
+  const t = useTranslations("stays");
+  const tCommon = useTranslations("common");
+  const tHostTypes = useTranslations("hostTypes");
+  const tActions = useTranslations("actions");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const can = useCan();
+  const [, startTransition] = useTransition();
 
   // URL state
   const currentStatus = searchParams.get("status") || "all";
@@ -101,7 +109,7 @@ export default function StaysListClient() {
   const [selectedWilaya, setSelectedWilaya] = useState("all");
   const [selectedPropType, setSelectedPropType] = useState("all");
   const [page, setPage] = useState(initialPage);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
   const [selectedStayId, setSelectedStayId] = useState<string | null>(selectedStayIdFromUrl);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [panelTab, setPanelTab] = useState("info");
@@ -115,6 +123,8 @@ export default function StaysListClient() {
     stay: Listing;
   } | null>(null);
 
+  const hostTypeLabel = (type: string) => (HOST_TYPE_KEYS.includes(type) ? tHostTypes(type) : type);
+
   // Sync selected stay with URL
   const updateUrl = (newParams: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -125,34 +135,37 @@ export default function StaysListClient() {
         params.set(k, v);
       }
     });
-    router.push(`${pathname}?${params.toString()}`);
+    startTransition(() => router.push(`${pathname}?${params.toString()}`));
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await listListings({
+      const res = unwrap(await listListings({
         status: currentStatus,
         vertical: "home", // stays includes homes, apartments, villas, etc.
         wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
         search: searchQuery || undefined,
         page,
         pageSize,
-      });
+      }));
       setData(res.rows);
       setTotal(res.total);
       setTotalPages(res.totalPages || Math.ceil(res.total / pageSize));
       setFacets(res.facets || {});
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentStatus, selectedWilaya, searchQuery, page, pageSize, addToast, tCommon]);
 
   useEffect(() => {
     fetchData();
-  }, [currentStatus, selectedWilaya, selectedPropType, page, pageSize, searchQuery]);
+    // selectedPropType is not sent to the API yet but still triggers a refresh (previous behaviour).
+  }, [fetchData, selectedPropType]);
+
+  const statusActions = useListingStatusActions(fetchData);
 
   const selectedStay = data.find((s) => s.id === selectedStayId) || null;
 
@@ -167,44 +180,43 @@ export default function StaysListClient() {
   };
 
   // KPI Strip definitions from Mockup 05
-  // 1,248 Total · 186 En attente · 892 Publiés · 78 Suspendus · 54 Refusés
   const statusFacets = facets["status"] || {};
   const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
 
   const kpis: KpiCardItem[] = [
     {
       id: "all",
-      label: "Total des hébergements",
+      label: t("list.kpis.total"),
       value: totalCount || 1248,
-      icon: <Home className="w-5 h-5" />,
+      icon: <Home className="w-5 h-5" aria-hidden="true" />,
       colorVariant: "neutral",
     },
     {
       id: "pending",
-      label: "En attente de validation",
+      label: t("list.kpis.pending"),
       value: statusFacets["pending"] ?? statusFacets["pending_review"] ?? 186,
-      icon: <Clock className="w-5 h-5" />,
+      icon: <Clock className="w-5 h-5" aria-hidden="true" />,
       colorVariant: "warning",
     },
     {
       id: "published",
-      label: "Publiés",
+      label: t("list.kpis.published"),
       value: statusFacets["published"] ?? statusFacets["approved"] ?? 892,
-      icon: <CheckCircle className="w-5 h-5" />,
+      icon: <CheckCircle className="w-5 h-5" aria-hidden="true" />,
       colorVariant: "success",
     },
     {
       id: "suspended",
-      label: "Suspendus",
+      label: t("list.kpis.suspended"),
       value: statusFacets["suspended"] ?? 78,
-      icon: <PauseCircle className="w-5 h-5" />,
+      icon: <PauseCircle className="w-5 h-5" aria-hidden="true" />,
       colorVariant: "neutral",
     },
     {
       id: "refused",
-      label: "Refusés",
+      label: t("list.kpis.refused"),
       value: statusFacets["refused"] ?? statusFacets["rejected"] ?? 54,
-      icon: <XCircle className="w-5 h-5" />,
+      icon: <XCircle className="w-5 h-5" aria-hidden="true" />,
       colorVariant: "danger",
     },
   ];
@@ -213,24 +225,32 @@ export default function StaysListClient() {
   const columns: Column<Listing>[] = [
     {
       key: "listing",
-      header: "Hébergement",
+      header: t("list.columns.stay"),
       render: (row) => (
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
             <Image
               src={row.imageSrc?.[0] || row.images?.[0] || "/placeholder-stay.jpg"}
-              alt={row.title}
+              alt=""
               fill
+              sizes="48px"
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
-            <div className="font-medium text-[#2E3A2F] truncate text-sm hover:underline cursor-pointer" onClick={() => handleSelectStay(row)}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectStay(row);
+              }}
+              className="block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            >
               {row.title}
-            </div>
-            <div className="text-xs text-[#2E3A2F]/60 flex items-center gap-1.5 mt-0.5">
-              <span>{row.formattedId || `#H${row.id.replace("lst_", "").padStart(5, "0")}`}</span>
-              <span>•</span>
+            </button>
+            <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5 mt-0.5">
+              <span dir="ltr">{row.formattedId || `#H${row.id.replace("lst_", "").padStart(5, "0")}`}</span>
+              <span aria-hidden="true">•</span>
               <span className="capitalize">{row.propertyType}</span>
             </div>
           </div>
@@ -239,151 +259,128 @@ export default function StaysListClient() {
     },
     {
       key: "host",
-      header: "Hôte",
+      header: t("list.columns.host"),
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
+          <div aria-hidden="true" className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
             {row.hostName.charAt(0)}
           </div>
           <div className="min-w-0">
             <div className="text-xs font-medium text-[#2E3A2F] truncate">{row.hostName}</div>
-            <div className="text-[11px] text-[#2E3A2F]/60 capitalize">{row.hostType}</div>
+            <div className="text-[11px] text-[#2E3A2F]/70">{hostTypeLabel(row.hostType)}</div>
           </div>
         </div>
       ),
     },
     {
       key: "location",
-      header: "Ville / Région",
+      header: t("list.columns.location"),
       render: (row) => (
         <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" />
+          <MapPin className="w-3.5 h-3.5 text-secondary-700 shrink-0" aria-hidden="true" />
           <span className="truncate">{row.city}, {row.wilayaCode}</span>
         </div>
       ),
     },
     {
       key: "type",
-      header: "Type",
+      header: t("list.columns.type"),
       render: (row) => <TypePill type={row.hostType} />,
     },
     {
       key: "price",
-      header: "Prix / nuit",
+      header: t("list.columns.price"),
       render: (row) => (
         <div className="text-xs font-medium text-[#2E3A2F]">
-          {row.price.toLocaleString("fr-FR")} DZD
+          {formatDzd(row.price, locale)}
         </div>
       ),
     },
     {
       key: "status",
-      header: "Statut",
+      header: tCommon("status"),
       render: (row) => <StatusPill status={row.status} />,
     },
     {
       key: "rating",
-      header: "Note",
+      header: t("list.columns.rating"),
       render: (row) => (
         <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
           <span className="font-medium">{row.rating.toFixed(1)}</span>
-          <span className="text-[#2E3A2F]/60">({row.reviewsCount})</span>
+          <span className="text-[#2E3A2F]/70">{t("values.reviewsShort", { count: row.reviewsCount })}</span>
         </div>
       ),
     },
     {
       key: "bookings",
-      header: "Réservations",
+      header: t("list.columns.bookings"),
       render: (row) => (
         <span className="text-xs font-medium text-[#2E3A2F]">{row.bookingsCount}</span>
       ),
     },
     {
       key: "actions",
-      header: "Actions",
+      header: tCommon("actions"),
       className: "text-end",
       render: (row) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <button
+            type="button"
             onClick={() => handleSelectStay(row)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title={locale === "ar" ? "معاينة سريعة" : locale === "en" ? "Quick preview" : "Aperçu rapide"}
+            className={iconBtn}
+            title={t("list.actions.quickPreview")}
+            aria-label={t("list.actions.quickPreviewOf", { title: row.title })}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={() => router.push(`/stays/${row.id}`)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors"
-            title={locale === "ar" ? "فتح التفاصيل" : locale === "en" ? "View full page" : "Consulter"}
+            className={iconBtn}
+            title={t("list.actions.openFull")}
+            aria-label={t("list.actions.openFullOf", { title: row.title })}
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
           </button>
           <DropdownMenu
             items={[
               {
-                label: locale === "ar" ? "معاينة سريعة" : locale === "en" ? "Quick preview" : "Aperçu rapide",
-                icon: <Eye className="w-3.5 h-3.5" />,
+                label: t("list.actions.quickPreview"),
+                icon: <Eye className="w-3.5 h-3.5" aria-hidden="true" />,
                 onClick: () => handleSelectStay(row),
               },
               {
-                label: locale === "ar" ? "موافقة ونشر (Approved)" : locale === "en" ? "Approve / Publish" : "Approuver / Publier",
-                icon: <CheckCircle className="w-3.5 h-3.5 text-secondary" />,
-                disabled: row.status === "approved" || row.status === "published",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "approved");
-                  addToast({
-                    title: locale === "ar" ? "تمت الموافقة على الإعلان" : locale === "en" ? "Listing approved" : "Hébergement approuvé",
-                    variant: "success",
-                  });
-                  fetchData();
-                },
+                label: t("list.actions.approvePublish"),
+                icon: <CheckCircle className="w-3.5 h-3.5 text-secondary-700" aria-hidden="true" />,
+                disabled: !statusActions.allowed(row, "approved"),
+                onClick: () => statusActions.changeStatus(row, "approved"),
               },
               {
-                label: locale === "ar" ? "تعيين قيد المراجعة (Pending)" : locale === "en" ? "Mark as Pending Review" : "Mettre en attente",
-                icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
-                disabled: row.status === "pending" || row.status === "pending_review",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "pending_review");
-                  addToast({
-                    title: locale === "ar" ? "تم تعيين الإعلان قيد المراجعة" : locale === "en" ? "Listing marked pending" : "Hébergement mis en attente",
-                    variant: "info",
-                  });
-                  fetchData();
-                },
+                label: t("list.actions.markPending"),
+                icon: <Clock className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />,
+                disabled: !statusActions.allowed(row, "pending_review"),
+                onClick: () => statusActions.changeStatus(row, "pending_review"),
               },
               {
-                label: locale === "ar" ? "تعليق الإعلان (Suspend)" : locale === "en" ? "Suspend Listing" : "Suspendre l'annonce",
-                icon: <PauseCircle className="w-3.5 h-3.5 text-amber-700" />,
-                disabled: row.status === "suspended",
+                label: t("list.actions.suspend"),
+                icon: <PauseCircle className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />,
+                disabled: !statusActions.allowed(row, "suspended"),
                 variant: "danger",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "suspended");
-                  addToast({
-                    title: locale === "ar" ? "تم تعليق الإعلان" : locale === "en" ? "Listing suspended" : "Hébergement suspendu",
-                    variant: "warning",
-                  });
-                  fetchData();
-                },
+                onClick: () => statusActions.changeStatus(row, "suspended"),
               },
               {
-                label: locale === "ar" ? "رفض الإعلان (Reject)" : locale === "en" ? "Reject Listing" : "Refuser l'annonce",
-                icon: <XCircle className="w-3.5 h-3.5 text-accent" />,
-                disabled: row.status === "rejected" || row.status === "refused",
+                label: t("list.actions.reject"),
+                icon: <XCircle className="w-3.5 h-3.5 text-accent-700" aria-hidden="true" />,
+                disabled: !statusActions.allowed(row, "rejected"),
                 variant: "danger",
-                onClick: async () => {
-                  await updateListingStatus(row.id, "rejected");
-                  addToast({
-                    title: locale === "ar" ? "تم رفض الإعلان" : locale === "en" ? "Listing rejected" : "Hébergement refusé",
-                    variant: "warning",
-                  });
-                  fetchData();
-                },
+                onClick: () => statusActions.changeStatus(row, "rejected"),
               },
               {
-                label: locale === "ar" ? "حذف الإعلان" : locale === "en" ? "Delete Listing" : "Supprimer",
-                icon: <Trash2 className="w-3.5 h-3.5 text-accent" />,
+                label: t("list.actions.delete"),
+                icon: <Trash2 className="w-3.5 h-3.5 text-accent-700" aria-hidden="true" />,
                 variant: "danger",
+                disabled: !can("listings.delete"),
                 onClick: () => setConfirmAction({ type: "delete", stay: row }),
               },
             ]}
@@ -397,26 +394,37 @@ export default function StaysListClient() {
     <div className="space-y-6">
       {/* 1. Page Header (Mockup 05) */}
       <PageHeader
-        title="Gestion des hébergements"
-        subtitle="Consultez, modifiez et validez tous les hébergements répertoriés sur DARNA."
+        title={t("list.title")}
+        subtitle={t("list.subtitle")}
         actions={
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => {
-                addToast({ title: "Export en cours", description: "Le fichier CSV sera téléchargé sous peu.", variant: "info" });
-              }}
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm"
+              type="button"
+              disabled={!statusActions.canExport}
+              title={statusActions.canExport ? undefined : tActions("notAllowed")}
+              onClick={() =>
+                statusActions.exportCsv({
+                  status: currentStatus,
+                  vertical: "home",
+                  wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+                  search: searchQuery || undefined,
+                })
+              }
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-4 h-4" />
-              <span>Exporter</span>
+              <Download className="w-4 h-4" aria-hidden="true" />
+              <span>{t("list.export")}</span>
             </button>
+            {can("listings.approve") && (
             <button
+              type="button"
               onClick={() => router.push("/stays/new")}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm"
             >
-              <Plus className="w-4 h-4" />
-              <span>Ajouter un hébergement</span>
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              <span>{t("list.add")}</span>
             </button>
+            )}
           </div>
         }
       />
@@ -432,7 +440,7 @@ export default function StaysListClient() {
 
       {/* 3. Filter Bar (Mockup 05) */}
       <FilterBar
-        searchPlaceholder="Rechercher par titre, ville, propriétaire..."
+        searchPlaceholder={t("list.searchPlaceholder")}
         searchValue={searchQuery}
         onSearchChange={(q) => {
           setSearchQuery(q);
@@ -441,10 +449,10 @@ export default function StaysListClient() {
         selects={[
           {
             id: "wilaya",
-            label: "Région / Wilaya",
+            label: t("list.filters.wilaya"),
             value: selectedWilaya,
             options: [
-              { value: "all", label: locale === "ar" ? "جميع الولايات" : locale === "en" ? "All wilayas" : "Toutes les wilayas" },
+              { value: "all", label: t("list.filters.allWilayas") },
               ...WILAYAS.map((w) => ({ value: w.code, label: getWilayaLabel(w, locale) })),
             ],
             onChange: (val) => {
@@ -454,11 +462,11 @@ export default function StaysListClient() {
           },
           {
             id: "propType",
-            label: "Type de logement",
+            label: t("fields.propertyType"),
             value: selectedPropType,
             options: [
-              { value: "all", label: "Tous les types" },
-              ...PROPERTY_TYPES.map((t) => ({ value: t.toLowerCase(), label: t })),
+              { value: "all", label: t("list.filters.allTypes") },
+              ...PROPERTY_TYPES.map((p) => ({ value: p.value, label: t(`propertyTypes.${p.key}`) })),
             ],
             onChange: (val) => {
               setSelectedPropType(val);
@@ -467,14 +475,14 @@ export default function StaysListClient() {
           },
           {
             id: "status",
-            label: "Statut",
+            label: tCommon("status"),
             value: normalizedStatus,
             options: [
-              { value: "all", label: "Tous les statuts" },
-              { value: "pending", label: "En attente de validation" },
-              { value: "published", label: "Publié" },
-              { value: "suspended", label: "Suspendu" },
-              { value: "refused", label: "Refusé" },
+              { value: "all", label: t("list.filters.allStatuses") },
+              { value: "pending", label: t("list.kpis.pending") },
+              { value: "published", label: t("list.filters.published") },
+              { value: "suspended", label: t("list.filters.suspended") },
+              { value: "refused", label: t("list.filters.refused") },
             ],
             onChange: (val) => {
               updateUrl({ status: val === "all" ? null : val, page: "1" });
@@ -503,7 +511,7 @@ export default function StaysListClient() {
               selectedRowId={selectedStayId || undefined}
               onRowClick={handleSelectStay}
               isLoading={isLoading}
-              emptyMessage="Aucun hébergement trouvé avec ces filtres."
+              emptyMessage={t("list.empty")}
               selection={{
                 selectedIds: selectedRowIds,
                 onSelectionChange: setSelectedRowIds,
@@ -519,7 +527,7 @@ export default function StaysListClient() {
                 }}
                 pageSize={pageSize}
                 totalItems={total}
-                itemLabel="hébergements"
+                itemLabel={t("list.itemLabel")}
               />
             </div>
           </div>
@@ -534,84 +542,105 @@ export default function StaysListClient() {
               statusBadge={<StatusPill status={selectedStay.status} />}
               actions={
                 <button
+                  type="button"
                   onClick={() => router.push(`/stays/${selectedStay.id}`)}
-                  className="p-1 text-[#2E3A2F]/60 hover:text-[#2E3A2F] rounded"
-                  title="Plein écran"
+                  className="p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  title={t("list.actions.fullscreen")}
+                  aria-label={t("list.actions.fullscreen")}
                 >
-                  <Maximize2 className="w-4 h-4" />
+                  <Maximize2 className="w-4 h-4" aria-hidden="true" />
                 </button>
               }
               footer={
                 <div className="flex items-center justify-between gap-2 w-full flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {(selectedStay.status === "approved" || selectedStay.status === "published") ? (
+                    {(selectedStay.status === "approved" || selectedStay.status === "published") ? (statusActions.allowed(selectedStay, "suspended") &&
                       <button
-                        onClick={() => setConfirmAction({ type: "suspend", stay: selectedStay })}
+                        type="button"
+                        onClick={() => statusActions.changeStatus(selectedStay, "suspended")}
                         className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
                       >
-                        {locale === "ar" ? "تعليق" : locale === "en" ? "Suspend" : "Suspendre"}
+                        {tActions("suspend")}
                       </button>
                     ) : (selectedStay.status === "pending_review" || selectedStay.status === "pending") ? (
                       <>
+                        {can("listings.approve") && (
                         <button
+                          type="button"
                           onClick={async () => {
                             try {
-                              await approveListing(selectedStay.id, { id: "usr_superadmin", name: "Super Admin", role: "super_admin" });
+                              unwrap(await approveListing(selectedStay.id));
                               addToast({
-                                title: locale === "ar" ? "تمت الموافقة" : locale === "en" ? "Listing approved" : "Hébergement approuvé",
-                                description: locale === "ar" ? "تمت الموافقة على هذا العقار ونشره مباشرة" : locale === "en" ? "This listing has been approved directly" : "Cet hébergement a été approuvé directement.",
+                                title: t("list.toasts.approvedTitle"),
+                                description: t("list.toasts.approvedDescription"),
                                 variant: "success",
                               });
                               fetchData();
-                            } catch (err: any) {
-                              addToast({ title: "Erreur", description: err.message, variant: "danger" });
+                            } catch (err: unknown) {
+                              addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#6B7F5B] hover:bg-[#5a6b4c] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-secondary-700 hover:bg-secondary-800 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
                         >
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>{locale === "ar" ? "موافقة مباشرة" : locale === "en" ? "Approve directly" : "Approuver directement"}</span>
+                          <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>{t("list.actions.approveDirect")}</span>
                         </button>
+                        )}
                         <button
+                          type="button"
                           onClick={() => router.push(`/stays/${selectedStay.id}/review`)}
                           className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
                         >
-                          {locale === "ar" ? "فحص الملف" : locale === "en" ? "Review file" : "Examiner le dossier"}
+                          {t("list.actions.reviewFile")}
                         </button>
                       </>
-                    ) : (selectedStay.status === "suspended" || selectedStay.status === "rejected" || selectedStay.status === "refused") ? (
+                    ) : (selectedStay.status === "suspended" || selectedStay.status === "rejected" || selectedStay.status === "refused") ? (statusActions.allowed(selectedStay, selectedStay.status === "suspended" ? "approved" : "pending_review") &&
                       <button
+                        type="button"
                         onClick={async () => {
                           try {
-                            await restoreListing(selectedStay.id, { id: "usr_superadmin", name: "Super Admin", role: "super_admin" });
+                            unwrap(await updateListingStatus(selectedStay.id, selectedStay.status === "suspended" ? "approved" : "pending_review"));
                             addToast({
-                              title: locale === "ar" ? "تم إلغاء التعليق" : locale === "en" ? "Suspension lifted" : "Suspension annulée",
-                              description: locale === "ar" ? "تمت إعادة تفعيل هذا العقار بنجاح" : locale === "en" ? "This listing has been reactivated" : "L'hébergement a été réactivé avec succès.",
+                              title: t("list.toasts.reactivatedTitle"),
+                              description: t("list.toasts.reactivatedDescription"),
                               variant: "success",
                             });
                             fetchData();
-                          } catch (err: any) {
-                            addToast({ title: "Erreur", description: err.message, variant: "danger" });
+                          } catch (err: unknown) {
+                            addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                           }
                         }}
                         className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg flex items-center gap-1.5 transition-colors"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" />
-                        <span>{locale === "ar" ? "إلغاء التعليق" : locale === "en" ? "Cancel suspension" : "Annuler la suspension"}</span>
+                        <RotateCcw className="w-3.5 h-3.5 text-secondary-700" aria-hidden="true" />
+                        <span>{t("list.actions.cancelSuspension")}</span>
                       </button>
                     ) : null}
+                    {statusActions.canRestore(selectedStay) && (
+                      <button
+                        type="button"
+                        onClick={() => statusActions.restore(selectedStay)}
+                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg transition-colors"
+                      >
+                        {tActions("restore")}
+                      </button>
+                    )}
+                    {statusActions.canDelete(selectedStay) && (
                     <button
+                      type="button"
                       onClick={() => setConfirmAction({ type: "delete", stay: selectedStay })}
-                      className="px-3 py-1.5 text-xs font-medium text-[#C96F4F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 text-xs font-medium text-accent-700 border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
                     >
-                      {locale === "ar" ? "حذف" : locale === "en" ? "Delete" : "Supprimer"}
+                      {tCommon("delete")}
                     </button>
+                    )}
                   </div>
                   <button
+                    type="button"
                     onClick={() => router.push(`/stays/${selectedStay.id}`)}
                     className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
                   >
-                    Modifier
+                    {tCommon("edit")}
                   </button>
                 </div>
               }
@@ -626,24 +655,24 @@ export default function StaysListClient() {
                 {/* Rating & Location */}
                 <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
                     <span className="font-semibold">{selectedStay.rating.toFixed(1)}</span>
-                    <span className="text-[#2E3A2F]/60">({selectedStay.reviewsCount} avis)</span>
+                    <span className="text-[#2E3A2F]/70">{t("values.reviews", { count: selectedStay.reviewsCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#6B7F5B] font-medium cursor-pointer hover:underline">
-                    <MapPin className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1 text-secondary-700 font-medium">
+                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{selectedStay.city}, {selectedStay.wilayaCode}</span>
                   </div>
                 </div>
 
-                {/* Panel Tabs (Mockup 05: Informations, Photos, Équipements, Calendrier, Réservations) */}
+                {/* Panel Tabs */}
                 <Tabs
                   items={[
-                    { id: "info", label: "Informations" },
-                    { id: "photos", label: "Photos" },
-                    { id: "amenities", label: "Équipements" },
-                    { id: "calendar", label: "Calendrier" },
-                    { id: "bookings", label: "Réservations" },
+                    { id: "info", label: t("tabs.info") },
+                    { id: "photos", label: t("tabs.photos") },
+                    { id: "amenities", label: t("tabs.amenities") },
+                    { id: "calendar", label: t("tabs.calendar") },
+                    { id: "bookings", label: t("tabs.bookings") },
                   ]}
                   activeId={panelTab}
                   onChange={setPanelTab}
@@ -655,73 +684,81 @@ export default function StaysListClient() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70">
-                          {locale === "ar" ? "معلومات عامة عن الإقامة" : locale === "en" ? "About This Stay" : "À propos de ce logement"}
+                          {t("list.panel.about")}
                         </h4>
                         <button
+                          type="button"
                           onClick={() => router.push(`/stays/${selectedStay.id}`)}
-                          className="text-xs text-[#6B7F5B] hover:underline"
+                          className="text-xs text-secondary-700 hover:underline"
                         >
-                          {locale === "ar" ? "تعديل" : locale === "en" ? "Edit" : "Modifier"}
+                          {tCommon("edit")}
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoTile label={locale === "ar" ? "نوع العقار" : locale === "en" ? "Property Type" : "Type de logement"} value={selectedStay.propertyType} />
-                        <InfoTile label={locale === "ar" ? "السعة" : locale === "en" ? "Capacity" : "Capacité"} value={`${selectedStay.guestCapacity} ${locale === "ar" ? "ضيوف" : locale === "en" ? "guests" : "voyageurs"}`} />
-                        <InfoTile label={locale === "ar" ? "الغرف" : locale === "en" ? "Bedrooms" : "Chambres"} value={`${selectedStay.bedroomCount || 1}`} />
-                        <InfoTile label={locale === "ar" ? "الحمامات" : locale === "en" ? "Bathrooms" : "Salles de bain"} value={`${selectedStay.bathroomCount || 1}`} />
-                        <InfoTile label={locale === "ar" ? "المساحة" : locale === "en" ? "Surface" : "Surface"} value={`${selectedStay.surfaceM2 || 120} m²`} />
-                        <InfoTile label={locale === "ar" ? "الولاية" : locale === "en" ? "Wilaya" : "Wilaya"} value={`${selectedStay.wilayaCode} - ${selectedStay.city}`} />
+                        <InfoTile label={t("fields.propertyType")} value={selectedStay.propertyType} />
+                        <InfoTile label={t("fields.capacity")} value={t("values.guests", { count: selectedStay.guestCapacity })} />
+                        <InfoTile label={t("fields.bedrooms")} value={`${selectedStay.bedroomCount || 1}`} />
+                        <InfoTile label={t("fields.bathrooms")} value={`${selectedStay.bathroomCount || 1}`} />
+                        <InfoTile label={t("fields.surface")} value={t("values.surface", { value: selectedStay.surfaceM2 || 120 })} />
+                        <InfoTile label={t("fields.wilaya")} value={`${selectedStay.wilayaCode} - ${selectedStay.city}`} />
                       </div>
                     </div>
 
-                    {/* Price & Discount Section (Price & Disc) */}
+                    {/* Price & Discount Section */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
                       <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
-                        <span>{locale === "ar" ? "تفاصيل الأسعار والخصومات" : locale === "en" ? "Pricing & Discounts" : "Tarification & Remises"}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">{selectedStay.price.toLocaleString("fr-FR")} DZD <span className="text-[10px] text-[#2E3A2F]/60">/ {locale === "ar" ? "ليلة" : locale === "en" ? "night" : "nuit"}</span></span>
+                        <span>{t("pricing.title")}</span>
+                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                          {t.rich("values.pricePerNight", {
+                            price: formatDzd(selectedStay.price, locale),
+                            unit: (chunks) => <span className="text-[10px] text-[#2E3A2F]/70">{chunks}</span>,
+                          })}
+                        </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "رسوم التنظيف" : locale === "en" ? "Cleaning Fee" : "Frais de ménage"}</span>
-                          <span className="font-medium text-[#2E3A2F]">3 500 DZD</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.cleaningFee")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{formatDzd(3500, locale)}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "عمولة المنصة" : locale === "en" ? "Commission" : "Commission DARNA"}</span>
-                          <span className="font-medium text-[#6B7F5B]">12% ({locale === "ar" ? "مشمولة" : locale === "en" ? "included" : "incluse"})</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.commission")}</span>
+                          <span className="font-medium text-secondary-700">{t("pricing.commissionValue", { rate: 12 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "خصم أسبوعي" : locale === "en" ? "Weekly Discount" : "Remise semaine (-10%)"}</span>
-                          <span className="font-medium text-[#6B7F5B]">{Math.round(selectedStay.price * 7 * 0.9).toLocaleString("fr-FR")} DZD / 7 j</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.weeklyDiscount", { rate: DISCOUNTS.weekly })}</span>
+                          <span className="font-medium text-secondary-700">
+                            {t("pricing.weeklyPrice", { amount: formatDzd(applyDiscount(selectedStay.price, DISCOUNTS.weekly, 7), locale) })}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "التأمين المسترد" : locale === "en" ? "Deposit" : "Caution remboursable"}</span>
-                          <span className="font-medium text-[#2E3A2F]">20 000 DZD</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("pricing.deposit")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{formatDzd(20000, locale)}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Time & Schedule Section (Time) */}
+                    {/* Time & Schedule Section */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
                       <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#6B7F5B]" />
-                        <span>{locale === "ar" ? "المواعيد والشروط الزمنية" : locale === "en" ? "Times & Duration Rules" : "Horaires & Durées de séjour"}</span>
+                        <Clock className="w-4 h-4 text-secondary-700" aria-hidden="true" />
+                        <span>{t("times.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "تسجيل الوصول (Check-in)" : locale === "en" ? "Check-in Time" : "Heure d'arrivée"}</span>
-                          <span className="font-medium text-[#2E3A2F]">À partir de 15h00</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("times.checkIn")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("times.checkInValue", { time: "15:00" })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "تسجيل المغادرة (Check-out)" : locale === "en" ? "Check-out Time" : "Heure de départ"}</span>
-                          <span className="font-medium text-[#2E3A2F]">Avant 11h00</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("times.checkOut")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("times.checkOutValue", { time: "11:00" })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "الحد الأدنى للإقامة" : locale === "en" ? "Min Stay Duration" : "Durée minimale"}</span>
-                          <span className="font-medium text-[#2E3A2F]">2 nuits minimum</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("times.minStay")}</span>
+                          <span className="font-medium text-[#2E3A2F]">{t("times.minStayValue", { count: 2 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/60 block">{locale === "ar" ? "سياسة الإلغاء" : locale === "en" ? "Cancellation" : "Politique d'annulation"}</span>
-                          <span className="font-medium text-[#6B7F5B]">Flexible (48h avant)</span>
+                          <span className="text-[#2E3A2F]/70 block">{t("times.cancellation")}</span>
+                          <span className="font-medium text-secondary-700">{t("times.cancellationValue", { hours: 48 })}</span>
                         </div>
                       </div>
                     </div>
@@ -729,92 +766,106 @@ export default function StaysListClient() {
                     {/* Host Mini Card */}
                     <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
                       <div className="text-xs font-semibold text-[#2E3A2F] mb-2 flex items-center justify-between">
-                        <span>{locale === "ar" ? "المضيف / المالك" : locale === "en" ? "Host / Owner" : "Hôte / Propriétaire"}</span>
-                        <span className="text-[11px] text-[#6B7F5B] cursor-pointer hover:underline">
-                          {locale === "ar" ? "عرض الملف" : locale === "en" ? "View profile" : "Voir le profil"}
-                        </span>
+                        <span>{t("host.title")}</span>
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/hosts/${selectedStay.hostId}`)}
+                          className="text-[11px] text-secondary-700 hover:underline"
+                        >
+                          {t("host.viewProfile")}
+                        </button>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
+                        <div aria-hidden="true" className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
                           {selectedStay.hostName.charAt(0)}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-[#2E3A2F]">{selectedStay.hostName}</div>
-                          <div className="text-xs text-[#2E3A2F]/60 flex items-center gap-1.5">
-                            <span className="capitalize">{selectedStay.hostType}</span>
-                            <span>•</span>
-                            <span className="text-[#6B7F5B] flex items-center gap-0.5">
-                              <ShieldCheck className="w-3 h-3" /> {locale === "ar" ? "موثق" : locale === "en" ? "Verified" : "Vérifié"}
+                          <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5">
+                            <span>{hostTypeLabel(selectedStay.hostType)}</span>
+                            <span aria-hidden="true">•</span>
+                            <span className="text-secondary-700 flex items-center gap-0.5">
+                              <ShieldCheck className="w-3 h-3" aria-hidden="true" /> {t("host.verified")}
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Description snippet (Disc) */}
+                    {/* Description snippet */}
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
-                        {locale === "ar" ? "الوصف الكامل" : locale === "en" ? "Description" : "Description"}
+                        {t("fields.description")}
                       </h4>
                       <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
-                        {selectedStay.description || "Aucune description fournie pour cet hébergement."}
+                        {selectedStay.description || t("list.panel.noDescription")}
                       </p>
                     </div>
                   </div>
                 )}
 
                 {panelTab === "photos" && (
-                  <div className="grid grid-cols-2 gap-2">
+                  <ul className="grid grid-cols-2 gap-2">
                     {(selectedStay.imageSrc?.length ? selectedStay.imageSrc : ["/placeholder-stay.jpg"]).map((img, i) => (
-                      <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-[#D9C9B2]/40">
-                        <Image src={img} alt="" fill className="object-cover" />
-                      </div>
+                      <li key={i} className="relative aspect-video rounded-lg overflow-hidden border border-[#D9C9B2]/40">
+                        <Image
+                          src={img}
+                          alt={t("photoAlt", { title: selectedStay.title, index: i + 1 })}
+                          fill
+                          sizes="200px"
+                          className="object-cover"
+                        />
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
 
                 {panelTab === "amenities" && (
-                  <div className="flex flex-wrap gap-1.5">
+                  <ul className="flex flex-wrap gap-1.5">
                     {selectedStay.amenities.map((am, i) => (
-                      <span key={i} className="px-2.5 py-1 text-xs bg-[#FAF9F5] border border-[#D9C9B2]/50 text-[#2E3A2F] rounded-md">
+                      <li key={i} className="px-2.5 py-1 text-xs bg-[#FAF9F5] border border-[#D9C9B2]/50 text-[#2E3A2F] rounded-md">
                         {am}
-                      </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
 
                 {panelTab === "calendar" && (
                   <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 text-center">
-                    <Calendar className="w-8 h-8 text-[#6B7F5B] mx-auto mb-2 opacity-70" />
+                    <Calendar className="w-8 h-8 text-secondary-700 mx-auto mb-2 opacity-70" aria-hidden="true" />
                     <p className="text-xs text-[#2E3A2F]/70">
-                      Disponibilités et tarifs saisonniers gérés pour cet hébergement.
+                      {t("list.panel.calendarText")}
                     </p>
                     <button
+                      type="button"
                       onClick={() => router.push(`/stays/${selectedStay.id}?tab=calendar`)}
-                      className="mt-2 text-xs font-medium text-[#6B7F5B] hover:underline"
+                      className="mt-2 text-xs font-medium text-secondary-700 hover:underline inline-flex items-center gap-1"
                     >
-                      Consulter le calendrier complet →
+                      {t("list.panel.calendarLink")}
+                      <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                     </button>
                   </div>
                 )}
 
                 {panelTab === "bookings" && (
-                  <div className="space-y-2 text-xs">
-                    <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40 flex justify-between items-center">
-                      <div>
-                        <div className="font-medium text-[#2E3A2F]">#R1248 • Karim L.</div>
-                        <div className="text-[11px] text-[#2E3A2F]/60">12 mars - 15 mars 2024</div>
-                      </div>
-                      <StatusPill status="confirmed" />
-                    </div>
-                    <div className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40 flex justify-between items-center">
-                      <div>
-                        <div className="font-medium text-[#2E3A2F]">#R1190 • Sarah B.</div>
-                        <div className="text-[11px] text-[#2E3A2F]/60">02 fév - 06 fév 2024</div>
-                      </div>
-                      <StatusPill status="completed" />
-                    </div>
-                  </div>
+                  <ul className="space-y-2 text-xs">
+                    {[
+                      { ref: "#R1248", guest: "Karim L.", start: "2024-03-12", end: "2024-03-15", status: "confirmed" },
+                      { ref: "#R1190", guest: "Sarah B.", start: "2024-02-02", end: "2024-02-06", status: "completed" },
+                    ].map((b) => (
+                      <li key={b.ref} className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40 flex justify-between items-center">
+                        <div>
+                          <div className="font-medium text-[#2E3A2F]">
+                            <span dir="ltr">{b.ref}</span> • {b.guest}
+                          </div>
+                          <div className="text-[11px] text-[#2E3A2F]/70">
+                            {t("values.dateRange", { start: formatDate(b.start, locale), end: formatDate(b.end, locale) })}
+                          </div>
+                        </div>
+                        <StatusPill status={b.status} />
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </DetailPanel>
@@ -826,7 +877,7 @@ export default function StaysListClient() {
       <FilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
-        title="Filtres avancés des hébergements"
+        title={t("list.advanced.title")}
         onApply={() => {
           setIsFilterDrawerOpen(false);
           fetchData();
@@ -839,8 +890,9 @@ export default function StaysListClient() {
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label className="font-semibold text-[#2E3A2F] block mb-1.5">Capacité minimale (personnes)</label>
+            <label htmlFor="stays-adv-capacity" className="font-semibold text-[#2E3A2F] block mb-1.5">{t("list.advanced.minCapacity")}</label>
             <input
+              id="stays-adv-capacity"
               type="number"
               min="1"
               max="30"
@@ -848,27 +900,29 @@ export default function StaysListClient() {
               className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
             />
           </div>
-          <div>
-            <label className="font-semibold text-[#2E3A2F] block mb-1.5">Fourchette de prix (DZD)</label>
+          <fieldset>
+            <legend className="font-semibold text-[#2E3A2F] block mb-1.5">{t("list.advanced.priceRange")}</legend>
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                placeholder="Min"
+                aria-label={t("list.advanced.min")}
+                placeholder={t("list.advanced.min")}
                 className="w-1/2 px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
               />
               <input
                 type="number"
-                placeholder="Max"
+                aria-label={t("list.advanced.max")}
+                placeholder={t("list.advanced.max")}
                 className="w-1/2 px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
               />
             </div>
-          </div>
+          </fieldset>
           <div>
-            <label className="font-semibold text-[#2E3A2F] block mb-1.5">Mode d'approbation</label>
-            <select className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]">
-              <option value="all">Tous les modes</option>
-              <option value="instant">Réservation instantanée</option>
-              <option value="request">Sur demande</option>
+            <label htmlFor="stays-adv-approval" className="font-semibold text-[#2E3A2F] block mb-1.5">{t("fields.approvalMode")}</label>
+            <select id="stays-adv-approval" className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]">
+              <option value="all">{t("list.advanced.allModes")}</option>
+              <option value="instant">{t("values.instantBooking")}</option>
+              <option value="request">{t("values.onRequest")}</option>
             </select>
           </div>
         </div>
@@ -880,27 +934,22 @@ export default function StaysListClient() {
           isOpen={true}
           title={
             confirmAction.type === "delete"
-              ? "Supprimer cet hébergement ?"
+              ? t("list.confirm.deleteTitle")
               : confirmAction.type === "suspend"
-              ? "Suspendre cet hébergement ?"
-              : "Valider cet hébergement ?"
+              ? t("list.confirm.suspendTitle")
+              : t("list.confirm.approveTitle")
           }
-          description={`Vous êtes sur le point de modifier le statut de "${confirmAction.stay.title}". Cette action sera consignée dans le journal d'audit.`}
-          confirmLabel={confirmAction.type === "delete" ? "Supprimer définitivement" : "Confirmer"}
+          description={t("list.confirm.description", { title: confirmAction.stay.title })}
+          confirmLabel={confirmAction.type === "delete" ? t("list.confirm.deleteConfirm") : tCommon("confirm")}
           variant={confirmAction.type === "delete" ? "danger" : "primary"}
           onConfirm={async () => {
-            if (confirmAction.type === "delete") {
-              addToast({ title: "Hébergement supprimé", variant: "warning" });
-            } else if (confirmAction.type === "suspend") {
-              await suspendListing(confirmAction.stay.id, "Suspension administrative temporaire", { id: "usr_admin", name: "Admin", role: "super_admin" });
-              addToast({ title: "Hébergement suspendu", variant: "info" });
-            }
-            setConfirmAction(null);
-            fetchData();
+            const ok = await statusActions.remove(confirmAction.stay, t("list.toasts.deleted"));
+            if (ok) setConfirmAction(null);
           }}
           onCancel={() => setConfirmAction(null)}
         />
       )}
+      {statusActions.dialog}
     </div>
   );
 }

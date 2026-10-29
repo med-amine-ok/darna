@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 export interface BadgeProps {
   children: React.ReactNode;
@@ -16,9 +17,9 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variantStyles = {
     primary: "bg-primary text-white",
-    secondary: "bg-secondary text-white",
+    secondary: "bg-secondary-700 text-white",
     tertiary: "bg-tertiary text-primary",
-    accent: "bg-accent text-white",
+    accent: "bg-accent-600 text-white",
     outline: "border border-tertiary/70 text-primary bg-white",
   };
 
@@ -44,6 +45,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   size = 36,
   className = "",
 }) => {
+  const t = useTranslations("uiKit");
   const initials = name
     ? name
         .split(" ")
@@ -61,7 +63,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       {src ? (
         <Image
           src={src}
-          alt={name || "Avatar"}
+          alt={name || t("avatar")}
           width={size}
           height={size}
           className="object-cover w-full h-full"

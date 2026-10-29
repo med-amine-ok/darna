@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useId, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Users,
@@ -8,27 +8,22 @@ import {
   ShieldAlert,
   Ban,
   CheckCircle2,
-  XCircle,
   Eye,
   KeyRound,
   Trash2,
-  RotateCcw,
   Download,
   Calendar,
-  CreditCard,
   Star,
   Activity,
   MapPin,
-  Phone,
-  Mail,
   UserCheck,
   Clock,
+  MoreHorizontal,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip } from "@/components/ui/KpiStrip";
 import { SplitView } from "@/components/ui/SplitView";
 import { DetailPanel } from "@/components/ui/DetailPanel";
-import { Tabs } from "@/components/ui/Tabs";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { FilterBar } from "@/components/data-table/FilterBar";
 import { FilterDrawer } from "@/components/data-table/FilterDrawer";
@@ -42,22 +37,28 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { GuestUser, PaginatedResult } from "@/lib/types";
 import { getWilayaName, getWilayaLabel, WILAYAS } from "@/lib/utils/wilayas";
-import { formatDzd, formatDate } from "@/lib/utils/format";
+import { formatDzd, formatDate, formatNumber, intlLocale } from "@/lib/utils/format";
 import {
   listUsers,
   suspendUser,
-  unsuspendUser,
   banUser,
   deleteUser,
-  restoreUser,
   updateUserStatus,
-} from "@/lib/data/users";
+} from "@/lib/actions/users";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 
 export interface UsersClientProps {
   initialData: PaginatedResult<GuestUser>;
   initialStatus: string;
   initialRole: string;
 }
+
+const SELECT_CLASS =
+  "w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 cursor-pointer";
+
+// Demo activity timestamp (mock panel content) — rendered in the viewer's locale.
+const DEMO_LOGIN_AT = "2024-03-20T08:34:00";
 
 export default function UsersClient({
   initialData,
@@ -67,8 +68,16 @@ export default function UsersClient({
   const locale = useLocale() as "en" | "fr" | "ar";
   const t = useTranslations("users");
   const tCommon = useTranslations("common");
+  const tStatus = useTranslations("status");
   const { success, error, info } = useToast();
+  const can = useCan();
   const [isPending, startTransition] = useTransition();
+  const uid = useId();
+
+  const statusLabel = (value: string) => (tStatus.has(value) ? tStatus(value) : value);
+  const roleLabel = (value: string) => (t.has(`roles.${value}`) ? t(`roles.${value}`) : value);
+  const formatTime = (iso: string) =>
+    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
 
   const [data, setData] = useState<PaginatedResult<GuestUser>>(initialData);
   const [status, setStatus] = useState<string>(initialStatus);
@@ -101,7 +110,7 @@ export default function UsersClient({
 
   const fetchData = async (overrideParams: Record<string, any> = {}) => {
     startTransition(async () => {
-      const res = await listUsers({
+      const res = unwrap(await listUsers({
         status: overrideParams.status ?? status,
         role: overrideParams.role ?? role,
         search: overrideParams.search ?? search,
@@ -109,7 +118,7 @@ export default function UsersClient({
         isFlagged: overrideParams.isFlaggedOnly ?? (isFlaggedOnly ? true : undefined),
         page: overrideParams.page ?? currentPage,
         pageSize: overrideParams.pageSize ?? pageSize,
-      });
+      }));
       setData(res);
     });
   };
@@ -126,10 +135,12 @@ export default function UsersClient({
   };
 
   const activeChips: ActiveFilterItem[] = [];
-  if (status !== "all") activeChips.push({ key: "status", label: "Statut", valueDisplay: status });
-  if (role !== "all") activeChips.push({ key: "role", label: "Rôle", valueDisplay: role });
-  if (selectedWilaya !== "all") activeChips.push({ key: "wilaya", label: "Wilaya", valueDisplay: selectedWilaya });
-  if (isFlaggedOnly) activeChips.push({ key: "flagged", label: "Signalé", valueDisplay: "Signalé uniquement" });
+  if (status !== "all") activeChips.push({ key: "status", label: t("status"), valueDisplay: statusLabel(status) });
+  if (role !== "all") activeChips.push({ key: "role", label: t("role"), valueDisplay: roleLabel(role) });
+  if (selectedWilaya !== "all") {
+    activeChips.push({ key: "wilaya", label: t("wilaya"), valueDisplay: getWilayaName(selectedWilaya, locale) });
+  }
+  if (isFlaggedOnly) activeChips.push({ key: "flagged", label: tStatus("flagged"), valueDisplay: t("flaggedOnly") });
 
   const handleRemoveChip = (key: string) => {
     if (key === "status") { setStatus("all"); fetchData({ status: "all" }); }
@@ -150,18 +161,19 @@ export default function UsersClient({
   const handleSuspend = (user: GuestUser) => {
     setConfirmState({
       isOpen: true,
-      title: "Suspendre le compte utilisateur",
-      description: `Suspendre temporairement ${user.name}. L'utilisateur ne pourra plus réserver ni publier d'avis.`,
+      title: t("confirm.suspendTitle"),
+      description: t("confirm.suspendDescription", { name: user.name }),
       variant: "danger",
-      confirmLabel: "Suspendre l'utilisateur",
+      confirmLabel: t("confirm.suspendConfirm"),
       action: async () => {
         try {
-          const updated = await suspendUser(user.id, "Violation des conditions d'utilisation", { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Utilisateur ${user.name} suspendu`);
+          // Reason is stored in the audit trail — intentionally not localized.
+          const updated = unwrap(await suspendUser(user.id, "Violation des conditions d'utilisation"));
+          info(t("toasts.suspended", { name: user.name }));
           setDetailUser(updated);
           fetchData();
         } catch (e: any) {
-          error(e.message || "Impossible de suspendre l'utilisateur");
+          error(t("toasts.suspendFailed"), e.message);
         }
       },
     });
@@ -170,18 +182,19 @@ export default function UsersClient({
   const handleBan = (user: GuestUser) => {
     setConfirmState({
       isOpen: true,
-      title: "Bannir définitivement l'utilisateur",
-      description: `Bannir définitivement ${user.name} de la plateforme DARNA.`,
+      title: t("confirm.banTitle"),
+      description: t("confirm.banDescription", { name: user.name }),
       variant: "danger",
-      confirmLabel: "Bannir l'utilisateur",
+      confirmLabel: t("confirm.banConfirm"),
       action: async () => {
         try {
-          const updated = await banUser(user.id, "Manquement grave à la sécurité", { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Utilisateur ${user.name} banni`);
+          // Reason is stored in the audit trail — intentionally not localized.
+          const updated = unwrap(await banUser(user.id, "Manquement grave à la sécurité"));
+          info(t("toasts.banned", { name: user.name }));
           setDetailUser(updated);
           fetchData();
         } catch (e: any) {
-          error(e.message || "Impossible de bannir l'utilisateur");
+          error(t("toasts.banFailed"), e.message);
         }
       },
     });
@@ -190,26 +203,26 @@ export default function UsersClient({
   const handleDelete = (user: GuestUser) => {
     setConfirmState({
       isOpen: true,
-      title: "Supprimer l'utilisateur",
-      description: `Suppression réversible du compte de ${user.name}. Tapez le nom de l'utilisateur pour confirmer.`,
+      title: t("confirm.deleteTitle"),
+      description: t("confirm.deleteDescription", { name: user.name }),
       variant: "danger",
-      confirmLabel: "Supprimer le compte",
+      confirmLabel: t("confirm.deleteConfirm"),
       requireTypedConfirmation: user.name,
       action: async () => {
         try {
-          await deleteUser(user.id, { id: "adm_01", name: "Admin", role: "super_admin" });
-          info(`Utilisateur ${user.name} supprimé`);
+          unwrap(await deleteUser(user.id));
+          info(t("toasts.deleted", { name: user.name }));
           setDetailUser(null);
           fetchData();
         } catch (e: any) {
-          error(e.message || "Impossible de supprimer l'utilisateur");
+          error(t("toasts.deleteFailed"), e.message);
         }
       },
     });
   };
 
   const handleResetPassword = (user: GuestUser) => {
-    success(`Lien de réinitialisation envoyé à ${user.email}`);
+    success(t("toasts.resetSent", { email: user.email }));
   };
 
   const facets = data.facets || {};
@@ -224,7 +237,7 @@ export default function UsersClient({
   const kpis = [
     {
       id: "all",
-      label: "Tous les utilisateurs",
+      label: t("kpis.all"),
       value: totalUsers,
       icon: Users,
       colorVariant: "primary" as const,
@@ -233,7 +246,7 @@ export default function UsersClient({
     },
     {
       id: "active",
-      label: "Comptes actifs",
+      label: t("kpis.active"),
       value: activeUsers,
       icon: CheckCircle2,
       colorVariant: "secondary" as const,
@@ -242,7 +255,7 @@ export default function UsersClient({
     },
     {
       id: "guests",
-      label: "Voyageurs",
+      label: t("kpis.guests"),
       value: guestUsers,
       icon: UserCheck,
       colorVariant: "tertiary" as const,
@@ -255,7 +268,7 @@ export default function UsersClient({
     },
     {
       id: "suspended",
-      label: "Comptes suspendus",
+      label: t("kpis.suspended"),
       value: suspendedUsers,
       icon: ShieldAlert,
       colorVariant: "tertiary" as const,
@@ -264,7 +277,7 @@ export default function UsersClient({
     },
     {
       id: "banned",
-      label: "Comptes bannis",
+      label: t("kpis.banned"),
       value: bannedUsers,
       icon: Ban,
       colorVariant: "accent" as const,
@@ -285,7 +298,7 @@ export default function UsersClient({
             <span className="block font-bold text-primary truncate leading-tight">
               {u.name}
             </span>
-            <span className="block text-[11px] text-neutral-400 truncate leading-snug">
+            <span className="block text-[11px] text-neutral-500 truncate leading-snug">
               {u.email}
             </span>
           </div>
@@ -294,20 +307,20 @@ export default function UsersClient({
     },
     {
       key: "wilayaCode",
-      header: "Localisation",
+      header: t("location"),
       render: (u) => (
         <span className="text-xs text-neutral-600 flex items-center gap-1">
-          <MapPin className="w-3.5 h-3.5 text-neutral-400" />
-          {u.wilayaCode ? getWilayaName(u.wilayaCode, locale) : "Alger"}
+          <MapPin className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+          {u.wilayaCode ? getWilayaName(u.wilayaCode, locale) : "—"}
         </span>
       ),
     },
     {
       key: "role",
-      header: "Rôle",
+      header: t("role"),
       render: (u) => (
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-primary">
-          {u.role === "both" ? "Voyageur & Hôte" : "Voyageur"}
+          {u.role === "both" ? roleLabel("both") : roleLabel("guest")}
         </span>
       ),
     },
@@ -317,7 +330,7 @@ export default function UsersClient({
       sortable: true,
       render: (u) => (
         <span className="text-xs font-mono font-medium text-primary">
-          {u.bookingsCount}
+          {formatNumber(u.bookingsCount, locale)}
         </span>
       ),
     },
@@ -338,75 +351,103 @@ export default function UsersClient({
     },
     {
       key: "actions",
-      header: "",
+      header: tCommon("actions"),
       render: (u) => (
+        // Stops row-click propagation only; the buttons inside are the interactive elements.
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <Button
             variant="ghost"
             size="sm"
             className="p-1 text-neutral-500 hover:text-primary"
             onClick={() => setDetailUser(u)}
-            title="Aperçu rapide"
+            title={t("quickView", { name: u.name })}
+            aria-label={t("quickView", { name: u.name })}
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           </Button>
           <DropdownMenu
             trigger={
-              <Button variant="ghost" size="sm" className="p-1 text-neutral-500">
-                ⋯
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1 text-neutral-500"
+                aria-label={t("moreActions", { name: u.name })}
+                aria-haspopup="menu"
+              >
+                <MoreHorizontal className="w-4 h-4" aria-hidden="true" />
               </Button>
             }
             items={[
               {
-                label: locale === "ar" ? "عرض الملف الشخصي" : locale === "en" ? "View profile" : "Voir le profil",
-                icon: <Eye className="w-3.5 h-3.5" />,
+                label: t("menu.viewProfile"),
+                icon: <Eye className="w-3.5 h-3.5" aria-hidden="true" />,
                 onClick: () => setDetailUser(u),
               },
+              ...(can("users.suspend")
+                ? [
+                    {
+                      label: t("menu.markActive"),
+                      icon: <CheckCircle2 className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />,
+                      disabled: u.status === "active",
+                      onClick: async () => {
+                        try {
+                          unwrap(await updateUserStatus(u.id, "active"));
+                          success(t("toasts.markedActive"));
+                          fetchData();
+                        } catch (e: any) {
+                          error(tCommon("error"), e.message);
+                        }
+                      },
+                    },
+                    {
+                      label: t("menu.markPending"),
+                      icon: <Clock className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />,
+                      disabled: u.status === "pending",
+                      onClick: async () => {
+                        try {
+                          unwrap(await updateUserStatus(u.id, "pending"));
+                          info(t("toasts.markedPending"));
+                          fetchData();
+                        } catch (e: any) {
+                          error(tCommon("error"), e.message);
+                        }
+                      },
+                    },
+                    {
+                      label: t("menu.suspendAccount"),
+                      icon: <ShieldAlert className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />,
+                      onClick: () => handleSuspend(u),
+                      variant: "danger" as const,
+                      disabled: u.status === "suspended",
+                    },
+                  ]
+                : []),
+              ...(can("users.ban")
+                ? [
+                    {
+                      label: t("menu.banAccount"),
+                      icon: <Ban className="w-3.5 h-3.5 text-accent" aria-hidden="true" />,
+                      onClick: () => handleBan(u),
+                      variant: "danger" as const,
+                      disabled: u.status === "banned",
+                    },
+                  ]
+                : []),
               {
-                label: locale === "ar" ? "تفعيل الحساب (Active)" : locale === "en" ? "Mark as Active / Approved" : "Activer / Approuver",
-                icon: <CheckCircle2 className="w-3.5 h-3.5 text-secondary" />,
-                disabled: u.status === "active",
-                onClick: async () => {
-                  await updateUserStatus(u.id, "active");
-                  success(locale === "ar" ? "تم تفعيل الحساب بنجاح" : locale === "en" ? "User marked as active" : "Compte activé avec succès");
-                  fetchData();
-                },
-              },
-              {
-                label: locale === "ar" ? "وضع قيد المراجعة (Pending)" : locale === "en" ? "Mark as Pending" : "Mettre en attente",
-                icon: <Clock className="w-3.5 h-3.5 text-amber-600" />,
-                disabled: u.status === "pending",
-                onClick: async () => {
-                  await updateUserStatus(u.id, "pending");
-                  info(locale === "ar" ? "تم وضع الحساب قيد المراجعة" : locale === "en" ? "User marked as pending" : "Compte placé en attente");
-                  fetchData();
-                },
-              },
-              {
-                label: locale === "ar" ? "تعليق الحساب (Suspend)" : locale === "en" ? "Suspend user" : "Suspendre le compte",
-                icon: <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />,
-                onClick: () => handleSuspend(u),
-                variant: "danger",
-                disabled: u.status === "suspended",
-              },
-              {
-                label: locale === "ar" ? "حظر الحساب (Ban)" : locale === "en" ? "Ban user" : "Bannir le compte",
-                icon: <Ban className="w-3.5 h-3.5 text-accent" />,
-                onClick: () => handleBan(u),
-                variant: "danger",
-                disabled: u.status === "banned",
-              },
-              {
-                label: locale === "ar" ? "إعادة تعيين كلمة المرور" : locale === "en" ? "Reset password" : t("resetPassword"),
-                icon: <KeyRound className="w-3.5 h-3.5" />,
+                label: t("resetPassword"),
+                icon: <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />,
                 onClick: () => handleResetPassword(u),
               },
-              {
-                label: locale === "ar" ? "حذف الحساب" : locale === "en" ? "Delete user" : t("delete"),
-                icon: <Trash2 className="w-3.5 h-3.5 text-accent" />,
-                onClick: () => handleDelete(u),
-                variant: "danger",
-              },
+              ...(can("users.delete")
+                ? [
+                    {
+                      label: t("delete"),
+                      icon: <Trash2 className="w-3.5 h-3.5 text-accent" aria-hidden="true" />,
+                      onClick: () => handleDelete(u),
+                      variant: "danger" as const,
+                    },
+                  ]
+                : []),
             ]}
           />
         </div>
@@ -414,19 +455,29 @@ export default function UsersClient({
     },
   ];
 
+  const ids = {
+    status: `${uid}-status`,
+    role: `${uid}-role`,
+    wilaya: `${uid}-wilaya`,
+  };
+
   return (
     <div className="space-y-6 text-start">
       <PageHeader
         title={t("title")}
-        subtitle="Gérez les comptes utilisateurs, voyageurs et permissions de la plateforme."
-        actions={[
-          {
-            label: "Exporter",
-            icon: <Download className="w-4 h-4" />,
-            variant: "outline",
-            onClick: () => success("Export des utilisateurs généré"),
-          },
-        ]}
+        subtitle={t("subtitle")}
+        actions={
+          can("reports.export")
+            ? [
+                {
+                  label: tCommon("export"),
+                  icon: <Download className="w-4 h-4" aria-hidden="true" />,
+                  variant: "outline" as const,
+                  onClick: () => success(t("toasts.exportReady")),
+                },
+              ]
+            : []
+        }
       />
 
       <KpiStrip cards={kpis} />
@@ -438,7 +489,7 @@ export default function UsersClient({
         activeFilterCount={activeChips.length}
         onOpenFilterDrawer={() => setIsFilterDrawerOpen(true)}
         totalResults={data.total}
-        resultsLabel="utilisateurs"
+        resultsLabel={t("resultsLabel")}
       />
 
       <ActiveFilterChips
@@ -493,14 +544,14 @@ export default function UsersClient({
             <DetailPanel
               onClose={() => setDetailUser(null)}
               title={detailUser.name}
-              subtitle={`ID: #${detailUser.id} · ${detailUser.email}`}
+              subtitle={t("detail.subtitle", { id: detailUser.id, email: detailUser.email })}
               status={detailUser.status}
               tabs={[
-                { id: "profile", label: "Profil" },
-                { id: "bookings", label: "Réservations" },
-                { id: "reviews", label: "Avis" },
-                { id: "payments", label: "Paiements" },
-                { id: "activity", label: "Activité" },
+                { id: "profile", label: t("detail.tabs.profile") },
+                { id: "bookings", label: t("detail.tabs.bookings") },
+                { id: "reviews", label: t("detail.tabs.reviews") },
+                { id: "payments", label: t("detail.tabs.payments") },
+                { id: "activity", label: t("detail.tabs.activity") },
               ]}
               activeTab={panelTab}
               onTabChange={setPanelTab}
@@ -512,25 +563,29 @@ export default function UsersClient({
                       size="sm"
                       onClick={() => handleResetPassword(detailUser)}
                     >
-                      <KeyRound className="w-3.5 h-3.5 me-1" />
-                      Mot de passe
+                      <KeyRound className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+                      {t("detail.resetPassword")}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-accent border-accent/40 hover:bg-accent/10"
-                      onClick={() => handleSuspend(detailUser)}
-                    >
-                      Suspendre
-                    </Button>
+                    {can("users.suspend") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-accent-700 border-accent/40 hover:bg-accent/10"
+                        onClick={() => handleSuspend(detailUser)}
+                      >
+                        {t("detail.suspend")}
+                      </Button>
+                    )}
                   </div>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleBan(detailUser)}
-                  >
-                    Bannir
-                  </Button>
+                  {can("users.ban") && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleBan(detailUser)}
+                    >
+                      {t("detail.ban")}
+                    </Button>
+                  )}
                 </div>
               }
             >
@@ -543,8 +598,8 @@ export default function UsersClient({
                       <p className="text-xs text-neutral-500">{detailUser.email}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <StatusPill status={detailUser.status} />
-                        <span className="text-[11px] text-neutral-400">
-                          Inscrit le {formatDate(detailUser.joinedAt, locale)}
+                        <span className="text-[11px] text-neutral-500">
+                          {t("detail.joinedOn", { date: formatDate(detailUser.joinedAt, locale) })}
                         </span>
                       </div>
                     </div>
@@ -552,85 +607,88 @@ export default function UsersClient({
 
                   {/* Financial & Price Grid (Price) */}
                   <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                    <span className="text-xs font-bold text-primary block">
-                      {locale === "ar" ? "المؤشرات المالية والمبالغ (Price)" : locale === "en" ? "Financial & Price Metrics" : "Métriques financières & Dépenses"}
-                    </span>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
+                    <h5 className="text-xs font-bold text-primary block">
+                      {t("detail.financialTitle")}
+                    </h5>
+                    <dl className="grid grid-cols-3 gap-2 text-xs">
                       <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100">
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "إجمالي الإنفاق" : locale === "en" ? "Total Spent" : "Dépenses totales"}</span>
-                        <span className="font-mono font-bold text-xs text-primary block mt-0.5">{formatDzd(detailUser.totalSpentDzd, locale)}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.totalSpent")}</dt>
+                        <dd className="font-mono font-bold text-xs text-primary block mt-0.5">{formatDzd(detailUser.totalSpentDzd, locale)}</dd>
                       </div>
                       <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100">
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "رصيد المحفظة" : locale === "en" ? "Wallet Balance" : "Portefeuille"}</span>
-                        <span className="font-mono font-bold text-xs text-secondary block mt-0.5">{formatDzd(detailUser.walletBalanceDzd || 0, locale)}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.walletBalance")}</dt>
+                        <dd className="font-mono font-bold text-xs text-secondary-700 block mt-0.5">{formatDzd(detailUser.walletBalanceDzd || 0, locale)}</dd>
                       </div>
                       <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100">
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "متوسط الحجز" : locale === "en" ? "Avg. Booking" : "Panier moyen"}</span>
-                        <span className="font-mono font-bold text-xs text-primary block mt-0.5">{formatDzd(Math.round(detailUser.totalSpentDzd / Math.max(1, detailUser.bookingsCount)), locale)}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.avgBooking")}</dt>
+                        <dd className="font-mono font-bold text-xs text-primary block mt-0.5">{formatDzd(Math.round(detailUser.totalSpentDzd / Math.max(1, detailUser.bookingsCount)), locale)}</dd>
                       </div>
-                    </div>
+                    </dl>
                   </div>
 
                   {/* Activity Timestamps (Time) */}
                   <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                    <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-secondary" />
-                      <span>{locale === "ar" ? "التواريخ والنشاط الزمني (Time)" : locale === "en" ? "Activity & Timestamps" : "Historique temporel & Activité"}</span>
-                    </span>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <h5 className="text-xs font-bold text-primary flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
+                      <span>{t("detail.activityTitle")}</span>
+                    </h5>
+                    <dl className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "تاريخ التسجيل" : locale === "en" ? "Registered On" : "Date d'inscription"}</span>
-                        <span className="font-medium text-neutral-700">{formatDate(detailUser.joinedAt, locale)}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.registeredOn")}</dt>
+                        <dd className="font-medium text-neutral-700">{formatDate(detailUser.joinedAt, locale)}</dd>
                       </div>
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "آخر نشاط" : locale === "en" ? "Last Active" : "Dernière connexion"}</span>
-                        <span className="font-medium text-neutral-700">{formatDate(detailUser.lastActiveAt || detailUser.joinedAt, locale)}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.lastActive")}</dt>
+                        <dd className="font-medium text-neutral-700">{formatDate(detailUser.lastActiveAt || detailUser.joinedAt, locale)}</dd>
                       </div>
-                    </div>
+                    </dl>
                   </div>
 
                   {/* About User Section (About) */}
                   <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                    <span className="text-xs font-bold text-primary block">
-                      {locale === "ar" ? "حول المستخدم والتحقق (About)" : locale === "en" ? "About & Verification" : "À propos du compte & Vérification"}
-                    </span>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <h5 className="text-xs font-bold text-primary block">
+                      {t("detail.aboutTitle")}
+                    </h5>
+                    <dl className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "الرتبة والنوع" : locale === "en" ? "User Role" : "Rôle"}</span>
-                        <span className="font-semibold text-primary">{detailUser.role === "both" ? "Voyageur & Hôte" : "Voyageur"}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.userRole")}</dt>
+                        <dd className="font-semibold text-primary">{detailUser.role === "both" ? roleLabel("both") : roleLabel("guest")}</dd>
                       </div>
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "اللغة المفضلة" : locale === "en" ? "Language" : "Langue préférée"}</span>
-                        <span className="font-semibold text-primary uppercase">{detailUser.preferredLanguage || "FR"}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.language")}</dt>
+                        <dd className="font-semibold text-primary uppercase">{detailUser.preferredLanguage || "FR"}</dd>
                       </div>
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "الحجوزات" : locale === "en" ? "Bookings" : "Réservations"}</span>
-                        <span className="font-semibold text-primary">{detailUser.bookingsCount} {locale === "ar" ? "حجز" : locale === "en" ? "bookings" : "effectuées"}</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.bookings")}</dt>
+                        <dd className="font-semibold text-primary">{t("detail.bookingsValue", { count: detailUser.bookingsCount })}</dd>
                       </div>
                       <div>
-                        <span className="text-[10px] text-neutral-400 block">{locale === "ar" ? "التقييمات والمفضلة" : locale === "en" ? "Reviews & Favs" : "Avis & Favoris"}</span>
-                        <span className="font-semibold text-primary">{detailUser.reviewsWrittenCount || 0} avis · {detailUser.favoritesCount || 0} favs</span>
+                        <dt className="text-[10px] text-neutral-500 block">{t("detail.reviewsFavs")}</dt>
+                        <dd className="font-semibold text-primary">
+                          {t("detail.reviewsFavsValue", {
+                            reviews: detailUser.reviewsWrittenCount || 0,
+                            favs: detailUser.favoritesCount || 0,
+                          })}
+                        </dd>
                       </div>
-                    </div>
+                    </dl>
                     <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-neutral-600">
-                        <ShieldCheck className="w-3.5 h-3.5 text-secondary" /> {locale === "ar" ? "حالة التحقق من الهوية" : locale === "en" ? "Identity Status" : "Statut d'identité"}
+                        <ShieldCheck className="w-3.5 h-3.5 text-secondary" aria-hidden="true" /> {t("detail.identityStatus")}
                       </span>
-                      <span className="text-secondary font-bold text-xs">{detailUser.idVerified ? "Vérifié (CNI conforme)" : "En attente de vérification"}</span>
+                      <span className="text-secondary-700 font-bold text-xs">
+                        {detailUser.idVerified ? t("detail.idVerified") : t("detail.idPending")}
+                      </span>
                     </div>
                   </div>
 
                   {/* Description / Bio Section (Disc) */}
                   <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-1.5">
-                    <span className="text-xs font-bold text-primary block">
-                      {locale === "ar" ? "الوصف والسيرة الذاتية (Description)" : locale === "en" ? "User Bio & Description" : "Bio & Description du profil"}
-                    </span>
+                    <h5 className="text-xs font-bold text-primary block">
+                      {t("detail.bioTitle")}
+                    </h5>
                     <p className="text-xs text-neutral-600 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
-                      {locale === "ar"
-                        ? "مستخدم معتمد على منصة دارنا، مهتم بالسياحة والرحلات والاستكشافات الثقافية. سجل الحجوزات ممتاز وبدون أي مخالفات."
-                        : locale === "en"
-                        ? "Verified DARNA guest, passionate about authentic accommodations and Sahara expeditions. Excellent booking track record with no disputes."
-                        : "Voyageur vérifié sur la plateforme DARNA, passionné par les hébergements authentiques et les circuits sahariens. Excellent historique sans aucun litige."}
+                      {t("detail.bioText")}
                     </p>
                   </div>
                 </div>
@@ -643,16 +701,28 @@ export default function UsersClient({
                       <span className="font-semibold text-xs text-primary">#R1248 · Villa Hydra</span>
                       <StatusPill status="confirmed" />
                     </div>
-                    <p className="text-[11px] text-neutral-500 mt-1">12 mars 2024 - 15 mars 2024 · 3 nuits</p>
-                    <p className="font-mono font-bold text-xs text-primary mt-1">75 000 DZD</p>
+                    <p className="text-[11px] text-neutral-500 mt-1">
+                      {t("detail.dateRange", {
+                        start: formatDate("2024-03-12", locale),
+                        end: formatDate("2024-03-15", locale),
+                        duration: t("detail.nights", { count: 3 }),
+                      })}
+                    </p>
+                    <p className="font-mono font-bold text-xs text-primary mt-1">{formatDzd(75000, locale)}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-white border border-tertiary/40">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-xs text-primary">#R1092 · Excursion Tassili</span>
                       <StatusPill status="completed" />
                     </div>
-                    <p className="text-[11px] text-neutral-500 mt-1">10 fév 2024 - 14 fév 2024 · 4 jours</p>
-                    <p className="font-mono font-bold text-xs text-primary mt-1">120 000 DZD</p>
+                    <p className="text-[11px] text-neutral-500 mt-1">
+                      {t("detail.dateRange", {
+                        start: formatDate("2024-02-10", locale),
+                        end: formatDate("2024-02-14", locale),
+                        duration: t("detail.days", { count: 4 }),
+                      })}
+                    </p>
+                    <p className="font-mono font-bold text-xs text-primary mt-1">{formatDzd(120000, locale)}</p>
                   </div>
                 </div>
               )}
@@ -661,15 +731,20 @@ export default function UsersClient({
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl bg-white border border-tertiary/40">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">Séjour Villa Hydra</span>
-                      <div className="flex items-center text-secondary text-xs">
-                        <Star className="w-3.5 h-3.5 fill-current me-1" /> 5.0
+                      <span className="font-semibold text-xs text-primary">Villa Hydra</span>
+                      <div
+                        className="flex items-center text-secondary-700 text-xs"
+                        role="img"
+                        aria-label={t("detail.rating", { rating: formatNumber(5, locale) })}
+                      >
+                        <Star className="w-3.5 h-3.5 fill-current me-1" aria-hidden="true" /> 5.0
                       </div>
                     </div>
-                    <p className="text-xs text-neutral-600 mt-1 italic">
-                      "Superbe accueil, maison propre et spacieuse. Hôte très arrangeant !"
+                    {/* Review body is user-generated content (mock record), shown as written. */}
+                    <p className="text-xs text-neutral-600 mt-1 italic" lang="fr">
+                      &ldquo;Superbe accueil, maison propre et spacieuse. Hôte très arrangeant !&rdquo;
                     </p>
-                    <span className="text-[10px] text-neutral-400 block mt-1">16 mars 2024</span>
+                    <span className="text-[10px] text-neutral-500 block mt-1">{formatDate("2024-03-16", locale)}</span>
                   </div>
                 </div>
               )}
@@ -678,31 +753,33 @@ export default function UsersClient({
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl bg-white border border-tertiary/40 flex items-center justify-between">
                     <div>
-                      <span className="font-semibold text-xs text-primary block">Paiement CIB / Edahabia</span>
-                      <span className="text-[11px] text-neutral-400">Transaction #TX-9012</span>
+                      <span className="font-semibold text-xs text-primary block">{t("detail.cardPayment")}</span>
+                      <span className="text-[11px] text-neutral-500">{t("detail.transaction", { ref: "#TX-9012" })}</span>
                     </div>
-                    <span className="font-mono font-bold text-xs text-secondary">75 000 DZD</span>
+                    <span className="font-mono font-bold text-xs text-secondary-700">{formatDzd(75000, locale)}</span>
                   </div>
                 </div>
               )}
 
               {panelTab === "activity" && (
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-start gap-2 p-2">
-                    <Activity className="w-4 h-4 text-secondary mt-0.5" />
+                <ul className="space-y-2 text-xs">
+                  <li className="flex items-start gap-2 p-2">
+                    <Activity className="w-4 h-4 text-secondary mt-0.5" aria-hidden="true" />
                     <div>
-                      <p className="font-semibold text-primary">Connexion au compte</p>
-                      <span className="text-[11px] text-neutral-400">Aujourd'hui à 08:34 (IP: 105.102.x.x)</span>
+                      <p className="font-semibold text-primary">{t("detail.login")}</p>
+                      <span className="text-[11px] text-neutral-500">
+                        {t("detail.loginMeta", { time: formatTime(DEMO_LOGIN_AT), ip: "105.102.x.x" })}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-2 p-2">
-                    <Calendar className="w-4 h-4 text-primary mt-0.5" />
+                  </li>
+                  <li className="flex items-start gap-2 p-2">
+                    <Calendar className="w-4 h-4 text-primary mt-0.5" aria-hidden="true" />
                     <div>
-                      <p className="font-semibold text-primary">Réservation effectuée #R1248</p>
-                      <span className="text-[11px] text-neutral-400">12 mars 2024</span>
+                      <p className="font-semibold text-primary">{t("detail.bookingMade", { ref: "#R1248" })}</p>
+                      <span className="text-[11px] text-neutral-500">{formatDate("2024-03-12", locale)}</span>
                     </div>
-                  </div>
-                </div>
+                  </li>
+                </ul>
               )}
             </DetailPanel>
           ) : undefined
@@ -717,42 +794,43 @@ export default function UsersClient({
         onApply={() => fetchData({ page: 1 })}
       >
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-primary">Statut</label>
+          <label htmlFor={ids.status} className="block text-xs font-bold text-primary">{t("status")}</label>
           <select
+            id={ids.status}
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+            className={SELECT_CLASS}
           >
-            <option value="all">Tous les statuts</option>
-            <option value="active">Actif</option>
-            <option value="suspended">Suspendu</option>
-            <option value="banned">Banni</option>
+            <option value="all">{t("filters.allStatuses")}</option>
+            <option value="active">{tStatus("active")}</option>
+            <option value="suspended">{tStatus("suspended")}</option>
+            <option value="banned">{tStatus("banned")}</option>
           </select>
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-primary">Rôle</label>
+          <label htmlFor={ids.role} className="block text-xs font-bold text-primary">{t("role")}</label>
           <select
+            id={ids.role}
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+            className={SELECT_CLASS}
           >
-            <option value="all">Tous les rôles</option>
-            <option value="guest">Voyageur uniquement</option>
-            <option value="both">Voyageur & Hôte</option>
+            <option value="all">{t("filters.allRoles")}</option>
+            <option value="guest">{t("filters.guestOnly")}</option>
+            <option value="both">{t("filters.guestAndHost")}</option>
           </select>
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-primary">Wilaya</label>
+          <label htmlFor={ids.wilaya} className="block text-xs font-bold text-primary">{t("wilaya")}</label>
           <select
+            id={ids.wilaya}
             value={selectedWilaya}
             onChange={(e) => setSelectedWilaya(e.target.value)}
-            className="w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary cursor-pointer"
+            className={SELECT_CLASS}
           >
-            <option value="all">
-              {locale === "ar" ? "جميع الولايات" : locale === "en" ? "All wilayas" : "Toutes les wilayas"}
-            </option>
+            <option value="all">{t("filters.allWilayas")}</option>
             {WILAYAS.map((w) => (
               <option key={w.code} value={w.code}>
                 {getWilayaLabel(w, locale)}

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useId, useRef, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
+import { useDialogA11y } from "@/hook/useDialogA11y";
 import {
   BrandTrashIcon,
   BrandAlertCircleIcon,
@@ -63,11 +65,11 @@ export default function ConfirmDialog({
   variant = "destructive",
   confirmLabel,
   onConfirm,
-  cancelLabel = "Cancel",
+  cancelLabel,
   onCancel,
-  discardLabel = "Discard changes",
+  discardLabel,
   onDiscard,
-  saveAndExitLabel = "Save & exit",
+  saveAndExitLabel,
   onSaveAndExit,
   icon: customIcon,
   isLoading = false,
@@ -75,6 +77,7 @@ export default function ConfirmDialog({
   autoFocusButton,
   backdropClose,
 }: ConfirmDialogProps) {
+  const t = useTranslations("common");
   const [internalLoading, setInternalLoading] = useState(false);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
@@ -100,31 +103,24 @@ export default function ConfirmDialog({
   // Default labels based on normalized variant
   const defaultConfirmLabel =
     normalizedVariant === "destructive"
-      ? "Delete"
+      ? t("delete")
       : normalizedVariant === "discard"
-      ? "Save & exit"
-      : "Confirm";
+      ? t("saveAndExit")
+      : t("confirm");
   const effectiveConfirmLabel = confirmLabel || defaultConfirmLabel;
 
-  // Handle ESC key
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen && !isLoading && !internalLoading) {
-        onCancel();
-        if (onClose) onClose();
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen, isLoading, internalLoading, onCancel, onClose]);
+  const isBusy = isLoading || internalLoading;
+  const titleId = useId();
+  const descriptionId = useId();
+  // Focus trap, Escape to cancel, scroll lock and focus restore.
+  const panelRef = useDialogA11y<HTMLDivElement>(isOpen, {
+    onEscape: isBusy
+      ? undefined
+      : () => {
+          onCancel();
+          if (onClose) onClose();
+        },
+  });
 
   // Focus trap: Default focus to Cancel on destructive variants to prevent accidental Enter confirmation
   useEffect(() => {
@@ -207,7 +203,7 @@ export default function ConfirmDialog({
           badgeStyle: "bg-amber-50 border-amber-200/80 text-amber-700 shadow-amber-100/50",
           topAccentGradient: "from-amber-500 via-tertiary to-accent",
           primaryBtn:
-            "bg-accent hover:bg-accent/90 active:bg-accent/95 text-white shadow-md shadow-accent/25 border-accent",
+            "bg-accent-600 hover:bg-accent-700 active:bg-accent-700 text-white shadow-md shadow-accent/25 border-accent-600",
         };
       case "neutral":
       default:
@@ -216,7 +212,7 @@ export default function ConfirmDialog({
           badgeStyle: "bg-accent/10 border-accent/25 text-accent shadow-accent/10",
           topAccentGradient: "from-accent via-tertiary to-primary",
           primaryBtn:
-            "bg-accent hover:bg-accent/90 active:bg-accent/95 text-white shadow-md shadow-accent/25 border-accent",
+            "bg-accent-600 hover:bg-accent-700 active:bg-accent-700 text-white shadow-md shadow-accent/25 border-accent-600",
         };
     }
   };
@@ -226,10 +222,6 @@ export default function ConfirmDialog({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-description"
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-primary/60 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget && allowBackdropClose && !busy) {
@@ -240,6 +232,11 @@ export default function ConfirmDialog({
     >
       {/* Dialog Modal Container: Desktop Centered Card, Mobile Bottom Sheet */}
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={bodyContent ? descriptionId : undefined}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl border border-tertiary/80 shadow-darna-modal p-6 sm:p-8 overflow-hidden animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200 select-none cursor-default max-h-[92dvh] overflow-y-auto"
       >
@@ -260,8 +257,8 @@ export default function ConfirmDialog({
               onCancel();
               if (onClose) onClose();
             }}
-            aria-label="Close dialog"
-            className="absolute top-4 end-4 w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-neutral-100 transition cursor-pointer disabled:opacity-40"
+            aria-label={t("close")}
+            className="absolute top-4 end-4 w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             <BrandCloseIcon size={18} strokeWidth={2} />
           </button>
@@ -278,14 +275,14 @@ export default function ConfirmDialog({
 
           <div className="w-full">
             <h3
-              id="confirm-dialog-title"
-              className="text-lg sm:text-xl font-serif font-black text-primary tracking-tight"
+              id={titleId}
+              className="text-lg sm:text-xl font-serif font-bold text-primary tracking-tight"
             >
               {title}
             </h3>
             {bodyContent && (
               <div
-                id="confirm-dialog-description"
+                id={descriptionId}
                 className="text-xs sm:text-sm text-neutral-600 mt-1.5 leading-relaxed"
               >
                 {bodyContent}
@@ -314,18 +311,18 @@ export default function ConfirmDialog({
                 type="button"
                 disabled={busy}
                 onClick={onCancel}
-                className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold border border-tertiary/80 bg-white text-neutral-700 hover:text-primary hover:bg-neutral-100 transition cursor-pointer disabled:opacity-50 btn-press"
+                className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold border border-tertiary/80 bg-white text-neutral-700 hover:text-primary hover:bg-neutral-100 transition cursor-pointer disabled:opacity-50 btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               >
-                {cancelLabel || "Keep editing"}
+                {cancelLabel ?? t("keepEditing")}
               </button>
 
               <button
                 type="button"
                 disabled={busy}
                 onClick={handleDiscardAction}
-                className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 transition cursor-pointer disabled:opacity-50 btn-press"
+                className="px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 transition cursor-pointer disabled:opacity-50 btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               >
-                {discardLabel}
+                {discardLabel ?? t("discardChanges")}
               </button>
 
               <button
@@ -333,14 +330,14 @@ export default function ConfirmDialog({
                 type="button"
                 disabled={busy}
                 onClick={handleSaveAndExitAction}
-                className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 btn-press ${primaryBtn}`}
+                className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${primaryBtn}`}
               >
                 {busy ? (
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <BrandCheckIcon size={15} />
                 )}
-                <span>{saveAndExitLabel}</span>
+                <span>{saveAndExitLabel ?? t("saveAndExit")}</span>
               </button>
             </div>
           ) : (
@@ -351,9 +348,9 @@ export default function ConfirmDialog({
                 type="button"
                 disabled={busy}
                 onClick={onCancel}
-                className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold border border-tertiary/80 bg-white text-neutral-700 hover:text-primary hover:bg-neutral-100 hover:border-primary/50 transition cursor-pointer disabled:opacity-50 btn-press"
+                className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold border border-tertiary/80 bg-white text-neutral-700 hover:text-primary hover:bg-neutral-100 hover:border-primary/50 transition cursor-pointer disabled:opacity-50 btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               >
-                {cancelLabel}
+                {cancelLabel ?? t("cancel")}
               </button>
 
               <button
@@ -361,7 +358,7 @@ export default function ConfirmDialog({
                 type="button"
                 disabled={busy || disabled}
                 onClick={handleConfirmAction}
-                className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 btn-press ${primaryBtn}`}
+                className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${primaryBtn}`}
               >
                 {busy && (
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

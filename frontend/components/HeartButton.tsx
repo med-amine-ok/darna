@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import useFavorite from "@/hook/useFavorite";
 import { User } from "@/types";
 import { BrandHeartIcon } from "@/components/icons";
@@ -20,14 +21,19 @@ export default function HeartButton({
     listingId,
     currentUser,
   });
+  const t = useTranslations("common");
+  const label = hasFavorite ? t("removeFromFavorites") : t("addToFavorites");
+  const focusRing =
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
   if (variant === "circle") {
     return (
       <button
         type="button"
-        aria-label="Save listing"
+        aria-label={label}
+        aria-pressed={hasFavorite}
         onClick={toggleFavorite}
-        className="w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer touch-manipulation"
+        className={`w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center transition-all duration-150 hover:scale-105 active:scale-95 cursor-pointer touch-manipulation ${focusRing}`}
       >
         <BrandHeartIcon
           size={18}
@@ -46,9 +52,10 @@ export default function HeartButton({
   return (
     <button
       type="button"
-      aria-label="Save listing"
+      aria-label={label}
+        aria-pressed={hasFavorite}
       onClick={toggleFavorite}
-      className="relative hover:scale-110 active:scale-90 transition-transform duration-150 cursor-pointer p-1 rounded-full touch-manipulation focus:outline-none select-none flex items-center justify-center"
+      className={`relative hover:scale-110 active:scale-90 transition-transform duration-150 cursor-pointer p-1 rounded-full touch-manipulation select-none flex items-center justify-center ${focusRing}`}
     >
       <BrandHeartIcon
         size={24}

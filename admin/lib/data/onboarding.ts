@@ -1,6 +1,7 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { OnboardingConfig, HostType, OnboardingStepConfig } from "@/lib/types";
+import { OnboardingConfig, HostType, OnboardingStepConfig, AdminActor } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
 import { logAudit } from "./audit";
 
@@ -14,7 +15,7 @@ export async function getOnboardingConfig(): Promise<OnboardingConfig> {
 export async function updateOnboardingFlow(
   hostType: HostType,
   steps: OnboardingStepConfig[],
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<OnboardingConfig> {
   assertCan(actor.role, "onboarding.edit");
   await delay(200);

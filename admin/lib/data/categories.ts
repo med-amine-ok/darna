@@ -1,6 +1,7 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
-import { CategoryItem } from "@/lib/types";
+import { CategoryItem, AdminActor } from "@/lib/types";
 import { assertCan } from "@/lib/permissions";
 import { logAudit } from "./audit";
 
@@ -13,7 +14,7 @@ export async function listCategories(): Promise<CategoryItem[]> {
 
 export async function createCategory(
   item: Omit<CategoryItem, "id" | "listingCount">,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<CategoryItem> {
   assertCan(actor.role, "categories.manage");
   await delay(180);
@@ -31,7 +32,7 @@ export async function createCategory(
 
 export async function toggleCategoryStatus(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<CategoryItem> {
   assertCan(actor.role, "categories.manage");
   await delay(180);
@@ -57,7 +58,7 @@ export async function toggleCategoryStatus(
 
 export async function deleteCategory(
   id: string,
-  actor: { id: string; name: string; role: any }
+  actor: AdminActor
 ): Promise<boolean> {
   assertCan(actor.role, "categories.manage");
   await delay(180);

@@ -1,19 +1,25 @@
 "use client";
 
 import React from "react";
-import { Listing, User, Review } from "@/types";
+import { Listing, User, PublicUser, Review } from "@/types";
 import Container from "@/components/Container";
 import ListingHead from "./ListingHead";
 import ListingInfo from "./ListingInfo";
 import ListingReservation from "./ListingReservation";
 import HotelHostelDetailClient from "./HotelHostelDetailClient";
+import type { ListingAvailability } from "@/lib/booking/availability";
+import type { PriceOverrides } from "@/lib/booking/pricing";
 
 interface ListingClientProps {
   listing: Listing;
-  host?: User | null;
+  host?: PublicUser | null;
   reviews?: Review[];
   similarListings?: Listing[];
   currentUser?: User | null;
+  /** Booked / blocked nights, built server-side. */
+  availability: ListingAvailability;
+  /** Host per-date prices (whole-listing pricing only). */
+  priceOverrides?: PriceOverrides;
 }
 
 export default function ListingClient({
@@ -22,13 +28,11 @@ export default function ListingClient({
   reviews = [],
   similarListings = [],
   currentUser,
+  availability,
+  priceOverrides = {},
 }: ListingClientProps) {
-  const isHotelOrHostel =
-    listing.businessCategory === "hotel" ||
-    listing.businessCategory === "hostel" ||
-    listing.type?.toLowerCase().includes("hotel") ||
-    listing.type?.toLowerCase().includes("hostel") ||
-    (listing.roomTypes && listing.roomTypes.length > 0);
+  // Room-based booking needs real room types (the server books only those).
+  const isHotelOrHostel = Boolean(listing.roomTypes && listing.roomTypes.length > 0);
 
   if (isHotelOrHostel) {
     return (
@@ -38,6 +42,7 @@ export default function ListingClient({
         reviews={reviews}
         similarListings={similarListings}
         currentUser={currentUser}
+        availability={availability}
       />
     );
   }
@@ -63,7 +68,12 @@ export default function ListingClient({
 
           {/* Sticky Booking Column */}
           <div className="lg:col-span-5 xl:col-span-4 relative">
-            <ListingReservation listing={listing} currentUser={currentUser} />
+            <ListingReservation
+              listing={listing}
+              currentUser={currentUser}
+              availability={availability}
+              priceOverrides={priceOverrides}
+            />
           </div>
         </div>
       </Container>

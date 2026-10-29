@@ -1,0 +1,49 @@
+{
+  "step1Title": "Parlez-nous de votre agence de tourisme ou de votre flotte",
+  "step1Subtitle": "Définissez le nom de marque de votre agence, votre logo et votre bio.",
+  "businessName": "Raison sociale",
+  "businessNamePlaceholder": "ex. Atlas Escapes Tourisme SARL",
+  "step2Title": "Immatriculation & agrément",
+  "step2Subtitle": "Renseignez votre immatriculation, votre catégorie d'entreprise et vos coordonnées.",
+  "regNumber": "Registre du commerce (RC) / numéro d’agrément",
+  "regNumberPlaceholder": "DZ-ALG-2024-B-XXXXX",
+  "businessType": "Catégorie d’activité",
+  "contactEmail": "E-mail professionnel officiel",
+  "contactPhone": "Numéro de téléphone",
+  "headquarters": "Pays du siège",
+  "address": "Adresse du siège",
+  "addressPlaceholder": "ex. Didouche Mourad, Alger",
+  "step3Title": "Quelle est la taille de votre équipe ?",
+  "step3Subtitle": "Combien de collaborateurs gèrent vos opérations et l'accueil des voyageurs ?",
+  "step4Title": "Invitez vos gestionnaires et co-hôtes",
+  "step4Subtitle": "Cette étape est facultative. Vous pourrez inviter votre équipe de réservation à tout moment.",
+  "step5Title": "Vérifiez et inscrivez votre agence",
+  "step5Subtitle": "Vérifiez les données de votre agence avant d'accéder à votre espace professionnel.",
+  "createAgency": "Créer l’espace agence",
+  "creatingAgency": "Inscription de l’agence...",
+  "verificationNotice": "Votre agence affichera un badge « Vérification en attente » pendant que notre équipe de conformité examine votre registre du commerce.",
+  "eyebrow": "Agence – étape {current} sur {total}",
+  "emailPlaceholder": "contact@agence.dz",
+  "phonePlaceholder": "+213 21 XX XX XX",
+  "invitePlaceholder": "collaborateur@agence.dz",
+  "businessTypes": {
+    "tourismAgency": "Agence de voyage agréée",
+    "vehicleRental": "Location de voitures",
+    "hotelOperator": "Exploitant d’hôtel et de résidence",
+    "saharaOutfitter": "Organisateur d’expéditions au Sahara"
+  },
+  "teamSizes": {
+    "1": "Moi seul(e)",
+    "2-10": "2 à 10 membres",
+    "11-50": "11 à 50 membres",
+    "50+": "Plus de 50 membres"
+  },
+  "review": {
+    "name": "Nom de l’agence",
+    "license": "Numéro d’agrément",
+    "email": "E-mail professionnel",
+    "category": "Catégorie"
+  },
+  "verificationTitle": "Avis de vérification",
+  "success": "Agence enregistrée ! Elle est en attente de vérification — vous pouvez commencer à configurer votre espace."
+}

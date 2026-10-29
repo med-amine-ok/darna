@@ -135,6 +135,31 @@ export interface AdminUser {
   createdAt: string;
   lastLoginAt?: string;
   permissions?: Permission[];
+  /** "invited" accounts have no password until the invitation is accepted. */
+  status?: "active" | "invited" | "deactivated";
+  invitedAt?: string;
+  invitedBy?: string;
+}
+
+/**
+ * The authenticated admin performing an operation. Always derived on the
+ * server from the verified session + current admin store record, never
+ * supplied by the client.
+ */
+export interface AdminActor {
+  id: string;
+  name: string;
+  role: AdminRole;
+  /** Client IP of the request, for the audit trail. */
+  ip?: string;
+}
+
+/** Who an audit entry is attributed to (an admin, or an anonymous sign-in attempt). */
+export interface AuditActor {
+  id: string;
+  name: string;
+  role: AdminRole | "anonymous";
+  ip?: string;
 }
 
 export type Permission =
@@ -232,6 +257,8 @@ export interface Host {
   phone: string;
   hostType: HostType;
   status: HostStatus;
+  /** Status the host had before a soft delete; `restore` returns to it. */
+  statusBeforeDelete?: HostStatus;
   verificationStatus: VerificationStatus;
   wilayaCode: string;
   city: string;
@@ -313,6 +340,8 @@ export interface Listing {
   hostName: string;
   hostType: HostType;
   status: ListingStatus;
+  /** Status the listing had before a soft delete; `restore` returns to it. */
+  statusBeforeDelete?: ListingStatus;
   price: number; // in DZD
   priceDzd?: number;
   originalPrice?: number;
@@ -417,13 +446,28 @@ export interface Booking {
   commissionRate: number;
   commissionAmountDzd: number;
   hostPayoutDzd: number;
-  paymentStatus: "paid" | "refunded" | "pending" | "failed";
+  paymentStatus: BookingPaymentStatus;
+  /** Cumulative amount refunded to the guest (integer DZD). */
+  refundedAmountDzd?: number;
+  /** Timestamp of the most recent refund. */
+  refundedAt?: string;
   paymentMethod: "cib_edahabia" | "ccp_transfer" | "baridimob" | "cash_on_arrival";
   createdAt: string;
   cancelledAt?: string;
   disputeReason?: string;
+  disputeResolution?: {
+    outcome: DisputeOutcome;
+    refundAmountDzd: number;
+    note: string;
+    resolvedAt: string;
+    resolvedBy: string;
+  };
   adminNotes: string[];
 }
+
+export type BookingPaymentStatus = "paid" | "partially_refunded" | "refunded" | "pending" | "failed";
+
+export type DisputeOutcome = "refund_full" | "refund_partial" | "declined";
 
 export type ReviewStatus = "published" | "flagged" | "hidden" | "deleted";
 
@@ -509,21 +553,28 @@ export interface PayoutRequest {
     rib?: string;
     phone?: string;
   };
-  rib?: string;
-  status: "pending" | "approved" | "processed" | "rejected";
+  status: PayoutStatus;
   requestedAt: string;
   processedAt?: string;
+  /** Name of the admin who approved / rejected the request. */
+  processedBy?: string;
+  rejectionReason?: string;
+  /** Ledger entry (host_payout) created on approval. */
+  transactionId?: string;
   adminNotes?: string;
 }
+
+export type PayoutStatus = "pending" | "approved" | "processed" | "rejected";
 
 export interface AuditEntry {
   id: string;
   timestamp: string;
   actorId: string;
   actorName: string;
-  actorRole: AdminRole;
+  /** "anonymous" is used for failed sign-in attempts on unknown accounts. */
+  actorRole: AdminRole | "anonymous";
   action: string;
-  entityType: "host" | "listing" | "user" | "booking" | "review" | "wallet" | "payout" | "setting" | "onboarding" | "promotion";
+  entityType: "host" | "listing" | "user" | "booking" | "review" | "wallet" | "payout" | "setting" | "onboarding" | "promotion" | "auth" | "export" | "team";
   entityId: string;
   entityName?: string;
   beforeState?: Record<string, any>;
@@ -665,4 +716,24 @@ export interface QueryParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   filters?: Record<string, any>;
+}
+
+export interface NetworkSearchParams {
+  vertical?: ListingVertical;
+  destination?: string;
+  wilayaCode?: string;
+  guests?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  hostType?: HostType | "all";
+  propertyType?: string;
+}
+
+export interface CommandPaletteResult {
+  id: string;
+  type: "host" | "listing" | "user" | "booking" | "review" | "action";
+  title: string;
+  subtitle: string;
+  href: string;
+  badge?: string;
 }

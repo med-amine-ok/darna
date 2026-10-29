@@ -1,0 +1,187 @@
+{
+  "metaTitle": "Account settings",
+  "title": "Account settings",
+  "member": "Member",
+  "navLabel": "Settings sections",
+  "cancel": "Cancel",
+  "add": "Add",
+  "edit": "Edit",
+  "save": "Save",
+  "comingSoon": "Coming soon",
+  "editField": "Edit {field}",
+  "cancelEditing": "Cancel editing {field}",
+  "errors": {
+    "saveFailed": "Could not save your changes. Please try again."
+  },
+  "nav": {
+    "personal": "Personal information",
+    "security": "Login & security",
+    "privacy": "Privacy & sharing",
+    "notifications": "Notifications",
+    "taxes": "Taxes & invoices",
+    "payments": "Payments & payouts",
+    "languages": "Languages & currency",
+    "bookingPermissions": "Booking permissions",
+    "travelForWork": "Travel for work",
+    "new": "New",
+    "hostingManagement": "Hosting management",
+    "proHosting": "Professional hosting tools"
+  },
+  "personal": {
+    "title": "Personal information",
+    "description": "Your legal identity and contact details used for bookings and Algerian tax receipts",
+    "notProvided": "Not provided",
+    "legalName": "Legal name",
+    "legalNameSaved": "Legal name saved.",
+    "preferredName": "Preferred first name",
+    "preferredNamePlaceholder": "e.g. Mina",
+    "preferredNameSaved": "Preferred name updated.",
+    "email": "Email address",
+    "saveAndVerify": "Save & verify",
+    "emailChangeSoon": "Changing your email is coming soon.",
+    "phone": "Phone number",
+    "phoneSaved": "Phone number saved.",
+    "identity": "Identity verification",
+    "identityVerified": "Verified with Algerian biometric national ID card",
+    "completed": "Completed",
+    "residentialAddress": "Residential address",
+    "residentialAddressSaved": "Residential address updated.",
+    "mailingAddress": "Mailing address",
+    "mailingAddressPlaceholder": "P.O. box or alternative postal address",
+    "mailingAddressSaved": "Mailing address updated."
+  },
+  "security": {
+    "title": "Login & security",
+    "description": "Manage your password, active devices and session security",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "updating": "Updating…",
+    "updatePassword": "Update password",
+    "passwordChanged": "Password changed successfully.",
+    "errors": {
+      "failed": "Could not change your password. Please try again."
+    },
+    "sessionsTitle": "Active device sessions",
+    "thisBrowser": "This browser",
+    "activeNow": "Signed in · Active now",
+    "thisDevice": "This device",
+    "otherDevicesSoon": "Viewing and signing out other devices is coming soon. Logging out here ends this session.",
+    "deactivateTitle": "Deactivate your account",
+    "deactivateDescription": "Temporarily hide your profile and active listings",
+    "deactivate": "Deactivate"
+  },
+  "notifications": {
+    "title": "Notification preferences",
+    "description": "Choose how you receive messages, trip reminders and DARNA updates",
+    "updated": "Notification preferences updated.",
+    "type": "Notification type",
+    "channelEmail": "Email",
+    "channelPush": "Push",
+    "channelSms": "SMS / WhatsApp",
+    "rows": {
+      "booking": "Booking updates & confirmations",
+      "messages": "Guest & host messages",
+      "promo": "Promotions & travel inspiration",
+      "account": "Account & security alerts"
+    },
+    "toggleLabel": "{type} by {channel}"
+  },
+  "payments": {
+    "title": "Payments & payouts",
+    "description": "Manage your Algerian CIB / Edahabia cards and host bank payout accounts",
+    "savedMethods": "Saved payment methods",
+    "addMethod": "Add method",
+    "addMethodSoon": "Adding a payment card is coming soon.",
+    "cibCard": "CIB Gold card ·•••• {last4}",
+    "edahabiaCard": "Algérie Poste Edahabia ·•••• {last4}",
+    "expiresDefault": "Expires {date} · Default",
+    "expires": "Expires {date}",
+    "active": "Active",
+    "removeCardLabel": "Remove {card}",
+    "payoutMethods": "Host payout methods",
+    "bnaAccount": "BNA bank account (Banque Nationale d'Algérie)",
+    "ribLabel": "RIB:",
+    "editRibSoon": "Editing your bank RIB is coming soon.",
+    "editRibLabel": "Edit bank RIB"
+  },
+  "languages": {
+    "title": "Languages & currency",
+    "description": "Choose your display language, text direction (RTL/LTR) and currency",
+    "displayLanguage": "Display language",
+    "languageSub": {
+      "en": "English (US)",
+      "fr": "French (Algeria)",
+      "ar": "Arabic (right-to-left)"
+    },
+    "preferredCurrency": "Preferred currency",
+    "currencySet": "Currency set to {currency}.",
+    "currencies": {
+      "DZD": "Algerian dinar",
+      "EUR": "Euro",
+      "USD": "US dollar"
+    }
+  },
+  "booking": {
+    "title": "Booking permissions",
+    "description": "Set instant booking criteria and guest verification requirements",
+    "instantBook": "Instant booking",
+    "instantBookDescription": "Let qualified guests book your stay without waiting for manual approval",
+    "requireId": "Require a verified national ID",
+    "requireIdDescription": "Only guests with a verified Algerian ID card or passport can book",
+    "requireReviews": "Require positive past reviews",
+    "requireReviewsDescription": "Only guests with at least one positive review and no complaints can book instantly"
+  },
+  "taxes": {
+    "title": "Taxes & fiscal information",
+    "description": "Algerian tax registration (NIF / NIS) for host compliance",
+    "nifLabel": "Tax identification number (NIF)",
+    "save": "Save tax profile",
+    "saved": "Tax details recorded."
+  },
+  "privacy": {
+    "title": "Privacy & data sharing",
+    "description": "Control your public visibility and export your DARNA account history",
+    "searchIndexing": "Search engine listing",
+    "searchIndexingDescription": "Allow search engines to index your public host profile",
+    "downloadData": "Download your personal data",
+    "downloadDataDescription": "Get a copy of your bookings, reviews and messages",
+    "exportZip": "Export ZIP",
+    "exportRequested": "Data export requested."
+  },
+  "work": {
+    "title": "Travel for work",
+    "description": "Add your company email for business trips and tax-compliant corporate invoicing",
+    "enable": "Enable business travel mode",
+    "enableDescription": "Split billing and attach company VAT receipts"
+  },
+  "pro": {
+    "title": "Professional hosting tools",
+    "description": "Advanced features for multi-property managers, tourism agencies and rental fleets",
+    "pricingSoon": "The pricing rules editor is coming soon.",
+    "icalSoon": "The iCal feeds manager is coming soon.",
+    "pricing": {
+      "title": "Automated pricing rules",
+      "description": "Automatically adjust nightly rates during Algerian high seasons (Eid, Saharan winter festivals).",
+      "action": "Configure rules"
+    },
+    "ical": {
+      "title": "iCal multi-calendar sync",
+      "description": "Export and import iCal feeds to sync availability with your external agency channels.",
+      "action": "Manage sync feeds"
+    }
+  },
+  "dialogs": {
+    "deactivateTitle": "Deactivate account",
+    "deactivateMessage": "Are you sure you want to deactivate your DARNA account? Your profile, reviews and active listings will be hidden until you sign in again.",
+    "deactivateConfirm": "Deactivate account",
+    "deactivateCancel": "Keep account active",
+    "deactivateSoon": "Account deactivation is coming soon. Please contact support for now.",
+    "removeCardTitle": "Remove payment card",
+    "removeCardMessage": "Are you sure you want to remove {card} from your DARNA account? You will need to enter your card details again for future bookings.",
+    "removeCardConfirm": "Remove card",
+    "removeCardCancel": "Keep card",
+    "cardRemoved": "Payment card removed from your account."
+  }
+}

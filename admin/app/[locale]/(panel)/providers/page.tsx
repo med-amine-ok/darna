@@ -1,5 +1,10 @@
-import ProvidersValidationClient from "../moderation/providers/ProvidersValidationClient";
+import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-export default function ProvidersPage() {
-  return <ProvidersValidationClient />;
+/** Legacy duplicate route — canonical page is /moderation/providers. */
+export default function ProvidersRedirect({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  redirectToCanonical("/moderation/providers", searchParams);
 }

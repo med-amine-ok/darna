@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useLocale } from "next-intl";
+import { formatNumber } from "@/lib/utils/format";
 
 export interface KpiCardItem {
   id: string;
@@ -29,6 +31,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
   onCardClick,
   className = "",
 }) => {
+  const locale = useLocale();
   const cardList = cards || items || [];
 
   const getIconBg = (bg?: string, variant?: string) => {
@@ -70,11 +73,12 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
           <button
             key={card.id}
             type="button"
+            aria-pressed={isSelected}
             onClick={() => {
               if (card.onClick) card.onClick();
               if (onCardClick) onCardClick(card.id);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border text-start transition-all cursor-pointer min-h-[44px] ${
+            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border text-start transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
               isSelected
                 ? "bg-white border-primary shadow-darna-card ring-2 ring-primary/20"
                 : "bg-white/80 border-tertiary-200/70 hover:border-tertiary-400 hover:bg-white shadow-2xs"
@@ -82,6 +86,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
           >
             {/* Icon Tile */}
             <div
+              aria-hidden="true"
               className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 border ${getIconBg(
                 card.iconBg,
                 card.colorVariant
@@ -93,7 +98,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
             {/* Label & Value */}
             <div className="min-w-0 flex-1">
               <span className="block font-mono text-base sm:text-lg font-bold text-primary leading-tight truncate">
-                {card.value}
+                {typeof card.value === "number" ? formatNumber(card.value, locale) : card.value}
               </span>
               <span className="block text-[10px] sm:text-[11px] font-medium text-neutral-500 truncate leading-snug mt-0.5">
                 {card.label}

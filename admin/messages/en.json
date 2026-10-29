@@ -138,7 +138,10 @@
       "security": "Security",
       "team": "Team & roles",
       "auditLog": "Audit log"
-    }
+    },
+    "more": "More",
+    "openMenu": "Open the full navigation menu",
+    "quickNavigation": "Quick navigation"
   },
   "sidebar": {
     "overview": "Overview",
@@ -147,7 +150,16 @@
     "configuration": "Configuration",
     "system": "System & Governance",
     "adminBadge": "Staff Control Center",
-    "version": "DARNA v2.4 Platform"
+    "version": "DARNA v2.4 Platform",
+    "consoleTitle": "DARNA Admin Console",
+    "tagline": "Travel in Algeria",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "toggleSection": "{section}: show or hide sub-pages",
+    "mainNavigation": "Main navigation",
+    "menuLabel": "Navigation menu",
+    "closeMenu": "Close navigation menu",
+    "pendingBadge": "{count, plural, one {# item waiting} other {# items waiting}}"
   },
   "header": {
     "searchPlaceholder": "Search platform or type a command...",
@@ -159,7 +171,42 @@
     "trainingMode": "Training Mode",
     "trainingActive": "Training Active",
     "simpleView": "Simple view",
-    "detailedView": "Detailed view"
+    "detailedView": "Detailed view",
+    "openNavigation": "Open navigation menu",
+    "openCommandPalette": "Open the command palette (⌘K)",
+    "searchLabel": "Search the platform",
+    "searchPlaceholders": {
+      "trips": "Search a trip, destination, organiser...",
+      "stays": "Search an accommodation, host, city...",
+      "experiences": "Search an experience, guide, city...",
+      "cars": "Search a car, city, category...",
+      "bookings": "Search a booking, customer, accommodation...",
+      "moderation": "Search a provider, agency, hotel...",
+      "default": "Search an accommodation, trip, experience, agency, hotel, car..."
+    },
+    "markAllRead": "Mark all as read",
+    "unread": "Unread",
+    "accountMenu": "{name}, account menu",
+    "adminFallback": "Admin",
+    "language": "Language",
+    "myProfileSecurity": "My profile & security",
+    "guidedTour": "Guided tour",
+    "helpCenter": "Help center",
+    "sampleNotifications": {
+      "newValidation": {
+        "title": "New validation request",
+        "description": "Villa les Oliviers (Ahmed Benali) in Tizi Ouzou"
+      },
+      "tripPending": {
+        "title": "Trip awaiting approval",
+        "description": "Tassili n'Ajjer expedition by Sahara Tours"
+      },
+      "reviewReported": {
+        "title": "Guest review reported",
+        "description": "Comment reported on Hôtel El Aurassi"
+      }
+    },
+    "notificationsUnread": "{count, plural, one {# unread notification} other {# unread notifications}}"
   },
   "commandPalette": {
     "placeholder": "Type a query, host name, wilaya, or command...",
@@ -172,7 +219,16 @@
       "users": "Guests & Users",
       "bookings": "Reservations",
       "actions": "Quick Commands"
-    }
+    },
+    "title": "Command palette",
+    "inputLabel": "Search records and commands",
+    "clear": "Clear search",
+    "resultsLabel": "Search results",
+    "noResultsFor": "No matching records found for “{query}”",
+    "typeToSearch": "Start typing to search.",
+    "navigateHint": "Navigate <kbd>↑</kbd> <kbd>↓</kbd>",
+    "selectHint": "Open <kbd>↵</kbd>",
+    "tipLabel": "Tip:"
   },
   "status": {
     "applied": "Applied",
@@ -195,7 +251,12 @@
     "flagged": "Flagged",
     "hidden": "Hidden",
     "active": "Active",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "partially_refunded": "Partially refunded",
+    "paid": "Paid",
+    "processed": "Processed",
+    "invited": "Invited",
+    "failed": "Failed"
   },
   "roles": {
     "super_admin": "Super Admin",
@@ -287,7 +348,82 @@
     "moreDetails": "More details",
     "hideDetails": "Hide details",
     "simpleView": "Simple view",
-    "detailedView": "Detailed view"
+    "detailedView": "Detailed view",
+    "greetingNeutral": "Hello, {name}",
+    "greetingAfternoon": "Good afternoon, {name}",
+    "greetingEvening": "Good evening, {name}",
+    "needsAttentionTitle": "Needs your attention",
+    "needsAttentionHint": "Decide in 1 click",
+    "attentionCards": {
+      "hosts": "Hosts waiting for approval",
+      "listings": "Listings waiting for review",
+      "reviews": "Reviews flagged by guests",
+      "bookings": "Requests over 24h & disputes"
+    },
+    "waitingDays": "{count, plural, one {{value} day} other {{value} days}}",
+    "howDoingTitle": "How is DARNA doing?",
+    "howDoingSubtitle": "Key business metrics in plain language, with no abbreviations.",
+    "periodSwitchLabel": "Period",
+    "comparisonPeriods": {
+      "today": "day",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
+    "chartBookingsSubtitle": "Daily count of confirmed guest reservations this week",
+    "chartTooltipBookings": "{count, plural, one {{value} booking} other {{value} bookings}}",
+    "chartWilayasSubtitle": "Wilayas with the most confirmed guest stays this month",
+    "wilayaColumn": "Wilaya",
+    "staysCount": "{count, plural, one {{value} stay} other {{value} stays}}",
+    "moreDetailsSubtitle": "Advanced breakdowns by partner type, accommodation category and occupancy",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "tiersTitle": "Financial performance by partner type",
+    "tier": {
+      "total": "Total: <b>{value}</b>",
+      "darna": "DARNA: <b>{value}</b>",
+      "bookings": "Bookings: <b>{value}</b>",
+      "commissionValue": "{amount} ({rate}%)"
+    },
+    "avgResponseTitle": "Average response time",
+    "avgResponseValue": "{minutes} min",
+    "avgResponseHint": "Average time for hosts to confirm booking requests",
+    "checklist": {
+      "title": "Getting started checklist",
+      "subtitle": "{count, plural, one {{count} simple task to master the core moderation actions.} other {{count} simple tasks to master the core moderation actions.}}",
+      "progress": "{done} / {total}",
+      "dismiss": "Dismiss checklist",
+      "markDone": "Mark as done: {task}",
+      "goToPage": "Go to page",
+      "items": {
+        "review_host": {
+          "title": "Review a waiting host application",
+          "desc": "Check the national ID and tourism documents in the approvals inbox."
+        },
+        "approve_listing": {
+          "title": "Approve a stay or tour listing",
+          "desc": "Check the photos, the price in DZD and the stay rules before publishing."
+        },
+        "find_guest": {
+          "title": "Find a guest in the directory",
+          "desc": "Search by phone number, email or booking history."
+        },
+        "recharge_wallet": {
+          "title": "Inspect host wallet balances",
+          "desc": "View balances, bank transfers and wallet top-ups."
+        },
+        "switch_language": {
+          "title": "Explore the languages (FR / AR / EN)",
+          "desc": "Try the full Arabic right-to-left layout and Algerian dinar formatting."
+        }
+      }
+    },
+    "whatChanged": {
+      "ariaLabel": "Interface update announcement",
+      "title": "What changed? Navigation simplified to 7 core items",
+      "description": "Fewer choices, faster work: secondary pages are now grouped under “Manage”.",
+      "guideLink": "Where did my page go?",
+      "dismiss": "Dismiss banner"
+    }
   },
   "hosts": {
     "title": "Partners & Hosts",
@@ -312,7 +448,149 @@
     "viewDetails": "View",
     "suspendHost": "Suspend Partner",
     "deleteHost": "Delete Partner",
-    "exportSuccess": "Filtered hosts CSV exported successfully"
+    "exportSuccess": "Filtered hosts CSV exported successfully",
+    "documentsColumn": "Documents",
+    "moreActions": "More actions for {name}",
+    "verification": {
+      "verified": "Verified",
+      "pending": "Pending",
+      "missing": "Missing",
+      "expired": "Expired"
+    },
+    "approvalModes": {
+      "instant": "Instant booking",
+      "request": "Manual host request"
+    },
+    "chips": {
+      "status": "Status",
+      "wilayas": "Wilayas",
+      "wilayasSelected": "{count, plural, one {# selected} other {# selected}}",
+      "verification": "Verification",
+      "bookingMode": "Booking mode",
+      "balance": "Balance",
+      "negativeOnly": "Negative only"
+    },
+    "confirm": {
+      "approveTitle": "Approve {name}?",
+      "approveDescription": "This will grant active marketplace permissions to {name} ({type}).",
+      "approveConfirm": "Approve host",
+      "deleteTitle": "Confirm deletion",
+      "deleteDescription": "The host record {name} will be soft-deleted. To confirm, type the owner's full name below.",
+      "deleteConfirm": "Delete host",
+      "bulkApproveTitle": "Bulk approval: {count, plural, one {# host} other {# hosts}}",
+      "bulkApproveDescription": "All selected host accounts will be approved immediately.",
+      "bulkApproveConfirm": "Approve all selected"
+    },
+    "toasts": {
+      "approved": "Host {name} approved",
+      "approveFailed": "Could not approve the host",
+      "suspended": "Host {name} suspended",
+      "deleted": "Host {name} deleted",
+      "deleteFailed": "Could not delete the host",
+      "commissionUpdated": "Commission rate updated to {rate}",
+      "commissionFailed": "Could not update the commission",
+      "recharged": "{amount} credited to the host wallet",
+      "rechargeFailed": "Could not credit the wallet",
+      "bulkApproved": "{count, plural, one {# host approved} other {# hosts approved}}",
+      "bulkApproveFailed": "Could not approve the selected hosts"
+    },
+    "bulk": {
+      "approveSelected": "Approve selected",
+      "exportSelected": "Export selected"
+    },
+    "filters": {
+      "wilaya": "Wilaya (province)",
+      "regionShortcuts": "Select by region",
+      "north": "North",
+      "highPlateaus": "High Plateaus",
+      "south": "South",
+      "wilayaPlaceholder": "Select Algerian wilayas…",
+      "partnerStatus": "Partner status",
+      "allStatuses": "All statuses",
+      "appliedNew": "Applied (new)",
+      "documentVerification": "Document verification",
+      "allDocuments": "All documents",
+      "docsVerified": "Complete & verified",
+      "docsPending": "Pending document review",
+      "docsMissing": "Missing documents",
+      "docsExpired": "Expired documents",
+      "approvalMode": "Booking approval mode",
+      "anyMode": "Any mode",
+      "priceRange": "Price range (DZD)"
+    },
+    "drawer": {
+      "subtitle": "{type} in {city} · ID: {id}",
+      "approveHost": "Approve host",
+      "suspendHost": "Suspend host",
+      "sections": "Host details sections",
+      "tabs": {
+        "overview": "Overview",
+        "documents": "Documents ({count})",
+        "listings": "Listings ({count})",
+        "bookings": "Bookings ({count})",
+        "money": "Money",
+        "history": "History"
+      },
+      "overview": {
+        "ownerName": "Owner name",
+        "businessName": "Business name",
+        "individualPartner": "Individual partner",
+        "email": "Email",
+        "phone": "Phone",
+        "wilaya": "Wilaya",
+        "walletBalance": "Wallet balance",
+        "agencyTitle": "Agency & staff details",
+        "teamSize": "Team size",
+        "teamSizeValue": "{count, plural, one {# staff member} other {# staff members}}",
+        "licenseNo": "Licence no.",
+        "offersTrips": "Offers trips",
+        "yes": "Yes",
+        "no": "No",
+        "hotelTitle": "Hotel classification",
+        "stars": "Stars",
+        "starsValue": "{count, plural, one {# star} other {# stars}}",
+        "totalRooms": "Total rooms",
+        "roomsValue": "{count, plural, one {# room} other {# rooms}}",
+        "internalNotes": "Internal notes",
+        "internalNotesText": "Verified Algerian tourism operator. Identity documents matched against national records. Contact phone verified by SMS."
+      },
+      "documents": {
+        "meta": "Uploaded {date} · Status: {status}",
+        "viewFile": "View file",
+        "viewFileLabel": "View file {title} (opens in a new tab)"
+      },
+      "listings": {
+        "activeFleet": "Active listings",
+        "registered": "{count, plural, one {# property registered} other {# properties registered}}",
+        "subsections": "Catalogue sub-sections",
+        "stays": "Stays / homes",
+        "hotelRooms": "Hotel rooms",
+        "trips": "Trips & tours"
+      },
+      "bookings": {
+        "title": "Guest reservations",
+        "completed": "{count, plural, one {# completed stay} other {# completed stays}}",
+        "trackRecord": "Reliable track record. Average check-in confirmation within 24 minutes."
+      },
+      "money": {
+        "currentBalance": "Current wallet balance",
+        "rate": "Rate: <strong>{rate}</strong>",
+        "commissionTitle": "Platform commission rate",
+        "commissionInput": "Commission rate (%)",
+        "saveOverride": "Save override",
+        "rechargeTitle": "Credit partner wallet (offline top-up)",
+        "amount": "Amount (DZD)",
+        "receiptRef": "Receipt / wire reference",
+        "receiptPlaceholder": "e.g. BNA-VIR-891244",
+        "creditWallet": "Credit wallet"
+      },
+      "history": {
+        "title": "Partner action history",
+        "verifiedBy": "Account verified by {name}",
+        "idApproved": "Identity document approved",
+        "applicationSubmitted": "Partner application submitted"
+      }
+    }
   },
   "listings": {
     "title": "Listings & Stays Fleet",
@@ -334,7 +612,108 @@
     "moderationChecklist": "Moderation Quality Checklist",
     "approveAction": "Approve Listing",
     "requestChanges": "Request Changes",
-    "rejectAction": "Reject Listing"
+    "rejectAction": "Reject Listing",
+    "viewModeLabel": "Display mode",
+    "featuredBadge": "Featured",
+    "byHost": "by {host} ({type})",
+    "cityHost": "{city} · Host: {host}",
+    "itemLabel": "listings",
+    "columns": {
+      "wilaya": "Wilaya",
+      "rating": "Rating",
+      "bookings": "Bookings"
+    },
+    "filters": {
+      "wilayas": "Wilayas",
+      "wilayasSelected": "{count, plural, one {# selected} other {# selected}}",
+      "wilayaPlaceholder": "Select wilayas…",
+      "priceRange": "Price range (DZD)"
+    },
+    "toasts": {
+      "loadFailed": "Could not load listings",
+      "approved": "Listing approved: {title}",
+      "approveFailed": "Failed to approve the listing",
+      "changesRequested": "Changes requested on {title}",
+      "requestChangesFailed": "Failed to request changes",
+      "featured": "Featured on the homepage",
+      "unfeatured": "Listing no longer featured",
+      "featureFailed": "Failed to update featuring",
+      "deleted": "Listing deleted: {title}",
+      "deleteFailed": "Failed to delete the listing"
+    },
+    "dialogs": {
+      "approveDescription": "Publish {title} directly to the public traveler catalog.",
+      "deleteTitle": "Confirm deletion",
+      "deleteDescription": "Delete the listing {title}. To confirm, type its exact title below.",
+      "deleteConfirm": "Delete listing"
+    },
+    "menu": {
+      "feature": "Feature on homepage",
+      "unfeature": "Remove from featured",
+      "approve": "Approve & publish",
+      "markPending": "Mark as pending review",
+      "suspend": "Suspend listing",
+      "reject": "Reject listing",
+      "delete": "Delete listing"
+    },
+    "grid": {
+      "openLabel": "Open moderation for {title}",
+      "bookings": "{count, plural, one {# booking} other {# bookings}}",
+      "moderate": "Moderate"
+    },
+    "bulk": {
+      "approve": "Approve selected",
+      "approveTitle": "Approve {count, plural, one {# listing} other {# listings}}?",
+      "approveDescription": "Publish all selected listings to the live traveler catalog.",
+      "approveFailed": "Bulk approval failed",
+      "approved": "{count, plural, one {# listing approved} other {# listings approved}}",
+      "export": "Export selection"
+    },
+    "checklist": {
+      "photosOk": "High-quality, realistic photos",
+      "locationAccurate": "Accurate wilaya & coordinates",
+      "priceReasonable": "Price consistent with wilaya median",
+      "policiesPresent": "Cancellation policy present",
+      "descriptionAppropriate": "Appropriate description"
+    },
+    "detail": {
+      "subtitle": "{type} · {city} · ID: {id}",
+      "nightlyPrice": "Price per night",
+      "medianBenchmark": "Wilaya median",
+      "medianValue": "≈ {amount}",
+      "pricingTitle": "Pricing & discount rules",
+      "commission": "DARNA commission",
+      "commissionValue": "{rate} %",
+      "weeklyDiscount": "Weekly discount",
+      "weeklyDiscountValue": "-{rate} % ({amount} / week)",
+      "cleaningFee": "Cleaning fee",
+      "deposit": "Security deposit",
+      "timesTitle": "Times & stay rules",
+      "checkIn": "Check-in",
+      "checkInValue": "From {time}",
+      "checkOut": "Check-out",
+      "checkOutValue": "Before {time}",
+      "minStay": "Minimum stay",
+      "nights": "{count, plural, one {# night} other {# nights}}",
+      "cancellation": "Cancellation",
+      "cancellationValue": "Free up to {hours} h before",
+      "description": "Description",
+      "amenities": "Amenities"
+    },
+    "revision": {
+      "title": "Changes requested from the host",
+      "placeholder": "e.g. Please upload clear photos of the bathroom and specify the exact parking location.",
+      "send": "Send request"
+    },
+    "map": {
+      "title": "Interactive map of Algeria",
+      "pins": "{count, plural, one {# pin} other {# pins}}",
+      "pinLabel": "{title}, {price}",
+      "legend": "* Pins spread across Algerian wilayas, from the coastal Tell to the Saharan plateau.",
+      "cityHost": "{city} · Host: {host}",
+      "rating": "Rating:",
+      "moderate": "Moderate this listing"
+    }
   },
   "approvals": {
     "title": "Central Moderation Inbox",
@@ -364,7 +743,113 @@
     "showingResults": "Showing {shown} of {total} items",
     "resetFilters": "Reset filters",
     "noMatchesTitle": "No matching pending items",
-    "noMatchesSubtitle": "Try adjusting your category, wilaya, or search query to see pending items."
+    "noMatchesSubtitle": "Try adjusting your category, wilaya, or search query to see pending items.",
+    "pendingBadge": "{count} pending SLA",
+    "tabsLabel": "Moderation queues",
+    "shortcuts": {
+      "title": "Shortcuts:",
+      "navigate": "navigate",
+      "approve": "approve",
+      "reject": "reject"
+    },
+    "search": {
+      "label": "Search the queue",
+      "hosts": "Search by host, business, ID, city...",
+      "listings": "Search by listing title, host, city, ID...",
+      "default": "Search pending items...",
+      "clear": "Clear search"
+    },
+    "filterChip": "{label}: {value}",
+    "quoted": "“{text}”",
+    "removeFilter": "Remove filter: {label}",
+    "bulk": {
+      "selected": "{count, plural, one {# item selected} other {# items selected}}",
+      "clear": "Clear",
+      "approve": "Bulk approve ({count})"
+    },
+    "selectAll": "Select all {count}",
+    "selectItem": "Select {title}",
+    "sortedBy": "Sorted by: oldest submitted first (SLA priority)",
+    "caughtUpTitle": "All caught up!",
+    "caughtUpDesc": "No items pending moderation in this queue. Great job keeping the marketplace safe and verified.",
+    "waitingDays": "{count, plural, one {# day} other {# days}} waiting",
+    "submitted": "Submitted: {date}",
+    "approveItem": "Approve {title} (A)",
+    "rejectItem": "Reject {title} (R)",
+    "inspectItem": "Inspect {title}",
+    "typeLabel": {
+      "host": "Host review",
+      "listing": "Listing review",
+      "document": "Document review",
+      "review": "Review moderation",
+      "dispute": "Dispute review"
+    },
+    "typeName": {
+      "host": "host",
+      "listing": "listing",
+      "document": "document",
+      "review": "review",
+      "dispute": "dispute"
+    },
+    "closeDetail": "Close details",
+    "detail": {
+      "businessOwner": "Business / owner",
+      "category": "Category",
+      "wilaya": "Wilaya",
+      "phone": "Phone",
+      "nif": "Commercial reg. / NIF",
+      "na": "N/A",
+      "host": "Host",
+      "vertical": "Category / vertical",
+      "nightlyPrice": "Nightly price",
+      "cityWilaya": "City & wilaya",
+      "wilayaCity": "{wilaya} ({city})",
+      "approvalMode": "Approval mode",
+      "approvalModes": {
+        "instant": "Instant",
+        "request": "On request"
+      },
+      "reportedContent": "Reported content",
+      "flaggedByCommunity": "Flagged by the community",
+      "reason": "Reason: {reason}",
+      "offensiveDefault": "Offensive language",
+      "disputedBooking": "Disputed booking",
+      "bookingRef": "Booking reference",
+      "disputeAmount": "Disputed amount"
+    },
+    "emptyDetail": "Select an item from the list or press <kbd>J</kbd> to inspect details.",
+    "reject": {
+      "title": "Reject {type}: {title}",
+      "intro": "A formal rejection reason is mandatory. The applicant will receive a notification with this explanation.",
+      "templateLabel": "Standard reason template",
+      "noteLabel": "Additional details / note to host (optional)",
+      "notePlaceholder": "e.g. Please re-upload the commercial register with a valid 2026 stamp.",
+      "withNote": "{template} — Note: {note}",
+      "templates": {
+        "registration": "Incomplete commercial or tax registration document",
+        "photos": "Listing photos contain promotional watermarks or are low resolution",
+        "pricing": "Pricing does not follow regional fair-market guidelines",
+        "idExpired": "Government ID expired or photo unclear",
+        "address": "Property address cannot be verified via cadastral records",
+        "hateSpeech": "Review contains prohibited hate speech or abusive language",
+        "other": "Other regulatory non-compliance"
+      }
+    },
+    "toast": {
+      "loadFailed": "Failed to load moderation queue",
+      "approved": "Approved: {title}",
+      "approvedDesc": "Action committed and logged to the audit trail",
+      "undoRequested": "Undo requested",
+      "undoDesc": "Approval reversed back to the review queue",
+      "approveFailed": "Approval failed",
+      "rejected": "Rejected: {title}",
+      "rejectedDesc": "Reason sent to the user: “{reason}”",
+      "rejectFailed": "Rejection failed",
+      "bulkApproved": "{count, plural, one {# item approved} other {# items approved}}",
+      "bulkApprovedDesc": "All verified entities updated and notifications queued.",
+      "bulkFailed": "Bulk approval encountered an issue",
+      "disputeFailed": "Dispute resolution failed"
+    }
   },
   "finance": {
     "title": "Financial Treasury",
@@ -392,7 +877,36 @@
     "priceRange": "Price Range (DZD)",
     "resultsFound": "Available Marketplace Offerings",
     "listView": "List View",
-    "mapView": "Map Explorer"
+    "mapView": "Map Explorer",
+    "liveMirror": "Live marketplace mirror",
+    "viewMode": "Display mode",
+    "verticalsLabel": "Listing categories",
+    "where": "Where in Algeria",
+    "wherePlaceholder": "City, oasis or landmark…",
+    "wilaya": "Wilaya (69 wilayas)",
+    "allWilayas": "All 69 wilayas",
+    "guestsCapacity": "Guests / capacity",
+    "hostType": "Host type",
+    "allCategories": "All categories",
+    "unitPriceRange": "Nightly / unit price range",
+    "mapCount": "{count, plural, one {# listing shown on the map of Algeria} other {# listings shown on the map of Algeria}}",
+    "foundCount": "{count, plural, one {<strong>#</strong> matching listing found on the network} other {<strong>#</strong> matching listings found on the network}}",
+    "emptyTitle": "No exact matches in the network",
+    "emptyHint": "Try widening your price range or exploring another Algerian wilaya.",
+    "wilayaCity": "Wilaya {code} · {city}",
+    "host": "Host: <strong>{name}</strong>",
+    "photoAlt": "Photo of {title}",
+    "inspect": "Inspect",
+    "inspectLabel": "Inspect {title}",
+    "approve": "Approve",
+    "suspend": "Suspend",
+    "searchFailed": "Search failed",
+    "approved": "Listing approved",
+    "approvedDescription": "It is now live and bookable on the network.",
+    "approveFailed": "Approval failed",
+    "suspended": "Listing suspended",
+    "suspendedDescription": "It has been taken offline from marketplace search.",
+    "suspendFailed": "Suspension failed"
   },
   "users": {
     "title": "Guests & Users",
@@ -415,7 +929,103 @@
     "delete": "Delete User",
     "flaggedOnly": "Flagged Only",
     "filterTitle": "Advanced User Filtering",
-    "filterSubtitle": "Refine guest accounts by status, role, and verification"
+    "filterSubtitle": "Refine guest accounts by status, role, and verification",
+    "resultsLabel": "users",
+    "wilaya": "Wilaya",
+    "location": "Location",
+    "quickView": "Quick view of {name}",
+    "moreActions": "More actions for {name}",
+    "roles": {
+      "guest": "Guest",
+      "host": "Host",
+      "both": "Guest & host"
+    },
+    "kpis": {
+      "all": "All users",
+      "active": "Active accounts",
+      "guests": "Guests",
+      "suspended": "Suspended accounts",
+      "banned": "Banned accounts"
+    },
+    "menu": {
+      "viewProfile": "View profile",
+      "markActive": "Mark as active",
+      "markPending": "Mark as pending",
+      "suspendAccount": "Suspend account",
+      "banAccount": "Ban account"
+    },
+    "confirm": {
+      "suspendTitle": "Suspend this user account?",
+      "suspendDescription": "{name} will be temporarily suspended and will no longer be able to book or post reviews.",
+      "suspendConfirm": "Suspend user",
+      "banTitle": "Permanently ban this user?",
+      "banDescription": "{name} will be permanently banned from the DARNA platform.",
+      "banConfirm": "Ban user",
+      "deleteTitle": "Delete this user?",
+      "deleteDescription": "The account of {name} will be soft-deleted (reversible). Type the user's name to confirm.",
+      "deleteConfirm": "Delete account"
+    },
+    "toasts": {
+      "suspended": "User {name} suspended",
+      "suspendFailed": "Could not suspend the user",
+      "banned": "User {name} banned",
+      "banFailed": "Could not ban the user",
+      "deleted": "User {name} deleted",
+      "deleteFailed": "Could not delete the user",
+      "resetSent": "Password reset link sent to {email}",
+      "markedActive": "Account activated",
+      "markedPending": "Account placed on hold",
+      "exportReady": "User export generated"
+    },
+    "detail": {
+      "subtitle": "ID: #{id} · {email}",
+      "tabs": {
+        "profile": "Profile",
+        "bookings": "Bookings",
+        "reviews": "Reviews",
+        "payments": "Payments",
+        "activity": "Activity"
+      },
+      "resetPassword": "Password",
+      "suspend": "Suspend",
+      "ban": "Ban",
+      "joinedOn": "Joined {date}",
+      "financialTitle": "Spending & financial metrics",
+      "totalSpent": "Total spent",
+      "walletBalance": "Wallet balance",
+      "avgBooking": "Avg. booking",
+      "activityTitle": "Activity & timestamps",
+      "registeredOn": "Registered on",
+      "lastActive": "Last active",
+      "aboutTitle": "About & verification",
+      "userRole": "User role",
+      "language": "Preferred language",
+      "bookings": "Bookings",
+      "bookingsValue": "{count, plural, one {# booking} other {# bookings}}",
+      "reviewsFavs": "Reviews & favourites",
+      "reviewsFavsValue": "{reviews, plural, one {# review} other {# reviews}} · {favs, plural, one {# favourite} other {# favourites}}",
+      "identityStatus": "Identity status",
+      "idVerified": "Verified (ID card compliant)",
+      "idPending": "Awaiting verification",
+      "bioTitle": "Profile bio & description",
+      "bioText": "Verified DARNA guest, passionate about authentic stays and Sahara expeditions. Excellent booking track record with no disputes.",
+      "nights": "{count, plural, one {# night} other {# nights}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "dateRange": "{start} – {end} · {duration}",
+      "cardPayment": "CIB / Edahabia payment",
+      "transaction": "Transaction {ref}",
+      "login": "Account sign-in",
+      "loginMeta": "Today at {time} (IP: {ip})",
+      "bookingMade": "Booking made {ref}",
+      "rating": "Rated {rating} out of 5"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "allRoles": "All roles",
+      "guestOnly": "Guests only",
+      "guestAndHost": "Guest & host",
+      "allWilayas": "All wilayas"
+    }
   },
   "bookings": {
     "title": "Reservations & Stays",
@@ -440,7 +1050,69 @@
     "refundBooking": "Process Refund",
     "cancelBooking": "Cancel Booking",
     "filterTitle": "Advanced Booking Filters",
-    "filterSubtitle": "Filter by financial vertical, dispute status, and time windows"
+    "filterSubtitle": "Filter by financial vertical, dispute status, and time windows",
+    "pageTitle": "Booking management",
+    "pageSubtitle": "Track booking status, payments received and cancellation requests.",
+    "report": "Report",
+    "verticalTabs": {
+      "all": "All",
+      "stays": "Stays",
+      "experiences": "Experiences",
+      "trips": "Organised trips",
+      "cars": "Cars"
+    },
+    "types": {
+      "home": "Stay",
+      "experience": "Experience",
+      "trip": "Trip",
+      "vehicle": "Car"
+    },
+    "cols": {
+      "booking": "Booking",
+      "type": "Type",
+      "details": "Details",
+      "dates": "Dates",
+      "amount": "Amount"
+    },
+    "dateRange": "{from} – {to}",
+    "nights": "{count, plural, one {{count} night} other {{count} nights}}",
+    "guestsCount": "{count, plural, one {{count} guest} other {{count} guests}}",
+    "quickView": "Quick view",
+    "quickViewOf": "Quick view of booking {reference}",
+    "invoiceUnavailable": "Invoice (not available yet)",
+    "allStatuses": "All statuses",
+    "wilayaFilter": "Region / wilaya",
+    "allWilayas": "All wilayas",
+    "empty": "No bookings found.",
+    "itemLabel": "bookings",
+    "bookedOn": "Booked on {date}",
+    "print": "Print booking",
+    "editBooking": "Edit booking",
+    "panelTabs": {
+      "details": "Details",
+      "guest": "Guest",
+      "payment": "Payment",
+      "messages": "Messages"
+    },
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "duration": "Duration",
+    "travelers": "Guests",
+    "priceBreakdown": "Amount and price details",
+    "basePrice": "Base price ({count, plural, one {{count} night} other {{count} nights}})",
+    "serviceFee": "DARNA service fee",
+    "totalPaid": "Total paid",
+    "verifiedAccount": "Verified account",
+    "paymentReceived": "Payment received",
+    "paymentMethodLine": "Method: {method}",
+    "paymentMethods": {
+      "cib_edahabia": "CIB / Edahabia card",
+      "ccp_transfer": "CCP transfer",
+      "baridimob": "BaridiMob",
+      "cash_on_arrival": "Cash on arrival"
+    },
+    "labelValue": "{label}: {value}",
+    "downloadInvoice": "Download invoice"
   },
   "reviews": {
     "title": "Review Moderation",
@@ -462,7 +1134,66 @@
     "dismiss": "Dismiss Flag",
     "delete": "Delete Permanently",
     "deleteConfirmTitle": "Confirm Permanent Deletion",
-    "deleteConfirmDesc": "Are you sure you want to permanently delete this review? This action cannot be undone."
+    "deleteConfirmDesc": "Are you sure you want to permanently delete this review? This action cannot be undone.",
+    "kpi": {
+      "all": "All reviews",
+      "flagged": "Flagged reviews",
+      "reports": "User reports",
+      "disputes": "Open disputes"
+    },
+    "exportReport": "Export review report",
+    "exported": "Review report exported",
+    "filters": {
+      "search": "Search reviews",
+      "vertical": "Service",
+      "allVerticals": "All services",
+      "rating": "Rating",
+      "allRatings": "All ratings (1–5 ★)",
+      "ratingOnly5": "5 stars only",
+      "ratingStars": "{count, plural, one {# star} other {# stars}}",
+      "rating1": "1 star (alert)",
+      "wilaya": "Wilaya",
+      "allWilayas": "All wilayas"
+    },
+    "emptyTitle": "No reviews found",
+    "emptyDesc": "Adjust your filters or search terms.",
+    "listLabel": "Reviews",
+    "ratingValue": "{rating} / 5",
+    "ratingAria": "Rated {rating} out of 5",
+    "openReview": "Open review by {name}",
+    "quoted": "“{text}”",
+    "flagReasonInline": "Reason: {reason}",
+    "guestLabel": "Guest: {name}",
+    "hostLabel": "Host: {name}",
+    "detailTitle": "Review #{id}",
+    "detailSubtitle": "{name} · {date}",
+    "ratingGiven": "Rating given",
+    "flagReasonTitle": "Flag reason",
+    "flaggedByProvider": "Flagged by the provider on {date}",
+    "contextTitle": "Service context",
+    "ctxListing": "Listing",
+    "ctxGuest": "Guest (author)",
+    "ctxHost": "Host / provider",
+    "ctxLocation": "Location",
+    "rulesTitle": "Moderation rules",
+    "rulesText": "Defamatory reviews, hate speech or reviews containing personal contact details may be removed without notice.",
+    "deleteTitle": "Delete review",
+    "deleteDesc": "This review will be removed from the database and will no longer appear on the listing page.",
+    "toast": {
+      "loadFailed": "Failed to load reviews",
+      "hidden": "Review hidden",
+      "hiddenDesc": "The review has been removed from public display.",
+      "hideFailed": "Failed to hide the review",
+      "restored": "Review restored",
+      "restoredDesc": "The review is publicly visible again.",
+      "restoreFailed": "Failed to restore the review",
+      "flagDismissed": "Flag dismissed",
+      "flagDismissedDesc": "The review has been confirmed as compliant.",
+      "dismissFailed": "Failed to dismiss the flag",
+      "deleted": "Review deleted",
+      "deletedDesc": "Soft-deleted. It can be recovered from the trash.",
+      "deleteFailed": "Delete failed"
+    }
   },
   "onboarding": {
     "title": "Host Onboarding Configurator",
@@ -483,7 +1214,37 @@
     "stepDesc": "Step Description",
     "publishChanges": "Publish Version to Marketplace",
     "draftStatus": "Draft Changes Pending",
-    "publishedVersion": "Currently Live on Marketplace"
+    "publishedVersion": "Currently Live on Marketplace",
+    "contractVersionValue": "Contract version {version}",
+    "hostTypePicker": "Host category",
+    "categoryCapped": "Strict limit of {max} pages",
+    "categoryMultiPage": "Multi-page structured flow",
+    "soloCapTitle": "DARNA rule: individual host flow is capped",
+    "stepsHeading": "{hostType} ({count, plural, one {# step} other {# steps}})",
+    "noSteps": "No steps configured for this host category yet.",
+    "stepNumber": "Step {number}:",
+    "fieldsCount": "{count, plural, one {# field} other {# fields}}",
+    "requiredToggleLabel": "Mandatory step: {name}",
+    "moveUpLabel": "Move “{name}” up",
+    "moveDownLabel": "Move “{name}” down",
+    "removeStepLabel": "Remove step “{name}”",
+    "toasts": {
+      "loadFailed": "Could not load the sign-up flows",
+      "soloLimitTitle": "Individual host limit reached",
+      "soloLimitBody": "The individual host sign-up flow is capped at {max} pages so it can be completed quickly.",
+      "policyViolationTitle": "Rule not respected",
+      "policyViolationBody": "The individual host sign-up flow cannot exceed {max} pages.",
+      "publishedTitle": "Version {version} published",
+      "publishedBody": "The sign-up flow for {hostType} is now live.",
+      "publishFailed": "Publishing failed",
+      "copiedTitle": "Copied",
+      "copiedBody": "The JSON contract was copied to the clipboard."
+    },
+    "exportDialog": {
+      "title": "Exported sign-up JSON contract",
+      "description": "This typed schema follows <code>{schema}</code>. The public website's <code>{flow}</code> consumes this contract.",
+      "copy": "Copy to clipboard"
+    }
   },
   "categories": {
     "title": "Taxonomies & Amenity Categories",
@@ -501,7 +1262,29 @@
     "createTitle": "Add New Category",
     "createSubtitle": "Define category names in English, French, and Arabic",
     "deleteTitle": "Delete Category",
-    "deleteDesc": "Are you sure you want to delete this category? This might affect existing listings."
+    "deleteDesc": "Are you sure you want to delete this category? This might affect existing listings.",
+    "empty": "No categories in this vertical yet.",
+    "filterLabel": "Filter by vertical",
+    "placeholderEn": "e.g. Desert Glamping",
+    "placeholderFr": "e.g. Bivouac de luxe dans le désert",
+    "placeholderAr": "e.g. تخييم صحراوي فاخر",
+    "toggleActive": "Toggle active status of {name}",
+    "deleteCategory": "Delete category {name}",
+    "toast": {
+      "loadFailed": "Failed to load categories",
+      "statusChanged": "Category status changed",
+      "nowActive": "{name} is now active",
+      "nowInactive": "{name} is now inactive",
+      "toggleFailed": "Toggle failed",
+      "nameRequired": "English name required",
+      "nameRequiredDesc": "Please enter at least an English category name.",
+      "created": "Category created",
+      "createdDesc": "Added {name} to {vertical}.",
+      "createFailed": "Creation failed",
+      "deleted": "Category deleted",
+      "deletedDesc": "{name} has been deleted.",
+      "deleteFailed": "Delete failed"
+    }
   },
   "promotions": {
     "title": "Promotions, Vouchers & Codes",
@@ -517,7 +1300,77 @@
     "status": "Status",
     "actions": "Actions",
     "deleteConfirmTitle": "Delete Promotion Voucher",
-    "deleteConfirmDesc": "Are you sure you want to delete this coupon? It will no longer be redeemable by travelers."
+    "deleteConfirmDesc": "Are you sure you want to delete this coupon? It will no longer be redeemable by travelers.",
+    "kpi": {
+      "created": "Promo codes created",
+      "active": "Active codes",
+      "uses": "Total redemptions",
+      "featured": "Active featured placements"
+    },
+    "newCode": "New promo code",
+    "tabCoupons": "Promo codes",
+    "tabFeatured": "Featured placements",
+    "colCode": "Code",
+    "colDiscount": "Discount",
+    "colMinSpend": "Min. spend",
+    "colUses": "Redemptions",
+    "colExpires": "Expires",
+    "none": "None",
+    "usesValue": "{used} / {max}",
+    "unlimited": "∞",
+    "expired": "Expired",
+    "empty": "No promo codes yet.",
+    "copyCode": "Copy code {code}",
+    "copied": "Code copied to clipboard",
+    "toggleStatus": "Toggle status of {code}",
+    "deleteCode": "Delete code {code}",
+    "featured": {
+      "title": "Homepage featured placements",
+      "subtitle": "Manage listings sponsored or featured by the moderation team.",
+      "add": "Add a featured placement",
+      "selectListing": "Select a listing to promote",
+      "placement": "Placement: {place}",
+      "until": "Until {date}",
+      "clicks": "{count, plural, one {# click} other {# clicks}}",
+      "badge": {
+        "featured": "Featured",
+        "favorite": "Staff pick",
+        "topRenter": "Top renter"
+      },
+      "place": {
+        "homeHeader": "Homepage header · Algiers",
+        "tours": "Organized trips section",
+        "carsCarousel": "Popular cars carousel"
+      }
+    },
+    "form": {
+      "title": "Create a new promo code",
+      "description": "Configure the code, discount rate and usage limits.",
+      "code": "Promo code (uppercase)",
+      "codePlaceholder": "e.g. DARNA2024",
+      "type": "Discount type",
+      "percentage": "Percentage (%)",
+      "fixed": "Fixed amount (DZD)",
+      "value": "Discount value",
+      "minSpend": "Minimum spend (DZD)",
+      "maxUses": "Maximum number of uses",
+      "expiresAt": "Expiration date",
+      "submit": "Create code",
+      "codeMissing": "Please enter a promo code."
+    },
+    "toast": {
+      "loadFailed": "Failed to load promotions",
+      "statusUpdated": "Status updated",
+      "statusUpdatedDesc": "Code {code} is now {status}",
+      "updateFailed": "Update failed",
+      "codeMissing": "Missing code",
+      "created": "Promo code created",
+      "createFailed": "Creation failed",
+      "deleted": "Promo code deleted",
+      "deleteFailed": "Delete failed"
+    },
+    "deleteTitle": "Delete promo code",
+    "deleteDesc": "Are you sure you want to delete code {code}? This cannot be undone."
   },
   "reports": {
     "title": "Business Intelligence & Reports",
@@ -531,11 +1384,45 @@
     "kpiListings": "Active Listings Fleet",
     "revenueReport": "Platform Net Revenue Report",
     "occupancyReport": "Wilayas Occupancy & Trends Report",
-    "hostsReport": "Host Partners Economics Report"
+    "hostsReport": "Host Partners Economics Report",
+    "kpiHints": {
+      "revenue": "Commissions + booking service fees",
+      "gross": "Total spent on reservations",
+      "occupancy": "Across active listings",
+      "listings": "Across all Algerian wilayas"
+    },
+    "topWilayasTitle": "Top Algerian wilayas by booking volume",
+    "rank": "#{rank}",
+    "staysCount": "{count, plural, one {{value} stay} other {{value} stays}}",
+    "presetsTitle": "Standard export presets",
+    "presetsSubtitle": "One-click structured exports for accounting, tax compliance and performance tracking.",
+    "downloadAria": "Export CSV: {report}",
+    "presets": {
+      "monthlyFinance": {
+        "type": "Finance / audit",
+        "title": "Monthly financial & commission settlement",
+        "description": "Gross bookings, platform commission revenue, CCP payout totals and VAT breakdowns."
+      },
+      "wilayaDemand": {
+        "type": "Marketplace / growth",
+        "title": "Regional wilaya demand & tourism heatmap",
+        "description": "Nightly bookings, guest origins and average stay prices across all 69 wilayas."
+      },
+      "hostSolvency": {
+        "type": "Risk / compliance",
+        "title": "Host solvency & escrow balance audit",
+        "description": "Negative balance flags, pending disbursements and dispute recovery liabilities."
+      },
+      "tourismTax": {
+        "type": "Regulatory",
+        "title": "Algerian tourism tax declaration",
+        "description": "Official summary formatted for the Algerian Ministry of Tourism and Handicrafts."
+      }
+    }
   },
   "auditLog": {
     "title": "System Audit Trail",
-    "subtitle": "Immutable security record of all administrative actions, ledger changes, and status transitions.",
+    "subtitle": "Append-only security record of all administrative actions, ledger changes, status transitions, sign-ins and data exports. Entries cannot be edited or deleted from the back-office.",
     "actor": "Staff Actor",
     "action": "Action Taken",
     "entity": "Affected Record",
@@ -544,7 +1431,44 @@
     "viewDiff": "View Diff",
     "filterEntity": "Entity Type",
     "filterRole": "Staff Role",
-    "exportCsv": "Export Audit Trail CSV"
+    "exportCsv": "Export Audit Trail CSV",
+    "entityPayout": "Payouts",
+    "entityTeam": "Staff team",
+    "entityAuth": "Sign-in / sign-out",
+    "entityExport": "Data exports",
+    "appendOnlyBadge": "Append-only ledger",
+    "anonymous": "Anonymous",
+    "loadFailed": "Could not load the audit trail",
+    "searchPlaceholder": "Search action, staff member, record ID or details…",
+    "allEntities": "All record types",
+    "allRoles": "All staff roles",
+    "entities": {
+      "host": "Host organisations",
+      "listing": "Listings & stays",
+      "booking": "Bookings",
+      "user": "Guests",
+      "wallet": "Wallets",
+      "review": "Reviews",
+      "setting": "Platform settings",
+      "onboarding": "Host sign-up steps",
+      "promotion": "Promotions",
+      "payout": "Payouts",
+      "team": "Staff team",
+      "auth": "Sign-in / sign-out",
+      "export": "Data exports"
+    },
+    "empty": "No audit entries match these filters.",
+    "viewDiffFor": "View changes for {action} on {id}",
+    "noDiff": "No recorded changes",
+    "diff": {
+      "title": "Recorded changes: {action}",
+      "target": "Record: <strong>{type}</strong> ({id})",
+      "ip": "Recorded IP: {ip}",
+      "before": "Before",
+      "after": "After",
+      "noBefore": "No previous snapshot recorded",
+      "noAfter": "No later state recorded"
+    }
   },
   "team": {
     "title": "Staff Team & Permissions",
@@ -558,7 +1482,43 @@
     "status": "Account Status",
     "actions": "Actions",
     "roleMatrix": "Permissions Matrix",
-    "saveRole": "Update Role"
+    "saveRole": "Update Role",
+    "inviteMissingFields": "Please fill in the name and email.",
+    "inviteSent": "Invitation created",
+    "inviteSentHint": "{email} is listed as invited. The account has no password and cannot sign in until the invitation is accepted.",
+    "inviteFailed": "Invitation failed",
+    "statusInvited": "Invited",
+    "never": "Never",
+    "statusActive": "Active",
+    "statusDeactivated": "Deactivated",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "activateLabel": "Activate {name}",
+    "deactivateLabel": "Deactivate {name}",
+    "roleFor": "Role of {name}",
+    "invitePlaceholderName": "e.g. Yacine Brahimi",
+    "roleDescriptions": {
+      "super_admin": "Full authority over platform settings, the team and the financial ledger.",
+      "moderator": "Verifies hosts, listings, legal certificates and reviews.",
+      "finance": "Pays out CCP transfers, tops up wallets and updates commissions.",
+      "support": "Resolves guest disputes, cancels bookings and handles enquiries.",
+      "analyst": "Read-only access to business intelligence, reports and charts."
+    },
+    "matrix": {
+      "title": "Admin roles & permissions",
+      "pickRole": "Choose a role",
+      "granted": "Granted permissions"
+    },
+    "toasts": {
+      "loadFailed": "Could not load the staff team",
+      "roleUpdated": "Role updated",
+      "roleUpdatedBody": "{name} is now {role}.",
+      "roleUpdateFailed": "Could not update the role",
+      "statusUpdated": "Status updated",
+      "nowActive": "{name} is now active.",
+      "nowDeactivated": "{name} has been deactivated.",
+      "actionProhibited": "Action not allowed"
+    }
   },
   "settings": {
     "title": "Platform Settings",
@@ -571,7 +1531,45 @@
     "twoFactor": "Require Two-Factor Authentication (2FA) for Staff",
     "sessionTimeout": "Session Timeout (minutes)",
     "saveSettings": "Save Platform Settings",
-    "saving": "Saving Settings..."
+    "saving": "Saving Settings...",
+    "tabs": {
+      "general": "General",
+      "languages": "Languages & translations",
+      "notifications": "Notifications & alerts",
+      "security": "Security & sessions"
+    },
+    "identity": {
+      "title": "Platform identity",
+      "serviceFeeHint": "Applied to the booking subtotal before the provider commission is deducted.",
+      "maintenanceHint": "Locks public access to the marketplace while staff can still browse."
+    },
+    "languages": {
+      "title": "Supported languages",
+      "description": "The DARNA platform runs in {count, plural, one {# official language} other {# official languages}}, with full right-to-left support for Arabic.",
+      "sourceOfTruth": "Source of truth",
+      "fullRtl": "Full RTL",
+      "international": "International",
+      "translated": "{percent}% translated"
+    },
+    "notifications": {
+      "title": "Notification channels",
+      "email": "Email alerts",
+      "emailHint": "For every new validation request",
+      "sms": "Urgent SMS notifications",
+      "smsHint": "For critical disputes and security incidents",
+      "panel": "Real-time alerts in the panel",
+      "panelHint": "Notification bell and count badges"
+    },
+    "securityPolicy": {
+      "title": "Security policy",
+      "twoFactorHint": "Mandatory for Super Admin roles"
+    },
+    "toasts": {
+      "loadFailed": "Could not load settings",
+      "saved": "Settings saved",
+      "savedHint": "The platform configuration has been updated.",
+      "saveFailed": "Could not save settings"
+    }
   },
   "login": {
     "title": "Control Center Login",
@@ -580,6 +1578,2312 @@
     "passwordLabel": "Password",
     "submitButton": "Authenticate & Enter",
     "demoSeeds": "Demo Seed Accounts:",
-    "footerText": "© 2026 DARNA Technologies DZ. Restricted access for authorized staff only."
+    "footerText": "© 2026 DARNA Technologies DZ. Restricted access for authorized staff only.",
+    "errors": {
+      "invalidCredentials": "Invalid email or password.",
+      "rateLimited": "Too many sign-in attempts. Please wait {seconds} seconds and try again.",
+      "unexpected": "Something went wrong while signing in. Please try again."
+    },
+    "adminBadge": "Admin",
+    "demoFillLabel": "Fill in the {role} demo account ({email})"
+  },
+  "auth": {
+    "forbidden": {
+      "title": "Access restricted",
+      "description": "Your role does not have permission to view this section. Contact a Super Admin if you need access.",
+      "backHome": "Back to dashboard"
+    }
+  },
+  "actions": {
+    "reasonLabel": "Reason (required)",
+    "reasonPlaceholder": "Explain the decision — it is stored in the audit trail.",
+    "reasonTooShort": "Please enter at least {min} characters.",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "actionFailed": "Action failed",
+    "statusUpdated": "Status updated",
+    "notAllowed": "This action is not available for the current status.",
+    "rejectListingTitle": "Reject this listing?",
+    "suspendListingTitle": "Suspend this listing?",
+    "requestChangesTitle": "Request changes from the host?",
+    "reject": "Reject",
+    "suspend": "Suspend",
+    "requestChanges": "Request changes",
+    "restore": "Restore",
+    "restored": "Restored to its previous status",
+    "exportStarted": "Export ready",
+    "exportRows": "{count} rows exported",
+    "exportFailed": "Export failed",
+    "unavailable": "Not available yet",
+    "unavailableHint": "This feature is not connected to the back-office yet.",
+    "suspendHostTitle": "Suspend {name}?",
+    "suspendHostDescription": "Their listings will be temporarily hidden from travelers.",
+    "reactivate": "Reactivate",
+    "invalidRate": "Rate must be between 0 and 100 % with at most 2 decimals.",
+    "invalidAmount": "Enter a whole amount between 1 and {max}."
+  },
+  "payments": {
+    "title": "Payments & Finance",
+    "subtitle": "Host wallets, ledger, commissions, payouts and refunds — all balances are derived from the ledger.",
+    "exportLedger": "Export ledger (CSV)",
+    "exportWallets": "Export wallets (CSV)",
+    "rechargeWallet": "Recharge a wallet",
+    "noWallet": "No wallet available",
+    "loadError": "Could not load finance data",
+    "kpi": {
+      "wallets": "Total wallet balances",
+      "pendingPayouts": "Pending payouts",
+      "monthCommissions": "Commissions this month",
+      "refunds": "Refunds issued",
+      "negativeWallets": "Negative wallets"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "wallets": "Wallets",
+      "transactions": "Ledger",
+      "commissions": "Commissions",
+      "payouts": "Payouts",
+      "refunds": "Refunds"
+    },
+    "overview": {
+      "escrow": "Guest funds held",
+      "escrowHint": "Paid bookings that are confirmed or disputed, net of refunds.",
+      "monthPayouts": "Payouts executed this month",
+      "monthPayoutsHint": "{count, plural, one {{count} payout debited from host wallets.} other {{count} payouts debited from host wallets.}}",
+      "monthCommissions": "Net commission revenue",
+      "monthCommissionsHint": "Commission deductions recorded in the ledger since {date}.",
+      "latest": "Latest ledger entries",
+      "seeAll": "See the full ledger"
+    },
+    "filters": {
+      "searchWallets": "Search by host name…",
+      "searchTransactions": "Search by reference, host, booking…",
+      "hostType": "Host type",
+      "allHostTypes": "All host types",
+      "wilaya": "Wilaya",
+      "allWilayas": "All wilayas",
+      "negativeOnly": "Negative balances only",
+      "txType": "Entry type",
+      "allTxTypes": "All entry types"
+    },
+    "txTypes": {
+      "booking_payment": "Booking settlement",
+      "commission_deduction": "Commission",
+      "host_payout": "Host payout",
+      "wallet_recharge": "Wallet recharge",
+      "booking_refund": "Booking refund",
+      "adjustment": "Adjustment"
+    },
+    "payoutMethods": {
+      "ccp": "CCP (Algérie Poste)",
+      "bank_wire": "Bank wire",
+      "baridimob": "BaridiMob"
+    },
+    "cols": {
+      "date": "Date",
+      "reference": "Reference",
+      "host": "Host",
+      "type": "Type",
+      "description": "Description",
+      "amount": "Amount",
+      "balanceAfter": "Balance after",
+      "location": "Wilaya",
+      "balance": "Balance",
+      "commissionsPaid": "Commissions paid",
+      "actions": "Actions",
+      "requestedAt": "Requested",
+      "account": "Account",
+      "method": "Method",
+      "status": "Status",
+      "processed": "Processed",
+      "booking": "Booking",
+      "guest": "Guest",
+      "refunded": "Refunded",
+      "total": "Booking total"
+    },
+    "recharge": "Recharge",
+    "rechargeTitle": "Recharge host wallet",
+    "rechargeDescription": "Manually credit a host after a CCP deposit or bank transfer. The credit is written to the ledger and the audit trail.",
+    "rechargeHost": "Host",
+    "rechargeAmount": "Amount to credit (DZD)",
+    "rechargeAmountHint": "Whole DZD between 1 and {max}.",
+    "rechargeMethod": "Payment channel",
+    "rechargeMethods": {
+      "ccp": "CCP deposit / Algérie Poste",
+      "bank_transfer": "Bank transfer",
+      "cash_guarantee": "Cash deposit (guarantee)"
+    },
+    "rechargeReceipt": "Receipt number / reference",
+    "rechargeReason": "Internal reason",
+    "rechargeConfirm": "Confirm recharge",
+    "rechargeDone": "Wallet recharged",
+    "invalidAmount": "Enter a whole amount between 1 and {max}.",
+    "commissionsTitle": "Commission rates per host type",
+    "commissionsHint": "Applied to the base price when a booking is confirmed. 0–100 %, at most 2 decimals.",
+    "commissionLabels": {
+      "individual": "Individual hosts",
+      "agency": "Travel agencies",
+      "hotel": "Hotels",
+      "hostel": "Hostels"
+    },
+    "invalidRate": "Each rate must be between 0 and 100 with at most 2 decimals.",
+    "saveRates": "Save commission rates",
+    "ratesSaved": "Commission rates saved",
+    "approvePayout": "Approve",
+    "rejectPayout": "Reject",
+    "approveTitle": "Approve this payout?",
+    "approveDescription": "{amount} will be debited from the wallet of {host} and sent to {account} ({method}). This cannot be undone.",
+    "approveConfirm": "Approve {amount}",
+    "payoutApproved": "Payout approved and wallet debited",
+    "rejectTitle": "Reject this payout request?",
+    "rejectDescription": "Request of {amount} from {host}. The wallet is not debited.",
+    "payoutRejected": "Payout request rejected",
+    "processedBy": "by {name}",
+    "noPayouts": "No payout requests.",
+    "refundsTitle": "Guest refunds",
+    "refundsHint": "Bookings with a full or partial refund, from cancellations or dispute resolutions.",
+    "noRefunds": "No refunds yet.",
+    "noTransactions": "No ledger entries match these filters.",
+    "noWallets": "No wallets match these filters.",
+    "rechargeFor": "Recharge the wallet of {host}",
+    "approvePayoutFor": "Approve the payout of {host}",
+    "rejectPayoutFor": "Reject the payout of {host}",
+    "processedOnBy": "{date} by {name}",
+    "itemLabels": {
+      "wallets": "wallets",
+      "transactions": "entries",
+      "refunds": "refunds"
+    }
+  },
+  "bookingOps": {
+    "total": "Booking total",
+    "alreadyRefunded": "Already refunded",
+    "refundable": "Refundable",
+    "refundTitle": "Refund booking {reference}",
+    "refundDescription": "The guest is refunded and the host's share is debited from its wallet (booking_refund ledger entry).",
+    "refundAmount": "Refund amount (DZD)",
+    "amountRange": "Enter a whole amount between 1 and {max}.",
+    "partialRange": "A partial refund must be a whole amount between 1 and less than {max}.",
+    "refundConfirm": "Refund {amount}",
+    "refundDone": "Refund issued",
+    "cancelTitle": "Cancel booking {reference}?",
+    "cancelDescription": "Pending and confirmed bookings only. Refunds are issued separately.",
+    "cancelDone": "Booking cancelled",
+    "disputeTitle": "Resolve dispute on {reference}",
+    "disputeDescription": "Choose the outcome. Refunds are written to the ledger; a declined dispute returns the booking to its normal lifecycle.",
+    "outcome": "Outcome",
+    "outcomes": {
+      "refund_full": "Full refund",
+      "refund_partial": "Partial refund",
+      "declined": "Decline the claim"
+    },
+    "outcomeHints": {
+      "refund_full": "Refund the whole remaining amount; the booking becomes refunded.",
+      "refund_partial": "Refund part of the amount; the booking returns to confirmed / completed.",
+      "declined": "No refund; the booking returns to confirmed / completed."
+    },
+    "resolutionNote": "Resolution note (required)",
+    "resolveConfirm": "Resolve dispute",
+    "disputeResolved": "Dispute resolved",
+    "cancel": "Cancel",
+    "refund": "Refund",
+    "resolveDispute": "Resolve dispute",
+    "export": "Export",
+    "refundedSoFar": "Refunded so far",
+    "paymentStatus": "Payment status"
+  },
+  "hostDetail": {
+    "breadcrumb": "Hosts",
+    "financialSnapshot": "Financial snapshot",
+    "walletBalance": "Wallet balance:",
+    "takeRate": "Take rate:",
+    "totalBookings": "Total bookings:",
+    "activeFleet": "Active fleet:",
+    "listingsValue": "{count, plural, one {# listing} other {# listings}}",
+    "verificationDocuments": "Verification documents",
+    "uploaded": "Uploaded {date}",
+    "viewFile": "View file",
+    "viewFileLabel": "View file {title} (opens in a new tab)"
+  },
+  "search": {
+    "title": "Global search & DARNA network",
+    "subtitle": "Search across every entity on the platform.",
+    "subtitleQuery": "Results for “{query}”",
+    "showMap": "Show map",
+    "showList": "Show list",
+    "searchLabel": "Search the platform",
+    "placeholder": "Search by title, city, provider, code…",
+    "wilayaLabel": "Filter by wilaya",
+    "allWilayas": "All wilayas",
+    "searchFailed": "Search failed",
+    "tabs": {
+      "all": "All results",
+      "stays": "Stays",
+      "experiences": "Experiences",
+      "trips": "Organised trips",
+      "cars": "Car rentals",
+      "providers": "Providers",
+      "users": "Users"
+    },
+    "emptyTitle": "No results found",
+    "emptyHint": "Try a shorter keyword or adjust your filters.",
+    "cityWilaya": "{city}, Wilaya {code}",
+    "rating": "Rated {rating} out of 5",
+    "host": "Host: <strong>{name}</strong>",
+    "hostFallback": "Provider",
+    "details": "Details",
+    "detailsLabel": "Details of {title}"
+  },
+  "inbox": {
+    "title": "Messaging & communications",
+    "subtitle": "Manage conversations with users, automatic notifications and multilingual templates.",
+    "sendNotification": "Send a notification",
+    "kpi": {
+      "conversations": "Active conversations",
+      "unread": "Unread messages",
+      "notificationsSent": "Notifications sent",
+      "templates": "Configured templates"
+    },
+    "tabs": {
+      "conversations": "Conversations",
+      "notifications": "Sent notifications",
+      "templates": "Message templates (3 languages)"
+    },
+    "roles": {
+      "individualHost": "Individual host · {place}",
+      "travelAgency": "Travel agency · {place}",
+      "traveler": "Traveler"
+    },
+    "searchLabel": "Search conversations",
+    "searchPlaceholder": "Search a conversation...",
+    "threadsLabel": "Conversations",
+    "unread": "{count, plural, one {# unread message} other {# unread messages}}",
+    "viewProfile": "View profile",
+    "profileOpened": "User profile opened",
+    "messagesLabel": "Messages with {name}",
+    "replyLabel": "Reply to {name}",
+    "replyPlaceholder": "Write your message to the user...",
+    "send": "Send message",
+    "sent": "Message sent",
+    "quickReplies": "Quick replies:",
+    "quick": {
+      "validatedLabel": "Validation OK",
+      "validatedText": "Your documents have been successfully validated.",
+      "moreInfoLabel": "More documents required",
+      "moreInfoText": "Please provide a recent proof of address."
+    },
+    "notifications": {
+      "colDate": "Date & time",
+      "colTitle": "Notification title",
+      "colChannel": "Channel",
+      "colRecipients": "Recipients",
+      "colStatus": "Status",
+      "channelEmailInApp": "Email + in-app",
+      "channelBroadcast": "In-app broadcast",
+      "recipientHost": "{name} (host)",
+      "allProviders": "All providers ({count})",
+      "delivered": "Delivered"
+    },
+    "templates": {
+      "languages": "FR / EN / AR",
+      "bookingTitle": "Booking confirmation",
+      "bookingDesc": "Sent automatically once a booking payment is confirmed.",
+      "bookingBody": "“Hello {userName}, your booking {bookingId} for {listingTitle} from {startDate} to {endDate} is confirmed!”",
+      "docsTitle": "Request for additional documents",
+      "docsDesc": "Sent by the administrator when a provider document is partially rejected.",
+      "docsBody": "“Hello {hostName}, your file needs an update: {reasonText}. Please upload the required document.”"
+    },
+    "broadcast": {
+      "title": "Broadcast a notification",
+      "description": "Send a targeted push or email notification to users or providers.",
+      "target": "Recipients",
+      "targetAllUsers": "All users",
+      "targetAllProviders": "All providers",
+      "targetHomeHosts": "Accommodation hosts only",
+      "targetAgencies": "Travel agencies",
+      "notifTitle": "Notification title",
+      "notifTitlePlaceholder": "e.g. Scheduled platform maintenance",
+      "message": "Message",
+      "messagePlaceholder": "Notification content...",
+      "submit": "Send notification",
+      "sent": "Notification broadcast to recipients"
+    }
+  },
+  "providers": {
+    "title": "Provider validation",
+    "subtitle": "Review and validate every provider before they are published on the platform.",
+    "settings": "Validation settings",
+    "entity": "providers",
+    "kpi": {
+      "underReview": "Pending validation",
+      "approved": "Approved providers",
+      "applied": "To complete",
+      "rejected": "Rejected"
+    },
+    "categories": {
+      "all": "All",
+      "host": "Hosts",
+      "hotel_hostel": "Hotels & hostels",
+      "travel_agency": "Travel agencies",
+      "experience_company": "Experiences",
+      "rental_agency": "Rental agencies"
+    },
+    "cols": {
+      "provider": "Provider",
+      "type": "Type",
+      "location": "Location",
+      "requestedAt": "Request date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "individual": "Individual",
+    "professional": "Professional",
+    "view": "View {name}",
+    "filters": {
+      "search": "Search a provider...",
+      "more": "More filters",
+      "type": "Provider type",
+      "allTypes": "All",
+      "typeIndividual": "Individual (host)",
+      "typeAgency": "Travel / rental agency",
+      "typeHotel": "Hotel",
+      "typeHostel": "Youth hostel",
+      "wilaya": "Region / wilaya",
+      "allWilayas": "All wilayas",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "underReview": "Pending",
+      "approved": "Approved",
+      "applied": "To complete",
+      "rejected": "Rejected"
+    },
+    "drawer": {
+      "title": "Advanced provider filters",
+      "completeness": "Document completeness",
+      "completenessAll": "All levels",
+      "completenessFull": "100% complete (4/4)",
+      "completenessPartial": "Partial documents",
+      "completenessMissing": "Missing documents",
+      "bookingMode": "Booking mode",
+      "bookingModeAll": "All modes",
+      "bookingModeInstant": "Instant booking",
+      "bookingModeRequest": "On request",
+      "minRating": "Minimum rating",
+      "minRatingAll": "All ratings",
+      "minRatingValue": "★ {rating} and above"
+    },
+    "actions": {
+      "approveDirectly": "Approve directly",
+      "unsuspend": "Cancel suspension / reactivate",
+      "reject": "Reject",
+      "requestChanges": "Request changes",
+      "validatePublish": "Validate & publish"
+    },
+    "toast": {
+      "error": "Error",
+      "loadFailed": "Failed to load providers",
+      "approved": "Provider approved and published",
+      "approvedDesc": "{name} is now active on DARNA.",
+      "unsuspended": "Suspension cancelled / provider reactivated",
+      "unsuspendedDesc": "{name} has been restored to active status.",
+      "rejected": "Application rejected",
+      "rejectedDesc": "Notification sent to {email}.",
+      "changesSent": "Request for more information sent",
+      "changesSentDesc": "Message sent to the provider."
+    },
+    "panel": {
+      "requestedOn": "Requested on {date}",
+      "tabsLabel": "Provider details",
+      "tabs": {
+        "informations": "Information",
+        "photos": "Photos",
+        "documents": "Documents",
+        "avis": "Reviews",
+        "activites": "Activities",
+        "historique": "History"
+      },
+      "general": "General information",
+      "contact": "Contact",
+      "specs": "Specifications",
+      "type": "Type",
+      "wilaya": "Wilaya",
+      "listings": "Listings",
+      "viewOnMap": "View on map",
+      "newTab": "(opens in a new tab)",
+      "description": "Description",
+      "descriptionText": "Provider registered on DARNA offering verified tourism services in the {city} area. Compliance file submitted for administrative approval.",
+      "documentsProvided": "Documents provided ({count}/{total})",
+      "allDocumentsProvided": "All documents have been provided",
+      "publicProfile": "View public profile",
+      "contactAction": "Contact",
+      "tabLoaded": "{tab} tab content loaded.",
+      "tabSynced": "All items are synchronised with the file."
+    },
+    "docs": {
+      "idCard": "ID card",
+      "idCardFull": "National ID card",
+      "property": "Property title",
+      "propertyFull": "Property title or lease",
+      "photos": "Photos of the place",
+      "photosFull": "Photo gallery",
+      "rules": "House rules",
+      "typeImage": "Image",
+      "typePdf": "PDF",
+      "files": "{count, plural, one {# file} other {# files}}",
+      "sizeMb": "{size} MB",
+      "sizeKb": "{size} KB"
+    },
+    "rules": {
+      "title": "Provider validation settings",
+      "intro": "Configure regulatory requirements and processing times for provider applications.",
+      "requiredDocs": "Required documents by category:",
+      "hosts": "Hosts: ID card + property title / lease",
+      "hotels": "Hotels & hostels: CNRC trade register + tourism approval",
+      "agencies": "Travel agencies: Ministry of Tourism licence (category A/B)",
+      "experiences": "Experiences: professional guide diploma/card + civil liability insurance",
+      "sla": "Maximum moderation SLA (response time)",
+      "slaDefault": "48 hours",
+      "save": "Save settings"
+    },
+    "contactModal": {
+      "title": "Contact {name}",
+      "description": "Send a direct message or a notification about the validation file.",
+      "messageLabel": "Message",
+      "placeholder": "Write your message here...",
+      "send": "Send message"
+    },
+    "decision": {
+      "changesTitle": "Request more information from the provider",
+      "rejectTitle": "Reason for rejecting the provider",
+      "changesDesc": "List the documents or details required. An email and a notification will be sent.",
+      "rejectDesc": "Specify the legal or regulatory reason for rejecting the application.",
+      "placeholder": "Specify the reasons...",
+      "sendRequest": "Send request",
+      "confirmReject": "Confirm rejection"
+    }
+  },
+  "categoryManager": {
+    "defaultItem": "category",
+    "back": "Back",
+    "add": "Add {item}",
+    "created": "New {item} added",
+    "empty": "No {item} found.",
+    "statusUpdated": "Status updated",
+    "nameFrRequired": "The French name is required.",
+    "toggleVisibility": "Toggle visibility of {name}",
+    "visible": "Visible",
+    "hidden": "Hidden",
+    "columns": {
+      "icon": "Icon",
+      "nameFr": "Name (French)",
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "slug": "URL slug",
+      "activeListings": "Active listings",
+      "visibility": "Visibility"
+    },
+    "form": {
+      "nameFr": "Name in French",
+      "nameFrPlaceholder": "e.g. Villa de charme",
+      "nameEn": "Name in English",
+      "nameEnPlaceholder": "e.g. Charming villa",
+      "nameAr": "Name in Arabic",
+      "nameArPlaceholder": "e.g. فيلا ساحرة",
+      "slug": "URL identifier (slug)",
+      "slugPlaceholder": "e.g. charming-villa"
+    }
+  },
+  "changeRequests": {
+    "back": "Back",
+    "guests": "{count, plural, one {# guest} other {# guests}}",
+    "toastApproved": "Request approved",
+    "toastRejected": "Request rejected",
+    "toastDescription": "The owner will be notified with the details.",
+    "host": "Host: {name}",
+    "before": "Before:",
+    "after": "After:",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveAria": "Approve the change to {field} on {listing}",
+    "rejectAria": "Reject the change to {field} on {listing}",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "empty": "No pending change requests.",
+    "columns": {
+      "listing": "Listing",
+      "field": "Changed field",
+      "diff": "Comparison (before / after)",
+      "date": "Requested on",
+      "decision": "Decision"
+    },
+    "fields": {
+      "pricePerNight": "Price per night",
+      "capacity": "Guest capacity",
+      "descriptionAmenities": "Description & amenities"
+    }
+  },
+  "stays": {
+    "photoAlt": "{title} — photo {index}",
+    "categoriesPage": {
+      "title": "Stay categories",
+      "subtitle": "Configure the categories and property types shown to travelers.",
+      "itemLabel": "category"
+    },
+    "changeRequestsPage": {
+      "title": "Stay change requests",
+      "subtitle": "Review and validate the changes hosts request on their published listings."
+    },
+    "propertyTypes": {
+      "villa": "Villa",
+      "apartment": "Apartment",
+      "traditionalHouse": "Traditional house",
+      "bungalow": "Bungalow",
+      "chalet": "Chalet",
+      "studio": "Studio",
+      "hotel": "Hotel",
+      "hostel": "Hostel"
+    },
+    "fields": {
+      "propertyType": "Property type",
+      "category": "Category",
+      "capacity": "Capacity",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "surface": "Surface",
+      "wilaya": "Wilaya",
+      "description": "Description",
+      "approvalMode": "Approval mode",
+      "constructionYear": "Year built",
+      "pricePerNight": "Price per night"
+    },
+    "values": {
+      "guests": "{count, plural, one {# guest} other {# guests}}",
+      "surface": "{value} m²",
+      "reviews": "{count, plural, one {(# review)} other {(# reviews)}}",
+      "reviewsShort": "({count})",
+      "pricePerNight": "{price} <unit>/ night</unit>",
+      "dateRange": "{start} – {end}",
+      "instantBooking": "Instant booking",
+      "onRequest": "On request"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "info": "Information",
+      "photos": "Photos",
+      "amenities": "Amenities",
+      "pricing": "Pricing & availability",
+      "rules": "Rules",
+      "calendar": "Calendar",
+      "documents": "Documents",
+      "history": "History",
+      "bookings": "Bookings"
+    },
+    "pricing": {
+      "title": "Pricing & discounts",
+      "cleaningFee": "Cleaning fee",
+      "commission": "DARNA commission",
+      "commissionValue": "{rate} %",
+      "weeklyDiscount": "Weekly discount (-{rate} %)",
+      "weeklyPrice": "{amount} / week",
+      "deposit": "Security deposit"
+    },
+    "times": {
+      "title": "Times & stay rules",
+      "checkIn": "Check-in",
+      "checkInValue": "From {time}",
+      "checkOut": "Check-out",
+      "checkOutValue": "Before {time}",
+      "minStay": "Minimum stay",
+      "minStayValue": "{count, plural, one {# night} other {# nights}}",
+      "cancellation": "Cancellation",
+      "cancellationValue": "Free up to {hours} h before"
+    },
+    "host": {
+      "title": "Host / owner",
+      "viewProfile": "View profile",
+      "verified": "Verified"
+    },
+    "list": {
+      "title": "Stays management",
+      "subtitle": "Browse, edit and validate every stay listed on DARNA.",
+      "export": "Export",
+      "add": "Add a stay",
+      "searchPlaceholder": "Search by title, city, owner…",
+      "empty": "No stays match these filters.",
+      "itemLabel": "stays",
+      "kpis": {
+        "total": "Total stays",
+        "pending": "Pending validation",
+        "published": "Published",
+        "suspended": "Suspended",
+        "refused": "Rejected"
+      },
+      "columns": {
+        "stay": "Stay",
+        "host": "Host",
+        "location": "City / region",
+        "type": "Type",
+        "price": "Price / night",
+        "rating": "Rating",
+        "bookings": "Bookings"
+      },
+      "filters": {
+        "wilaya": "Region / wilaya",
+        "allWilayas": "All wilayas",
+        "allTypes": "All types",
+        "allStatuses": "All statuses",
+        "published": "Published",
+        "suspended": "Suspended",
+        "refused": "Rejected"
+      },
+      "actions": {
+        "quickPreview": "Quick preview",
+        "quickPreviewOf": "Quick preview of {title}",
+        "openFull": "View full page",
+        "openFullOf": "Open the full page of {title}",
+        "approvePublish": "Approve / publish",
+        "markPending": "Mark as pending review",
+        "suspend": "Suspend listing",
+        "reject": "Reject listing",
+        "delete": "Delete listing",
+        "fullscreen": "Open full page",
+        "approveDirect": "Approve directly",
+        "reviewFile": "Review file",
+        "cancelSuspension": "Lift suspension"
+      },
+      "toasts": {
+        "approvedTitle": "Stay approved",
+        "approvedDescription": "This stay has been approved directly.",
+        "reactivatedTitle": "Stay reactivated",
+        "reactivatedDescription": "This stay has been reactivated successfully.",
+        "deleted": "Stay deleted"
+      },
+      "panel": {
+        "about": "About this stay",
+        "noDescription": "No description provided for this stay.",
+        "calendarText": "Availability and seasonal rates are managed for this stay.",
+        "calendarLink": "Open the full calendar"
+      },
+      "advanced": {
+        "title": "Advanced stay filters",
+        "minCapacity": "Minimum capacity",
+        "priceRange": "Price range (DZD)",
+        "min": "Min",
+        "max": "Max",
+        "allModes": "All modes"
+      },
+      "confirm": {
+        "deleteTitle": "Delete this stay?",
+        "suspendTitle": "Suspend this stay?",
+        "approveTitle": "Validate this stay?",
+        "description": "You are about to change the status of “{title}”. This action will be recorded in the audit log.",
+        "deleteConfirm": "Delete permanently"
+      }
+    },
+    "detail": {
+      "notFoundTitle": "Stay not found",
+      "notFoundText": "The requested listing does not exist or has been deleted.",
+      "backToStays": "Back to stays",
+      "backToList": "Back to list",
+      "addedOn": "Added on {date}",
+      "reviewModeration": "Verification & moderation",
+      "previous": "Previous stay",
+      "next": "Next stay",
+      "mainImage": "Main image",
+      "enlargePhoto": "Enlarge photo {index}",
+      "morePhotos": "{count, plural, one {+# photo} other {+# photos}}",
+      "generalInfo": "General information",
+      "guestCapacity": "Guest capacity",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "instant": "Instant",
+      "amenitiesTitle": "Amenities ({count})",
+      "amenitiesSubtitle": "Amenities the host declares as available",
+      "seeAll": "See all ({count})",
+      "houseRules": "House rules",
+      "rules": {
+        "pets": "Pets",
+        "smoking": "Smoking",
+        "parties": "Parties & events",
+        "children": "Children",
+        "notAllowed": "Not allowed",
+        "childFriendly": "Child-friendly"
+      },
+      "validationStatus": "Validation status",
+      "statusText": {
+        "published": "This stay is currently validated and publicly visible to all travelers.",
+        "pending": "This stay is awaiting review by the moderation team.",
+        "attention": "This stay needs your attention or has been suspended."
+      },
+      "approvePublish": "Approve and publish",
+      "requestChanges": "Request changes",
+      "reactivate": "Lift suspension / reactivate",
+      "checkpointsTitle": "Points to check",
+      "checkpoints": {
+        "ownerDocuments": "Owner documents",
+        "photos": "Photo compliance",
+        "address": "Exact address on the map",
+        "amenities": "Declared amenities",
+        "pricingPolicy": "Rates and cancellation policy",
+        "houseRules": "House rules"
+      },
+      "checkResults": {
+        "compliant": "Compliant",
+        "verified": "Verified",
+        "complete": "Complete"
+      },
+      "verification": {
+        "identity": "Identity",
+        "phone": "Phone",
+        "email": "Email"
+      },
+      "ownerDocuments": "Owner documents",
+      "documents": {
+        "identity": "ID document",
+        "propertyTitle": "Property deed",
+        "proofOfAddress": "Proof of address"
+      },
+      "fileMeta": "{ext} • {size} MB",
+      "docValidated": "Validated",
+      "docToCheck": "To check",
+      "viewDocument": "View {name}",
+      "downloadDocument": "Download {name}",
+      "download": "Download",
+      "approveDialogTitle": "Approve and publish this stay?",
+      "approveDialogText": "The listing will immediately be visible on DARNA and open for bookings.",
+      "toasts": {
+        "approved": "Stay approved and published",
+        "rejected": "Stay rejected",
+        "changesRequested": "Changes requested from the host"
+      }
+    },
+    "review": {
+      "title": "Stay validation",
+      "subtitle": "Check all information and documents before publishing the listing.",
+      "viewOnSite": "View on site",
+      "newTab": "(opens in a new tab)",
+      "nextStep": "Next",
+      "steps": {
+        "info": "Information",
+        "photos": "Photos",
+        "documents": "Documents",
+        "verification": "Verification",
+        "decision": "Decision"
+      },
+      "idLabel": "ID: <code>{id}</code>",
+      "stats": {
+        "guests": "Guests"
+      },
+      "ownerInfo": "Owner information",
+      "viewFullProfile": "View full profile",
+      "memberSince": "Member since {year}",
+      "ratingLabel": "Rating:",
+      "tabs": {
+        "info": "General information",
+        "location": "Location"
+      },
+      "fields": {
+        "title": "Title"
+      },
+      "checklistTitle": "Verification & compliance",
+      "checks": {
+        "idProof": "Owner's ID document",
+        "residenceProof": "Proof of address",
+        "propertyTitle": "Property deed or lease",
+        "photos": "Stay photos",
+        "address": "Address on the map",
+        "completeness": "Complete information",
+        "rules": "Compliance with the rules"
+      },
+      "checkResults": {
+        "valid": "Valid",
+        "compliantPlural": "Compliant",
+        "verified": "Verified",
+        "completeFem": "Complete",
+        "compliant": "Compliant",
+        "toCheck": "To check"
+      },
+      "inspect": "Inspect",
+      "inspectItem": "Inspect: {item}",
+      "notesTitle": "Internal notes",
+      "notesHint": "Visible only to DARNA administrators and moderators.",
+      "notesReasonHint": "Required for this decision (at least {min} characters): it is sent to the host and stored in the audit trail.",
+      "notesPlaceholder": "Add a note for moderators or record a check…",
+      "decisionTitle": "Decision",
+      "decisions": {
+        "approve": {
+          "title": "Approve and publish",
+          "description": "The listing will be published on the platform immediately."
+        },
+        "changes": {
+          "title": "Request changes",
+          "description": "The host will have to make changes before a new validation."
+        },
+        "reject": {
+          "title": "Reject",
+          "description": "The listing will be rejected and the host informed of the reason."
+        }
+      },
+      "submit": {
+        "approve": "Approve and publish",
+        "reject": "Confirm rejection",
+        "changes": "Send the change request"
+      },
+      "toasts": {
+        "approved": "Stay approved and published successfully",
+        "rejected": "Stay rejected. The host has been notified.",
+        "changesRequested": "Request for more information sent to the owner."
+      }
+    }
+  },
+  "stayWizard": {
+    "back": "Back",
+    "title": "Add a stay",
+    "subtitle": "Fill in the information step by step to create and publish a new stay listing.",
+    "draftSavedAt": "Draft saved at {time}",
+    "saveDraft": "Save as draft",
+    "next": "Next",
+    "previous": "Previous",
+    "cancel": "Cancel",
+    "publish": "Publish the stay",
+    "required": "(required)",
+    "charCount": "({count}/{max})",
+    "locationValue": "{city}, wilaya of {wilaya}",
+    "steps": {
+      "general": "General information",
+      "location": "Location",
+      "amenities": "Amenities",
+      "photos": "Photos & description",
+      "pricing": "Pricing & availability",
+      "rules": "Rules & validation"
+    },
+    "progress": {
+      "general": "General information",
+      "locationContact": "Location & contact",
+      "amenities": "Amenities",
+      "media": "Photos & media",
+      "pricing": "Pricing & availability",
+      "rules": "Rules & validation"
+    },
+    "preview": {
+      "title": "Listing preview"
+    },
+    "fields": {
+      "title": "Stay title",
+      "titlePlaceholder": "e.g. Panoramic villa with pool – Hydra",
+      "propertyType": "Property type",
+      "category": "Category",
+      "capacity": "Capacity",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "surface": "Surface (m²)",
+      "host": "Host / owner",
+      "shortDescription": "Short description",
+      "fullDescription": "Detailed description",
+      "fullDescriptionPlaceholder": "Write a detailed description…"
+    },
+    "propertyTypes": {
+      "villaPool": "Villa with pool",
+      "luxuryApartment": "High-end apartment",
+      "traditionalHouse": "Traditional house / Casbah",
+      "beachBungalow": "Beachfront bungalow",
+      "mountainChalet": "Mountain chalet",
+      "modernStudio": "Modern studio",
+      "hotelSuite": "Hotel / suite",
+      "hostel": "Youth hostel"
+    },
+    "categories": {
+      "home": "Entire place (house / villa / apartment)",
+      "hotel": "Hotel / establishment",
+      "hostel": "Youth hostel"
+    },
+    "hostOptions": {
+      "individualAlgiers": "{name} (individual – Algiers)",
+      "agency": "{name} (agency)",
+      "establishment": "{name} (establishment)"
+    },
+    "rules": {
+      "title": "Main rules",
+      "pets": "Pets allowed",
+      "parties": "Parties & events",
+      "smoking": "Smoking allowed",
+      "children": "Child-friendly",
+      "checkInTime": "Check-in time",
+      "checkOutTime": "Check-out time"
+    },
+    "location": {
+      "title": "Address & geolocation",
+      "wilaya": "Wilaya",
+      "city": "Municipality / city",
+      "address": "Exact address",
+      "mapLabel": "Position on the map (move the pin to refine)"
+    },
+    "contact": {
+      "title": "Contact details",
+      "phone": "Phone number",
+      "email": "Email address",
+      "showPublic": "Show the public contact on the listing after validation"
+    },
+    "amenitiesStep": {
+      "title": "Amenities selection",
+      "subtitle": "Tick every amenity and facility included in this stay."
+    },
+    "amenities": {
+      "wifi": "High-speed Wi-Fi",
+      "privatePool": "Private pool",
+      "airConditioning": "Reversible air conditioning",
+      "kitchen": "Equipped kitchen",
+      "parking": "Secure parking",
+      "tv": "4K TV",
+      "washer": "Washing machine",
+      "seaView": "Sea view",
+      "heating": "Central heating",
+      "workspace": "Workspace",
+      "jacuzzi": "Jacuzzi / spa",
+      "barbecue": "Outdoor barbecue"
+    },
+    "photosStep": {
+      "title": "Photos & gallery (at least 5 photos recommended)",
+      "dropLabel": "Drop the stay photos here",
+      "dropHint": "Accepted formats: JPG, PNG, WEBP up to 10 MB per photo",
+      "cover": "Cover",
+      "coverAlt": "Cover photo"
+    },
+    "pricing": {
+      "title": "Pricing & booking conditions",
+      "price": "Price per night (DZD)",
+      "cleaningFee": "Cleaning fee (DZD)",
+      "deposit": "Security deposit (DZD)",
+      "minStay": "Minimum stay (nights)",
+      "bookingMode": "Booking mode",
+      "modes": {
+        "instant": {
+          "title": "Instant",
+          "description": "The guest books without waiting."
+        },
+        "request": {
+          "title": "On request",
+          "description": "The host must approve each request."
+        }
+      }
+    },
+    "summary": {
+      "title": "Summary before publication",
+      "subtitle": "Check that all the data below is complete and complies with DARNA moderation rules.",
+      "titleLabel": "Title",
+      "location": "Location",
+      "capacity": "Capacity",
+      "capacityValue": "{guests, plural, one {# guest} other {# guests}} • {bedrooms, plural, one {# bedroom} other {# bedrooms}}",
+      "price": "Price per night",
+      "amenities": "Declared amenities",
+      "amenitiesValue": "{count, plural, one {# selected} other {# selected}}"
+    },
+    "errors": {
+      "summary": "{count, plural, one {# error needs fixing} other {# errors need fixing}} before you continue:",
+      "titleRequired": "Enter the stay title.",
+      "shortDescriptionRequired": "Enter a short description.",
+      "min": "Enter a value of at least {min}.",
+      "cityRequired": "Enter the municipality or city.",
+      "addressRequired": "Enter the exact address.",
+      "emailInvalid": "Enter a valid email address.",
+      "priceRequired": "Enter a price per night greater than 0."
+    },
+    "toasts": {
+      "draftSaved": "Draft saved",
+      "draftSavedDescription": "Saved at {time}. You can resume at any time.",
+      "created": "Stay created successfully",
+      "createdDescription": "The listing has been saved and sent for publication.",
+      "photoAdded": "Photo added"
+    },
+    "tips": {
+      "step1": {
+        "title": "Tips for a good listing",
+        "tip1": "Choose a catchy title that mentions the property type and its key asset.",
+        "tip2": "Enter the real surface and the exact number of bedrooms and beds available.",
+        "tip3": "Make sure you select the verified owner from the DARNA directory."
+      },
+      "step2": {
+        "title": "Location tips",
+        "tip1": "Place the pin precisely on the map to help guests locate the neighborhood.",
+        "tip2": "Mention landmarks or major attractions within 15 minutes.",
+        "tip3": "The exact address can stay hidden until the booking is confirmed."
+      },
+      "step3": {
+        "title": "Amenities selection",
+        "tip1": "Stays with Wi-Fi and air conditioning get 40% more bookings.",
+        "tip2": "Specify whether on-site parking is free or paid."
+      },
+      "step4": {
+        "title": "Eye-catching photos",
+        "tip1": "Upload at least 5 high-resolution photos with natural light.",
+        "tip2": "Photograph every main room, the view and the outside."
+      },
+      "step5": {
+        "title": "Optimal pricing",
+        "tip1": "Set a base rate in line with market prices in the wilaya.",
+        "tip2": "Instant booking maximizes the conversion rate."
+      },
+      "step6": {
+        "title": "Final validation",
+        "tip1": "Review all the house rules.",
+        "tip2": "Once submitted, the stay will be indexed on DARNA immediately."
+      }
+    }
+  },
+  "experiences": {
+    "title": "Experience management",
+    "subtitle": "Oversee the activities, excursions and workshops offered by guides and agencies.",
+    "export": "Export",
+    "categories": "Categories",
+    "add": "Add an experience",
+    "searchPlaceholder": "Search by title, guide, location...",
+    "empty": "No experiences match these filters.",
+    "itemLabel": "experiences",
+    "fullScreen": "Full screen",
+    "quickPreview": "Quick preview",
+    "quickPreviewOf": "Quick preview of {title}",
+    "openFullPage": "Open full page",
+    "openFullPageOf": "Open the full page of {title}",
+    "reviewsCount": "({count, plural, one {# review} other {# reviews}})",
+    "locationValue": "{city}, {code}",
+    "kpi": {
+      "total": "Total experiences",
+      "pending": "Awaiting validation",
+      "published": "Published",
+      "suspended": "Suspended",
+      "refused": "Rejected"
+    },
+    "columns": {
+      "experience": "Experience",
+      "guide": "Organizer / Guide",
+      "location": "Location",
+      "category": "Category",
+      "price": "Price",
+      "rating": "Rating",
+      "bookings": "Bookings"
+    },
+    "categoryOptions": {
+      "adventure": "Adventure",
+      "culture": "Culture",
+      "nature": "Nature",
+      "gastronomy": "Gastronomy",
+      "sea": "Sea"
+    },
+    "filters": {
+      "wilaya": "Region / Wilaya",
+      "allWilayas": "All wilayas",
+      "category": "Category",
+      "allCategories": "All categories",
+      "allStatuses": "All statuses"
+    },
+    "statusOptions": {
+      "pending": "Awaiting validation",
+      "published": "Published",
+      "suspended": "Suspended",
+      "refused": "Rejected"
+    },
+    "menu": {
+      "approve": "Approve / Publish",
+      "markPending": "Mark as pending review",
+      "suspend": "Suspend experience",
+      "reject": "Reject experience"
+    },
+    "panel": {
+      "suspend": "Suspend",
+      "approveDirectly": "Approve directly",
+      "review": "Review file",
+      "cancelSuspension": "Lift suspension"
+    },
+    "toast": {
+      "approvedTitle": "Experience approved",
+      "approvedDescription": "This experience has been approved and published directly.",
+      "reactivatedTitle": "Suspension lifted",
+      "reactivatedDescription": "This experience has been reactivated."
+    },
+    "tabs": {
+      "overview": "Overview",
+      "info": "Information",
+      "photos": "Photos",
+      "calendar": "Calendar",
+      "bookings": "Bookings"
+    },
+    "about": {
+      "title": "About this experience",
+      "category": "Category",
+      "maxGroup": "Max group",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "difficulty": "Difficulty",
+      "difficultyModerate": "Moderate",
+      "languages": "Languages"
+    },
+    "pricing": {
+      "title": "Pricing & discounts",
+      "perPerson": "/ person",
+      "groupDiscount": "Group discount (>4 people)",
+      "discountValue": "-{percent}% ({price})",
+      "commission": "DARNA commission",
+      "commissionIncluded": "{rate}% (included)",
+      "cancellation": "Cancellation policy",
+      "cancellationFlexible": "Flexible ({hours} h before)",
+      "prepayment": "Prepayment",
+      "prepaymentSecure": "100% secure"
+    },
+    "schedule": {
+      "title": "Times & duration",
+      "totalDuration": "Total duration",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "departureTimes": "Departure times",
+      "operatingDays": "Operating days",
+      "everyDay": "Every day",
+      "advanceNotice": "Advance booking",
+      "hoursInAdvance": "{count, plural, one {# hour} other {# hours}} in advance"
+    },
+    "host": {
+      "title": "Organizer / Guide",
+      "viewProfile": "View profile",
+      "certified": "Certified guide"
+    },
+    "description": {
+      "title": "Description",
+      "empty": "No description provided for this experience."
+    },
+    "confirm": {
+      "deleteTitle": "Delete this experience?",
+      "suspendTitle": "Suspend this experience?",
+      "description": "You are about to change the status of \"{title}\". This action will be recorded in the audit log.",
+      "deleteLabel": "Delete",
+      "deleted": "Experience deleted"
+    },
+    "categoriesPage": {
+      "title": "Experience categories",
+      "subtitle": "Organize activity themes (Adventure, Culture, Gastronomy, etc.).",
+      "itemType": "category"
+    },
+    "changeRequestsPage": {
+      "title": "Experience change requests",
+      "subtitle": "Validate route, pricing or condition updates submitted by guides."
+    }
+  },
+  "experienceWizard": {
+    "title": "Add an experience",
+    "subtitle": "Describe your activity, routes and prices to welcome travelers.",
+    "backToList": "Back to list",
+    "draftSavedAt": "Draft saved at {time}",
+    "saveDraft": "Save as draft",
+    "next": "Next",
+    "previous": "Previous",
+    "cancel": "Cancel",
+    "publish": "Publish experience",
+    "locationValue": "{city}, wilaya {code}",
+    "steps": {
+      "general": "General information",
+      "location": "Location",
+      "details": "Details & programme",
+      "pricing": "Prices & availability",
+      "media": "Photos & media",
+      "rules": "Rules & validation"
+    },
+    "categories": {
+      "adventure": "Adventure & hiking",
+      "culture": "Culture & history",
+      "nature": "Nature & wildlife",
+      "gastronomy": "Gastronomy & local produce",
+      "sea": "Sea & water sports"
+    },
+    "difficultyOptions": {
+      "easy": "Easy (all audiences)",
+      "moderate": "Moderate (good fitness)",
+      "hard": "Hard (athletic)",
+      "expert": "Expert (climbing/technical)"
+    },
+    "errors": {
+      "required": "This field is required.",
+      "groupSize": "Enter a whole number between {min} and {max}.",
+      "languages": "Add at least one language.",
+      "price": "Enter a price greater than 0.",
+      "priceChild": "The child price cannot be negative.",
+      "summary": "{count, plural, one {# field needs your attention.} other {# fields need your attention.}}"
+    },
+    "general": {
+      "heading": "General information",
+      "title": "Experience title",
+      "category": "Main category",
+      "subCategory": "Subcategory",
+      "duration": "Duration",
+      "durationPlaceholder": "e.g. 3 hours",
+      "difficulty": "Difficulty level",
+      "groupSize": "Max group size",
+      "languages": "Languages offered",
+      "languagesPlaceholder": "Add a language...",
+      "shortDescription": "Short description",
+      "charCount": "{count}/{max} characters",
+      "fullDescription": "Detailed description",
+      "fullDescriptionPlaceholder": "Describe the experience in detail...",
+      "highlights": "Experience highlights",
+      "removeHighlight": "Remove highlight: {item}"
+    },
+    "type": {
+      "heading": "Experience type & keywords",
+      "legend": "Experience type",
+      "tags": "Keywords (tags)",
+      "tagsPlaceholder": "Add a tag...",
+      "options": {
+        "excursion": "Excursion / guided tour",
+        "sport": "Sports activity",
+        "workshop": "Workshop / class",
+        "tasting": "Tasting / gastronomy",
+        "other": "Other experience"
+      }
+    },
+    "location": {
+      "heading": "Address & location",
+      "country": "Country",
+      "countryAlgeria": "Algeria",
+      "wilaya": "Wilaya",
+      "city": "City",
+      "address": "Exact address or meeting point",
+      "addressHint": "Select the exact location on the interactive map below."
+    },
+    "poi": {
+      "heading": "Nearby points of interest (max. {max})",
+      "add": "Add a point",
+      "newName": "New point",
+      "newDistance": "1 km",
+      "newTime": "15 min",
+      "remove": "Remove point of interest: {name}"
+    },
+    "access": {
+      "heading": "Access & transport",
+      "transportMode": "Main means of access",
+      "instructions": "Access instructions for participants"
+    },
+    "programme": {
+      "heading": "Detailed programme & inclusions",
+      "stepTitle": "Step {n}: {title}",
+      "items": {
+        "welcome": {
+          "title": "Welcome and safety briefing",
+          "description": "Gathering, equipment check and route instructions."
+        },
+        "walk": {
+          "title": "Walk along the stream",
+          "description": "Guided observation of the flora and Barbary macaques."
+        },
+        "waterfall": {
+          "title": "Arrival at the waterfall & tea break",
+          "description": "Time to relax, optional swim and tasting."
+        }
+      }
+    },
+    "pricing": {
+      "heading": "Prices per person & booking",
+      "adult": "Adult price (DZD)",
+      "child": "Child price (DZD)"
+    },
+    "media": {
+      "heading": "Photos & presentation video",
+      "dropLabel": "Drop the experience photos here",
+      "hint": "Accepted formats: JPG, PNG, MP4 up to {size} MB"
+    },
+    "review": {
+      "heading": "Check before submitting",
+      "activity": "Activity",
+      "category": "Category",
+      "categoryValue": "{category} ({difficulty})",
+      "location": "Location",
+      "pricePerPerson": "Price per person"
+    },
+    "tips": {
+      "title": "Tips for your experience",
+      "unique": "Highlight what makes your experience unique in Algeria.",
+      "equipment": "Detail the equipment provided and what travelers should bring.",
+      "photos": "Action photos with participants get twice as many clicks."
+    },
+    "toast": {
+      "draftSaved": "Draft saved",
+      "draftSavedAt": "Saved at {time}.",
+      "created": "Experience created",
+      "createdDescription": "The activity has been submitted to DARNA moderation."
+    }
+  },
+  "cars": {
+    "title": "Car rental",
+    "subtitle": "Manage the rental fleet, prices and partner agencies.",
+    "export": "Export",
+    "categories": "Categories",
+    "add": "Add a car",
+    "searchPlaceholder": "Search by make, model, agency...",
+    "empty": "No vehicles found.",
+    "itemLabel": "vehicles",
+    "fullScreen": "Full screen",
+    "quickPreview": "Quick preview",
+    "quickPreviewOf": "Quick preview of {title}",
+    "openFullPage": "Open full page",
+    "openFullPageOf": "Open the full page of {title}",
+    "reviewsCount": "({count, plural, one {# review} other {# reviews}})",
+    "locationValue": "{city}, {code}",
+    "rowSpecs": "{year} • Diesel • Automatic",
+    "kpi": {
+      "total": "Total vehicles",
+      "available": "Available",
+      "booked": "Booked",
+      "maintenance": "In maintenance",
+      "unavailable": "Unavailable",
+      "owners": "Agencies & rental companies"
+    },
+    "columns": {
+      "vehicle": "Vehicle",
+      "category": "Category",
+      "city": "City",
+      "pricePerDay": "Price / day"
+    },
+    "categoryOptions": {
+      "suv": "SUV & 4x4",
+      "cityCar": "City car",
+      "sedan": "Sedan",
+      "compact": "Compact",
+      "utility": "Van / utility"
+    },
+    "filters": {
+      "category": "Category",
+      "allCategories": "All categories",
+      "wilaya": "City / Wilaya",
+      "allCities": "All cities",
+      "gearbox": "Gearbox",
+      "allGearboxes": "All",
+      "allStatuses": "All statuses"
+    },
+    "gearbox": {
+      "auto": "Automatic",
+      "manual": "Manual"
+    },
+    "statusOptions": {
+      "approved": "Available",
+      "pending": "Pending",
+      "maintenance": "In maintenance",
+      "rejected": "Unavailable"
+    },
+    "menu": {
+      "approve": "Approve / Publish",
+      "markPending": "Mark as pending review",
+      "suspend": "Suspend vehicle",
+      "maintenance": "Maintenance mode (coming soon)",
+      "reject": "Reject vehicle"
+    },
+    "panel": {
+      "approveDirectly": "Approve directly",
+      "reactivate": "Reactivate",
+      "maintenance": "Maintenance",
+      "edit": "Edit"
+    },
+    "tabs": {
+      "details": "Details",
+      "pricing": "Prices",
+      "photos": "Photos",
+      "amenities": "Equipment",
+      "bookings": "Bookings"
+    },
+    "about": {
+      "title": "About this vehicle",
+      "category": "Category",
+      "year": "Year",
+      "fuel": "Fuel",
+      "fuelDiesel": "Diesel",
+      "transmission": "Transmission",
+      "capacity": "Capacity",
+      "seats": "{count, plural, one {# seat} other {# seats}}",
+      "airConditioning": "Air conditioning",
+      "yes": "Yes"
+    },
+    "pricing": {
+      "title": "Pricing & discounts",
+      "perDayUnit": "/ day",
+      "perDay": "{price} / day",
+      "perDayDiscounted": "{price} / day (-{percent}%)",
+      "weeklyDiscount": "Weekly discount (-{percent}%)",
+      "monthlyDiscount": "Monthly discount (-{percent}%)",
+      "deposit": "Refundable deposit",
+      "mileage": "Mileage",
+      "mileageUnlimited": "Unlimited ({days, plural, one {# day} other {# days}} or more)"
+    },
+    "tiers": {
+      "range": "{min}–{max} days",
+      "over": "{min} days or more"
+    },
+    "schedule": {
+      "title": "Rental times & conditions",
+      "pickup": "Pick-up time",
+      "fromTime": "From {time}",
+      "return": "Return time",
+      "beforeTime": "Before {time}",
+      "minDuration": "Minimum duration",
+      "minDays": "{count, plural, one {# day} other {# days}} minimum",
+      "fuelPolicy": "Fuel policy",
+      "fullToFull": "Full to full"
+    },
+    "owner": {
+      "title": "Owner agency",
+      "licensed": "Licensed rental agency"
+    },
+    "description": {
+      "title": "Description",
+      "empty": "No description provided for this vehicle."
+    },
+    "confirm": {
+      "deleteTitle": "Delete this vehicle?",
+      "description": "You are about to change the status of the vehicle \"{title}\".",
+      "deleted": "Vehicle deleted"
+    },
+    "categoriesPage": {
+      "title": "Vehicle categories",
+      "subtitle": "Configure the segments (SUVs, city cars, sedans, vans).",
+      "itemType": "category"
+    },
+    "insurancePage": {
+      "title": "Car insurance plans",
+      "subtitle": "Manage comprehensive insurance contracts, deductibles and coverage options.",
+      "itemType": "insurance plan"
+    },
+    "pricingPage": {
+      "title": "Rental price grid",
+      "subtitle": "Configure sliding discounts by booking length (1–3 days, 4–7 days, 15+ days).",
+      "itemType": "duration tier"
+    }
+  },
+  "trips": {
+    "title": "Organized trips",
+    "subtitle": "Manage the tours and organized trips offered by licensed agencies.",
+    "export": "Export",
+    "categories": "Categories",
+    "add": "Add a trip",
+    "searchPlaceholder": "Search for a trip, a destination...",
+    "empty": "No trips found.",
+    "itemLabel": "trips",
+    "fullScreen": "Full screen",
+    "quickPreview": "Quick preview",
+    "quickPreviewOf": "Quick preview of {title}",
+    "openFullPage": "Open full page",
+    "openFullPageOf": "Open the full page of {title}",
+    "reviewsCount": "({count, plural, one {# review} other {# reviews}})",
+    "locationValue": "{city}, {code}",
+    "categoryFallback": "Sahara tour",
+    "duration": "{days, plural, one {# day} other {# days}} / {nights, plural, one {# night} other {# nights}}",
+    "kpi": {
+      "total": "All trips",
+      "published": "Published",
+      "pending": "Pending",
+      "suspended": "Suspended",
+      "refused": "Rejected",
+      "drafts": "Drafts"
+    },
+    "columns": {
+      "trip": "Trip",
+      "destination": "Destination",
+      "departure": "Departure date",
+      "duration": "Duration",
+      "price": "Price"
+    },
+    "categoryOptions": {
+      "sahara": "Sahara & South",
+      "cultural": "Cultural tour",
+      "trekking": "Hiking & bivouac",
+      "seaside": "Seaside stay",
+      "deepSouth": "Deep South tour"
+    },
+    "filters": {
+      "destination": "Destination",
+      "allDestinations": "All destinations",
+      "category": "Category",
+      "allCategories": "All categories",
+      "allStatuses": "All statuses"
+    },
+    "statusOptions": {
+      "published": "Published",
+      "pending": "Pending",
+      "suspended": "Suspended",
+      "refused": "Rejected",
+      "draft": "Draft"
+    },
+    "menu": {
+      "approve": "Approve / Publish",
+      "markPending": "Mark as pending review",
+      "suspend": "Suspend trip",
+      "reject": "Reject trip"
+    },
+    "panel": {
+      "suspend": "Suspend",
+      "approveDirectly": "Approve directly",
+      "cancelSuspension": "Lift suspension",
+      "edit": "Edit"
+    },
+    "toast": {
+      "approvedTitle": "Trip approved",
+      "approvedDescription": "This trip has been approved directly.",
+      "reactivatedTitle": "Suspension lifted",
+      "reactivatedDescription": "This trip has been reactivated."
+    },
+    "tabs": {
+      "details": "Details",
+      "programme": "Programme",
+      "photos": "Photos",
+      "bookings": "Bookings"
+    },
+    "about": {
+      "title": "About this tour",
+      "departureDate": "Departure date",
+      "duration": "Duration",
+      "maxGroup": "Max group",
+      "maxPeople": "Max {count, plural, one {# person} other {# people}}",
+      "difficulty": "Difficulty",
+      "difficultyModerate": "Moderate"
+    },
+    "pricing": {
+      "title": "Pricing & discounts",
+      "perPerson": "/ person",
+      "earlyBird": "Early-bird discount",
+      "discountValue": "-{percent}% ({price})",
+      "commission": "DARNA commission",
+      "commissionIncluded": "{rate}% (included)",
+      "deposit": "Deposit at booking",
+      "depositValue": "{percent}% when ordering",
+      "cancellation": "Cancellation policy",
+      "cancellationValue": "Refund up to {days, plural, one {# day} other {# days}} before"
+    },
+    "schedule": {
+      "title": "Times & meeting points",
+      "gathering": "Gathering",
+      "gatheringValue": "{time} (day 1)",
+      "return": "Estimated return",
+      "returnValue": "{time} (last day)",
+      "dailyWalk": "Daily walking",
+      "dailyWalkValue": "{min} to {max} hours / day",
+      "meetingPoint": "Meeting point",
+      "meetingPointValue": "{city} centre"
+    },
+    "agency": {
+      "title": "Organizing agency",
+      "licensed": "Licensed travel agency"
+    },
+    "highlights": {
+      "title": "Highlights",
+      "bivouac": "Bivouac under the stars in the Tassili desert",
+      "fullBoard": "Full board & local Tuareg guides",
+      "transport": "Comfortable 4x4 transport included"
+    },
+    "description": {
+      "title": "Detailed tour description",
+      "empty": "No description provided for this trip."
+    },
+    "confirm": {
+      "deleteTitle": "Delete this trip?",
+      "suspendTitle": "Suspend this trip?",
+      "description": "You are about to change the status of the trip \"{title}\".",
+      "deleted": "Trip deleted"
+    },
+    "categoriesPage": {
+      "title": "Organized trip categories",
+      "subtitle": "Manage tour types (Sahara, bivouac, cultural stays).",
+      "itemType": "category"
+    },
+    "bookingRequestsPage": {
+      "title": "Trip booking requests",
+      "subtitle": "Review and approve requests to join group tours."
+    }
+  },
+  "stats": {
+    "title": "Statistics & reports",
+    "subtitle": "Trend analysis, performance by vertical, territorial breakdown and accounting exports.",
+    "periodLast30": "Period: last 30 days",
+    "exportCsv": "Export CSV",
+    "generalReport": "General DARNA report",
+    "kpi": {
+      "grossVolume": "Gross booking volume",
+      "netCommissions": "DARNA net commissions",
+      "confirmedBookings": "Confirmed bookings",
+      "activeWilayas": "Active wilayas"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "providers": "By provider type",
+      "services": "By service",
+      "wilayas": "By wilaya",
+      "revenue": "Revenue & commissions",
+      "reports": "Reports & exports"
+    },
+    "overview": {
+      "volumeTitle": "Booking volume over time",
+      "volumeChartLabel": "Monthly booking volume, months 1 to 12: {values}",
+      "monthShort": "M{n}",
+      "avgGrowth": "Average monthly growth: +{value}",
+      "verticalTitle": "Breakdown by business vertical",
+      "verticals": {
+        "stays": "Stays (villas, apartments, hotels)",
+        "trips": "Organised trips (South & North tours)",
+        "cars": "Car rental (partner agencies)",
+        "experiences": "Guided experiences & activities"
+      }
+    },
+    "providers": {
+      "avgRate": "Average commission rate: {rate}",
+      "individual": {
+        "label": "Individual hosts",
+        "count": "{count, plural, one {{value} active} other {{value} active}}"
+      },
+      "agency": {
+        "label": "Travel agencies",
+        "count": "{count, plural, one {{value} certified} other {{value} certified}}"
+      },
+      "hotel": {
+        "label": "Hotels & hostels",
+        "count": "{count, plural, one {{value} rated} other {{value} rated}}"
+      },
+      "carRental": {
+        "label": "Car rental agencies",
+        "count": "{count, plural, one {{value} fleet} other {{value} fleets}}"
+      }
+    },
+    "services": {
+      "stays": "Stays",
+      "trips": "Organised trips",
+      "cars": "Cars",
+      "experiences": "Experiences",
+      "listingsCount": "{count, plural, one {{value} listing} other {{value} listings}}",
+      "tripsCount": "{count, plural, one {{value} tour} other {{value} tours}}",
+      "vehiclesCount": "{count, plural, one {{value} vehicle} other {{value} vehicles}}",
+      "activitiesCount": "{count, plural, one {{value} activity} other {{value} activities}}",
+      "avgRating": "Average guest rating: ★ {value}",
+      "fillRate": "Fill rate: {value}",
+      "availability": "Availability: {value} ready",
+      "satisfaction": "Satisfaction: {value} recommend"
+    },
+    "wilayas": {
+      "title": "Top tourist destinations in Algeria",
+      "cols": {
+        "wilaya": "Wilaya",
+        "listings": "Active listings",
+        "bookings30d": "Bookings (30 days)",
+        "volume": "Volume generated",
+        "share": "Market share"
+      }
+    },
+    "revenue": {
+      "title": "DARNA revenue breakdown",
+      "subtitle": "Net revenue from platform commissions, excluding escrowed funds paid out to providers.",
+      "items": {
+        "individual": "Commissions — individual hosts",
+        "agency": "Commissions — travel agencies",
+        "carRental": "Commissions — car rental agencies"
+      }
+    },
+    "reports": {
+      "export": "Export",
+      "exportAria": "Export: {report}",
+      "items": {
+        "Comptabilite_Mensuelle": {
+          "title": "Monthly financial ledger",
+          "desc": "Gross bookings, DARNA commissions, CCP settlements and VAT statements."
+        },
+        "Declaration_Tourisme": {
+          "title": "Algerian tourism tax return",
+          "desc": "Official document compliant with the Ministry of Tourism and Handicrafts standards."
+        },
+        "Audit_Solvabilite": {
+          "title": "Provider solvency audit",
+          "desc": "Negative balances, open claims and escrow guarantees."
+        },
+        "Performance_Territoriale": {
+          "title": "Regional & wilaya performance",
+          "desc": "Breakdown of nights, average prices and guest origins."
+        }
+      }
+    }
+  },
+  "help": {
+    "title": "DARNA help & training centre",
+    "subtitle": "Step-by-step operating guides, business definitions and a navigation guide.",
+    "open": "Open",
+    "kpi": {
+      "guides": "Operating guides",
+      "guidesValue": "{count, plural, one {# guide} other {# guides}}",
+      "glossary": "DARNA glossary",
+      "glossaryValue": "{count, plural, one {# definition} other {# definitions}}",
+      "migration": "Where did my page go?",
+      "migrationValue": "{count, plural, one {# match} other {# matches}}"
+    },
+    "tabs": {
+      "guides": "Step-by-step guides",
+      "glossary": "Business terms glossary",
+      "migration": "Where did my page go?"
+    },
+    "guides": {
+      "validateProviders": {
+        "title": "How do I approve or reject a new provider?",
+        "body": "Check the ID documents, trade register or travel agency licence. Each document has its own verification button before final approval.",
+        "cta": "Go to provider validation"
+      },
+      "refunds": {
+        "title": "How do I process a refund after a cancellation?",
+        "body": "In the bookings list, open the side panel and check the cancellation policy (more than 48 h before = 100%). Click “Refund” to record the entry in the ledger.",
+        "cta": "Go to booking management"
+      },
+      "commissions": {
+        "title": "How do commissions and escrow work?",
+        "body": "Money paid by guests is held in escrow until the service is delivered. Commissions (10% to 18%) are deducted automatically when the provider is paid.",
+        "cta": "Configure commission rates"
+      },
+      "staysVsHotels": {
+        "title": "Private accommodation vs. hotel / hostel",
+        "body": "Hotels and youth hostels have several room types (private room or dorm bed) and are classified by stars or an official hotel licence.",
+        "cta": "See the accommodation catalogue"
+      }
+    },
+    "glossaryTitle": "Official DARNA terminology",
+    "terms": {
+      "dzd": {
+        "term": "DZD (Algerian dinar)",
+        "definition": "The only currency used for prices and payouts on the platform. All accounting entries use DZD."
+      },
+      "escrow": {
+        "term": "Escrow",
+        "definition": "Guarantee mechanism that holds payments until the day after check-in or the start of the activity."
+      },
+      "individualHost": {
+        "term": "Individual host",
+        "definition": "A private person renting a room in their home, a villa or a furnished apartment."
+      },
+      "travelAgency": {
+        "term": "Travel agency",
+        "definition": "A professional company holding a licence approved by the Ministry of Tourism to organise tours."
+      }
+    }
+  },
+  "whereDidItGo": {
+    "title": "Where did my old page go?",
+    "subtitle": "To save you time and clicks, navigation now has {count} main sections. Find all previous pages and their new locations below.",
+    "searchLabel": "Search previous pages",
+    "searchPlaceholder": "Type the old page name or a keyword…",
+    "tableCaption": "Previous pages and their new location",
+    "columns": {
+      "oldName": "Previous name",
+      "newName": "New name",
+      "location": "New location",
+      "why": "Why it changed",
+      "link": "Direct link"
+    },
+    "noResults": "No page matches “{query}”.",
+    "jumpThere": "Go there",
+    "jumpToLabel": "Go to {name}",
+    "items": {
+      "guests": {
+        "oldName": "Users / User management",
+        "newName": "Guests",
+        "location": "Main navigation (#4)",
+        "description": "Renamed “Guests” to use the language of our marketplace. Manage guest profiles, booking history and accounts."
+      },
+      "onboarding": {
+        "oldName": "Onboarding config",
+        "newName": "Host sign-up steps",
+        "location": "Sidebar > Manage > Host sign-up steps",
+        "description": "Configure the identity documents and verification steps required for individual hosts, agencies, hotels and hostels."
+      },
+      "auditLog": {
+        "oldName": "Audit log",
+        "newName": "History of actions",
+        "location": "Sidebar > Manage > Settings > History of actions",
+        "description": "Complete chronological timeline of all staff decisions, wallet top-ups and approvals."
+      },
+      "money": {
+        "oldName": "Treasury & finance",
+        "newName": "Money",
+        "location": "Main navigation (#7)",
+        "description": "Host wallets, CCP / bank top-ups, DARNA commission earnings and payout approvals."
+      },
+      "team": {
+        "oldName": "Team & permissions",
+        "newName": "Team",
+        "location": "Sidebar > Manage > Settings > Team",
+        "description": "Manage staff accounts, moderator access, finance officers and supervisor roles."
+      },
+      "disputes": {
+        "oldName": "Dispute arbitration",
+        "newName": "Disputed bookings",
+        "location": "Sidebar > Bookings (Disputes tab) or Home card",
+        "description": "Inspect booking conflicts, review evidence and decide on guest refunds or host payouts."
+      }
+    }
+  },
+  "glossary": {
+    "gmv": {
+      "term": "GMV / Gross volume",
+      "plainTerm": "Money paid by guests",
+      "definition": "The total paid in Algerian dinars by guests for all stays and experiences.",
+      "howItIsCounted": "Sum of nightly rates, cleaning fees and service charges across confirmed bookings."
+    },
+    "commission": {
+      "term": "Commission revenue",
+      "plainTerm": "DARNA earnings",
+      "definition": "The platform service fee kept by DARNA to run support, servers and marketing.",
+      "howItIsCounted": "The platform commission rate (e.g. 10% to 15%) applied to each booking."
+    },
+    "bookingsCount": {
+      "term": "Total bookings",
+      "plainTerm": "Bookings",
+      "definition": "Total reservations made by guests for family stays, hotels or Sahara trips.",
+      "howItIsCounted": "Count of all confirmed, in-progress and completed guest reservations."
+    },
+    "newHosts": {
+      "term": "New hosts",
+      "plainTerm": "New hosts",
+      "definition": "New Algerian individuals, tourism agencies, hotels and hostels that joined DARNA.",
+      "howItIsCounted": "Count of newly registered and approved host profiles during the period."
+    },
+    "occupancy": {
+      "term": "Occupancy rate",
+      "plainTerm": "Nights booked out of nights available",
+      "definition": "Share of calendar nights on which accommodation listings were occupied by guests.",
+      "howItIsCounted": "(Nights booked ÷ total nights available on host calendars) × 100."
+    },
+    "cancellationRate": {
+      "term": "Cancellation / churn rate",
+      "plainTerm": "Bookings cancelled",
+      "definition": "Share of reservations that were cancelled before check-in."
+    },
+    "payout": {
+      "term": "Payout",
+      "plainTerm": "Payment to host",
+      "definition": "Net funds transferred to a partner's bank or CCP account after the DARNA commission."
+    },
+    "auditLog": {
+      "term": "Audit log",
+      "plainTerm": "History of actions",
+      "definition": "Chronological record of every administrative action, approval and balance adjustment."
+    },
+    "onboardingConfig": {
+      "term": "Onboarding config",
+      "plainTerm": "Host sign-up steps",
+      "definition": "The documents and profile questions hosts must complete before going live."
+    },
+    "pendingReview": {
+      "term": "Pending review",
+      "plainTerm": "Waiting for your decision",
+      "definition": "An application or listing waiting for a staff moderator to review and decide."
+    },
+    "users": {
+      "term": "Users",
+      "plainTerm": "Guests",
+      "definition": "Algerian and international travellers who book stays and tours on DARNA."
+    }
+  },
+  "layout": {
+    "skipToContent": "Skip to main content",
+    "localeSwitcher": {
+      "groupLabel": "Language",
+      "switchTo": {
+        "en": "Switch to English",
+        "fr": "Switch to French",
+        "ar": "Switch to Arabic"
+      }
+    }
+  },
+  "training": {
+    "badge": "Training mode",
+    "start": "Training mode",
+    "stop": "Exit training mode",
+    "bannerLabel": "Training mode banner",
+    "bannerMessage": "Training mode: nothing you do here is real. Practice freely without fear of breaking anything!",
+    "exitAndReset": "Exit and reset data"
+  },
+  "pageHelp": {
+    "sections": {
+      "whatFor": "What is this page for?",
+      "commonTasks": "Common tasks",
+      "words": "Words used on this page",
+      "shortcuts": "Helpful keyboard shortcuts"
+    },
+    "replayTour": "Replay the guided tour ({count} steps)",
+    "whereDidMyPageGo": "Where did my page go? (Old to new guide)",
+    "shortcuts": {
+      "quickSearch": "Quick search anywhere",
+      "openHelp": "Open this help side panel",
+      "closeDialog": "Close dialog or panel",
+      "quickApprove": "Quick approve focused item",
+      "openReject": "Open rejection dialog",
+      "commandSearch": "Open command search",
+      "toggleHelp": "Show or hide this help panel"
+    },
+    "terms": {
+      "trainingMode": {
+        "term": "Training mode",
+        "definition": "A safe sandbox where actions do not affect real data. Perfect for learning."
+      }
+    },
+    "pages": {
+      "home": {
+        "title": "Home dashboard help",
+        "whatFor": "Gives you a calm 10-second overview of pending approvals and overall DARNA business health.",
+        "tasks": {
+          "reviewHosts": {
+            "title": "Review pending host applications",
+            "steps": {
+              "s1": "Look at the first card under “Needs your attention”",
+              "s2": "Click the green “Review hosts” button",
+              "s3": "Inspect the identity documents and click “Approve host”"
+            }
+          },
+          "monthlyEarnings": {
+            "title": "Check monthly earnings and bookings",
+            "steps": {
+              "s1": "Make sure the period selector is set to “Last 30 days”",
+              "s2": "Read the 4 cards: Bookings, Money paid by guests, DARNA earnings, New hosts",
+              "s3": "Hover over the (?) icon on any card to see how it is counted"
+            }
+          }
+        }
+      },
+      "approvals": {
+        "title": "To review (approvals inbox) help",
+        "whatFor": "Your central moderation desk for deciding on new hosts and pending listings.",
+        "tasks": {
+          "approveHost": {
+            "title": "Approve a verified host",
+            "steps": {
+              "s1": "Click the host row to open their verification panel",
+              "s2": "Inspect their Algerian identity card and tourism documents",
+              "s3": "Click the solid green “Approve host” button",
+              "s4": "A confirmation message appears with an 8-second Undo option"
+            }
+          },
+          "rejectWithReason": {
+            "title": "Reject with a helpful reason",
+            "steps": {
+              "s1": "Click “Reject” on the host or listing row",
+              "s2": "Choose a clear template (e.g. “Blurry ID card”)",
+              "s3": "Add a friendly sentence so the host knows what to re-upload",
+              "s4": "Click “Confirm rejection”"
+            }
+          }
+        }
+      },
+      "default": {
+        "title": "DARNA Admin help",
+        "whatFor": "This page is built for safe, clear administration. You can always undo reversible changes.",
+        "tasks": {
+          "findRecord": {
+            "title": "Find any record quickly",
+            "steps": {
+              "s1": "Press ⌘K or click the search bar at the top",
+              "s2": "Type a host name, guest name or Algerian wilaya",
+              "s3": "Press Enter to jump directly to the record"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tour": {
+    "stepCounter": "Step {current} of {total}",
+    "skip": "Skip tour",
+    "back": "Back",
+    "next": "Next",
+    "getStarted": "Get started",
+    "steps": {
+      "welcome": {
+        "title": "Welcome to the DARNA Admin Console",
+        "description": "Designed for effortless, safe moderation. You can understand the health of DARNA in under 10 seconds and reach any task in 3 clicks or less."
+      },
+      "home": {
+        "title": "1. Home & needs your attention",
+        "description": "The top of the dashboard highlights urgent tasks (hosts waiting for approval, listings to review, disputes). Each card takes you directly to the filtered queue in 1 click."
+      },
+      "approvals": {
+        "title": "2. “To review” approvals inbox",
+        "description": "Click “To review” in the sidebar at any time. The red badge shows how many items are waiting. Check documents and approve or reject with helpful guidance."
+      },
+      "search": {
+        "title": "3. Instant search anywhere (⌘K)",
+        "description": "Press ⌘K or click the search bar at any time to jump instantly to any host, guest, booking or Algerian wilaya."
+      },
+      "help": {
+        "title": "4. Languages & contextual help (?)",
+        "description": "Switch between French, Arabic (full right-to-left) and English. Press ? or open Help on any page for step-by-step guides and the words used."
+      }
+    }
+  },
+  "uiKit": {
+    "avatar": "Avatar",
+    "required": "required",
+    "breadcrumbs": {
+      "label": "Breadcrumb",
+      "root": "Admin"
+    },
+    "chipInput": {
+      "placeholder": "Add…",
+      "add": "Add",
+      "remove": "Remove {value}",
+      "count": "{count} of {max} items"
+    },
+    "document": {
+      "toCheck": "To check",
+      "valid": "Validated",
+      "rejected": "Rejected",
+      "missing": "Missing",
+      "preview": "Preview {title}",
+      "download": "Download {title}",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "dropzone": {
+      "label": "Upload files",
+      "hint": "PNG, JPG or PDF up to 10 MB",
+      "photoAlt": "Photo {index}",
+      "removePhoto": "Remove photo {index}",
+      "add": "Add",
+      "addMore": "Add more files"
+    },
+    "filterBar": {
+      "searchPlaceholder": "Search…",
+      "searchLabel": "Search",
+      "moreFilters": "More filters",
+      "openFilters": "Open filters",
+      "filters": "Filters",
+      "activeFilters": "Active filters:",
+      "activeFiltersLabel": "Active filters",
+      "removeFilter": "Remove filter {label}",
+      "clearAll": "Clear all",
+      "dialogTitle": "Search filters",
+      "apply": "Apply",
+      "shortcutHint": "Press / to search",
+      "results": "{count, plural, one {<b>{formatted}</b> result} other {<b>{formatted}</b> results}}"
+    },
+    "carousel": {
+      "enlarge": "Enlarge image",
+      "previous": "Previous image",
+      "next": "Next image",
+      "counter": "Image {current} of {total}",
+      "imageAlt": "{alt} – image {current} of {total}",
+      "defaultAlt": "Image",
+      "preview": "Image preview",
+      "closePreview": "Close preview"
+    },
+    "kpi": {
+      "help": "About “{title}”",
+      "howCounted": "How it is calculated:"
+    },
+    "livePreview": {
+      "title": "Listing preview",
+      "live": "Live preview",
+      "untitled": "Listing title",
+      "sampleLocation": "Hydra, Algiers",
+      "sampleRating": "{rating} ({count, plural, one {# review} other {# reviews}})"
+    },
+    "map": {
+      "selectedPoint": "Selected point",
+      "mapType": "Map type",
+      "map": "Map",
+      "satellite": "Satellite",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "clearAddress": "Clear address",
+      "sampleAddress": "Tassili n'Ajjer, Djanet, Illizi",
+      "label": "Location map"
+    },
+    "multiSelect": {
+      "placeholder": "Select options…",
+      "selected": "{count} selected",
+      "clearAll": "Clear selection",
+      "search": "Search…",
+      "searchLabel": "Search options",
+      "selectAll": "Select all ({count})",
+      "noMatches": "No matches found"
+    },
+    "pageHeader": {
+      "export": "Export",
+      "moreActions": "More actions"
+    },
+    "pagination": {
+      "nav": "Pagination",
+      "items": "items",
+      "summary": "Showing <b>{start}</b> to <b>{end}</b> of <b>{total}</b> {label}",
+      "previous": "Previous",
+      "next": "Next",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "firstPage": "First page",
+      "lastPage": "Last page",
+      "page": "Page {page}",
+      "pageOf": "Page {page} of {total}",
+      "perPage": "{size} / page",
+      "pageSize": "Items per page"
+    },
+    "phone": {
+      "countryCode": "Algeria (+213)"
+    },
+    "richText": {
+      "placeholder": "Write a detailed description…",
+      "toolbar": "Text formatting",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "bulletList": "Bulleted list",
+      "numberedList": "Numbered list",
+      "alignStart": "Align to start",
+      "alignCenter": "Center",
+      "charCount": "{count} of {max} characters"
+    },
+    "checklist": {
+      "title": "Creation progress",
+      "done": "Completed",
+      "current": "Current step"
+    },
+    "range": {
+      "min": "Min",
+      "max": "Max",
+      "minimum": "Minimum value",
+      "maximum": "Maximum value"
+    },
+    "status": {
+      "fallback": "Status"
+    },
+    "stepper": {
+      "viewAll": "View all steps",
+      "stepOf": "Step {current} of {total}",
+      "steps": "Steps",
+      "allSteps": "All steps",
+      "done": "Completed",
+      "current": "In progress",
+      "progress": "Wizard progress"
+    },
+    "tips": {
+      "title": "Tips for a great listing"
+    },
+    "types": {
+      "host": "Host",
+      "hotel": "Hotel",
+      "hostel": "Hostel",
+      "travelAgency": "Travel agency",
+      "experience": "Experience",
+      "rentalAgency": "Rental agency",
+      "aventure": "Adventure",
+      "culture": "Culture",
+      "nature": "Nature",
+      "gastronomie": "Gastronomy",
+      "mer": "Sea",
+      "suv": "SUV",
+      "citadine": "City car",
+      "berline": "Sedan",
+      "compacte": "Compact",
+      "utilitaire": "Utility vehicle",
+      "villa": "Villa",
+      "appartement": "Apartment",
+      "maison": "House",
+      "bungalow": "Bungalow",
+      "chalet": "Chalet",
+      "studio": "Studio"
+    },
+    "bulk": {
+      "toolbar": "Bulk actions",
+      "selected": "{count, plural, one { selected} other { selected}}",
+      "selectAllMatching": "Select all {count} matching results",
+      "clearSelection": "Clear selection"
+    }
+  },
+  "ui": {
+    "closeDialog": "Close dialog",
+    "closePanel": "Close panel",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "typeToConfirm": "To proceed, type <strong>{value}</strong> below:",
+    "advancedFilters": "Advanced filters",
+    "activeFilterCount": "{count, plural, one {{count} active} other {{count} active}}",
+    "reset": "Reset",
+    "applyFilters": "Apply filters",
+    "moreOptions": "More options",
+    "undo": "Undo",
+    "dismissNotification": "Dismiss notification",
+    "notifications": "Notifications"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "This page could not be displayed. You can try again, or go back to the dashboard. If the problem persists, contact the technical team with the reference below.",
+    "reference": "Reference:",
+    "retry": "Try again",
+    "backToDashboard": "Back to dashboard",
+    "loading": "Loading…",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "This page or record does not exist, or it has been removed."
+  },
+  "dataTable": {
+    "empty": "No items found",
+    "selectRow": "Select {label}",
+    "selectAll": "Select all displayed rows"
+  },
+  "meta": {
+    "titleTemplate": "%s · DARNA Admin",
+    "defaultTitle": "DARNA Admin",
+    "description": "DARNA marketplace administration and moderation console",
+    "titles": {
+      "dashboard": "Dashboard",
+      "login": "Sign in",
+      "approvals": "Approvals inbox",
+      "bookings": "Bookings",
+      "cars": "Cars",
+      "cars_categories": "Car categories",
+      "cars_insurance": "Car insurance plans",
+      "cars_new": "Add a car",
+      "cars_pricing": "Car pricing tiers",
+      "categories": "Categories",
+      "experiences": "Experiences",
+      "experiences_categories": "Experience categories",
+      "experiences_changerequests": "Experience change requests",
+      "experiences_new": "Add an experience",
+      "help": "Help center",
+      "hosts": "Partners & hosts",
+      "hostDetail": "Host details",
+      "listings": "Listings",
+      "listingDetail": "Listing details",
+      "listingReview": "Listing review",
+      "messages": "Messages",
+      "messages_notifications": "Notifications",
+      "messages_templates": "Message templates",
+      "moderation_providers": "Provider validation",
+      "network": "Network explorer",
+      "payments": "Payments & finance",
+      "payments_commissions": "Commissions",
+      "payments_payouts": "Payouts",
+      "payments_refunds": "Refunds",
+      "payments_transactions": "Transactions",
+      "payments_wallets": "Host wallets",
+      "promotions": "Promotions",
+      "promotions_featured": "Featured listings",
+      "reports": "Reports",
+      "reviews": "Reviews",
+      "reviews_disputes": "Disputes",
+      "reviews_reports": "Reported reviews",
+      "search": "Search",
+      "settings": "Platform settings",
+      "settings_auditlog": "Audit log",
+      "settings_commissions": "Commission settings",
+      "settings_languages": "Languages",
+      "settings_notifications": "Notification settings",
+      "settings_onboarding": "Host onboarding",
+      "settings_security": "Security",
+      "settings_team": "Team & roles",
+      "stats": "Statistics",
+      "stats_providers": "Provider statistics",
+      "stats_reports": "Statistical reports",
+      "stats_revenue": "Revenue",
+      "stats_services": "Service statistics",
+      "stats_wilayas": "Statistics by wilaya",
+      "stays": "Stays",
+      "stays_categories": "Stay categories",
+      "stays_changerequests": "Stay change requests",
+      "stays_new": "Add a stay",
+      "trips": "Trips",
+      "trips_bookingrequests": "Trip booking requests",
+      "trips_categories": "Trip categories",
+      "trips_new": "Add a trip",
+      "users": "Users",
+      "users_guests": "Guests",
+      "wherediditgo": "Where did my page go?"
+    }
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useId } from "react";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
@@ -12,7 +12,7 @@ import Heading from "@/components/Heading";
 import Calendar from "@/components/inputs/Calendar";
 import Counter from "@/components/inputs/Counter";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { POPULAR_DESTINATIONS } from "@/components/search/destinations";
 import { BrandPinIcon } from "@/components/icons";
 
 enum STEPS {
@@ -21,25 +21,15 @@ enum STEPS {
   INFO = 2,
 }
 
-const ALGERIAN_DESTINATIONS = [
-  { name: "Algiers", wilaya: "Wilaya 16", tag: "Historic Casbah & Coastal Bays" },
-  { name: "Oran", wilaya: "Wilaya 31", tag: "Santa Cruz Fortress & Corniche" },
-  { name: "Constantine", wilaya: "Wilaya 25", tag: "City of Suspension Bridges" },
-  { name: "Tipaza", wilaya: "Wilaya 42", tag: "Roman Ruins & Mediterranean Coast" },
-  { name: "Tlemcen", wilaya: "Wilaya 13", tag: "Andalusian Art & Architecture" },
-  { name: "Djanet", wilaya: "Wilaya 56", tag: "Tassili n'Ajjer Rock Art & Dunes" },
-  { name: "Taghit", wilaya: "Wilaya 53", tag: "Grand Erg Occidental Oasis" },
-  { name: "Ghardaïa", wilaya: "Wilaya 47", tag: "UNESCO M'zab Valley Ksars" },
-  { name: "Béjaïa", wilaya: "Wilaya 06", tag: "Cap Carbon & Gouraya Cliffs" },
-  { name: "Annaba", wilaya: "Wilaya 23", tag: "Basilica of St Augustine & Beaches" },
-];
-
 export default function SearchModal() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const searchModal = useSearchModal();
+  const isOpen = useSearchModal((s) => s.isOpen);
+  const closeSearchModal = useSearchModal((s) => s.onClose);
   const tNav = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const t = useTranslations("search");
+  const destinationInputId = useId();
 
   const [step, setStep] = useState(STEPS.LOCATION);
   const [destination, setDestination] = useState<string>("");
@@ -70,7 +60,7 @@ export default function SearchModal() {
       currentQuery = qs.parse(searchParams.toString());
     }
 
-    const updatedQuery: any = {
+    const updatedQuery: qs.StringifiableRecord = {
       ...currentQuery,
       destination: destination || undefined,
       guests: guestCount,
@@ -98,11 +88,11 @@ export default function SearchModal() {
     );
 
     setStep(STEPS.LOCATION);
-    searchModal.onClose();
+    closeSearchModal();
     router.push(url);
   }, [
     step,
-    searchModal,
+    closeSearchModal,
     destination,
     guestCount,
     roomCount,
@@ -115,69 +105,78 @@ export default function SearchModal() {
 
   const actionLabel = useMemo(() => {
     if (step === STEPS.INFO) {
-      return tNav("search") || "Search";
+      return tNav("search");
     }
-    return tCommon("next") || "Next";
+    return tCommon("next");
   }, [step, tNav, tCommon]);
 
   const secondaryActionLabel = useMemo(() => {
     if (step === STEPS.LOCATION) {
       return undefined;
     }
-    return tCommon("back") || "Back";
+    return tCommon("back");
   }, [step, tCommon]);
 
   let bodyContent = (
     <div className="flex flex-col gap-6">
       <Heading
-        title="Where do you want to go?"
-        subtitle="Explore top Algerian wilayas, coastal villas, or desert getaways"
+        title={t("modal.whereTitle")}
+        subtitle={t("modal.whereSubtitle")}
       />
 
       {/* Destination text input */}
       <div className="relative">
+        <label htmlFor={destinationInputId} className="sr-only">
+          {tNav("searchDestinations")}
+        </label>
         <input
-          type="text"
+          id={destinationInputId}
+          type="search"
+          autoComplete="off"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          placeholder="Search destinations (e.g. Tipaza, Algiers, Djanet)..."
-          className="w-full p-4 ps-11 border border-tertiary rounded-2xl outline-none focus:border-primary text-primary font-medium text-sm sm:text-base"
+          placeholder={t("modal.destinationPlaceholder")}
+          className="w-full p-4 ps-11 border border-tertiary rounded-2xl outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 text-primary font-medium text-sm sm:text-base"
         />
         <BrandPinIcon
           size={20}
           strokeWidth={1.8}
-          className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
+          className="absolute start-3.5 top-1/2 -translate-y-1/2 text-neutral-500"
         />
       </div>
 
       {/* Quick Select Algerian Cities */}
       <div className="space-y-2">
-        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
-          Popular in Algeria
-        </h4>
+        <h3 className="text-xs font-bold text-neutral-600 uppercase tracking-wider">
+          {t("popularInAlgeria")}
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pe-1">
-          {ALGERIAN_DESTINATIONS.map((dest) => (
+          {POPULAR_DESTINATIONS.map((dest) => (
             <button
-              key={dest.name}
+              key={dest.key}
               type="button"
+              aria-pressed={destination === dest.name}
               onClick={() => setDestination(dest.name)}
-              className={`p-2.5 rounded-xl border text-start flex items-center gap-3 transition cursor-pointer ${
+              className={`p-2.5 rounded-xl border text-start flex items-center gap-3 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
                 destination === dest.name
                   ? "border-primary bg-primary/5 text-primary"
                   : "border-tertiary/60 hover:border-tertiary text-neutral-700 hover:bg-neutral-50"
               }`}
             >
-              <div className="w-8 h-8 rounded-lg bg-tertiary/30 flex items-center justify-center flex-shrink-0 text-primary font-bold text-xs">
-                {dest.name.substring(0, 2).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold text-xs sm:text-sm text-primary truncate">
-                  {dest.name}
-                </div>
-                <div className="text-[11px] text-neutral-400 truncate">
-                  {dest.tag}
-                </div>
-              </div>
+              <span
+                aria-hidden="true"
+                className="w-8 h-8 rounded-lg bg-tertiary/30 flex items-center justify-center flex-shrink-0 text-primary font-bold text-xs"
+              >
+                {String(dest.wilaya).padStart(2, "0")}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold text-xs sm:text-sm text-primary truncate">
+                  {t(`destinations.${dest.key}.name`)}
+                </span>
+                <span className="block text-[11px] text-neutral-600 truncate">
+                  {t("destinationMeta", { tag: t(`destinations.${dest.key}.tag`), wilaya: dest.wilaya })}
+                </span>
+              </span>
             </button>
           ))}
         </div>
@@ -189,8 +188,8 @@ export default function SearchModal() {
     bodyContent = (
       <div className="flex flex-col gap-6">
         <Heading
-          title="When are you traveling?"
-          subtitle="Select dates for your stay, experience, or vehicle rental"
+          title={t("modal.whenTitle")}
+          subtitle={t("modal.whenSubtitle")}
         />
         <div className="flex justify-center overflow-x-auto">
           <Calendar
@@ -206,26 +205,26 @@ export default function SearchModal() {
     bodyContent = (
       <div className="flex flex-col gap-6">
         <Heading
-          title="Who is coming?"
-          subtitle="Add guests or passengers for your trip"
+          title={t("modal.whoTitle")}
+          subtitle={t("modal.whoSubtitle")}
         />
         <Counter
-          title="Guests"
-          subtitle="Total adults and children"
+          title={t("modal.guests")}
+          subtitle={t("modal.guestsSubtitle")}
           value={guestCount}
           onChange={(v) => setGuestCount(v)}
         />
         <hr className="border-tertiary/40" />
         <Counter
-          title="Rooms / Spaces"
-          subtitle="How many bedrooms or separate rooms?"
+          title={t("modal.rooms")}
+          subtitle={t("modal.roomsSubtitle")}
           value={roomCount}
           onChange={(v) => setRoomCount(v)}
         />
         <hr className="border-tertiary/40" />
         <Counter
-          title="Bathrooms"
-          subtitle="Minimum bathrooms desired"
+          title={t("modal.bathrooms")}
+          subtitle={t("modal.bathroomsSubtitle")}
           value={bathroomCount}
           onChange={(v) => setBathroomCount(v)}
         />
@@ -235,12 +234,12 @@ export default function SearchModal() {
 
   return (
     <Modal
-      isOpen={searchModal.isOpen}
-      onClose={searchModal.onClose}
+      isOpen={isOpen}
+      onClose={closeSearchModal}
       onSubmit={onSubmit}
       secondaryAction={step === STEPS.LOCATION ? undefined : onBack}
       secondaryActionLabel={secondaryActionLabel}
-      title={tNav("search") || "Search DARNA"}
+      title={t("modal.title")}
       actionLabel={actionLabel}
       body={bodyContent}
     />

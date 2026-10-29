@@ -1,9 +1,8 @@
 import createMiddleware from "next-intl/middleware";
 import { locales, defaultLocale } from "./i18n";
 import { NextRequest, NextResponse } from "next/server";
-import { mockUsers } from "./lib/mock-data/users";
-import { mockListings } from "./lib/mock-data/listings";
-import { mockOrganizations } from "./lib/mock-data/organizations";
+import { SESSION_COOKIE, verifySession } from "./lib/auth/session-token";
+import { isOrgHostType } from "./lib/host-types";
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -11,77 +10,59 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
-export default function middleware(request: NextRequest) {
+// "/trips" itself (the guest's bookings) is private; "/trips/<id>" is a public trip page.
+const PROTECTED_USER_EXACT = ["/trips"];
+
+const PROTECTED_USER_PREFIXES = [
+  "/become-a-host",
+  "/favorites",
+  "/profile",
+  "/settings",
+  "/reservations",
+  "/properties",
+  "/messages",
+  "/notifications",
+];
+
+function redirectTo(request: NextRequest, pathname: string, callbackUrl?: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+  if (callbackUrl) url.searchParams.set("callbackUrl", callbackUrl);
+  return NextResponse.redirect(url);
+}
+
+/**
+ * Coarse, cookie-only route guards. The session is verified (HMAC) here, but
+ * pages and server actions still re-check everything against the server
+ * store — the middleware is only a fast first line of defence.
+ */
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Extract locale from pathname (e.g. /en/... or /fr/...)
   const localeMatch = pathname.match(/^\/(en|fr|ar)(\/.*)?$/);
   const locale = localeMatch?.[1] || defaultLocale;
   const pathWithoutLocale = localeMatch ? localeMatch[2] || "/" : pathname;
 
-  const cookieUserId = request.cookies.get("darna_user_id")?.value;
-  const cookieHostType = request.cookies.get("darna_host_type")?.value;
+  const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
 
-  // 1. Protected routes requiring any authenticated user
   const isProtectedUserRoute =
-    pathWithoutLocale.startsWith("/become-a-host") ||
-    pathWithoutLocale.startsWith("/trips") ||
-    pathWithoutLocale.startsWith("/favorites") ||
-    pathWithoutLocale.startsWith("/profile") ||
-    pathWithoutLocale.startsWith("/settings") ||
-    pathWithoutLocale.startsWith("/reservations") ||
-    pathWithoutLocale.startsWith("/properties");
+    PROTECTED_USER_EXACT.includes(pathWithoutLocale) ||
+    PROTECTED_USER_PREFIXES.some((prefix) => pathWithoutLocale === prefix || pathWithoutLocale.startsWith(`${prefix}/`));
+  const isHostRoute = pathWithoutLocale === "/host" || pathWithoutLocale.startsWith("/host/");
 
-  if (isProtectedUserRoute && !cookieUserId) {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/login`;
-    url.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(url);
+  if ((isProtectedUserRoute || isHostRoute) && !session) {
+    return redirectTo(request, `/${locale}/login`, `/${locale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`);
   }
 
-  // 2. Protected Host routes (/host and subroutes)
-  if (pathWithoutLocale.startsWith("/host")) {
-    // If not authenticated -> redirect to login
-    if (!cookieUserId) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${locale}/login`;
-      url.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(url);
+  if (isHostRoute && session) {
+    // Not a host yet -> host-type selection
+    if (!session.hostType) {
+      return redirectTo(request, `/${locale}/become-a-host`);
     }
-
-    const user = mockUsers.find((u) => u.id === cookieUserId);
-    const effectiveHostType = cookieHostType || user?.hostType;
-
-    // If authenticated guest without hostType -> redirect to become-a-host onboarding
-    if (!effectiveHostType) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${locale}/become-a-host`;
-      return NextResponse.redirect(url);
-    }
-
-    // Individual host guard
-    if (effectiveHostType === "individual") {
-      const hasListings =
-        cookieHostType === "individual" || mockListings.some((l) => l.hostUserId === cookieUserId);
-      if (!hasListings) {
-        const url = request.nextUrl.clone();
-        url.pathname = `/${locale}/become-a-host/1`;
-        return NextResponse.redirect(url);
-      }
-    }
-
-    // Agency host guard
-    if (effectiveHostType === "agency") {
-      const org = mockOrganizations.find(
-        (o) => o.id === user?.organizationId || o.ownerUserId === cookieUserId
-      );
-      const isVerifiedOrg =
-        cookieHostType === "agency" || (org && Boolean(org.verificationStatus));
-      if (!isVerifiedOrg) {
-        const url = request.nextUrl.clone();
-        url.pathname = `/${locale}/become-a-host/agency`;
-        return NextResponse.redirect(url);
-      }
+    // Org host (agency/hotel/hostel) without an organization -> finish org onboarding
+    if (isOrgHostType(session.hostType) && !session.organizationId) {
+      return redirectTo(request, `/${locale}/become-a-host/${session.hostType}`);
     }
   }
 

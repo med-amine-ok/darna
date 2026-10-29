@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DARNA — frontend
 
-## Getting Started
+DARNA is an Airbnb-style marketplace for Algeria: homes, hotels, hostels,
+experiences, vehicles and agency-run multi-day trips, in English, French and
+Arabic (RTL). This package is the public web app (guests and hosts). The
+staff back-office lives in `../admin`.
 
-First, run the development server:
+Stack: Next.js 14 (App Router), next-intl 3, Tailwind CSS 3, zustand.
+
+## Running locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # then set DARNA_SESSION_SECRET (optional in dev)
+npm install
+npm run dev                  # http://localhost:3000 (redirects to /en)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Other scripts: `npm run build`, `npm run start`, `npm run lint`,
+`npx tsc --noEmit`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DARNA_SESSION_SECRET` | Production: yes (32+ chars). Dev: no, an insecure fallback is used with a console warning. | HMAC-SHA256 key that signs the `darna_session` cookie. |
 
-## Learn More
+## Demo accounts
 
-To learn more about Next.js, take a look at the following resources:
+There is no backend yet: data comes from an in-memory mock store seeded from
+`lib/mock-data` (it resets when the dev server restarts). Every seeded account
+uses the password **`darna-demo-2026`**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Email | Role |
+| --- | --- |
+| `yacine.traveler@darna.dz` | Guest / traveler |
+| `amina.benali@darna.dz` | Individual host |
+| `karim.mansouri@darna.dz` | Agency owner (Atlas Escapes) and hotel owner |
+| `sofiane.mebarki@gmail.com`, `leila.hadj@yahoo.fr` | Guests |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The login page also has one-click demo buttons. New accounts can be created
+from the sign-up modal (passwords are hashed with scrypt in the mock store;
+minimum 8 characters).
 
-## Deploy on Vercel
+## How data and auth work (mock backend)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Session**: one signed, httpOnly `darna_session` cookie (payload: user id,
+  host type, organization id, expiry), verified in `middleware.ts` and on the
+  server via `getSessionUser()` (`lib/server/session.ts`). The browser never
+  reads or writes identity cookies. `darna_mode` is only a UI preference.
+- **Single source of truth**: `lib/data/*` are server-only functions over
+  in-memory tables kept on `globalThis` (`lib/data/_tables.ts`). Each one is a
+  `TODO: replace with Supabase` seam — swap the function body for a query
+  without touching components.
+- **Mutations** go through Server Actions in `app/actions/*`. Each action
+  takes the user from the session, checks ownership / organization role, then
+  calls `lib/data`. Client components call the action and update state or
+  `router.refresh()`.
+- **Organizations** are resolved only through the session user's active
+  memberships (`lib/server/host-context.ts`). Roles: owner > admin > manager
+  (`lib/host-types.ts`). New organizations start as `pending` verification.
+- **Public pages** (`/listings/[id]`, `/users/[id]`, `/agencies/[id]`) receive
+  public DTOs only (`lib/server/dto.ts`) — no email, phone or address.

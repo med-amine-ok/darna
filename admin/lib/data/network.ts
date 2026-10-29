@@ -1,19 +1,12 @@
+import "server-only";
 // TODO: replace with Supabase query
 import { store } from "@/lib/mock-data/store";
+import type { NetworkSearchParams } from "@/lib/types";
 import { Listing, ListingVertical, HostType } from "@/lib/types";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export interface NetworkSearchParams {
-  vertical?: ListingVertical;
-  destination?: string;
-  wilayaCode?: string;
-  guests?: number;
-  minPrice?: number;
-  maxPrice?: number;
-  hostType?: HostType | "all";
-  propertyType?: string;
-}
+export type { NetworkSearchParams } from "@/lib/types";
 
 export async function searchNetwork(params: NetworkSearchParams = {}) {
   await delay(180);

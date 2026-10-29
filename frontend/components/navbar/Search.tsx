@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import Image from "next/image";
+import React, { useState, useRef, useCallback, useId } from "react";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
-import { format } from "date-fns";
 import { BrandSearchIcon, BrandPinIcon } from "@/components/icons";
 import { Range } from "react-date-range";
-import { useTranslations } from "next-intl";
-import { ListingVertical } from "@/types";
+import { useLocale, useTranslations } from "next-intl";
 import { useVertical } from "@/hook/useVertical";
+import { useDismiss } from "@/hook/useDismiss";
+import { useDestinationLabel } from "@/hook/useDestinationLabel";
+import { shortDayLabel } from "@/components/search/dateLabels";
 
 import WherePopover, { DestinationItem } from "./search/WherePopover";
 import WhenPopover from "./search/WhenPopover";
@@ -28,11 +28,20 @@ export default function Search({
 }: SearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale();
   const tNav = useTranslations("nav");
-  const { activeVertical } = useVertical();
+  const tCommon = useTranslations("common");
+  const t = useTranslations("search");
+  const destinationLabel = useDestinationLabel();
+  const activeVertical = useVertical((s) => s.activeVertical);
+  const popoverId = useId();
 
   const [activePopover, setActivePopover] = useState<PopoverType>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const whereRef = useRef<HTMLButtonElement>(null);
+  const whenRef = useRef<HTMLButtonElement>(null);
+  const whoRef = useRef<HTMLButtonElement>(null);
+  const summaryRef = useRef<HTMLButtonElement>(null);
 
   // Search state
   const [destination, setDestination] = useState<string>(
@@ -55,76 +64,60 @@ export default function Search({
       : 1
   );
 
-  // Close popover when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setActivePopover(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // Close the open popover on outside click or Escape; Escape returns focus to its trigger.
+  const triggerRef =
+    activePopover === "where"
+      ? whereRef
+      : activePopover === "when"
+      ? whenRef
+      : activePopover === "who"
+      ? whoRef
+      : summaryRef;
+  const closePopover = useCallback(() => setActivePopover(null), []);
+  useDismiss(activePopover !== null, containerRef, closePopover, triggerRef);
 
-  // Format labels based on active vertical
+  // Field labels depend on the active vertical (stays, hotels, vehicles...).
+  const vertical = activeVertical || "home";
   const labels = {
-    home: {
-      whereTitle: tNav("where"),
-      wherePlaceholder: tNav("searchDestinations"),
-      whenTitle: tNav("when"),
-      whenPlaceholder: tNav("addDates"),
-      whoTitle: tNav("who"),
-      whoPlaceholder: tNav("addGuests"),
-      whoSubtitle: "Ages 13 or above",
-    },
-    hotel: {
-      whereTitle: tNav("where"),
-      wherePlaceholder: "City, hotel or hostel name",
-      whenTitle: tNav("when"),
-      whenPlaceholder: tNav("addDates"),
-      whoTitle: "Rooms & Guests",
-      whoPlaceholder: "Add rooms & guests",
-      whoSubtitle: "Rooms, adults & children",
-    },
-    vehicle: {
-      whereTitle: "Pickup",
-      wherePlaceholder: "Airport or city location",
-      whenTitle: "Rental Dates",
-      whenPlaceholder: "Pickup & return dates",
-      whoTitle: "Passengers",
-      whoPlaceholder: "Seats & passengers",
-      whoSubtitle: "Total seats required",
-    },
-    experience: {
-      whereTitle: "Region",
-      wherePlaceholder: "Explore activities in...",
-      whenTitle: tNav("when"),
-      whenPlaceholder: "Select experience date",
-      whoTitle: "Group Size",
-      whoPlaceholder: "Number of participants",
-      whoSubtitle: "Attendees count",
-    },
-    trip: {
-      whereTitle: "Circuit / Region",
-      wherePlaceholder: "Sahara, Atlas, Coast...",
-      whenTitle: "Trip Dates",
-      whenPlaceholder: "Departure dates",
-      whoTitle: "Travelers",
-      whoPlaceholder: "Number of participants",
-      whoSubtitle: "All ages welcome",
-    },
-  }[activeVertical || "home"];
+    whereTitle: t(`bar.${vertical}.whereTitle`),
+    wherePlaceholder: t(`bar.${vertical}.wherePlaceholder`),
+    whenTitle: t(`bar.${vertical}.whenTitle`),
+    whenPlaceholder: t(`bar.${vertical}.whenPlaceholder`),
+    whoTitle: t(`bar.${vertical}.whoTitle`),
+    whoPlaceholder: t(`bar.${vertical}.whoPlaceholder`),
+    whoSubtitle: t(`bar.${vertical}.whoSubtitle`),
+  };
+
+  const verticalTabLabel: Record<string, string> = {
+    home: tNav("tabHomes"),
+    hotel: tNav("tabHotels"),
+    experience: tNav("tabExperiences"),
+    vehicle: tNav("tabVehicles"),
+    trip: tNav("tabTrips"),
+  };
 
   const formattedDates =
     dateRange.startDate && dateRange.endDate
-      ? `${format(dateRange.startDate, "MMM d")} - ${format(
-          dateRange.endDate,
-          "MMM d"
-        )}`
+      ? tCommon("dateRange", {
+          start: shortDayLabel(dateRange.startDate, locale),
+          end: shortDayLabel(dateRange.endDate, locale),
+        })
       : "";
+
+  const guestSummary =
+    guestCount > 1
+      ? vertical === "vehicle"
+        ? t("passengerCount", { count: guestCount })
+        : t("guestCount", { count: guestCount })
+      : "";
+
+  const destinationText = destination ? destinationLabel(destination) : "";
+
+  const segmentProps = (type: Exclude<PopoverType, null>) => ({
+    "aria-haspopup": "dialog" as const,
+    "aria-expanded": activePopover === type,
+    "aria-controls": activePopover === type ? `${popoverId}-${type}` : undefined,
+  });
 
   const handleSearch = useCallback(
     (e?: React.MouseEvent) => {
@@ -192,11 +185,6 @@ export default function Search({
               : "768px"
             : "420px",
         }}
-        onClick={() => {
-          if (progress >= 0.6 && !activePopover) {
-            setActivePopover("where");
-          }
-        }}
       >
         {/* ======================================================== */}
         {/* STATE A: EXPANDED HERO SEARCH BAR (visible when progress < 0.6) */}
@@ -212,13 +200,15 @@ export default function Search({
         >
           {/* Segment 1: Where */}
           <button
+            ref={whereRef}
             type="button"
+            {...segmentProps("where")}
             onClick={(e) => {
               e.stopPropagation();
               setActivePopover(activePopover === "where" ? null : "where");
             }}
             className={`
-              flex-1 flex items-center gap-2.5 text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none
+              flex-1 flex items-center gap-2.5 text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
               ${
                 activePopover === "where"
                   ? "bg-white shadow-md ring-1 ring-black/5"
@@ -238,7 +228,7 @@ export default function Search({
                 {labels.whereTitle}
               </span>
               <span className="text-xs sm:text-sm font-medium text-neutral-600 truncate mt-0.5">
-                {destination || labels.wherePlaceholder}
+                {destinationText || labels.wherePlaceholder}
               </span>
             </div>
           </button>
@@ -247,13 +237,15 @@ export default function Search({
 
           {/* Segment 2: When */}
           <button
+            ref={whenRef}
             type="button"
+            {...segmentProps("when")}
             onClick={(e) => {
               e.stopPropagation();
               setActivePopover(activePopover === "when" ? null : "when");
             }}
             className={`
-              flex-1 flex flex-col text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none
+              flex-1 flex flex-col text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
               ${
                 activePopover === "when"
                   ? "bg-white shadow-md ring-1 ring-black/5"
@@ -273,13 +265,15 @@ export default function Search({
 
           {/* Segment 3: Who */}
           <button
+            ref={whoRef}
             type="button"
+            {...segmentProps("who")}
             onClick={(e) => {
               e.stopPropagation();
               setActivePopover(activePopover === "who" ? null : "who");
             }}
             className={`
-              flex-1 flex flex-col text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none
+              flex-1 flex flex-col text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
               ${
                 activePopover === "who"
                   ? "bg-white shadow-md ring-1 ring-black/5"
@@ -291,9 +285,7 @@ export default function Search({
               {labels.whoTitle}
             </span>
             <span className="text-xs sm:text-sm font-medium text-neutral-600 truncate mt-0.5">
-              {guestCount > 1
-                ? `${guestCount} ${activeVertical === "vehicle" ? "passengers" : "guests"}`
-                : labels.whoPlaceholder}
+              {guestSummary || labels.whoPlaceholder}
             </span>
           </button>
 
@@ -302,12 +294,12 @@ export default function Search({
             <button
               type="button"
               onClick={handleSearch}
-              aria-label="Search"
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-accent text-white font-semibold text-xs sm:text-sm shadow-xs hover:bg-accent/90 transition select-none cursor-pointer btn-press"
+              aria-label={tNav("search")}
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-accent-600 text-white font-semibold text-xs sm:text-sm shadow-xs hover:bg-accent-700 transition select-none cursor-pointer btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
             >
               <BrandSearchIcon size={16} strokeWidth={2.4} className="text-white" />
-              <span className="hidden md:inline">
-                {tNav("search") || "Search"}
+              <span className="hidden md:inline" aria-hidden="true">
+                {tNav("search")}
               </span>
             </button>
           </div>
@@ -325,32 +317,36 @@ export default function Search({
             opacity: Math.max(0, (progress - 0.4) * 1.66),
           }}
         >
-          <div className="font-semibold text-primary truncate max-w-[110px] sm:max-w-[140px] flex items-center gap-1.5">
-            <BrandPinIcon
-              size={14}
-              strokeWidth={2}
-              className="shrink-0 text-accent"
-            />
-            <span className="truncate">{destination || "Anywhere in Algeria"}</span>
-          </div>
+          <button
+            ref={summaryRef}
+            type="button"
+            {...segmentProps("where")}
+            onClick={() => setActivePopover(activePopover ? null : "where")}
+            className="flex items-center gap-2 sm:gap-3 min-w-0 rounded-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+          >
+            <span className="font-semibold text-primary truncate max-w-[96px] lg:max-w-[140px] flex items-center gap-1.5">
+              <BrandPinIcon size={14} strokeWidth={2} className="shrink-0 text-accent" />
+              <span className="truncate">{destinationText || t("anywhereInAlgeria")}</span>
+            </span>
 
-          <div className="text-tertiary">|</div>
+            <span className="text-tertiary" aria-hidden="true">|</span>
 
-          <div className="font-semibold text-neutral-600 truncate max-w-[100px]">
-            {formattedDates || (activeVertical ? activeVertical.toUpperCase() : "Any week")}
-          </div>
+            <span className="font-semibold text-neutral-600 truncate max-w-[72px] lg:max-w-[100px]">
+              {formattedDates || verticalTabLabel[vertical] || tCommon("anyWeek")}
+            </span>
 
-          <div className="text-tertiary">|</div>
+            <span className="text-tertiary" aria-hidden="true">|</span>
 
-          <div className="text-neutral-500 font-normal truncate max-w-[90px]">
-            {guestCount > 1 ? `${guestCount} guests` : "Add guests"}
-          </div>
+            <span className="text-neutral-600 font-normal truncate max-w-[56px] lg:max-w-[90px]">
+              {guestSummary || tNav("addGuests")}
+            </span>
+          </button>
 
           <button
             type="button"
             onClick={handleSearch}
-            className="p-1.5 bg-accent rounded-full text-white flex items-center justify-center shrink-0 shadow-xs hover:bg-accent/90 transition"
-            aria-label="Search"
+            className="p-1.5 bg-accent-600 rounded-full text-white flex items-center justify-center shrink-0 shadow-xs hover:bg-accent-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            aria-label={tNav("search")}
           >
             <BrandSearchIcon size={13} strokeWidth={2.5} className="text-white" />
           </button>
@@ -359,7 +355,7 @@ export default function Search({
 
       {/* Floating Popovers (Positioned below the pill) */}
       {activePopover === "where" && (
-        <div className="absolute top-full start-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
+        <div id={`${popoverId}-where`} role="dialog" aria-label={labels.whereTitle} className="absolute top-full start-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
           <WherePopover
             query={destination}
             onSelect={handleSelectDestination}
@@ -368,7 +364,7 @@ export default function Search({
       )}
 
       {activePopover === "when" && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
+        <div id={`${popoverId}-when`} role="dialog" aria-label={labels.whenTitle} className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
           <WhenPopover
             dateRange={dateRange}
             onChangeDateRange={(range) => setDateRange(range)}
@@ -386,7 +382,7 @@ export default function Search({
       )}
 
       {activePopover === "who" && (
-        <div className="absolute top-full end-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
+        <div id={`${popoverId}-who`} role="dialog" aria-label={labels.whoTitle} className="absolute top-full end-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
           <WhoPopover
             guestCount={guestCount}
             onChangeGuests={setGuestCount}

@@ -1,0 +1,87 @@
+{
+  "empty": {
+    "title": "Aucune annonce à gérer pour le moment",
+    "body": "Créez votre première annonce pour gérer ici ses disponibilités, ses dates bloquées et ses prix par nuit.",
+    "cta": "Créer une annonce"
+  },
+  "title": "Calendrier et disponibilités",
+  "subtitle": "Gérez vos disponibilités en temps réel, bloquez des dates de maintenance et définissez des tarifs saisonniers.",
+  "viewSwitcherLabel": "Vue du calendrier",
+  "previous": "{view, select, month {Mois précédent} week {Semaine précédente} day {Jour précédent} other {Année précédente}}",
+  "next": "{view, select, month {Mois suivant} week {Semaine suivante} day {Jour suivant} other {Année suivante}}",
+  "propertyLabel": "Logement",
+  "allProperties": "Tous les logements ({count})",
+  "listingOption": "{title} ({city})",
+  "unitLabel": "Unité",
+  "allUnits": "Toutes les unités ({count})",
+  "unitOption": "{name} ({unit, select, bed {{count, plural, one {# lit} other {# lits}}} other {{count, plural, one {# chambre} other {# chambres}}}})",
+  "listingLegend": "Couleurs des annonces",
+  "untitledListing": "Annonce",
+  "guestFallback": "Voyageur",
+  "status": {
+    "blocked": "Bloqué",
+    "booked": "Réservé",
+    "available": "Disponible"
+  },
+  "moreBookings": "+{count} de plus",
+  "dayCellLabel": "{date} : {status}",
+  "dayCellLabelWithPrice": "{date} : {status}, {price} la nuit",
+  "weekCellLabel": "{listing} – {date} : {status}, {price} la nuit",
+  "bookingTitle": "{guest} – {listing}",
+  "dayView": {
+    "eyebrow": "Déroulé de la journée",
+    "block": "Bloquer ce jour",
+    "unblock": "Débloquer ce jour",
+    "arrivingToday": "Voyageurs arrivant aujourd’hui",
+    "slots": {
+      "morning": {
+        "title": "Point du matin",
+        "desc": "Vérification du logement et du ménage"
+      },
+      "checkout": {
+        "title": "Départ standard",
+        "desc": "Départ des voyageurs des séjours précédents"
+      },
+      "turnover": {
+        "title": "Rotation et ménage",
+        "desc": "Désinfection et préparation du linge propre"
+      },
+      "checkin": {
+        "title": "Ouverture des arrivées",
+        "desc": "Remise des clés et accueil des voyageurs"
+      },
+      "evening": {
+        "title": "Conciergerie du soir",
+        "desc": "Assistance aux voyageurs et rappel des heures calmes"
+      }
+    }
+  },
+  "guestLine": "{name} ({count, plural, one {# voyageur} other {# voyageurs}})",
+  "yearView": {
+    "viewMonth": "Voir le mois",
+    "viewMonthLabel": "Voir {month}"
+  },
+  "dialog": {
+    "eyebrow": "Paramètres de la date",
+    "property": "Logement",
+    "availability": "Disponibilité",
+    "blockedDesc": "Masquée des recherches des voyageurs",
+    "availableDesc": "Ouverte aux réservations",
+    "unblock": "Débloquer",
+    "block": "Bloquer la date",
+    "priceTitle": "Prix pour cette date",
+    "defaultRate": "Tarif par défaut : {price} la nuit. Laissez vide pour réinitialiser.",
+    "priceInputLabel": "Prix de la nuit pour cette date",
+    "saveRate": "Enregistrer le tarif",
+    "reservationsOnDate": "Réservations à cette date"
+  },
+  "toast": {
+    "dateBlocked": "Date bloquée aux réservations",
+    "dateReopened": "Date de nouveau ouverte aux réservations",
+    "dateUpdateFailed": "Impossible de mettre à jour cette date. Veuillez réessayer.",
+    "priceInvalid": "Saisissez un nombre entier entre {min} et {max}, ou laissez vide pour réinitialiser.",
+    "priceReset": "Prix standard de l’annonce rétabli.",
+    "priceSet": "Tarif de la nuit fixé à {price}",
+    "priceSaveFailed": "Impossible d’enregistrer ce prix. Veuillez réessayer."
+  }
+}

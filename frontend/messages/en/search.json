@@ -1,0 +1,180 @@
+{
+  "price": "Price",
+  "instantBook": "Instant Book",
+  "apply": "Apply",
+  "minPrice": "Min price",
+  "maxPrice": "Max price",
+  "perNight": "per night",
+  "clearAllFilters": "Clear all filters",
+  "showMap": "Show map",
+  "partialAvailabilityBadge": "Available {range} within your dates",
+  "anywhereInAlgeria": "Anywhere in Algeria",
+  "popularDestinations": "Popular destinations in Algeria",
+  "matchingDestinations": "Matching destinations",
+  "popularInAlgeria": "Popular in Algeria",
+  "noDestinationsFound": "No destinations match “{query}”",
+  "destinationMeta": "{tag} · Wilaya {wilaya}",
+  "selectDates": "Select dates",
+  "clearDates": "Clear dates",
+  "done": "Done",
+  "guestCount": "{count, plural, one {# guest} other {# guests}}",
+  "passengerCount": "{count, plural, one {# passenger} other {# passengers}}",
+  "destinations": {
+    "algiers": {
+      "name": "Algiers",
+      "tag": "Historic Casbah & coastal bays"
+    },
+    "oran": {
+      "name": "Oran",
+      "tag": "Santa Cruz fortress & corniche"
+    },
+    "constantine": {
+      "name": "Constantine",
+      "tag": "City of suspension bridges"
+    },
+    "tipaza": {
+      "name": "Tipaza",
+      "tag": "Roman ruins & Mediterranean coast"
+    },
+    "tlemcen": {
+      "name": "Tlemcen",
+      "tag": "Andalusian art & architecture"
+    },
+    "djanet": {
+      "name": "Djanet",
+      "tag": "Tassili n'Ajjer rock art & dunes"
+    },
+    "taghit": {
+      "name": "Taghit",
+      "tag": "Grand Erg Occidental oasis"
+    },
+    "ghardaia": {
+      "name": "Ghardaïa",
+      "tag": "UNESCO M'zab Valley ksour"
+    },
+    "bejaia": {
+      "name": "Béjaïa",
+      "tag": "Cap Carbon & Gouraya cliffs"
+    },
+    "annaba": {
+      "name": "Annaba",
+      "tag": "Basilica of St Augustine & beaches"
+    }
+  },
+  "modal": {
+    "title": "Search DARNA",
+    "whereTitle": "Where do you want to go?",
+    "whereSubtitle": "Explore top Algerian wilayas, coastal villas or desert getaways",
+    "destinationPlaceholder": "Search destinations (e.g. Tipaza, Algiers, Djanet)…",
+    "whenTitle": "When are you traveling?",
+    "whenSubtitle": "Select dates for your stay, experience or vehicle rental",
+    "whoTitle": "Who is coming?",
+    "whoSubtitle": "Add guests or passengers for your trip",
+    "guests": "Guests",
+    "guestsSubtitle": "Total adults and children",
+    "rooms": "Rooms / spaces",
+    "roomsSubtitle": "How many bedrooms or separate rooms?",
+    "bathrooms": "Bathrooms",
+    "bathroomsSubtitle": "Minimum bathrooms desired"
+  },
+  "bar": {
+    "home": {
+      "whereTitle": "Where",
+      "wherePlaceholder": "Search destinations",
+      "whenTitle": "When",
+      "whenPlaceholder": "Add dates",
+      "whoTitle": "Guests",
+      "whoPlaceholder": "Add guests",
+      "whoSubtitle": "Ages 13 or above"
+    },
+    "hotel": {
+      "whereTitle": "Where",
+      "wherePlaceholder": "City, hotel or hostel name",
+      "whenTitle": "When",
+      "whenPlaceholder": "Add dates",
+      "whoTitle": "Rooms & guests",
+      "whoPlaceholder": "Add rooms & guests",
+      "whoSubtitle": "Rooms, adults & children"
+    },
+    "vehicle": {
+      "whereTitle": "Pickup",
+      "wherePlaceholder": "Airport or city location",
+      "whenTitle": "Rental dates",
+      "whenPlaceholder": "Pickup & return dates",
+      "whoTitle": "Passengers",
+      "whoPlaceholder": "Seats & passengers",
+      "whoSubtitle": "Total seats required"
+    },
+    "experience": {
+      "whereTitle": "Region",
+      "wherePlaceholder": "Explore activities in…",
+      "whenTitle": "When",
+      "whenPlaceholder": "Select experience date",
+      "whoTitle": "Group size",
+      "whoPlaceholder": "Number of participants",
+      "whoSubtitle": "Number of attendees"
+    },
+    "trip": {
+      "whereTitle": "Circuit / region",
+      "wherePlaceholder": "Sahara, Atlas, coast…",
+      "whenTitle": "Trip dates",
+      "whenPlaceholder": "Departure dates",
+      "whoTitle": "Travelers",
+      "whoPlaceholder": "Number of participants",
+      "whoSubtitle": "All ages welcome"
+    }
+  },
+  "loadingMap": "Loading interactive map…",
+  "algeria": "Algeria",
+  "editSearch": "Edit search",
+  "tabsLabel": "Type of stay",
+  "tabs": {
+    "all": "All stays & rentals",
+    "home": "Homes",
+    "hotel": "Hotels / hostels",
+    "vehicle": "Vehicles 4x4",
+    "experience": "Experiences",
+    "trip": "Agency circuits"
+  },
+  "guestFavorites": "Guest favorites",
+  "heading": {
+    "tripsIn": "Agency circuits & expeditions in {place}, Algeria",
+    "trips": "Agency circuits & multi-day expeditions in Algeria",
+    "hotelsIn": "Hotels & hostels in {place}, Algeria",
+    "hotels": "Hotels & hostels in Algeria",
+    "staysIn": "Stays & rentals in {place}, Algeria",
+    "all": "All stays, vehicles & experiences in Algeria"
+  },
+  "count": {
+    "tripsInMap": "{count, plural, one {# agency circuit} other {# agency circuits}} visible in the map area ({total} total)",
+    "trips": "{count, plural, =0 {No verified agency circuits available} one {# verified agency circuit available} other {# verified agency circuits available}}",
+    "listingsInMap": "{count, plural, one {# listing} other {# listings}} visible in the map area ({total} total)",
+    "listings": "{count, plural, =0 {No verified listings available} one {# verified listing available} other {# verified listings available}}"
+  },
+  "addDatesForTotal": "Add dates to see total prices",
+  "showTotalPrice": "Show total price",
+  "showTotalPriceAddDates": "Show total price (add dates)",
+  "searchAsMapMoves": "Search as I move the map",
+  "empty": {
+    "trips": "No agency circuits in this map area",
+    "tripsDesc": "Zoom out or pan across Algeria to discover expeditions in the Sahara, the M'zab and along the coast.",
+    "listings": "No listings in this map area",
+    "listingsDesc": "Zoom out or pan across the map to discover listings across Algeria."
+  },
+  "showList": "Show list",
+  "mapDialogLabel": "Map of results",
+  "map": {
+    "pinLabel": "{title}, {price}",
+    "clusterLabel": "{count, plural, one {# place here} other {# places here}}, zoom in",
+    "previewLabel": "Selected place",
+    "closePreview": "Close preview",
+    "tripDuration": "{days}D / {nights}N",
+    "verifiedAgency": "Verified agency",
+    "maxGroup": "Max {count}"
+  },
+  "meta": {
+    "title": "Search stays, experiences & vehicles in Algeria",
+    "titleIn": "Stays & rentals in {place}",
+    "description": "Compare homes, hotels, guided circuits and 4x4 rentals across Algeria on an interactive map, with prices in DZD."
+  }
+}

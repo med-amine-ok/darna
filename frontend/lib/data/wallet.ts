@@ -1,13 +1,12 @@
 // TODO: replace with Supabase query
+import "server-only";
 import { Wallet, Transaction, HostTypeCommissionRates, HostType } from "@/types";
+import { newId } from "@/lib/ids";
+import { clone, globalStore } from "./_store";
+import { DEFAULT_COMMISSION_RATES } from "@/lib/booking/config";
 export type { HostTypeCommissionRates };
 
-export const DEFAULT_COMMISSION_RATES: HostTypeCommissionRates = {
-  individual: 12.0, // 12% standard host take-rate
-  agency: 15.0,     // 15% agency & tour package take-rate
-  hotel: 18.0,      // 18% commercial hotel & resort take-rate
-  hostel: 10.0,     // 10% youth hostel community rate
-};
+export { DEFAULT_COMMISSION_RATES };
 
 const SEED_WALLETS: Wallet[] = [
   {
@@ -227,97 +226,52 @@ const SEED_WALLETS: Wallet[] = [
   },
 ];
 
-const WALLETS_STORAGE_KEY = "darna_host_wallets_v1";
-const RATES_STORAGE_KEY = "darna_commission_rates_v1";
-
-// In-memory cache for SSR and consistency
-let memoryWallets: Wallet[] = JSON.parse(JSON.stringify(SEED_WALLETS));
-let memoryRates: HostTypeCommissionRates = { ...DEFAULT_COMMISSION_RATES };
+// Server-side store (shared on globalThis). Wallet balances and commission
+// rates are never stored in the browser.
+const walletsStore = globalStore<Wallet[]>("__darna_wallets__", () => clone(SEED_WALLETS));
+const ratesStore = globalStore<{ rates: HostTypeCommissionRates }>("__darna_commission_rates__", () => ({
+  rates: { ...DEFAULT_COMMISSION_RATES },
+}));
 
 function computeBalance(transactions: Transaction[]): number {
   return transactions.reduce((sum, tx) => sum + tx.amount, 0);
 }
 
-function loadFromStorage(): void {
-  if (typeof window === "undefined") return;
-  try {
-    const rawWallets = localStorage.getItem(WALLETS_STORAGE_KEY);
-    if (rawWallets) {
-      const parsed = JSON.parse(rawWallets) as Wallet[];
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        memoryWallets = parsed.map((w) => ({
-          ...w,
-          balance: computeBalance(w.transactions),
-        }));
-      }
-    }
-
-    const rawRates = localStorage.getItem(RATES_STORAGE_KEY);
-    if (rawRates) {
-      memoryRates = { ...DEFAULT_COMMISSION_RATES, ...JSON.parse(rawRates) };
-    }
-  } catch (err) {
-    console.error("Failed to load wallets from localStorage:", err);
-  }
+export async function getCommissionRates(): Promise<HostTypeCommissionRates> {
+  return { ...ratesStore.rates };
 }
 
-function persistToStorage(): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(WALLETS_STORAGE_KEY, JSON.stringify(memoryWallets));
-    localStorage.setItem(RATES_STORAGE_KEY, JSON.stringify(memoryRates));
-  } catch (err) {
-    console.error("Failed to save wallets to localStorage:", err);
-  }
-}
-
-// Initialize on client
-if (typeof window !== "undefined") {
-  loadFromStorage();
-}
-
-export function getCommissionRates(): HostTypeCommissionRates {
-  loadFromStorage();
-  return { ...memoryRates };
-}
-
-export function saveCommissionRates(updates: Partial<HostTypeCommissionRates>): HostTypeCommissionRates {
-  loadFromStorage();
-  memoryRates = {
-    ...memoryRates,
-    ...updates,
-  };
-  persistToStorage();
-  return { ...memoryRates };
+/** Admin-only operation (no caller in the public app). */
+export async function saveCommissionRates(
+  updates: Partial<HostTypeCommissionRates>
+): Promise<HostTypeCommissionRates> {
+  ratesStore.rates = { ...ratesStore.rates, ...updates };
+  return { ...ratesStore.rates };
 }
 
 export function getRateForHostType(hostType: HostType): number {
-  loadFromStorage();
-  return memoryRates[hostType] ?? DEFAULT_COMMISSION_RATES[hostType] ?? 12.0;
+  return ratesStore.rates[hostType] ?? DEFAULT_COMMISSION_RATES[hostType] ?? 12.0;
 }
 
 export async function getWallets(): Promise<Wallet[]> {
-  loadFromStorage();
-  return JSON.parse(JSON.stringify(memoryWallets));
+  return clone(walletsStore);
 }
 
 export async function getWalletById(id: string): Promise<Wallet | null> {
-  loadFromStorage();
-  const found = memoryWallets.find((w) => w.id === id);
-  return found ? JSON.parse(JSON.stringify(found)) : null;
+  const found = walletsStore.find((w) => w.id === id);
+  return found ? clone(found) : null;
 }
 
 export async function getWalletByOwner(
   ownerId: string,
   ownerType?: "user" | "organization"
 ): Promise<Wallet | null> {
-  loadFromStorage();
-  const found = memoryWallets.find((w) => {
+  const found = walletsStore.find((w) => {
     if (w.ownerId === ownerId) return true;
     if (ownerType && w.ownerType === ownerType && w.ownerId === ownerId) return true;
     return false;
   });
-  return found ? JSON.parse(JSON.stringify(found)) : null;
+  return found ? clone(found) : null;
 }
 
 export async function rechargeWallet(params: {
@@ -326,14 +280,13 @@ export async function rechargeWallet(params: {
   note?: string;
   adminUserId?: string;
 }): Promise<{ wallet: Wallet; transaction: Transaction }> {
-  loadFromStorage();
-  const walletIndex = memoryWallets.findIndex((w) => w.id === params.walletId);
+  const walletIndex = walletsStore.findIndex((w) => w.id === params.walletId);
   if (walletIndex === -1) {
     throw new Error(`Wallet not found for ID: ${params.walletId}`);
   }
 
   const newTx: Transaction = {
-    id: `tx_rec_${Date.now()}`,
+    id: newId("tx_rec"),
     walletId: params.walletId,
     type: "recharge",
     amount: Math.abs(params.amount), // positive credit
@@ -343,92 +296,148 @@ export async function rechargeWallet(params: {
     timestamp: new Date().toISOString(),
   };
 
-  const updatedTransactions = [newTx, ...memoryWallets[walletIndex].transactions];
+  const updatedTransactions = [newTx, ...walletsStore[walletIndex].transactions];
   const updatedWallet: Wallet = {
-    ...memoryWallets[walletIndex],
+    ...walletsStore[walletIndex],
     transactions: updatedTransactions,
     balance: computeBalance(updatedTransactions),
     updatedAt: new Date().toISOString(),
   };
 
-  memoryWallets[walletIndex] = updatedWallet;
-  persistToStorage();
+  walletsStore[walletIndex] = updatedWallet;
 
   return {
-    wallet: JSON.parse(JSON.stringify(updatedWallet)),
+    wallet: clone(updatedWallet),
     transaction: newTx,
   };
 }
 
-export async function deductBookingCommission(params: {
-  bookingId: string;
-  bookingTotal: number;
+function findOrCreateWallet(params: {
   hostUserId?: string | null;
   organizationId?: string | null;
-  hostType?: HostType;
-}): Promise<Transaction | null> {
-  loadFromStorage();
+  hostType: HostType;
+  ownerName?: string;
+}): Wallet | null {
+  if (!params.organizationId && !params.hostUserId) return null;
+  const ownerId = (params.organizationId || params.hostUserId) as string;
+  const ownerType: "user" | "organization" = params.organizationId ? "organization" : "user";
 
-  // Find target wallet
-  let targetWallet = memoryWallets.find((w) => {
-    if (params.organizationId && w.ownerId === params.organizationId) return true;
-    if (params.hostUserId && w.ownerId === params.hostUserId) return true;
-    return false;
-  });
-
-  // If wallet doesn't exist yet, create a default one for this host/org
-  if (!targetWallet) {
-    const ownerType: "user" | "organization" = params.organizationId ? "organization" : "user";
-    const ownerId = params.organizationId || params.hostUserId || `usr_temp_${Date.now()}`;
-    const hType: HostType = params.hostType || (params.organizationId ? "agency" : "individual");
-    
-    targetWallet = {
+  let wallet = walletsStore.find((w) => w.ownerId === ownerId && w.ownerType === ownerType);
+  if (!wallet) {
+    const now = new Date().toISOString();
+    wallet = {
       id: `wal_${ownerId}`,
       ownerType,
       ownerId,
-      ownerName: params.organizationId ? `Organization (${ownerId})` : `Host (${ownerId})`,
-      hostType: hType,
+      ownerName: params.ownerName || (params.organizationId ? `Organization (${ownerId})` : `Host (${ownerId})`),
+      hostType: params.hostType,
       currency: "DZD",
       balance: 0,
       transactions: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
-    memoryWallets.push(targetWallet);
+    walletsStore.push(wallet);
   }
-
-  const commissionRate = getRateForHostType(targetWallet.hostType);
-  const commissionAmount = Math.round((params.bookingTotal * commissionRate) / 100);
-
-  const newTx: Transaction = {
-    id: `tx_com_${Date.now()}`,
-    walletId: targetWallet.id,
-    type: "commission_deduction",
-    amount: -commissionAmount, // negative deduction
-    currency: "DZD",
-    relatedBookingId: params.bookingId,
-    note: `Platform ${commissionRate}% commission on confirmed booking ${params.bookingId} (Total: ${params.bookingTotal.toLocaleString("fr-DZ")} DZD)`,
-    timestamp: new Date().toISOString(),
-  };
-
-  const walletIdx = memoryWallets.findIndex((w) => w.id === targetWallet!.id);
-  if (walletIdx !== -1) {
-    const updatedTransactions = [newTx, ...memoryWallets[walletIdx].transactions];
-    memoryWallets[walletIdx] = {
-      ...memoryWallets[walletIdx],
-      transactions: updatedTransactions,
-      balance: computeBalance(updatedTransactions),
-      updatedAt: new Date().toISOString(),
-    };
-    persistToStorage();
-  }
-
-  return newTx;
+  return wallet;
 }
 
-export function resetWalletsToDefault(): Wallet[] {
-  memoryWallets = JSON.parse(JSON.stringify(SEED_WALLETS));
-  memoryRates = { ...DEFAULT_COMMISSION_RATES };
-  persistToStorage();
-  return JSON.parse(JSON.stringify(memoryWallets));
+function appendTransaction(wallet: Wallet, tx: Transaction) {
+  const idx = walletsStore.findIndex((w) => w.id === wallet.id);
+  if (idx === -1) return;
+  const transactions = [tx, ...walletsStore[idx].transactions];
+  walletsStore[idx] = {
+    ...walletsStore[idx],
+    transactions,
+    balance: computeBalance(transactions),
+    updatedAt: tx.timestamp,
+  };
+}
+
+/** Net commission currently charged for a booking (deductions minus reversals). */
+function netCommissionFor(bookingId: string): { wallet: Wallet; net: number } | null {
+  for (const wallet of walletsStore) {
+    const related = wallet.transactions.filter(
+      (t) => t.relatedBookingId === bookingId && (t.type === "commission_deduction" || t.type === "adjustment")
+    );
+    if (related.length > 0) {
+      return { wallet, net: -related.reduce((sum, t) => sum + t.amount, 0) };
+    }
+  }
+  return null;
+}
+
+/**
+ * Charges DARNA's commission for a confirmed booking — idempotent: a booking
+ * is charged at most once (no-op when a non-reversed charge exists).
+ * The commission base is the accommodation subtotal: DARNA's guest service
+ * fee and the cleaning fee are excluded. The rate comes from the owner's
+ * host type (individual / agency / hotel / hostel).
+ */
+export async function deductBookingCommission(params: {
+  bookingId: string;
+  commissionBase: number;
+  hostType: HostType;
+  hostUserId?: string | null;
+  organizationId?: string | null;
+  ownerName?: string;
+}): Promise<{ transaction: Transaction | null; rate: number; amount: number }> {
+  const existing = netCommissionFor(params.bookingId);
+  if (existing && existing.net > 0) {
+    return { transaction: null, rate: getRateForHostType(existing.wallet.hostType), amount: existing.net };
+  }
+
+  const wallet = findOrCreateWallet(params);
+  const rate = getRateForHostType(wallet?.hostType ?? params.hostType);
+  const amount = Math.round((Math.max(0, params.commissionBase) * rate) / 100);
+  if (!wallet || amount <= 0) return { transaction: null, rate, amount: 0 };
+
+  const tx: Transaction = {
+    id: newId("tx_com"),
+    walletId: wallet.id,
+    type: "commission_deduction",
+    amount: -amount,
+    currency: "DZD",
+    relatedBookingId: params.bookingId,
+    note: `Platform ${rate}% commission on booking ${params.bookingId} (subtotal: ${params.commissionBase.toLocaleString("fr-DZ")} DZD)`,
+    timestamp: new Date().toISOString(),
+  };
+  appendTransaction(wallet, tx);
+  return { transaction: tx, rate, amount };
+}
+
+/**
+ * Reverses the commission of a cancelled / declined booking (idempotent).
+ * `keepShare` (0–1) keeps that share of the commission, matching the share
+ * of the subtotal the host keeps after a partial guest refund.
+ */
+export async function reverseBookingCommission(bookingId: string, keepShare = 0): Promise<Transaction | null> {
+  const existing = netCommissionFor(bookingId);
+  if (!existing || existing.net <= 0) return null;
+
+  const original = -existing.wallet.transactions
+    .filter((t) => t.relatedBookingId === bookingId && t.type === "commission_deduction")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const target = Math.round(original * Math.min(1, Math.max(0, keepShare)));
+  const credit = existing.net - target;
+  if (credit <= 0) return null;
+
+  const tx: Transaction = {
+    id: newId("tx_rev"),
+    walletId: existing.wallet.id,
+    type: "adjustment",
+    amount: credit,
+    currency: "DZD",
+    relatedBookingId: bookingId,
+    note: `Commission reversal for cancelled booking ${bookingId}`,
+    timestamp: new Date().toISOString(),
+  };
+  appendTransaction(existing.wallet, tx);
+  return tx;
+}
+
+/** Net commission currently charged for a booking, or null when none was charged. */
+export function getBookingCommission(bookingId: string): number | null {
+  const existing = netCommissionFor(bookingId);
+  return existing ? existing.net : null;
 }

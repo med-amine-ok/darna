@@ -1,18 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { useLocale } from "next-intl";
-import {
-  Sparkles,
-  Home,
-  CheckSquare,
-  Search,
-  Globe,
-  HelpCircle,
-  ArrowRight,
-  ArrowLeft,
-  X,
-} from "lucide-react";
+import React, { useId, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Sparkles, Home, CheckSquare, Search, HelpCircle, ArrowRight, ArrowLeft } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 
@@ -21,83 +11,24 @@ export interface ProductTourProps {
   onClose: () => void;
 }
 
-interface TourStep {
-  title: { en: string; fr: string; ar: string };
-  desc: { en: string; fr: string; ar: string };
-  icon: React.ElementType;
-}
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    title: {
-      en: "Welcome to DARNA Admin Console",
-      fr: "Bienvenue sur l'espace d'administration DARNA",
-      ar: "مرحباً بكم في لوحة إدارة دارنا الجزائر",
-    },
-    desc: {
-      en: "Designed for effortless, safe moderation. You can understand the health of DARNA in under 10 seconds and reach any task in 3 clicks or less.",
-      fr: "Conçu pour une modération simple et sereine. Comprenez l'état de DARNA en moins de 10 secondes et accédez à chaque tâche en 3 clics ou moins.",
-      ar: "تم تصميم المنصة لتوفير تجربة مريحة وآمنة. فهم نشاط دارنا في أقل من 10 ثوانٍ وإنجاز أي مهمة في 3 نقرات أو أقل.",
-    },
-    icon: Sparkles,
-  },
-  {
-    title: {
-      en: "1. Home & Needs Your Attention",
-      fr: "1. Accueil & Ce qui nécessite votre attention",
-      ar: "1. الرئيسية والمهام العاجلة",
-    },
-    desc: {
-      en: "The top of the dashboard highlights urgent tasks (hosts waiting for approval, listings to review, disputes). Each card takes you directly to the filtered queue in 1 click.",
-      fr: "Le haut de l'accueil regroupe vos priorités du jour (candidatures d'hôtes, annonces à vérifier). Chaque carte vous mène directement à l'action en un clic.",
-      ar: "أعلى لوحة التحكم يبرز أولوياتكم (مضيفون قيد الانتظار، إعلانات للمراجعة). كل بطاقة تنقلكم مباشرة للقرار بنقرة واحدة.",
-    },
-    icon: Home,
-  },
-  {
-    title: {
-      en: "2. 'To Review' Approvals Inbox",
-      fr: "2. Boîte de validation « À vérifier »",
-      ar: "2. صندوق المراجعة والاعتماد",
-    },
-    desc: {
-      en: "Click 'To review' in the sidebar anytime. The red badge shows how many items are waiting. Check documents and approve or reject with helpful guidance.",
-      fr: "Le menu « À vérifier » centralise toutes les demandes en attente avec un badge de décompte. Examinez les pièces d'identité et validez d'un clic.",
-      ar: "قائمة 'قيد المراجعة' تجمع كافة الطلبات المعلقة مع شارة عددية واضحة. افحصوا الوثائق واعتمدوا الحسابات بسهولة.",
-    },
-    icon: CheckSquare,
-  },
-  {
-    title: {
-      en: "3. Instant Search Anywhere (⌘K)",
-      fr: "3. Recherche rapide partout (⌘K)",
-      ar: "3. البحث السريع في كل مكان (⌘K)",
-    },
-    desc: {
-      en: "Press ⌘K or click the search bar at any time to instantly jump to any host name, guest, booking, or Algerian wilaya.",
-      fr: "Appuyez sur ⌘K ou cliquez sur la barre de recherche pour trouver immédiatement un hôte, un voyageur, ou une wilaya.",
-      ar: "اضغطوا على ⌘K أو انقروا على شريط البحث في أي وقت للانتقال الفوري إلى أي مضيف، ضيف، أو ولاية جزائرية.",
-    },
-    icon: Search,
-  },
-  {
-    title: {
-      en: "4. Multi-Language & Contextual Help (?)",
-      fr: "4. Multilingue & Aide contextuelle (?)",
-      ar: "4. اللغات والمساعدة السريعة (?)",
-    },
-    desc: {
-      en: "Switch between French, Arabic (full RTL), and English. Click the (?) icon in the top bar on any page for task step-by-step guides and words used.",
-      fr: "Passez en français, arabe (RTL complet) ou anglais. Cliquez sur le bouton (?) pour voir le mode d'emploi et les définitions de la page.",
-      ar: "التبديل بين العربية والفرنسية والإنجليزية. اضغطوا على أيقونة (?) في أعلى أي صفحة للاطلاع على دليل الخطوات والمصطلحات.",
-    },
-    icon: HelpCircle,
-  },
+/** Tour steps: text lives in tour.steps.<id>.{title, description}. */
+const TOUR_STEPS: ReadonlyArray<{ id: string; icon: React.ElementType }> = [
+  { id: "welcome", icon: Sparkles },
+  { id: "home", icon: Home },
+  { id: "approvals", icon: CheckSquare },
+  { id: "search", icon: Search },
+  { id: "help", icon: HelpCircle },
 ];
 
+export const TOUR_STEP_COUNT = TOUR_STEPS.length;
+
 export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => {
+  const t = useTranslations("tour");
   const [stepIndex, setStepIndex] = useState(0);
-  const locale = useLocale() as "en" | "fr" | "ar";
+  const uid = useId();
+  const titleId = `${uid}-title`;
+  const descId = `${uid}-desc`;
+  const nextRef = useRef<HTMLButtonElement>(null);
 
   if (!isOpen) return null;
 
@@ -121,40 +52,44 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} size="md">
+    // Dialog provides role="dialog" + aria-modal, focus trap, focus restore; Escape = skip (onClose).
+    <Dialog
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      labelledBy={titleId}
+      describedBy={descId}
+      initialFocusRef={nextRef}
+    >
       <div className="p-6 text-start space-y-6">
         {/* Step indicator header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            {TOUR_STEPS.map((_, i) => (
+          <div className="flex items-center gap-1.5" aria-hidden="true">
+            {TOUR_STEPS.map((step, i) => (
               <span
-                key={i}
+                key={step.id}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === stepIndex
-                    ? "w-8 bg-secondary"
-                    : i < stepIndex
-                    ? "w-3 bg-secondary/50"
-                    : "w-3 bg-neutral-200"
+                  i === stepIndex ? "w-8 bg-secondary" : i < stepIndex ? "w-3 bg-secondary/50" : "w-3 bg-neutral-200"
                 }`}
               />
             ))}
           </div>
-          <span className="text-[11px] font-bold text-neutral-400">
-            {stepIndex + 1} / {TOUR_STEPS.length}
-          </span>
+          <p className="text-[11px] font-bold text-neutral-600">
+            {t("stepCounter", { current: stepIndex + 1, total: TOUR_STEPS.length })}
+          </p>
         </div>
 
-        {/* Content Card */}
-        <div className="flex items-start gap-4">
+        {/* Content Card (announced when the step changes) */}
+        <div className="flex items-start gap-4" aria-live="polite">
           <div className="w-12 h-12 rounded-2xl bg-secondary/15 border border-secondary/25 flex items-center justify-center shrink-0 text-secondary">
-            <StepIcon className="w-6 h-6" />
+            <StepIcon className="w-6 h-6" aria-hidden="true" />
           </div>
           <div className="space-y-1.5 flex-1 min-w-0">
-            <h3 className="text-base font-bold text-primary">
-              {currentStep.title[locale] || currentStep.title.en}
-            </h3>
-            <p className="text-xs text-neutral-600 leading-relaxed">
-              {currentStep.desc[locale] || currentStep.desc.en}
+            <h2 id={titleId} className="text-base font-bold text-primary">
+              {t(`steps.${currentStep.id}.title`)}
+            </h2>
+            <p id={descId} className="text-xs text-neutral-600 leading-relaxed">
+              {t(`steps.${currentStep.id}.description`)}
             </p>
           </div>
         </div>
@@ -164,44 +99,22 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => 
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-neutral-500 hover:text-neutral-800 transition font-medium"
+            className="text-xs text-neutral-600 hover:text-neutral-800 transition font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
-            {locale === "fr"
-              ? "Passer la visite"
-              : locale === "ar"
-              ? "تخطي الجولة"
-              : "Skip tour"}
+            {t("skip")}
           </button>
 
           <div className="flex items-center gap-2">
             {stepIndex > 0 && (
               <Button variant="outline" size="sm" onClick={handlePrev}>
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>
-                  {locale === "fr"
-                    ? "Précédent"
-                    : locale === "ar"
-                    ? "السابق"
-                    : "Back"}
-                </span>
+                <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+                <span>{t("back")}</span>
               </Button>
             )}
 
-            <Button variant="primary" size="sm" onClick={handleNext}>
-              <span>
-                {isLast
-                  ? locale === "fr"
-                    ? "C'est parti !"
-                    : locale === "ar"
-                    ? "ابدأ العمل"
-                    : "Get Started"
-                  : locale === "fr"
-                  ? "Suivant"
-                  : locale === "ar"
-                  ? "التالي"
-                  : "Next"}
-              </span>
-              {!isLast && <ArrowRight className="w-3.5 h-3.5" />}
+            <Button ref={nextRef} variant="primary" size="sm" onClick={handleNext}>
+              <span>{isLast ? t("getStarted") : t("next")}</span>
+              {!isLast && <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
             </Button>
           </div>
         </div>

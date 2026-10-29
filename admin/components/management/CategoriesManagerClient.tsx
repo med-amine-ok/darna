@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Check, X, ArrowLeft, Layers, Tag, Eye } from "lucide-react";
+import React, { useState, useEffect, useCallback, useId } from "react";
+import { Plus, ArrowLeft, Tag } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { FilterDrawer } from "@/components/ui/FilterDrawer";
 import { useToast } from "@/components/ui/Toast";
-import { listCategories, createCategory, toggleCategoryStatus } from "@/lib/data/categories";
+import { listCategories, createCategory, toggleCategoryStatus } from "@/lib/actions/categories";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import { CategoryItem } from "@/lib/types";
 
 interface Props {
@@ -15,7 +18,12 @@ interface Props {
   subtitle: string;
   backRoute: string;
   defaultVertical?: string;
+  /** Translated, lower-case noun for one item (e.g. "category"). Defaults to the generic "category". */
   itemTypeLabel?: string;
+}
+
+function errorMessage(err: unknown): string | undefined {
+  return err instanceof Error ? err.message : undefined;
 }
 
 export default function CategoriesManagerClient({
@@ -23,10 +31,18 @@ export default function CategoriesManagerClient({
   subtitle,
   backRoute,
   defaultVertical = "home",
-  itemTypeLabel = "catégorie",
+  itemTypeLabel,
 }: Props) {
+  const t = useTranslations("categoryManager");
+  const tCommon = useTranslations("common");
+  const locale = useLocale() as "en" | "fr" | "ar";
   const router = useRouter();
   const { addToast } = useToast();
+  const can = useCan();
+  const canManage = can("categories.manage");
+  const item = itemTypeLabel || t("defaultItem");
+  const formId = useId();
+  const nameFrErrorId = `${formId}-nameFr-error`;
 
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,126 +53,140 @@ export default function CategoriesManagerClient({
   const [nameEn, setNameEn] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [slug, setSlug] = useState("");
-  const [icon, setIcon] = useState("Home");
+  const icon = "Home";
+  const [nameFrError, setNameFrError] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const all = await listCategories();
+      const all = unwrap(await listCategories());
       setCategories(all);
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addToast, tCommon]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleToggle = async (cat: CategoryItem) => {
     try {
-      await toggleCategoryStatus(cat.id, { id: "usr_admin", name: "Admin", role: "super_admin" });
-      addToast({ title: "Statut mis à jour", variant: "info" });
+      unwrap(await toggleCategoryStatus(cat.id));
+      addToast({ title: t("statusUpdated"), variant: "info" });
       loadData();
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     }
+  };
+
+  const resetForm = () => {
+    setNameFr("");
+    setNameEn("");
+    setNameAr("");
+    setSlug("");
+    setNameFrError(false);
   };
 
   const handleCreate = async () => {
     if (!nameFr) {
-      addToast({ title: "Erreur", description: "Le nom en français est requis", variant: "danger" });
+      setNameFrError(true);
+      addToast({ title: tCommon("error"), description: t("nameFrRequired"), variant: "danger" });
       return;
     }
     try {
-      await createCategory(
+      unwrap(await createCategory(
         {
           slug: slug || nameFr.toLowerCase().replace(/\s+/g, "-"),
-          vertical: (defaultVertical as any) || "home",
+          vertical: (defaultVertical as CategoryItem["vertical"]) || "home",
           name: { fr: nameFr, en: nameEn || nameFr, ar: nameAr || nameFr },
           icon,
           order: categories.length + 1,
           isActive: true,
-        },
-        { id: "usr_admin", name: "Admin", role: "super_admin" }
-      );
-      addToast({ title: `${itemTypeLabel} ajoutée avec succès`, variant: "success" });
+        }
+      ));
+      addToast({ title: t("created", { item }), variant: "success" });
       setIsAddDrawerOpen(false);
-      setNameFr("");
-      setNameEn("");
-      setNameAr("");
-      setSlug("");
+      resetForm();
       loadData();
-    } catch (err: any) {
-      addToast({ title: "Erreur", description: err.message, variant: "danger" });
+    } catch (err: unknown) {
+      addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     }
   };
 
   const columns: Column<CategoryItem>[] = [
     {
       key: "icon",
-      header: "Icône",
+      header: t("columns.icon"),
       className: "w-16 text-center",
-      render: (row) => (
+      render: () => (
         <div className="w-8 h-8 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/50 flex items-center justify-center text-xs font-semibold text-[#2E3A2F]">
-          <Tag className="w-4 h-4 text-[#6B7F5B]" />
+          <Tag className="w-4 h-4 text-secondary-700" aria-hidden="true" />
         </div>
       ),
     },
     {
       key: "nameFr",
-      header: "Nom (Français)",
-      render: (row) => <span className="font-medium text-[#2E3A2F] text-xs">{row.name.fr}</span>,
+      header: t("columns.nameFr"),
+      render: (row) => <span lang="fr" className="font-medium text-[#2E3A2F] text-xs">{row.name.fr}</span>,
     },
     {
       key: "nameEn",
-      header: "Nom (English)",
-      render: (row) => <span className="text-[#2E3A2F]/80 text-xs">{row.name.en}</span>,
+      header: t("columns.nameEn"),
+      render: (row) => <span lang="en" className="text-[#2E3A2F]/80 text-xs">{row.name.en}</span>,
     },
     {
       key: "nameAr",
-      header: "Nom (العربية)",
-      render: (row) => <span className="text-[#2E3A2F]/80 text-xs font-arabic">{row.name.ar}</span>,
+      header: t("columns.nameAr"),
+      render: (row) => <span lang="ar" dir="rtl" className="text-[#2E3A2F]/80 text-xs font-arabic">{row.name.ar}</span>,
     },
     {
       key: "slug",
-      header: "Slug URL",
-      render: (row) => <span className="font-mono text-[11px] text-[#2E3A2F]/60">/{row.slug}</span>,
+      header: t("columns.slug"),
+      render: (row) => <span dir="ltr" className="font-mono text-[11px] text-[#2E3A2F]/70">/{row.slug}</span>,
     },
     {
       key: "count",
-      header: "Annonces actives",
+      header: t("columns.activeListings"),
       render: (row) => <span className="font-medium text-xs text-[#2E3A2F]">{row.listingCount}</span>,
     },
     {
       key: "status",
-      header: "Visibilité",
+      header: t("columns.visibility"),
       render: (row) => (
         <button
+          type="button"
           onClick={() => handleToggle(row)}
-          className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors ${
+          disabled={!canManage}
+          aria-pressed={row.isActive}
+          aria-label={t("toggleVisibility", { name: row.name[locale] || row.name.fr })}
+          className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
             row.isActive
-              ? "bg-secondary/15 text-secondary hover:bg-secondary/25"
-              : "bg-neutral-200 text-neutral-600 hover:bg-neutral-300"
+              ? "bg-secondary/15 text-secondary-800 hover:bg-secondary/25"
+              : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
           }`}
         >
-          {row.isActive ? "Visible" : "Masquée"}
+          {row.isActive ? t("visible") : t("hidden")}
         </button>
       ),
     },
   ];
 
+  const inputClass =
+    "w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={() => router.push(backRoute)}
           className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] font-medium"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Retour</span>
+          <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+          <span>{t("back")}</span>
         </button>
       </div>
 
@@ -164,13 +194,16 @@ export default function CategoriesManagerClient({
         title={title}
         subtitle={subtitle}
         actions={
+          canManage && (
           <button
+            type="button"
             onClick={() => setIsAddDrawerOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] shadow-sm"
           >
-            <Plus className="w-4 h-4" />
-            <span>Ajouter une {itemTypeLabel}</span>
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>{t("add", { item })}</span>
           </button>
+          )
         }
       />
 
@@ -180,7 +213,7 @@ export default function CategoriesManagerClient({
           data={categories}
           keyExtractor={(c) => c.id}
           isLoading={isLoading}
-          emptyMessage={`Aucune ${itemTypeLabel} trouvée.`}
+          emptyMessage={t("empty", { item })}
         />
       </div>
 
@@ -188,55 +221,71 @@ export default function CategoriesManagerClient({
       <FilterDrawer
         isOpen={isAddDrawerOpen}
         onClose={() => setIsAddDrawerOpen(false)}
-        title={`Ajouter une ${itemTypeLabel}`}
+        title={t("add", { item })}
         onApply={handleCreate}
-        onReset={() => {
-          setNameFr("");
-          setNameEn("");
-          setNameAr("");
-          setSlug("");
-        }}
+        onReset={resetForm}
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label className="block font-semibold text-[#2E3A2F] mb-1">Nom en français *</label>
+            <label htmlFor={`${formId}-nameFr`} className="block font-semibold text-[#2E3A2F] mb-1">
+              {t("form.nameFr")} <span aria-hidden="true">*</span>
+            </label>
             <input
+              id={`${formId}-nameFr`}
               type="text"
+              lang="fr"
+              aria-required="true"
+              aria-invalid={nameFrError || undefined}
+              aria-describedby={nameFrError ? nameFrErrorId : undefined}
               value={nameFr}
-              onChange={(e) => setNameFr(e.target.value)}
-              placeholder="Ex: Villa de charme"
-              className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+              onChange={(e) => {
+                setNameFr(e.target.value);
+                if (e.target.value) setNameFrError(false);
+              }}
+              placeholder={t("form.nameFrPlaceholder")}
+              className={inputClass}
             />
+            {nameFrError && (
+              <p id={nameFrErrorId} role="alert" className="mt-1 text-[11px] text-accent-700">
+                {t("nameFrRequired")}
+              </p>
+            )}
           </div>
           <div>
-            <label className="block font-semibold text-[#2E3A2F] mb-1">Nom en anglais</label>
+            <label htmlFor={`${formId}-nameEn`} className="block font-semibold text-[#2E3A2F] mb-1">{t("form.nameEn")}</label>
             <input
+              id={`${formId}-nameEn`}
               type="text"
+              lang="en"
               value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              placeholder="Ex: Charming Villa"
-              className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+              placeholder={t("form.nameEnPlaceholder")}
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block font-semibold text-[#2E3A2F] mb-1">Nom en arabe</label>
+            <label htmlFor={`${formId}-nameAr`} className="block font-semibold text-[#2E3A2F] mb-1">{t("form.nameAr")}</label>
             <input
+              id={`${formId}-nameAr`}
               type="text"
+              lang="ar"
               value={nameAr}
               onChange={(e) => setNameAr(e.target.value)}
-              placeholder="مثال: فيلا ساحرة"
+              placeholder={t("form.nameArPlaceholder")}
               dir="rtl"
-              className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block font-semibold text-[#2E3A2F] mb-1">Identifiant URL (slug)</label>
+            <label htmlFor={`${formId}-slug`} className="block font-semibold text-[#2E3A2F] mb-1">{t("form.slug")}</label>
             <input
+              id={`${formId}-slug`}
               type="text"
+              dir="ltr"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              placeholder="Ex: villa-charme"
-              className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+              placeholder={t("form.slugPlaceholder")}
+              className={inputClass}
             />
           </div>
         </div>

@@ -1,10 +1,20 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { getConversations, getMessages } from "@/lib/data/conversations";
-import { getCurrentUser } from "@/lib/data/auth";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { notFound, redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/server/session";
+import {
+  getConversationForParticipant,
+  getConversations,
+  getMessages,
+} from "@/lib/data/conversations";
 import MessagesClient from "@/components/messages/MessagesClient";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "messages" });
+  return { title: t("title"), robots: { index: false, follow: false } };
+}
 
 export default async function ConversationPage({
   params,
@@ -12,22 +22,28 @@ export default async function ConversationPage({
   params: { locale: string; conversationId: string };
 }) {
   const locale = params?.locale || "en";
-  const cookieStore = cookies();
-  const cookieUserId = cookieStore.get("darna_user_id")?.value;
-  const currentUser = await getCurrentUser(cookieUserId);
+  const currentUser = await getSessionUser();
 
   if (!currentUser) {
-    redirect(`/${locale}/login?callbackUrl=/${locale}/messages/${params.conversationId}`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/messages/${encodeURIComponent(params.conversationId)}`);
   }
 
-  const conversations = await getConversations(currentUser.id);
-  const messages = await getMessages(params.conversationId);
+  // Only participants may read a conversation.
+  const conversation = await getConversationForParticipant(params.conversationId, currentUser.id);
+  if (!conversation) {
+    notFound();
+  }
+
+  const [conversations, messages] = await Promise.all([
+    getConversations(currentUser.id),
+    getMessages(conversation.id),
+  ]);
 
   return (
     <MessagesClient
       initialConversations={conversations}
       initialMessages={messages}
-      selectedConversationId={params.conversationId}
+      selectedConversationId={conversation.id}
       currentUser={currentUser}
     />
   );

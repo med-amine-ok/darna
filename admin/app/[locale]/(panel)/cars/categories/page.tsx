@@ -1,13 +1,22 @@
+import { getTranslations } from "next-intl/server";
+import { guardPage } from "@/lib/auth/page-guard";
 import CategoriesManagerClient from "@/components/management/CategoriesManagerClient";
+import { pageMetadata } from "@/lib/metadata";
 
-export default function CarCategoriesPage() {
+export const generateMetadata = pageMetadata("cars_categories");
+
+export default async function CarCategoriesPage() {
+  const denied = await guardPage("categories.manage");
+  if (denied) return denied;
+  const t = await getTranslations("cars");
+
   return (
     <CategoriesManagerClient
-      title="Catégories de véhicules"
-      subtitle="Configurez les segments (SUV, Citadines, Berlines, Utilitaires)."
+      title={t("categoriesPage.title")}
+      subtitle={t("categoriesPage.subtitle")}
       backRoute="/cars"
       defaultVertical="vehicle"
-      itemTypeLabel="catégorie"
+      itemTypeLabel={t("categoriesPage.itemType")}
     />
   );
 }

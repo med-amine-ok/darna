@@ -1,0 +1,187 @@
+{
+  "metaTitle": "Paramètres du compte",
+  "title": "Paramètres du compte",
+  "member": "Membre",
+  "navLabel": "Sections des paramètres",
+  "cancel": "Annuler",
+  "add": "Ajouter",
+  "edit": "Modifier",
+  "save": "Enregistrer",
+  "comingSoon": "Bientôt disponible",
+  "editField": "Modifier : {field}",
+  "cancelEditing": "Annuler la modification : {field}",
+  "errors": {
+    "saveFailed": "Impossible d'enregistrer vos modifications. Veuillez réessayer."
+  },
+  "nav": {
+    "personal": "Informations personnelles",
+    "security": "Connexion et sécurité",
+    "privacy": "Confidentialité et partage",
+    "notifications": "Notifications",
+    "taxes": "Taxes et factures",
+    "payments": "Paiements et versements",
+    "languages": "Langues et devise",
+    "bookingPermissions": "Autorisations de réservation",
+    "travelForWork": "Voyages d'affaires",
+    "new": "Nouveau",
+    "hostingManagement": "Gestion de l'hébergement",
+    "proHosting": "Outils d'hébergement professionnels"
+  },
+  "personal": {
+    "title": "Informations personnelles",
+    "description": "Votre identité légale et vos coordonnées, utilisées pour les réservations et les reçus fiscaux algériens",
+    "notProvided": "Non renseigné",
+    "legalName": "Nom légal",
+    "legalNameSaved": "Nom légal enregistré.",
+    "preferredName": "Prénom d'usage",
+    "preferredNamePlaceholder": "ex. Mina",
+    "preferredNameSaved": "Prénom d'usage mis à jour.",
+    "email": "Adresse e-mail",
+    "saveAndVerify": "Enregistrer et vérifier",
+    "emailChangeSoon": "La modification de l'e-mail arrive bientôt.",
+    "phone": "Numéro de téléphone",
+    "phoneSaved": "Numéro de téléphone enregistré.",
+    "identity": "Vérification d'identité",
+    "identityVerified": "Vérifiée avec la carte d'identité nationale biométrique algérienne",
+    "completed": "Terminée",
+    "residentialAddress": "Adresse de résidence",
+    "residentialAddressSaved": "Adresse de résidence mise à jour.",
+    "mailingAddress": "Adresse postale",
+    "mailingAddressPlaceholder": "Boîte postale ou autre adresse postale",
+    "mailingAddressSaved": "Adresse postale mise à jour."
+  },
+  "security": {
+    "title": "Connexion et sécurité",
+    "description": "Gérez votre mot de passe, vos appareils connectés et la sécurité de vos sessions",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "updating": "Mise à jour…",
+    "updatePassword": "Mettre à jour le mot de passe",
+    "passwordChanged": "Mot de passe modifié avec succès.",
+    "errors": {
+      "failed": "Impossible de changer votre mot de passe. Veuillez réessayer."
+    },
+    "sessionsTitle": "Sessions actives",
+    "thisBrowser": "Ce navigateur",
+    "activeNow": "Connecté · Actif maintenant",
+    "thisDevice": "Cet appareil",
+    "otherDevicesSoon": "L'affichage et la déconnexion des autres appareils arrivent bientôt. Vous déconnecter ici met fin à cette session.",
+    "deactivateTitle": "Désactiver votre compte",
+    "deactivateDescription": "Masquer temporairement votre profil et vos annonces actives",
+    "deactivate": "Désactiver"
+  },
+  "notifications": {
+    "title": "Préférences de notification",
+    "description": "Choisissez comment recevoir les messages, les rappels de voyage et les actualités DARNA",
+    "updated": "Préférences de notification mises à jour.",
+    "type": "Type de notification",
+    "channelEmail": "E-mail",
+    "channelPush": "Push",
+    "channelSms": "SMS / WhatsApp",
+    "rows": {
+      "booking": "Mises à jour et confirmations de réservation",
+      "messages": "Messages voyageurs et hôtes",
+      "promo": "Promotions et idées de voyage",
+      "account": "Alertes de compte et de sécurité"
+    },
+    "toggleLabel": "{type} par {channel}"
+  },
+  "payments": {
+    "title": "Paiements et versements",
+    "description": "Gérez vos cartes CIB / Edahabia et les comptes bancaires de versement hôte",
+    "savedMethods": "Moyens de paiement enregistrés",
+    "addMethod": "Ajouter un moyen",
+    "addMethodSoon": "L'ajout d'une carte de paiement arrive bientôt.",
+    "cibCard": "Carte CIB Gold ·•••• {last4}",
+    "edahabiaCard": "Algérie Poste Edahabia ·•••• {last4}",
+    "expiresDefault": "Expire le {date} · Par défaut",
+    "expires": "Expire le {date}",
+    "active": "Active",
+    "removeCardLabel": "Supprimer {card}",
+    "payoutMethods": "Moyens de versement hôte",
+    "bnaAccount": "Compte bancaire BNA (Banque Nationale d'Algérie)",
+    "ribLabel": "RIB :",
+    "editRibSoon": "La modification du RIB arrive bientôt.",
+    "editRibLabel": "Modifier le RIB bancaire"
+  },
+  "languages": {
+    "title": "Langues et devise",
+    "description": "Choisissez la langue d'affichage, le sens du texte (RTL/LTR) et la devise",
+    "displayLanguage": "Langue d'affichage",
+    "languageSub": {
+      "en": "Anglais (États-Unis)",
+      "fr": "Français (Algérie)",
+      "ar": "Arabe (de droite à gauche)"
+    },
+    "preferredCurrency": "Devise préférée",
+    "currencySet": "Devise définie : {currency}.",
+    "currencies": {
+      "DZD": "Dinar algérien",
+      "EUR": "Euro",
+      "USD": "Dollar américain"
+    }
+  },
+  "booking": {
+    "title": "Autorisations de réservation",
+    "description": "Définissez les critères de réservation instantanée et les exigences de vérification des voyageurs",
+    "instantBook": "Réservation instantanée",
+    "instantBookDescription": "Permettre aux voyageurs qualifiés de réserver sans attendre votre approbation",
+    "requireId": "Exiger une pièce d'identité vérifiée",
+    "requireIdDescription": "Seuls les voyageurs avec une carte d'identité algérienne ou un passeport vérifié peuvent réserver",
+    "requireReviews": "Exiger des avis positifs",
+    "requireReviewsDescription": "Seuls les voyageurs ayant au moins un avis positif et aucune réclamation peuvent réserver instantanément"
+  },
+  "taxes": {
+    "title": "Taxes et informations fiscales",
+    "description": "Immatriculation fiscale algérienne (NIF / NIS) pour la conformité des hôtes",
+    "nifLabel": "Numéro d'identification fiscale (NIF)",
+    "save": "Enregistrer le profil fiscal",
+    "saved": "Informations fiscales enregistrées."
+  },
+  "privacy": {
+    "title": "Confidentialité et partage des données",
+    "description": "Contrôlez votre visibilité publique et exportez l'historique de votre compte DARNA",
+    "searchIndexing": "Référencement dans les moteurs de recherche",
+    "searchIndexingDescription": "Autoriser les moteurs de recherche à indexer votre profil d'hôte public",
+    "downloadData": "Télécharger vos données personnelles",
+    "downloadDataDescription": "Obtenez une copie de vos réservations, avis et messages",
+    "exportZip": "Exporter en ZIP",
+    "exportRequested": "Export des données demandé."
+  },
+  "work": {
+    "title": "Voyages d'affaires",
+    "description": "Ajoutez votre e-mail professionnel pour les déplacements et une facturation conforme pour votre entreprise",
+    "enable": "Activer le mode voyage d'affaires",
+    "enableDescription": "Séparer la facturation et joindre les reçus de TVA de l'entreprise"
+  },
+  "pro": {
+    "title": "Outils d'hébergement professionnels",
+    "description": "Fonctionnalités avancées pour les gestionnaires multi-biens, agences de tourisme et loueurs de flottes",
+    "pricingSoon": "L'éditeur de règles tarifaires arrive bientôt.",
+    "icalSoon": "Le gestionnaire de flux iCal arrive bientôt.",
+    "pricing": {
+      "title": "Règles tarifaires automatiques",
+      "description": "Ajustez automatiquement les prix par nuit en haute saison algérienne (Aïd, festivals d'hiver au Sahara).",
+      "action": "Configurer les règles"
+    },
+    "ical": {
+      "title": "Synchronisation iCal multi-calendriers",
+      "description": "Exportez et importez des flux iCal pour synchroniser vos disponibilités avec vos canaux externes.",
+      "action": "Gérer les flux"
+    }
+  },
+  "dialogs": {
+    "deactivateTitle": "Désactiver le compte",
+    "deactivateMessage": "Voulez-vous vraiment désactiver votre compte DARNA ? Votre profil, vos avis et vos annonces actives seront masqués jusqu'à votre prochaine connexion.",
+    "deactivateConfirm": "Désactiver le compte",
+    "deactivateCancel": "Garder le compte actif",
+    "deactivateSoon": "La désactivation du compte arrive bientôt. Veuillez contacter le support pour le moment.",
+    "removeCardTitle": "Supprimer la carte de paiement",
+    "removeCardMessage": "Voulez-vous vraiment supprimer {card} de votre compte DARNA ? Vous devrez saisir à nouveau les informations de votre carte pour vos prochaines réservations.",
+    "removeCardConfirm": "Supprimer la carte",
+    "removeCardCancel": "Garder la carte",
+    "cardRemoved": "Carte de paiement supprimée de votre compte."
+  }
+}

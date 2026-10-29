@@ -1,0 +1,45 @@
+{
+  "login": {
+    "title": "Bienvenue sur DARNA",
+    "subtitle": "Connectez-vous pour gérer vos réservations, vos favoris et vos paramètres d'hôte",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "continue": "Continuer",
+    "continueGoogle": "Continuer avec Google",
+    "continueGithub": "Continuer avec GitHub",
+    "firstTime": "Première visite sur DARNA ?",
+    "createAccount": "Créer un compte",
+    "success": "Connexion réussie !",
+    "modalTitle": "Connexion",
+    "genericError": "Connexion impossible. Veuillez réessayer.",
+    "welcomeBackName": "Bon retour, {name} !",
+    "oauthComingSoon": "La connexion avec {provider} arrive bientôt."
+  },
+  "register": {
+    "title": "Bienvenue sur DARNA",
+    "subtitle": "Créez un compte pour réserver instantanément partout en Algérie",
+    "name": "Nom complet",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "continue": "Continuer",
+    "continueGoogle": "Continuer avec Google",
+    "continueGithub": "Continuer avec GitHub",
+    "alreadyAccount": "Vous avez déjà un compte ?",
+    "logIn": "Se connecter",
+    "success": "Compte créé avec succès !",
+    "modalTitle": "Inscription",
+    "genericError": "Impossible de créer votre compte. Veuillez réessayer.",
+    "welcomeName": "Compte créé ! Bienvenue sur DARNA, {name} !",
+    "oauthComingSoon": "L'inscription avec {provider} arrive bientôt."
+  },
+  "search": {
+    "title": "Filtres de recherche",
+    "stepLocationTitle": "Où souhaitez-vous aller ?",
+    "stepLocationSubtitle": "Trouvez la destination de vos rêves !",
+    "stepDateTitle": "Quand prévoyez-vous de partir ?",
+    "stepDateSubtitle": "Vérifiez les disponibilités de chacun !",
+    "stepInfoTitle": "Précisions supplémentaires",
+    "stepInfoSubtitle": "Trouvez l'endroit idéal adapté à vos besoins !",
+    "actionSearch": "Rechercher"
+  }
+}

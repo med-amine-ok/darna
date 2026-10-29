@@ -2,13 +2,16 @@
 
 import React, { useState, useMemo, useCallback, useRef } from "react";
 import Image from "next/image";
-import { useRouter, usePathname } from "@/navigation";
+import { Link, usePathname } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import { Listing, Reservation, User } from "@/types";
 import HeartButton from "@/components/HeartButton";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import Button from "@/components/Button";
 import { useTranslations, useLocale } from "next-intl";
+import { useShowTotalPrice } from "@/hook/useShowTotalPrice";
+import { formatDate, formatRating } from "@/lib/i18n/date-locale";
+import { listingHref, priceSuffixKey } from "./cardLabels";
 import {
   BrandStarIcon,
   BrandChevronLeftIcon,
@@ -28,6 +31,7 @@ interface ListingCardProps {
   currentUser?: User | null;
   onHover?: (id: string | null) => void;
   isHovered?: boolean;
+  /** Called instead of navigating when the card is activated. */
   onClick?: () => void;
   customHref?: string;
 }
@@ -41,16 +45,16 @@ export default function ListingCard({
   actionId = "",
   currentUser,
   onHover,
-  isHovered = false,
   onClick,
   customHref,
 }: ListingCardProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const locale = useLocale();
   const tNav = useTranslations("nav");
   const tSearch = useTranslations("search");
+  const tCommon = useTranslations("common");
+  const t = useTranslations("listing");
 
   const images = useMemo(() => {
     if (Array.isArray(data.imageSrc)) {
@@ -60,8 +64,8 @@ export default function ListingCard({
   }, [data.imageSrc]);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [pointerStartX, setPointerStartX] = useState<number | null>(null);
+  const imageAreaRef = useRef<HTMLDivElement>(null);
+  const gestureStartX = useRef<number | null>(null);
   const didDragRef = useRef(false);
 
   const handleNextImage = useCallback(
@@ -82,52 +86,53 @@ export default function ListingCard({
     [images.length]
   );
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX - touchEndX;
-
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      } else {
-        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-      }
-    }
-    setTouchStartX(null);
+  // Swipe/drag on the photo changes the image. The card link overlays the whole card, so the
+  // gesture is tracked on the card and only counts when it starts over the photo area.
+  const isOverImage = (clientX: number, clientY: number) => {
+    const rect = imageAreaRef.current?.getBoundingClientRect();
+    return Boolean(rect && clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom);
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    setPointerStartX(e.clientX);
     didDragRef.current = false;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    gestureStartX.current = isOverImage(e.clientX, e.clientY) ? e.clientX : null;
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (pointerStartX === null) return;
-    if (Math.abs(e.clientX - pointerStartX) > 8) {
+    if (gestureStartX.current === null) return;
+    if (Math.abs(e.clientX - gestureStartX.current) > 8) {
       didDragRef.current = true;
     }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (pointerStartX === null) return;
-    const diff = pointerStartX - e.clientX;
+    if (gestureStartX.current === null) return;
+    const diff = gestureStartX.current - e.clientX;
     if (images.length > 1 && Math.abs(diff) > 35) {
-      if (diff > 0) {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      } else {
-        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-      }
+      // Swipe toward the reading direction's end shows the next photo.
+      const forward = locale === "ar" ? diff < 0 : diff > 0;
+      setCurrentImageIndex((prev) =>
+        forward ? (prev + 1) % images.length : (prev - 1 + images.length) % images.length
+      );
     }
-    setPointerStartX(null);
+    gestureStartX.current = null;
   };
 
-  const handleCancel = useCallback(
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Drag guard: a swipe on the photo must not open the listing.
+    if (didDragRef.current) {
+      e.preventDefault();
+      didDragRef.current = false;
+      return;
+    }
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  const handleAction = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
       if (disabled) return;
@@ -136,7 +141,12 @@ export default function ListingCard({
     [onAction, actionId, disabled]
   );
 
+  const [showTotalPrice] = useShowTotalPrice();
+  // "Show total price": search total incl. fees when dates were searched.
+  const showTotal = !reservation && showTotalPrice && typeof data.quotedTotal === "number";
+
   const price = useMemo(() => {
+    if (showTotal) return data.quotedTotal as number;
     if (reservation) {
       return reservation.totalPrice;
     }
@@ -144,77 +154,56 @@ export default function ListingCard({
       return Math.min(...data.roomTypes.map((r) => r.basePrice ?? r.price ?? data.price));
     }
     return data.price;
-  }, [reservation, data.price, data.roomTypes]);
+  }, [reservation, data.price, data.roomTypes, data.quotedTotal, showTotal]);
 
-  const rating = useMemo(() => {
-    if (data.rating) {
-      return data.rating.toFixed(2).replace(/\.00$/, ".0");
-    }
-    return "4.95";
-  }, [data.rating]);
+  const rating = formatRating(data.rating, locale);
 
-  const reservationDate = useMemo(() => {
-    if (!reservation) return null;
-    const start = new Date(reservation.startDate);
-    const end = new Date(reservation.endDate);
-    const formatter = new Intl.DateTimeFormat(locale, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+  const shortDate = { month: "short", day: "numeric" } as const;
+  const reservationDate = reservation
+    ? tCommon("dateRange", {
+        start: formatDate(reservation.startDate, locale, { ...shortDate, year: "numeric" }),
+        end: formatDate(reservation.endDate, locale, { ...shortDate, year: "numeric" }),
+      })
+    : null;
+
+  const href =
+    customHref ??
+    listingHref(data, {
+      onSearchPage: Boolean(pathname?.includes("/search")),
+      query: searchParams?.toString(),
     });
-    return `${formatter.format(start)} - ${formatter.format(end)}`;
-  }, [reservation, locale]);
 
-  const periodLabel =
-    data.category === "vehicle"
-      ? "/ day"
-      : data.category === "experience"
-      ? "/ person"
-      : "/ night";
+  const hasRoomTypes = Boolean(data.roomTypes && data.roomTypes.length > 0);
+  const period = showTotal ? t("priceSuffix.total") : !reservation ? t(priceSuffixKey(data)) : undefined;
+
+  const arrowClass =
+    "hidden group-hover:flex group-focus-within:flex items-center justify-center p-1.5 rounded-full bg-white/95 hover:bg-white text-neutral-800 shadow-darna transition absolute top-1/2 -translate-y-1/2 z-10 hover:scale-105 active:scale-95 cursor-pointer btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
 
   return (
     <div
       onMouseEnter={() => onHover?.(data.id)}
       onMouseLeave={() => onHover?.(null)}
-      onClick={() => {
-        if (didDragRef.current) {
-          didDragRef.current = false;
-          return;
-        }
-        if (onClick) {
-          onClick();
-        } else if (customHref) {
-          router.push(customHref);
-        } else if (pathname?.includes("/search")) {
-          // On search split-map view, clicking the item redirects to its full detail page preserving search query
-          const q = searchParams?.toString();
-          router.push(`/listings/${data.id}${q ? `?${q}` : ""}`);
-        } else {
-          // On homepage or other views, clicking the item redirects to the split map view
-          const destParam = data.city ? `&destination=${encodeURIComponent(data.city)}` : "";
-          const vertParam = data.category ? `&vertical=${data.category}` : "";
-          const q = searchParams?.toString();
-          router.push(`/search?selectedId=${data.id}${destParam}${vertParam}${q ? `&${q}` : ""}`);
-        }
+      onFocus={() => onHover?.(data.id)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onHover?.(null);
       }}
-      className="col-span-1 cursor-pointer group select-none transition-all duration-200 card-hover-lift"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => (gestureStartX.current = null)}
+      className="relative col-span-1 group select-none transition-all duration-200 card-hover-lift"
     >
       <div className="flex flex-col gap-1.5 w-full">
         {/* Image Container */}
         <div
-          className="aspect-square w-full relative overflow-hidden rounded-xl bg-neutral-100 border border-tertiary/40 select-none cursor-grab active:cursor-grabbing"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={() => setPointerStartX(null)}
+          ref={imageAreaRef}
+          className="aspect-square w-full relative overflow-hidden rounded-xl bg-neutral-100 border border-tertiary/40 select-none"
         >
           <Image
             fill
             className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-300"
             src={images[currentImageIndex] || "/assets/template.jpeg"}
-            alt={data.title}
+            alt=""
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
 
@@ -225,8 +214,8 @@ export default function ListingCard({
 
           {/* Guest Favorite Badge */}
           {data.isGuestFavorite && (
-            <div className="absolute top-2 start-2 z-10 bg-white/95 backdrop-blur-xs text-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm max-w-[calc(100%-48px)] truncate">
-              {tNav("guestFavorite") || "Guest favorite"}
+            <div className="absolute top-2 start-2 z-[2] bg-white/95 backdrop-blur-xs text-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm max-w-[calc(100%-48px)] truncate">
+              {tNav("guestFavorite")}
             </div>
           )}
 
@@ -235,17 +224,17 @@ export default function ListingCard({
             <>
               <button
                 type="button"
-                aria-label="Previous photo"
+                aria-label={t("previousPhoto")}
                 onClick={handlePrevImage}
-                className="hidden group-hover:flex items-center justify-center p-1.5 rounded-full bg-white/95 hover:bg-white text-neutral-800 shadow-darna transition absolute top-1/2 -translate-y-1/2 z-10 start-2 hover:scale-105 active:scale-95 cursor-pointer btn-press"
+                className={`${arrowClass} start-2`}
               >
                 <BrandChevronLeftIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
               </button>
               <button
                 type="button"
-                aria-label="Next photo"
+                aria-label={t("nextPhoto")}
                 onClick={handleNextImage}
-                className="hidden group-hover:flex items-center justify-center p-1.5 rounded-full bg-white/95 hover:bg-white text-neutral-800 shadow-darna transition absolute top-1/2 -translate-y-1/2 z-10 end-2 hover:scale-105 active:scale-95 cursor-pointer btn-press"
+                className={`${arrowClass} end-2`}
               >
                 <BrandChevronRightIcon size={16} strokeWidth={2.2} className="rtl:rotate-180" />
               </button>
@@ -254,14 +243,15 @@ export default function ListingCard({
 
           {/* Carousel Dots */}
           {images.length > 1 && (
-            <div className="absolute bottom-2 inset-x-0 flex justify-center items-center gap-1 z-10 pointer-events-none">
+            <div
+              className="absolute bottom-2 inset-x-0 flex justify-center items-center gap-1 z-[2] pointer-events-none"
+              aria-hidden="true"
+            >
               {images.map((_, idx) => (
                 <div
                   key={idx}
                   className={`rounded-full transition-all duration-200 ${
-                    idx === currentImageIndex
-                      ? "bg-white w-2 h-2 shadow-xs"
-                      : "bg-white/60 w-1.5 h-1.5"
+                    idx === currentImageIndex ? "bg-white w-2 h-2 shadow-xs" : "bg-white/60 w-1.5 h-1.5"
                   }`}
                 />
               ))}
@@ -275,7 +265,10 @@ export default function ListingCard({
             <BrandCalendarIcon size={12} strokeWidth={1.8} className="text-amber-700 shrink-0" />
             <span className="truncate">
               {tSearch("partialAvailabilityBadge", {
-                range: `${new Date(data.matchedAvailability.overlapStart).toLocaleDateString(locale, { month: "short", day: "numeric" })} – ${new Date(data.matchedAvailability.overlapEnd).toLocaleDateString(locale, { month: "short", day: "numeric" })}`,
+                range: tCommon("dateRange", {
+                  start: formatDate(data.matchedAvailability.overlapStart, locale, shortDate),
+                  end: formatDate(data.matchedAvailability.overlapEnd, locale, shortDate),
+                }),
               })}
             </span>
           </div>
@@ -284,76 +277,77 @@ export default function ListingCard({
         {/* Text Details */}
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-1 text-xs sm:text-sm font-semibold text-primary">
-            <span className="truncate flex items-center gap-1">
-              <BrandPinIcon
-                size={13}
-                strokeWidth={2}
-                className="text-accent shrink-0"
-              />
-              <span className="truncate">{data.city ? `${data.city}, Algeria` : data.title}</span>
-            </span>
+            <h3 className="truncate flex items-center gap-1 min-w-0">
+              <BrandPinIcon size={13} strokeWidth={2} className="text-accent shrink-0" />
+              {/* Stretched link: its ::after covers the whole card, so the entire card is clickable. */}
+              <Link
+                href={href}
+                onClick={handleLinkClick}
+                draggable={false}
+                className="truncate rounded after:absolute after:inset-0 after:z-[1] after:rounded-xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent-600 focus-visible:after:ring-offset-2"
+              >
+                <span className="sr-only">{data.title} – </span>
+                {data.city ? t("cityCountry", { city: data.city }) : data.title}
+              </Link>
+            </h3>
             <span className="flex items-center gap-0.5 font-semibold flex-shrink-0 ms-1 text-xs text-neutral-800">
-              <BrandStarIcon size={12} className="fill-accent text-accent" />
-              <span>{rating}</span>
-              {data.reviewCount ? (
-                <span className="font-normal text-neutral-500 text-[10px]">
-                  ({data.reviewCount})
+              {rating ? (
+                <>
+                  <BrandStarIcon size={12} className="fill-accent text-accent" />
+                  <span className="sr-only">{t("ratingLabel", { rating })}</span>
+                  <span aria-hidden="true">{rating}</span>
+                </>
+              ) : (
+                t("ratingNew")
+              )}
+              {rating && data.reviewCount ? (
+                <span className="font-normal text-neutral-600 text-[10px]">
+                  <span aria-hidden="true">({data.reviewCount})</span>
+                  <span className="sr-only">{t("reviewsCount", { count: data.reviewCount })}</span>
                 </span>
               ) : null}
             </span>
           </div>
 
-          <div className="font-normal text-neutral-500 text-[11px] sm:text-xs truncate flex items-center gap-1">
+          <div className="font-normal text-neutral-600 text-[11px] sm:text-xs truncate flex items-center gap-1">
             {reservationDate ||
-              (data.roomTypes && data.roomTypes.length > 0 ? (
+              (hasRoomTypes ? (
                 <>
-                  <span className="capitalize font-semibold text-secondary">
-                    {data.businessCategory === "hostel" ? "Hostel" : "Hotel"}
+                  <span className="font-semibold text-secondary-700">
+                    {data.businessCategory === "hostel" ? t("hostel") : t("hotel")}
                   </span>
-                  <span>·</span>
-                  <span>{data.roomTypes.length} unit types</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{t("unitTypes", { count: data.roomTypes?.length ?? 0 })}</span>
                 </>
               ) : data.category === "vehicle" ? (
                 <>
-                  <CategoryVehicleIcon
-                    size={15}
-                    strokeWidth={1.8}
-                    className="text-secondary shrink-0"
-                  />
-                  <span>{`${data.seats || 5} seats · ${data.transmission || "Automatic"}`}</span>
+                  <CategoryVehicleIcon size={15} strokeWidth={1.8} className="text-secondary shrink-0" />
+                  <span>
+                    {t("vehicleSummary", {
+                      seats: data.seats || 5,
+                      transmission: t(`transmission.${data.transmission === "manual" ? "manual" : "automatic"}`),
+                    })}
+                  </span>
                 </>
               ) : data.category === "experience" ? (
-                `${data.durationHours || 4} hours · ${data.type}`
+                t("experienceSummary", { hours: data.durationHours || 4, type: data.type })
               ) : (
-                `${data.type} · ${data.bedroomCount || 2} bedrooms`
+                t("homeSummary", { type: data.type, count: data.bedroomCount || 2 })
               ))}
           </div>
 
           <div className="pt-0.5">
             <PriceDisplay
               price={price}
-              originalPrice={data.originalPrice}
-              period={
-                !reservation
-                  ? data.roomTypes && data.roomTypes.length > 0
-                    ? data.roomTypes.some((r) => r.bookingUnit === "bed")
-                      ? "from / bed"
-                      : "from / night"
-                    : periodLabel
-                  : undefined
-              }
+              originalPrice={showTotal ? undefined : data.originalPrice}
+              period={period}
             />
           </div>
         </div>
 
         {onAction && actionLabel && (
-          <div className="pt-1">
-            <Button
-              disabled={disabled}
-              small
-              label={actionLabel}
-              onClick={handleCancel}
-            />
+          <div className="pt-1 relative z-10">
+            <Button disabled={disabled} small label={actionLabel} onClick={handleAction} />
           </div>
         )}
       </div>

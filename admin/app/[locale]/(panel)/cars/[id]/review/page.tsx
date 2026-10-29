@@ -1,18 +1,21 @@
+import { notFound } from "next/navigation";
+import { guardPage } from "@/lib/auth/page-guard";
 import { getListingById } from "@/lib/data/listings";
-import { redirect } from "@/navigation";
+import { pageMetadata } from "@/lib/metadata";
 import StayReviewClient from "@/app/[locale]/(panel)/stays/[id]/review/StayReviewClient";
+
+export const generateMetadata = pageMetadata("listingReview");
 
 export default async function CarReviewPage({
   params,
 }: {
   params: { id: string; locale: string };
 }) {
-  const car = await getListingById(params.id);
+  const denied = await guardPage("listings.view");
+  if (denied) return denied;
 
-  if (!car) {
-    redirect("/cars");
-    return null;
-  }
+  const listing = await getListingById(params.id);
+  if (!listing) notFound();
 
-  return <StayReviewClient stay={car} />;
+  return <StayReviewClient stay={listing} />;
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import { Download, MoreHorizontal } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Download } from "lucide-react";
+import { Link, useRouter } from "@/navigation";
 import { DropdownMenu } from "./DropdownMenu";
 
 export interface PageHeaderAction {
@@ -22,34 +24,50 @@ export interface PageHeaderProps {
   children?: React.ReactNode;
 }
 
+const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
+const getButtonClass = (variant?: string) => {
+  switch (variant) {
+    case "primary":
+      return "bg-primary hover:bg-primary-700 text-white shadow-xs border border-primary";
+    case "secondary":
+      return "bg-secondary-700 hover:bg-secondary-800 text-white shadow-xs border border-secondary-700";
+    case "accent":
+      return "border border-accent/40 text-accent-700 hover:bg-accent/10";
+    default:
+      return "border border-tertiary-300 bg-white hover:bg-neutral-50 text-neutral-700";
+  }
+};
+
+/** Internal paths go through the locale-aware Link; anything else stays a plain anchor. */
+const ActionLink: React.FC<{ href: string; className: string; children: React.ReactNode }> = ({ href, className, children }) =>
+  href.startsWith("/") ? (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  );
+
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
   badge,
   onExport,
-  exportLabel = "Exporter",
+  exportLabel,
   actions = [],
   children,
 }) => {
+  const t = useTranslations("uiKit.pageHeader");
+  const router = useRouter();
   const isCustomActions = React.isValidElement(actions);
   const actionList = Array.isArray(actions) ? (actions as PageHeaderAction[]) : [];
 
   // Split actions for mobile: primary action stays visible, others collapse into ... on mobile
   const primaryAction = actionList.find((a) => a.variant === "primary") || actionList[0];
   const secondaryActions = actionList.filter((a) => a !== primaryAction);
-
-  const getButtonClass = (variant?: string) => {
-    switch (variant) {
-      case "primary":
-        return "bg-primary hover:bg-primary-700 text-white shadow-xs border border-primary";
-      case "secondary":
-        return "bg-secondary hover:bg-secondary-700 text-white shadow-xs border border-secondary";
-      case "accent":
-        return "border border-accent/40 text-accent hover:bg-accent/10";
-      default:
-        return "border border-tertiary-300 bg-white hover:bg-neutral-50 text-neutral-700";
-    }
-  };
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -74,10 +92,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <button
             type="button"
             onClick={onExport}
-            className="inline-flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[38px] px-3.5 py-2 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer active:scale-95"
+            className={`inline-flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[38px] px-3.5 py-2 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer active:scale-95 ${focusRing}`}
           >
-            <Download className="w-4 h-4 text-neutral-500" />
-            <span>{exportLabel}</span>
+            <Download className="w-4 h-4 text-neutral-500" aria-hidden="true" />
+            <span>{exportLabel ?? t("export")}</span>
           </button>
         )}
 
@@ -91,14 +109,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 const btnClass = getButtonClass(act.variant);
                 if (act.href) {
                   return (
-                    <a
+                    <ActionLink
                       key={idx}
                       href={act.href}
-                      className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-xs font-semibold transition select-none ${btnClass}`}
+                      className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-xs font-semibold transition select-none ${btnClass} ${focusRing}`}
                     >
                       {act.icon}
                       <span>{act.label}</span>
-                    </a>
+                    </ActionLink>
                   );
                 }
 
@@ -107,7 +125,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                     key={idx}
                     type="button"
                     onClick={act.onClick}
-                    className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none active:scale-95 ${btnClass}`}
+                    className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none active:scale-95 ${btnClass} ${focusRing}`}
                   >
                     {act.icon}
                     <span>{act.label}</span>
@@ -118,25 +136,45 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
             {/* Mobile (< sm): render primary action + dropdown for secondary actions */}
             <div className="flex sm:hidden items-center gap-2 w-full">
-              {primaryAction && (
-                <button
-                  type="button"
-                  onClick={primaryAction.onClick}
-                  className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none active:scale-95 ${getButtonClass(
-                    primaryAction.variant
-                  )}`}
-                >
-                  {primaryAction.icon}
-                  <span className="truncate">{primaryAction.label}</span>
-                </button>
-              )}
+              {primaryAction &&
+                (primaryAction.href ? (
+                  <ActionLink
+                    href={primaryAction.href}
+                    className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold transition select-none ${getButtonClass(
+                      primaryAction.variant
+                    )} ${focusRing}`}
+                  >
+                    {primaryAction.icon}
+                    <span className="truncate">{primaryAction.label}</span>
+                  </ActionLink>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={primaryAction.onClick}
+                    className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none active:scale-95 ${getButtonClass(
+                      primaryAction.variant
+                    )} ${focusRing}`}
+                  >
+                    {primaryAction.icon}
+                    <span className="truncate">{primaryAction.label}</span>
+                  </button>
+                ))}
 
               {secondaryActions.length > 0 && (
                 <DropdownMenu
+                  triggerLabel={t("moreActions")}
                   items={secondaryActions.map((act) => ({
                     label: act.label,
                     icon: act.icon,
-                    onClick: act.onClick || (() => {}),
+                    onClick:
+                      act.onClick ||
+                      (act.href
+                        ? () => {
+                            const href = act.href as string;
+                            if (href.startsWith("/")) router.push(href);
+                            else window.location.assign(href);
+                          }
+                        : () => {}),
                     variant: act.variant === "accent" ? "danger" : "default",
                   }))}
                 />

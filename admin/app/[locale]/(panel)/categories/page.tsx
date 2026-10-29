@@ -1,9 +1,9 @@
-import { Metadata } from "next";
+import { guardPage } from "@/lib/auth/page-guard";
 import CategoriesClient from "./CategoriesClient";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Taxonomy & Categories",
-};
+export const generateMetadata = pageMetadata("categories");
+
 
 interface Props {
   params: {
@@ -11,6 +11,9 @@ interface Props {
   };
 }
 
-export default function CategoriesPage({ params }: Props) {
+export default async function CategoriesPage({ params }: Props) {
+  const denied = await guardPage("categories.manage");
+  if (denied) return denied;
+
   return <CategoriesClient locale={params.locale} />;
 }

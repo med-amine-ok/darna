@@ -2,31 +2,30 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import {
-  Tag,
-  Plus,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  FolderTree,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
 import {
   listCategories,
   createCategory,
   toggleCategoryStatus,
   deleteCategory,
-} from "@/lib/data/categories";
+} from "@/lib/actions/categories";
+import { unwrap } from "@/lib/actions/result";
+import { useCan } from "@/components/auth/AdminSessionProvider";
 import { CategoryItem, ListingVertical } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
+import { formatNumber } from "@/lib/utils/format";
 
 interface Props {
   locale: string;
 }
+
+const VERTICAL_FILTERS = ["all", "home", "hotel", "trip", "vehicle", "experience"] as const;
+const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function CategoriesClient({ locale }: Props) {
   const t = useTranslations("categories");
@@ -42,50 +41,53 @@ export default function CategoriesClient({ locale }: Props) {
   const [nameFr, setNameFr] = useState("");
   const [nameAr, setNameAr] = useState("");
   const [categoryVertical, setCategoryVertical] = useState<ListingVertical>("home");
-  const [iconName, setIconName] = useState("Sparkles");
+  const [iconName] = useState("Sparkles");
 
   // Delete Confirm
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [catToDelete, setCatToDelete] = useState<CategoryItem | null>(null);
 
   const { success, error } = useToast();
+  const can = useCan();
+  const canManage = can("categories.manage");
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const items = await listCategories();
+      const items = unwrap(await listCategories());
       setCategories(items);
-    } catch (err: any) {
-      error("Failed to load categories", err.message);
+    } catch (err) {
+      error(t("toast.loadFailed"), errMsg(err));
     } finally {
       setLoading(false);
     }
-  }, [error]);
+  }, [error, t]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const handleToggle = async (cat: CategoryItem) => {
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
     try {
-      const updated = await toggleCategoryStatus(cat.id, actor);
-      success("Category Status Changed", `${cat.name.en} is now ${updated.isActive ? "active" : "inactive"}`);
+      const updated = unwrap(await toggleCategoryStatus(cat.id));
+      success(
+        t("toast.statusChanged"),
+        t(updated.isActive ? "toast.nowActive" : "toast.nowInactive", { name: cat.name.en })
+      );
       loadData();
-    } catch (err: any) {
-      error("Toggle failed", err.message);
+    } catch (err) {
+      error(t("toast.toggleFailed"), errMsg(err));
     }
   };
 
   const handleCreate = async () => {
     if (!nameEn.trim()) {
-      error("English Name Required", "Please enter at least an English category name.");
+      error(t("toast.nameRequired"), t("toast.nameRequiredDesc"));
       return;
     }
 
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
     try {
-      await createCategory(
+      unwrap(await createCategory(
         {
           name: {
             en: nameEn.trim(),
@@ -96,32 +98,33 @@ export default function CategoriesClient({ locale }: Props) {
           icon: iconName,
           order: categories.length + 1,
           isActive: true,
-        },
-        actor
-      );
+        }
+      ));
 
-      success("Category Created", `Added ${nameEn} to ${categoryVertical} categories.`);
+      success(
+        t("toast.created"),
+        t("toast.createdDesc", { name: nameEn.trim(), vertical: tVerticals(categoryVertical) })
+      );
       setCreateModalOpen(false);
       setNameEn("");
       setNameFr("");
       setNameAr("");
       loadData();
-    } catch (err: any) {
-      error("Creation failed", err.message);
+    } catch (err) {
+      error(t("toast.createFailed"), errMsg(err));
     }
   };
 
   const confirmDelete = async () => {
     if (!catToDelete) return;
-    const actor = { id: "adm_01", name: "Amine Admin", role: "super_admin" as const };
     try {
-      await deleteCategory(catToDelete.id, actor);
-      success("Category Deleted", `${catToDelete.name.en} has been deleted.`);
+      unwrap(await deleteCategory(catToDelete.id));
+      success(t("toast.deleted"), t("toast.deletedDesc", { name: catToDelete.name.en }));
       setDeleteModalOpen(false);
       setCatToDelete(null);
       loadData();
-    } catch (err: any) {
-      error("Delete failed", err.message);
+    } catch (err) {
+      error(t("toast.deleteFailed"), errMsg(err));
     }
   };
 
@@ -140,24 +143,32 @@ export default function CategoriesClient({ locale }: Props) {
           </p>
         </div>
 
+        {canManage && (
         <Button
           variant="primary"
           size="sm"
           onClick={() => setCreateModalOpen(true)}
           className="text-xs font-bold"
         >
-          <Plus className="w-3.5 h-3.5 me-1.5" />
+          <Plus className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
           {t("addNew")}
         </Button>
+        )}
       </div>
 
       {/* Filter by Vertical */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/60">
-        {["all", "home", "hotel", "trip", "vehicle", "experience"].map((v) => (
+      <div
+        role="group"
+        aria-label={t("filterLabel")}
+        className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/60"
+      >
+        {VERTICAL_FILTERS.map((v) => (
           <button
             key={v}
+            type="button"
+            aria-pressed={verticalFilter === v}
             onClick={() => setVerticalFilter(v)}
-            className={`px-4 py-2 text-xs font-semibold rounded-t-xl transition-all border-b-2 -mb-[2px] capitalize cursor-pointer ${
+            className={`px-4 py-2 text-xs font-semibold rounded-t-xl transition-all border-b-2 -mb-[2px] cursor-pointer ${FOCUS_RING} ${
               verticalFilter === v
                 ? "border-primary text-primary bg-white shadow-2xs font-bold"
                 : "border-transparent text-neutral-500 hover:text-primary"
@@ -174,49 +185,53 @@ export default function CategoriesClient({ locale }: Props) {
           <table className="w-full text-xs text-start">
             <thead className="bg-darnaBg/60 border-b border-tertiary/60 text-neutral-600 text-xs font-semibold">
               <tr>
-                <th className="py-3 px-4 text-start">{t("order")}</th>
-                <th className="py-3 px-4 text-start">{t("nameEn")}</th>
-                <th className="py-3 px-4 text-start">{t("nameFr")}</th>
-                <th className="py-3 px-4 text-start">{t("nameAr")}</th>
-                <th className="py-3 px-4 text-start">{t("vertical")}</th>
-                <th className="py-3 px-4 text-end">{t("listings")}</th>
-                <th className="py-3 px-4 text-start">{tCommon("status")}</th>
-                <th className="py-3 px-4 text-end">{tCommon("actions")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("order")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("nameEn")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("nameFr")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("nameAr")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{t("vertical")}</th>
+                <th scope="col" className="py-3 px-4 text-end">{t("listings")}</th>
+                <th scope="col" className="py-3 px-4 text-start">{tCommon("status")}</th>
+                <th scope="col" className="py-3 px-4 text-end">{tCommon("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-tertiary/40">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-neutral-400">
+                  <td colSpan={8} className="py-8 text-center text-neutral-500" aria-live="polite">
                     {tCommon("loading")}
                   </td>
                 </tr>
               ) : filteredCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-neutral-400">
-                    {t("subtitle")}
+                  <td colSpan={8} className="py-8 text-center text-neutral-500">
+                    {t("empty")}
                   </td>
                 </tr>
               ) : (
                 filteredCategories.map((c) => (
                   <tr key={c.id} className="hover:bg-darnaBg/20 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-neutral-400">{c.order}</td>
-                    <td className="py-3 px-4 font-bold text-primary">{c.name.en}</td>
-                    <td className="py-3 px-4 text-neutral-600">{c.name.fr}</td>
-                    <td className="py-3 px-4 font-arabic text-neutral-600">{c.name.ar}</td>
-                    <td className="py-3 px-4 capitalize font-semibold text-secondary">
+                    <td className="py-3 px-4 font-mono font-bold text-neutral-500">{formatNumber(c.order, locale)}</td>
+                    <td className="py-3 px-4 font-bold text-primary" lang="en">{c.name.en}</td>
+                    <td className="py-3 px-4 text-neutral-600" lang="fr">{c.name.fr}</td>
+                    <td className="py-3 px-4 font-arabic text-neutral-600" lang="ar" dir="rtl">{c.name.ar}</td>
+                    <td className="py-3 px-4 font-semibold text-secondary">
                       {tVerticals(c.vertical)}
                     </td>
                     <td className="py-3 px-4 text-end font-bold tabular-nums text-neutral-700">
-                      {c.listingCount}
+                      {formatNumber(c.listingCount, locale)}
                     </td>
                     <td className="py-3 px-4">
                       <button
+                        type="button"
                         onClick={() => handleToggle(c)}
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer ${
+                        disabled={!canManage}
+                        aria-pressed={c.isActive}
+                        title={t("toggleActive", { name: c.name.en })}
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer disabled:cursor-default ${FOCUS_RING} ${
                           c.isActive
                             ? "bg-secondary/15 text-secondary border-secondary/30"
-                            : "bg-neutral-100 text-neutral-400 border-neutral-300"
+                            : "bg-neutral-100 text-neutral-600 border-neutral-300"
                         }`}
                       >
                         {c.isActive ? tCommon("active") : tCommon("disabled")}
@@ -224,13 +239,19 @@ export default function CategoriesClient({ locale }: Props) {
                     </td>
                     <td className="py-3 px-4 text-end">
                       <div className="flex items-center justify-end gap-1">
+                        {canManage && (<>
                         <button
                           type="button"
                           onClick={() => handleToggle(c)}
-                          className="p-1 rounded-lg text-neutral-400 hover:text-primary hover:bg-neutral-100"
-                          title="Toggle Active"
+                          className={`p-1 rounded-lg text-neutral-500 hover:text-primary hover:bg-neutral-100 ${FOCUS_RING}`}
+                          title={t("toggleActive", { name: c.name.en })}
+                          aria-label={t("toggleActive", { name: c.name.en })}
                         >
-                          {c.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          {c.isActive ? (
+                            <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                          )}
                         </button>
                         <button
                           type="button"
@@ -238,11 +259,13 @@ export default function CategoriesClient({ locale }: Props) {
                             setCatToDelete(c);
                             setDeleteModalOpen(true);
                           }}
-                          className="p-1 rounded-lg text-accent/80 hover:text-accent hover:bg-accent/10"
-                          title="Delete Category"
+                          className={`p-1 rounded-lg text-accent-700 hover:text-accent-800 hover:bg-accent/10 ${FOCUS_RING}`}
+                          title={t("deleteCategory", { name: c.name.en })}
+                          aria-label={t("deleteCategory", { name: c.name.en })}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
+                        </>)}
                       </div>
                     </td>
                   </tr>
@@ -258,14 +281,16 @@ export default function CategoriesClient({ locale }: Props) {
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         title={t("createTitle")}
+        subtitle={t("createSubtitle")}
         size="md"
       >
         <div className="space-y-4 text-start">
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-vertical" className="block text-xs font-bold text-primary mb-1">
               {t("vertical")}
             </label>
             <select
+              id="category-vertical"
               value={categoryVertical}
               onChange={(e) => setCategoryVertical(e.target.value as ListingVertical)}
               className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
@@ -279,41 +304,49 @@ export default function CategoriesClient({ locale }: Props) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-name-en" className="block text-xs font-bold text-primary mb-1">
               {t("nameEn")}
             </label>
             <input
+              id="category-name-en"
               type="text"
+              lang="en"
+              required
+              aria-required="true"
               value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
-              placeholder="e.g. Desert Glamping"
+              placeholder={t("placeholderEn")}
               className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-name-fr" className="block text-xs font-bold text-primary mb-1">
               {t("nameFr")}
             </label>
             <input
+              id="category-name-fr"
               type="text"
+              lang="fr"
               value={nameFr}
               onChange={(e) => setNameFr(e.target.value)}
-              placeholder="e.g. Bivouac de luxe dans le désert"
+              placeholder={t("placeholderFr")}
               className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-name-ar" className="block text-xs font-bold text-primary mb-1">
               {t("nameAr")}
             </label>
             <input
+              id="category-name-ar"
               type="text"
+              lang="ar"
               dir="rtl"
               value={nameAr}
               onChange={(e) => setNameAr(e.target.value)}
-              placeholder="مثال: تخييم صحراوي فاخر"
+              placeholder={t("placeholderAr")}
               className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary font-arabic"
             />
           </div>

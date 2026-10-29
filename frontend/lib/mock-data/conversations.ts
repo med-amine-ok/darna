@@ -1,3 +1,4 @@
+import "server-only";
 import { Conversation, Message } from "@/types";
 
 export const mockConversations: Conversation[] = [

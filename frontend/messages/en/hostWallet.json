@@ -1,0 +1,48 @@
+{
+  "title": "Host Prepaid Wallet & Balance",
+  "currentBalance": "Current Deposit Balance",
+  "applicableCommission": "Applicable Commission",
+  "rechargeProcess": "Recharge Process",
+  "statementHistory": "Statement & History",
+  "negativeNoticeAmount": "Action required: negative host balance ({amount})",
+  "overdue": "Overdue",
+  "negativeBody": "Your platform commission deductions currently exceed your prepaid deposit funds. Please complete an offline CCP or bank transfer to DARNA platform administration to restore your deposit and prevent temporary pauses on listing reservations.",
+  "ccpAccount": "CCP account:",
+  "baridiMobRip": "BaridiMob RIP:",
+  "adminSupport": "Admin support:",
+  "ledgerSubtitle": "Prepaid commission deposit ledger (platform take rate: {rate})",
+  "deficit": "Deposit deficit",
+  "solvent": "Active & solvent",
+  "deductedPer": {
+    "individual": "Deducted per confirmed booking (individual host rate)",
+    "agency": "Deducted per confirmed booking (agency rate)",
+    "hotel": "Deducted per confirmed booking (hotel rate)",
+    "hostel": "Deducted per confirmed booking (hostel rate)"
+  },
+  "offlineTransfer": "Offline CCP / bank wire",
+  "creditedManually": "Credited manually by platform admins once the receipt is validated",
+  "howItWorksTitle": "How the DARNA host balance works:",
+  "howItWorksBody": "In line with Algerian banking practice, commission is deducted from your offline deposit rather than from automated guest payouts. To recharge your balance, make a transfer via BaridiMob or CCP and send the receipt to support.",
+  "statementTitle": "Host transaction statement",
+  "statementSubtitle": "Append-only ledger of deposits and booking commission deductions",
+  "closeStatement": "Close statement",
+  "netBalance": "Net current balance",
+  "takeRate": "Take rate",
+  "filterLabel": "Filter transactions",
+  "filters": {
+    "all": "All activity",
+    "recharge": "Deposits (+)",
+    "commission": "Commissions (−)"
+  },
+  "table": {
+    "caption": "Wallet transactions",
+    "date": "Date",
+    "activity": "Activity",
+    "amount": "Amount",
+    "reference": "Reference"
+  },
+  "deposit": "Deposit",
+  "commission": "Commission",
+  "bookingRef": "Booking: {id}",
+  "noTransactions": "No transactions to show."
+}

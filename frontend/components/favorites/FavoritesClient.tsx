@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useFavoriteIds } from "@/hook/useFavorite";
 import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { Listing, User, ListingVertical } from "@/types";
@@ -16,40 +17,12 @@ export default function FavoritesClient({
   initialListings,
   currentUser,
 }: FavoritesClientProps) {
+  const t = useTranslations("favorites");
   const tNav = useTranslations("nav");
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(
-    () => currentUser?.favoriteIds || ["lst_tipaza_villa", "lst_djanet_tassili"]
-  );
+  // Server-backed favorites (initial list comes from the page props).
+  const favoriteIds = useFavoriteIds(currentUser);
 
   const [activeVertical, setActiveVertical] = useState<"all" | ListingVertical>("all");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("darna_favorites");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            setFavoriteIds(parsed);
-          }
-        } catch {}
-      }
-    }
-
-    const handleStorage = () => {
-      const stored = localStorage.getItem("darna_favorites");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            setFavoriteIds(parsed);
-          }
-        } catch {}
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
 
   // Filter listings by saved IDs and vertical
   const savedListings = initialListings.filter((l) => favoriteIds.includes(l.id));
@@ -75,21 +48,23 @@ export default function FavoritesClient({
           <h1 className="text-2xl sm:text-3xl font-bold text-primary font-serif">
             {tNav("myFavorites")}
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            {savedListings.length}{" "}
-            {savedListings.length === 1 ? "saved place" : "saved places"} across Algeria
-          </p>
+          <p className="text-sm text-neutral-500 mt-1">{t("savedPlaces", { count: savedListings.length })}</p>
         </div>
 
         {/* Vertical Tabs */}
         {savedListings.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 bg-tertiary/20 p-1.5 rounded-2xl border border-tertiary/40">
+          <div
+            role="group"
+            aria-label={t("filterLabel")}
+            className="flex flex-wrap items-center gap-1.5 bg-tertiary/20 p-1.5 rounded-2xl border border-tertiary/40"
+          >
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveVertical(tab.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+                aria-pressed={activeVertical === tab.id}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
                   activeVertical === tab.id
                     ? "bg-white text-primary shadow-xs"
                     : "text-neutral-600 hover:text-primary"
@@ -106,19 +81,17 @@ export default function FavoritesClient({
       {filteredListings.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-lg mx-auto my-8 shadow-xs">
           <div className="w-16 h-16 bg-accent/10 text-accent rounded-full flex items-center justify-center mx-auto mb-4 border border-accent/20">
-            <BrandHeartIcon size={32} />
+            <BrandHeartIcon size={32} aria-hidden="true" />
           </div>
-          <h3 className="text-lg font-bold text-primary mb-1">
+          <h2 className="text-lg font-bold text-primary mb-1">
             {savedListings.length === 0
-              ? "No saved stays or experiences yet"
-              : `No saved ${activeVertical}s found`}
-          </h3>
-          <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">
-            As you explore DARNA, click the heart icon on any villa, 4x4, or Sahara trek to bookmark your favorites here.
-          </p>
+              ? t("emptyTitle")
+              : t("noSavedInTab", { tab: tabs.find((tab) => tab.id === activeVertical)?.label ?? "" })}
+          </h2>
+          <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">{t("noFavoritesDesc")}</p>
           <Link
             href="/search"
-            className="inline-flex items-center justify-center py-2.5 px-6 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm"
+            className="inline-flex items-center justify-center py-2.5 px-6 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
             {tNav("explore")}
           </Link>

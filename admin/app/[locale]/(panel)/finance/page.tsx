@@ -1,7 +1,10 @@
-import { getLocale } from "next-intl/server";
-import PaymentsClient from "../payments/PaymentsClient";
+import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-export default async function FinancePage() {
-  const locale = await getLocale();
-  return <PaymentsClient locale={locale} initialTab="overview" />;
+/** Legacy duplicate route — canonical page is /payments. */
+export default function FinanceRedirect({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  redirectToCanonical("/payments", searchParams);
 }

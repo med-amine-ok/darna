@@ -1,3 +1,6 @@
+import { arDZ, enUS, fr } from "date-fns/locale";
+import type { Locale as DateFnsLocale } from "date-fns";
+
 // Centralized formatting for DZD amounts, numbers, and dates.
 // In Arabic, Latin digits (1, 2, 3...) are the standard convention across Algerian commerce and banking.
 
@@ -60,4 +63,24 @@ export function formatCompactNumber(num: number): string {
     return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
   }
   return String(num);
+}
+
+/**
+ * Masks a bank / postal account identifier (CCP RIP, RIB, BaridiMob phone) to
+ * its last 4 characters, e.g. "•••• 7890". Returns "—" when missing.
+ */
+export function maskAccount(value: string | undefined | null): string {
+  const clean = (value ?? "").replace(/\s+/g, "");
+  if (!clean) return "—";
+  return `•••• ${clean.slice(-4)}`;
+}
+
+/** Intl/BCP-47 tag used for the admin locales (Latin digits everywhere). */
+export function intlLocale(locale: string): string {
+  return locale === "ar" ? "ar-DZ-u-nu-latn" : locale === "fr" ? "fr-DZ" : "en-US";
+}
+
+/** date-fns locale object for `format(date, pattern, { locale })`. */
+export function dateFnsLocale(locale: string): DateFnsLocale {
+  return locale === "ar" ? arDZ : locale === "fr" ? fr : enUS;
 }

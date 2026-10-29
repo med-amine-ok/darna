@@ -1,16 +1,10 @@
-import { Metadata } from "next";
-import AuditLogClient from "./AuditLogClient";
+import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-export const metadata: Metadata = {
-  title: "Security Audit Log",
-};
-
-interface Props {
-  params: {
-    locale: string;
-  };
-}
-
-export default function AuditLogPage({ params }: Props) {
-  return <AuditLogClient locale={params.locale} />;
+/** Legacy duplicate route — canonical page is /settings/audit-log. */
+export default function AuditLogRedirect({
+  searchParams,
+}: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  redirectToCanonical("/settings/audit-log", searchParams);
 }

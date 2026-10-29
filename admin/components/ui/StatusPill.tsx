@@ -25,6 +25,8 @@ import {
   GUEST_STATUS_CONFIG,
   BOOKING_STATUS_CONFIG,
   REVIEW_STATUS_CONFIG,
+  MISC_STATUS_CONFIG,
+  type StatusConfig,
 } from "@/lib/status";
 
 import { useTranslations } from "next-intl";
@@ -50,13 +52,8 @@ export const StatusPill: React.FC<StatusPillProps> = ({
   size = "md",
   className = "",
 }) => {
-  let tStatus: any = null;
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    tStatus = useTranslations("status");
-  } catch {
-    // Fallback if rendered outside intl context
-  }
+  const tStatus = useTranslations("status");
+  const tKit = useTranslations("uiKit.status");
 
   // If status is passed, derive config automatically
   let derivedVariant: StatusVariant = variant || "neutral";
@@ -64,12 +61,13 @@ export const StatusPill: React.FC<StatusPillProps> = ({
   let derivedLabel = label;
 
   if (status) {
-    const config =
-      (HOST_STATUS_CONFIG as Record<string, any>)[status] ||
-      (LISTING_STATUS_CONFIG as Record<string, any>)[status] ||
-      (GUEST_STATUS_CONFIG as Record<string, any>)[status] ||
-      (BOOKING_STATUS_CONFIG as Record<string, any>)[status] ||
-      (REVIEW_STATUS_CONFIG as Record<string, any>)[status];
+    const config: StatusConfig | undefined =
+      (HOST_STATUS_CONFIG as Record<string, StatusConfig>)[status] ||
+      (LISTING_STATUS_CONFIG as Record<string, StatusConfig>)[status] ||
+      (GUEST_STATUS_CONFIG as Record<string, StatusConfig>)[status] ||
+      (BOOKING_STATUS_CONFIG as Record<string, StatusConfig>)[status] ||
+      (REVIEW_STATUS_CONFIG as Record<string, StatusConfig>)[status] ||
+      (MISC_STATUS_CONFIG as Record<string, StatusConfig>)[status];
 
     if (config) {
       if (!variant) derivedVariant = config.variant;
@@ -77,7 +75,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
     }
     
     // Check if status translation exists
-    if (tStatus && tStatus.has(status)) {
+    if (tStatus.has(status)) {
       derivedLabel = tStatus(status);
     } else if (!label) {
       derivedLabel = status
@@ -102,41 +100,42 @@ export const StatusPill: React.FC<StatusPillProps> = ({
   const renderIcon = () => {
     if (icon) return icon;
     const iconClass = size === "sm" ? "w-3 h-3 shrink-0" : "w-3.5 h-3.5 shrink-0";
+    const a11y = { "aria-hidden": true } as const;
 
     switch (derivedIconName) {
       case "CheckCircle":
       case "CheckCircle2":
-        return <CheckCircle2 className={iconClass} />;
+        return <CheckCircle2 className={iconClass} {...a11y} />;
       case "Clock":
-        return <Clock className={iconClass} />;
+        return <Clock className={iconClass} {...a11y} />;
       case "XCircle":
-        return <XCircle className={iconClass} />;
+        return <XCircle className={iconClass} {...a11y} />;
       case "AlertTriangle":
-        return <AlertTriangle className={iconClass} />;
+        return <AlertTriangle className={iconClass} {...a11y} />;
       case "Ban":
-        return <Ban className={iconClass} />;
+        return <Ban className={iconClass} {...a11y} />;
       case "Trash2":
-        return <Trash2 className={iconClass} />;
+        return <Trash2 className={iconClass} {...a11y} />;
       case "FileEdit":
-        return <FileEdit className={iconClass} />;
+        return <FileEdit className={iconClass} {...a11y} />;
       case "AlertCircle":
-        return <AlertCircle className={iconClass} />;
+        return <AlertCircle className={iconClass} {...a11y} />;
       case "Archive":
-        return <Archive className={iconClass} />;
+        return <Archive className={iconClass} {...a11y} />;
       case "CheckCheck":
-        return <CheckCheck className={iconClass} />;
+        return <CheckCheck className={iconClass} {...a11y} />;
       case "AlertOctagon":
-        return <AlertOctagon className={iconClass} />;
+        return <AlertOctagon className={iconClass} {...a11y} />;
       case "RotateCcw":
-        return <RotateCcw className={iconClass} />;
+        return <RotateCcw className={iconClass} {...a11y} />;
       case "Flag":
-        return <Flag className={iconClass} />;
+        return <Flag className={iconClass} {...a11y} />;
       case "EyeOff":
-        return <EyeOff className={iconClass} />;
+        return <EyeOff className={iconClass} {...a11y} />;
       case "ShieldCheck":
-        return <ShieldCheck className={iconClass} />;
+        return <ShieldCheck className={iconClass} {...a11y} />;
       case "FileText":
-        return <FileText className={iconClass} />;
+        return <FileText className={iconClass} {...a11y} />;
       default:
         return null;
     }
@@ -149,7 +148,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
       } ${sizeStyles[size]} ${className}`}
     >
       {renderIcon()}
-      <span>{derivedLabel || status || "Status"}</span>
+      <span>{derivedLabel || status || tKit("fallback")}</span>
     </span>
   );
 };

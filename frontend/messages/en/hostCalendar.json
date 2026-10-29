@@ -1,0 +1,87 @@
+{
+  "empty": {
+    "title": "No listings to manage yet",
+    "body": "Create your first listing to manage its availability, blocked dates and nightly prices here.",
+    "cta": "Create a listing"
+  },
+  "title": "Host calendar & availability",
+  "subtitle": "Manage real-time availability, block maintenance dates and set custom seasonal rates.",
+  "viewSwitcherLabel": "Calendar view",
+  "previous": "{view, select, month {Previous month} week {Previous week} day {Previous day} other {Previous year}}",
+  "next": "{view, select, month {Next month} week {Next week} day {Next day} other {Next year}}",
+  "propertyLabel": "Property",
+  "allProperties": "All properties ({count})",
+  "listingOption": "{title} ({city})",
+  "unitLabel": "Unit",
+  "allUnits": "All units ({count})",
+  "unitOption": "{name} ({unit, select, bed {{count, plural, one {# bed} other {# beds}}} other {{count, plural, one {# room} other {# rooms}}}})",
+  "listingLegend": "Listing colours",
+  "untitledListing": "Listing",
+  "guestFallback": "Guest",
+  "status": {
+    "blocked": "Blocked",
+    "booked": "Booked",
+    "available": "Available"
+  },
+  "moreBookings": "+{count} more",
+  "dayCellLabel": "{date}: {status}",
+  "dayCellLabelWithPrice": "{date}: {status}, {price} per night",
+  "weekCellLabel": "{listing} – {date}: {status}, {price} per night",
+  "bookingTitle": "{guest} – {listing}",
+  "dayView": {
+    "eyebrow": "Daily operations timeline",
+    "block": "Block this day",
+    "unblock": "Unblock this day",
+    "arrivingToday": "Guests arriving today",
+    "slots": {
+      "morning": {
+        "title": "Morning overview",
+        "desc": "Property readiness and housekeeping check"
+      },
+      "checkout": {
+        "title": "Standard check-out",
+        "desc": "Guests from previous stays depart"
+      },
+      "turnover": {
+        "title": "Room turnover & cleaning",
+        "desc": "Disinfection and fresh linen preparation"
+      },
+      "checkin": {
+        "title": "Guest check-in window opens",
+        "desc": "Key handover and guest welcome"
+      },
+      "evening": {
+        "title": "Evening concierge",
+        "desc": "Guest assistance and quiet hours reminder"
+      }
+    }
+  },
+  "guestLine": "{name} ({count, plural, one {# guest} other {# guests}})",
+  "yearView": {
+    "viewMonth": "View month",
+    "viewMonthLabel": "View {month}"
+  },
+  "dialog": {
+    "eyebrow": "Date settings",
+    "property": "Property",
+    "availability": "Availability",
+    "blockedDesc": "Hidden from traveller searches",
+    "availableDesc": "Open for bookings",
+    "unblock": "Unblock",
+    "block": "Block date",
+    "priceTitle": "Price for this date",
+    "defaultRate": "Default rate: {price} per night. Leave blank to reset.",
+    "priceInputLabel": "Nightly price for this date",
+    "saveRate": "Save rate",
+    "reservationsOnDate": "Reservations on this date"
+  },
+  "toast": {
+    "dateBlocked": "Date blocked from bookings",
+    "dateReopened": "Date reopened for bookings",
+    "dateUpdateFailed": "Could not update this date. Please try again.",
+    "priceInvalid": "Enter a whole number between {min} and {max}, or leave blank to reset.",
+    "priceReset": "Standard listing price restored.",
+    "priceSet": "Nightly rate set to {price}",
+    "priceSaveFailed": "Could not save this price. Please try again."
+  }
+}

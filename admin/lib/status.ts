@@ -78,3 +78,12 @@ export const LISTING_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
   archived: ["approved", "deleted"],
   deleted: ["approved", "archived"], // restore
 };
+
+/** Booking payment, payout and staff-account statuses. */
+export const MISC_STATUS_CONFIG: Record<string, StatusConfig> = {
+  paid: { labelKey: "status.paid", variant: "success", iconName: "CheckCircle" },
+  partially_refunded: { labelKey: "status.partially_refunded", variant: "warning", iconName: "RotateCcw" },
+  failed: { labelKey: "status.failed", variant: "danger", iconName: "XCircle" },
+  processed: { labelKey: "status.processed", variant: "success", iconName: "CheckCheck" },
+  invited: { labelKey: "status.invited", variant: "info", iconName: "Clock" },
+};

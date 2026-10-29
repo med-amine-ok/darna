@@ -1,0 +1,22 @@
+{
+  "priceRange": "Fourchette de prix",
+  "priceRangeSubtitle": "Tarifs à la nuit ou à la journée pour les séjours et locations en Algérie",
+  "minimum": "Minimum",
+  "maximum": "Maximum",
+  "roomsAndBeds": "Chambres et espaces",
+  "bedrooms": "Chambres",
+  "bedroomsSubtitle": "Nombre minimum de chambres",
+  "bathrooms": "Salles de bain",
+  "bathroomsSubtitle": "Salles de bain privées ou partagées",
+  "propertyType": "Type de logement",
+  "apartment": "Appartement",
+  "hotel": "Hôtel",
+  "amenities": "Équipements et atouts",
+  "anyStayType": "Tout type de séjour",
+  "entireHome": "Logement entier",
+  "privateRoom": "Chambre privée",
+  "hotelResort": "Hôtel & resort",
+  "hostelDorms": "Auberge de jeunesse & dortoirs",
+  "villa": "Villa",
+  "riad": "Riad & ksar historiques"
+}

@@ -1,9 +1,9 @@
-import { Metadata } from "next";
+import { guardPage } from "@/lib/auth/page-guard";
 import PromotionsClient from "./PromotionsClient";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Promotions & Campaigns",
-};
+export const generateMetadata = pageMetadata("promotions");
+
 
 interface Props {
   params: {
@@ -11,6 +11,9 @@ interface Props {
   };
 }
 
-export default function PromotionsPage({ params }: Props) {
+export default async function PromotionsPage({ params }: Props) {
+  const denied = await guardPage("promotions.manage");
+  if (denied) return denied;
+
   return <PromotionsClient locale={params.locale} />;
 }

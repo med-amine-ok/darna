@@ -9,6 +9,7 @@ import { User } from "@/types";
 import { useSearchModal } from "@/hook/useSearchModal";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useDestinationLabel } from "@/hook/useDestinationLabel";
 import Search from "./Search";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { BrandPinIcon, BrandSearchIcon } from "@/components/icons";
@@ -19,12 +20,13 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
-  const searchModal = useSearchModal();
+  const openSearchModal = useSearchModal((s) => s.onOpen);
   const searchParams = useSearchParams();
   const tNav = useTranslations("nav");
+  const tSearch = useTranslations("search");
+  const destinationLabel = useDestinationLabel();
 
   const destination = searchParams?.get("destination");
-  const vertical = searchParams?.get("vertical");
 
   // Continuous scroll progress: 0 (at top) to 1 (scrolled past hero)
   const [scrollProgress, setScrollProgress] = useState(isHero ? 0 : 1);
@@ -85,7 +87,7 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
             <div className="flex items-center shrink-0 z-50">
               {/* Desktop: Always horizontal logo */}
               <div className="hidden md:block">
-                <Logo variant="horizontal" />
+                <Logo variant="horizontal" priority />
               </div>
               {/* Mobile: Horizontal at hero top, smoothly transitions to compact icon when scrolled or on non-hero pages */}
               <div className="md:hidden relative flex items-center h-9">
@@ -96,7 +98,7 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
                       : "opacity-0 scale-90 pointer-events-none absolute inset-0"
                   }`}
                 >
-                  <Logo variant="horizontal" />
+                  <Logo variant="horizontal" hidden={!(isHero && scrollProgress < 0.4)} />
                 </div>
                 <div
                   className={`transition-all duration-200 ${
@@ -105,7 +107,7 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
                       : "opacity-100 scale-100"
                   }`}
                 >
-                  <Logo variant="icon" />
+                  <Logo variant="icon" hidden={isHero && scrollProgress < 0.4} />
                 </div>
               </div>
             </div>
@@ -124,12 +126,14 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
             <div className="md:hidden flex-1 min-w-0 flex items-center justify-center px-1">
               <button
                 type="button"
-                onClick={searchModal.onOpen}
-                aria-label="Search"
+                onClick={openSearchModal}
+                tabIndex={isHero && scrollProgress < 0.35 ? -1 : undefined}
+                aria-hidden={isHero && scrollProgress < 0.35 ? true : undefined}
+                aria-label={tNav("search")}
                 className={`
                   w-full max-w-[210px] flex items-center justify-between gap-1.5 py-1.5 px-3 
                   rounded-full bg-white/95 backdrop-blur-md border border-tertiary/80 shadow-xs 
-                  hover:border-primary text-xs font-semibold text-primary transition-all duration-200 cursor-pointer select-none
+                  hover:border-primary text-xs font-semibold text-primary transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
                   ${
                     isHero && scrollProgress < 0.35
                       ? "opacity-0 pointer-events-none scale-90 translate-y-2"
@@ -144,7 +148,7 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
                     className="text-accent shrink-0"
                   />
                   <span className="truncate text-xs font-semibold text-primary">
-                    {destination || "Anywhere in Algeria"}
+                    {destination ? destinationLabel(destination) : tSearch("anywhereInAlgeria")}
                   </span>
                 </div>
                 <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
@@ -160,7 +164,7 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
             {/* End: LanguageSwitcher + Notifications + UserMenu */}
             <div className="flex items-center gap-1 sm:gap-2.5 shrink-0 z-50">
               <LanguageSwitcher />
-              <NotificationsDropdown />
+              {currentUser && <NotificationsDropdown />}
               <UserMenu currentUser={currentUser} />
             </div>
           </div>

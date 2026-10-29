@@ -19,7 +19,7 @@ export default function PriceDisplay({
   period,
   className = "",
   priceClassName = "font-bold text-neutral-900",
-  eurClassName = "text-xs text-neutral-500 font-normal",
+  eurClassName = "text-xs text-neutral-600 font-normal",
   showEur = true,
 }: PriceDisplayProps) {
   const { formatDzd, convertToEur, formatEur } = useCurrency();
@@ -31,7 +31,7 @@ export default function PriceDisplay({
   return (
     <div className={`inline-flex items-baseline gap-1.5 flex-wrap ${className}`}>
       {originalPrice && originalPrice > price && (
-        <span className="line-through text-neutral-400 text-xs font-normal">
+        <span className="line-through text-neutral-500 text-xs font-normal">
           {formatDzd(originalPrice)}
         </span>
       )}
@@ -42,7 +42,7 @@ export default function PriceDisplay({
         </span>
       )}
       {period && (
-        <span className="font-normal text-neutral-500 text-xs sm:text-sm">
+        <span className="font-normal text-neutral-600 text-xs sm:text-sm">
           {period}
         </span>
       )}

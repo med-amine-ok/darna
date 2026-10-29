@@ -1,0 +1,450 @@
+{
+  "step1Title": "Which of these best describes your place?",
+  "step1Subtitle": "Choose the category for your Algerian stay, vehicle or experience.",
+  "step2Title": "Where is your place located?",
+  "step2Subtitle": "Your address is only shared with guests after they make a reservation.",
+  "step3Title": "Share some basics about your place",
+  "step3Subtitle": "You can add more details, like bed types, later.",
+  "step4Title": "Tell guests what your place offers",
+  "step4Subtitle": "You can add more amenities after you publish.",
+  "step5Title": "Add photos of your home",
+  "step5Subtitle": "Upload at least one high quality photo to showcase your space.",
+  "step7Title": "Now, set your price",
+  "step7Subtitle": "You can change it anytime from your host dashboard.",
+  "guests": "Guests",
+  "bedrooms": "Bedrooms",
+  "beds": "Beds",
+  "bathrooms": "Bathrooms",
+  "city": "City / neighborhood",
+  "cityPlaceholder": "e.g. Tipaza Ville, Didouche Mourad",
+  "titlePlaceholder": "e.g. Seaside villa in Chenoua with private pool",
+  "descPlaceholder": "Describe the atmosphere, views, and unique features of your home...",
+  "coverPhoto": "Cover",
+  "addPhoto": "Add photo",
+  "saveAndExit": "Save & exit",
+  "discard": "Discard changes",
+  "keepEditing": "Keep editing",
+  "exitModalTitle": "Leave listing setup?",
+  "exitModalDesc": "You have unsaved changes. Save your progress as a draft to resume later, or discard what you entered.",
+  "reviewTitle": "Review your listing before publishing",
+  "reviewSubtitle": "Here is what guests will see when browsing DARNA.",
+  "publishListing": "Publish your listing to DARNA",
+  "pricePerNight": "Price per night (DZD)",
+  "draftSaved": "Progress saved as a draft in your browser.",
+  "addPhotoUrlPlaceholder": "Paste image URL (https://...)",
+  "step": "Step {current} of {total}",
+  "hostTypeTitle": "How do you plan to host on DARNA?",
+  "hostTypeSubtitle": "Choose the hosting model that best reflects your Algerian properties, fleet, or hospitality establishment.",
+  "individualTitle": "Individual Host",
+  "individualDesc": "You are an individual hosting your private villa, Casbah apartment, Sahara tent, or personal 4x4. Dedicated lightweight workspace.",
+  "agencyTitle": "Tourism Agency / Fleet",
+  "agencyDesc": "Licensed Algerian travel agency, excursions operator, or car rental fleet with staff, multi-day tours, and fleet management.",
+  "businessName": "Agency / Business Name",
+  "businessNamePlaceholder": "e.g. Algiers Prestige Stays SARL",
+  "regNumber": "Business Registration / Tax Number",
+  "regNumberPlaceholder": "e.g. DZ-16-0982419-A",
+  "contactEmail": "Business Contact Email",
+  "contactPhone": "Business Contact Phone",
+  "header": {
+    "logoAlt": "DARNA home",
+    "becomeHost": "Become a Host",
+    "agency": "Agency Registration",
+    "hotel": "Hotel Registration",
+    "hostel": "Hostel Registration",
+    "progress": "Onboarding progress"
+  },
+  "nav": {
+    "chooseAccountType": "Choose account type",
+    "selectHostMode": "Select host mode"
+  },
+  "hostType": {
+    "eyebrow": "Step 1 of 2 · Partner account type",
+    "individual": {
+      "badge": "Solo Host",
+      "cta": "Continue as Individual"
+    },
+    "agency": {
+      "badge": "Agency Fleet",
+      "cta": "Register Agency Workspace"
+    },
+    "hotel": {
+      "badge": "Hotel & Resort",
+      "title": "Hotel & Resort",
+      "desc": "Multi-room boutique hotel, heritage palace, or luxury resort. Manage multiple room types, front desk check-in, and a high-volume calendar.",
+      "cta": "Register Hotel Property"
+    },
+    "hostel": {
+      "badge": "Hostel & Beds",
+      "title": "Hostel & Community",
+      "desc": "Shared dorm rooms, per-bed booking, private rooms, communal kitchen, lockers, and a social backpacker atmosphere.",
+      "cta": "Register Hostel Property"
+    }
+  },
+  "intro": {
+    "eyebrow": "Overview",
+    "title": "It's easy to get started on DARNA",
+    "subtitle": "Join thousands of welcoming hosts sharing Algerian culture, coastlines, and desert expeditions.",
+    "step1Title": "Tell us about your place",
+    "step1Desc": "Share your location, property type, and guest capacity.",
+    "step2Title": "Make it stand out",
+    "step2Desc": "Add at least 4 photos, amenities, and an authentic title.",
+    "step3Title": "Set pricing & publish",
+    "step3Desc": "Choose your nightly price in DZD and welcome your first guests.",
+    "getStarted": "Get Started"
+  },
+  "categories": {
+    "villa": "Villa",
+    "casbahHouse": "Casbah Heritage House",
+    "seasideApartment": "Seaside Apartment",
+    "saharanKsar": "Saharan Ksar",
+    "desertCamp": "Desert Camp",
+    "landCruiser": "4x4 Land Cruiser SUV",
+    "saharaExpedition": "Sahara 4x4 Expedition",
+    "casbahTour": "Casbah Architecture Tour"
+  },
+  "verticals": {
+    "home": "Stay",
+    "vehicle": "Vehicle",
+    "experience": "Experience"
+  },
+  "placement": {
+    "title": "What type of space will guests have?",
+    "subtitle": "Select the level of privacy guests will enjoy.",
+    "entire": {
+      "title": "An entire place",
+      "desc": "Guests have the whole residence to themselves, including a private entrance and amenities."
+    },
+    "private": {
+      "title": "A private room",
+      "desc": "Guests have their own private bedroom, while areas like the kitchen or patio may be shared."
+    },
+    "shared": {
+      "title": "A shared room",
+      "desc": "Guests sleep in a common space or dorm room with others."
+    }
+  },
+  "location": {
+    "wilaya": "Wilaya (province)",
+    "street": "Street address",
+    "exactStreet": "Exact street address",
+    "streetPlaceholder": "e.g. 14 Route de la Corniche",
+    "mapLabel": "Map pin position",
+    "mapPreview": "Map preview of the selected wilaya"
+  },
+  "wilayas": {
+    "algiers": "Algiers",
+    "oran": "Oran",
+    "constantine": "Constantine",
+    "tipaza": "Tipaza",
+    "djanet": "Djanet (Sahara)",
+    "taghit": "Taghit (Béchar)",
+    "bejaia": "Béjaïa",
+    "ghardaia": "Ghardaïa (M'zab)",
+    "tlemcen": "Tlemcen",
+    "annaba": "Annaba"
+  },
+  "capacity": {
+    "guestsHint": "How many guests can stay comfortably?",
+    "bedroomsHint": "How many bedrooms are available?",
+    "bedsHint": "How many beds do guests have access to?",
+    "bathroomsHint": "How many full or half bathrooms?",
+    "summary": "Summary: {guests} · {bedrooms} · {beds} · {bathrooms}"
+  },
+  "counts": {
+    "guests": "{count, plural, one {# guest} other {# guests}}",
+    "bedrooms": "{count, plural, one {# bedroom} other {# bedrooms}}",
+    "beds": "{count, plural, one {# bed} other {# beds}}",
+    "bathrooms": "{count, plural, one {# bathroom} other {# bathrooms}}"
+  },
+  "amenities": {
+    "wifi": "Fast WiFi",
+    "air_conditioning": "Air conditioning",
+    "kitchen": "Equipped kitchen",
+    "free_parking": "Free parking on premises",
+    "sea_view": "Mediterranean sea view",
+    "traditional_patio": "Traditional central patio",
+    "pool": "Private swimming pool",
+    "sahara_fireplace": "Sahara campfire & fireplace"
+  },
+  "photos": {
+    "title": "Add photos of your Algerian stay",
+    "subtitle": "You need at least 4 photos to publish. High quality photos boost reservations by 40%.",
+    "orgTitle": "Upload property photos",
+    "hotelSubtitle": "Add photos of your hotel exterior, lobby, facilities and grounds (at least 4 required).",
+    "hostelSubtitle": "Add photos of your hostel facade, common areas, rooftop and vibe (at least 4 required).",
+    "photoAlt": "Property photo {number}",
+    "removeLabel": "Remove photo {number}",
+    "urlLabel": "Add a photo by URL",
+    "presetsLabel": "Presets:",
+    "addPreset": "Add preset photo: {name}",
+    "added": "Photo added to the gallery!",
+    "minOne": "Your gallery must have at least one photo.",
+    "presets": {
+      "tipazaVilla": "Tipaza ruins villa",
+      "oranSeaside": "Oran seaside",
+      "constantineBridges": "Constantine bridges",
+      "casbahTerrace": "Casbah terrace",
+      "grandLobby": "Grand lobby",
+      "seasideSuite": "Seaside suite",
+      "historicCourtyard": "Historic courtyard",
+      "poolPatio": "Pool & patio",
+      "rooftopLounge": "Rooftop lounge",
+      "saharanOasis": "Saharan oasis",
+      "socialArea": "Social area"
+    }
+  },
+  "titleStep": {
+    "title": "Now, let's give your place a title",
+    "subtitle": "Short titles that highlight what makes your place special work best.",
+    "label": "Listing title",
+    "tip": "Keep it catchy and descriptive",
+    "ideas": "Need ideas? Tap an example:",
+    "suggestions": {
+      "chenoua": "Seaside luxury villa in Chenoua with private pool",
+      "casbah": "Authentic restored Casbah rooftop with bay view",
+      "tassili": "Tassili desert camp under the Sahara stars"
+    },
+    "default": "Stunning Mediterranean villa with private garden"
+  },
+  "descriptionStep": {
+    "title": "Create your description",
+    "subtitle": "Share what makes your place special, nearby Algerian landmarks, and your hospitality.",
+    "label": "Listing description",
+    "tip": "Mention parking, terrace, views, or nearby markets",
+    "default": "Experience authentic Algerian warmth in this tranquil private residence. Enjoy breathtaking sea breezes, a sun-drenched central patio, and modern comfort just minutes from the coast."
+  },
+  "charCount": "{count}/{max} characters",
+  "pricing": {
+    "preview": "{amount} per night",
+    "eurEquivalent": "Equivalent to {amount} per night",
+    "breakdown": "Earnings estimate",
+    "base": "Base nightly price",
+    "commission": "DARNA commission ({rate}%)",
+    "payout": "Your net payout"
+  },
+  "booking": {
+    "title": "Choose your reservation settings",
+    "subtitle": "Control how guests book and your cancellation rules.",
+    "instantBook": "Instant Book",
+    "instantBookDesc": "Qualified guests book immediately without waiting for host confirmation.",
+    "cancellation": "Cancellation policy",
+    "flexible": {
+      "label": "Flexible",
+      "desc": "Full refund up to 1 day before"
+    },
+    "moderate": {
+      "label": "Moderate",
+      "desc": "Full refund up to 5 days before"
+    },
+    "strict": {
+      "label": "Strict",
+      "desc": "Full refund up to 14 days before"
+    }
+  },
+  "review": {
+    "eyebrow": "Final step",
+    "location": "{city}, {wilaya}, Algeria",
+    "perNight": "per night ({eur})",
+    "editLocation": "Edit location",
+    "editPhotos": "Edit photos ({count})",
+    "editPrice": "Edit price",
+    "publishing": "Publishing listing...",
+    "published": "Congratulations! Your listing is now live on DARNA.",
+    "empty": "—"
+  },
+  "bookingMode": {
+    "title": "How do you want to accept bookings?",
+    "recommended": "Recommended",
+    "manualReview": "Manual review",
+    "instant": "Instant booking",
+    "request": "Request to book",
+    "hotelInstantDesc": "Guests can reserve available rooms immediately without waiting for host confirmation. Recommended for hotels.",
+    "hotelRequestDesc": "Every reservation request must be confirmed manually by the front desk within 24 hours.",
+    "hostelInstant": "Instant bed booking",
+    "hostelInstantDesc": "Backpackers can book immediately and receive hostel access instantly. Keeps occupancy high.",
+    "hostelRequestDesc": "The hostel desk reviews each traveler request and accepts it within 24 hours."
+  },
+  "team": {
+    "emailLabel": "Team member {number} email",
+    "roleLabel": "Team member {number} role",
+    "optional": "This step is optional. You can invite your team anytime.",
+    "addTeammate": "Add another teammate",
+    "addHotelMember": "Add another team member",
+    "addCrewMember": "Add another crew member",
+    "roles": {
+      "agencyManager": "Manager",
+      "agencyAdmin": "Admin",
+      "hotelManager": "Receptionist / manager",
+      "hotelAdmin": "Hotel general manager",
+      "hostelManager": "Desk crew / volunteer",
+      "hostelAdmin": "Hostel manager"
+    }
+  },
+  "org": {
+    "commercialRegister": "Commercial register (RC)",
+    "taxId": "Tax ID (NIF)",
+    "regPlaceholder": "DZ-ALG-2024-B-04192",
+    "taxIdPlaceholder": "002316098765432",
+    "phonePlaceholder": "+213 21 69 21 21",
+    "registerSummary": "Commercial register",
+    "bookingModeSummary": "Booking mode",
+    "location": "Location"
+  },
+  "hotel": {
+    "s1": {
+      "eyebrow": "Hotel step {current} of {total} · Property identity",
+      "title": "Tell us about your hotel or resort",
+      "subtitle": "Enter the official property name and its Algerian hotel classification."
+    },
+    "s2": {
+      "eyebrow": "Hotel step {current} of {total} · Details & facilities",
+      "title": "Registration, timings & amenities"
+    },
+    "s3": {
+      "eyebrow": "Hotel step {current} of {total} · Property location",
+      "title": "Where is your hotel located?",
+      "subtitle": "Set your location so guests can find your hotel on the interactive map."
+    },
+    "s4": {
+      "eyebrow": "Hotel step {current} of {total} · Property gallery"
+    },
+    "s5": {
+      "eyebrow": "Hotel step {current} of {total} · Reservation policy"
+    },
+    "s6": {
+      "eyebrow": "Hotel step {current} of {total} · Front desk staff",
+      "title": "Invite reception & reservation staff",
+      "subtitle": "Optional. You can add front desk operators and managers at any time."
+    },
+    "s7": {
+      "eyebrow": "Hotel step {current} of {total} · Final confirmation",
+      "title": "Review and register your hotel"
+    },
+    "name": "Hotel / resort name",
+    "namePlaceholder": "e.g. El Djazair Grand Palace Hotel",
+    "stars": "Star rating classification",
+    "starCount": "{count, plural, one {# star} other {# stars}}",
+    "checkIn": "Check-in time",
+    "checkOut": "Check-out time",
+    "email": "Reservations email",
+    "emailPlaceholder": "reservations@hoteldjazair.dz",
+    "phone": "Reception phone",
+    "amenitiesLabel": "Property amenities",
+    "amenities": {
+      "breakfast": "Breakfast buffet",
+      "pool": "Swimming pool",
+      "spa": "Spa & hammam",
+      "wifi": "High-speed WiFi",
+      "valet": "Valet parking",
+      "conference": "Conference room",
+      "reception_24_7": "24/7 front desk",
+      "shuttle": "Airport shuttle"
+    },
+    "cityPlaceholder": "e.g. Hydra, Didouche Mourad",
+    "streetPlaceholder": "e.g. 24 Avenue Souidani Boudjemaa",
+    "invitePlaceholder": "reception@hoteldjazair.dz",
+    "review": {
+      "name": "Property name",
+      "classification": "Classification",
+      "totalRooms": "Total rooms",
+      "rooms": "{count, plural, one {# room} other {# rooms}}"
+    },
+    "notice": {
+      "title": "Hotel onboarding complete",
+      "body": "Your hotel workspace will be activated right away. You can define room types and nightly rates from your host extranet."
+    },
+    "registering": "Registering hotel...",
+    "register": "Register hotel workspace",
+    "success": "Hotel workspace registered! It is pending verification — you can start setting up your property."
+  },
+  "hostel": {
+    "s1": {
+      "eyebrow": "Hostel step {current} of {total} · Property identity",
+      "title": "Tell us about your hostel",
+      "subtitle": "Enter your backpacker hostel name and location in Algeria."
+    },
+    "s2": {
+      "eyebrow": "Hostel step {current} of {total} · Details & policies",
+      "title": "Legal registration & hostel policies"
+    },
+    "s3": {
+      "eyebrow": "Hostel step {current} of {total} · Property location",
+      "title": "Where is your hostel located?",
+      "subtitle": "Set your location so backpackers can easily find your hostel on the map."
+    },
+    "s4": {
+      "eyebrow": "Hostel step {current} of {total} · Property gallery"
+    },
+    "s5": {
+      "eyebrow": "Hostel step {current} of {total} · Reservation policy"
+    },
+    "s6": {
+      "eyebrow": "Hostel step {current} of {total} · Community team",
+      "title": "Invite hostel crew & volunteers"
+    },
+    "s7": {
+      "eyebrow": "Hostel step {current} of {total} · Final confirmation",
+      "title": "Review and register your hostel"
+    },
+    "name": "Hostel name",
+    "namePlaceholder": "e.g. Casbah Heritage Backpacker Hostel",
+    "addressLabel": "Street address & city",
+    "addressPlaceholder": "e.g. 12 Rue Sidi Ramdane, Casbah, Algiers",
+    "email": "Hostel email",
+    "emailPlaceholder": "hello@casbahhostel.dz",
+    "phone": "Reception phone / WhatsApp",
+    "regPlaceholder": "DZ-ALG-2024-B-07114",
+    "taxIdPlaceholder": "002416098877112",
+    "phonePlaceholder": "+213 21 73 88 19",
+    "curfew": "Curfew policy",
+    "curfewDefault": "No curfew · 24h keycard access",
+    "age": "Age policy",
+    "ageDefault": "All ages welcome (18+ in dorms)",
+    "facilitiesLabel": "Hostel facilities",
+    "facilities": {
+      "lockers": "Personal lockers",
+      "shared_kitchen": "Communal kitchen",
+      "rooftop": "Rooftop social patio",
+      "coworking": "Co-working zone",
+      "luggage_storage": "Free luggage storage",
+      "breakfast": "Hostel breakfast"
+    },
+    "cityPlaceholder": "e.g. Casbah, Bab El Oued",
+    "streetPlaceholder": "e.g. 12 Rue Sidi Ramdane, Casbah",
+    "invitePlaceholder": "crew@casbahhostel.dz",
+    "review": {
+      "name": "Hostel name",
+      "totalBeds": "Total beds",
+      "beds": "{total, plural, one {# bed} other {# beds}} ({dorm} dorm, {private} private)"
+    },
+    "notice": {
+      "title": "Hostel community profile ready",
+      "body": "Your hostel workspace will be active right away. You can manage per-bed rates, dorm allocations, and guest arrivals."
+    },
+    "registering": "Registering hostel...",
+    "register": "Register hostel workspace",
+    "success": "Hostel workspace registered! It is pending verification — you can start setting up your property."
+  },
+  "customStep": {
+    "additionalInfo": "Additional information",
+    "selectOption": "Select an option..."
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "cityAddress": "Please provide a city and street address.",
+    "title": "Please write a catchy listing title.",
+    "titlePrice": "Please add a title and a whole-number nightly price between {min} and {max}.",
+    "minPhotos": "Please add at least 4 property photos.",
+    "orgName": "Please enter the registered business name.",
+    "orgReg": "Please enter the commercial registration number (RC).",
+    "orgEmail": "Please enter a valid business email.",
+    "orgPhone": "Please enter a business phone number.",
+    "orgAddress": "Please enter the business address.",
+    "contactDetails": "Please enter the registration number, a valid email and a phone number.",
+    "hotelName": "Please enter your hotel name.",
+    "hotelAddress": "Please enter the hotel address.",
+    "hostelName": "Please enter your hostel name.",
+    "hostelAddress": "Please enter the hostel address."
+  },
+  "discarded": "Unsaved changes discarded."
+}

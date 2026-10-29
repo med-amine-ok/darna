@@ -1,38 +1,82 @@
 // TODO: replace with Supabase query
-import { Organization, Membership } from "@/types";
-import { mockOrganizations, mockMemberships } from "@/lib/mock-data/organizations";
+import "server-only";
+import { Organization, Membership, MembershipRole } from "@/types";
+import { newId } from "@/lib/ids";
+import { clone, delay, removeWhere } from "./_store";
+import {
+  organizationsTable as organizationsStore,
+  membershipsTable as membershipsStore,
+  listingsTable,
+  tripsTable,
+} from "./_tables";
 
-const g = globalThis as unknown as {
-  __darna_orgs__?: Organization[];
-  __darna_memberships__?: Membership[];
-};
-if (!g.__darna_orgs__) {
-  g.__darna_orgs__ = [...mockOrganizations];
-}
-if (!g.__darna_memberships__) {
-  g.__darna_memberships__ = [...mockMemberships];
-}
-let organizationsStore: Organization[] = g.__darna_orgs__;
-let membershipsStore: Membership[] = g.__darna_memberships__;
+/** Fields whose change requires a new verification by DARNA staff. */
+export const ORGANIZATION_LEGAL_FIELDS = [
+  "name",
+  "businessRegistrationNumber",
+  "businessType",
+  "businessCategory",
+  "address",
+  "country",
+] as const;
+
+/** Fields an org admin/owner may edit through settings. */
+export const ORGANIZATION_EDITABLE_FIELDS = [
+  ...ORGANIZATION_LEGAL_FIELDS,
+  "logo",
+  "description",
+  "businessEmail",
+  "businessPhone",
+  "teamSizeEstimate",
+  "hotelStarRating",
+  "totalRoomCount",
+  "checkInTime",
+  "checkOutTime",
+  "hotelAmenities",
+  "hostelFacilities",
+  "curfewPolicy",
+  "agePolicy",
+  "bookingApprovalMode",
+] as const;
+
+export type OrganizationEditableField = (typeof ORGANIZATION_EDITABLE_FIELDS)[number];
 
 export async function getOrganizationById(id: string): Promise<Organization | null> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  return organizationsStore.find((org) => org.id === id) || null;
+  await delay(30);
+  const org = organizationsStore.find((o) => o.id === id);
+  return org ? clone(org) : null;
 }
 
 export async function getOrganizations(): Promise<Organization[]> {
-  await new Promise((resolve) => setTimeout(resolve, 60));
-  return [...organizationsStore];
+  await delay(30);
+  return clone(organizationsStore);
 }
 
 export async function getOrganizationMembers(organizationId: string): Promise<Membership[]> {
-  await new Promise((resolve) => setTimeout(resolve, 70));
-  return membershipsStore.filter((m) => m.organizationId === organizationId);
+  await delay(30);
+  return clone(membershipsStore.filter((m) => m.organizationId === organizationId));
+}
+
+/** Active memberships of a user (the only way a user is linked to an org). */
+export async function getMembershipsForUser(userId: string): Promise<Membership[]> {
+  return clone(membershipsStore.filter((m) => m.userId === userId && m.status === "active"));
+}
+
+export async function getMembership(organizationId: string, userId: string): Promise<Membership | null> {
+  const m = membershipsStore.find(
+    (x) => x.organizationId === organizationId && x.userId === userId && x.status === "active"
+  );
+  return m ? clone(m) : null;
+}
+
+export async function getMemberById(memberId: string): Promise<Membership | null> {
+  const m = membershipsStore.find((x) => x.id === memberId);
+  return m ? clone(m) : null;
 }
 
 export async function createOrganization(data: {
   name: string;
-  businessCategory?: "agency" | "hotel" | "hostel";
+  businessCategory: "agency" | "hotel" | "hostel";
   logo?: string;
   description?: string;
   businessRegistrationNumber: string;
@@ -41,8 +85,7 @@ export async function createOrganization(data: {
   businessPhone: string;
   address?: string;
   country?: string;
-  ownerUserId: string;
-  verificationStatus?: "pending" | "verified" | "rejected";
+  owner: { userId: string; name: string; email: string };
   teamSizeEstimate?: "1" | "2-10" | "11-50" | "50+";
   hotelStarRating?: number;
   totalRoomCount?: number;
@@ -55,92 +98,87 @@ export async function createOrganization(data: {
   bookingApprovalMode?: "instant" | "request";
   invitedMembers?: { email: string; role: "admin" | "manager" }[];
 }): Promise<Organization> {
-  await new Promise((resolve) => setTimeout(resolve, 120));
+  await delay(60);
 
-  const orgId = `org_${Date.now()}`;
+  const now = new Date().toISOString();
+  const category = data.businessCategory;
   const newOrg: Organization = {
-    id: orgId,
+    id: newId("org"),
     name: data.name,
-    businessCategory: data.businessCategory || "agency",
+    businessCategory: category,
     logo: data.logo || "/assets/logo-vertical.png",
     description: data.description || "",
     businessRegistrationNumber: data.businessRegistrationNumber,
-    businessType: data.businessType || (data.businessCategory === "hotel" ? "Commercial Luxury Hotel" : data.businessCategory === "hostel" ? "Youth & Backpacker Hostel" : "Licensed Tourism Agency"),
+    businessType:
+      data.businessType ||
+      (category === "hotel"
+        ? "Commercial Luxury Hotel"
+        : category === "hostel"
+        ? "Youth & Backpacker Hostel"
+        : "Licensed Tourism Agency"),
     businessEmail: data.businessEmail,
     businessPhone: data.businessPhone,
-    address: data.address || "Algiers, Algeria",
+    address: data.address || "",
     country: data.country || "Algeria",
-    verificationStatus: data.verificationStatus || "verified",
-    createdAt: new Date().toISOString(),
-    ownerUserId: data.ownerUserId,
+    // New organizations always start unverified; DARNA staff verify them from the admin app.
+    verificationStatus: "pending",
+    createdAt: now,
+    ownerUserId: data.owner.userId,
     teamSizeEstimate: data.teamSizeEstimate || "2-10",
     hotelStarRating: data.hotelStarRating,
     totalRoomCount: data.totalRoomCount,
-    checkInTime: data.checkInTime || (data.businessCategory === "hotel" ? "14:00" : "13:00"),
-    checkOutTime: data.checkOutTime || (data.businessCategory === "hotel" ? "12:00" : "11:00"),
+    checkInTime: data.checkInTime || (category === "hotel" ? "14:00" : "13:00"),
+    checkOutTime: data.checkOutTime || (category === "hotel" ? "12:00" : "11:00"),
     hotelAmenities: data.hotelAmenities || [],
     hostelFacilities: data.hostelFacilities || [],
     curfewPolicy: data.curfewPolicy,
     agePolicy: data.agePolicy,
     bookingApprovalMode: data.bookingApprovalMode || "instant",
-    rating: 5.0,
+    rating: 0,
     reviewCount: 0,
   };
+  organizationsStore.unshift(newOrg);
 
-  organizationsStore = [newOrg, ...organizationsStore];
-  g.__darna_orgs__ = organizationsStore;
-  if (!mockOrganizations.some((o) => o.id === newOrg.id)) {
-    mockOrganizations.unshift(newOrg);
-  }
-
-  // Create owner membership
-  const ownerMembership: Membership = {
-    id: `mem_${Date.now()}_owner`,
-    organizationId: orgId,
-    userId: data.ownerUserId,
-    name: "Agency Owner",
-    email: data.businessEmail,
+  membershipsStore.unshift({
+    id: newId("mem"),
+    organizationId: newOrg.id,
+    userId: data.owner.userId,
+    name: data.owner.name,
+    email: data.owner.email,
     role: "owner",
     status: "active",
     invitedBy: "system",
-    createdAt: new Date().toISOString(),
-    joinedAt: new Date().toISOString(),
-  };
-  membershipsStore = [ownerMembership, ...membershipsStore];
+    createdAt: now,
+    joinedAt: now,
+  });
 
-  // Add invited team members
-  if (data.invitedMembers && data.invitedMembers.length > 0) {
-    data.invitedMembers.forEach((member, i) => {
-      const invitedMem: Membership = {
-        id: `mem_${Date.now()}_${i}`,
-        organizationId: orgId,
-        userId: null,
-        name: member.email.split("@")[0],
-        email: member.email,
-        role: member.role,
-        status: "invited",
-        invitedBy: data.ownerUserId,
-        createdAt: new Date().toISOString(),
-        joinedAt: null,
-      };
-      membershipsStore.push(invitedMem);
+  for (const member of data.invitedMembers || []) {
+    membershipsStore.push({
+      id: newId("mem"),
+      organizationId: newOrg.id,
+      userId: null,
+      name: member.email.split("@")[0],
+      email: member.email,
+      role: member.role,
+      status: "invited",
+      invitedBy: data.owner.userId,
+      createdAt: now,
+      joinedAt: null,
     });
   }
 
-  return newOrg;
+  return clone(newOrg);
 }
 
 export async function updateOrganizationVerification(
   id: string,
   status: "pending" | "verified" | "rejected"
 ): Promise<Organization | null> {
-  await new Promise((resolve) => setTimeout(resolve, 60));
+  await delay(30);
   const org = organizationsStore.find((o) => o.id === id);
-  if (org) {
-    org.verificationStatus = status;
-    return org;
-  }
-  return null;
+  if (!org) return null;
+  org.verificationStatus = status;
+  return clone(org);
 }
 
 export async function addOrganizationMember(data: {
@@ -150,9 +188,9 @@ export async function addOrganizationMember(data: {
   role: "admin" | "manager";
   invitedBy: string;
 }): Promise<Membership> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
+  await delay(40);
   const newMember: Membership = {
-    id: `mem_${Date.now()}`,
+    id: newId("mem"),
     organizationId: data.organizationId,
     userId: null,
     name: data.name || data.email.split("@")[0],
@@ -163,53 +201,82 @@ export async function addOrganizationMember(data: {
     createdAt: new Date().toISOString(),
     joinedAt: null,
   };
-  membershipsStore = [newMember, ...membershipsStore];
-  return newMember;
+  membershipsStore.unshift(newMember);
+  return clone(newMember);
 }
 
 export async function updateOrganizationMemberRole(
   memberId: string,
-  role: "admin" | "manager" | "owner"
+  role: MembershipRole
 ): Promise<Membership | null> {
-  await new Promise((resolve) => setTimeout(resolve, 60));
-  const idx = membershipsStore.findIndex((m) => m.id === memberId);
-  if (idx !== -1) {
-    membershipsStore[idx] = {
-      ...membershipsStore[idx],
-      role,
-    };
-    return membershipsStore[idx];
+  await delay(30);
+  const member = membershipsStore.find((m) => m.id === memberId);
+  if (!member) return null;
+  member.role = role;
+  return clone(member);
+}
+
+/** Makes `newOwnerMemberId` the owner and demotes the current owner(s) to admin. */
+export async function transferOrganizationOwnership(
+  organizationId: string,
+  newOwnerMemberId: string
+): Promise<boolean> {
+  const target = membershipsStore.find(
+    (m) => m.id === newOwnerMemberId && m.organizationId === organizationId && m.status === "active"
+  );
+  const org = organizationsStore.find((o) => o.id === organizationId);
+  if (!target || !target.userId || !org) return false;
+
+  for (const m of membershipsStore) {
+    if (m.organizationId === organizationId && m.role === "owner") m.role = "admin";
   }
-  return null;
+  target.role = "owner";
+  org.ownerUserId = target.userId;
+  return true;
 }
 
 export async function removeOrganizationMember(memberId: string): Promise<boolean> {
-  await new Promise((resolve) => setTimeout(resolve, 60));
-  const beforeLen = membershipsStore.length;
-  membershipsStore = membershipsStore.filter((m) => m.id !== memberId);
-  return membershipsStore.length < beforeLen;
+  await delay(30);
+  return removeWhere(membershipsStore, (m) => m.id === memberId) > 0;
 }
 
+/**
+ * Applies a whitelisted patch. If any legal field changes, verification goes
+ * back to "pending".
+ */
 export async function updateOrganization(
   id: string,
-  data: Partial<Organization>
+  data: Partial<Pick<Organization, OrganizationEditableField>>
 ): Promise<Organization | null> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  const idx = organizationsStore.findIndex((o) => o.id === id);
-  if (idx !== -1) {
-    organizationsStore[idx] = {
-      ...organizationsStore[idx],
-      ...data,
-    };
-    return organizationsStore[idx];
+  await delay(40);
+  const org = organizationsStore.find((o) => o.id === id);
+  if (!org) return null;
+
+  let legalChanged = false;
+  const target = org as unknown as Record<string, unknown>;
+  for (const field of ORGANIZATION_EDITABLE_FIELDS) {
+    if (!(field in data)) continue;
+    const next = (data as Record<string, unknown>)[field];
+    if (next === undefined) continue;
+    if (
+      (ORGANIZATION_LEGAL_FIELDS as readonly string[]).includes(field) &&
+      JSON.stringify(target[field]) !== JSON.stringify(next)
+    ) {
+      legalChanged = true;
+    }
+    target[field] = next;
   }
-  return null;
+  if (legalChanged) org.verificationStatus = "pending";
+
+  return clone(org);
 }
 
 export async function deleteOrganization(id: string): Promise<boolean> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  const before = organizationsStore.length;
-  organizationsStore = organizationsStore.filter((o) => o.id !== id);
-  membershipsStore = membershipsStore.filter((m) => m.organizationId !== id);
-  return organizationsStore.length < before;
+  await delay(40);
+  const removed = removeWhere(organizationsStore, (o) => o.id === id);
+  removeWhere(membershipsStore, (m) => m.organizationId === id);
+  // Unpublish everything the organization owned.
+  for (const l of listingsTable) if (l.organizationId === id) l.status = "draft";
+  for (const t of tripsTable) if (t.organizationId === id) t.status = "draft";
+  return removed > 0;
 }

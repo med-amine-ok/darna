@@ -5,9 +5,11 @@ import Image from "next/image";
 interface AvatarProps {
   src?: string | null;
   size?: number;
+  /** Accessible name; omit when the avatar sits next to the person's name. */
+  alt?: string;
 }
 
-export default function Avatar({ src, size = 30 }: AvatarProps) {
+export default function Avatar({ src, size = 30, alt = "" }: AvatarProps) {
   return (
     <div
       style={{ width: `${size}px`, height: `${size}px` }}
@@ -16,7 +18,7 @@ export default function Avatar({ src, size = 30 }: AvatarProps) {
       <Image
         className="object-cover"
         src={src || "/assets/avatar.png"}
-        alt="Avatar"
+        alt={alt}
         fill
         sizes={`${size}px`}
       />

@@ -1,0 +1,57 @@
+{
+  "eyebrowAgency": "مركز إدارة الوكالة",
+  "eyebrowIndividual": "لوحة تحكم المضيف",
+  "greeting": "مرحبًا، {name}!",
+  "hostFallback": "مضيف",
+  "subtitle": "ملخصك اليومي لعمليات الوصول وطلبات الضيوف المعلقة وأداء الحجوزات.",
+  "createListing": "إنشاء إعلان",
+  "performanceTitle": "نظرة عامة على الأداء",
+  "periodLabel": "الفترة",
+  "period": {
+    "month": "هذا الشهر",
+    "30days": "آخر 30 يومًا",
+    "year": "منذ بداية السنة"
+  },
+  "kpi": {
+    "grossEarnings": "إجمالي أرباح المضيف",
+    "earningsTrend": "{change} مقارنة بالفترة السابقة (≈ {eur})",
+    "occupancyRate": "نسبة الإشغال",
+    "occupancyNote": "{booked} ليلة محجوزة من أصل {available} ليلة متاحة",
+    "activeBookings": "الحجوزات النشطة",
+    "activeBookingsNote": "الإقامات وتأجير المركبات المؤكدة",
+    "overallRating": "التقييم العام",
+    "ratingNote": "{count, plural, =0 {لا توجد تقييمات بعد} one {من تقييم ضيف واحد} two {من تقييمين للضيوف} few {من # تقييمات للضيوف} many {من # تقييمًا للضيوف} other {من # تقييم للضيوف}}",
+    "earningsEur": "≈ {eur}"
+  },
+  "pendingTitle": "إجراء مطلوب: طلبات حجز معلقة ({count})",
+  "requestFor": "طلب حجز لـ {title}",
+  "requestDetails": "التواريخ: <strong>{dates}</strong> · {guests, plural, zero {بدون ضيوف} one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}} · المبلغ المستحق: <strong>{payout}</strong>",
+  "acceptRequest": "قبول الطلب",
+  "toast": {
+    "accepted": "تم قبول الحجز وتأكيد الضيف.",
+    "declined": "تم رفض الحجز.",
+    "updateFailed": "تعذّر تحديث حالة الحجز."
+  },
+  "todayTitle": "إقامات اليوم وعمليات الوصول",
+  "noCheckIns": "لا توجد عمليات وصول مقررة اليوم.",
+  "checkInAt": "الوصول على الساعة {time}",
+  "stayDetails": "{count, plural, zero {بدون مسافرين} one {مسافر واحد} two {مسافران} few {# مسافرين} many {# مسافرًا} other {# مسافر}} · تم تأكيد الوصول",
+  "currentlyHosting": "الاستضافات الجارية ({count})",
+  "stayEnds": "تنتهي الإقامة في {date}",
+  "inHouse": "مقيم حاليًا",
+  "recentReviews": "أحدث تقييمات الضيوف",
+  "noReviews": "لا توجد تقييمات بعد.",
+  "quickActions": "إجراءات سريعة",
+  "quick": {
+    "calendar": "حجب تواريخ أو تعديل الأسعار",
+    "listings": "إدارة إعلاناتك ({count})",
+    "messages": "الاطلاع على رسائل الضيوف",
+    "payout": "حساب الدفع وRIB"
+  },
+  "tip": {
+    "eyebrow": "نصيحة للمضيفين في الجزائر",
+    "title": "الشتاء موسم الذروة في الصحراء",
+    "body": "يبلغ الطلب على الرحلات الاستكشافية وتأجير سيارات الدفع الرباعي حول جانت وتاغيت ذروته بين نوفمبر ومارس. عدّل أسعار تقويمك وفقًا لذلك.",
+    "cta": "فتح تقويم الأسعار"
+  }
+}
