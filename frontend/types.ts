@@ -24,7 +24,7 @@ export interface User {
 }
 
 /**
- * Public projection of a user — safe to send to any visitor.
+ * Public projection of a user, safe to send to any visitor.
  * Never contains email, phone or address.
  */
 export interface PublicUser {
@@ -44,7 +44,12 @@ export interface PublicUser {
 
 export type CancellationPolicy = "flexible" | "moderate" | "strict";
 
-export type ListingVertical = "home" | "hotel" | "experience" | "vehicle" | "trip";
+export type ListingVertical =
+  | "home"
+  | "hotel"
+  | "experience"
+  | "vehicle"
+  | "trip";
 export type ListingOwnerType = "individual" | "organization";
 export type ListingStatus = "active" | "pending" | "suspended" | "draft";
 
@@ -120,6 +125,8 @@ export interface Listing {
   updatedAt?: string;
   locationValue: string; // City or country code
   city: string;
+  /** Commune (municipality), see lib/algeria.ts; the wilaya is derived from it. */
+  commune?: string;
   country: string;
   latlng: [number, number];
   featured?: boolean;
@@ -188,9 +195,20 @@ export interface Listing {
   experienceLanguages?: string[];
 }
 
-export type ReservationStatus = "confirmed" | "pending" | "cancelled" | "completed" | "declined" | "expired";
+export type ReservationStatus =
+  | "confirmed"
+  | "pending"
+  | "cancelled"
+  | "completed"
+  | "declined"
+  | "expired";
 
-export type PaymentStatus = "paid" | "pending" | "refunded" | "partially_refunded" | "voided";
+export type PaymentStatus =
+  | "paid"
+  | "pending"
+  | "refunded"
+  | "partially_refunded"
+  | "voided";
 
 export interface Reservation {
   id: string;
@@ -256,6 +274,8 @@ export interface Trip {
   exclusions: string[];
   meetingPoint: string;
   city: string;
+  /** Commune (municipality), see lib/algeria.ts. */
+  commune?: string;
   locationValue: string;
   latlng?: [number, number];
   cancellationPolicy: CancellationPolicy;
@@ -269,7 +289,10 @@ export interface Trip {
   organization?: PublicOrganization;
 }
 
-export type OrganizationVerificationStatus = "pending" | "verified" | "rejected";
+export type OrganizationVerificationStatus =
+  | "pending"
+  | "verified"
+  | "rejected";
 
 export interface Organization {
   id: string;
@@ -436,7 +459,13 @@ export interface AuditLogEntry {
   adminId: string;
   adminName: string;
   action: string;
-  targetType: "listing" | "booking" | "user" | "review" | "setting" | "organization";
+  targetType:
+    | "listing"
+    | "booking"
+    | "user"
+    | "review"
+    | "setting"
+    | "organization";
   targetId: string;
   details: string;
   timestamp: string;
@@ -456,7 +485,12 @@ export interface Coupon {
   createdAt: string;
 }
 
-export type NotificationType = "booking" | "message" | "price" | "system" | "review";
+export type NotificationType =
+  | "booking"
+  | "message"
+  | "price"
+  | "system"
+  | "review";
 
 export interface Notification {
   id: string;
@@ -570,7 +604,7 @@ export interface Wallet {
 
 export interface HostTypeCommissionRates {
   individual: number; // percentage (e.g. 12.0)
-  agency: number;     // percentage (e.g. 15.0)
-  hotel: number;      // percentage (e.g. 18.0)
-  hostel: number;     // percentage (e.g. 10.0)
+  agency: number; // percentage (e.g. 15.0)
+  hotel: number; // percentage (e.g. 18.0)
+  hostel: number; // percentage (e.g. 10.0)
 }

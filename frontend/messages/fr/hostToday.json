@@ -21,7 +21,11 @@
     "activeBookingsNote": "Séjours et locations de véhicules confirmés",
     "overallRating": "Note globale",
     "ratingNote": "{count, plural, =0 {Aucun avis pour le moment} one {Sur # avis de voyageur} other {Sur # avis de voyageurs}}",
-    "earningsEur": "≈ {eur}"
+    "earningsEur": "≈ {eur}",
+    "vsPrevious": "vs. période précédente (≈ {eur})",
+    "noEarnings": "Aucun revenu confirmé sur cette période",
+    "noOccupancy": "Ajoutez un logement ou un véhicule réservable pour suivre l’occupation.",
+    "ratingNew": "Nouveau"
   },
   "pendingTitle": "Action requise : demandes de réservation en attente ({count})",
   "requestFor": "Demande de réservation pour {title}",
@@ -53,5 +57,11 @@
     "title": "L’hiver, c’est la haute saison au Sahara",
     "body": "La demande d’expéditions et de locations de 4x4 autour de Djanet et Taghit culmine entre novembre et mars. Ajustez les prix de votre calendrier en conséquence.",
     "cta": "Ouvrir le calendrier des prix"
-  }
+  },
+  "upcomingTitle": "Prochaines arrivées",
+  "allBookings": "Toutes les réservations",
+  "noUpcoming": "Aucune arrivée à venir",
+  "noUpcomingHint": "Les réservations confirmées s’affichent ici avec leur date d’arrivée et l’heure d’enregistrement.",
+  "todayBadge": "Aujourd’hui",
+  "guestsNights": "{count, plural, one {# voyageur} other {# voyageurs}} · {nights, plural, one {# nuit} other {# nuits}}"
 }

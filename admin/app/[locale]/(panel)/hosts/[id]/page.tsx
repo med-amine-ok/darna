@@ -41,17 +41,17 @@ export default async function HostDetailPage({
         ]}
       />
 
-      <div className="p-6 rounded-3xl bg-white border border-tertiary/70 shadow-darna-card flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-white shadow-e1 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Avatar name={host.ownerName} size={56} />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-serif font-black text-primary">
+              <h1 className="font-serif text-heading text-primary-900">
                 {host.businessName || host.ownerName}
               </h1>
               <Badge variant="secondary">{hostTypeLabel}</Badge>
             </div>
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-primary-600 mt-1">
               {host.email} · <span dir="ltr">{host.phone}</span> · {getWilayaName(host.wilayaCode, locale)}
             </p>
           </div>
@@ -67,38 +67,38 @@ export default async function HostDetailPage({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 rounded-3xl bg-white border border-tertiary/70 shadow-darna-card space-y-3 text-xs">
-          <h2 className="font-bold text-primary text-sm">{t("financialSnapshot")}</h2>
+        <div className="p-6 rounded-2xl bg-white shadow-e1 space-y-3 text-xs">
+          <h2 className="font-semibold text-primary text-sm">{t("financialSnapshot")}</h2>
           <dl className="space-y-3">
-            <div className="flex justify-between py-1 border-b border-neutral-100">
-              <dt className="text-neutral-500">{t("walletBalance")}</dt>
-              <dd className="font-bold font-mono text-primary">{formatDzd(host.walletBalance, locale)}</dd>
+            <div className="flex justify-between py-1 border-b border-primary/[0.08]">
+              <dt className="text-primary-600">{t("walletBalance")}</dt>
+              <dd className="font-semibold font-mono text-primary">{formatDzd(host.walletBalance, locale)}</dd>
             </div>
-            <div className="flex justify-between py-1 border-b border-neutral-100">
-              <dt className="text-neutral-500">{t("takeRate")}</dt>
-              <dd className="font-bold font-mono">{commission}</dd>
+            <div className="flex justify-between py-1 border-b border-primary/[0.08]">
+              <dt className="text-primary-600">{t("takeRate")}</dt>
+              <dd className="font-semibold font-mono">{commission}</dd>
             </div>
-            <div className="flex justify-between py-1 border-b border-neutral-100">
-              <dt className="text-neutral-500">{t("totalBookings")}</dt>
-              <dd className="font-bold">{formatNumber(host.bookingsCount, locale)}</dd>
+            <div className="flex justify-between py-1 border-b border-primary/[0.08]">
+              <dt className="text-primary-600">{t("totalBookings")}</dt>
+              <dd className="font-semibold">{formatNumber(host.bookingsCount, locale)}</dd>
             </div>
             <div className="flex justify-between py-1">
-              <dt className="text-neutral-500">{t("activeFleet")}</dt>
-              <dd className="font-bold">{t("listingsValue", { count: host.listingsCount })}</dd>
+              <dt className="text-primary-600">{t("activeFleet")}</dt>
+              <dd className="font-semibold">{t("listingsValue", { count: host.listingsCount })}</dd>
             </div>
           </dl>
         </div>
 
-        <div className="md:col-span-2 p-6 rounded-3xl bg-white border border-tertiary/70 shadow-darna-card space-y-4">
-          <h2 className="font-bold text-primary text-sm">{t("verificationDocuments")}</h2>
+        <div className="md:col-span-2 p-6 rounded-2xl bg-white shadow-e1 space-y-4">
+          <h2 className="font-semibold text-primary text-sm">{t("verificationDocuments")}</h2>
           <ul className="space-y-3">
             {host.documents.map((doc) => (
-              <li key={doc.id} className="p-3.5 rounded-2xl bg-darnaBg/40 border border-tertiary/50 flex items-center justify-between gap-3 text-xs">
+              <li key={doc.id} className="p-3.5 rounded-2xl bg-darnaBg-100 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2.5">
                   <FileCheck className="w-4 h-4 text-secondary shrink-0" aria-hidden="true" />
                   <div>
-                    <span className="font-bold text-primary block">{doc.title}</span>
-                    <span className="text-[11px] text-neutral-500">
+                    <span className="font-semibold text-primary block">{doc.title}</span>
+                    <span className="text-[11px] text-primary-600">
                       {t("uploaded", { date: formatDate(doc.uploadedAt, locale) })}
                     </span>
                   </div>
@@ -108,7 +108,7 @@ export default async function HostDetailPage({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={t("viewFileLabel", { title: doc.title })}
-                  className="px-3 py-1 rounded-lg border border-tertiary/70 text-xs font-bold hover:bg-white transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                  className="px-3 py-1 rounded-lg border border-primary/[0.08] text-xs font-semibold hover:bg-white transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                 >
                   {t("viewFile")}
                 </a>

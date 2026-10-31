@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useId, useState } from "react";
+import React, { useState } from "react";
 import { useTranslations } from "next-intl";
+import { m } from "framer-motion";
 import { Link, usePathname, useRouter } from "@/navigation";
-import { useDialogA11y } from "@/hook/useDialogA11y";
+import { Sheet, cn, focusRingInset } from "@/components/ui";
+import { spring } from "@/lib/motion";
 import {
-  BrandCloseIcon,
   BrandHomeIcon,
   BrandBookingsIcon,
   BrandCalendarIcon,
@@ -18,6 +19,7 @@ import {
   BrandSettingsIcon,
   BrandPlusIcon,
   BrandBriefcaseIcon,
+  BrandChevronRightIcon,
   IconProps,
 } from "@/components/icons";
 
@@ -32,16 +34,12 @@ interface HostTab {
   exact?: boolean;
 }
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-
+/** Phone tab bar for host mode: glass, sliding pill behind the active icon, "More" opens a kit Sheet. */
 export default function HostBottomNav({ hostType }: HostBottomNavProps) {
   const t = useTranslations("hostNav");
   const pathname = usePathname();
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const sheetTitleId = useId();
-  const sheetRef = useDialogA11y<HTMLDivElement>(sheetOpen, { onEscape: () => setSheetOpen(false) });
 
   const isIndividual = hostType === "individual" || !hostType;
   const isAgency = hostType === "agency";
@@ -52,200 +50,149 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
     { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
     { href: "/host/messages", label: t("tabs.messages"), icon: BrandMessageIcon },
   ];
-
   const enterpriseTabs: HostTab[] = [
     { href: "/host", label: t("tabs.today"), icon: BrandHomeIcon, exact: true },
     { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
     { href: "/host/calendar", label: t("tabs.calendar"), icon: BrandCalendarIcon },
     { href: "/host/listings", label: t("tabs.listings"), icon: BrandGridIcon },
   ];
+  const tabs = isIndividual ? soloTabs : enterpriseTabs;
 
-  const tabs: HostTab[] = isIndividual ? soloTabs : enterpriseTabs;
-
-  const isActive = (href: string, exact = false) => {
-    if (exact) return pathname === href;
-    return pathname?.startsWith(href);
-  };
-
+  const isActive = (href: string, exact = false) => (exact ? pathname === href : !!pathname?.startsWith(href));
   const isMoreActive =
-    pathname?.startsWith("/host/agency") ||
+    !!pathname?.startsWith("/host/agency") ||
     pathname === "/host/settings" ||
-    (!isIndividual && pathname?.startsWith("/host/messages"));
+    (!isIndividual && !!pathname?.startsWith("/host/messages"));
 
-  // Hide bottom navigation on host messages (full-screen messaging app)
-  if (pathname?.includes("/host/messages")) {
-    return null;
-  }
+  if (pathname?.includes("/host/messages")) return null;
 
-  const sheetLinkClass = (active: boolean | undefined) =>
-    `flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${focusRing} ${
-      active ? "bg-primary/10 text-primary font-bold" : "hover:bg-neutral-50 text-neutral-700"
-    }`;
+  const close = () => setSheetOpen(false);
+
+  const sheetLink = (href: string, label: string, Icon: React.FC<IconProps>, active: boolean) => (
+    <Link
+      href={href}
+      onClick={close}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-h-[52px] items-center gap-3 rounded-2xl px-3 text-body font-medium transition-colors duration-fast ease-standard",
+        focusRingInset,
+        active ? "bg-primary/[0.07] text-primary-900" : "text-primary-800 hover:bg-primary/[0.04]"
+      )}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary-100 text-secondary-800">
+        <Icon size={18} aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <BrandChevronRightIcon size={16} aria-hidden="true" className="text-primary-400 rtl:rotate-180" />
+    </Link>
+  );
+
+  const tabClass = (active: boolean) =>
+    cn(
+      "relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl touch-manipulation select-none",
+      "transition-colors duration-fast ease-standard",
+      focusRingInset,
+      active ? "text-primary-900" : "text-primary-600 hover:text-primary-800"
+    );
+
+  const pill = (
+    <m.span
+      layoutId="host-bottom-indicator"
+      transition={spring.layout}
+      aria-hidden="true"
+      className="absolute inset-x-1.5 inset-y-1 -z-10 rounded-2xl bg-primary/[0.07]"
+    />
+  );
 
   return (
     <>
-      {/* Mobile slide-up "More" sheet */}
-      {sheetOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in"
-            aria-hidden="true"
-            onClick={() => setSheetOpen(false)}
-          />
+      <Sheet isOpen={sheetOpen} onClose={close} title={t("mobileNav")} size="sm">
+        <nav aria-label={t("mobileNav")} className="space-y-1 pb-2">
+          {!isIndividual &&
+            sheetLink("/host/messages", t("messagesInquiries"), BrandMessageIcon, !!pathname?.startsWith("/host/messages"))}
+          {isAgency &&
+            sheetLink("/host/agency/trips", t("agencyTrips"), BrandCompassIcon, !!pathname?.startsWith("/host/agency/trips"))}
+          {!isIndividual &&
+            sheetLink("/host/agency/team", t("teamRoles"), BrandUsersIcon, !!pathname?.startsWith("/host/agency/team"))}
+          {!isIndividual &&
+            sheetLink(
+              "/host/agency/settings",
+              t("orgProfileSettings", { type: orgType }),
+              BrandBuildingIcon,
+              !!pathname?.startsWith("/host/agency/settings")
+            )}
+          {sheetLink("/host/settings", t("hostSettingsPayouts"), BrandSettingsIcon, pathname === "/host/settings")}
 
-          <div
-            ref={sheetRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={sheetTitleId}
-            className="relative bg-white rounded-t-3xl border-t border-tertiary/70 p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-5 duration-200"
+          <div className="my-2 h-px bg-primary/[0.08]" aria-hidden="true" />
+
+          <Link
+            href="/become-a-host/1"
+            onClick={close}
+            className={cn(
+              "flex min-h-[52px] items-center gap-3 rounded-2xl px-3 text-body font-semibold text-accent-700 hover:bg-accent-50",
+              focusRingInset
+            )}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-tertiary/40 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-1 rounded-full bg-neutral-300 mx-auto" aria-hidden="true" />
-                <h2 id={sheetTitleId} className="font-serif font-black text-primary text-base">
-                  {t("mobileNav")}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSheetOpen(false)}
-                className={`p-1 rounded-full hover:bg-neutral-100 text-neutral-600 ${focusRing}`}
-                aria-label={t("closeMenu")}
-              >
-                <BrandCloseIcon size={18} aria-hidden="true" />
-              </button>
-            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-100 text-accent-700">
+              <BrandPlusIcon size={18} aria-hidden="true" />
+            </span>
+            {t("createListing")}
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              try {
+                localStorage.setItem("darna_mode", "traveler");
+              } catch {}
+              router.push("/");
+            }}
+            className={cn(
+              "flex min-h-[52px] w-full items-center gap-3 rounded-2xl px-3 text-start text-body font-medium text-primary-800 hover:bg-primary/[0.04]",
+              focusRingInset
+            )}
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-tertiary-100 text-primary-700">
+              <BrandBriefcaseIcon size={18} aria-hidden="true" />
+            </span>
+            {t("switchToTravelingMode")}
+          </button>
+        </nav>
+      </Sheet>
 
-            <nav aria-labelledby={sheetTitleId} className="space-y-1 text-sm">
-              {!isIndividual && (
-                <Link
-                  href="/host/messages"
-                  onClick={() => setSheetOpen(false)}
-                  className={sheetLinkClass(pathname?.startsWith("/host/messages"))}
-                >
-                  <BrandMessageIcon size={18} className="text-secondary" aria-hidden="true" />
-                  <span>{t("messagesInquiries")}</span>
-                </Link>
-              )}
-
-              {isAgency && (
-                <Link
-                  href="/host/agency/trips"
-                  onClick={() => setSheetOpen(false)}
-                  className={sheetLinkClass(pathname?.startsWith("/host/agency/trips"))}
-                >
-                  <BrandCompassIcon size={18} className="text-secondary" aria-hidden="true" />
-                  <span>{t("agencyTrips")}</span>
-                </Link>
-              )}
-
-              {!isIndividual && (
-                <Link
-                  href="/host/agency/team"
-                  onClick={() => setSheetOpen(false)}
-                  className={sheetLinkClass(pathname?.startsWith("/host/agency/team"))}
-                >
-                  <BrandUsersIcon size={18} className="text-secondary" aria-hidden="true" />
-                  <span>{t("teamRoles")}</span>
-                </Link>
-              )}
-
-              {!isIndividual && (
-                <Link
-                  href="/host/agency/settings"
-                  onClick={() => setSheetOpen(false)}
-                  className={sheetLinkClass(pathname?.startsWith("/host/agency/settings"))}
-                >
-                  <BrandBuildingIcon size={18} className="text-secondary" aria-hidden="true" />
-                  <span>{t("orgProfileSettings", { type: orgType })}</span>
-                </Link>
-              )}
-
-              <Link
-                href="/host/settings"
-                onClick={() => setSheetOpen(false)}
-                className={sheetLinkClass(pathname === "/host/settings")}
-              >
-                <BrandSettingsIcon size={18} className="text-secondary" aria-hidden="true" />
-                <span>{t("hostSettingsPayouts")}</span>
-              </Link>
-
-              <hr className="my-2 border-tertiary/40" />
-
-              <Link
-                href="/become-a-host/1"
-                onClick={() => setSheetOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-accent-700 font-bold hover:bg-neutral-50 transition ${focusRing}`}
-              >
-                <BrandPlusIcon size={18} aria-hidden="true" />
-                <span>{t("createListing")}</span>
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSheetOpen(false);
-                  try {
-                    localStorage.setItem("darna_mode", "traveler");
-                  } catch {}
-                  router.push("/");
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-secondary font-bold hover:bg-neutral-50 transition ${focusRing}`}
-              >
-                <BrandBriefcaseIcon size={18} aria-hidden="true" />
-                <span>{t("switchToTravelingMode")}</span>
-              </button>
-            </nav>
-          </div>
-        </div>
-      )}
-
-      {/* Persistent bottom bar */}
       <nav
         aria-label={t("primaryNav")}
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-tertiary/60 h-16 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
+        className="glass fixed inset-x-0 bottom-0 z-header border-t border-primary/[0.08] pb-[env(safe-area-inset-bottom)] md:hidden"
       >
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const active = isActive(tab.href, tab.exact);
-
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition ${focusRing} ${
-                active ? "text-primary font-bold scale-105" : "text-neutral-600 hover:text-neutral-800"
-              }`}
-            >
-              <Icon size={20} aria-hidden="true" className={active ? "text-primary" : "text-neutral-500"} />
-              <span className="text-[10px] leading-none">{tab.label}</span>
-            </Link>
-          );
-        })}
-
-        <button
-          type="button"
-          onClick={() => setSheetOpen(true)}
-          aria-haspopup="dialog"
-          aria-expanded={sheetOpen}
-          aria-label={t("moreOptions")}
-          className={`flex-1 flex flex-col items-center justify-center gap-1 min-h-[48px] py-1 transition cursor-pointer ${focusRing} ${
-            isMoreActive || sheetOpen
-              ? "text-primary font-bold scale-105"
-              : "text-neutral-600 hover:text-neutral-800"
-          }`}
-        >
-          <BrandMoreIcon
-            size={20}
-            aria-hidden="true"
-            className={isMoreActive || sheetOpen ? "text-primary" : "text-neutral-500"}
-          />
-          <span className="text-[10px] leading-none" aria-hidden="true">
-            {t("tabs.more")}
-          </span>
-        </button>
+        <div className="isolate mx-auto flex h-16 max-w-xl items-stretch px-1.5 py-1.5">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = isActive(tab.href, tab.exact);
+            return (
+              <Link key={tab.href} href={tab.href} aria-current={active ? "page" : undefined} className={tabClass(active)}>
+                {active && pill}
+                <Icon size={21} strokeWidth={active ? 2.1 : 1.75} aria-hidden="true" />
+                <span className={cn("text-[0.6875rem] leading-none", active ? "font-semibold" : "font-medium")}>
+                  {tab.label}
+                </span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={sheetOpen}
+            aria-label={t("moreOptions")}
+            className={tabClass(isMoreActive || sheetOpen)}
+          >
+            {isMoreActive && pill}
+            <BrandMoreIcon size={21} aria-hidden="true" />
+            <span aria-hidden="true" className="text-[0.6875rem] font-medium leading-none">
+              {t("tabs.more")}
+            </span>
+          </button>
+        </div>
       </nav>
     </>
   );

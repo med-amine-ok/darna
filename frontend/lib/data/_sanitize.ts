@@ -160,6 +160,7 @@ export function sanitizeListingInput(input: unknown, listingId: string): Partial
   }
   set("locationValue", str(d.locationValue, 120));
   set("city", str(d.city, 120));
+  set("commune", str(d.commune, 120));
   set("latlng", latlng(d.latlng));
   if (typeof d.instantBook === "boolean") out.instantBook = d.instantBook;
   set("bookingApprovalMode", oneOf(d.bookingApprovalMode, ["instant", "request"] as const));

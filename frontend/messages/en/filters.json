@@ -18,5 +18,80 @@
   "hotelResort": "Hotel & resort",
   "hostelDorms": "Youth hostel & dorms",
   "villa": "Villa",
-  "riad": "Historic riad & ksar"
+  "riad": "Historic riad & ksar",
+  "showStays": "{count, plural, =0 {No stays} one {Show # stay} other {Show # stays}}",
+  "sidebar": {
+    "label": "Search filters",
+    "title": "Filters",
+    "reset": "Reset",
+    "seeMore": "See more",
+    "seeLess": "See less",
+    "price": "Price (DZD)",
+    "pricePerPerson": "Price per person (DZD)",
+    "rating": "Guest rating",
+    "anyRating": "Any rating",
+    "ratingAtLeast": "{rating} and up",
+    "bedrooms": "Bedrooms",
+    "any": "Any",
+    "atLeast": "{count}+",
+    "tripType": "Trip length",
+    "duration": {
+      "1-3": "1 to 3 days",
+      "4-7": "4 to 7 days",
+      "8-14": "8 to 14 days",
+      "15+": "15 days or more"
+    },
+    "departureMonth": "Departure month",
+    "optionCount": "{count, plural, one {# result} other {# results}}",
+    "category": "Category",
+    "wilaya": "Wilaya",
+    "searchWilaya": "Search a wilaya or its number",
+    "noWilaya": "No wilaya matches",
+    "seeAllWilayas": "See all {count} wilayas",
+    "commune": "Commune",
+    "communeHint": "Pick a wilaya to see only its communes.",
+    "roomsAndBaths": "Rooms and bathrooms",
+    "bathrooms": "Bathrooms",
+    "bedroomsAtLeast": "{count}+ bedrooms",
+    "bathroomsAtLeast": "{count}+ bathrooms",
+    "hotelStars": "Hotel class",
+    "starsAtLeast": "{count}+ stars",
+    "vehicleType": "Vehicle type",
+    "transmission": "Gearbox",
+    "transmissionTypes": {
+      "automatic": "Automatic",
+      "manual": "Manual"
+    },
+    "fuel": "Fuel",
+    "fuelTypes": {
+      "petrol": "Petrol",
+      "diesel": "Diesel",
+      "hybrid": "Hybrid",
+      "electric": "Electric"
+    },
+    "seats": "Seats",
+    "seatsAtLeast": "{count}+ seats",
+    "experienceType": "Experience type",
+    "experienceLength": "Length",
+    "expLength": {
+      "upTo4h": "Up to 4 hours",
+      "halfDay": "4 to 12 hours",
+      "multiDay": "Several days"
+    },
+    "languages": "Languages",
+    "groupSize": "Group size",
+    "groupAtLeast": "{count}+ travellers",
+    "agency": "Agency",
+    "bookingOptions": "Booking options",
+    "instantBook": "Instant Book",
+    "guestFavorite": "Guest favourite",
+    "freeCancellation": "Free cancellation",
+    "hostType": "Host type",
+    "hostTypes": {
+      "individual": "Individual hosts",
+      "organization": "Hotels, agencies and pros"
+    },
+    "activeFilters": "Active filters",
+    "remove": "Remove filter: {label}"
+  }
 }

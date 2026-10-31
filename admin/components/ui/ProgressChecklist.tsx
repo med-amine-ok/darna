@@ -39,11 +39,11 @@ export const ProgressChecklist: React.FC<ProgressChecklistProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl border border-tertiary-200/80 shadow-darna-card p-4 ${className}`}
+      className={`bg-white rounded-2xl shadow-e1 p-4 ${className}`}
     >
-      <div className="flex items-center justify-between pb-3 border-b border-neutral-100 mb-3">
-        <h4 className="text-xs font-bold text-primary">{title ?? t("checklist.title")}</h4>
-        <span className="text-xs font-bold text-secondary-700 tabular-nums">
+      <div className="flex items-center justify-between pb-3 border-b border-primary/[0.06] mb-3">
+        <h4 className="text-xs font-semibold text-primary-900">{title ?? t("checklist.title")}</h4>
+        <span className="text-xs font-semibold text-secondary-700 tabular-nums">
           <span aria-hidden="true">
             {formatNumber(currentStep, locale)}/{formatNumber(maxSteps, locale)}
           </span>
@@ -63,19 +63,19 @@ export const ProgressChecklist: React.FC<ProgressChecklistProps> = ({
           return (
             <li key={stepId} aria-current={isCurrent ? "step" : undefined} className="flex items-center gap-2.5 text-xs">
               {isDone ? (
-                <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" aria-hidden="true" />
+                <CheckCircle2 className="w-4 h-4 text-secondary-700 shrink-0" aria-hidden="true" />
               ) : isCurrent ? (
-                <CircleDot className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+                <CircleDot className="w-4 h-4 text-primary-900 shrink-0" aria-hidden="true" />
               ) : (
-                <Circle className="w-4 h-4 text-neutral-300 shrink-0" aria-hidden="true" />
+                <Circle className="w-4 h-4 text-primary-300 shrink-0" aria-hidden="true" />
               )}
               <span
                 className={`font-medium ${
                   isCurrent
                     ? "font-bold text-primary"
                     : isDone
-                    ? "text-neutral-700"
-                    : "text-neutral-500"
+                    ? "text-primary-800"
+                    : "text-primary-600"
                 }`}
               >
                 {st.label || st.title || ""}

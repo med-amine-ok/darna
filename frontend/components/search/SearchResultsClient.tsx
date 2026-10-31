@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "@/navigation";
+import { useRouter, Link } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { AnimatePresence, LazyMotion, m } from "framer-motion";
 import { useDialogA11y } from "@/hook/useDialogA11y";
 import { useDestinationLabel } from "@/hook/useDestinationLabel";
 import { Listing, User, ListingVertical, Trip } from "@/types";
@@ -13,12 +14,16 @@ import { getTripCoordinates } from "@/lib/trip-coordinates";
 import { useShowTotalPrice } from "@/hook/useShowTotalPrice";
 import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
-import EmptyState from "@/components/EmptyState";
 import { useFilterModal } from "@/hook/useFilterModal";
-import { useSearchModal } from "@/hook/useSearchModal";
+import { Chip, Switch, KitEmptyState, Button, cn, useMediaQuery } from "@/components/ui";
+import { dur, ease, spring } from "@/lib/motion";
+import { nearbyDestinations } from "./destinations";
+import type { MapBounds } from "./SearchMap";
+import { FILTER_PARAMS, countSideFilters, parseSideFilters, useSearchFacets, type ListingFacet, type TripFacet } from "./searchFacets";
+import { communeLabel, findWilaya, wilayaLabel } from "@/lib/algeria";
+import SearchFilterSidebar from "./SearchFilterSidebar";
 import {
   PremiumStarIcon,
-  BrandSearchIcon,
   BrandFilterIcon,
   BrandCompassIcon,
   BrandMapIcon,
@@ -27,20 +32,23 @@ import {
   CategoryHotelIcon,
   CategoryVehicleIcon,
   BrandPinIcon,
+  BrandLightningIcon,
+  BrandWifiIcon,
+  BrandWaterIcon,
+  BrandAcIcon,
+  BrandSunIcon,
+  GuestFavoriteIcon,
+  BrandTagIcon,
 } from "@/components/icons";
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+/** Layout + drag features, loaded lazily on top of the root `domAnimation` set. */
+const loadMaxFeatures = () => import("framer-motion").then((mod) => mod.domMax);
 
-// Dynamically import Leaflet map with ssr: false
 function MapLoading() {
   const t = useTranslations("search");
   return (
-    <div
-      role="status"
-      className="w-full h-full min-h-[450px] bg-tertiary/20 animate-pulse rounded-2xl flex items-center justify-center text-primary/70 text-sm font-semibold border border-tertiary/40"
-    >
-      {t("loadingMap")}
+    <div role="status" className="skeleton flex h-full w-full items-center justify-center rounded-3xl text-meta font-semibold text-primary-600">
+      <span className="relative z-[1]">{t("loadingMap")}</span>
     </div>
   );
 }
@@ -56,6 +64,26 @@ interface SearchResultsClientProps {
   currentUser?: User | null;
   destination?: string;
   activeVertical?: ListingVertical;
+  /** Listings of this search before the filter-modal filters (histogram + live count). */
+  facets?: ListingFacet[];
+  /** Same for trips (sidebar counts). */
+  tripFacets?: TripFacet[];
+  /** Results per category for the same search (sidebar "Category"). */
+  categoryCounts?: Record<string, number>;
+}
+
+/** Quick amenity chips: `id` is the value sent in `?amenities=`, `key` the label in `amenities`. */
+const QUICK_AMENITIES = [
+  { id: "wifi", key: "wifi", Icon: BrandWifiIcon },
+  { id: "pool", key: "pool", Icon: BrandWaterIcon },
+  { id: "airConditioning", key: "airConditioning", Icon: BrandAcIcon },
+  { id: "seaView", key: "seaView", Icon: BrandSunIcon },
+] as const;
+
+function inBounds(coords: unknown, b: MapBounds): boolean {
+  if (!Array.isArray(coords) || coords.length !== 2) return false;
+  const [lat, lng] = coords as [number, number];
+  return lat >= b.south && lat <= b.north && lng >= b.west && lng <= b.east;
 }
 
 export default function SearchResultsClient({
@@ -64,421 +92,463 @@ export default function SearchResultsClient({
   currentUser,
   destination,
   activeVertical,
+  facets,
+  tripFacets,
+  categoryCounts,
 }: SearchResultsClientProps) {
+  const setFacetPool = useSearchFacets((s) => s.setPool);
+  useEffect(() => {
+    setFacetPool(facets ?? [], tripFacets ?? []);
+    return () => setFacetPool([], []);
+  }, [facets, tripFacets, setFacetPool]);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const openFilterModal = useFilterModal((s) => s.onOpen);
-  const openSearchModal = useSearchModal((s) => s.onOpen);
   const tCommon = useTranslations("common");
+  const tAmenities = useTranslations("amenities");
   const t = useTranslations("search");
+  const locale = useLocale();
   const destinationLabel = useDestinationLabel();
-  const place = destination ? destinationLabel(destination) : "";
+  // Sidebar from lg (CSS), map panel from xl; below xl the map opens full screen.
+  const isWide = useMediaQuery("(min-width: 1280px)");
+  const [isPending, startTransition] = useTransition();
 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [showTotalPrice, setShowTotalPrice] = useShowTotalPrice();
   const hasSearchDates = Boolean(
-    (searchParams?.get("startDate") || searchParams?.get("checkIn")) &&
-      (searchParams?.get("endDate") || searchParams?.get("checkOut"))
+    (searchParams?.get("startDate") || searchParams?.get("checkIn")) && (searchParams?.get("endDate") || searchParams?.get("checkOut"))
   );
-  const initialSelectedId =
-    searchParams?.get("selectedId") ||
-    searchParams?.get("listingId") ||
-    searchParams?.get("tripId") ||
-    null;
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
-  const [showMobileMap, setShowMobileMap] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-  // Full-screen mobile map is a modal overlay: focus trap, Escape returns to the list.
-  const mobileMapOpen = showMobileMap && !isDesktop;
-  const mapOverlayRef = useDialogA11y<HTMLDivElement>(mobileMapOpen, {
-    onEscape: () => setShowMobileMap(false),
-  });
-
+  const urlSelectedId = searchParams?.get("selectedId") || searchParams?.get("listingId") || searchParams?.get("tripId") || null;
+  const [selectedId, setSelectedId] = useState<string | null>(urlSelectedId);
   useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    if (urlSelectedId) setSelectedId(urlSelectedId);
+  }, [urlSelectedId]);
+
+  const [showMobileMap, setShowMobileMap] = useState(false);
+  const mobileMapOpen = showMobileMap && !isWide;
+  const mapOverlayRef = useDialogA11y<HTMLDivElement>(mobileMapOpen, { onEscape: () => setShowMobileMap(false) });
 
   const [searchAsMoveMap, setSearchAsMoveMap] = useState(true);
-  const [mapBounds, setMapBounds] = useState<{
-    north: number;
-    south: number;
-    east: number;
-    west: number;
-  } | null>(null);
+  // Only set after the user moves the map (SearchMap never reports programmatic fits).
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  // New results → the map refits, so forget the old area.
+  useEffect(() => setMapBounds(null), [listings, trips]);
+  const mapVisible = isWide || mobileMapOpen;
+  const boundsActive = Boolean(searchAsMoveMap && mapBounds && mapVisible);
 
-  // Sync selectedId if searchParams change
-  React.useEffect(() => {
-    const sId =
-      searchParams?.get("selectedId") ||
-      searchParams?.get("listingId") ||
-      searchParams?.get("tripId") ||
-      null;
-    if (sId) {
-      setSelectedId(sId);
-    }
-  }, [searchParams]);
-
-  // Dynamically filter listings within the visible map area when zoom in / out
-  const displayListings = useMemo(() => {
-    let list = listings;
-
-    if (searchAsMoveMap && mapBounds && (isDesktop || showMobileMap)) {
-      const inBounds = listings.filter((l) => {
-        if (!l.latlng || l.latlng.length !== 2) return false;
-        const [lat, lng] = l.latlng;
-        return (
-          lat >= mapBounds.south &&
-          lat <= mapBounds.north &&
-          lng >= mapBounds.west &&
-          lng <= mapBounds.east
-        );
-      });
-      list = inBounds;
-    }
-
-    if (!selectedId) return list;
-    const target = list.find((l) => l.id === selectedId);
-    if (!target) return list;
-    return [target, ...list.filter((l) => l.id !== selectedId)];
-  }, [listings, selectedId, searchAsMoveMap, mapBounds, isDesktop, showMobileMap]);
-
-  // Dynamically filter agency trips within the visible map area
-  const displayTrips = useMemo(() => {
-    let list = trips;
-
-    if (searchAsMoveMap && mapBounds && (isDesktop || showMobileMap)) {
-      const inBounds = trips.filter((t) => {
-        const coords = t.latlng || getTripCoordinates(t);
-        if (!coords || coords.length !== 2) return false;
-        const [lat, lng] = coords;
-        return (
-          lat >= mapBounds.south &&
-          lat <= mapBounds.north &&
-          lng >= mapBounds.west &&
-          lng <= mapBounds.east
-        );
-      });
-      list = inBounds;
-    }
-
-    if (!selectedId) return list;
-    const target = list.find((t) => t.id === selectedId);
-    if (!target) return list;
-    return [target, ...list.filter((t) => t.id !== selectedId)];
-  }, [trips, selectedId, searchAsMoveMap, mapBounds, isDesktop, showMobileMap]);
-
-  // Quick filter parameters from query
   const currentVertical = (searchParams?.get("vertical") as ListingVertical) || activeVertical;
+  const isTrips = currentVertical === "trip";
+
+  const pinFirst = useCallback(
+    <T extends { id: string }>(list: T[]) => {
+      if (!selectedId) return list;
+      const target = list.find((x) => x.id === selectedId);
+      return target ? [target, ...list.filter((x) => x.id !== selectedId)] : list;
+    },
+    [selectedId]
+  );
+
+  const displayListings = useMemo(() => {
+    const list = boundsActive && mapBounds ? listings.filter((l) => inBounds(l.latlng, mapBounds)) : listings;
+    return pinFirst(list);
+  }, [listings, boundsActive, mapBounds, pinFirst]);
+
+  const displayTrips = useMemo(() => {
+    const list = boundsActive && mapBounds ? trips.filter((tr) => inBounds(tr.latlng || getTripCoordinates(tr), mapBounds)) : trips;
+    return pinFirst(list);
+  }, [trips, boundsActive, mapBounds, pinFirst]);
+
+  // Quick filters from the URL.
   const instantBookFilter = searchParams?.get("instantBook") === "true";
   const guestFavoriteFilter = searchParams?.get("isGuestFavorite") === "true";
-  const maxPriceFilter = searchParams?.get("maxPrice");
+  const amenityFilters = useMemo(
+    () => (searchParams?.get("amenities") ? searchParams.get("amenities")!.split(",").filter(Boolean) : []),
+    [searchParams]
+  );
+  const side = useMemo(() => parseSideFilters((k) => searchParams?.get(k)), [searchParams]);
+  // Heading place: the searched destination, else the communes or wilayas ticked in the sidebar.
+  const listFormat = new Intl.ListFormat(locale, { style: "long", type: "conjunction" });
+  const place = destination
+    ? destinationLabel(destination)
+    : side.communes.length > 0 && side.communes.length <= 3
+      ? listFormat.format(side.communes.map((c) => communeLabel(c, locale)))
+      : side.wilayas.length > 0 && side.wilayas.length <= 3
+        ? listFormat.format(side.wilayas.map((w) => { const x = findWilaya(w); return x ? wilayaLabel(x, locale) : String(w); }))
+        : "";
+  const activeFilterCount = countSideFilters(side);
 
   const updateQuery = useCallback(
     (newParams: qs.StringifiableRecord) => {
-      let currentQuery: qs.StringifiableRecord = {};
-      if (searchParams) {
-        currentQuery = qs.parse(searchParams.toString());
-      }
-
-      const updated: qs.StringifiableRecord = {
-        ...currentQuery,
-        ...newParams,
-      };
-
-      // Clean up falsy/undefined keys
+      const updated: qs.StringifiableRecord = { ...(searchParams ? qs.parse(searchParams.toString()) : {}), ...newParams };
       Object.keys(updated).forEach((k) => {
-        if (updated[k] === undefined || updated[k] === null || updated[k] === "") {
-          delete updated[k];
-        }
+        if (updated[k] === undefined || updated[k] === null || updated[k] === "") delete updated[k];
       });
-
-      const url = qs.stringifyUrl(
-        {
-          url: "/search",
-          query: updated,
-        },
-        { skipNull: true }
-      );
-
-      router.push(url);
+      const url = qs.stringifyUrl({ url: "/search", query: updated }, { skipNull: true });
+      // Transition: the current results stay on screen (dimmed) until the new ones arrive.
+      startTransition(() => router.push(url, { scroll: false }));
     },
     [searchParams, router]
   );
 
+  const toggleAmenity = (id: string) => {
+    const next = amenityFilters.includes(id) ? amenityFilters.filter((a) => a !== id) : [...amenityFilters, id];
+    updateQuery({ amenities: next.length ? next.join(",") : undefined });
+  };
+
+  const clearFilters = () =>
+    updateQuery({
+      ...Object.fromEntries(Object.values(FILTER_PARAMS).map((k) => [k, undefined])),
+      minPrice: undefined,
+      maxPrice: undefined,
+    });
+
+  const hasAnyFilter = activeFilterCount > 0;
+
   const verticalTabs = [
-    { id: "all", label: t("tabs.all"), icon: PremiumStarIcon },
-    { id: "home", label: t("tabs.home"), icon: CategoryHouseIcon },
-    { id: "hotel", label: t("tabs.hotel"), icon: CategoryHotelIcon },
-    { id: "vehicle", label: t("tabs.vehicle"), icon: CategoryVehicleIcon },
-    { id: "experience", label: t("tabs.experience"), icon: BrandPinIcon },
-    { id: "trip", label: t("tabs.trip"), icon: BrandCompassIcon },
+    { id: "all", label: t("tabs.all"), Icon: PremiumStarIcon },
+    { id: "home", label: t("tabs.home"), Icon: CategoryHouseIcon },
+    { id: "hotel", label: t("tabs.hotel"), Icon: CategoryHotelIcon },
+    { id: "vehicle", label: t("tabs.vehicle"), Icon: CategoryVehicleIcon },
+    { id: "experience", label: t("tabs.experience"), Icon: BrandPinIcon },
+    { id: "trip", label: t("tabs.trip"), Icon: BrandCompassIcon },
   ];
 
-  return (
-    <div className="flex flex-col min-h-[calc(100dvh-72px)] bg-darnaBg">
-      {/* 1. Sticky Sub-Header: Search Summary & Filter Pills */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-tertiary/60 py-3 shadow-2xs">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            {/* Left: Compact Summary Pill + Vertical Switcher */}
-            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-0.5">
-              {/* Compact Search Pill (re-opens SearchModal) */}
-              <button
-                type="button"
-                onClick={openSearchModal}
-                className={`flex items-center gap-2 py-1.5 px-3.5 rounded-full border border-tertiary bg-white hover:border-primary text-xs sm:text-sm font-semibold text-primary shadow-xs hover:shadow-sm transition cursor-pointer flex-shrink-0 ${focusRing}`}
-              >
-                <BrandSearchIcon size={15} className="text-accent" />
-                <span className="truncate max-w-[140px] sm:max-w-[200px]">
-                  {place || t("algeria")}
-                </span>
-                <span className="text-tertiary" aria-hidden="true">|</span>
-                <span className="text-neutral-600 font-normal">{t("editSearch")}</span>
-              </button>
+  const heading = isTrips
+    ? place
+      ? t("heading.tripsIn", { place })
+      : t("heading.trips")
+    : currentVertical === "hotel"
+      ? place
+        ? t("heading.hotelsIn", { place })
+        : t("heading.hotels")
+      : place
+        ? t("heading.staysIn", { place })
+        : t("heading.all");
 
-              {/* Vertical Pills */}
-              <div
-                role="group"
-                aria-label={t("tabsLabel")}
-                className="flex items-center gap-1.5 bg-neutral-100 p-1 rounded-full flex-shrink-0"
-              >
-                {verticalTabs.map((tab) => {
-                  const isActive =
-                    (tab.id === "all" && !currentVertical) ||
-                    currentVertical === tab.id;
-                  const Icon = tab.icon;
+  const total = isTrips ? trips.length : listings.length;
+  const shown = isTrips ? displayTrips.length : displayListings.length;
+  const countText = isTrips
+    ? boundsActive && shown !== total
+      ? t("count.tripsInMap", { count: shown, total })
+      : t("count.trips", { count: total })
+    : boundsActive && shown !== total
+      ? t("count.listingsInMap", { count: shown, total })
+      : t("count.listings", { count: total });
+
+  const suggestions = nearbyDestinations(destination, 4);
+  const suggestionHref = (name: string) => {
+    const q: Record<string, string> = { destination: name };
+    if (currentVertical) q.vertical = currentVertical;
+    return { pathname: "/search", query: q };
+  };
+
+  const emptyState =
+    total > 0 ? (
+      // Results exist, just not in the visible map area: never a blank list.
+      <KitEmptyState
+        compact
+        variant="search"
+        title={isTrips ? t("empty.trips") : t("empty.listings")}
+        description={isTrips ? t("empty.tripsDesc") : t("empty.listingsDesc")}
+        action={
+          <Button variant="secondary" leadingIcon={<BrandListIcon size={16} />} onClick={() => setMapBounds(null)}>
+            {t("empty.showAll", { count: total })}
+          </Button>
+        }
+      />
+    ) : (
+      <div>
+        <KitEmptyState
+          compact
+          variant="search"
+          title={t("empty.noResults")}
+          description={hasAnyFilter ? t("empty.noResultsFiltersDesc") : t("empty.noResultsDesc")}
+          action={
+            hasAnyFilter ? (
+              <Button variant="secondary" onClick={clearFilters}>
+                {t("clearAllFilters")}
+              </Button>
+            ) : undefined
+          }
+        />
+        <div className="mx-auto max-w-xl pb-6 text-center">
+          <h3 className="text-eyebrow uppercase font-semibold text-primary-500">{place ? t("empty.nearby") : t("popularDestinations")}</h3>
+          <ul className="mt-3 flex flex-wrap justify-center gap-2">
+            {suggestions.map((d) => (
+              <li key={d.key}>
+                <Link
+                  href={suggestionHref(d.name)}
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-primary-800 shadow-e1 transition-[box-shadow,color] duration-fast ease-standard hover:text-primary-900 hover:shadow-e2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-darnaBg"
+                >
+                  <BrandPinIcon size={15} className="text-accent-600" aria-hidden="true" />
+                  {t(`destinations.${d.key}.name`)}
+                  <span className="text-meta text-primary-500">{String(d.wilaya).padStart(2, "0")}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+
+  const cardMotion = {
+    layout: "position" as const,
+    initial: { opacity: 0, scale: 0.97, y: 8 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: dur.base, ease: ease.out } },
+    exit: { opacity: 0, scale: 0.97, transition: { duration: dur.fast, ease: ease.standard } },
+    transition: spring.layout,
+  };
+
+  const results = isTrips ? (
+    displayTrips.length === 0 ? (
+      emptyState
+    ) : (
+      <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 min-[1760px]:grid-cols-3">
+        <AnimatePresence initial={false} mode="popLayout">
+          {displayTrips.map((trip) => (
+            <m.div key={trip.id} {...cardMotion}>
+              <TripCard trip={trip} onHover={setHoveredId} isHovered={hoveredId === trip.id || selectedId === trip.id} />
+            </m.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    )
+  ) : displayListings.length === 0 ? (
+    emptyState
+  ) : (
+    <div className="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 min-[1760px]:grid-cols-3">
+      <AnimatePresence initial={false} mode="popLayout">
+        {displayListings.map((listing, i) => (
+          <m.div key={listing.id} {...cardMotion}>
+            <ListingCard
+              data={listing}
+              currentUser={currentUser}
+              priority={i < 2}
+              onHover={setHoveredId}
+              isHovered={hoveredId === listing.id || selectedId === listing.id}
+            />
+          </m.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+
+  const map = (
+    <SearchMap
+      listings={listings}
+      trips={trips}
+      currentVertical={currentVertical}
+      currentUser={currentUser}
+      selectedListingId={selectedId}
+      hoveredListingId={hoveredId}
+      isVisible={mapVisible}
+      onSelectListing={setSelectedId}
+      onHoverListing={setHoveredId}
+      onBoundsChange={setMapBounds}
+      searchAsMove={searchAsMoveMap}
+      onSearchAsMoveChange={
+        isWide
+          ? (v) => {
+              setSearchAsMoveMap(v);
+              if (!v) setMapBounds(null);
+            }
+          : undefined
+      }
+    />
+  );
+
+  const totalSwitch = !isTrips && (
+    <div className="flex items-center gap-2.5" title={hasSearchDates ? undefined : t("addDatesForTotal")}>
+      <Switch id="search-total-price" size="sm" ariaLabel={t("showTotalPrice")} checked={showTotalPrice} onCheckedChange={setShowTotalPrice} />
+      <label htmlFor="search-total-price" className="cursor-pointer whitespace-nowrap text-meta font-semibold text-primary-800">
+        {t("showTotalPrice")}
+      </label>
+    </div>
+  );
+
+  return (
+    <LazyMotion features={loadMaxFeatures}>
+      <div className="flex min-h-[calc(100dvh-72px)] flex-col bg-darnaBg">
+        {/* 1. Sticky glass filter bar: verticals · quick filters · all filters */}
+        <div className="glass sticky top-[64px] z-30 border-b border-primary/[0.08] sm:top-[72px]">
+          <div className="mx-auto flex max-w-[1920px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <div role="group" aria-label={t("filterBarLabel")} className="no-scrollbar -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-3.5 ps-0.5 pe-4 [mask-image:linear-gradient(to_right,#000_92%,transparent)] rtl:[mask-image:linear-gradient(to_left,#000_92%,transparent)]">
+              <div role="group" aria-label={t("tabsLabel")} className="flex shrink-0 items-center gap-2">
+                {verticalTabs.map(({ id, label, Icon }) => {
+                  const active = (id === "all" && !currentVertical) || currentVertical === id;
                   return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      aria-pressed={isActive}
-                      onClick={() =>
-                        updateQuery({
-                          vertical: tab.id === "all" ? undefined : tab.id,
-                        })
-                      }
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer select-none ${focusRing} ${
-                        isActive
-                          ? "bg-primary text-white shadow-xs"
-                          : "text-neutral-600 hover:text-primary hover:bg-neutral-200/60"
-                      }`}
+                    <Chip
+                      key={id}
+                      selected={active}
+                      onSelectedChange={() => updateQuery({ vertical: id === "all" ? undefined : id, selectedId: undefined })}
+                      icon={<Icon size={16} strokeWidth={1.8} />}
                     >
-                      <Icon
-                        size={14}
-                        strokeWidth={1.8}
-                        className={
-                          isActive
-                            ? "text-white"
-                            : tab.id === "all"
-                            ? "text-accent"
-                            : tab.id === "trip"
-                            ? "text-secondary"
-                            : "text-neutral-600"
-                        }
-                      />
-                      <span>{tab.label}</span>
-                    </button>
+                      {label}
+                    </Chip>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Right: Quick Filters + Filters Modal Button */}
-            <div className="flex items-center gap-2 flex-shrink-0 overflow-x-auto no-scrollbar">
-              
+              <span aria-hidden="true" className="mx-1 h-6 w-px shrink-0 bg-primary/[0.12]" />
 
-              {/* Guest Favorites toggle pill */}
-              <button
-                type="button"
-                aria-pressed={guestFavoriteFilter}
-                onClick={() =>
-                  updateQuery({
-                    isGuestFavorite: guestFavoriteFilter ? undefined : "true",
-                  })
-                }
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${focusRing} ${
-                  guestFavoriteFilter
-                    ? "border-primary bg-primary text-white"
-                    : "border-tertiary/80 bg-white text-neutral-700 hover:border-primary"
-                }`}
+              <Chip
+                selected={guestFavoriteFilter}
+                onSelectedChange={(v) => updateQuery({ isGuestFavorite: v ? "true" : undefined })}
+                icon={<GuestFavoriteIcon size={16} />}
               >
                 {t("guestFavorites")}
-              </button>
-              {/* Extended Filters Button */}
+              </Chip>
+              {!isTrips && (
+                <>
+                  <Chip
+                    selected={instantBookFilter}
+                    onSelectedChange={(v) => updateQuery({ instantBook: v ? "true" : undefined })}
+                    icon={<BrandLightningIcon size={16} />}
+                  >
+                    {t("instantBook")}
+                  </Chip>
+                  {/* The sidebar lists amenities from lg up. */}
+                  <div className="contents lg:hidden">
+                    {QUICK_AMENITIES.map(({ id, key, Icon }) => (
+                      <Chip key={id} selected={amenityFilters.includes(id)} onSelectedChange={() => toggleAmenity(id)} icon={<Icon size={16} />}>
+                        {tAmenities(key)}
+                      </Chip>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-4">
+              <div className="hidden xl:block">{totalSwitch}</div>
               <button
                 type="button"
                 onClick={openFilterModal}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-tertiary/80 text-xs font-bold text-primary hover:border-primary bg-white shadow-xs transition cursor-pointer ${focusRing}`}
+                className="relative inline-flex lg:hidden h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-primary-900 shadow-e1 cursor-pointer transition-shadow duration-fast ease-standard hover:shadow-e2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-darnaBg"
               >
-                <BrandFilterIcon size={15} />
-                <span>{tCommon("filters")}</span>
+                <BrandFilterIcon size={16} />
+                <span className="hidden sm:inline">{tCommon("filters")}</span>
+                <span className="sr-only sm:hidden">{tCommon("filters")}</span>
+                {activeFilterCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-800 px-1.5 text-[11px] font-bold tabular-nums text-white">
+                    <span aria-hidden="true">{activeFilterCount}</span>
+                    <span className="sr-only">{t("activeFilters", { count: activeFilterCount })}</span>
+                  </span>
+                )}
               </button>
             </div>
           </div>
+          {/* Thin progress line while new results load (old ones stay visible). */}
+          <div aria-hidden="true" className={cn("absolute inset-x-0 bottom-0 h-0.5 origin-left overflow-hidden transition-opacity duration-fast", isPending ? "opacity-100" : "opacity-0")}>
+            <div className="progress-indeterminate h-full w-1/3 bg-accent-500" />
+          </div>
         </div>
-      </div>
 
-      {/* 2. Main Content Split: Cards Left vs Interactive Map Right */}
-      <div className="flex-1 max-w-[1920px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-          {/* LEFT COLUMN: Listing Cards */}
-          <div
-            className={`lg:col-span-7 xl:col-span-7 flex flex-col space-y-4 ${
-              showMobileMap ? "hidden lg:flex" : "flex"
-            }`}
-          >
-            {/* Result Header & Counter */}
-            <div className="flex items-center justify-between border-b border-tertiary/40 pb-3">
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-primary">
-                  {currentVertical === "trip"
-                    ? place
-                      ? t("heading.tripsIn", { place })
-                      : t("heading.trips")
-                    : currentVertical === "hotel"
-                    ? place
-                      ? t("heading.hotelsIn", { place })
-                      : t("heading.hotels")
-                    : place
-                    ? t("heading.staysIn", { place })
-                    : t("heading.all")}
-                </h1>
-                <p className="text-xs text-neutral-600 mt-0.5" role="status">
-                  {currentVertical === "trip"
-                    ? mapBounds && searchAsMoveMap && displayTrips.length !== trips.length
-                      ? t("count.tripsInMap", { count: displayTrips.length, total: trips.length })
-                      : t("count.trips", { count: trips.length })
-                    : mapBounds && searchAsMoveMap && displayListings.length !== listings.length
-                    ? t("count.listingsInMap", { count: displayListings.length, total: listings.length })
-                    : t("count.listings", { count: listings.length })}
-                </p>
-              </div>
-
-              <div className="flex flex-col items-end gap-1.5">
-              {/* Display total price (incl. fees) for the searched dates */}
-              {currentVertical !== "trip" && (
-                <label
-                  className="flex items-center gap-2 text-xs font-medium text-neutral-600 cursor-pointer select-none"
-                  title={hasSearchDates ? undefined : t("addDatesForTotal")}
-                >
-                  <input
-                    type="checkbox"
-                    checked={showTotalPrice}
-                    onChange={(e) => setShowTotalPrice(e.target.checked)}
-                    className="w-3.5 h-3.5 accent-accent rounded text-accent"
-                  />
-                  <span>{hasSearchDates ? t("showTotalPrice") : t("showTotalPriceAddDates")}</span>
-                </label>
-              )}
-              {/* Pan Behavior Note */}
-              <label className="hidden sm:flex items-center gap-2 text-xs font-medium text-neutral-600 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={searchAsMoveMap}
-                  onChange={(e) => setSearchAsMoveMap(e.target.checked)}
-                  className="w-3.5 h-3.5 accent-accent rounded text-accent"
-                />
-                <span>{t("searchAsMapMoves")}</span>
-              </label>
-              </div>
+        {/* 2. Results · map */}
+        <div className="mx-auto w-full max-w-[1920px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[15.5rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_minmax(0,38%)] 2xl:gap-8">
+            {/* Filter sidebar (lg+): sticky, scrolls on its own when taller than the screen. */}
+            <div className="hidden lg:block">
+              <SearchFilterSidebar
+                isTrips={isTrips}
+                vertical={currentVertical}
+                categoryCounts={categoryCounts}
+                onUpdate={updateQuery}
+                className="no-scrollbar sticky top-[160px] max-h-[calc(100dvh-184px)] overflow-y-auto overscroll-contain"
+              />
             </div>
 
-            {/* Empty State or Listing Cards Grid */}
-            {currentVertical === "trip" ? (
-              displayTrips.length === 0 ? (
-                <EmptyState
-                  title={t("empty.trips")}
-                  subtitle={t("empty.tripsDesc")}
-                  showReset
-                />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {displayTrips.map((trip) => (
-                    <TripCard
-                      key={trip.id}
-                      trip={trip}
-                      onHover={(id) => setHoveredId(id)}
-                      isHovered={hoveredId === trip.id || selectedId === trip.id}
-                    />
-                  ))}
+            <section aria-labelledby="search-results-title" className="flex min-w-0 flex-col gap-5">
+              <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+                <div className="min-w-0">
+                  <h1 id="search-results-title" className="text-balance font-serif text-heading text-primary-900">
+                    {heading}
+                  </h1>
+                  <p className="mt-1 text-meta text-primary-600" role="status" aria-live="polite">
+                    {countText}
+                    {isPending && <span className="sr-only"> {t("updating")}</span>}
+                  </p>
                 </div>
-              )
-            ) : displayListings.length === 0 ? (
-              <EmptyState
-                title={t("empty.listings")}
-                subtitle={t("empty.listingsDesc")}
-                showReset
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {displayListings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    data={listing}
-                    currentUser={currentUser}
-                    onHover={(id) => setHoveredId(id)}
-                    isHovered={hoveredId === listing.id || selectedId === listing.id}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+                <div className="xl:hidden">{totalSwitch}</div>
+              </header>
 
-          {/* RIGHT COLUMN: Real Interactive Map */}
-          <div
-            ref={mapOverlayRef}
-            role={mobileMapOpen ? "dialog" : undefined}
-            aria-modal={mobileMapOpen ? true : undefined}
-            aria-label={mobileMapOpen ? t("mapDialogLabel") : undefined}
-            className={`lg:col-span-5 xl:col-span-5 h-[calc(100dvh-150px)] sticky top-[76px] rounded-3xl overflow-hidden border border-tertiary/70 shadow-md ${
-              showMobileMap ? "fixed inset-0 z-40 rounded-none border-none top-0" : "hidden lg:block"
-            }`}
-          >
-            <SearchMap
-              listings={listings}
-              trips={trips}
-              currentVertical={currentVertical}
-              currentUser={currentUser}
-              selectedListingId={selectedId}
-              hoveredListingId={hoveredId}
-              isVisible={isDesktop || showMobileMap}
-              onSelectListing={(id) => setSelectedId(id)}
-              onHoverListing={(id) => setHoveredId(id)}
-              onBoundsChange={(b) => setMapBounds(b)}
-            />
-            {/* Close control inside the full-screen mobile map */}
-            {showMobileMap && (
-              <div className="lg:hidden absolute bottom-20 inset-x-0 z-[600] flex justify-center pointer-events-none">
-                <button
+              {!isTrips && showTotalPrice && (
+                <p className="glass-light inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-2 text-meta font-medium text-primary-800 shadow-e1">
+                  <BrandTagIcon size={15} className="text-accent-600" aria-hidden="true" />
+                  {hasSearchDates ? t("pricesIncludeFees") : t("addDatesForTotal")}
+                </p>
+              )}
+
+              <div aria-busy={isPending} className={cn("transition-opacity duration-base ease-standard", isPending && "pointer-events-none opacity-60")}>
+                {results}
+              </div>
+            </section>
+
+            {/* Wide screens: map as a rounded inset panel (column reserved by CSS, no shift). */}
+            <div className="hidden xl:block">
+              <div className="sticky top-[160px] h-[calc(100dvh-184px)] min-h-[480px] overflow-hidden rounded-3xl shadow-e2 ring-1 ring-primary/[0.06]">
+                {isWide && map}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Mobile: floating glass "Map" pill (clears the bottom nav) */}
+        <AnimatePresence>
+          {!isWide && !showMobileMap && (
+            <m.div
+              key="map-pill"
+              className="pointer-events-none fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 flex justify-center md:bottom-8"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0, transition: { duration: dur.base, ease: ease.out } }}
+              exit={{ opacity: 0, y: 16, transition: { duration: dur.fast } }}
+            >
+              <m.button
+                type="button"
+                onClick={() => setShowMobileMap(true)}
+                whileTap={{ scale: 0.96 }}
+                transition={spring.press}
+                className="pointer-events-auto inline-flex h-12 items-center gap-2 rounded-full bg-primary-900/90 px-5 text-sm font-semibold text-white shadow-e4 backdrop-blur-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              >
+                <BrandMapIcon size={18} />
+                {t("showMap")}
+              </m.button>
+            </m.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile full-screen map (modal), slides up on a spring; "Show list" returns. */}
+        <AnimatePresence>
+          {mobileMapOpen && (
+            <m.div
+              key="mobile-map"
+              ref={mapOverlayRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("mapDialogLabel")}
+              className="fixed inset-0 z-[60] bg-darnaBg"
+              initial={{ y: "100%" }}
+              animate={{ y: 0, transition: spring.sheet }}
+              exit={{ y: "100%", transition: { duration: dur.base, ease: ease.inOut } }}
+            >
+              <div className="h-[100dvh] w-full">{map}</div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-[600] flex justify-center">
+                <m.button
                   type="button"
                   onClick={() => setShowMobileMap(false)}
-                  className={`pointer-events-auto bg-primary text-white font-semibold text-xs sm:text-sm py-2.5 px-5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 select-none ${focusRing}`}
+                  whileTap={{ scale: 0.96 }}
+                  transition={spring.press}
+                  className="pointer-events-auto inline-flex h-12 items-center gap-2 rounded-full bg-primary-900/90 px-5 text-sm font-semibold text-white shadow-e4 backdrop-blur-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                 >
                   <BrandListIcon size={18} />
-                  <span>{t("showList")}</span>
-                </button>
+                  {t("showList")}
+                </m.button>
               </div>
-            )}
-          </div>
-        </div>
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
-
-      {/* 3. Floating Mobile Toggle: "Show map" (the overlay has its own "Show list") */}
-      {!showMobileMap && (
-        <div className="lg:hidden fixed bottom-20 inset-x-0 z-50 flex justify-center pointer-events-none">
-          <button
-            type="button"
-            onClick={() => setShowMobileMap(true)}
-            className={`pointer-events-auto bg-primary text-white font-semibold text-xs sm:text-sm py-2.5 px-5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 select-none ${focusRing}`}
-          >
-            <BrandMapIcon size={18} />
-            <span>{t("showMap")}</span>
-          </button>
-        </div>
-      )}
-    </div>
+    </LazyMotion>
   );
 }

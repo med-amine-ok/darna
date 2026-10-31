@@ -1,38 +1,48 @@
 "use client";
 
-import Image from "next/image";
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/navigation";
+import { BrandRefreshIcon } from "@/components/icons";
+import Button from "@/components/ui/Button";
+import { Illustration } from "@/components/ui/Illustration";
 
 interface ErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
-export default function ErrorPage({ reset }: ErrorProps) {
+/** Route-level error boundary: branded card on paper with retry and a way home. */
+export default function ErrorPage({ error, reset }: ErrorProps) {
   const t = useTranslations("errors");
 
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
-    <div role="alert" className="min-h-[80dvh] flex flex-col items-center justify-center p-6 text-center">
-      <div className="relative w-64 h-64 mb-6">
-        <Image src="/assets/404-illustration.png" alt="" fill sizes="256px" className="object-contain" />
-      </div>
-      <h1 className="text-2xl font-bold text-primary mb-2">{t("errorTitle")}</h1>
-      <p className="text-sm text-neutral-600 max-w-md mb-6">{t("errorBody")}</p>
-      <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => reset()}
-          className="px-6 py-2.5 rounded-full bg-accent-600 text-white font-medium hover:bg-accent-700 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-        >
-          {t("tryAgain")}
-        </button>
-        <Link
-          href="/"
-          className="px-6 py-2.5 rounded-full border border-tertiary text-primary font-medium hover:bg-tertiary/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-        >
-          {t("returnHome")}
-        </Link>
+    <div className="relative flex min-h-[80dvh] items-center justify-center overflow-hidden bg-darnaBg px-4 py-14">
+      <div aria-hidden="true" className="texture-zellige pointer-events-none absolute inset-x-0 top-0 h-72 opacity-50" />
+      <div
+        role="alert"
+        className="enter-up relative w-full max-w-xl rounded-3xl bg-white px-6 py-10 text-center shadow-e3 sm:px-12 sm:py-12"
+      >
+        <Illustration variant="error" size={148} className="mx-auto" />
+        <p className="mt-4 text-eyebrow uppercase font-semibold text-secondary-700">{t("errorEyebrow")}</p>
+        <h1 className="mt-3 font-serif text-display-md text-primary-900 [text-wrap:balance]">{t("errorTitle")}</h1>
+        <p className="mx-auto mt-3 max-w-[46ch] text-body text-primary-600 [text-wrap:pretty]">{t("errorBody")}</p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button onClick={() => reset()} leadingIcon={<BrandRefreshIcon size={18} aria-hidden="true" />}>
+            {t("tryAgain")}
+          </Button>
+          <Button href="/" variant="tertiary">
+            {t("returnHome")}
+          </Button>
+        </div>
+        {error.digest && (
+          <p className="mt-6 text-meta text-primary-500">
+            {t("errorReference")} <span className="font-mono tabular-nums" dir="ltr">{error.digest}</span>
+          </p>
+        )}
       </div>
     </div>
   );

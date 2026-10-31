@@ -21,13 +21,15 @@
   "status": {
     "blocked": "Blocked",
     "booked": "Booked",
-    "available": "Available"
+    "available": "Available",
+    "past": "Past",
+    "special": "Custom price"
   },
   "moreBookings": "+{count} more",
   "dayCellLabel": "{date}: {status}",
   "dayCellLabelWithPrice": "{date}: {status}, {price} per night",
-  "weekCellLabel": "{listing} – {date}: {status}, {price} per night",
-  "bookingTitle": "{guest} – {listing}",
+  "weekCellLabel": "{listing}, {date}: {status}, {price} per night",
+  "bookingTitle": "{guest}, {listing}",
   "dayView": {
     "eyebrow": "Daily operations timeline",
     "block": "Block this day",
@@ -59,7 +61,8 @@
   "guestLine": "{name} ({count, plural, one {# guest} other {# guests}})",
   "yearView": {
     "viewMonth": "View month",
-    "viewMonthLabel": "View {month}"
+    "viewMonthLabel": "View {month}",
+    "bookedDays": "{count, plural, =0 {No bookings} one {# booked day} other {# booked days}}"
   },
   "dialog": {
     "eyebrow": "Date settings",
@@ -73,7 +76,8 @@
     "defaultRate": "Default rate: {price} per night. Leave blank to reset.",
     "priceInputLabel": "Nightly price for this date",
     "saveRate": "Save rate",
-    "reservationsOnDate": "Reservations on this date"
+    "reservationsOnDate": "Reservations on this date",
+    "openForBookings": "Open for bookings"
   },
   "toast": {
     "dateBlocked": "Date blocked from bookings",
@@ -82,6 +86,45 @@
     "priceInvalid": "Enter a whole number between {min} and {max}, or leave blank to reset.",
     "priceReset": "Standard listing price restored.",
     "priceSet": "Nightly rate set to {price}",
-    "priceSaveFailed": "Could not save this price. Please try again."
+    "priceSaveFailed": "Could not save this price. Please try again.",
+    "rangeBlocked": "{count, plural, one {# day blocked} other {# days blocked}}",
+    "rangeReopened": "{count, plural, one {# day reopened} other {# days reopened}}",
+    "rangePriceSet": "{count, plural, one {# day set to {price}} other {# days set to {price}}}",
+    "rangePriceReset": "{count, plural, one {Standard price restored for # day} other {Standard price restored for # days}}"
+  },
+  "eyebrow": "Availability",
+  "weekRange": "{start} to {end}",
+  "gridLabel": "Days of {month}",
+  "priceUnit": "{category, select, vehicle {per day} experience {per person} trip {per person} other {per night}}",
+  "legend": {
+    "title": "Legend",
+    "available": "Available",
+    "booked": "Booked",
+    "blocked": "Blocked",
+    "special": "Custom price",
+    "today": "Today",
+    "selected": "Selected"
+  },
+  "details": {
+    "title": "Day details",
+    "selection": "Selection",
+    "noBookings": "No reservations on this day.",
+    "hint": "Hover or focus a day to see its details. Drag across days to select a range."
+  },
+  "range": {
+    "modeLabel": "Select a range",
+    "hint": "Drag across days, or use Shift with the arrow keys, to block or price several days at once.",
+    "pickStart": "Tap the first day of the range.",
+    "pickEnd": "Now tap the last day of the range.",
+    "title": "{count, plural, one {# day selected} other {# days selected}}",
+    "dates": "{start} to {end}",
+    "edit": "Edit these days",
+    "clear": "Clear selection",
+    "bookedInside": "{count, plural, one {# of these days already has a reservation. Blocking does not cancel it.} other {# of these days already have reservations. Blocking does not cancel them.}}",
+    "block": "Block these days",
+    "reopen": "Reopen these days",
+    "priceTitle": "Price for these days",
+    "priceInputLabel": "Price for the selected days",
+    "savePrice": "Apply price"
   }
 }

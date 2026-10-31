@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import HostLayoutShell from "@/components/host/HostLayoutShell";
+import ScopedIntlProvider from "@/components/i18n/ScopedIntlProvider";
 import { requireHostContext } from "@/lib/server/host-context";
 import { getHostListings } from "@/lib/data/listings";
 
@@ -29,8 +30,10 @@ export default async function HostLayout({
   }
 
   return (
+    <ScopedIntlProvider scope="host">
     <HostLayoutShell currentUser={ctx.user} organization={ctx.organization} hostType={ctx.hostType}>
       {children}
     </HostLayoutShell>
+    </ScopedIntlProvider>
   );
 }

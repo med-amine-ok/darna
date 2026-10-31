@@ -3,7 +3,10 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Bell, Save, Languages, ShieldCheck, Sliders } from "lucide-react";
-import { getPlatformSettings, updatePlatformSettings } from "@/lib/actions/settings";
+import {
+  getPlatformSettings,
+  updatePlatformSettings,
+} from "@/lib/actions/settings";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -19,10 +22,15 @@ export interface SettingsClientProps {
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
-const INPUT_CLASS = `text-xs rounded-xl border border-tertiary/70 p-2.5 text-primary font-bold focus:outline-none focus:border-secondary ${FOCUS_RING}`;
+const INPUT_CLASS = `text-xs rounded-xl border border-primary/[0.12] p-2.5 text-primary font-semibold focus:outline-none focus:border-primary-600 shadow-2xs hover:border-primary/25 ${FOCUS_RING}`;
 
-/** Supported UI languages — names are autonyms, shown as-is in every locale. */
-const LANGUAGES: { code: "fr" | "ar" | "en"; autonym: string; badgeKey: string; badgeClass: string }[] = [
+/** Supported UI languages, names are autonyms, shown as-is in every locale. */
+const LANGUAGES: {
+  code: "fr" | "ar" | "en";
+  autonym: string;
+  badgeKey: string;
+  badgeClass: string;
+}[] = [
   {
     code: "fr",
     autonym: "Français (FR)",
@@ -69,11 +77,14 @@ function SwitchRow({
       <div>
         <label
           htmlFor={id}
-          className={`font-bold text-primary block cursor-pointer ${emphasized ? "text-sm" : "text-xs"}`}
+          className={`font-semibold text-primary block cursor-pointer ${emphasized ? "text-sm" : "text-xs"}`}
         >
           {label}
         </label>
-        <p id={hintId} className={`text-neutral-500 mt-0.5 ${emphasized ? "text-xs" : "text-[11px]"}`}>
+        <p
+          id={hintId}
+          className={`text-neutral-500 mt-0.5 ${emphasized ? "text-xs" : "text-[11px]"}`}
+        >
           {hint}
         </p>
       </div>
@@ -119,7 +130,8 @@ export default function SettingsClient({
   // Notifications states
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
-  const [instantBookingNotifications, setInstantBookingNotifications] = useState(true);
+  const [instantBookingNotifications, setInstantBookingNotifications] =
+    useState(true);
 
   const { success, error } = useToast();
   const can = useCan();
@@ -128,7 +140,9 @@ export default function SettingsClient({
     try {
       const data = unwrap(await getPlatformSettings());
       setPlatformName(data.platformName);
-      setServiceFeePercent(data.serviceFeePercent ?? data.guestServiceFeePercent ?? 5);
+      setServiceFeePercent(
+        data.serviceFeePercent ?? data.guestServiceFeePercent ?? 5,
+      );
       setMaintenanceMode(data.maintenanceMode);
       setTwoFactorEnabled(data.security?.twoFactorRequired || false);
       setSessionTimeoutMinutes(data.security?.sessionTimeoutMinutes || 120);
@@ -153,7 +167,7 @@ export default function SettingsClient({
             sessionTimeoutMinutes,
             twoFactorRequired: twoFactorEnabled,
           },
-        })
+        }),
       );
       success(t("toasts.saved"), t("toasts.savedHint"));
     } catch (err) {
@@ -184,10 +198,26 @@ export default function SettingsClient({
 
       <Tabs
         items={[
-          { id: "general", label: t("tabs.general"), icon: <Sliders className="w-4 h-4" aria-hidden="true" /> },
-          { id: "languages", label: t("tabs.languages"), icon: <Languages className="w-4 h-4" aria-hidden="true" /> },
-          { id: "notifications", label: t("tabs.notifications"), icon: <Bell className="w-4 h-4" aria-hidden="true" /> },
-          { id: "security", label: t("tabs.security"), icon: <ShieldCheck className="w-4 h-4" aria-hidden="true" /> },
+          {
+            id: "general",
+            label: t("tabs.general"),
+            icon: <Sliders className="w-4 h-4" aria-hidden="true" />,
+          },
+          {
+            id: "languages",
+            label: t("tabs.languages"),
+            icon: <Languages className="w-4 h-4" aria-hidden="true" />,
+          },
+          {
+            id: "notifications",
+            label: t("tabs.notifications"),
+            icon: <Bell className="w-4 h-4" aria-hidden="true" />,
+          },
+          {
+            id: "security",
+            label: t("tabs.security"),
+            icon: <ShieldCheck className="w-4 h-4" aria-hidden="true" />,
+          },
         ]}
         activeId={activeTab}
         onChange={setActiveTab}
@@ -196,11 +226,16 @@ export default function SettingsClient({
       {/* General Settings */}
       {activeTab === "general" && (
         <div className="space-y-4">
-          <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-            <h2 className="font-bold text-primary text-base">{t("identity.title")}</h2>
+          <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
+            <h2 className="font-semibold text-primary text-base">
+              {t("identity.title")}
+            </h2>
 
             <div>
-              <label htmlFor={platformNameId} className="block text-xs font-bold text-primary mb-1">
+              <label
+                htmlFor={platformNameId}
+                className="block text-xs font-semibold text-primary mb-1"
+              >
                 {t("platformName")}
               </label>
               <input
@@ -213,7 +248,10 @@ export default function SettingsClient({
             </div>
 
             <div>
-              <label htmlFor={serviceFeeId} className="block text-xs font-bold text-primary mb-1">
+              <label
+                htmlFor={serviceFeeId}
+                className="block text-xs font-semibold text-primary mb-1"
+              >
                 {t("serviceFee")}
               </label>
               <input
@@ -226,13 +264,16 @@ export default function SettingsClient({
                 aria-describedby={`${serviceFeeId}-hint`}
                 className={`w-32 font-mono ${INPUT_CLASS}`}
               />
-              <p id={`${serviceFeeId}-hint`} className="text-[11px] text-neutral-500 mt-1">
+              <p
+                id={`${serviceFeeId}-hint`}
+                className="text-[11px] text-neutral-500 mt-1"
+              >
                 {t("identity.serviceFeeHint")}
               </p>
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-3">
+          <section className="bg-white p-6 rounded-2xl space-y-3 shadow-e1">
             <SwitchRow
               emphasized
               label={t("maintenance")}
@@ -246,30 +287,38 @@ export default function SettingsClient({
 
       {/* Languages */}
       {activeTab === "languages" && (
-        <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-          <h2 className="font-bold text-primary text-base">{t("languages.title")}</h2>
-          <p className="text-xs text-neutral-500">{t("languages.description", { count: LANGUAGES.length })}</p>
+        <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
+          <h2 className="font-semibold text-primary text-base">
+            {t("languages.title")}
+          </h2>
+          <p className="text-xs text-neutral-500">
+            {t("languages.description", { count: LANGUAGES.length })}
+          </p>
 
           <ul className="space-y-3 pt-2">
             {LANGUAGES.map((lang) => (
               <li
                 key={lang.code}
-                className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/30 border border-tertiary/40"
+                className="flex items-center justify-between p-3 rounded-xl bg-darnaBg-100  "
               >
                 <div className="flex items-center gap-3">
                   <span
                     lang={lang.code}
                     dir={lang.code === "ar" ? "rtl" : "ltr"}
-                    className="font-bold text-xs text-primary"
+                    className="font-semibold text-xs text-primary"
                   >
                     {lang.autonym}
                   </span>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${lang.badgeClass}`}>
+                  <span
+                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${lang.badgeClass}`}
+                  >
                     {t(lang.badgeKey)}
                   </span>
                 </div>
                 <span className="text-xs font-semibold text-secondary-700">
-                  {t("languages.translated", { percent: formatNumber(100, locale) })}
+                  {t("languages.translated", {
+                    percent: formatNumber(100, locale),
+                  })}
                 </span>
               </li>
             ))}
@@ -279,9 +328,11 @@ export default function SettingsClient({
 
       {/* Notifications */}
       {activeTab === "notifications" && (
-        <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-          <h2 className="font-bold text-primary text-base">{t("notifications.title")}</h2>
-          <div className="pt-1 divide-y divide-neutral-100">
+        <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
+          <h2 className="font-semibold text-primary text-base">
+            {t("notifications.title")}
+          </h2>
+          <div className="pt-1 divide-y divide-primary/[0.06]">
             <div className="py-3">
               <SwitchRow
                 label={t("notifications.email")}
@@ -312,12 +363,17 @@ export default function SettingsClient({
 
       {/* Security */}
       {activeTab === "security" && (
-        <section className="bg-white p-6 rounded-2xl border border-tertiary/40 space-y-4">
-          <h2 className="font-bold text-primary text-base">{t("securityPolicy.title")}</h2>
+        <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
+          <h2 className="font-semibold text-primary text-base">
+            {t("securityPolicy.title")}
+          </h2>
 
           <div className="space-y-4">
             <div>
-              <label htmlFor={sessionTimeoutId} className="block text-xs font-bold text-primary mb-1">
+              <label
+                htmlFor={sessionTimeoutId}
+                className="block text-xs font-semibold text-primary mb-1"
+              >
                 {t("sessionTimeout")}
               </label>
               <input
@@ -326,12 +382,14 @@ export default function SettingsClient({
                 min="15"
                 max="480"
                 value={sessionTimeoutMinutes}
-                onChange={(e) => setSessionTimeoutMinutes(Number(e.target.value))}
+                onChange={(e) =>
+                  setSessionTimeoutMinutes(Number(e.target.value))
+                }
                 className={`w-32 font-mono ${INPUT_CLASS}`}
               />
             </div>
 
-            <div className="pt-4 border-t border-neutral-100">
+            <div className="pt-4 border-t border-primary/[0.08]">
               <SwitchRow
                 label={t("twoFactor")}
                 hint={t("securityPolicy.twoFactorHint")}

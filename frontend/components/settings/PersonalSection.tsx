@@ -5,14 +5,19 @@ import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useRouter } from "@/navigation";
 import { User } from "@/types";
+import { AnimatePresence, m } from "framer-motion";
 import { BrandShieldIcon } from "@/components/icons";
+import { Input } from "@/components/ui/Field";
+import Button from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { dur, ease } from "@/lib/motion";
 import { updateProfileAction } from "@/app/actions/account";
 import { useActionError } from "@/hook/useActionError";
-import { INPUT_CLASS, LINK_BUTTON_CLASS, PRIMARY_BUTTON_CLASS, SectionHeader } from "./settingsUi";
+import { LINK_BUTTON_CLASS, SectionHeader, SettingsCard, SettingsList } from "./settingsUi";
 
 type FieldKey = "legalName" | "preferredName" | "email" | "phone" | "resAddress" | "mailingAddress";
 
-const maskEmail = (val: string) => {
+export const maskEmail = (val: string) => {
   const parts = val.split("@");
   if (parts.length !== 2) return val;
   const name = parts[0];
@@ -57,11 +62,13 @@ function EditableField({
   const inputId = `settings-${field}`;
   const panelId = `settings-${field}-editor`;
   return (
-    <div className="py-4">
+    <div className="py-4 first:pt-0 last:pb-0">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold text-neutral-600">{label}</div>
-          <div className={`text-sm mt-0.5 ${isEmpty ? "text-neutral-500" : "font-medium text-primary"}`}>{display}</div>
+        <div className="min-w-0">
+          <div className="text-meta font-medium text-primary-600">{label}</div>
+          <div className={`mt-0.5 break-words text-body ${isEmpty ? "text-primary-500" : "font-medium text-primary-900"}`}>
+            {display}
+          </div>
         </div>
         <button
           type="button"
@@ -69,37 +76,45 @@ function EditableField({
           aria-expanded={editing}
           aria-controls={editing ? panelId : undefined}
           aria-label={editing ? t("cancelEditing", { field: label }) : t("editField", { field: label })}
-          className={LINK_BUTTON_CLASS}
+          className={`${LINK_BUTTON_CLASS} shrink-0`}
         >
           {editing ? t("cancel") : isEmpty ? t("add") : t("edit")}
         </button>
       </div>
-      {editing && (
-        <form
-          id={panelId}
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSave();
-          }}
-          className="mt-3 p-4 bg-neutral-50 rounded-2xl border border-tertiary/50 space-y-3"
-        >
-          <label htmlFor={inputId} className="sr-only">
-            {label}
-          </label>
-          <input
-            id={inputId}
-            type={type}
-            value={value}
-            autoComplete={autoComplete}
-            placeholder={placeholder}
-            onChange={(e) => onChange(e.target.value)}
-            className={INPUT_CLASS}
-          />
-          <button type="submit" disabled={saving} className={PRIMARY_BUTTON_CLASS}>
-            {saveLabel || t("save")}
-          </button>
-        </form>
-      )}
+      <AnimatePresence initial={false}>
+        {editing && (
+          <m.div
+            key="editor"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto", transition: { duration: dur.base, ease: ease.out } }}
+            exit={{ opacity: 0, height: 0, transition: { duration: dur.fast, ease: ease.standard } }}
+            className="-mx-1 overflow-hidden px-1"
+          >
+            <form
+              id={panelId}
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSave();
+              }}
+              className="flex flex-col gap-3 pb-1 pt-4 sm:flex-row sm:items-start"
+            >
+              <Input
+                id={inputId}
+                label={label}
+                type={type}
+                value={value}
+                autoComplete={autoComplete}
+                placeholder={placeholder}
+                onChange={(e) => onChange(e.target.value)}
+                containerClassName="sm:flex-1"
+              />
+              <Button type="submit" variant="secondary" loading={saving} className="sm:mt-1">
+                {saveLabel || t("save")}
+              </Button>
+            </form>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -152,7 +167,8 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
         description={t("personal.description")}
       />
 
-      <div className="divide-y divide-tertiary/40">
+      <SettingsCard>
+      <SettingsList>
         <EditableField
           field="legalName"
           label={t("personal.legalName")}
@@ -220,14 +236,15 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
 
         <div className="py-4">
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-semibold text-neutral-600">{t("personal.identity")}</div>
-              <div className="text-sm font-semibold text-emerald-700 mt-0.5 flex items-center gap-1.5">
-                <BrandShieldIcon size={16} aria-hidden="true" />
-                <span>{t("personal.identityVerified")}</span>
+            <div className="min-w-0">
+              <div className="text-meta font-medium text-primary-600">{t("personal.identity")}</div>
+              <div className="mt-1">
+                <Badge tone="success" icon={<BrandShieldIcon size={14} aria-hidden="true" />}>
+                  {t("personal.identityVerified")}
+                </Badge>
               </div>
             </div>
-            <span className="text-xs font-semibold text-neutral-600">{t("personal.completed")}</span>
+            <span className="text-meta font-medium text-primary-600">{t("personal.completed")}</span>
           </div>
         </div>
 
@@ -260,7 +277,8 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
             toast.success(t("personal.mailingAddressSaved"));
           }}
         />
-      </div>
+      </SettingsList>
+      </SettingsCard>
     </section>
   );
 }

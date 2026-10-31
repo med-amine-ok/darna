@@ -18,9 +18,9 @@ export const Badge: React.FC<BadgeProps> = ({
   const variantStyles = {
     primary: "bg-primary text-white",
     secondary: "bg-secondary-700 text-white",
-    tertiary: "bg-tertiary text-primary",
+    tertiary: "bg-tertiary text-primary-900",
     accent: "bg-accent-600 text-white",
-    outline: "border border-tertiary/70 text-primary bg-white",
+    outline: "ring-1 ring-inset ring-primary/15 text-primary-900 bg-white",
   };
 
   return (
@@ -57,7 +57,7 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div
-      className={`relative rounded-xl overflow-hidden bg-tertiary/30 border border-tertiary/50 shrink-0 flex items-center justify-center font-bold text-xs text-primary shadow-2xs ${className}`}
+      className={`relative rounded-full overflow-hidden bg-tertiary-100 ring-1 ring-primary/[0.06] shrink-0 flex items-center justify-center font-semibold text-xs text-primary-900 ${className}`}
       style={{ width: size, height: size }}
     >
       {src ? (

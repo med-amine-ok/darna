@@ -8,19 +8,18 @@ import {
   toast,
 } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  BrandCheckIcon,
-  BrandAlertCircleIcon,
-  BrandCloseIcon,
-  BrandSpinnerIcon,
-} from "@/components/icons";
+import { useTranslations } from "next-intl";
+import { BrandAlertCircleIcon, BrandCloseIcon } from "@/components/icons";
+import { DrawnCheck, Spinner } from "@/components/ui/Button";
 import { useParams } from "next/navigation";
 
 // Re-export toast for unified design system imports
 export { toast };
 
 /**
- * Custom Spring Overshoot Motion for DARNA toasts
+ * DARNA toasts (react-toastify). Styling lives in styles/globals.css ("DARNA kit, toasts"):
+ * glass-light card, e3, rounded-2xl, accent bar on the reading-start edge, thin progress bar.
+ * Enter slides from the start edge (up from the bottom on phones); exit fades + collapses.
  */
 const DarnaToastTransition = cssTransition({
   enter: "darna-toast-enter",
@@ -30,13 +29,7 @@ const DarnaToastTransition = cssTransition({
   collapseDuration: 220,
 });
 
-/**
- * Variant-coded Icon Badge matching DARNA Earthy Minimal palette:
- * - Success: filled circular badge in soft sage-tinted background (secondary token #6B7F5B) with white checkmark
- * - Error: circular badge in warm brick-red (#C94A4A) destructive tint with white alert icon
- * - Info/Neutral: circular badge in tan/tertiary (#D9C9B2) tint with primary-colored info icon
- * - Warning: circular badge in warm amber (#D9822B) tint with white warning icon
- */
+/** Tinted circular icon per toast type (olive success, terracotta error, ochre warning, sand info). */
 export function DarnaToastIcon({
   type,
   isLoading,
@@ -44,75 +37,59 @@ export function DarnaToastIcon({
   type?: TypeOptions;
   isLoading?: boolean;
 }) {
+  const base = "flex items-center justify-center shrink-0 w-8 h-8 rounded-full";
   if (isLoading) {
     return (
-      <div
-        className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-accent/15 border border-accent/30 text-accent"
+      <span
+        className={`${base} bg-accent-100 text-accent-700`}
         aria-hidden="true"
       >
-        <div className="w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center shadow-xs">
-          <BrandSpinnerIcon size={12} strokeWidth={2.5} />
-        </div>
-      </div>
+        <Spinner size={15} />
+      </span>
     );
   }
-
   switch (type) {
     case "success":
       return (
-        <div
-          className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-secondary/15 border border-secondary/35 text-secondary shadow-xs"
+        <span
+          className={`${base} bg-secondary-100 text-secondary-700`}
           aria-hidden="true"
         >
-          <div className="w-5 h-5 rounded-full bg-secondary text-white flex items-center justify-center shadow-xs">
-            <BrandCheckIcon size={12} strokeWidth={3} />
-          </div>
-        </div>
+          <DrawnCheck size={16} strokeWidth={2.6} />
+        </span>
       );
-
     case "error":
       return (
-        <div
-          className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-rose-50 border border-rose-200/90 text-rose-600 shadow-xs"
+        <span
+          className={`${base} bg-accent-100 text-accent-700`}
           aria-hidden="true"
         >
-          <div className="w-5 h-5 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xs">
-            <BrandAlertCircleIcon size={13} strokeWidth={2.5} />
-          </div>
-        </div>
+          <BrandAlertCircleIcon size={17} strokeWidth={2} />
+        </span>
       );
-
     case "warning":
       return (
-        <div
-          className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-amber-50 border border-amber-200/90 text-amber-700 shadow-xs"
+        <span
+          className={`${base} bg-amber-100 text-amber-700`}
           aria-hidden="true"
         >
-          <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-xs">
-            <BrandAlertCircleIcon size={12} strokeWidth={2.5} />
-          </div>
-        </div>
+          <BrandAlertCircleIcon size={17} strokeWidth={2} />
+        </span>
       );
-
     case "info":
     default:
       return (
-        <div
-          className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-tertiary/30 border border-tertiary/75 text-primary shadow-xs"
+        <span
+          className={`${base} bg-tertiary-200 text-tertiary-800`}
           aria-hidden="true"
         >
-          <div className="w-5 h-5 rounded-full bg-tertiary-300 text-primary flex items-center justify-center shadow-xs">
-            <BrandAlertCircleIcon size={13} strokeWidth={2.5} className="text-primary" />
-          </div>
-        </div>
+          <BrandAlertCircleIcon size={17} strokeWidth={2} />
+        </span>
       );
   }
 }
 
-/**
- * Custom Quiet Close Button:
- * Muted gray, hover-darkens with soft pill feedback
- */
+/** Close control: 32px circle (44px hit area), tinted hover, localized label. */
 export function DarnaToastCloseButton({
   closeToast,
   ariaLabel,
@@ -120,20 +97,22 @@ export function DarnaToastCloseButton({
   closeToast?: (e: React.MouseEvent<HTMLElement>) => void;
   ariaLabel?: string;
 }) {
+  const t = useTranslations("ui");
   return (
     <button
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        e.preventDefault();
-        if (closeToast) {
-          closeToast(e);
-        }
+        closeToast?.(e);
       }}
-      aria-label={ariaLabel || "Close notification"}
-      className="shrink-0 w-7 h-7 -me-1 ms-2 rounded-full flex items-center justify-center text-neutral-400 hover:text-primary hover:bg-tertiary/25 active:scale-95 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent z-20 pointer-events-auto"
+      aria-label={ariaLabel || t("dismissNotification")}
+      className="relative z-20 shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-primary-500 hover:text-primary-900 hover:bg-primary/[0.07] active:scale-90 transition-[background-color,color,transform] duration-fast ease-standard cursor-pointer before:absolute before:-inset-1.5 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
     >
-      <BrandCloseIcon size={15} strokeWidth={2.2} className="pointer-events-none" />
+      <BrandCloseIcon
+        size={15}
+        strokeWidth={2.2}
+        className="pointer-events-none"
+      />
     </button>
   );
 }
@@ -166,7 +145,9 @@ export default function ToastContainerBar() {
       icon={(props) => (
         <DarnaToastIcon
           type={props.type}
-          isLoading={Boolean((props as unknown as { isLoading?: boolean })?.isLoading)}
+          isLoading={Boolean(
+            (props as unknown as { isLoading?: boolean })?.isLoading,
+          )}
         />
       )}
       closeButton={(props) => (
@@ -178,10 +159,10 @@ export default function ToastContainerBar() {
         return `darna-toast darna-toast--${type} ${rtlClass}`;
       }}
       bodyClassName={() => "darna-toast-body"}
-      progressClassName={(context) => {
-        const type = context?.type || "default";
-        return `darna-toast-progress darna-toast-progress--${type}`;
-      }}
+      // Keep react-toastify's own classes: its animation drives autoClose.
+      progressClassName={(context) =>
+        `${context?.defaultClassName ?? ""} darna-toast-progress`
+      }
     />
   );
 }

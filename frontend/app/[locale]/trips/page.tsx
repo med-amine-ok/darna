@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/server/session";
-import Container from "@/components/Container";
+import { AccountPage } from "@/components/profile/AccountShell";
 import { getReservations } from "@/lib/data/reservations";
 import TripsClient from "@/components/trips/TripsClient";
 
@@ -25,13 +25,14 @@ export default async function TripsPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/trips`);
   }
 
-  const reservations = await getReservations({ userId: currentUser.id });
+  const [reservations, t] = await Promise.all([
+    getReservations({ userId: currentUser.id }),
+    getTranslations({ locale, namespace: "trips" }),
+  ]);
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-10">
-      <Container>
-        <TripsClient initialReservations={reservations} />
-      </Container>
-    </div>
+    <AccountPage eyebrow={t("eyebrow")} title={t("pageTitle")} subtitle={t("pageSubtitle")}>
+      <TripsClient initialReservations={reservations} />
+    </AccountPage>
   );
 }

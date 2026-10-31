@@ -49,7 +49,7 @@ interface MessageThread {
 }
 
 const FIELD =
-  "w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600";
+  "w-full rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
@@ -253,23 +253,23 @@ export default function MessagesClient({
       {activeTab === "conversations" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[560px]">
           {/* Threads List */}
-          <div className="lg:col-span-5 bg-white rounded-2xl border border-tertiary/40 overflow-hidden flex flex-col">
-            <div className="p-3.5 border-b border-tertiary/40">
+          <div className="lg:col-span-5 bg-white rounded-2xl overflow-hidden flex flex-col shadow-e1">
+            <div className="p-3.5 border-b border-primary/[0.08]">
               <div className="relative">
                 <label htmlFor="inbox-search" className="sr-only">{t("searchLabel")}</label>
-                <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+                <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
                 <input
                   id="inbox-search"
                   type="search"
                   placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full text-xs rounded-xl bg-darnaBg/40 border border-tertiary/60 py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="w-full text-xs rounded-xl bg-white border border-primary/[0.12] py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25"
                 />
               </div>
             </div>
 
-            <ul className="divide-y divide-neutral-100 overflow-y-auto flex-1" aria-label={t("threadsLabel")}>
+            <ul className="divide-y divide-primary/[0.06] overflow-y-auto flex-1" aria-label={t("threadsLabel")}>
               {threads.map((thread) => {
                 const isSelected = thread.id === activeThread.id;
                 return (
@@ -287,14 +287,14 @@ export default function MessagesClient({
                       <Avatar name={thread.senderName} size={40} />
                       <span className="min-w-0 flex-1 block">
                         <span className="flex items-center justify-between gap-2">
-                          <span className="font-bold text-xs text-primary truncate">
+                          <span className="font-semibold text-xs text-primary truncate">
                             {thread.senderName}
                           </span>
-                          <time dateTime={thread.time} className="text-[10px] text-neutral-500 font-mono shrink-0">
+                          <time dateTime={thread.time} className="text-[11px] text-neutral-500 font-mono shrink-0">
                             {formatDate(thread.time, locale)}
                           </time>
                         </span>
-                        <span className="text-[10px] text-neutral-500 block truncate">
+                        <span className="text-[11px] text-neutral-500 block truncate">
                           {roleLabel(thread.senderRole)}
                         </span>
                         <span className="text-xs text-neutral-600 line-clamp-1 mt-1 block">
@@ -315,13 +315,13 @@ export default function MessagesClient({
           </div>
 
           {/* Active Thread Message Viewer */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-tertiary/40 flex flex-col overflow-hidden">
+          <div className="lg:col-span-7 bg-white rounded-2xl flex flex-col overflow-hidden shadow-e1">
             {/* Header */}
-            <div className="p-4 border-b border-tertiary/40 flex items-center justify-between gap-3 bg-darnaBg/30">
+            <div className="p-4 border-b border-primary/[0.08] flex items-center justify-between gap-3 bg-darnaBg/30">
               <div className="flex items-center gap-3">
                 <Avatar name={activeThread.senderName} size={42} />
                 <div>
-                  <h2 className="font-bold text-sm text-primary">{activeThread.senderName}</h2>
+                  <h2 className="font-semibold text-sm text-primary">{activeThread.senderName}</h2>
                   <span className="text-xs text-neutral-500">{roleLabel(activeThread.senderRole)}</span>
                 </div>
               </div>
@@ -349,12 +349,12 @@ export default function MessagesClient({
                     className={`max-w-[80%] rounded-2xl p-3 text-xs leading-relaxed ${
                       msg.sender === "admin"
                         ? "bg-primary text-white rounded-ee-none"
-                        : "bg-white border border-tertiary/60 text-primary rounded-es-none shadow-2xs"
+                        : "bg-white text-primary-800 rounded-es-none shadow-e1"
                     }`}
                   >
                     {msg.text}
                   </div>
-                  <time dateTime={msg.time} className="text-[10px] text-neutral-500 mt-1 px-1">
+                  <time dateTime={msg.time} className="text-[11px] text-neutral-500 mt-1 px-1">
                     {formatDateTime(msg.time, locale)}
                   </time>
                 </div>
@@ -362,7 +362,7 @@ export default function MessagesClient({
             </div>
 
             {/* Reply Composer */}
-            <div className="p-3 border-t border-tertiary/40 bg-white space-y-2">
+            <div className="p-3 border-t border-primary/[0.08] bg-white space-y-2">
               <div className="flex items-center gap-2">
                 <label htmlFor="inbox-reply" className="sr-only">
                   {t("replyLabel", { name: activeThread.senderName })}
@@ -373,7 +373,7 @@ export default function MessagesClient({
                   placeholder={t("replyPlaceholder")}
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  className="w-full text-xs rounded-xl bg-darnaBg/30 border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
+                  className="w-full text-xs rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] resize-none shadow-2xs hover:border-primary/25"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -416,9 +416,9 @@ export default function MessagesClient({
 
       {/* Notifications Tab */}
       {activeTab === "notifications" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto shadow-2xs">
+        <div className="relative bg-white rounded-2xl overflow-x-auto shadow-e1">
           <table className="w-full text-xs text-start">
-            <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+            <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
               <tr>
                 <th scope="col" className="py-3 px-4 text-start">{t("notifications.colDate")}</th>
                 <th scope="col" className="py-3 px-4 text-start">{t("notifications.colTitle")}</th>
@@ -427,15 +427,15 @@ export default function MessagesClient({
                 <th scope="col" className="py-3 px-4 text-start">{t("notifications.colStatus")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-primary/[0.06]">
               {SENT_NOTIFICATIONS.map((n) => (
-                <tr key={n.id} className="hover:bg-neutral-50/50">
-                  <td className="py-3 px-4 font-mono text-neutral-500">
+                <tr key={n.id} className="hover:bg-darnaBg-100">
+                  <td className="py-3 px-4 tabular-nums text-neutral-500 whitespace-nowrap">
                     <time dateTime={n.at}>{formatDateTime(n.at, locale)}</time>
                   </td>
-                  <td className="py-3 px-4 font-bold text-primary">{n.title}</td>
+                  <td className="py-3 px-4 font-semibold text-primary">{n.title}</td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-primary">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 text-primary">
                       {t(`notifications.${n.channelKey}`)}
                     </span>
                   </td>
@@ -445,7 +445,7 @@ export default function MessagesClient({
                       : t("notifications.allProviders", { count: formatNumber(n.recipient.count, locale) })}
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-secondary/15 text-secondary">
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-secondary/15 text-secondary">
                       {t("notifications.delivered")}
                     </span>
                   </td>
@@ -460,17 +460,17 @@ export default function MessagesClient({
       {activeTab === "templates" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {TEMPLATES.map((tpl) => (
-            <div key={tpl.id} className="bg-white rounded-2xl border border-tertiary/40 p-5 space-y-3">
+            <div key={tpl.id} className="bg-white rounded-2xl p-5 space-y-3 shadow-e1">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="font-bold text-sm text-primary">{t(`templates.${tpl.titleKey}`)}</h3>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600" dir="ltr">
+                <h3 className="font-semibold text-sm text-primary">{t(`templates.${tpl.titleKey}`)}</h3>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600" dir="ltr">
                   {t("templates.languages")}
                 </span>
               </div>
               <p className="text-xs text-neutral-500">
                 {t(`templates.${tpl.descKey}`)}
               </p>
-              <div className="bg-darnaBg/40 p-3 rounded-xl border border-tertiary/40 text-[11px] font-mono text-primary leading-relaxed">
+              <div className="bg-darnaBg-100 p-3 rounded-xl text-[11px] font-mono text-primary leading-relaxed">
                 {/* raw: the {placeholders} are template variables, shown literally */}
                 {t.raw(`templates.${tpl.bodyKey}`) as string}
               </div>
@@ -488,7 +488,7 @@ export default function MessagesClient({
       >
         <div className="space-y-4 text-xs text-start">
           <div>
-            <label htmlFor="broadcast-target" className="block font-bold text-primary mb-1">
+            <label htmlFor="broadcast-target" className="block font-semibold text-primary mb-1">
               {t("broadcast.target")}
             </label>
             <select id="broadcast-target" className={`${FIELD} cursor-pointer`}>
@@ -500,7 +500,7 @@ export default function MessagesClient({
           </div>
 
           <div>
-            <label htmlFor="broadcast-title" className="block font-bold text-primary mb-1">
+            <label htmlFor="broadcast-title" className="block font-semibold text-primary mb-1">
               {t("broadcast.notifTitle")}
             </label>
             <input
@@ -512,7 +512,7 @@ export default function MessagesClient({
           </div>
 
           <div>
-            <label htmlFor="broadcast-message" className="block font-bold text-primary mb-1">
+            <label htmlFor="broadcast-message" className="block font-semibold text-primary mb-1">
               {t("broadcast.message")}
             </label>
             <textarea

@@ -99,26 +99,26 @@ export default function ChangeRequestsClient({ title, subtitle, backRoute }: Pro
       header: t("columns.listing"),
       render: (row) => (
         <div>
-          <div className="font-medium text-[#2E3A2F] text-xs">{row.listingTitle}</div>
-          <div className="text-[11px] text-[#2E3A2F]/70">{t("host", { name: row.hostName })}</div>
+          <div className="font-medium text-primary-900 text-xs">{row.listingTitle}</div>
+          <div className="text-[11px] text-primary/70">{t("host", { name: row.hostName })}</div>
         </div>
       ),
     },
     {
       key: "field",
       header: t("columns.field"),
-      render: (row) => <span className="font-semibold text-xs text-[#2E3A2F]">{t(`fields.${row.field}`)}</span>,
+      render: (row) => <span className="font-semibold text-xs text-primary-900">{t(`fields.${row.field}`)}</span>,
     },
     {
       key: "diff",
       header: t("columns.diff"),
       render: (row) => (
         <div className="flex items-center gap-2 text-xs">
-          <del className="text-accent-700 bg-[#C96F4F]/10 px-2 py-0.5 rounded">
+          <del className="text-accent-700 bg-accent/10 px-2 py-0.5 rounded">
             <span className="sr-only">{t("before")} </span>
             {renderValue(row.oldValue)}
           </del>
-          <ArrowRight className="w-3.5 h-3.5 text-[#2E3A2F]/50 rtl:rotate-180" aria-hidden="true" />
+          <ArrowRight className="w-3.5 h-3.5 text-primary/50 rtl:rotate-180" aria-hidden="true" />
           <ins className="no-underline font-medium text-secondary-800 bg-secondary/15 px-2 py-0.5 rounded">
             <span className="sr-only">{t("after")} </span>
             {renderValue(row.newValue)}
@@ -130,7 +130,7 @@ export default function ChangeRequestsClient({ title, subtitle, backRoute }: Pro
       key: "date",
       header: t("columns.date"),
       render: (row) => (
-        <span className="text-xs text-[#2E3A2F]/70">
+        <span className="text-xs text-primary/70">
           {formatDate(row.requestedAt, locale)}
         </span>
       ),
@@ -147,7 +147,7 @@ export default function ChangeRequestsClient({ title, subtitle, backRoute }: Pro
                 type="button"
                 onClick={() => handleAction(row.id, "approved")}
                 aria-label={t("approveAria", { field: t(`fields.${row.field}`), listing: row.listingTitle })}
-                className="px-2.5 py-1 text-xs font-medium text-white bg-secondary-700 rounded-md hover:bg-secondary-800"
+                className="px-2.5 py-1 text-xs font-medium text-white bg-secondary-700 rounded-lg hover:bg-secondary-800 shadow-e1 transition-colors duration-fast"
               >
                 {t("approve")}
               </button>
@@ -155,7 +155,7 @@ export default function ChangeRequestsClient({ title, subtitle, backRoute }: Pro
                 type="button"
                 onClick={() => handleAction(row.id, "rejected")}
                 aria-label={t("rejectAria", { field: t(`fields.${row.field}`), listing: row.listingTitle })}
-                className="px-2.5 py-1 text-xs font-medium text-accent-700 border border-[#C96F4F]/40 rounded-md hover:bg-[#C96F4F]/10"
+                className="px-2.5 py-1 text-xs font-medium text-accent-700 ring-1 ring-inset ring-accent/40 rounded-lg hover:bg-accent-50 transition-colors duration-fast"
               >
                 {t("reject")}
               </button>
@@ -182,7 +182,7 @@ export default function ChangeRequestsClient({ title, subtitle, backRoute }: Pro
         <button
           type="button"
           onClick={() => router.push(backRoute)}
-          className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary-900 font-medium"
         >
           <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
           <span>{t("back")}</span>
@@ -191,7 +191,7 @@ export default function ChangeRequestsClient({ title, subtitle, backRoute }: Pro
 
       <PageHeader title={title} subtitle={subtitle} />
 
-      <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden">
+      <div>
         <DataTable
           columns={columns}
           data={requests}

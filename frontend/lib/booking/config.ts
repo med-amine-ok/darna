@@ -1,8 +1,12 @@
 /**
  * Platform booking configuration (client-safe constants).
- * TODO: replace with Supabase — move to a platform_settings table editable in admin.
+ * TODO: replace with Supabase, move to a platform_settings table editable in admin.
  */
-import type { HostTypeCommissionRates, Listing, ListingVertical } from "@/types";
+import type {
+  HostTypeCommissionRates,
+  Listing,
+  ListingVertical,
+} from "@/types";
 
 /**
  * Default DARNA commission (% of the accommodation subtotal) by host type.
@@ -76,14 +80,32 @@ export interface StayRules {
 }
 
 export function getStayRules(
-  listing: Pick<Listing, "minNights" | "maxNights" | "advanceNoticeDays" | "checkInTime" | "checkOutTime">
+  listing: Pick<
+    Listing,
+    | "minNights"
+    | "maxNights"
+    | "advanceNoticeDays"
+    | "checkInTime"
+    | "checkOutTime"
+  >,
 ): StayRules {
-  const minNights = Math.max(1, Math.floor(listing.minNights ?? STAY_RULE_DEFAULTS.minNights));
-  const maxNights = Math.max(minNights, Math.floor(listing.maxNights ?? STAY_RULE_DEFAULTS.maxNights));
+  const minNights = Math.max(
+    1,
+    Math.floor(listing.minNights ?? STAY_RULE_DEFAULTS.minNights),
+  );
+  const maxNights = Math.max(
+    minNights,
+    Math.floor(listing.maxNights ?? STAY_RULE_DEFAULTS.maxNights),
+  );
   return {
     minNights,
     maxNights,
-    advanceNoticeDays: Math.max(0, Math.floor(listing.advanceNoticeDays ?? STAY_RULE_DEFAULTS.advanceNoticeDays)),
+    advanceNoticeDays: Math.max(
+      0,
+      Math.floor(
+        listing.advanceNoticeDays ?? STAY_RULE_DEFAULTS.advanceNoticeDays,
+      ),
+    ),
     checkInTime: listing.checkInTime ?? STAY_RULE_DEFAULTS.checkInTime,
     checkOutTime: listing.checkOutTime ?? STAY_RULE_DEFAULTS.checkOutTime,
   };

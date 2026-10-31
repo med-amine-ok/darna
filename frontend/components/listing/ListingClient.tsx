@@ -6,6 +6,7 @@ import Container from "@/components/Container";
 import ListingHead from "./ListingHead";
 import ListingInfo from "./ListingInfo";
 import ListingReservation from "./ListingReservation";
+import ListingSectionNav from "./ListingSectionNav";
 import HotelHostelDetailClient from "./HotelHostelDetailClient";
 import type { ListingAvailability } from "@/lib/booking/availability";
 import type { PriceOverrides } from "@/lib/booking/pricing";
@@ -48,13 +49,22 @@ export default function ListingClient({
   }
 
   return (
-    <div className="pt-6 sm:pt-8 pb-28 lg:pb-8">
-      <Container className="space-y-8">
+    <div className="pt-6 sm:pt-8 pb-28 lg:pb-16">
+      <ListingSectionNav
+        sections={
+          listing.category === "experience"
+            ? ["photos", "included", "reviews", "location"]
+            : listing.category === "vehicle"
+            ? ["photos", "specs", "reviews", "location"]
+            : undefined
+        }
+      />
+      <Container className="space-y-10 lg:space-y-12">
         {/* Top Header & Bento Gallery */}
         <ListingHead listing={listing} currentUser={currentUser} />
 
         {/* Content Split: Details Left vs Sticky Booking Sidebar Right */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 relative">
           {/* Main Info Column */}
           <div className="lg:col-span-7 xl:col-span-8">
             <ListingInfo

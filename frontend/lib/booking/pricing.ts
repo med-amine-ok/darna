@@ -1,5 +1,5 @@
 /**
- * Booking price quotes — pure and client-safe, so the booking widgets preview
+ * Booking price quotes, pure and client-safe, so the booking widgets preview
  * exactly what the server charges. The SERVER recomputes every quote when a
  * booking is created (app/actions/bookings.ts); client totals are display-only.
  *
@@ -17,7 +17,11 @@
  * rounded in exactly one place (roundDzd).
  */
 import type { Listing, RoomType, Trip } from "@/types";
-import { DEFAULT_CLEANING_FEES, PLATFORM_TAX_RATE, SERVICE_FEE_RATES } from "./config";
+import {
+  DEFAULT_CLEANING_FEES,
+  PLATFORM_TAX_RATE,
+  SERVICE_FEE_RATES,
+} from "./config";
 import { eachNightKey, nightsBetween, type DateKey } from "./dates";
 
 export type PricingModel =
@@ -36,7 +40,7 @@ export interface BookingQuote {
   quantity: number;
   /** Standard unit price (before per-date overrides). */
   unitPrice: number;
-  /** subtotal / (nights × quantity), rounded — equals unitPrice without overrides. */
+  /** subtotal / (nights × quantity), rounded, equals unitPrice without overrides. */
   averageUnitPrice: number;
   hasPriceOverrides: boolean;
   subtotal: number;
@@ -57,31 +61,43 @@ export type PriceOverrides = Record<DateKey, number>;
 
 type QuotableListing = Pick<
   Listing,
-  "price" | "category" | "roomTypes" | "cleaningFee" | "serviceFeeRate" | "taxRate"
+  | "price"
+  | "category"
+  | "roomTypes"
+  | "cleaningFee"
+  | "serviceFeeRate"
+  | "taxRate"
 >;
 
-export function roomTypePrice(roomType: Pick<RoomType, "price" | "basePrice">): number {
+export function roomTypePrice(
+  roomType: Pick<RoomType, "price" | "basePrice">,
+): number {
   return roomType.basePrice ?? roomType.price;
 }
 
-export function roomTypeInventory(roomType: Pick<RoomType, "inventoryCount" | "totalInventory">): number {
+export function roomTypeInventory(
+  roomType: Pick<RoomType, "inventoryCount" | "totalInventory">,
+): number {
   return Math.max(0, roomType.inventoryCount ?? roomType.totalInventory ?? 0);
 }
 
 /** The room type a booking applies to (first one when none/unknown is selected). */
 export function selectRoomType<T extends Pick<Listing, "roomTypes">>(
   listing: T,
-  roomTypeId?: string | null
+  roomTypeId?: string | null,
 ): RoomType | null {
   if (!listing.roomTypes || listing.roomTypes.length === 0) return null;
-  return listing.roomTypes.find((r) => r.id === roomTypeId) || listing.roomTypes[0];
+  return (
+    listing.roomTypes.find((r) => r.id === roomTypeId) || listing.roomTypes[0]
+  );
 }
 
 export function pricingModelFor(
   listing: Pick<Listing, "category">,
-  roomType?: Pick<RoomType, "bookingUnit"> | null
+  roomType?: Pick<RoomType, "bookingUnit"> | null,
 ): PricingModel {
-  if (roomType) return roomType.bookingUnit === "bed" ? "per_bed_night" : "per_room_night";
+  if (roomType)
+    return roomType.bookingUnit === "bed" ? "per_bed_night" : "per_room_night";
   if (listing.category === "experience") return "per_person";
   if (listing.category === "vehicle") return "per_day";
   if (listing.category === "trip") return "per_traveller";
@@ -106,15 +122,26 @@ export function unitLabel(model: PricingModel): string {
   }
 }
 
-function serviceFeeRateFor(listing: Pick<Listing, "category" | "serviceFeeRate">): number {
-  const rate = listing.serviceFeeRate ?? SERVICE_FEE_RATES[listing.category] ?? 0;
+function serviceFeeRateFor(
+  listing: Pick<Listing, "category" | "serviceFeeRate">,
+): number {
+  const rate =
+    listing.serviceFeeRate ?? SERVICE_FEE_RATES[listing.category] ?? 0;
   return Math.min(1, Math.max(0, rate));
 }
 
 function finishQuote(
-  base: Omit<BookingQuote, "serviceFee" | "taxes" | "total" | "averageUnitPrice" | "serviceFeeRate" | "taxRate">,
+  base: Omit<
+    BookingQuote,
+    | "serviceFee"
+    | "taxes"
+    | "total"
+    | "averageUnitPrice"
+    | "serviceFeeRate"
+    | "taxRate"
+  >,
   serviceFeeRate: number,
-  taxRate: number
+  taxRate: number,
 ): BookingQuote {
   const subtotal = roundDzd(base.subtotal);
   const cleaningFee = roundDzd(base.cleaningFee);
@@ -154,9 +181,15 @@ export function quoteListingBooking(params: {
   const guests = Math.max(1, Math.floor(params.guestCount || 1));
   const roomType = selectRoomType(listing, params.selectedRoomTypeId);
   const model = pricingModelFor(listing, roomType);
-  const cleaningFee = Math.max(0, listing.cleaningFee ?? DEFAULT_CLEANING_FEES[listing.category] ?? 0);
+  const cleaningFee = Math.max(
+    0,
+    listing.cleaningFee ?? DEFAULT_CLEANING_FEES[listing.category] ?? 0,
+  );
   const serviceFeeRate = serviceFeeRateFor(listing);
-  const taxRate = Math.min(1, Math.max(0, listing.taxRate ?? PLATFORM_TAX_RATE));
+  const taxRate = Math.min(
+    1,
+    Math.max(0, listing.taxRate ?? PLATFORM_TAX_RATE),
+  );
 
   if (model === "per_person") {
     const unitPrice = overrides[params.startDate] ?? listing.price;
@@ -171,7 +204,7 @@ export function quoteListingBooking(params: {
         cleaningFee,
       },
       serviceFeeRate,
-      taxRate
+      taxRate,
     );
   }
 
@@ -184,9 +217,17 @@ export function quoteListingBooking(params: {
         ? Math.max(1, Math.floor(params.unitCount ?? guests))
         : Math.max(1, Math.floor(params.unitCount ?? 1));
     return finishQuote(
-      { model, nights, quantity, unitPrice, hasPriceOverrides: false, subtotal: unitPrice * quantity * nights, cleaningFee },
+      {
+        model,
+        nights,
+        quantity,
+        unitPrice,
+        hasPriceOverrides: false,
+        subtotal: unitPrice * quantity * nights,
+        cleaningFee,
+      },
       serviceFeeRate,
-      taxRate
+      taxRate,
     );
   }
 
@@ -194,17 +235,29 @@ export function quoteListingBooking(params: {
   let hasPriceOverrides = false;
   for (const night of eachNightKey(params.startDate, params.endDate)) {
     const override = overrides[night];
-    if (override !== undefined && override !== listing.price) hasPriceOverrides = true;
+    if (override !== undefined && override !== listing.price)
+      hasPriceOverrides = true;
     subtotal += override ?? listing.price;
   }
   return finishQuote(
-    { model, nights, quantity: 1, unitPrice: listing.price, hasPriceOverrides, subtotal, cleaningFee },
+    {
+      model,
+      nights,
+      quantity: 1,
+      unitPrice: listing.price,
+      hasPriceOverrides,
+      subtotal,
+      cleaningFee,
+    },
     serviceFeeRate,
-    taxRate
+    taxRate,
   );
 }
 
-export function quoteTripBooking(params: { trip: Pick<Trip, "pricePerPerson">; guestCount: number }): BookingQuote {
+export function quoteTripBooking(params: {
+  trip: Pick<Trip, "pricePerPerson">;
+  guestCount: number;
+}): BookingQuote {
   const quantity = Math.max(1, Math.floor(params.guestCount || 1));
   return finishQuote(
     {
@@ -217,10 +270,14 @@ export function quoteTripBooking(params: { trip: Pick<Trip, "pricePerPerson">; g
       cleaningFee: 0,
     },
     SERVICE_FEE_RATES.trip,
-    0
+    0,
   );
 }
 
-export function isRequestToBook(listing: Pick<Listing, "bookingApprovalMode" | "instantBook">): boolean {
-  return listing.bookingApprovalMode === "request" || listing.instantBook === false;
+export function isRequestToBook(
+  listing: Pick<Listing, "bookingApprovalMode" | "instantBook">,
+): boolean {
+  return (
+    listing.bookingApprovalMode === "request" || listing.instantBook === false
+  );
 }

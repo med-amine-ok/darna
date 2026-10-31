@@ -1,10 +1,10 @@
 "use client";
 
 import L from "leaflet";
-import React, { useState, useEffect } from "react";
-import { MapContainer, Marker, Popup, TileLayer, Circle, useMap } from "react-leaflet";
+import React, { useEffect } from "react";
+import { MapContainer, Marker, Popup, Circle, useMap } from "react-leaflet";
+import OpenFreeMapLayer from "@/components/map/OpenFreeMapLayer";
 import "leaflet/dist/leaflet.css";
-import { useTranslations } from "next-intl";
 
 // Custom DARNA Location Pin from /assets/location.png (70x104 source, shown at half size).
 const darnaLocationIcon = L.icon({
@@ -51,13 +51,8 @@ export default function Map({
   zoom,
   className = "w-full h-[35vh] min-h-[300px]",
 }: MapProps) {
-  const t = useTranslations("common");
-  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const defaultZoom = zoom || (isApproximate ? 13 : center ? 9 : 6);
   const mapCenter = (center as [number, number]) || [36.5897, 2.4475]; // Tipaza default
-
-  const googleRoadmapUrl = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
-  const googleSatelliteUrl = "https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
 
   return (
     <div className={`relative rounded-2xl overflow-hidden shadow-sm group ${className}`}>
@@ -65,17 +60,11 @@ export default function Map({
         center={mapCenter}
         zoom={defaultZoom}
         scrollWheelZoom={false}
-        attributionControl={false}
         className="w-full h-full z-0"
       >
         <SmoothMapController center={center ? (center as [number, number]) : undefined} zoom={defaultZoom} />
 
-        <TileLayer
-          key={mapType}
-          url={mapType === "roadmap" ? googleRoadmapUrl : googleSatelliteUrl}
-          subdomains={["0", "1", "2", "3"]}
-          maxZoom={20}
-        />
+        <OpenFreeMapLayer />
 
         {center && isApproximate && (
           <>
@@ -108,33 +97,6 @@ export default function Map({
         )}
       </MapContainer>
 
-      {/* Map Layer Switcher */}
-      <div role="group" aria-label={t("mapType")} className="absolute top-3 end-3 z-[400] flex items-center bg-white/90 backdrop-blur-md p-1 rounded-xl shadow-md border border-tertiary/60 text-xs font-semibold">
-        <button
-          type="button"
-          onClick={() => setMapType("roadmap")}
-          aria-pressed={mapType === "roadmap"}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
-            mapType === "roadmap"
-              ? "bg-primary text-white shadow-xs"
-              : "text-neutral-700 hover:bg-neutral-100"
-          }`}
-        >
-          {t("mapView")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMapType("satellite")}
-          aria-pressed={mapType === "satellite"}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
-            mapType === "satellite"
-              ? "bg-primary text-white shadow-xs"
-              : "text-neutral-700 hover:bg-neutral-100"
-          }`}
-        >
-          {t("satelliteView")}
-        </button>
-      </div>
     </div>
   );
 }

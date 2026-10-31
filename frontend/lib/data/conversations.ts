@@ -3,22 +3,30 @@ import "server-only";
 import { Conversation, Message } from "@/types";
 import { newId } from "@/lib/ids";
 import { clone, delay } from "./_store";
-import { conversationsTable, listingsTable, messagesTable, usersTable } from "./_tables";
+import {
+  conversationsTable,
+  listingsTable,
+  messagesTable,
+  usersTable,
+} from "./_tables";
 
 function withRelations(conv: Conversation, viewerId: string): Conversation {
-  const otherId = conv.participants.find((p) => p !== viewerId) || conv.participants[0];
+  const otherId =
+    conv.participants.find((p) => p !== viewerId) || conv.participants[0];
   const other = usersTable.find((u) => u.id === otherId);
   return clone({
     ...conv,
     listing: listingsTable.find((l) => l.id === conv.listingId),
-    // Public fields only — never the other participant's email/phone.
+    // Public fields only, never the other participant's email/phone.
     otherUser: other
       ? { id: other.id, name: other.name, image: other.image, role: other.role }
       : conv.otherUser,
   });
 }
 
-export async function getConversations(userId: string): Promise<Conversation[]> {
+export async function getConversations(
+  userId: string,
+): Promise<Conversation[]> {
   await delay(40);
   return conversationsTable
     .filter((c) => c.participants.includes(userId))
@@ -28,7 +36,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
 /** Returns the conversation only if `viewerId` is a participant. */
 export async function getConversationForParticipant(
   id: string,
-  viewerId: string
+  viewerId: string,
 ): Promise<Conversation | null> {
   await delay(30);
   const conv = conversationsTable.find((c) => c.id === id);
@@ -36,7 +44,10 @@ export async function getConversationForParticipant(
   return withRelations(conv, viewerId);
 }
 
-export async function isConversationParticipant(conversationId: string, userId: string): Promise<boolean> {
+export async function isConversationParticipant(
+  conversationId: string,
+  userId: string,
+): Promise<boolean> {
   const conv = conversationsTable.find((c) => c.id === conversationId);
   return Boolean(conv && conv.participants.includes(userId));
 }
@@ -44,7 +55,9 @@ export async function isConversationParticipant(conversationId: string, userId: 
 /** Callers must check participation first (see isConversationParticipant). */
 export async function getMessages(conversationId: string): Promise<Message[]> {
   await delay(30);
-  return clone(messagesTable.filter((m) => m.conversationId === conversationId));
+  return clone(
+    messagesTable.filter((m) => m.conversationId === conversationId),
+  );
 }
 
 export async function sendMessage(data: {
@@ -56,7 +69,8 @@ export async function sendMessage(data: {
 
   const conv = conversationsTable.find((c) => c.id === data.conversationId);
   if (!conv || !conv.participants.includes(data.senderId)) return null;
-  const receiverId = conv.participants.find((p) => p !== data.senderId) || data.senderId;
+  const receiverId =
+    conv.participants.find((p) => p !== data.senderId) || data.senderId;
 
   const newMsg: Message = {
     id: newId("msg"),
@@ -78,10 +92,14 @@ export async function sendMessage(data: {
   return clone(newMsg);
 }
 
-export async function markConversationAsRead(conversationId: string, userId: string): Promise<void> {
+export async function markConversationAsRead(
+  conversationId: string,
+  userId: string,
+): Promise<void> {
   await delay(20);
   for (const m of messagesTable) {
-    if (m.conversationId === conversationId && m.receiverId === userId) m.read = true;
+    if (m.conversationId === conversationId && m.receiverId === userId)
+      m.read = true;
   }
   const conv = conversationsTable.find((c) => c.id === conversationId);
   if (conv && conv.unreadCount) conv.unreadCount[userId] = 0;
@@ -102,7 +120,7 @@ export async function findOrCreateConversation(params: {
     (c) =>
       c.participants.includes(params.userId) &&
       c.participants.includes(params.otherUserId) &&
-      (c.listingId ?? null) === listingId
+      (c.listingId ?? null) === listingId,
   );
   if (!conv) {
     conv = {

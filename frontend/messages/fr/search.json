@@ -159,7 +159,12 @@
     "trips": "Aucun circuit d'agence dans cette zone",
     "tripsDesc": "Dézoomez ou déplacez la carte pour découvrir des expéditions dans le Sahara, le M'zab et sur la côte.",
     "listings": "Aucune annonce dans cette zone",
-    "listingsDesc": "Dézoomez ou déplacez la carte pour découvrir des annonces partout en Algérie."
+    "listingsDesc": "Dézoomez ou déplacez la carte pour découvrir des annonces partout en Algérie.",
+    "showAll": "Afficher les {count} résultats",
+    "noResults": "Aucun résultat exact",
+    "noResultsDesc": "Essayez d'autres dates ou explorez une wilaya voisine.",
+    "noResultsFiltersDesc": "Retirez un filtre ou explorez une wilaya voisine.",
+    "nearby": "Destinations proches"
   },
   "showList": "Afficher la liste",
   "mapDialogLabel": "Carte des résultats",
@@ -170,11 +175,24 @@
     "closePreview": "Fermer l'aperçu",
     "tripDuration": "{days} j / {nights} n",
     "verifiedAgency": "Agence vérifiée",
-    "maxGroup": "Max. {count}"
+    "maxGroup": "Max. {count}",
+    "zoomIn": "Zoomer",
+    "zoomOut": "Dézoomer"
   },
   "meta": {
     "title": "Rechercher séjours, expériences et véhicules en Algérie",
     "titleIn": "Séjours et locations à {place}",
     "description": "Comparez logements, hôtels, circuits guidés et locations de 4x4 partout en Algérie sur une carte interactive, avec des prix en DZD."
+  },
+  "filterBarLabel": "Filtres",
+  "activeFilters": "{count, plural, one {# filtre actif} other {# filtres actifs}}",
+  "pricesIncludeFees": "Les prix incluent tous les frais",
+  "updating": "Mise à jour des résultats…",
+  "loadingResults": "Chargement des résultats…",
+  "flex": {
+    "label": "Flexibilité des dates",
+    "exact": "Dates exactes",
+    "plusMinus": "± {count, plural, one {# jour} other {# jours}}",
+    "short": "±{count}"
   }
 }

@@ -58,7 +58,7 @@
     "selectHostMode": "Choisissez votre mode d’accueil"
   },
   "hostType": {
-    "eyebrow": "Étape 1 sur 2 · Type de compte partenaire",
+    "eyebrow": "Devenir hôte sur DARNA",
     "individual": {
       "badge": "Hôte solo",
       "cta": "Continuer en tant que particulier"
@@ -78,6 +78,16 @@
       "title": "Auberge & communauté",
       "desc": "Dortoirs partagés, réservation au lit, chambres privées, cuisine commune, casiers et ambiance conviviale de routards.",
       "cta": "Inscrire mon auberge"
+    },
+    "chooseTitle": "Choisissez votre façon d’accueillir",
+    "points": {
+      "draft": "Configuration guidée : enregistrez un brouillon et revenez quand vous voulez",
+      "dzd": "Fixez vos prix en dinars algériens",
+      "types": "Logements, circuits, hôtels et auberges ont chacun leur espace de travail"
+    },
+    "imageAlt": {
+      "ghardaia": "Maisons de la vallée du M’zab à Ghardaïa",
+      "riad": "Une cour carrelée dans une maison algérienne traditionnelle"
     }
   },
   "intro": {
@@ -90,7 +100,8 @@
     "step2Desc": "Ajoutez au moins 4 photos, des équipements et un titre authentique.",
     "step3Title": "Fixez votre prix et publiez",
     "step3Desc": "Choisissez votre prix par nuit en DZD et accueillez vos premiers voyageurs.",
-    "getStarted": "Commencer"
+    "getStarted": "Commencer",
+    "imageAlt": "Une cour de riad avec une porte mauresque sculptée"
   },
   "categories": {
     "villa": "Villa",
@@ -175,7 +186,7 @@
     "photoAlt": "Photo du logement {number}",
     "removeLabel": "Supprimer la photo {number}",
     "urlLabel": "Ajouter une photo par URL",
-    "presetsLabel": "Photos suggérées :",
+    "presetsLabel": "Depuis la photothèque DARNA",
     "addPreset": "Ajouter la photo suggérée : {name}",
     "added": "Photo ajoutée à la galerie !",
     "minOne": "Votre galerie doit contenir au moins une photo.",
@@ -191,7 +202,15 @@
       "rooftopLounge": "Salon sur le toit",
       "saharanOasis": "Oasis saharienne",
       "socialArea": "Espace commun"
-    }
+    },
+    "dropTitle": "Glissez un lien de photo ici, ou collez-le ci-dessous",
+    "dropHint": "Déposez une image depuis un autre onglet, collez un lien ou choisissez dans la photothèque. La première photo sert de couverture.",
+    "dropFilesNote": "L’envoi de fichiers n’est pas encore disponible. Déposez une image depuis une page web ou collez son lien.",
+    "dropUnknownNote": "Cela ne ressemble pas à un lien d’image. Essayez de coller l’adresse de la photo.",
+    "galleryLabel": "{count, plural, one {# photo} other {# photos}} dans votre galerie",
+    "reorderHint": "Glissez pour réordonner, ou utilisez les flèches",
+    "moveEarlier": "Avancer la photo {number}",
+    "moveLater": "Reculer la photo {number}"
   },
   "titleStep": {
     "title": "Donnons maintenant un titre à votre logement",
@@ -218,9 +237,17 @@
     "preview": "{amount} par nuit",
     "eurEquivalent": "Soit environ {amount} par nuit",
     "breakdown": "Estimation des revenus",
-    "base": "Prix de base par nuit",
+    "base": "Prix de base",
     "commission": "Commission DARNA ({rate} %)",
-    "payout": "Votre revenu net"
+    "payout": "Votre revenu net",
+    "priceLabel": {
+      "home": "Prix par nuit",
+      "vehicle": "Prix par jour",
+      "experience": "Prix par personne"
+    },
+    "currency": "DZD",
+    "previewUnit": "{amount} {unit}",
+    "eurUnit": "Soit environ {amount} {unit}"
   },
   "booking": {
     "title": "Choisissez vos paramètres de réservation",
@@ -250,7 +277,8 @@
     "editPrice": "Modifier le prix",
     "publishing": "Publication de l’annonce...",
     "published": "Félicitations ! Votre annonce est maintenant en ligne sur DARNA.",
-    "empty": "—"
+    "empty": "Non renseigné",
+    "perUnit": "{unit} ({eur})"
   },
   "bookingMode": {
     "title": "Comment souhaitez-vous accepter les réservations ?",
@@ -355,7 +383,7 @@
     },
     "registering": "Inscription de l’hôtel...",
     "register": "Créer l’espace hôtel",
-    "success": "Espace hôtel enregistré ! Il est en attente de vérification — vous pouvez commencer à configurer votre établissement."
+    "success": "Espace hôtel enregistré ! Il est en attente de vérification, vous pouvez commencer à configurer votre établissement."
   },
   "hostel": {
     "s1": {
@@ -423,7 +451,7 @@
     },
     "registering": "Inscription de l’auberge...",
     "register": "Créer l’espace auberge",
-    "success": "Espace auberge enregistré ! Il est en attente de vérification — vous pouvez commencer à configurer votre établissement."
+    "success": "Espace auberge enregistré ! Il est en attente de vérification, vous pouvez commencer à configurer votre établissement."
   },
   "customStep": {
     "additionalInfo": "Informations complémentaires",
@@ -446,5 +474,22 @@
     "hostelName": "Veuillez saisir le nom de votre auberge.",
     "hostelAddress": "Veuillez saisir l’adresse de l’auberge."
   },
-  "discarded": "Modifications non enregistrées abandonnées."
+  "discarded": "Modifications non enregistrées abandonnées.",
+  "units": {
+    "home": "par nuit",
+    "vehicle": "par jour",
+    "experience": "par personne"
+  },
+  "preview": {
+    "eyebrow": "Aperçu en direct",
+    "note": "Voici la carte que les voyageurs verront dans la recherche. Elle se met à jour pendant la saisie.",
+    "titlePlaceholder": "Le titre de votre annonce",
+    "hotelPlaceholder": "Le nom de votre hôtel",
+    "hostelPlaceholder": "Le nom de votre auberge",
+    "beds": "{count, plural, one {# lit} other {# lits}}"
+  },
+  "complete": {
+    "cta": "Aller à mon espace hôte",
+    "redirecting": "Nous vous emmenons vers votre espace dans un instant."
+  }
 }

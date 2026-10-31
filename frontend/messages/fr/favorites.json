@@ -8,5 +8,8 @@
   "filterLabel": "Filtrer les lieux enregistrés par type",
   "metaTitle": "Mes favoris",
   "toastSaved": "Ajouté aux favoris",
-  "toastRemoved": "Retiré des favoris"
+  "toastRemoved": "Retiré des favoris",
+  "eyebrow": "Liste d'envies",
+  "pageSubtitle": "Les maisons, séjours et circuits que vous avez enregistrés, prêts quand vous l'êtes.",
+  "showAll": "Voir tous les favoris"
 }

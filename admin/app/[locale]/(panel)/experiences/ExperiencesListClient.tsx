@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { listingImageSrc, listingImages } from "@/lib/placeholders";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname, Link } from "@/navigation";
 import {
@@ -44,6 +45,9 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+
+/** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
+const SPLIT_HIDDEN_COLUMNS = ["guide", "location", "category", "rating", "bookings"];
 
 // value = filter value (unchanged), labelKey = translation key under experiences.categoryOptions
 const EXPERIENCE_CATEGORIES = [
@@ -213,19 +217,19 @@ export default function ExperiencesListClient() {
       header: t("columns.experience"),
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={row.imageSrc?.[0] || "/placeholder-experience.jpg"}
+              src={listingImageSrc(row.imageSrc?.[0], "experience")}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[220px]">
             <button
               type="button"
-              className="block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              className="block max-w-full font-semibold text-primary-900 truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectExp(row);
@@ -233,10 +237,10 @@ export default function ExperiencesListClient() {
             >
               {row.title}
             </button>
-            <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5 mt-0.5">
+            <div className="text-xs text-primary-600 flex items-center gap-1.5 mt-0.5 min-w-0 whitespace-nowrap">
               <span>{row.formattedId || `#EXP${row.id.replace("lst_", "").padStart(4, "0")}`}</span>
               <span aria-hidden="true">•</span>
-              <span className="capitalize">{row.propertyType}</span>
+              <span className="capitalize truncate">{row.propertyType}</span>
             </div>
           </div>
         </div>
@@ -247,12 +251,12 @@ export default function ExperiencesListClient() {
       header: t("columns.guide"),
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div aria-hidden="true" className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
+          <div aria-hidden="true" className="w-7 h-7 shrink-0 rounded-full bg-darnaBg-300 flex items-center justify-center font-semibold text-xs text-primary-800">
             {row.hostName.charAt(0)}
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-medium text-[#2E3A2F] truncate">{row.hostName}</div>
-            <div className="text-[11px] text-[#2E3A2F]/70">{tHostTypes(row.hostType)}</div>
+            <div className="text-xs font-medium text-primary truncate">{row.hostName}</div>
+            <div className="text-[11px] text-primary-600">{tHostTypes(row.hostType)}</div>
           </div>
         </div>
       ),
@@ -261,8 +265,8 @@ export default function ExperiencesListClient() {
       key: "location",
       header: t("columns.location"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" aria-hidden="true" />
+        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
+          <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
           <span className="truncate">{t("locationValue", { city: row.city, code: row.wilayaCode })}</span>
         </div>
       ),
@@ -271,8 +275,8 @@ export default function ExperiencesListClient() {
       key: "category",
       header: t("columns.category"),
       render: (row) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE5D9] text-[#2E3A2F] border border-[#D9C9B2]/50">
-          <Tag className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-darnaBg-300/70 text-primary-800 whitespace-nowrap">
+          <Tag className="w-3 h-3 text-secondary" aria-hidden="true" />
           <span>{row.propertyType || t("categoryOptions.adventure")}</span>
         </span>
       ),
@@ -281,7 +285,7 @@ export default function ExperiencesListClient() {
       key: "price",
       header: t("columns.price"),
       render: (row) => (
-        <div className="text-xs font-medium text-[#2E3A2F]">
+        <div className="text-xs font-medium text-primary tabular-nums whitespace-nowrap">
           {formatDzd(row.price, locale)}
         </div>
       ),
@@ -295,10 +299,10 @@ export default function ExperiencesListClient() {
       key: "rating",
       header: t("columns.rating"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
+        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
           <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
           <span className="font-medium">{formatRating(row.rating)}</span>
-          <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: row.reviewsCount })}</span>
+          <span className="text-primary-600">{t("reviewsCount", { count: row.reviewsCount })}</span>
         </div>
       ),
     },
@@ -306,7 +310,7 @@ export default function ExperiencesListClient() {
       key: "bookings",
       header: t("columns.bookings"),
       render: (row) => (
-        <span className="text-xs font-medium text-[#2E3A2F]">{formatNumber(row.bookingsCount, locale)}</span>
+        <span className="text-xs font-medium text-primary">{formatNumber(row.bookingsCount, locale)}</span>
       ),
     },
     {
@@ -318,7 +322,7 @@ export default function ExperiencesListClient() {
           <button
             type="button"
             onClick={() => handleSelectExp(row)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             title={t("quickPreview")}
             aria-label={t("quickPreviewOf", { title: row.title })}
           >
@@ -327,7 +331,7 @@ export default function ExperiencesListClient() {
           <button
             type="button"
             onClick={() => router.push(`/experiences/${row.id}`)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             title={t("openFullPage")}
             aria-label={t("openFullPageOf", { title: row.title })}
           >
@@ -487,9 +491,9 @@ export default function ExperiencesListClient() {
       <SplitView
         isPanelOpen={!!selectedExp}
         mainContent={
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex flex-col gap-1">
             <DataTable
-              columns={columns}
+              columns={selectedExp ? columns.filter((c) => !SPLIT_HIDDEN_COLUMNS.includes(c.key)) : columns}
               data={data}
               keyExtractor={(e) => e.id}
               selectedRowId={selectedExpId || undefined}
@@ -501,7 +505,7 @@ export default function ExperiencesListClient() {
                 onSelectionChange: setSelectedRowIds,
               }}
             />
-            <div className="p-4 border-t border-[#D9C9B2]/40 bg-[#FAF9F5]">
+            <div className="px-1">
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
@@ -528,7 +532,7 @@ export default function ExperiencesListClient() {
                 <button
                   type="button"
                   onClick={() => router.push(`/experiences/${selectedExp.id}`)}
-                  className="p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="p-1 text-primary-600 hover:text-primary rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                   title={t("fullScreen")}
                   aria-label={t("fullScreen")}
                 >
@@ -542,7 +546,7 @@ export default function ExperiencesListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.changeStatus(selectedExp, "suspended")}
-                        className="px-3 py-1.5 text-xs font-medium text-[#7A5A26] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-amber-800 bg-white shadow-e1 rounded-xl hover:bg-amber-50 transition-colors duration-fast"
                       >
                         {t("panel.suspend")}
                       </button>
@@ -564,7 +568,7 @@ export default function ExperiencesListClient() {
                               addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5a6b4c] hover:bg-[#4a5a3e] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-secondary-700 hover:bg-secondary-800 rounded-xl shadow-e1 flex items-center gap-1.5 transition-colors duration-fast"
                         >
                           <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>{t("panel.approveDirectly")}</span>
@@ -573,7 +577,7 @@ export default function ExperiencesListClient() {
                         <button
                           type="button"
                           onClick={() => router.push(`/experiences/${selectedExp.id}/review`)}
-                          className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                          className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl bg-white shadow-e1 hover:shadow-e2 transition duration-fast"
                         >
                           {t("panel.review")}
                         </button>
@@ -594,9 +598,9 @@ export default function ExperiencesListClient() {
                             addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                           }
                         }}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl flex items-center gap-1.5 transition-colors bg-white shadow-e1 hover:shadow-e2 duration-fast"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <RotateCcw className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                         <span>{t("panel.cancelSuspension")}</span>
                       </button>
                     ) : null}
@@ -604,7 +608,7 @@ export default function ExperiencesListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.restore(selectedExp)}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl transition-colors bg-white shadow-e1 hover:shadow-e2 duration-fast"
                       >
                         {tActions("restore")}
                       </button>
@@ -613,7 +617,7 @@ export default function ExperiencesListClient() {
                     <button
                       type="button"
                       onClick={() => setConfirmAction({ type: "delete", exp: selectedExp })}
-                      className="px-3 py-1.5 text-xs font-medium text-[#A4532F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-accent-700 bg-white ring-1 ring-inset ring-accent/40 rounded-xl hover:bg-accent-50 transition-colors duration-fast"
                     >
                       {tCommon("delete")}
                     </button>
@@ -622,7 +626,7 @@ export default function ExperiencesListClient() {
                   <button
                     type="button"
                     onClick={() => router.push(`/experiences/${selectedExp.id}`)}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
+                    className="px-3.5 py-1.5 min-h-[34px] text-xs font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 shadow-e1 transition-colors duration-fast"
                   >
                     {tCommon("edit")}
                   </button>
@@ -631,17 +635,17 @@ export default function ExperiencesListClient() {
             >
               <div className="space-y-5">
                 <ImageCarousel
-                  images={selectedExp.imageSrc?.length ? selectedExp.imageSrc : ["/placeholder-experience.jpg"]}
+                  images={listingImages(selectedExp.imageSrc, "experience")}
                   alt={selectedExp.title}
                 />
 
-                <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
+                <div className="flex items-center justify-between text-xs text-primary border-b border-primary/[0.08] pb-3">
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
                     <span className="font-semibold">{formatRating(selectedExp.rating)}</span>
-                    <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: selectedExp.reviewsCount })}</span>
+                    <span className="text-primary-600">{t("reviewsCount", { count: selectedExp.reviewsCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#4F5F43] font-medium">
+                  <div className="flex items-center gap-1 text-secondary-700 font-medium">
                     <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{t("locationValue", { city: selectedExp.city, code: selectedExp.wilayaCode })}</span>
                   </div>
@@ -663,7 +667,7 @@ export default function ExperiencesListClient() {
                   <div className="space-y-4">
                     {/* About Section */}
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-2">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-2">
                         {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
@@ -675,83 +679,83 @@ export default function ExperiencesListClient() {
                     </div>
 
                     {/* Price & Discounts Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2.5">
+                      <div className="text-xs font-semibold text-primary flex items-center justify-between">
                         <span>{t("pricing.title")}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                        <span className="font-semibold text-primary-900 text-sm tabular-nums whitespace-nowrap">
                           {formatDzd(selectedExp.price, locale)}{" "}
-                          <span className="text-[10px] text-[#2E3A2F]/70">{t("pricing.perPerson")}</span>
+                          <span className="text-[11px] text-primary-600">{t("pricing.perPerson")}</span>
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.groupDiscount")}</span>
-                          <span className="font-medium text-[#4F5F43]">
+                          <span className="text-primary-600 block">{t("pricing.groupDiscount")}</span>
+                          <span className="font-medium text-secondary-700">
                             {t("pricing.discountValue", { percent: DISCOUNTS.group, price: formatDzd(applyDiscount(selectedExp.price, DISCOUNTS.group), locale) })}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.commission")}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("pricing.commissionIncluded", { rate: 12 })}</span>
+                          <span className="text-primary-600 block">{t("pricing.commission")}</span>
+                          <span className="font-medium text-secondary-700">{t("pricing.commissionIncluded", { rate: 12 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.cancellation")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("pricing.cancellationFlexible", { hours: 24 })}</span>
+                          <span className="text-primary-600 block">{t("pricing.cancellation")}</span>
+                          <span className="font-medium text-primary">{t("pricing.cancellationFlexible", { hours: 24 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.prepayment")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("pricing.prepaymentSecure")}</span>
+                          <span className="text-primary-600 block">{t("pricing.prepayment")}</span>
+                          <span className="font-medium text-primary">{t("pricing.prepaymentSecure")}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Time & Schedule Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
+                      <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-secondary" aria-hidden="true" />
                         <span>{t("schedule.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.totalDuration")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.hours", { count: 3 })}</span>
+                          <span className="text-primary-600 block">{t("schedule.totalDuration")}</span>
+                          <span className="font-medium text-primary">{t("schedule.hours", { count: 3 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.departureTimes")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{formatTime(9, 0)} / {formatTime(14, 30)}</span>
+                          <span className="text-primary-600 block">{t("schedule.departureTimes")}</span>
+                          <span className="font-medium text-primary">{formatTime(9, 0)} / {formatTime(14, 30)}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.operatingDays")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.everyDay")}</span>
+                          <span className="text-primary-600 block">{t("schedule.operatingDays")}</span>
+                          <span className="font-medium text-primary">{t("schedule.everyDay")}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.advanceNotice")}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("schedule.hoursInAdvance", { count: 24 })}</span>
+                          <span className="text-primary-600 block">{t("schedule.advanceNotice")}</span>
+                          <span className="font-medium text-secondary-700">{t("schedule.hoursInAdvance", { count: 24 })}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Host Card */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
-                      <div className="text-xs font-semibold text-[#2E3A2F] mb-2 flex items-center justify-between">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl">
+                      <div className="text-xs font-semibold text-primary mb-2 flex items-center justify-between">
                         <span>{t("host.title")}</span>
                         <Link
                           href={`/hosts/${selectedExp.hostId}`}
-                          className="text-[11px] text-[#4F5F43] hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                          className="text-[11px] text-secondary-700 hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                         >
                           {t("host.viewProfile")}
                         </Link>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div aria-hidden="true" className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
+                        <div aria-hidden="true" className="w-10 h-10 rounded-full bg-darnaBg-400 flex items-center justify-center font-semibold text-sm text-primary">
                           {selectedExp.hostName.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-[#2E3A2F]">{selectedExp.hostName}</div>
-                          <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5">
+                          <div className="text-sm font-medium text-primary">{selectedExp.hostName}</div>
+                          <div className="text-xs text-primary-600 flex items-center gap-1.5">
                             <span>{tHostTypes(selectedExp.hostType)}</span>
                             <span aria-hidden="true">•</span>
-                            <span className="text-[#4F5F43] flex items-center gap-0.5">
+                            <span className="text-secondary-700 flex items-center gap-0.5">
                               <ShieldCheck className="w-3 h-3" aria-hidden="true" /> {t("host.certified")}
                             </span>
                           </div>
@@ -761,10 +765,10 @@ export default function ExperiencesListClient() {
 
                     {/* Description Section */}
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
                         {t("description.title")}
                       </h4>
-                      <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
+                      <p className="text-xs text-primary-700 leading-relaxed bg-darnaBg-100 p-3 rounded-xl">
                         {selectedExp.description || t("description.empty")}
                       </p>
                     </div>

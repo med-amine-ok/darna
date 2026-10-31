@@ -6,6 +6,7 @@ import { useRouter } from "@/navigation";
 import { ArrowLeft, ArrowRight, Save, ChevronRight, ChevronLeft } from "lucide-react";
 import { Stepper, StepItem } from "@/components/ui/Stepper";
 import { LivePreviewCard } from "@/components/ui/LivePreviewCard";
+import { placeholderFor } from "@/lib/placeholders";
 import { ProgressChecklist } from "@/components/ui/ProgressChecklist";
 import { TipsCard } from "@/components/ui/TipsCard";
 import { PhoneInput } from "@/components/ui/PhoneInput";
@@ -69,7 +70,7 @@ type FieldName =
   | "price";
 
 const inputBase =
-  "w-full text-xs bg-white border rounded-lg text-[#2E3A2F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
+  "w-full text-xs bg-white border rounded-xl shadow-2xs text-primary-900 placeholder:text-primary-500 hover:border-primary/25 focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] transition duration-fast ease-standard";
 const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function StayWizardClient() {
@@ -129,7 +130,7 @@ export default function StayWizardClient() {
     "aria-describedby": errors[name] ? errorId(name) : undefined,
   });
   const inputClass = (name?: FieldName) =>
-    `${inputBase} ${name && errors[name] ? "border-accent-600" : "border-[#D9C9B2]"}`;
+    `${inputBase} ${name && errors[name] ? "border-accent-600" : "border-primary/[0.12]"}`;
   const fieldError = (name: FieldName) =>
     errors[name] ? (
       <p id={errorId(name)} className="mt-1 text-[11px] font-medium text-accent-700">
@@ -231,28 +232,28 @@ export default function StayWizardClient() {
   return (
     <div className="space-y-6">
       {/* 1. Wizard Header (Mockup 08) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D9C9B2]/50 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-primary/[0.06] pb-5">
         <div>
           <button
             type="button"
             onClick={() => router.push("/stays")}
-            className={`inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] mb-2 font-medium rounded ${focusRing}`}
+            className={`inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-900 mb-2 font-medium rounded ${focusRing}`}
           >
             <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
             <span>{t("back")}</span>
           </button>
-          <h1 className="text-xl font-bold text-[#2E3A2F]">{t("title")}</h1>
-          <p className="text-xs text-[#2E3A2F]/70 mt-0.5">{t("subtitle")}</p>
+          <h1 className="font-serif text-heading text-primary-900">{t("title")}</h1>
+          <p className="text-xs text-primary-600 mt-0.5">{t("subtitle")}</p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <span className="text-[11px] text-[#2E3A2F]/70 hidden sm:inline" aria-live="polite">
+          <span className="text-[11px] text-primary-600 hidden sm:inline" aria-live="polite">
             {t("draftSavedAt", { time: draftSavedAt })}
           </span>
           <button
             type="button"
             onClick={handleSaveDraft}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors ${focusRing}`}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-primary-800 bg-white shadow-e1 rounded-xl hover:shadow-e2 transition duration-fast ease-standard active:scale-[0.98] ${focusRing}`}
           >
             <Save className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{t("saveDraft")}</span>
@@ -260,7 +261,7 @@ export default function StayWizardClient() {
           <button
             type="button"
             onClick={handleNext}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors ${focusRing}`}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-primary-800 rounded-xl shadow-e1 shadow-highlight hover:bg-primary-900 transition duration-fast ease-standard active:scale-[0.98] ${focusRing}`}
           >
             <span>{nextLabel}</span>
             {currentStep < 6 && <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
@@ -269,7 +270,7 @@ export default function StayWizardClient() {
       </div>
 
       {/* 2. Stepper (Mockup 08: 6 steps) */}
-      <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
+      <div className="bg-white rounded-2xl p-5 shadow-e1">
         <Stepper steps={steps} currentStep={currentStep} onStepClick={goToStep} />
       </div>
 
@@ -283,7 +284,7 @@ export default function StayWizardClient() {
               ref={summaryRef}
               tabIndex={-1}
               role="alert"
-              className="p-4 rounded-xl border border-accent-600/40 bg-accent/10 text-xs text-[#2E3A2F] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="p-4 rounded-2xl bg-accent-50 ring-1 ring-inset ring-accent-200 text-xs text-primary-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
               <p className="font-semibold text-accent-800">{t("errors.summary", { count: errorEntries.length })}</p>
               <ul className="mt-1.5 list-disc ps-5 space-y-0.5">
@@ -301,13 +302,13 @@ export default function StayWizardClient() {
           {/* STEP 1: General information */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <section aria-labelledby={`${uid}-general`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 id={`${uid}-general`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <section aria-labelledby={`${uid}-general`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 id={`${uid}-general`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("steps.general")}
                 </h2>
 
                 <div>
-                  <label htmlFor={fieldId("title")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("title")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("fields.title")}
                     {required}
                   </label>
@@ -325,7 +326,7 @@ export default function StayWizardClient() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor={fieldId("propertyType")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label htmlFor={fieldId("propertyType")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                       {t("fields.propertyType")}
                       {required}
                     </label>
@@ -342,7 +343,7 @@ export default function StayWizardClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor={fieldId("category")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label htmlFor={fieldId("category")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                       {t("fields.category")}
                       {required}
                     </label>
@@ -370,7 +371,7 @@ export default function StayWizardClient() {
                     ] as const
                   ).map((f) => (
                     <div key={f.name}>
-                      <label htmlFor={fieldId(f.name)} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                      <label htmlFor={fieldId(f.name)} className="block text-xs font-semibold text-primary-900 mb-1.5">
                         {f.label}
                         {required}
                       </label>
@@ -389,7 +390,7 @@ export default function StayWizardClient() {
                 </div>
 
                 <div>
-                  <label htmlFor={fieldId("host")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("host")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("fields.host")}
                     {required}
                   </label>
@@ -409,10 +410,10 @@ export default function StayWizardClient() {
                 </div>
 
                 <div>
-                  <label htmlFor={fieldId("shortDescription")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("shortDescription")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("fields.shortDescription")}
                     {required}{" "}
-                    <span className="font-normal text-[#2E3A2F]/70" dir="ltr">
+                    <span className="font-normal text-primary-600" dir="ltr">
                       {t("charCount", { count: formData.shortDescription.length, max: 300 })}
                     </span>
                   </label>
@@ -429,7 +430,7 @@ export default function StayWizardClient() {
                 </div>
 
                 <div role="group" aria-labelledby={`${uid}-fullDescription-label`}>
-                  <span id={`${uid}-fullDescription-label`} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <span id={`${uid}-fullDescription-label`} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("fields.fullDescription")}
                     {required}
                   </span>
@@ -443,8 +444,8 @@ export default function StayWizardClient() {
               </section>
 
               {/* Card 2: Main rules (toggles + times) */}
-              <section aria-labelledby={`${uid}-rules`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 id={`${uid}-rules`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <section aria-labelledby={`${uid}-rules`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 id={`${uid}-rules`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("rules.title")}
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
@@ -461,16 +462,16 @@ export default function StayWizardClient() {
                         type="checkbox"
                         checked={formData[r.name]}
                         onChange={(e) => setFormData({ ...formData, [r.name]: e.target.checked })}
-                        className="accent-[#2E3A2F] rounded"
+                        className="accent-primary rounded"
                       />
                       <span>{r.label}</span>
                     </label>
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#D9C9B2]/40 text-xs">
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-primary/[0.08] text-xs">
                   <div>
-                    <label htmlFor={fieldId("checkIn")} className="block font-semibold text-[#2E3A2F] mb-1">{t("rules.checkInTime")}</label>
+                    <label htmlFor={fieldId("checkIn")} className="block font-semibold text-primary-900 mb-1">{t("rules.checkInTime")}</label>
                     <input
                       id={fieldId("checkIn")}
                       type="time"
@@ -481,7 +482,7 @@ export default function StayWizardClient() {
                     />
                   </div>
                   <div>
-                    <label htmlFor={fieldId("checkOut")} className="block font-semibold text-[#2E3A2F] mb-1">{t("rules.checkOutTime")}</label>
+                    <label htmlFor={fieldId("checkOut")} className="block font-semibold text-primary-900 mb-1">{t("rules.checkOutTime")}</label>
                     <input
                       id={fieldId("checkOut")}
                       type="time"
@@ -499,14 +500,14 @@ export default function StayWizardClient() {
           {/* STEP 2: Location & contact */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <section aria-labelledby={`${uid}-address`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 id={`${uid}-address`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <section aria-labelledby={`${uid}-address`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 id={`${uid}-address`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("location.title")}
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor={fieldId("wilaya")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label htmlFor={fieldId("wilaya")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                       {t("location.wilaya")}
                       {required}
                     </label>
@@ -525,7 +526,7 @@ export default function StayWizardClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor={fieldId("city")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label htmlFor={fieldId("city")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                       {t("location.city")}
                       {required}
                     </label>
@@ -542,7 +543,7 @@ export default function StayWizardClient() {
                 </div>
 
                 <div>
-                  <label htmlFor={fieldId("address")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("address")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("location.address")}
                     {required}
                   </label>
@@ -559,7 +560,7 @@ export default function StayWizardClient() {
                 </div>
 
                 <div role="group" aria-labelledby={`${uid}-map-label`}>
-                  <span id={`${uid}-map-label`} className="block text-xs font-semibold text-[#2E3A2F] mb-2">
+                  <span id={`${uid}-map-label`} className="block text-xs font-semibold text-primary-900 mb-2">
                     {t("location.mapLabel")}
                   </span>
                   <MapPicker
@@ -572,13 +573,13 @@ export default function StayWizardClient() {
               </section>
 
               {/* Contact Card */}
-              <section aria-labelledby={`${uid}-contact`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 id={`${uid}-contact`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <section aria-labelledby={`${uid}-contact`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 id={`${uid}-contact`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("contact.title")}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div role="group" aria-labelledby={`${uid}-phone-label`}>
-                    <span id={`${uid}-phone-label`} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <span id={`${uid}-phone-label`} className="block text-xs font-semibold text-primary-900 mb-1.5">
                       {t("contact.phone")}
                       {required}
                     </span>
@@ -588,7 +589,7 @@ export default function StayWizardClient() {
                     />
                   </div>
                   <div>
-                    <label htmlFor={fieldId("email")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label htmlFor={fieldId("email")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                       {t("contact.email")}
                       {required}
                     </label>
@@ -605,12 +606,12 @@ export default function StayWizardClient() {
                     {fieldError("email")}
                   </div>
                 </div>
-                <label className="flex items-center gap-2 text-xs text-[#2E3A2F] cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-primary-900 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.showContactOnListing}
                     onChange={(e) => setFormData({ ...formData, showContactOnListing: e.target.checked })}
-                    className="accent-[#2E3A2F] rounded"
+                    className="accent-primary rounded"
                   />
                   <span>{t("contact.showPublic")}</span>
                 </label>
@@ -620,22 +621,22 @@ export default function StayWizardClient() {
 
           {/* STEP 3: Amenities */}
           {currentStep === 3 && (
-            <fieldset className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
+            <fieldset className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
               <legend className="sr-only">{t("amenitiesStep.title")}</legend>
-              <h2 aria-hidden="true" className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <h2 aria-hidden="true" className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("amenitiesStep.title")}
               </h2>
-              <p className="text-xs text-[#2E3A2F]/70">{t("amenitiesStep.subtitle")}</p>
+              <p className="text-xs text-primary-600">{t("amenitiesStep.subtitle")}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                 {AMENITIES_CATALOG.map((am) => {
                   const isChecked = formData.amenities.includes(am.value);
                   return (
                     <label
                       key={am.value}
-                      className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-accent-600 ${
+                      className={`flex items-center gap-2.5 p-3 rounded-xl border transition-colors duration-fast ease-standard text-xs cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-accent-600 ${
                         isChecked
-                          ? "bg-secondary/10 border-secondary text-[#2E3A2F] font-semibold"
-                          : "bg-[#FAF9F5] border-[#D9C9B2]/50 text-[#2E3A2F]/80 hover:bg-[#F8F6EE]"
+                          ? "bg-secondary-50 border-secondary-600 text-primary-900 font-semibold"
+                          : "bg-white border-primary/[0.12] text-primary-800 hover:border-primary/25"
                       }`}
                     >
                       <input
@@ -649,7 +650,7 @@ export default function StayWizardClient() {
                               : [...formData.amenities, am.value],
                           });
                         }}
-                        className="accent-[#6B7F5B] rounded"
+                        className="accent-secondary rounded"
                       />
                       <span>{t(`amenities.${am.key}`)}</span>
                     </label>
@@ -661,8 +662,8 @@ export default function StayWizardClient() {
 
           {/* STEP 4: Photos */}
           {currentStep === 4 && (
-            <section aria-labelledby={`${uid}-photos`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 id={`${uid}-photos`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <section aria-labelledby={`${uid}-photos`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 id={`${uid}-photos`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("photosStep.title")}
               </h2>
               <FileDropzone
@@ -674,9 +675,9 @@ export default function StayWizardClient() {
                 }}
               />
               <ul className="grid grid-cols-3 gap-3 pt-3">
-                <li className="relative aspect-video rounded-lg overflow-hidden border border-[#D9C9B2]">
-                  <Image src="/placeholder-stay.jpg" alt={t("photosStep.coverAlt")} fill sizes="200px" className="object-cover" />
-                  <span className="absolute bottom-1 start-1 px-1.5 py-0.5 bg-black/60 text-white text-[10px] rounded">
+                <li className="relative aspect-video rounded-xl overflow-hidden bg-tertiary-100 shadow-e1">
+                  <Image src={placeholderFor("stay")} alt={t("photosStep.coverAlt")} fill sizes="200px" className="object-cover" />
+                  <span className="absolute bottom-1 start-1 px-1.5 py-0.5 glass-light text-primary-900 text-[11px] font-semibold rounded-full shadow-e1">
                     {t("photosStep.cover")}
                   </span>
                 </li>
@@ -686,13 +687,13 @@ export default function StayWizardClient() {
 
           {/* STEP 5: Pricing & availability */}
           {currentStep === 5 && (
-            <section aria-labelledby={`${uid}-pricing`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 id={`${uid}-pricing`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <section aria-labelledby={`${uid}-pricing`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 id={`${uid}-pricing`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("pricing.title")}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor={fieldId("price")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("price")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("pricing.price")}
                     {required}
                   </label>
@@ -708,7 +709,7 @@ export default function StayWizardClient() {
                   {fieldError("price")}
                 </div>
                 <div>
-                  <label htmlFor={fieldId("cleaningFee")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("cleaningFee")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("pricing.cleaningFee")}
                   </label>
                   <input
@@ -724,7 +725,7 @@ export default function StayWizardClient() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor={fieldId("deposit")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("deposit")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("pricing.deposit")}
                   </label>
                   <input
@@ -737,7 +738,7 @@ export default function StayWizardClient() {
                   />
                 </div>
                 <div>
-                  <label htmlFor={fieldId("minStay")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label htmlFor={fieldId("minStay")} className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("pricing.minStay")}
                   </label>
                   <input
@@ -752,18 +753,18 @@ export default function StayWizardClient() {
               </div>
 
               <fieldset>
-                <legend className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">{t("pricing.bookingMode")}</legend>
+                <legend className="block text-xs font-semibold text-primary-900 mb-1.5">{t("pricing.bookingMode")}</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   {(
                     [
-                      { id: "instant", selected: "bg-secondary/10 border-secondary", accent: "accent-[#6B7F5B]" },
-                      { id: "request", selected: "bg-[#D9C9B2]/30 border-[#8C682E]", accent: "accent-[#8C682E]" },
+                      { id: "instant", selected: "bg-secondary-50 border-secondary-600", accent: "accent-secondary" },
+                      { id: "request", selected: "bg-amber-50 border-amber-600", accent: "accent-amber-700" },
                     ] as const
                   ).map((m) => (
                     <label
                       key={m.id}
-                      className={`p-3 rounded-lg border cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
-                        formData.bookingApprovalMode === m.id ? m.selected : "bg-[#FAF9F5] border-[#D9C9B2]"
+                      className={`p-3 rounded-xl border transition-colors duration-fast ease-standard cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
+                        formData.bookingApprovalMode === m.id ? m.selected : "bg-white border-primary/[0.12] hover:border-primary/25"
                       }`}
                     >
                       <input
@@ -775,7 +776,7 @@ export default function StayWizardClient() {
                         className={`${m.accent} me-2`}
                       />
                       <span className="font-semibold">{t(`pricing.modes.${m.id}.title`)}</span>
-                      <span className="block text-[11px] text-[#2E3A2F]/70 mt-1">{t(`pricing.modes.${m.id}.description`)}</span>
+                      <span className="block text-[11px] text-primary-600 mt-1">{t(`pricing.modes.${m.id}.description`)}</span>
                     </label>
                   ))}
                 </div>
@@ -785,33 +786,33 @@ export default function StayWizardClient() {
 
           {/* STEP 6: Rules & validation */}
           {currentStep === 6 && (
-            <section aria-labelledby={`${uid}-summary`} className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 id={`${uid}-summary`} className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <section aria-labelledby={`${uid}-summary`} className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 id={`${uid}-summary`} className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("summary.title")}
               </h2>
-              <p className="text-xs text-[#2E3A2F]/70">{t("summary.subtitle")}</p>
-              <dl className="p-4 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-2">
+              <p className="text-xs text-primary-600">{t("summary.subtitle")}</p>
+              <dl className="p-4 bg-darnaBg-100 rounded-xl text-xs space-y-2">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#2E3A2F]/70">{t("summary.titleLabel")}</dt>
-                  <dd className="font-medium text-[#2E3A2F] text-end">{formData.title}</dd>
+                  <dt className="text-primary-600">{t("summary.titleLabel")}</dt>
+                  <dd className="font-medium text-primary-900 text-end">{formData.title}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#2E3A2F]/70">{t("summary.location")}</dt>
-                  <dd className="font-medium text-[#2E3A2F] text-end">{locationText}</dd>
+                  <dt className="text-primary-600">{t("summary.location")}</dt>
+                  <dd className="font-medium text-primary-900 text-end">{locationText}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#2E3A2F]/70">{t("summary.capacity")}</dt>
-                  <dd className="font-medium text-[#2E3A2F] text-end">
+                  <dt className="text-primary-600">{t("summary.capacity")}</dt>
+                  <dd className="font-medium text-primary-900 text-end">
                     {t("summary.capacityValue", { guests: formData.guestCapacity, bedrooms: formData.bedroomCount })}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#2E3A2F]/70">{t("summary.price")}</dt>
-                  <dd className="font-semibold text-[#2E3A2F] text-end">{formatDzd(formData.price, locale)}</dd>
+                  <dt className="text-primary-600">{t("summary.price")}</dt>
+                  <dd className="font-semibold text-primary-900 text-end">{formatDzd(formData.price, locale)}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#2E3A2F]/70">{t("summary.amenities")}</dt>
-                  <dd className="font-medium text-[#2E3A2F] text-end">
+                  <dt className="text-primary-600">{t("summary.amenities")}</dt>
+                  <dd className="font-medium text-primary-900 text-end">
                     {t("summary.amenitiesValue", { count: formData.amenities.length })}
                   </dd>
                 </div>
@@ -820,11 +821,11 @@ export default function StayWizardClient() {
           )}
 
           {/* Bottom Navigation Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#D9C9B2]/40">
+          <div className="flex items-center justify-between pt-4 border-t border-primary/[0.06]">
             <button
               type="button"
               onClick={handleBack}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] ${focusRing}`}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-primary-800 bg-white shadow-e1 rounded-xl hover:shadow-e2 transition duration-fast ease-standard active:scale-[0.98] ${focusRing}`}
             >
               <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
               <span>{currentStep === 1 ? t("cancel") : t("previous")}</span>
@@ -832,7 +833,7 @@ export default function StayWizardClient() {
             <button
               type="button"
               onClick={handleNext}
-              className={`inline-flex items-center gap-1.5 px-5 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] ${focusRing}`}
+              className={`inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-primary-800 rounded-xl shadow-e1 shadow-highlight hover:bg-primary-900 transition duration-fast ease-standard active:scale-[0.98] ${focusRing}`}
             >
               <span>{nextLabel}</span>
               {currentStep < 6 && <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
@@ -841,7 +842,7 @@ export default function StayWizardClient() {
         </div>
 
         {/* Right Rail: Live Preview + Checklist + Tips (Mockup 08) */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-[88px] lg:self-start">
           {/* Live Preview Card */}
           <LivePreviewCard
             title={formData.title}

@@ -19,11 +19,32 @@ import {
   BrandBadgeCheckIcon,
   BrandClockIcon,
   BrandArrowLeftIcon,
-  BrandCrossIcon,
+  BrandUsersIcon,
+  BrandCheckCircleIcon,
+  BrandShieldIcon,
+  BrandMoreIcon,
+  BrandMailIcon,
 } from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
-import Dialog from "@/components/ui/Dialog";
+import {
+  Avatar,
+  AvatarStack,
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogFooter,
+  DropdownMenu,
+  IconButton,
+  Input,
+  RadioGroup,
+  Select,
+  StatCard,
+  cn,
+  focusRing,
+} from "@/components/ui";
+import type { DropdownItem } from "@/components/ui";
 import { formatDate, formatNumber } from "@/lib/i18n/date-locale";
 import { useActionError } from "@/hook/useActionError";
 
@@ -34,11 +55,6 @@ interface AgencyTeamClientProps {
   /** Viewer's role in the organization; controls which actions are offered. */
   currentRole?: MembershipRole | null;
 }
-
-const FIELD_CLASS =
-  "w-full px-3 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function AgencyTeamClient({
   organization,
@@ -70,9 +86,7 @@ export default function AgencyTeamClient({
 
   const ids = {
     inviteEmail: `${baseId}-invite-email`,
-    inviteEmailError: `${baseId}-invite-email-error`,
     inviteName: `${baseId}-invite-name`,
-    inviteRoleLabel: `${baseId}-invite-role`,
     readOnlyInvite: `${baseId}-invite-readonly`,
   };
 
@@ -185,23 +199,25 @@ export default function AgencyTeamClient({
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-      {/* Back button */}
-      <div className="mb-6">
-        <Link
-          href="/host"
-          className={`inline-flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-primary transition rounded ${FOCUS_RING}`}
-        >
-          <BrandArrowLeftIcon size={16} className="rtl:rotate-180" aria-hidden="true" />
-          <span>{t("backToHost")}</span>
-        </Link>
-      </div>
+  const activeMembers = members.filter((m) => m.status === "active");
 
-      {/* Header Banner */}
-      <div className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-neutral-100 border border-tertiary/60 shrink-0">
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <Link
+        href="/host"
+        className={cn(
+          "mb-6 inline-flex min-h-[44px] items-center gap-1.5 rounded-full text-meta font-semibold text-primary-600 transition-colors duration-fast ease-standard hover:text-primary-900",
+          focusRing
+        )}
+      >
+        <BrandArrowLeftIcon size={16} className="rtl:rotate-180" aria-hidden="true" />
+        <span>{t("backToHost")}</span>
+      </Link>
+
+      {/* Header */}
+      <header className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="enter-up flex min-w-0 items-center gap-4">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white shadow-e1">
             <Image
               src={organization.logo || "/assets/logo-vertical.png"}
               alt={t("logoAlt", { name: organization.name })}
@@ -210,346 +226,295 @@ export default function AgencyTeamClient({
               className="object-contain p-2"
             />
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-serif text-2xl font-black text-primary">{organization.name}</h1>
+          <div className="min-w-0">
+            <p className="text-eyebrow uppercase text-secondary-700">{t("eyebrow")}</p>
+            <h1 className="mt-1 font-serif text-display-md text-primary-900 [text-wrap:balance]">{organization.name}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-meta text-primary-600">
               {organization.verificationStatus === "verified" ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                  <BrandBadgeCheckIcon size={14} aria-hidden="true" />
+                <Badge tone="success" icon={<BrandBadgeCheckIcon size={13} aria-hidden="true" />}>
                   {t("verifiedAgency")}
-                </span>
+                </Badge>
               ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                <Badge tone="warning" dot>
                   {t("verificationPending")}
-                </span>
+                </Badge>
               )}
+              <span>
+                {t("rcLabel")}{" "}
+                <bdi dir="ltr" className="font-semibold tabular-nums text-primary-800">
+                  {organization.businessRegistrationNumber}
+                </bdi>
+              </span>
+              <bdi dir="ltr" className="truncate">
+                {organization.businessEmail}
+              </bdi>
             </div>
-            <p className="text-xs text-neutral-600 mt-1">
-              {t("rcLabel")}{" "}
-              <bdi dir="ltr" className="font-mono font-semibold">
-                {organization.businessRegistrationNumber}
-              </bdi>{" "}
-              • <bdi dir="ltr">{organization.businessEmail}</bdi>
-            </p>
           </div>
         </div>
 
-        {/* Invite CTA */}
-        <div className="flex flex-col items-start md:items-end gap-1 self-start md:self-auto">
-          <button
-            type="button"
-            disabled={!canInvite}
-            aria-haspopup="dialog"
-            aria-describedby={canInvite ? undefined : ids.readOnlyInvite}
-            onClick={() => setIsInviteOpen(true)}
-            className={`px-5 py-2.5 bg-primary text-white rounded-2xl text-xs sm:text-sm font-bold hover:bg-primary/95 transition flex items-center gap-2 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`}
-          >
-            <BrandUserAddIcon size={18} className="text-tertiary" aria-hidden="true" />
-            <span>{t("inviteTeammate")}</span>
-          </button>
+        <div className="enter-up flex flex-col items-start gap-2 md:items-end" style={{ animationDelay: "80ms" }}>
+          <div className="flex items-center gap-3">
+            {activeMembers.length > 0 && (
+              <AvatarStack
+                people={activeMembers.map((m) => ({ name: displayName(m), src: m.avatar }))}
+                max={4}
+                size="sm"
+              />
+            )}
+            <Button
+              variant="primary"
+              size="md"
+              disabled={!canInvite}
+              aria-haspopup="dialog"
+              aria-describedby={canInvite ? undefined : ids.readOnlyInvite}
+              onClick={() => setIsInviteOpen(true)}
+              leadingIcon={<BrandUserAddIcon size={18} aria-hidden="true" />}
+            >
+              {t("inviteTeammate")}
+            </Button>
+          </div>
           {!canInvite && (
-            <span id={ids.readOnlyInvite} className="text-[11px] text-neutral-600">
+            <span id={ids.readOnlyInvite} className="text-meta text-primary-600">
               {t("inviteNotAllowed")}
             </span>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <span className="block text-xs font-bold text-neutral-600 uppercase tracking-wider">
-            {t("kpi.totalRoster")}
-          </span>
-          <span className="text-2xl font-black text-primary">{formatNumber(members.length, locale)}</span>
-        </div>
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <span className="block text-xs font-bold text-emerald-700 uppercase tracking-wider">
-            {t("activeMembers")}
-          </span>
-          <span className="text-2xl font-black text-emerald-700">{formatNumber(activeCount, locale)}</span>
-        </div>
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <span className="block text-xs font-bold text-amber-700 uppercase tracking-wider">
-            {t("pendingInvites")}
-          </span>
-          <span className="text-2xl font-black text-amber-700">{formatNumber(pendingCount, locale)}</span>
-        </div>
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <span className="block text-xs font-bold text-secondary uppercase tracking-wider">
+      {/* KPIs */}
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label={t("kpi.totalRoster")} value={members.length} icon={<BrandUsersIcon size={18} aria-hidden="true" />} />
+        <StatCard label={t("activeMembers")} value={activeCount} icon={<BrandCheckCircleIcon size={18} aria-hidden="true" />} />
+        <StatCard label={t("pendingInvites")} value={pendingCount} icon={<BrandClockIcon size={18} aria-hidden="true" />} />
+        <Card padding="md" className="flex flex-col justify-between gap-2">
+          <p className="flex items-center gap-2 text-meta text-primary-600">
+            <BrandShieldIcon size={18} aria-hidden="true" className="text-secondary-700" />
             {t("kpi.permissionModel")}
-          </span>
-          <span className="text-sm font-black text-secondary flex items-center gap-1 mt-1">
-            {t("kpi.threeTier")}
-          </span>
-        </div>
+          </p>
+          <p className="font-serif text-heading text-primary-900">{t("kpi.threeTier")}</p>
+        </Card>
       </div>
 
-      {/* Members Table */}
-      <div className="bg-white rounded-3xl border border-tertiary/70 shadow-2xs overflow-hidden mb-8">
-        <div className="p-5 border-b border-tertiary/60 bg-neutral-50/60 flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="font-serif text-lg font-bold text-primary">{t("table.title")}</h2>
-          <span className="text-xs text-neutral-600">{t("table.count", { count: members.length })}</span>
+      {/* Members */}
+      <Card as="section" padding="none" radius="3xl" className="mb-8 overflow-hidden" aria-labelledby={`${baseId}-members-title`}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/[0.08] px-5 py-4 sm:px-6">
+          <h2 id={`${baseId}-members-title`} className="font-serif text-heading text-primary-900">
+            {t("table.title")}
+          </h2>
+          <span className="text-meta text-primary-600">{t("table.count", { count: members.length })}</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-start text-xs">
-            <caption className="sr-only">{t("table.title")}</caption>
-            <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-600 font-bold uppercase tracking-wider">
-              <tr>
-                <th scope="col" className="py-3 px-4 text-start">{t("table.colMember")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("table.colRole")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("table.colStatus")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("table.colDate")}</th>
-                <th scope="col" className="py-3 px-4 text-end">{t("table.colActions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-tertiary/40">
-              {members.map((member) => {
-                const name = displayName(member);
-                return (
-                  <tr key={member.id} className="hover:bg-neutral-50/50 transition">
-                    {/* Name & Avatar */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-9 h-9 rounded-full overflow-hidden bg-neutral-200 shrink-0">
-                          <Image
-                            src={member.avatar || "/assets/avatar.png"}
-                            alt=""
-                            fill
-                            sizes="36px"
-                            className="object-cover"
-                          />
-                        </div>
-                        <div>
-                          <div className="font-bold text-primary flex items-center gap-1.5">
-                            <span>{name}</span>
-                            {member.role === "owner" && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary text-white">
-                                {t("roleOwner")}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-neutral-600 font-mono">
-                            <bdi dir="ltr">{member.email}</bdi>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Role */}
-                    <td className="py-3.5 px-4">
-                      {member.role === "owner" ? (
-                        <span className="font-bold text-primary">{t("organizationOwner")}</span>
-                      ) : (
-                        <select
-                          value={member.role}
-                          disabled={!canChangeRoles}
-                          aria-label={t("table.roleFor", { name })}
-                          title={canChangeRoles ? undefined : t("table.rolesOwnerOnly")}
-                          onChange={(e) => handleChangeRole(member.id, e.target.value as "admin" | "manager")}
-                          className="px-2.5 py-1 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-                        >
-                          <option value="admin">{t("roleAdmin")}</option>
-                          <option value="manager">{t("roleManagerStaff")}</option>
-                        </select>
-                      )}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-3.5 px-4">
-                      {member.status === "active" ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          {t("status.active")}
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1 w-fit">
-                          <BrandClockIcon size={12} aria-hidden="true" />
-                          {t("status.pending")}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Date */}
-                    <td className="py-3.5 px-4 text-neutral-600">
-                      {member.joinedAt
-                        ? formatDate(member.joinedAt, locale)
-                        : t("invitedOn", {
-                            date: formatDate(member.createdAt, locale, { day: "numeric", month: "short" }),
-                          })}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3.5 px-4 text-end">
-                      <div className="flex items-center justify-end gap-2">
-                        {member.status === "invited" && (
-                          <button
-                            type="button"
-                            onClick={() => handleResend(member.email)}
-                            aria-label={t("actions.resendFor", { name })}
-                            className={`px-2.5 py-1 border border-tertiary/80 hover:bg-neutral-100 text-neutral-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition ${FOCUS_RING}`}
-                          >
-                            <BrandRefreshIcon size={13} aria-hidden="true" />
-                            <span>{t("resend")}</span>
-                          </button>
-                        )}
-
-                        {canTransfer && member.role !== "owner" && member.status === "active" && member.userId && (
-                          <button
-                            type="button"
-                            aria-haspopup="dialog"
-                            onClick={() => setMemberToPromote(member)}
-                            aria-label={t("actions.makeOwnerFor", { name })}
-                            className={`px-2.5 py-1 border border-tertiary/80 hover:bg-neutral-100 text-neutral-700 rounded-lg text-xs font-semibold transition ${FOCUS_RING}`}
-                          >
-                            {t("actions.makeOwner")}
-                          </button>
-                        )}
-
-                        {orgPermissions.canRemoveMember(currentRole, member.role) && (
-                          <button
-                            type="button"
-                            aria-haspopup="dialog"
-                            onClick={() => handleRemove(member)}
-                            aria-label={t("actions.revokeFor", { name })}
-                            title={t("actions.revoke")}
-                            className={`p-1.5 hover:bg-rose-50 text-rose-700 rounded-lg transition ${FOCUS_RING}`}
-                          >
-                            <BrandTrashIcon size={16} aria-hidden="true" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div
+          aria-hidden="true"
+          className="hidden grid-cols-[minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 bg-darnaBg-300/50 px-6 py-2.5 text-meta font-semibold text-primary-600 md:grid"
+        >
+          <span>{t("table.colMember")}</span>
+          <span>{t("table.colRole")}</span>
+          <span>{t("table.colStatus")}</span>
+          <span>{t("table.colDate")}</span>
+          <span className="w-24 text-end">{t("table.colActions")}</span>
         </div>
-      </div>
 
-      {/* Permission Matrix Guide */}
-      <section aria-labelledby={`${baseId}-matrix-title`} className="bg-white rounded-3xl border border-tertiary/70 p-6 shadow-2xs">
-        <h2 id={`${baseId}-matrix-title`} className="font-serif font-bold text-primary text-base mb-3">
+        <ul className="divide-y divide-primary/[0.06]">
+          {members.map((member) => {
+            const name = displayName(member);
+            const canRemove = orgPermissions.canRemoveMember(currentRole, member.role);
+            const canPromote = canTransfer && member.role !== "owner" && member.status === "active" && !!member.userId;
+            const menuItems: DropdownItem[] = [
+              ...(canPromote
+                ? [
+                    {
+                      label: t("actions.makeOwner"),
+                      icon: <BrandBadgeCheckIcon size={16} aria-hidden="true" />,
+                      onSelect: () => setMemberToPromote(member),
+                    } as DropdownItem,
+                  ]
+                : []),
+              ...(canRemove
+                ? [
+                    {
+                      label: t("actions.revoke"),
+                      icon: <BrandTrashIcon size={16} aria-hidden="true" />,
+                      destructive: true,
+                      onSelect: () => handleRemove(member),
+                    } as DropdownItem,
+                  ]
+                : []),
+            ];
+            return (
+              <li
+                key={member.id}
+                className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors duration-fast ease-standard hover:bg-darnaBg/60 sm:px-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-4"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar name={name} src={member.avatar} size="md" decorative />
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-1.5 text-body font-semibold text-primary-900">
+                      <span className="truncate">{name}</span>
+                      {member.role === "owner" && <Badge tone="ink">{t("roleOwner")}</Badge>}
+                    </p>
+                    <p className="truncate text-meta text-primary-600">
+                      <bdi dir="ltr">{member.email}</bdi>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 md:block">
+                  <span className="text-meta text-primary-600 md:hidden">{t("table.colRole")}</span>
+                  {member.role === "owner" ? (
+                    <Badge tone="ink" size="md">
+                      {t("organizationOwner")}
+                    </Badge>
+                  ) : canChangeRoles ? (
+                    <Select
+                      label={t("table.roleFor", { name })}
+                      hideLabel
+                      value={member.role}
+                      onChange={(e) => handleChangeRole(member.id, e.target.value as "admin" | "manager")}
+                      containerClassName="min-w-[10rem] flex-1 md:flex-none"
+                    >
+                      <option value="admin">{t("roleAdmin")}</option>
+                      <option value="manager">{t("roleManagerStaff")}</option>
+                    </Select>
+                  ) : (
+                    <Badge tone={member.role === "admin" ? "olive" : "sand"} size="md" title={t("table.rolesOwnerOnly")}>
+                      {member.role === "admin" ? t("roleAdmin") : t("roleManagerStaff")}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 md:block">
+                  <span className="text-meta text-primary-600 md:hidden">{t("table.colStatus")}</span>
+                  {member.status === "active" ? (
+                    <Badge tone="success" dot>
+                      {t("status.active")}
+                    </Badge>
+                  ) : (
+                    <Badge tone="warning" icon={<BrandClockIcon size={12} aria-hidden="true" />}>
+                      {t("status.pending")}
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-meta tabular-nums text-primary-600">
+                  {member.joinedAt
+                    ? formatDate(member.joinedAt, locale)
+                    : t("invitedOn", {
+                        date: formatDate(member.createdAt, locale, { day: "numeric", month: "short" }),
+                      })}
+                </p>
+
+                <div className="flex items-center gap-1 md:w-24 md:justify-end">
+                  {member.status === "invited" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleResend(member.email)}
+                      aria-label={t("actions.resendFor", { name })}
+                      leadingIcon={<BrandRefreshIcon size={14} aria-hidden="true" />}
+                    >
+                      {t("resend")}
+                    </Button>
+                  )}
+                  {menuItems.length > 0 && (
+                    <DropdownMenu
+                      ariaLabel={t("actions.menuFor", { name })}
+                      trigger={
+                        <IconButton
+                          label={t("actions.menuFor", { name })}
+                          icon={<BrandMoreIcon size={18} aria-hidden="true" />}
+                          variant="ghost"
+                        />
+                      }
+                      items={menuItems}
+                    />
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
+
+      {/* Roles guide */}
+      <section aria-labelledby={`${baseId}-matrix-title`}>
+        <h2 id={`${baseId}-matrix-title`} className="mb-4 font-serif text-heading text-primary-900">
           {t("matrix.title")}
         </h2>
-        <ol className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          {(["owner", "admin", "manager"] as const).map((role) => (
-            <li key={role} className="bg-neutral-50 p-4 rounded-2xl border border-tertiary/40">
-              <h3 className="font-bold text-primary text-sm mb-1">{t(`matrix.${role}.title`)}</h3>
-              <p className="text-neutral-600 leading-relaxed">{t(`matrix.${role}.description`)}</p>
+        <ol className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {(["owner", "admin", "manager"] as const).map((role, i) => (
+            <li key={role} className="rounded-2xl bg-white p-5 shadow-e1">
+              <div className="mb-2 flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary-100 text-meta font-semibold tabular-nums text-secondary-800"
+                >
+                  {formatNumber(i + 1, locale)}
+                </span>
+                <h3 className="text-title text-primary-900">{t(`matrix.${role}.title`)}</h3>
+              </div>
+              <p className="text-meta leading-relaxed text-primary-700">{t(`matrix.${role}.description`)}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      {/* Invite Member Modal */}
+      {/* Invite dialog */}
       <Dialog
         isOpen={isInviteOpen}
         onClose={closeInvite}
         busy={isSubmitting}
         title={t("invite.title")}
-        titleClassName="font-serif text-lg font-black text-primary pe-10 pb-3 border-b border-tertiary/60 mb-4"
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl border border-tertiary shadow-2xl p-6 sm:p-8 max-h-[92dvh] overflow-y-auto animate-in fade-in zoom-in-95"
+        description={t("invite.description")}
+        showClose
+        size="sm"
       >
-        <button
-          type="button"
-          onClick={closeInvite}
-          disabled={isSubmitting}
-          aria-label={t("invite.close")}
-          className={`absolute top-6 end-6 sm:top-8 sm:end-8 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center transition ${FOCUS_RING}`}
-        >
-          <BrandCrossIcon size={14} aria-hidden="true" />
-        </button>
-
-        <form onSubmit={handleInvite} noValidate className="space-y-4">
-          <div>
-            <label htmlFor={ids.inviteEmail} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("invite.emailLabel")}
-            </label>
-            <input
-              id={ids.inviteEmail}
-              type="email"
-              dir="ltr"
-              autoComplete="off"
-              placeholder={t("invite.emailPlaceholder")}
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              aria-required="true"
-              aria-invalid={inviteEmailError ? true : undefined}
-              aria-describedby={inviteEmailError ? ids.inviteEmailError : undefined}
-              className={`${FIELD_CLASS} text-start`}
-            />
-            {inviteEmailError && (
-              <p id={ids.inviteEmailError} role="alert" className="mt-1 text-xs font-semibold text-status-error">
-                {inviteEmailError}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor={ids.inviteName} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("invite.nameLabel")}
-            </label>
-            <input
-              id={ids.inviteName}
-              type="text"
-              autoComplete="off"
-              placeholder={t("invite.namePlaceholder")}
-              value={inviteName}
-              onChange={(e) => setInviteName(e.target.value)}
-              className={FIELD_CLASS}
-            />
-          </div>
-
-          <div role="group" aria-labelledby={ids.inviteRoleLabel}>
-            <span id={ids.inviteRoleLabel} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("invite.roleLabel")}
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {(["manager", "admin"] as const).map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  aria-pressed={inviteRole === role}
-                  onClick={() => setInviteRole(role)}
-                  className={`p-3 rounded-xl border text-start transition ${FOCUS_RING} ${
-                    inviteRole === role
-                      ? "bg-primary/5 border-primary text-primary"
-                      : "border-tertiary/80 text-neutral-600 hover:bg-neutral-50"
-                  }`}
-                >
-                  <span className="block font-bold text-xs">
-                    {role === "manager" ? t("roleManagerStaff") : t("roleAdmin")}
-                  </span>
-                  <span className="text-[10px] text-neutral-600">{t(`invite.${role}Hint`)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={closeInvite}
-              disabled={isSubmitting}
-              className={`px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition ${FOCUS_RING}`}
-            >
+        <form onSubmit={handleInvite} noValidate className="mt-6 space-y-4">
+          <Input
+            id={ids.inviteEmail}
+            type="email"
+            dir="ltr"
+            autoComplete="off"
+            label={t("invite.emailLabel")}
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            aria-required="true"
+            error={inviteEmailError ?? undefined}
+            helper={t("invite.emailPlaceholder")}
+            prefix={<BrandMailIcon size={16} aria-hidden="true" />}
+          />
+          <Input
+            id={ids.inviteName}
+            type="text"
+            autoComplete="off"
+            label={t("invite.nameLabel")}
+            value={inviteName}
+            onChange={(e) => setInviteName(e.target.value)}
+          />
+          <RadioGroup
+            legend={t("invite.roleLabel")}
+            name={`${baseId}-invite-role`}
+            value={inviteRole}
+            onChange={(v) => setInviteRole(v as "admin" | "manager")}
+            appearance="card"
+            options={(["manager", "admin"] as const).map((role) => ({
+              value: role,
+              label: role === "manager" ? t("roleManagerStaff") : t("roleAdmin"),
+              description: t(`invite.${role}Hint`),
+            }))}
+          />
+          <DialogFooter>
+            <Button type="button" variant="tertiary" size="md" onClick={closeInvite} disabled={isSubmitting}>
               {t("cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              aria-busy={isSubmitting || undefined}
-              className={`px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition shadow-2xs disabled:opacity-50 ${FOCUS_RING}`}
-            >
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={isSubmitting}>
               {isSubmitting ? t("invite.sending") : t("invite.send")}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
       </Dialog>
 
-      {/* Revoke Member Confirm Dialog */}
+      {/* Revoke member */}
       <ConfirmDialog
         isOpen={!!memberToRemove}
         variant="destructive"
@@ -566,7 +531,7 @@ export default function AgencyTeamClient({
         onCancel={() => setMemberToRemove(null)}
       />
 
-      {/* Transfer Ownership Confirm Dialog */}
+      {/* Transfer ownership */}
       <ConfirmDialog
         isOpen={!!memberToPromote}
         variant="neutral"

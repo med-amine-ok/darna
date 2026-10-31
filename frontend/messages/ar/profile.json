@@ -130,6 +130,15 @@
     "reviewsHeading": "{count, plural, =0 {تقييمات المجتمع} other {تقييمات المجتمع (#)}}",
     "noReviews": "لم يتم تلقي أي تقييمات بعد.",
     "anonymousTraveler": "مسافر",
-    "ratingOutOf": "التقييم {rating} من 5"
+    "ratingOutOf": "التقييم {rating} من 5",
+    "roleHost": "مضيف على دارنا",
+    "roleTraveler": "مسافر على دارنا",
+    "memberSince": "عضو منذ {year}",
+    "memberSinceLabel": "عضو منذ",
+    "listingsStat": "الإعلانات",
+    "reviewsStat": "التقييمات",
+    "listingsTabLabel": "الإعلانات",
+    "reviewsTabLabel": "التقييمات",
+    "statsLabel": "لمحة عن الملف"
   }
 }

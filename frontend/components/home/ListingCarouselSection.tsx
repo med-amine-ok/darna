@@ -1,26 +1,26 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useId } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Listing, User } from "@/types";
 import ListingCarouselCard from "./ListingCarouselCard";
-import {
-  BrandChevronLeftIcon,
-  BrandChevronRightIcon,
-  BrandArrowRightIcon,
-  BrandTagIcon,
-} from "@/components/icons";
-import { Link } from "@/navigation";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { BrandChevronLeftIcon, BrandChevronRightIcon } from "@/components/icons";
 
 interface ListingCarouselSectionProps {
   title: string;
   subtitle?: string;
+  /** Shown as the section eyebrow. */
   badge?: string;
   listings: Listing[];
   currentUser?: User | null;
   viewMoreHref?: string;
   isLoading?: boolean;
 }
+
+const arrowClass =
+  "w-10 h-10 rounded-full bg-white shadow-e1 text-primary-800 flex items-center justify-center transition duration-fast ease-standard hover:shadow-e2 hover:-translate-y-px active:scale-95 disabled:opacity-35 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-darnaBg";
 
 export default function ListingCarouselSection({
   title,
@@ -32,119 +32,82 @@ export default function ListingCarouselSection({
   isLoading = false,
 }: ListingCarouselSectionProps) {
   const t = useTranslations("common");
+  const tHome = useTranslations("homeHero.sections");
   const headingId = useId();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
 
-  const checkScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(Math.abs(scrollLeft) > 10);
-      setCanScrollRight(Math.abs(scrollLeft) < scrollWidth - clientWidth - 10);
-    }
-  };
+  const update = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    // scrollLeft is negative in RTL, so compare magnitudes.
+    const pos = Math.abs(el.scrollLeft);
+    setCanPrev(pos > 8);
+    setCanNext(pos < el.scrollWidth - el.clientWidth - 8);
+  }, []);
 
   useEffect(() => {
-    checkScroll();
-    window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
-  }, [listings]);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [listings, update]);
 
-  const handleScroll = (direction: "left" | "right") => {
-    if (scrollContainerRef.current) {
-      const offset = direction === "left" ? -460 : 460;
-      scrollContainerRef.current.scrollBy({ left: offset, behavior: "smooth" });
-      setTimeout(checkScroll, 350);
-    }
+  /** Scrolls by one viewport of cards towards the reading end (`next`) or start. */
+  const page = (dir: "prev" | "next") => {
+    const el = trackRef.current;
+    if (!el) return;
+    const isRtl = getComputedStyle(el).direction === "rtl";
+    const amount = el.clientWidth * 0.85 * (dir === "next" ? 1 : -1) * (isRtl ? -1 : 1);
+    el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
+  if (!isLoading && listings.length === 0) return null;
+
   return (
-    <section className="space-y-4 py-4" aria-labelledby={headingId}>
-      {/* Header Row */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h2 id={headingId} className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
-            {viewMoreHref ? (
-              <Link
-                href={viewMoreHref}
-                className="inline-flex items-center gap-2 group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-              >
-                <span>{title}</span>
-                <span className="sr-only">{t("seeAll")}</span>
-                <BrandArrowRightIcon
-                  size={20}
-                  className="rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform"
-                />
-              </Link>
-            ) : (
-              title
-            )}
-          </h2>
-          {subtitle && (
-            <p className="text-sm text-neutral-600 mt-0.5">{subtitle}</p>
-          )}
-        </div>
-
-        {/* Carousel Navigation Arrows */}
-        <div className="hidden sm:flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => handleScroll("left")}
-            disabled={!canScrollLeft}
-            aria-label={t("previous")}
-            className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-          >
-            <BrandChevronLeftIcon size={20} className="rtl:rotate-180" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleScroll("right")}
-            disabled={!canScrollRight}
-            aria-label={t("next")}
-            className="p-2 rounded-full border border-tertiary/70 text-primary hover:bg-tertiary/20 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-          >
-            <BrandChevronRightIcon size={20} className="rtl:rotate-180" />
-          </button>
-        </div>
-      </div>
-
-      {/* Floating Center Badge if provided */}
-      {badge && (
-        <div className="flex justify-center pt-1 pb-1">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-tertiary/60 rounded-2xl shadow-sm text-xs font-semibold text-primary">
-            <BrandTagIcon size={15} className="text-accent" />
-            <span>{badge}</span>
+    <section className="space-y-7" aria-labelledby={headingId}>
+      <SectionHeader
+        id={headingId}
+        eyebrow={badge}
+        title={title}
+        subtitle={subtitle}
+        href={viewMoreHref}
+        linkLabel={tHome("seeAll")}
+        actions={
+          <div className="hidden md:flex items-center gap-2">
+            <button type="button" onClick={() => page("prev")} disabled={!canPrev} aria-label={t("previous")} className={arrowClass}>
+              <BrandChevronLeftIcon size={18} className="rtl:rotate-180" />
+            </button>
+            <button type="button" onClick={() => page("next")} disabled={!canNext} aria-label={t("next")} className={arrowClass}>
+              <BrandChevronRightIcon size={18} className="rtl:rotate-180" />
+            </button>
           </div>
-        </div>
-      )}
+        }
+      />
 
-      {/* Carousel Track - Scrollbar / slider completely invisible */}
+      {/* Track: snap scrolling, next card peeks on mobile to invite a swipe. */}
       <div
-        ref={scrollContainerRef}
-        onScroll={checkScroll}
-        className="flex gap-3.5 sm:gap-4 overflow-x-auto scroll-smooth no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-2 -mx-4 px-4 sm:-mx-0 sm:px-0"
+        ref={trackRef}
+        onScroll={update}
+        className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none -mx-4 px-4 scroll-px-4 sm:-mx-6 sm:px-6 sm:scroll-px-6 lg:mx-0 lg:px-0 lg:scroll-px-0 pb-4 pt-1"
       >
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, idx) => (
-              <div
-                key={idx}
-                aria-hidden="true"
-                className="flex-shrink-0 w-52 sm:w-60 space-y-2.5 animate-pulse"
-              >
-                <div className="aspect-square w-full rounded-xl bg-neutral-200/70" />
-                <div className="h-3.5 bg-neutral-200/70 rounded w-3/4" />
-                <div className="h-3 bg-neutral-200/50 rounded w-1/2" />
-                <div className="h-3.5 bg-neutral-200/70 rounded w-1/3" />
-              </div>
-            ))
-          : listings.map((listing) => (
-              <ListingCarouselCard
-                key={listing.id}
-                listing={listing}
-                currentUser={currentUser}
-              />
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, idx) => (
+            <div key={idx} aria-hidden="true" className="snap-start shrink-0 w-[72vw] sm:w-64 lg:w-[17.5rem] space-y-3">
+              <div className="skeleton aspect-[20/19] rounded-2xl" />
+              <div className="skeleton h-4 rounded-md w-3/4" />
+              <div className="skeleton h-3.5 rounded-md w-1/2" />
+            </div>
+          ))
+        ) : (
+          <RevealGroup className="flex gap-4 sm:gap-6" each={0.06}>
+            {listings.map((listing) => (
+              <RevealItem key={listing.id} className="snap-start shrink-0 w-[72vw] sm:w-64 lg:w-[17.5rem]">
+                <ListingCarouselCard listing={listing} currentUser={currentUser} />
+              </RevealItem>
             ))}
+          </RevealGroup>
+        )}
       </div>
     </section>
   );

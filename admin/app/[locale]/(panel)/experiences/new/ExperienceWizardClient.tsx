@@ -40,9 +40,22 @@ const DIFFICULTY_OPTIONS = [
   { value: "Expert", labelKey: "expert" },
 ] as const;
 
-const EXPERIENCE_TYPES = ["excursion", "sport", "workshop", "tasting", "other"] as const;
+const EXPERIENCE_TYPES = [
+  "excursion",
+  "sport",
+  "workshop",
+  "tasting",
+  "other",
+] as const;
 
-const STEP_KEYS = ["general", "location", "details", "pricing", "media", "rules"] as const;
+const STEP_KEYS = [
+  "general",
+  "location",
+  "details",
+  "pricing",
+  "media",
+  "rules",
+] as const;
 
 const PROGRAMME_KEYS = ["welcome", "walk", "waterfall"] as const;
 
@@ -60,13 +73,20 @@ type FieldName =
   | "priceChild";
 
 const STEP_FIELDS: Record<number, FieldName[]> = {
-  1: ["title", "duration", "groupSize", "languages", "shortDescription", "fullDescription"],
+  1: [
+    "title",
+    "duration",
+    "groupSize",
+    "languages",
+    "shortDescription",
+    "fullDescription",
+  ],
   2: ["city", "address", "transportMode"],
   4: ["pricePerPerson", "priceChild"],
 };
 
 const INPUT_CLASS =
-  "w-full px-3 py-2 text-xs bg-white border rounded-lg text-[#2E3A2F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1";
+  "w-full px-3 py-2 text-xs bg-white border rounded-xl shadow-2xs text-primary-900 placeholder:text-primary-500 hover:border-primary/25 focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] transition duration-fast ease-standard";
 
 export default function ExperienceWizardClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
@@ -75,10 +95,12 @@ export default function ExperienceWizardClient() {
   const { addToast } = useToast();
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [draftSavedAt, setDraftSavedAt] = useState<Date>(() => new Date(2000, 0, 1, 10, 20));
+  const [draftSavedAt, setDraftSavedAt] = useState<Date>(
+    () => new Date(2000, 0, 1, 10, 20),
+  );
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
 
-  // Form state (Mockups 03 & 10) — pre-filled demo content
+  // Form state (Mockups 03 & 10), pre-filled demo content
   const [formData, setFormData] = useState({
     title: "Randonnée dans les gorges de Chiffa & Cascade",
     category: "Aventure",
@@ -87,8 +109,10 @@ export default function ExperienceWizardClient() {
     difficulty: "Modéré",
     groupSize: 12,
     languages: ["Français", "Arabe"],
-    shortDescription: "Partez à la découverte de la faune préservée et des cascades majestueuses des gorges de Chiffa en compagnie d'un guide local certifié.",
-    fullDescription: "Une excursion revigorante au cœur du parc national de Chréa. Nous longerons la rivière ombragée et observerons les célèbres macaques de Barbarie dans leur habitat naturel.",
+    shortDescription:
+      "Partez à la découverte de la faune préservée et des cascades majestueuses des gorges de Chiffa en compagnie d'un guide local certifié.",
+    fullDescription:
+      "Une excursion revigorante au cœur du parc national de Chréa. Nous longerons la rivière ombragée et observerons les célèbres macaques de Barbarie dans leur habitat naturel.",
     highlights: [
       "Baignade rafraîchissante dans les vasques naturelles",
       "Observation respectueuse des macaques de Barbarie",
@@ -103,22 +127,34 @@ export default function ExperienceWizardClient() {
     coordinates: { lat: 36.425, lng: 2.765 },
     visibilityMode: "exact",
     transportMode: "Véhicule personnel ou Navette",
-    accessInstructions: "Point de ralliement sur le parking du restaurant des Singes à 08h30 précises.",
+    accessInstructions:
+      "Point de ralliement sur le parking du restaurant des Singes à 08h30 précises.",
     pois: [
       { name: "Ruisseau des Singes", distance: "200 m", time: "3 min à pied" },
-      { name: "Cascade de Chiffa", distance: "2.5 km", time: "45 min de marche" },
+      {
+        name: "Cascade de Chiffa",
+        distance: "2.5 km",
+        time: "45 min de marche",
+      },
     ],
     pricePerPerson: 3500,
     priceChild: 2000,
     approvalMode: "instant" as "instant" | "request",
     included: ["Guide diplômé", "Assurance excursion", "Collation & thé"],
     notIncluded: ["Déjeuner complet", "Transport depuis Alger"],
-    whatToBring: ["Chaussures de marche fermées", "Gourde 1.5L", "Chapeau / Casquette"],
+    whatToBring: [
+      "Chaussures de marche fermées",
+      "Gourde 1.5L",
+      "Chapeau / Casquette",
+    ],
     images: ["/placeholder-experience.jpg"],
   });
 
   const formatTime = (d: Date) =>
-    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(d);
+    new Intl.DateTimeFormat(intlLocale(locale), {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(d);
 
   const categoryLabel = (value: string) => {
     const opt = CATEGORY_OPTIONS.find((o) => o.value === value);
@@ -129,7 +165,10 @@ export default function ExperienceWizardClient() {
     return opt ? t(`difficultyOptions.${opt.labelKey}`) : value;
   };
 
-  const steps: StepItem[] = STEP_KEYS.map((key, i) => ({ id: i + 1, title: t(`steps.${key}`) }));
+  const steps: StepItem[] = STEP_KEYS.map((key, i) => ({
+    id: i + 1,
+    title: t(`steps.${key}`),
+  }));
 
   const validateField = (field: FieldName): string | undefined => {
     switch (field) {
@@ -142,11 +181,15 @@ export default function ExperienceWizardClient() {
       case "transportMode":
         return formData[field].trim() ? undefined : t("errors.required");
       case "groupSize":
-        return Number.isInteger(formData.groupSize) && formData.groupSize >= 1 && formData.groupSize <= 50
+        return Number.isInteger(formData.groupSize) &&
+          formData.groupSize >= 1 &&
+          formData.groupSize <= 50
           ? undefined
           : t("errors.groupSize", { min: 1, max: 50 });
       case "languages":
-        return formData.languages.length > 0 ? undefined : t("errors.languages");
+        return formData.languages.length > 0
+          ? undefined
+          : t("errors.languages");
       case "pricePerPerson":
         return formData.pricePerPerson > 0 ? undefined : t("errors.price");
       case "priceChild":
@@ -175,27 +218,33 @@ export default function ExperienceWizardClient() {
   const fieldId = (field: string) => `exp-wizard-${field}`;
   const errorId = (field: FieldName) => `exp-wizard-${field}-error`;
   const a11yProps = (field: FieldName, hintId?: string) => {
-    const describedBy = [errors[field] ? errorId(field) : null, hintId].filter(Boolean).join(" ");
+    const describedBy = [errors[field] ? errorId(field) : null, hintId]
+      .filter(Boolean)
+      .join(" ");
     return {
       id: fieldId(field),
       "aria-invalid": errors[field] ? true : undefined,
       "aria-describedby": describedBy || undefined,
     };
   };
-  const borderClass = (field: FieldName) => (errors[field] ? "border-[#A4532F]" : "border-[#D9C9B2]");
+  const borderClass = (field: FieldName) =>
+    errors[field] ? "border-accent-700" : "border-primary/[0.12]";
   const FieldError = ({ field }: { field: FieldName }) =>
     errors[field] ? (
-      <p id={errorId(field)} className="text-[11px] text-[#A4532F] mt-1">
+      <p id={errorId(field)} className="text-[11px] text-accent-700 mt-1">
         {errors[field]}
       </p>
     ) : null;
   const Required = () => (
-    <span aria-hidden="true" className="text-[#A4532F]">
+    <span aria-hidden="true" className="text-accent-700">
       {" *"}
     </span>
   );
 
-  const updateField = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) => {
+  const updateField = <K extends keyof typeof formData>(
+    key: K,
+    value: (typeof formData)[K],
+  ) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
     if (key in errors) {
       setErrors((prev) => {
@@ -255,28 +304,36 @@ export default function ExperienceWizardClient() {
   return (
     <div className="space-y-6">
       {/* 1. Header (Mockup 10) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D9C9B2]/50 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-primary/[0.06] pb-5">
         <div>
           <button
             type="button"
             onClick={() => router.push("/experiences")}
-            className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] mb-2 font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-900 mb-2 font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
-            <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+            <ArrowLeft
+              className="w-3.5 h-3.5 rtl:rotate-180"
+              aria-hidden="true"
+            />
             <span>{t("backToList")}</span>
           </button>
-          <h1 className="text-xl font-bold text-[#2E3A2F]">{t("title")}</h1>
-          <p className="text-xs text-[#2E3A2F]/70 mt-0.5">{t("subtitle")}</p>
+          <h1 className="font-serif text-heading text-primary-900">
+            {t("title")}
+          </h1>
+          <p className="text-xs text-primary-600 mt-0.5">{t("subtitle")}</p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <span className="text-[11px] text-[#2E3A2F]/70 hidden sm:inline" aria-live="polite">
+          <span
+            className="text-[11px] text-primary-600 hidden sm:inline"
+            aria-live="polite"
+          >
             {t("draftSavedAt", { time: formatTime(draftSavedAt) })}
           </span>
           <button
             type="button"
             onClick={handleSaveDraft}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-primary-800 bg-white shadow-e1 rounded-xl hover:shadow-e2 transition duration-fast ease-standard active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             <Save className="w-3.5 h-3.5" aria-hidden="true" />
             <span>{t("saveDraft")}</span>
@@ -284,17 +341,26 @@ export default function ExperienceWizardClient() {
           <button
             type="button"
             onClick={handleNext}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-primary-800 rounded-xl shadow-e1 shadow-highlight hover:bg-primary-900 transition duration-fast ease-standard active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
             <span>{nextLabel}</span>
-            {currentStep < 6 && <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
+            {currentStep < 6 && (
+              <ChevronRight
+                className="w-3.5 h-3.5 rtl:rotate-180"
+                aria-hidden="true"
+              />
+            )}
           </button>
         </div>
       </div>
 
       {/* 2. Stepper */}
-      <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm">
-        <Stepper steps={steps} currentStep={currentStep} onStepClick={handleStepClick} />
+      <div className="bg-white rounded-2xl p-5 shadow-e1">
+        <Stepper
+          steps={steps}
+          currentStep={currentStep}
+          onStepClick={handleStepClick}
+        />
       </div>
 
       {/* 3. Three-Column Body: Form (2 cols) + Right Rail (1 col) */}
@@ -304,7 +370,7 @@ export default function ExperienceWizardClient() {
           {errorCount > 0 && (
             <div
               role="alert"
-              className="p-3 rounded-lg border border-[#A4532F]/40 bg-[#C96F4F]/10 text-xs text-[#7F3E22]"
+              className="p-3 rounded-xl bg-accent-50 ring-1 ring-inset ring-accent-200 text-xs text-accent-800"
             >
               {t("errors.summary", { count: errorCount })}
             </div>
@@ -313,13 +379,16 @@ export default function ExperienceWizardClient() {
           {/* STEP 1: Informations Générales (Mockup 10) */}
           {currentStep === 1 && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("general.heading")}
                 </h2>
 
                 <div>
-                  <label htmlFor={fieldId("title")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label
+                    htmlFor={fieldId("title")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("general.title")}
                     <Required />
                   </label>
@@ -336,7 +405,10 @@ export default function ExperienceWizardClient() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor={fieldId("category")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("category")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("general.category")}
                       <Required />
                     </label>
@@ -345,7 +417,7 @@ export default function ExperienceWizardClient() {
                       required
                       value={formData.category}
                       onChange={(e) => updateField("category", e.target.value)}
-                      className={`${INPUT_CLASS} px-3.5 border-[#D9C9B2]`}
+                      className={`${INPUT_CLASS} px-3.5 border-primary/[0.12]`}
                     >
                       {CATEGORY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -355,22 +427,30 @@ export default function ExperienceWizardClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor={fieldId("subCategory")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("subCategory")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("general.subCategory")}
                     </label>
                     <input
                       id={fieldId("subCategory")}
                       type="text"
                       value={formData.subCategory}
-                      onChange={(e) => updateField("subCategory", e.target.value)}
-                      className={`${INPUT_CLASS} px-3.5 border-[#D9C9B2]`}
+                      onChange={(e) =>
+                        updateField("subCategory", e.target.value)
+                      }
+                      className={`${INPUT_CLASS} px-3.5 border-primary/[0.12]`}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label htmlFor={fieldId("duration")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("duration")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("general.duration")}
                       <Required />
                     </label>
@@ -386,7 +466,10 @@ export default function ExperienceWizardClient() {
                     <FieldError field="duration" />
                   </div>
                   <div>
-                    <label htmlFor={fieldId("difficulty")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("difficulty")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("general.difficulty")}
                       <Required />
                     </label>
@@ -394,8 +477,10 @@ export default function ExperienceWizardClient() {
                       id={fieldId("difficulty")}
                       required
                       value={formData.difficulty}
-                      onChange={(e) => updateField("difficulty", e.target.value)}
-                      className={`${INPUT_CLASS} border-[#D9C9B2]`}
+                      onChange={(e) =>
+                        updateField("difficulty", e.target.value)
+                      }
+                      className={`${INPUT_CLASS} border-primary/[0.12]`}
                     >
                       {DIFFICULTY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -405,7 +490,10 @@ export default function ExperienceWizardClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor={fieldId("groupSize")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("groupSize")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("general.groupSize")}
                       <Required />
                     </label>
@@ -415,7 +503,9 @@ export default function ExperienceWizardClient() {
                       min="1"
                       max="50"
                       value={formData.groupSize}
-                      onChange={(e) => updateField("groupSize", Number(e.target.value))}
+                      onChange={(e) =>
+                        updateField("groupSize", Number(e.target.value))
+                      }
                       className={`${INPUT_CLASS} ${borderClass("groupSize")}`}
                       {...a11yProps("groupSize")}
                     />
@@ -426,9 +516,14 @@ export default function ExperienceWizardClient() {
                 <div
                   role="group"
                   aria-labelledby={fieldId("languages-label")}
-                  aria-describedby={errors.languages ? errorId("languages") : undefined}
+                  aria-describedby={
+                    errors.languages ? errorId("languages") : undefined
+                  }
                 >
-                  <span id={fieldId("languages-label")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <span
+                    id={fieldId("languages-label")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("general.languages")}
                     <Required />
                   </span>
@@ -441,7 +536,10 @@ export default function ExperienceWizardClient() {
                 </div>
 
                 <div>
-                  <label htmlFor={fieldId("shortDescription")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label
+                    htmlFor={fieldId("shortDescription")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("general.shortDescription")}
                     <Required />
                   </label>
@@ -450,12 +548,23 @@ export default function ExperienceWizardClient() {
                     required
                     maxLength={300}
                     value={formData.shortDescription}
-                    onChange={(e) => updateField("shortDescription", e.target.value)}
+                    onChange={(e) =>
+                      updateField("shortDescription", e.target.value)
+                    }
                     className={`${INPUT_CLASS} px-3.5 ${borderClass("shortDescription")}`}
-                    {...a11yProps("shortDescription", fieldId("shortDescription-count"))}
+                    {...a11yProps(
+                      "shortDescription",
+                      fieldId("shortDescription-count"),
+                    )}
                   />
-                  <p id={fieldId("shortDescription-count")} className="text-[11px] text-[#2E3A2F]/70 mt-1">
-                    {t("general.charCount", { count: formData.shortDescription.length, max: 300 })}
+                  <p
+                    id={fieldId("shortDescription-count")}
+                    className="text-[11px] text-primary-600 mt-1"
+                  >
+                    {t("general.charCount", {
+                      count: formData.shortDescription.length,
+                      max: 300,
+                    })}
                   </p>
                   <FieldError field="shortDescription" />
                 </div>
@@ -463,9 +572,16 @@ export default function ExperienceWizardClient() {
                 <div
                   role="group"
                   aria-labelledby={fieldId("fullDescription-label")}
-                  aria-describedby={errors.fullDescription ? errorId("fullDescription") : undefined}
+                  aria-describedby={
+                    errors.fullDescription
+                      ? errorId("fullDescription")
+                      : undefined
+                  }
                 >
-                  <span id={fieldId("fullDescription-label")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <span
+                    id={fieldId("fullDescription-label")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("general.fullDescription")}
                     <Required />
                   </span>
@@ -480,14 +596,20 @@ export default function ExperienceWizardClient() {
 
                 {/* Highlights */}
                 <div>
-                  <h3 className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <h3 className="block text-xs font-semibold text-primary-900 mb-1.5">
                     {t("general.highlights")}
                   </h3>
                   <ul className="space-y-2">
                     {formData.highlights.map((h, i) => (
-                      <li key={i} className="flex items-center justify-between p-2.5 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs text-[#2E3A2F]">
+                      <li
+                        key={i}
+                        className="flex items-center justify-between p-2.5 bg-darnaBg-100 rounded-xl text-xs text-primary-900"
+                      >
                         <span className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                          <Check
+                            className="w-3.5 h-3.5 text-secondary"
+                            aria-hidden="true"
+                          />
                           <span>{h}</span>
                         </span>
                         <button
@@ -495,12 +617,12 @@ export default function ExperienceWizardClient() {
                           onClick={() =>
                             updateField(
                               "highlights",
-                              formData.highlights.filter((_, idx) => idx !== i)
+                              formData.highlights.filter((_, idx) => idx !== i),
                             )
                           }
                           aria-label={t("general.removeHighlight", { item: h })}
                           title={t("general.removeHighlight", { item: h })}
-                          className="p-1 rounded text-[#A4532F] hover:text-[#7F3E22] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                          className="p-1 rounded text-accent-700 hover:text-accent-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                         >
                           <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
@@ -511,8 +633,8 @@ export default function ExperienceWizardClient() {
               </div>
 
               {/* Card 2: Type & keywords (Mockup 10) */}
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("type.heading")}
                 </h2>
 
@@ -522,10 +644,10 @@ export default function ExperienceWizardClient() {
                     {EXPERIENCE_TYPES.map((type) => (
                       <label
                         key={type}
-                        className={`p-3 rounded-lg border cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
+                        className={`p-3 rounded-xl border transition-colors duration-fast ease-standard cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
                           formData.experienceType === type
-                            ? "bg-secondary/10 border-secondary font-semibold text-[#2E3A2F]"
-                            : "bg-[#FAF9F5] border-[#D9C9B2]/50 text-[#2E3A2F]/80"
+                            ? "bg-secondary-50 border-secondary-600 font-semibold text-primary-900"
+                            : "bg-white border-primary/[0.12] text-primary-800 hover:border-primary/25"
                         }`}
                       >
                         <input
@@ -534,7 +656,7 @@ export default function ExperienceWizardClient() {
                           value={type}
                           checked={formData.experienceType === type}
                           onChange={() => updateField("experienceType", type)}
-                          className="accent-[#6B7F5B] me-2"
+                          className="accent-secondary me-2"
                         />
                         <span>{t(`type.options.${type}`)}</span>
                       </label>
@@ -543,7 +665,10 @@ export default function ExperienceWizardClient() {
                 </fieldset>
 
                 <div role="group" aria-labelledby={fieldId("tags-label")}>
-                  <span id={fieldId("tags-label")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <span
+                    id={fieldId("tags-label")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("type.tags")}
                   </span>
                   <ChipInput
@@ -559,14 +684,17 @@ export default function ExperienceWizardClient() {
           {/* STEP 2: Location (Mockup 03) */}
           {currentStep === 2 && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-                <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+                <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("location.heading")}
                 </h2>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label htmlFor={fieldId("country")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("country")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("location.country")}
                     </label>
                     <input
@@ -574,11 +702,14 @@ export default function ExperienceWizardClient() {
                       type="text"
                       disabled
                       value={t("location.countryAlgeria")}
-                      className="w-full px-3 py-2 text-xs bg-[#FAF9F5] border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                      className="w-full px-3 py-2 text-xs bg-darnaBg-100 border border-primary/[0.12] rounded-lg text-primary-900"
                     />
                   </div>
                   <div>
-                    <label htmlFor={fieldId("wilaya")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("wilaya")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("location.wilaya")}
                       <Required />
                     </label>
@@ -586,8 +717,10 @@ export default function ExperienceWizardClient() {
                       id={fieldId("wilaya")}
                       required
                       value={formData.wilayaCode}
-                      onChange={(e) => updateField("wilayaCode", e.target.value)}
-                      className={`${INPUT_CLASS} border-[#D9C9B2]`}
+                      onChange={(e) =>
+                        updateField("wilayaCode", e.target.value)
+                      }
+                      className={`${INPUT_CLASS} border-primary/[0.12]`}
                     >
                       {WILAYAS.map((w) => (
                         <option key={w.code} value={w.code}>
@@ -597,7 +730,10 @@ export default function ExperienceWizardClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor={fieldId("city")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                    <label
+                      htmlFor={fieldId("city")}
+                      className="block text-xs font-semibold text-primary-900 mb-1.5"
+                    >
                       {t("location.city")}
                       <Required />
                     </label>
@@ -614,7 +750,10 @@ export default function ExperienceWizardClient() {
                 </div>
 
                 <div>
-                  <label htmlFor={fieldId("address")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label
+                    htmlFor={fieldId("address")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("location.address")}
                     <Required />
                   </label>
@@ -627,7 +766,10 @@ export default function ExperienceWizardClient() {
                     {...a11yProps("address", fieldId("address-hint"))}
                   />
                   <FieldError field="address" />
-                  <p id={fieldId("address-hint")} className="text-[11px] text-[#2E3A2F]/70 mt-1">
+                  <p
+                    id={fieldId("address-hint")}
+                    className="text-[11px] text-primary-600 mt-1"
+                  >
                     {t("location.addressHint")}
                   </p>
                 </div>
@@ -635,14 +777,16 @@ export default function ExperienceWizardClient() {
                 <MapPicker
                   lat={formData.coordinates.lat}
                   lng={formData.coordinates.lng}
-                  onChange={(lat, lng) => updateField("coordinates", { lat, lng })}
+                  onChange={(lat, lng) =>
+                    updateField("coordinates", { lat, lng })
+                  }
                 />
               </div>
 
               {/* Nearby points of interest (Mockup 03) */}
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-[#D9C9B2]/40">
-                  <h2 className="text-sm font-semibold text-[#2E3A2F]">
+              <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-primary/[0.06]">
+                  <h2 className="text-sm font-semibold text-primary-900">
                     {t("poi.heading", { max: 5 })}
                   </h2>
                   <button
@@ -652,34 +796,46 @@ export default function ExperienceWizardClient() {
                       if (formData.pois.length < 5) {
                         updateField("pois", [
                           ...formData.pois,
-                          { name: t("poi.newName"), distance: t("poi.newDistance"), time: t("poi.newTime") },
+                          {
+                            name: t("poi.newName"),
+                            distance: t("poi.newDistance"),
+                            time: t("poi.newTime"),
+                          },
                         ]);
                       }
                     }}
-                    className="text-xs font-medium text-[#4F5F43] hover:underline flex items-center gap-1 rounded disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    className="text-xs font-medium text-secondary-700 hover:underline flex items-center gap-1 rounded disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                   >
-                    <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("poi.add")}
+                    <Plus className="w-3.5 h-3.5" aria-hidden="true" />{" "}
+                    {t("poi.add")}
                   </button>
                 </div>
 
                 <ul className="space-y-2">
                   {formData.pois.map((poi, idx) => (
-                    <li key={idx} className="flex items-center justify-between p-2.5 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs">
+                    <li
+                      key={idx}
+                      className="flex items-center justify-between p-2.5 bg-darnaBg-100 rounded-xl text-xs"
+                    >
                       <div>
-                        <span className="font-semibold text-[#2E3A2F]">{poi.name}</span>
-                        <span className="text-[#2E3A2F]/70 ms-2">• {poi.distance} ({poi.time})</span>
+                        <span className="font-semibold text-primary-900">
+                          {poi.name}
+                        </span>
+                        <span className="text-primary-600 ms-2">
+                          • {poi.distance} ({poi.time})
+                        </span>
                       </div>
                       <button
                         type="button"
                         onClick={() =>
                           updateField(
                             "pois",
-                            formData.pois.filter((_, i) => i !== idx)
+                            formData.pois.filter((_, i) => i !== idx),
                           )
                         }
                         aria-label={t("poi.remove", { name: poi.name })}
                         title={t("poi.remove", { name: poi.name })}
-                        className="p-1 rounded text-[#A4532F] hover:text-[#7F3E22] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                        className="p-1 rounded text-accent-700 hover:text-accent-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                       >
                         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
@@ -689,12 +845,15 @@ export default function ExperienceWizardClient() {
               </div>
 
               {/* Access & transport (Mockup 03) */}
-              <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-3">
-                <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+              <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-3">
+                <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                   {t("access.heading")}
                 </h2>
                 <div>
-                  <label htmlFor={fieldId("transportMode")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label
+                    htmlFor={fieldId("transportMode")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("access.transportMode")}
                     <Required />
                   </label>
@@ -702,22 +861,29 @@ export default function ExperienceWizardClient() {
                     type="text"
                     required
                     value={formData.transportMode}
-                    onChange={(e) => updateField("transportMode", e.target.value)}
+                    onChange={(e) =>
+                      updateField("transportMode", e.target.value)
+                    }
                     className={`${INPUT_CLASS} ${borderClass("transportMode")}`}
                     {...a11yProps("transportMode")}
                   />
                   <FieldError field="transportMode" />
                 </div>
                 <div>
-                  <label htmlFor={fieldId("accessInstructions")} className="block text-xs font-semibold text-[#2E3A2F] mb-1.5">
+                  <label
+                    htmlFor={fieldId("accessInstructions")}
+                    className="block text-xs font-semibold text-primary-900 mb-1.5"
+                  >
                     {t("access.instructions")}
                   </label>
                   <textarea
                     id={fieldId("accessInstructions")}
                     rows={2}
                     value={formData.accessInstructions}
-                    onChange={(e) => updateField("accessInstructions", e.target.value)}
-                    className={`${INPUT_CLASS} border-[#D9C9B2]`}
+                    onChange={(e) =>
+                      updateField("accessInstructions", e.target.value)
+                    }
+                    className={`${INPUT_CLASS} border-primary/[0.12]`}
                   />
                 </div>
               </div>
@@ -726,17 +892,22 @@ export default function ExperienceWizardClient() {
 
           {/* STEP 3: Programme */}
           {currentStep === 3 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("programme.heading")}
               </h2>
               <ol className="space-y-3 text-xs">
                 {PROGRAMME_KEYS.map((key, i) => (
-                  <li key={key} className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40">
-                    <div className="font-semibold text-[#2E3A2F]">
-                      {t("programme.stepTitle", { n: i + 1, title: t(`programme.items.${key}.title`) })}
+                  <li key={key} className="p-3 bg-darnaBg-100 rounded-xl">
+                    <div className="font-semibold text-primary-900">
+                      {t("programme.stepTitle", {
+                        n: i + 1,
+                        title: t(`programme.items.${key}.title`),
+                      })}
                     </div>
-                    <p className="text-[11px] text-[#2E3A2F]/70 mt-0.5">{t(`programme.items.${key}.description`)}</p>
+                    <p className="text-[11px] text-primary-600 mt-0.5">
+                      {t(`programme.items.${key}.description`)}
+                    </p>
                   </li>
                 ))}
               </ol>
@@ -745,13 +916,16 @@ export default function ExperienceWizardClient() {
 
           {/* STEP 4: Pricing */}
           {currentStep === 4 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("pricing.heading")}
               </h2>
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label htmlFor={fieldId("pricePerPerson")} className="block font-semibold text-[#2E3A2F] mb-1">
+                  <label
+                    htmlFor={fieldId("pricePerPerson")}
+                    className="block font-semibold text-primary-900 mb-1"
+                  >
                     {t("pricing.adult")}
                     <Required />
                   </label>
@@ -760,21 +934,28 @@ export default function ExperienceWizardClient() {
                     required
                     min="1"
                     value={formData.pricePerPerson}
-                    onChange={(e) => updateField("pricePerPerson", Number(e.target.value))}
+                    onChange={(e) =>
+                      updateField("pricePerPerson", Number(e.target.value))
+                    }
                     className={`${INPUT_CLASS} ${borderClass("pricePerPerson")}`}
                     {...a11yProps("pricePerPerson")}
                   />
                   <FieldError field="pricePerPerson" />
                 </div>
                 <div>
-                  <label htmlFor={fieldId("priceChild")} className="block font-semibold text-[#2E3A2F] mb-1">
+                  <label
+                    htmlFor={fieldId("priceChild")}
+                    className="block font-semibold text-primary-900 mb-1"
+                  >
                     {t("pricing.child")}
                   </label>
                   <input
                     type="number"
                     min="0"
                     value={formData.priceChild}
-                    onChange={(e) => updateField("priceChild", Number(e.target.value))}
+                    onChange={(e) =>
+                      updateField("priceChild", Number(e.target.value))
+                    }
                     className={`${INPUT_CLASS} ${borderClass("priceChild")}`}
                     {...a11yProps("priceChild")}
                   />
@@ -786,8 +967,8 @@ export default function ExperienceWizardClient() {
 
           {/* STEP 5: Media */}
           {currentStep === 5 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("media.heading")}
               </h2>
               <FileDropzone
@@ -799,18 +980,20 @@ export default function ExperienceWizardClient() {
 
           {/* STEP 6: Review */}
           {currentStep === 6 && (
-            <div className="bg-white rounded-xl border border-[#D9C9B2]/60 p-5 shadow-sm space-y-4">
-              <h2 className="text-sm font-semibold text-[#2E3A2F] pb-2 border-b border-[#D9C9B2]/40">
+            <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
+              <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
                 {t("review.heading")}
               </h2>
-              <dl className="p-4 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-2">
+              <dl className="p-4 bg-darnaBg-100 rounded-xl text-xs space-y-2">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#2E3A2F]/70">{t("review.activity")}</dt>
-                  <dd className="font-semibold text-[#2E3A2F] text-end">{formData.title}</dd>
+                  <dt className="text-primary-600">{t("review.activity")}</dt>
+                  <dd className="font-semibold text-primary-900 text-end">
+                    {formData.title}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#2E3A2F]/70">{t("review.category")}</dt>
-                  <dd className="font-semibold text-[#2E3A2F] text-end">
+                  <dt className="text-primary-600">{t("review.category")}</dt>
+                  <dd className="font-semibold text-primary-900 text-end">
                     {t("review.categoryValue", {
                       category: categoryLabel(formData.category),
                       difficulty: difficultyLabel(formData.difficulty),
@@ -818,46 +1001,65 @@ export default function ExperienceWizardClient() {
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#2E3A2F]/70">{t("review.location")}</dt>
-                  <dd className="font-semibold text-[#2E3A2F] text-end">
-                    {t("locationValue", { city: formData.city, code: formData.wilayaCode })}
+                  <dt className="text-primary-600">{t("review.location")}</dt>
+                  <dd className="font-semibold text-primary-900 text-end">
+                    {t("locationValue", {
+                      city: formData.city,
+                      code: formData.wilayaCode,
+                    })}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[#2E3A2F]/70">{t("review.pricePerPerson")}</dt>
-                  <dd className="font-bold text-[#4F5F43] text-end">{formatDzd(formData.pricePerPerson, locale)}</dd>
+                  <dt className="text-primary-600">
+                    {t("review.pricePerPerson")}
+                  </dt>
+                  <dd className="font-semibold text-secondary-700 text-end">
+                    {formatDzd(formData.pricePerPerson, locale)}
+                  </dd>
                 </div>
               </dl>
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#D9C9B2]/40">
+          <div className="flex items-center justify-between pt-4 border-t border-primary/[0.06]">
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-primary-800 bg-white shadow-e1 rounded-xl hover:shadow-e2 transition duration-fast ease-standard active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
-              <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+              <ChevronLeft
+                className="w-3.5 h-3.5 rtl:rotate-180"
+                aria-hidden="true"
+              />
               <span>{currentStep === 1 ? t("cancel") : t("previous")}</span>
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-primary-800 rounded-xl shadow-e1 shadow-highlight hover:bg-primary-900 transition duration-fast ease-standard active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
             >
               <span>{nextLabel}</span>
-              {currentStep < 6 && <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />}
+              {currentStep < 6 && (
+                <ChevronRight
+                  className="w-3.5 h-3.5 rtl:rotate-180"
+                  aria-hidden="true"
+                />
+              )}
             </button>
           </div>
         </div>
 
         {/* Right Rail: Live Preview + Checklist + Tips (Mockups 03 & 10) */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:sticky lg:top-[88px] lg:self-start">
           <LivePreviewCard
+            placeholderKind="experience"
             title={formData.title}
             propertyType={categoryLabel(formData.category)}
-            location={t("locationValue", { city: formData.city, code: formData.wilayaCode })}
+            location={t("locationValue", {
+              city: formData.city,
+              code: formData.wilayaCode,
+            })}
             priceDzd={formData.pricePerPerson}
             imageSrc={formData.images[0]}
           />

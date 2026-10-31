@@ -26,7 +26,7 @@ type InlineStyle = "bold" | "italic" | "underline";
 
 const toolButton = (pressed: boolean) =>
   `p-1.5 rounded transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
-    pressed ? "bg-neutral-200 text-primary" : "hover:bg-neutral-200/70 hover:text-primary"
+    pressed ? "bg-primary/[0.08] text-primary-900" : "hover:bg-primary/[0.05] hover:text-primary-900"
   }`;
 
 export const RichTextField: React.FC<RichTextFieldProps> = ({
@@ -79,7 +79,7 @@ export const RichTextField: React.FC<RichTextFieldProps> = ({
   return (
     <div className={`space-y-1.5 ${className}`}>
       {label && (
-        <label htmlFor={textareaId} className="block text-xs font-semibold text-neutral-700">
+        <label htmlFor={textareaId} className="block text-xs font-semibold text-primary-800">
           {label}{" "}
           {required && (
             <span className="text-accent-700" aria-hidden="true">
@@ -89,13 +89,13 @@ export const RichTextField: React.FC<RichTextFieldProps> = ({
         </label>
       )}
 
-      <div className="rounded-2xl border border-tertiary-300 bg-white overflow-hidden shadow-2xs focus-within:border-primary transition">
+      <div className="rounded-xl bg-white overflow-hidden border border-primary/[0.12] shadow-2xs hover:border-primary/25 focus-within:border-primary-600 focus-within:ring-4 focus-within:ring-primary/[0.08] transition duration-fast ease-standard">
         {/* Formatting Toolbar */}
         <div
           role="toolbar"
           aria-label={t("toolbar")}
           aria-controls={textareaId}
-          className="flex items-center gap-1 p-1.5 border-b border-neutral-100 bg-neutral-50/70 text-neutral-600"
+          className="flex items-center gap-1 p-1.5 border-b border-primary/[0.06] bg-darnaBg-100 text-primary-600"
         >
           {(
             [
@@ -116,7 +116,7 @@ export const RichTextField: React.FC<RichTextFieldProps> = ({
               <Icon className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           ))}
-          <div className="w-[1px] h-4 bg-neutral-200 mx-1" aria-hidden="true" />
+          <div className="w-[1px] h-4 bg-primary/[0.08] mx-1" aria-hidden="true" />
           <button
             type="button"
             onClick={() => insertListMarker(false)}
@@ -135,7 +135,7 @@ export const RichTextField: React.FC<RichTextFieldProps> = ({
           >
             <ListOrdered className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <div className="w-[1px] h-4 bg-neutral-200 mx-1" aria-hidden="true" />
+          <div className="w-[1px] h-4 bg-primary/[0.08] mx-1" aria-hidden="true" />
           <button
             type="button"
             onClick={() => setAlign("start")}
@@ -172,17 +172,17 @@ export const RichTextField: React.FC<RichTextFieldProps> = ({
           aria-label={ariaLabel}
           aria-invalid={ariaInvalid}
           aria-describedby={describedBy}
-          className={`w-full p-3 text-xs text-neutral-800 placeholder-neutral-500 focus:outline-none resize-y leading-relaxed bg-transparent ${
+          className={`w-full p-3 text-xs text-primary-900 placeholder:text-primary-500 focus:outline-none resize-y leading-relaxed bg-transparent ${
             align === "center" ? "text-center" : "text-start"
           } ${styles.bold ? "font-bold" : ""} ${styles.italic ? "italic" : ""} ${styles.underline ? "underline" : ""}`}
         />
 
         {/* Bottom Counter */}
-        <div className="px-3 py-1.5 bg-neutral-50/50 border-t border-neutral-100 flex items-center justify-end">
+        <div className="px-3 py-1.5 bg-darnaBg-100 border-t border-primary/[0.06] flex items-center justify-end">
           <span
             id={counterId}
-            className={`text-[10px] tabular-nums font-semibold ${
-              currentLength > charLimit * 0.9 ? "text-accent-700" : "text-neutral-500"
+            className={`text-[11px] tabular-nums font-semibold ${
+              currentLength > charLimit * 0.9 ? "text-accent-700" : "text-primary-600"
             }`}
           >
             <span aria-hidden="true">

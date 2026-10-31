@@ -25,7 +25,8 @@
     "travelForWork": "Voyages d'affaires",
     "new": "Nouveau",
     "hostingManagement": "Gestion de l'hébergement",
-    "proHosting": "Outils d'hébergement professionnels"
+    "proHosting": "Outils d'hébergement professionnels",
+    "accessibility": "Accessibilité"
   },
   "personal": {
     "title": "Informations personnelles",
@@ -183,5 +184,14 @@
     "removeCardConfirm": "Supprimer la carte",
     "removeCardCancel": "Garder la carte",
     "cardRemoved": "Carte de paiement supprimée de votre compte."
+  },
+  "eyebrow": "Votre compte",
+  "accessibility": {
+    "title": "Accessibilité",
+    "description": "Rendez DARNA confortable à utiliser sur cet appareil.",
+    "reduceMotion": "Réduire les animations",
+    "reduceMotionDescription": "Désactive les animations d'apparition, la parallaxe et les effets de mouvement. Par défaut, DARNA suit le réglage de votre appareil.",
+    "previewFull": "Les animations sont actives, sauf si votre appareil demande moins de mouvement.",
+    "previewReduced": "Les animations sont réduites sur cet appareil."
   }
 }

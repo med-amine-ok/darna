@@ -60,7 +60,7 @@ export const ChipInput: React.FC<ChipInputProps> = ({
     <div className={`space-y-2 ${className}`}>
       {label && (
         <div className="flex items-center justify-between">
-          <label htmlFor={inputId} className="text-xs font-semibold text-neutral-700">
+          <label htmlFor={inputId} className="text-xs font-semibold text-primary-800">
             {label}{" "}
             {required && (
               <span className="text-accent-700" aria-hidden="true">
@@ -69,7 +69,7 @@ export const ChipInput: React.FC<ChipInputProps> = ({
             )}
           </label>
           {maxChips && (
-            <span id={countId} className="text-[10px] text-neutral-500 tabular-nums">
+            <span id={countId} className="text-[11px] text-primary-600 tabular-nums">
               <span aria-hidden="true">
                 {chipList.length}/{maxChips}
               </span>
@@ -91,13 +91,13 @@ export const ChipInput: React.FC<ChipInputProps> = ({
           disabled={isFull}
           aria-required={required || undefined}
           aria-describedby={label && maxChips ? countId : undefined}
-          className="flex-1 px-3 py-2 text-xs bg-white border border-tertiary-300 rounded-xl focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1 transition"
+          className="flex-1 px-3 py-2 text-xs bg-white border border-primary/[0.12] rounded-xl focus:border-primary-600 focus:outline-none focus:ring-4 focus:ring-primary/[0.08] focus-visible:ring-offset-1 transition hover:border-primary/25"
         />
         <button
           type="button"
           onClick={handleAdd}
           disabled={!inputValue.trim() || isFull}
-          className="inline-flex items-center gap-1 px-3 py-2 bg-white hover:bg-neutral-50 border border-tertiary-300 text-xs font-semibold text-neutral-700 rounded-xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-1 px-3 py-2 bg-white hover:bg-primary/[0.05] border border-primary/[0.12] text-xs font-semibold text-primary-800 rounded-xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{t("chipInput.add")}</span>
@@ -110,7 +110,7 @@ export const ChipInput: React.FC<ChipInputProps> = ({
           {chipList.map((chip, idx) => (
             <li
               key={idx}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200 text-xs text-neutral-800 font-medium select-none"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/[0.05] border border-primary/[0.12] text-xs text-primary-900 font-medium select-none"
             >
               <span>{chip}</span>
               <button

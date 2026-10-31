@@ -10,7 +10,9 @@ export function hostDraftKey(userId: string): string {
   return `${HOST_DRAFT_PREFIX}:${userId}`;
 }
 
-export function readHostDraft(userId: string | null | undefined): Record<string, unknown> | null {
+export function readHostDraft(
+  userId: string | null | undefined,
+): Record<string, unknown> | null {
   if (!userId || typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(hostDraftKey(userId));
@@ -22,11 +24,14 @@ export function readHostDraft(userId: string | null | undefined): Record<string,
   }
 }
 
-export function writeHostDraft(userId: string, draft: Record<string, unknown>): void {
+export function writeHostDraft(
+  userId: string,
+  draft: Record<string, unknown>,
+): void {
   try {
     localStorage.setItem(hostDraftKey(userId), JSON.stringify(draft));
   } catch {
-    // storage full / disabled — drafts are best-effort
+    // storage full / disabled, drafts are best-effort
   }
 }
 
@@ -53,7 +58,10 @@ export function clearUserLocalData(): void {
     const toRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && USER_SCOPED_PREFIXES.some((p) => key === p || key.startsWith(`${p}:`))) {
+      if (
+        key &&
+        USER_SCOPED_PREFIXES.some((p) => key === p || key.startsWith(`${p}:`))
+      ) {
         toRemove.push(key);
       }
     }

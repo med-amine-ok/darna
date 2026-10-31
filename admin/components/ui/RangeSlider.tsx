@@ -56,9 +56,9 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
   return (
     <div role="group" aria-labelledby={label ? labelId : undefined} className={`space-y-2 text-start ${className}`}>
       {label && (
-        <div className="flex items-center justify-between text-xs font-semibold text-primary">
+        <div className="flex items-center justify-between text-xs font-semibold text-primary-900">
           <span id={labelId}>{label}</span>
-          <span className="text-[11px] text-neutral-500 font-mono" dir="ltr">
+          <span className="text-[11px] text-primary-600 font-mono" dir="ltr">
             {fmt(minVal)} – {fmt(maxVal)}
           </span>
         </div>
@@ -73,7 +73,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
             return (
               <div
                 key={idx}
-                className={`flex-1 rounded-t-xs transition-colors duration-150 ${
+                className={`flex-1 rounded-t-xs transition-colors duration-fast ${
                   isInRange ? "bg-secondary" : "bg-tertiary/50"
                 }`}
                 style={{ height: `${Math.max(12, height)}%` }}
@@ -86,12 +86,12 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
       {/* Track & Handles */}
       <div className="relative h-6 flex items-center">
         {/* Track Background */}
-        <div className="absolute w-full h-1.5 bg-neutral-200 rounded-full" aria-hidden="true" />
+        <div className="absolute w-full h-1.5 bg-primary/[0.08] rounded-full" aria-hidden="true" />
 
         {/* Selected Active Track Range */}
         <div
           aria-hidden="true"
-          className="absolute h-1.5 bg-secondary rounded-full"
+          className="absolute h-1.5 bg-secondary-600 rounded-full"
           style={{
             insetInlineStart: `${minPercent}%`,
             width: `${maxPercent - minPercent}%`,
@@ -127,12 +127,12 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
         {/* Visual Knobs (show focus of the hidden native sliders) */}
         <div
           aria-hidden="true"
-          className="absolute w-4 h-4 bg-white border-2 border-secondary rounded-full shadow-xs pointer-events-none -translate-x-1/2 rtl:translate-x-1/2 z-10 peer-focus-visible/min:ring-2 peer-focus-visible/min:ring-accent-600 peer-focus-visible/min:ring-offset-1"
+          className="absolute w-[18px] h-[18px] bg-white border-2 border-secondary-600 rounded-full shadow-e2 pointer-events-none -translate-x-1/2 rtl:translate-x-1/2 z-10 peer-focus-visible/min:ring-2 peer-focus-visible/min:ring-accent-600 peer-focus-visible/min:ring-offset-1"
           style={{ insetInlineStart: `${minPercent}%` }}
         />
         <div
           aria-hidden="true"
-          className="absolute w-4 h-4 bg-white border-2 border-secondary rounded-full shadow-xs pointer-events-none -translate-x-1/2 rtl:translate-x-1/2 z-10 peer-focus-visible/max:ring-2 peer-focus-visible/max:ring-accent-600 peer-focus-visible/max:ring-offset-1"
+          className="absolute w-[18px] h-[18px] bg-white border-2 border-secondary-600 rounded-full shadow-e2 pointer-events-none -translate-x-1/2 rtl:translate-x-1/2 z-10 peer-focus-visible/max:ring-2 peer-focus-visible/max:ring-accent-600 peer-focus-visible/max:ring-offset-1"
           style={{ insetInlineStart: `${maxPercent}%` }}
         />
       </div>
@@ -140,7 +140,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
       {/* Numerical inputs */}
       <div className="flex items-center gap-2 pt-1">
         <div className="flex-1">
-          <label htmlFor={minInputId} className="text-[11px] text-neutral-500 font-medium">
+          <label htmlFor={minInputId} className="text-[11px] text-primary-600 font-medium">
             {t("min")}
           </label>
           <input
@@ -151,14 +151,14 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
             step={step}
             value={minVal}
             onChange={(e) => onChange([Number(e.target.value), maxVal])}
-            className="w-full text-xs font-mono rounded-lg border border-tertiary/70 px-2 py-1 bg-white focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40"
+            className="w-full text-xs font-mono rounded-lg border border-primary/[0.12] px-2 py-1 bg-white focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] hover:border-primary/25"
           />
         </div>
-        <span className="text-neutral-500 text-xs mt-3" aria-hidden="true">
+        <span className="text-primary-600 text-xs mt-3" aria-hidden="true">
           –
         </span>
         <div className="flex-1">
-          <label htmlFor={maxInputId} className="text-[11px] text-neutral-500 font-medium">
+          <label htmlFor={maxInputId} className="text-[11px] text-primary-600 font-medium">
             {t("max")}
           </label>
           <input
@@ -169,7 +169,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
             step={step}
             value={maxVal}
             onChange={(e) => onChange([minVal, Number(e.target.value)])}
-            className="w-full text-xs font-mono rounded-lg border border-tertiary/70 px-2 py-1 bg-white focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40"
+            className="w-full text-xs font-mono rounded-lg border border-primary/[0.12] px-2 py-1 bg-white focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] hover:border-primary/25"
           />
         </div>
       </div>

@@ -17,22 +17,39 @@ export function dateFnsLocale(locale: string): DateFnsLocale {
 export function formatDate(
   value: Date | string | number | null | undefined,
   locale: string,
-  options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }
+  options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  },
 ): string {
   if (value === null || value === undefined || value === "") return "";
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(intlLocale(locale), { timeZone: "Africa/Algiers", ...options }).format(date);
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    timeZone: "Africa/Algiers",
+    ...options,
+  }).format(date);
 }
 
-/** Locale-aware plain number formatting (counts, not money — use formatDzd for DZD). */
-export function formatNumber(value: number, locale: string, options?: Intl.NumberFormatOptions): string {
+/** Locale-aware plain number formatting (counts, not money, use formatDzd for DZD). */
+export function formatNumber(
+  value: number,
+  locale: string,
+  options?: Intl.NumberFormatOptions,
+): string {
   return new Intl.NumberFormat(intlLocale(locale), options).format(value);
 }
 
-/** Average rating ("4.9", "4,87" in fr) — null when there is no rating yet (show "New" instead). */
-export function formatRating(value: number | null | undefined, locale: string): string | null {
+/** Average rating ("4.9", "4,87" in fr), null when there is no rating yet (show "New" instead). */
+export function formatRating(
+  value: number | null | undefined,
+  locale: string,
+): string | null {
   return typeof value === "number" && value > 0
-    ? formatNumber(value, locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 })
+    ? formatNumber(value, locale, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 2,
+      })
     : null;
 }

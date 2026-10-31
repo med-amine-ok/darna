@@ -7,7 +7,6 @@ import {
   XCircle,
   AlertTriangle,
   Clock,
-  ShieldCheck,
   Building,
   Home,
   Star,
@@ -38,6 +37,9 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { Dialog } from "@/components/ui/Dialog";
 import { useToast } from "@/components/ui/Toast";
 import { formatDzd, formatDate, formatNumber } from "@/lib/utils/format";
+import { m } from "framer-motion";
+import { slideIn } from "@/lib/motion";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Props {
   initialTab?: string;
@@ -378,32 +380,32 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
   return (
     <div className="space-y-6">
       {/* Header with Title & Keyboard Shortcuts Tip */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-serif text-heading text-primary-900">
               {t("title")}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent/15 text-accent-800 border border-accent/25">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold tabular-nums bg-accent-100 text-accent-800 ring-1 ring-inset ring-accent-200">
               {t("pendingBadge", { count: formatNumber(counts.total, locale) })}
             </span>
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-meta text-primary-600 mt-1">
             {t("subtitle")}
           </p>
         </div>
 
         {/* Keyboard Helper Badge */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-tertiary/70 shadow-2xs text-[11px] text-neutral-500">
+        <div className="hidden lg:flex items-center gap-2 px-3 h-9 rounded-xl bg-white shadow-e1 text-xs text-primary-600">
           <Keyboard className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
           <span>{t("shortcuts.title")}</span>
-          <kbd className="px-1.5 py-0.5 bg-neutral-100 rounded text-primary font-mono font-bold">J</kbd>
-          <kbd className="px-1.5 py-0.5 bg-neutral-100 rounded text-primary font-mono font-bold">K</kbd>
+          <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 bg-darnaBg-300 rounded-md text-primary-800 text-[11px] font-semibold">J</kbd>
+          <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 bg-darnaBg-300 rounded-md text-primary-800 text-[11px] font-semibold">K</kbd>
           <span>{t("shortcuts.navigate")}</span>
-          <span className="text-neutral-300" aria-hidden="true">|</span>
-          <kbd className="px-1.5 py-0.5 bg-secondary/15 rounded text-secondary-800 font-mono font-bold">A</kbd>
+          <span className="w-px h-4 bg-primary/10" aria-hidden="true" />
+          <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 bg-secondary-100 rounded-md text-secondary-800 text-[11px] font-semibold">A</kbd>
           <span>{t("shortcuts.approve")}</span>
-          <kbd className="px-1.5 py-0.5 bg-accent/15 rounded text-accent-800 font-mono font-bold">R</kbd>
+          <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 bg-accent-100 rounded-md text-accent-800 text-[11px] font-semibold">R</kbd>
           <span>{t("shortcuts.reject")}</span>
         </div>
       </div>
@@ -412,7 +414,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
       <div
         role="tablist"
         aria-label={t("tabsLabel")}
-        className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-tertiary/60"
+        className="flex items-center gap-5 overflow-x-auto scrollbar-none border-b border-primary/[0.08]"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -426,37 +428,42 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               aria-selected={isActive}
               aria-controls={TABS_PANEL_ID}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-t-xl transition-all border-b-2 -mb-[2px] whitespace-nowrap cursor-pointer ${FOCUS_RING} ${
-                isActive
-                  ? "border-primary text-primary bg-white shadow-2xs"
-                  : "border-transparent text-neutral-500 hover:text-primary hover:bg-white/50"
+              className={`relative flex items-center gap-2 px-0.5 pt-1 pb-2.5 min-h-[44px] sm:min-h-[38px] text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors duration-fast ease-standard ${FOCUS_RING} ${
+                isActive ? "text-primary-900" : "text-primary-600 hover:text-primary-900"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-secondary" : "text-neutral-400"}`} aria-hidden="true" />
+              <Icon className={`w-4 h-4 ${isActive ? "text-secondary-700" : "text-primary-500"}`} aria-hidden="true" />
               <span>{tab.label}</span>
               <span
-                className={`px-1.5 py-0.2 rounded-full text-[11px] font-bold ${
+                className={`px-1.5 leading-4 rounded-full text-[11px] font-semibold tabular-nums ${
                   isActive
-                    ? "bg-primary text-white"
+                    ? "bg-primary-800 text-white"
                     : tab.count > 0
-                    ? "bg-accent/15 text-accent-800"
-                    : "bg-neutral-100 text-neutral-600"
+                    ? "bg-accent-100 text-accent-800"
+                    : "bg-primary/[0.07] text-primary-700"
                 }`}
               >
                 {formatNumber(tab.count, locale)}
               </span>
+              {isActive && (
+                <m.span
+                  layoutId="approvals-tab-indicator"
+                  aria-hidden="true"
+                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-accent-600"
+                />
+              )}
             </button>
           );
         })}
       </div>
 
       {/* Filter and Search Bar with Category, Wilaya, and SLA controls */}
-      <div className="bg-white p-3.5 rounded-2xl border border-tertiary/70 shadow-2xs space-y-3">
+      <div className="bg-white p-3.5 rounded-2xl shadow-e1 space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1 min-w-[200px]">
             <label htmlFor="approvals-search" className="sr-only">{t("search.label")}</label>
-            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-primary-600" aria-hidden="true" />
             <input
               id="approvals-search"
               type="text"
@@ -469,13 +476,13 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                   ? t("search.listings")
                   : t("search.default")
               }
-              className="w-full ps-9 pe-8 py-2 text-xs rounded-xl border border-tertiary/80 bg-darnaBg/30 focus:bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 transition"
+              className="w-full ps-9 pe-8 py-2 text-xs rounded-xl border border-primary/[0.12] bg-white shadow-2xs hover:border-primary/25 text-primary focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 transition"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className={`absolute end-2.5 top-1/2 -translate-y-1/2 p-0.5 text-neutral-500 hover:text-primary rounded-full hover:bg-neutral-100 transition cursor-pointer ${FOCUS_RING}`}
+                className={`absolute end-2.5 top-1/2 -translate-y-1/2 p-0.5 text-primary-600 hover:text-primary rounded-full hover:bg-primary/[0.05] transition cursor-pointer ${FOCUS_RING}`}
                 title={t("search.clear")}
                 aria-label={t("search.clear")}
               >
@@ -491,7 +498,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 <select
                   value={hostCategoryFilter}
                   onChange={(e) => setHostCategoryFilter(e.target.value)}
-                  className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-tertiary/80 bg-darnaBg/30 focus:bg-white text-primary font-medium focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer"
+                  className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-primary/[0.12] bg-white shadow-2xs hover:border-primary/25 text-primary font-medium focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer"
                   aria-label={t("filterCategory")}
                 >
                   <option value="all">{t("allCategories")}</option>
@@ -500,7 +507,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                   <option value="hotel">{tHostTypes("hotel")}</option>
                   <option value="hostel">{tHostTypes("hostel")}</option>
                 </select>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                <ChevronRight className="w-3.5 h-3.5 text-primary-600 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               </div>
             )}
 
@@ -510,7 +517,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 <select
                   value={listingVerticalFilter}
                   onChange={(e) => setListingVerticalFilter(e.target.value)}
-                  className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-tertiary/80 bg-darnaBg/30 focus:bg-white text-primary font-medium focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer"
+                  className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-primary/[0.12] bg-white shadow-2xs hover:border-primary/25 text-primary font-medium focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer"
                   aria-label={t("filterVertical")}
                 >
                   <option value="all">{t("allVerticals")}</option>
@@ -520,7 +527,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                   <option value="vehicle">{tVerticals("vehicle")}</option>
                   <option value="experience">{tVerticals("experience")}</option>
                 </select>
-                <ChevronRight className="w-3.5 h-3.5 text-neutral-400 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                <ChevronRight className="w-3.5 h-3.5 text-primary-600 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               </div>
             )}
 
@@ -529,7 +536,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               <select
                 value={wilayaFilter}
                 onChange={(e) => setWilayaFilter(e.target.value)}
-                className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-tertiary/80 bg-darnaBg/30 focus:bg-white text-primary font-medium focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer max-w-[190px]"
+                className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-primary/[0.12] bg-white shadow-2xs hover:border-primary/25 text-primary font-medium focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer max-w-[190px]"
                 aria-label={t("filterWilaya")}
               >
                 <option value="all">{t("allWilayas")}</option>
@@ -539,7 +546,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                   </option>
                 ))}
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-neutral-400 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+              <ChevronRight className="w-3.5 h-3.5 text-primary-600 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
             </div>
 
             {/* SLA / Waiting Time Filter */}
@@ -547,14 +554,14 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               <select
                 value={slaFilter}
                 onChange={(e) => setSlaFilter(e.target.value)}
-                className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-tertiary/80 bg-darnaBg/30 focus:bg-white text-primary font-medium focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer"
+                className="appearance-none ps-3 pe-8 py-2 text-xs rounded-xl border border-primary/[0.12] bg-white shadow-2xs hover:border-primary/25 text-primary font-medium focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 transition cursor-pointer"
                 aria-label={t("filterSla")}
               >
                 <option value="all">{t("allWaitingTimes")}</option>
                 <option value="urgent">{t("urgentWaiting")}</option>
                 <option value="normal">{t("normalWaiting")}</option>
               </select>
-              <ChevronRight className="w-3.5 h-3.5 text-neutral-400 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+              <ChevronRight className="w-3.5 h-3.5 text-primary-600 rotate-90 absolute end-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
             </div>
 
             {/* Reset Filters Button */}
@@ -563,9 +570,9 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 variant="outline"
                 size="sm"
                 onClick={handleResetFilters}
-                className="text-xs text-neutral-600 hover:text-accent-700 hover:border-accent/40"
+                className="text-xs text-primary-600 hover:text-accent-700 hover:border-accent/40"
+                leftIcon={<RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />}
               >
-                <RotateCcw className="w-3.5 h-3.5 me-1" aria-hidden="true" />
                 {t("resetFilters")}
               </Button>
             )}
@@ -576,8 +583,8 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               size="sm"
               onClick={() => loadInbox(activeTab)}
               className="text-xs"
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />}
             >
-              <RefreshCw className={`w-3.5 h-3.5 me-1.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
               {tCommon("refresh")}
             </Button>
           </div>
@@ -585,12 +592,12 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
 
         {/* Active Filter Chips & Feedback */}
         {activeFiltersCount > 0 && (
-          <div className="pt-2.5 border-t border-tertiary/40 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div className="pt-2.5 border-t border-primary/[0.06] flex items-center justify-between flex-wrap gap-2 text-xs">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-neutral-500 text-[11px] font-semibold">{tCommon("filters")}:</span>
+              <span className="text-primary-600 text-[11px] font-semibold">{tCommon("filters")}:</span>
 
               {searchQuery.trim() && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-neutral-100 text-neutral-700 text-[11px] font-medium border border-neutral-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-darnaBg-300 text-primary-700 text-[11px] font-medium">
                   <span>{t("quoted", { text: searchQuery })}</span>
                   <button
                     type="button"
@@ -604,7 +611,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               )}
 
               {activeTab === "hosts" && hostCategoryFilter !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-secondary/15 text-secondary-800 text-[11px] font-medium border border-secondary/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-secondary-100 text-secondary-800 text-[11px] font-medium">
                   <span>{t("filterChip", { label: t("filterCategory"), value: tHostTypes(hostCategoryFilter as HostType) })}</span>
                   <button
                     type="button"
@@ -618,7 +625,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               )}
 
               {activeTab === "listings" && listingVerticalFilter !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-secondary/15 text-secondary-800 text-[11px] font-medium border border-secondary/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-secondary-100 text-secondary-800 text-[11px] font-medium">
                   <span>{t("filterChip", { label: t("filterVertical"), value: tVerticals(listingVerticalFilter as ListingVertical) })}</span>
                   <button
                     type="button"
@@ -632,8 +639,8 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               )}
 
               {wilayaFilter !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-neutral-100 text-neutral-800 text-[11px] font-medium border border-neutral-200">
-                  <MapPin className="w-3 h-3 text-neutral-400" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-darnaBg-300 text-primary-800 text-[11px] font-medium">
+                  <MapPin className="w-3 h-3 text-primary-600" aria-hidden="true" />
                   <span>{t("filterChip", { label: t("filterWilaya"), value: getWilayaName(wilayaFilter, locale) })}</span>
                   <button
                     type="button"
@@ -647,7 +654,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               )}
 
               {slaFilter !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent/10 text-accent-800 text-[11px] font-medium border border-accent/25">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-100 text-accent-800 text-[11px] font-medium">
                   <Clock className="w-3 h-3" aria-hidden="true" />
                   <span>{slaFilter === "urgent" ? t("urgentWaiting") : t("normalWaiting")}</span>
                   <button
@@ -664,13 +671,13 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className={`text-[11px] text-neutral-600 hover:text-accent-700 underline ps-1 cursor-pointer rounded ${FOCUS_RING}`}
+                className={`text-[11px] text-primary-600 hover:text-accent-700 underline ps-1 cursor-pointer rounded ${FOCUS_RING}`}
               >
                 {tCommon("clearAll")}
               </button>
             </div>
 
-            <span className="text-[11px] text-neutral-500 font-medium" aria-live="polite">
+            <span className="text-[11px] text-primary-600 font-medium" aria-live="polite">
               {t("showingResults", { shown: filteredCases.length, total: cases.length })}
             </span>
           </div>
@@ -682,10 +689,10 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
         <div
           role="region"
           aria-label={t("bulk.selected", { count: selectedIds.length })}
-          className="sticky top-4 z-20 flex items-center justify-between p-3.5 bg-primary text-white rounded-2xl shadow-darna-modal border border-primary-700 animate-in fade-in slide-in-from-top-2"
+          className="sticky top-[76px] z-20 flex items-center justify-between p-3 ps-4 bg-primary-900 text-white rounded-2xl shadow-e4 ring-1 ring-white/10 animate-in fade-in slide-in-from-top-2"
         >
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold" aria-live="polite">
+            <span className="text-xs font-semibold" aria-live="polite">
               {t("bulk.selected", { count: selectedIds.length })}
             </span>
             <button
@@ -699,13 +706,13 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
 
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleBulkApprove}
               disabled={!cases.some((c) => selectedIds.includes(c.id) && canApprove(c))}
-              className="bg-secondary-700 text-white border-secondary-700 hover:bg-secondary-800 text-xs font-bold"
+              className="text-xs font-semibold"
+              leftIcon={<CheckCheck className="w-3.5 h-3.5" aria-hidden="true" />}
             >
-              <CheckCheck className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
               {t("bulk.approve", { count: selectedIds.length })}
             </Button>
           </div>
@@ -721,7 +728,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
           aria-labelledby={`approvals-tab-${activeTab}`}
           className="lg:col-span-7 space-y-3"
         >
-          <div className="flex items-center justify-between text-xs text-neutral-500 px-1">
+          <div className="flex items-center justify-between text-xs text-primary-600 px-1">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -729,7 +736,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                   filteredCases.length > 0 && selectedIds.length === filteredCases.length
                 }
                 onChange={toggleSelectAll}
-                className="w-4 h-4 rounded text-secondary border-tertiary focus:ring-secondary cursor-pointer"
+                className="w-4 h-4 rounded text-secondary border-primary/[0.12] focus:ring-secondary cursor-pointer"
               />
               <span>{t("selectAll", { count: filteredCases.length })}</span>
             </label>
@@ -745,19 +752,19 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-24 bg-white rounded-2xl border border-tertiary/60 animate-pulse"
+                  className="h-24 rounded-2xl skeleton"
                 />
               ))}
             </div>
           ) : filteredCases.length === 0 ? (
             cases.length > 0 ? (
-              <div className="bg-white rounded-2xl border border-tertiary/70 p-10 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-neutral-100 text-neutral-500 flex items-center justify-center mx-auto">
+              <div className="bg-white rounded-2xl p-10 text-center space-y-3 shadow-e1">
+                <div className="w-12 h-12 rounded-2xl bg-darnaBg-300 text-primary-600 flex items-center justify-center mx-auto">
                   <Filter className="w-6 h-6" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-primary">{t("noMatchesTitle")}</h3>
-                  <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+                  <h3 className="text-sm font-semibold text-primary-900">{t("noMatchesTitle")}</h3>
+                  <p className="text-xs text-primary-600 mt-1 max-w-sm mx-auto">
                     {t("noMatchesSubtitle")}
                   </p>
                 </div>
@@ -766,20 +773,14 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                   size="sm"
                   onClick={handleResetFilters}
                   className="text-xs font-semibold"
+                  leftIcon={<RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />}
                 >
-                  <RotateCcw className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
                   {t("resetFilters")}
                 </Button>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-tertiary/70 p-12 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center mx-auto mb-3">
-                  <ShieldCheck className="w-6 h-6" aria-hidden="true" />
-                </div>
-                <h3 className="text-sm font-bold text-primary">{t("caughtUpTitle")}</h3>
-                <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-                  {t("caughtUpDesc")}
-                </p>
+              <div className="bg-white rounded-2xl shadow-e1">
+                <EmptyState title={t("caughtUpTitle")} description={t("caughtUpDesc")} />
               </div>
             )
           ) : (
@@ -790,10 +791,12 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               return (
                 <div
                   key={item.id}
-                  className={`group relative p-4 rounded-2xl border transition-all bg-white text-start ${
+                  className={`group relative p-4 rounded-2xl bg-white text-start transition-[box-shadow,background-color] duration-fast ease-standard ${
                     isSelected
-                      ? "border-secondary ring-2 ring-secondary/20 shadow-darna-card"
-                      : "border-tertiary/70 hover:border-secondary/50 shadow-2xs"
+                      ? "shadow-e2 ring-2 ring-primary-800"
+                      : isChecked
+                      ? "shadow-e1 ring-1 ring-secondary-600/50 bg-secondary-50"
+                      : "shadow-e1 hover:shadow-e2"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -808,7 +811,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                           isChecked ? prev.filter((id) => id !== item.id) : [...prev, item.id]
                         );
                       }}
-                      className="mt-1 w-4 h-4 rounded text-secondary border-tertiary focus:ring-secondary cursor-pointer"
+                      className="mt-1 w-4 h-4 rounded text-secondary border-primary/[0.12] focus:ring-secondary cursor-pointer"
                     />
 
                     {/* Content (selects the case) */}
@@ -823,46 +826,46 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                       className={`flex-1 min-w-0 text-start cursor-pointer rounded-lg ${FOCUS_RING}`}
                     >
                       <span className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-primary truncate">
+                        <span className="text-sm font-semibold text-primary-900 truncate">
                           {item.title}
                         </span>
                         <StatusPill status={item.status} size="sm" />
                         {item.waitingDays > 2 && (
-                          <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent-800 border border-accent/20">
+                          <span className="flex items-center gap-1 text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full bg-accent-100 text-accent-800 ring-1 ring-inset ring-accent-200">
                             <Clock className="w-3 h-3" aria-hidden="true" />
                             {t("waitingDays", { count: item.waitingDays })}
                           </span>
                         )}
                       </span>
 
-                      <span className="block text-xs text-neutral-500 mt-1 line-clamp-1">{item.subtitle}</span>
+                      <span className="block text-xs text-primary-600 mt-1 line-clamp-1">{item.subtitle}</span>
 
                       {/* Badges for Category, Wilaya, and Submission Date */}
                       <span className="flex items-center gap-2 mt-2.5 flex-wrap text-[11px]">
                         {/* Host Category badge */}
                         {item.type === "host" && (item.hostType || item.details?.hostType) && (
-                          <span className="px-2 py-0.5 rounded-md bg-secondary/10 text-secondary-800 font-medium">
+                          <span className="px-2 py-0.5 rounded-md bg-secondary-50 text-secondary-800 font-medium">
                             {tHostTypes((item.hostType || item.details?.hostType) as HostType)}
                           </span>
                         )}
 
                         {/* Listing Vertical badge */}
                         {item.type === "listing" && (item.vertical || item.details?.category) && (
-                          <span className="px-2 py-0.5 rounded-md bg-secondary/10 text-secondary-800 font-medium">
+                          <span className="px-2 py-0.5 rounded-md bg-secondary-50 text-secondary-800 font-medium">
                             {tVerticals((item.vertical || item.details?.category) as ListingVertical)}
                           </span>
                         )}
 
                         {/* Wilaya badge */}
                         {(item.wilayaCode || item.details?.wilayaCode) && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 font-medium">
-                            <MapPin className="w-3 h-3 text-neutral-400" aria-hidden="true" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-darnaBg-100 text-primary-700 font-medium">
+                            <MapPin className="w-3 h-3 text-primary-500" aria-hidden="true" />
                             {getWilayaName(item.wilayaCode || item.details?.wilayaCode, locale)}
                           </span>
                         )}
 
-                        <span className="text-neutral-300" aria-hidden="true">·</span>
-                        <span className="text-neutral-500">
+                        <span className="text-primary-300" aria-hidden="true">·</span>
+                        <span className="text-primary-600">
                           {t("submitted", { date: formatDate(item.submittedAt, locale) })}
                         </span>
                       </span>
@@ -879,7 +882,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                         }}
                         title={t("approveItem", { title: item.title })}
                         aria-label={t("approveItem", { title: item.title })}
-                        className={`p-1.5 rounded-xl bg-secondary/15 text-secondary-800 hover:bg-secondary-700 hover:text-white transition cursor-pointer ${FOCUS_RING}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl bg-secondary-100 text-secondary-800 hover:bg-secondary-700 hover:text-white transition-colors duration-fast cursor-pointer ${FOCUS_RING}`}
                       >
                         <CheckCircle className="w-4 h-4" aria-hidden="true" />
                       </button>
@@ -893,7 +896,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                         }}
                         title={t("rejectItem", { title: item.title })}
                         aria-label={t("rejectItem", { title: item.title })}
-                        className={`p-1.5 rounded-xl bg-accent/15 text-accent-800 hover:bg-accent-600 hover:text-white transition cursor-pointer ${FOCUS_RING}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-xl bg-accent-100 text-accent-800 hover:bg-accent-600 hover:text-white transition-colors duration-fast cursor-pointer ${FOCUS_RING}`}
                       >
                         <XCircle className="w-4 h-4" aria-hidden="true" />
                       </button>
@@ -907,31 +910,35 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
         </div>
 
         {/* Detail Inspection Drawer / Sidebar */}
-        <div className="lg:col-span-5 sticky top-6">
+        <div className="lg:col-span-5 lg:sticky lg:top-[88px]">
           {selectedCase ? (
-            <section
+            <m.section
+              key={selectedCase.id}
+              variants={slideIn("end", locale === "ar", 16)}
+              initial="hidden"
+              animate="show"
               aria-labelledby="approvals-detail-title"
-              className="bg-white rounded-2xl border border-tertiary/80 shadow-darna-card p-5 space-y-5 text-start"
+              className="bg-white rounded-2xl shadow-e2 p-5 space-y-5 text-start lg:max-h-[calc(100dvh-112px)] lg:overflow-y-auto"
             >
-              <div className="flex items-start justify-between gap-3 border-b border-tertiary/40 pb-4">
+              <div className="flex items-start justify-between gap-3 border-b border-primary/[0.06] pb-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-secondary-800">
                       {t(`typeLabel.${selectedCase.type}`)}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-100 text-neutral-600 font-mono">
+                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-darnaBg-300 text-primary-700 tabular-nums">
                       {selectedCase.entityId}
                     </span>
                   </div>
-                  <h3 id="approvals-detail-title" className="text-base font-bold text-primary mt-1">{selectedCase.title}</h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">{selectedCase.subtitle}</p>
+                  <h3 id="approvals-detail-title" className="text-title font-semibold text-primary-900 mt-1">{selectedCase.title}</h3>
+                  <p className="text-xs text-primary-600 mt-0.5">{selectedCase.subtitle}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedCase(null)}
                   aria-label={t("closeDetail")}
                   title={t("closeDetail")}
-                  className={`p-1 rounded-lg hover:bg-neutral-100 text-neutral-500 ${FOCUS_RING}`}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl hover:bg-primary/[0.06] text-primary-500 hover:text-primary-900 transition-colors duration-fast ${FOCUS_RING}`}
                 >
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
@@ -940,15 +947,15 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               {/* Entity Specific Information Cards */}
               <div className="space-y-3 text-xs">
                 {selectedCase.type === "host" && (
-                  <div className="space-y-2 p-3 rounded-xl bg-darnaBg/50 border border-tertiary/60">
+                  <div className="space-y-2 p-3 rounded-xl bg-darnaBg-100">
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.businessOwner")}</span>
+                      <span className="text-primary-600">{t("detail.businessOwner")}</span>
                       <span className="font-semibold text-primary">
                         {selectedCase.details?.businessName || selectedCase.details?.ownerName}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.category")}</span>
+                      <span className="text-primary-600">{t("detail.category")}</span>
                       <span className="font-semibold text-primary">
                         {selectedCase.details?.hostType
                           ? tHostTypes(selectedCase.details.hostType as HostType)
@@ -956,7 +963,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.wilaya")}</span>
+                      <span className="text-primary-600">{t("detail.wilaya")}</span>
                       <span className="font-semibold text-primary">
                         {selectedCase.details?.city
                           ? t("detail.wilayaCity", {
@@ -967,13 +974,13 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.phone")}</span>
+                      <span className="text-primary-600">{t("detail.phone")}</span>
                       <span className="font-semibold text-primary" dir="ltr">
                         {selectedCase.details?.phone}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.nif")}</span>
+                      <span className="text-primary-600">{t("detail.nif")}</span>
                       <span className="font-mono font-semibold text-primary">
                         {selectedCase.details?.nifNumber || t("detail.na")}
                       </span>
@@ -982,15 +989,15 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 )}
 
                 {selectedCase.type === "listing" && (
-                  <div className="space-y-2 p-3 rounded-xl bg-darnaBg/50 border border-tertiary/60">
+                  <div className="space-y-2 p-3 rounded-xl bg-darnaBg-100">
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.host")}</span>
+                      <span className="text-primary-600">{t("detail.host")}</span>
                       <span className="font-semibold text-primary">
                         {selectedCase.details?.hostName}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.vertical")}</span>
+                      <span className="text-primary-600">{t("detail.vertical")}</span>
                       <span className="font-semibold text-primary">
                         {selectedCase.vertical || selectedCase.details?.category
                           ? tVerticals(
@@ -1000,13 +1007,13 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.nightlyPrice")}</span>
-                      <span className="font-bold text-secondary-800">
+                      <span className="text-primary-600">{t("detail.nightlyPrice")}</span>
+                      <span className="font-semibold text-secondary-800">
                         {formatDzd(selectedCase.details?.price || 0, locale)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.cityWilaya")}</span>
+                      <span className="text-primary-600">{t("detail.cityWilaya")}</span>
                       <span className="font-semibold text-primary">
                         {selectedCase.details?.city
                           ? t("detail.wilayaCity", {
@@ -1017,7 +1024,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-500">{t("detail.approvalMode")}</span>
+                      <span className="text-primary-600">{t("detail.approvalMode")}</span>
                       <span className="font-semibold text-primary">
                         {t(
                           selectedCase.details?.approvalMode === "request"
@@ -1030,17 +1037,17 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 )}
 
                 {selectedCase.type === "review" && (
-                  <div className="space-y-2 p-3.5 rounded-xl bg-accent/5 border border-accent/20">
-                    <div className="flex items-center gap-1.5 text-accent-700 font-bold">
+                  <div className="space-y-2 p-3.5 rounded-xl bg-accent-50 ring-1 ring-inset ring-accent-200">
+                    <div className="flex items-center gap-1.5 text-accent-700 font-semibold">
                       <AlertTriangle className="w-4 h-4" aria-hidden="true" />
                       <span>{t("detail.reportedContent")}</span>
                     </div>
-                    <p className="text-xs italic text-primary leading-relaxed bg-white p-2.5 rounded-lg border border-accent/15">
+                    <p className="text-xs italic text-primary-800 leading-relaxed bg-white p-2.5 rounded-lg shadow-2xs">
                       {t("quoted", { text: selectedCase.details?.comment ?? "" })}
                     </p>
-                    <div className="text-[11px] text-neutral-600 flex justify-between gap-2">
+                    <div className="text-[11px] text-primary-600 flex justify-between gap-2">
                       <span>{t("detail.flaggedByCommunity")}</span>
-                      <span className="font-bold text-accent-700">
+                      <span className="font-semibold text-accent-700">
                         {t("detail.reason", {
                           reason: selectedCase.details?.flagReason || t("detail.offensiveDefault"),
                         })}
@@ -1050,15 +1057,15 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 )}
 
                 {selectedCase.type === "dispute" && (
-                  <div className="space-y-2 p-3.5 rounded-xl bg-amber-50 border border-amber-200">
-                    <div className="flex items-center gap-1.5 text-amber-800 font-bold">
+                  <div className="space-y-2 p-3.5 rounded-xl bg-amber-50 ring-1 ring-inset ring-amber-200">
+                    <div className="flex items-center gap-1.5 text-amber-800 font-semibold">
                       <DollarSign className="w-4 h-4" aria-hidden="true" />
                       <span>{t("detail.disputedBooking")}</span>
                     </div>
-                    <p className="text-xs text-neutral-700">
+                    <p className="text-xs text-primary-700">
                       {t("detail.bookingRef")}{" "}<strong dir="ltr">{selectedCase.details?.reference}</strong>
                     </p>
-                    <p className="text-xs text-neutral-700">
+                    <p className="text-xs text-primary-700">
                       {t("detail.disputeAmount")}{" "}
                       <strong>
                         {formatDzd(selectedCase.details?.totalAmountDzd || 0, locale)}
@@ -1072,33 +1079,33 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               <div className="pt-2 flex items-center gap-3">
                 <Button
                   variant="primary"
-                  className="flex-1 text-xs font-bold"
+                  className="flex-1 text-xs font-semibold"
                   disabled={!canApprove(selectedCase)}
                   onClick={() => handleApprove(selectedCase)}
+                  leftIcon={<CheckCircle className="w-4 h-4" aria-hidden="true" />}
+                  rightIcon={<kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-white/15 text-[11px] font-semibold" aria-hidden="true">A</kbd>}
                 >
-                  <CheckCircle className="w-4 h-4 me-1.5" aria-hidden="true" />
                   {t("approveAction")}
-                  <kbd className="ms-1.5 font-mono text-[10px] opacity-80" aria-hidden="true">A</kbd>
                 </Button>
                 <Button
                   variant="danger"
-                  className="flex-1 text-xs font-bold"
+                  className="flex-1 text-xs font-semibold"
                   disabled={!canReject(selectedCase)}
                   onClick={() => openRejectDialog(selectedCase)}
+                  leftIcon={<XCircle className="w-4 h-4" aria-hidden="true" />}
+                  rightIcon={<kbd className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-white/15 text-[11px] font-semibold" aria-hidden="true">R</kbd>}
                 >
-                  <XCircle className="w-4 h-4 me-1.5" aria-hidden="true" />
                   {t("rejectAction")}
-                  <kbd className="ms-1.5 font-mono text-[10px] opacity-80" aria-hidden="true">R</kbd>
                 </Button>
               </div>
-            </section>
+            </m.section>
           ) : (
-            <div className="bg-white rounded-2xl border border-tertiary/70 p-8 text-center text-neutral-500">
-              <Eye className="w-8 h-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
-              <p className="text-xs">
+            <div className="bg-white rounded-2xl px-8 py-10 text-center text-primary-600 shadow-e1">
+              <Eye className="w-7 h-7 mx-auto mb-3 text-primary-400" aria-hidden="true" />
+              <p className="text-meta">
                 {t.rich("emptyDetail", {
                   kbd: (chunks) => (
-                    <kbd className="font-mono bg-neutral-100 px-1 rounded text-primary">{chunks}</kbd>
+                    <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 bg-darnaBg-300 rounded-md text-primary-800 text-[11px] font-semibold">{chunks}</kbd>
                   ),
                 })}
               </p>
@@ -1121,14 +1128,14 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
       >
         <div className="space-y-4 text-start">
           <div>
-            <label htmlFor="approvals-reject-template" className="block text-xs font-bold text-primary mb-1.5">
+            <label htmlFor="approvals-reject-template" className="block text-xs font-semibold text-primary-900 mb-1.5">
               {t("reject.templateLabel")}
             </label>
             <select
               id="approvals-reject-template"
               value={rejectReasonTemplate}
               onChange={(e) => setRejectReasonTemplate(e.target.value as RejectionTemplate)}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="w-full p-2.5 rounded-xl border border-primary/[0.12] text-xs bg-white text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent-600"
             >
               {REJECTION_TEMPLATES.map((tmpl) => (
                 <option key={tmpl} value={tmpl}>
@@ -1139,7 +1146,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
           </div>
 
           <div>
-            <label htmlFor="approvals-reject-note" className="block text-xs font-bold text-primary mb-1.5">
+            <label htmlFor="approvals-reject-note" className="block text-xs font-semibold text-primary-900 mb-1.5">
               {t("reject.noteLabel")}
             </label>
             <textarea
@@ -1148,7 +1155,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               value={rejectCustomNote}
               onChange={(e) => setRejectCustomNote(e.target.value)}
               placeholder={t("reject.notePlaceholder")}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="w-full p-2.5 rounded-xl border border-primary/[0.12] text-xs bg-white text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent-600"
             />
           </div>
 
@@ -1164,7 +1171,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               variant="danger"
               size="sm"
               onClick={submitRejection}
-              className="font-bold text-xs"
+              className="font-semibold text-xs"
             >
               {t("rejectAction")}
             </Button>

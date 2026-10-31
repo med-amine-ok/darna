@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates, OG_LOCALE } from "@/lib/site";
 import SearchResultsClient from "@/components/search/SearchResultsClient";
+import { matchesListing, matchesTrip, parseSideFilters, toFacet, toTripFacet, verticalOf } from "@/components/search/searchFacets";
 
 import { getTrips } from "@/lib/data/trips";
 
@@ -15,6 +16,12 @@ interface SearchPageProps {
     isGuestFavorite?: string;
     propertyType?: string;
     amenities?: string;
+    wilayas?: string;
+    communes?: string;
+    roomCount?: string;
+    minRating?: string;
+    duration?: string;
+    months?: string;
   };
 }
 
@@ -39,75 +46,41 @@ export async function generateMetadata({ params: { locale }, searchParams }: Sea
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const currentUser = await getSessionUser();
+  const filters = parseSideFilters((key) => (searchParams as Record<string, unknown>)[key]);
+  const sideless = { ...searchParams, minPrice: undefined, maxPrice: undefined, propertyType: undefined, amenities: undefined };
 
-  // Load listings matching search parameters
-  let [listings, trips] = await Promise.all([
-    getListings(searchParams),
-    getTrips({
-      destination: searchParams.destination,
-      maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-    }),
+  // The base search (destination, dates, guests, vertical) without the side filters: it is
+  // the facet pool the sidebar counts from, and the results are that pool once filtered.
+  // `allVerticals` is the same search across every category, for the category counts.
+  const [currentUser, pool, allVerticals, baseTrips] = await Promise.all([
+    getSessionUser(),
+    getListings(sideless),
+    searchParams.vertical ? getListings({ ...sideless, vertical: undefined }) : null,
+    getTrips({ destination: searchParams.destination }),
   ]);
 
-  // Filter by instantBook if specified
-  if (searchParams.instantBook === "true") {
-    listings = listings.filter((l) => l.instantBook);
-  }
+  const facets = pool.map(toFacet);
+  const tripFacets = baseTrips.map(toTripFacet);
+  const listings = pool.filter((_, i) => matchesListing(facets[i], filters));
+  const trips = baseTrips.filter((_, i) => matchesTrip(tripFacets[i], filters));
 
-  // Filter by guestFavorite if specified
-  if (searchParams.isGuestFavorite === "true") {
-    listings = listings.filter((l) => l.isGuestFavorite);
-  }
-
-  // Filter by propertyType if specified
-  if (searchParams.propertyType && searchParams.propertyType !== "any") {
-    const pt = searchParams.propertyType.toLowerCase();
-    if (pt === "hotel") {
-      listings = listings.filter(
-        (l) => l.businessCategory === "hotel" || l.type.toLowerCase().includes("hotel")
-      );
-    } else if (pt === "hostel") {
-      listings = listings.filter(
-        (l) => l.businessCategory === "hostel" || l.type.toLowerCase().includes("hostel")
-      );
-    } else if (pt === "entire home" || pt === "entire") {
-      listings = listings.filter(
-        (l) =>
-          l.businessCategory !== "hotel" &&
-          l.businessCategory !== "hostel" &&
-          !l.roomTypes?.some((r) => r.bookingUnit === "bed")
-      );
-    } else if (pt === "private room" || pt === "private_room") {
-      listings = listings.filter(
-        (l) =>
-          l.type?.toLowerCase().includes("room") ||
-          l.roomTypes?.some((r) => r.bookingUnit === "room")
-      );
-    } else {
-      listings = listings.filter((l) => l.type.toLowerCase().includes(pt));
-    }
-  }
-
-  // Filter by amenities if specified
-  if (searchParams.amenities) {
-    const amenityFilters = searchParams.amenities.toLowerCase().split(",");
-    listings = listings.filter((l) =>
-      amenityFilters.every((am) =>
-        l.amenities?.some((a) => a.toLowerCase().includes(am))
-      )
-    );
+  const categoryCounts: Record<string, number> = { all: 0, home: 0, hotel: 0, experience: 0, vehicle: 0, trip: baseTrips.length };
+  for (const l of allVerticals ?? pool) {
+    categoryCounts.all += 1;
+    categoryCounts[verticalOf(l)] = (categoryCounts[verticalOf(l)] ?? 0) + 1;
   }
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-darnaBg">
-      {/* Two-Column Search Results Client */}
       <SearchResultsClient
         listings={listings}
         trips={trips}
         currentUser={currentUser}
         destination={searchParams.destination}
         activeVertical={searchParams.vertical}
+        facets={facets}
+        tripFacets={tripFacets}
+        categoryCounts={categoryCounts}
       />
     </div>
   );

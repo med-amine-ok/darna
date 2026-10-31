@@ -1,0 +1,14 @@
+{
+  "dateRange": "{start} – {end}",
+  "seatsLeft": "{count, plural, =1 {بقي مقعد واحد} =2 {بقي مقعدان} few {بقيت # مقاعد} many {بقي # مقعدًا} other {بقي # مقعد}}",
+  "full": "مكتمل",
+  "departure": "الانطلاق",
+  "travelersCount": "{count, plural, =1 {مسافر واحد} =2 {مسافران} few {# مسافرين} many {# مسافرًا} other {# مسافر}}",
+  "organizedBy": "تنظيم",
+  "verificationPending": "التحقق قيد الإجراء",
+  "gallery": "معرض الصور",
+  "bookTitle": "احجز هذه الرحلة",
+  "editBooking": "تغيير موعد الانطلاق والمسافرين",
+  "requestShort": "طلب",
+  "loading": "جارٍ تحميل الرحلة"
+}

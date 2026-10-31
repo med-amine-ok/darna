@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { m } from "framer-motion";
+import { ease } from "@/lib/motion";
 import {
   BarChart3,
   Download,
@@ -50,10 +52,10 @@ const REPORT_KEYS = [
 const MONTHLY_VOLUME = [45, 62, 58, 80, 95, 110, 88, 125, 140, 132, 160, 175];
 
 const VERTICAL_SHARES = [
-  { key: "stays", share: 0.52, bar: "bg-primary" },
-  { key: "trips", share: 0.22, bar: "bg-secondary" },
-  { key: "cars", share: 0.16, bar: "bg-tertiary" },
-  { key: "experiences", share: 0.1, bar: "bg-accent" },
+  { key: "stays", share: 0.52, bar: "bg-primary-800" },
+  { key: "trips", share: 0.22, bar: "bg-primary-800" },
+  { key: "cars", share: 0.16, bar: "bg-primary-800" },
+  { key: "experiences", share: 0.1, bar: "bg-primary-800" },
 ] as const;
 
 const PROVIDERS = [
@@ -196,43 +198,62 @@ export default function StatsClient({
       {/* Overview */}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="p-6 rounded-2xl bg-white border border-tertiary/40 space-y-4">
-            <h3 className="font-bold text-primary text-base">{t("overview.volumeTitle")}</h3>
+          <div className="p-6 rounded-2xl bg-white space-y-4 shadow-e1">
+            <h3 className="font-semibold text-primary-900 text-base">{t("overview.volumeTitle")}</h3>
             <div
               role="img"
               aria-label={t("overview.volumeChartLabel", {
                 values: MONTHLY_VOLUME.map((v) => formatNumber(v, locale)).join(", "),
               })}
-              className="h-64 flex items-end justify-between gap-2 pt-8 px-2 border-b border-neutral-100"
+              className="relative h-64 pt-6"
             >
-              {MONTHLY_VOLUME.map((val, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1.5 group" aria-hidden="true">
-                  <div
-                    style={{ height: `${val * 1.2}px` }}
-                    className="w-full rounded-t-lg bg-secondary/80 group-hover:bg-secondary transition-all"
-                  />
-                  <span className="text-[10px] text-neutral-500 font-mono">
-                    {t("overview.monthShort", { n: i + 1 })}
-                  </span>
-                </div>
-              ))}
+              {/* Quiet gridlines */}
+              <div aria-hidden="true" className="absolute inset-x-0 top-6 bottom-6 flex flex-col justify-between pointer-events-none">
+                {[0, 1, 2, 3].map((g) => (
+                  <div key={g} className="border-t border-primary/[0.06]" />
+                ))}
+              </div>
+              <div className="relative h-full flex items-end justify-between gap-1.5 sm:gap-2 px-1">
+                {MONTHLY_VOLUME.map((val, i) => (
+                  <div key={i} className="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group" aria-hidden="true">
+                    <m.div
+                      initial={{ scaleY: 0 }}
+                      animate={{ scaleY: 1 }}
+                      transition={{ duration: 0.7, ease: ease.out, delay: i * 0.03 }}
+                      style={{ height: `${(val / Math.max(...MONTHLY_VOLUME)) * 100}%`, originY: 1 }}
+                      className={`w-full max-w-[28px] rounded-t-md transition-colors duration-fast ${
+                        i === MONTHLY_VOLUME.length - 1 ? "bg-primary-800" : "bg-secondary-600/80 group-hover:bg-secondary-600"
+                      }`}
+                    />
+                    <span className="text-[11px] text-primary-500 tabular-nums h-4 leading-4">
+                      {t("overview.monthShort", { n: i + 1 })}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
             <p className="text-xs text-neutral-500 text-center">
               {t("overview.avgGrowth", { value: percent(0.184) })}
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-tertiary/40 space-y-4">
-            <h3 className="font-bold text-primary text-base">{t("overview.verticalTitle")}</h3>
+          <div className="p-6 rounded-2xl bg-white space-y-4 shadow-e1">
+            <h3 className="font-semibold text-primary-900 text-base">{t("overview.verticalTitle")}</h3>
             <div className="space-y-3 pt-2">
               {VERTICAL_SHARES.map((v) => (
                 <div key={v.key}>
-                  <div className="flex justify-between text-xs font-semibold mb-1">
+                  <div className="flex justify-between text-xs font-medium text-primary-700 mb-1.5">
                     <span>{t(`overview.verticals.${v.key}`)}</span>
-                    <span className="font-mono">{percent(v.share)}</span>
+                    <span className="tabular-nums text-primary-900">{percent(v.share)}</span>
                   </div>
-                  <div className="w-full h-2.5 rounded-full bg-neutral-100 overflow-hidden" aria-hidden="true">
-                    <div className={`h-full ${v.bar} rounded-full`} style={{ width: `${v.share * 100}%` }} />
+                  <div className="w-full h-2 rounded-full bg-darnaBg-300 overflow-hidden" aria-hidden="true">
+                    <m.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 0.7, ease: ease.out }}
+                      className={`h-full ${v.bar} rounded-full origin-left rtl:origin-right`}
+                      style={{ width: `${v.share * 100}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -245,9 +266,9 @@ export default function StatsClient({
       {activeTab === "providers" && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {PROVIDERS.map((p) => (
-            <div key={p.key} className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-2">
-              <span className="font-bold text-xs text-primary block">{t(`providers.${p.key}.label`)}</span>
-              <p className="text-xl font-serif font-black text-primary">
+            <div key={p.key} className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+              <span className="font-semibold text-xs text-primary block">{t(`providers.${p.key}.label`)}</span>
+              <p className="text-2xl font-serif text-primary-900 tabular-nums">
                 {t(`providers.${p.key}.count`, { count: p.count, value: formatNumber(p.count, locale) })}
               </p>
               <p className="text-[11px] text-neutral-500">
@@ -261,42 +282,42 @@ export default function StatsClient({
       {/* By Service */}
       {activeTab === "services" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs">
+          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
               <Home className="w-4 h-4 text-secondary" aria-hidden="true" /> {t("services.stays")}
             </div>
-            <p className="text-lg font-mono font-bold text-primary">
+            <p className="text-2xl font-serif text-primary-900 tabular-nums">
               {t("services.listingsCount", { count: 1248, value: formatNumber(1248, locale) })}
             </p>
             <p className="text-xs text-neutral-500">
               {t("services.avgRating", { value: formatNumber(4.8, locale) })}
             </p>
           </div>
-          <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs">
+          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
               <Plane className="w-4 h-4 text-primary" aria-hidden="true" /> {t("services.trips")}
             </div>
-            <p className="text-lg font-mono font-bold text-primary">
+            <p className="text-2xl font-serif text-primary-900 tabular-nums">
               {t("services.tripsCount", { count: 156, value: formatNumber(156, locale) })}
             </p>
             <p className="text-xs text-neutral-500">{t("services.fillRate", { value: percent(0.88) })}</p>
           </div>
-          <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs">
+          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
               <Car className="w-4 h-4 text-tertiary" aria-hidden="true" /> {t("services.cars")}
             </div>
-            <p className="text-lg font-mono font-bold text-primary">
+            <p className="text-2xl font-serif text-primary-900 tabular-nums">
               {t("services.vehiclesCount", { count: 1024, value: formatNumber(1024, locale) })}
             </p>
             <p className="text-xs text-neutral-500">
               {t("services.availability", { value: formatNumber(542, locale) })}
             </p>
           </div>
-          <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs">
+          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
               <Compass className="w-4 h-4 text-accent" aria-hidden="true" /> {t("services.experiences")}
             </div>
-            <p className="text-lg font-mono font-bold text-primary">
+            <p className="text-2xl font-serif text-primary-900 tabular-nums">
               {t("services.activitiesCount", { count: 238, value: formatNumber(238, locale) })}
             </p>
             <p className="text-xs text-neutral-500">{t("services.satisfaction", { value: percent(0.98) })}</p>
@@ -306,11 +327,11 @@ export default function StatsClient({
 
       {/* By Wilaya */}
       {activeTab === "wilayas" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 p-6 space-y-4">
-          <h3 id="stats-wilayas-title" className="font-bold text-primary text-base">{t("wilayas.title")}</h3>
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
+          <h3 id="stats-wilayas-title" className="font-semibold text-primary-900 text-base">{t("wilayas.title")}</h3>
+          <div className="relative overflow-x-auto">
             <table className="w-full text-xs text-start" aria-labelledby="stats-wilayas-title">
-              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+              <thead className="bg-darnaBg-100 text-primary-600 font-semibold">
                 <tr>
                   <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.wilaya")}</th>
                   <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.listings")}</th>
@@ -319,13 +340,13 @@ export default function StatsClient({
                   <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.share")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-primary/[0.06]">
                 {WILAYA_ROWS.map((row) => (
-                  <tr key={row.code} className="hover:bg-neutral-50/50">
-                    <td className="py-2.5 px-3 font-bold text-primary">{getWilayaName(row.code, locale)}</td>
+                  <tr key={row.code} className="hover:bg-darnaBg-100">
+                    <td className="py-2.5 px-3 font-semibold text-primary">{getWilayaName(row.code, locale)}</td>
                     <td className="py-2.5 px-3">{formatNumber(row.listings, locale)}</td>
-                    <td className="py-2.5 px-3 font-mono">{formatNumber(row.bookings, locale)}</td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-end text-primary">
+                    <td className="py-2.5 px-3 tabular-nums whitespace-nowrap">{formatNumber(row.bookings, locale)}</td>
+                    <td className="py-2.5 px-3 font-semibold text-end text-primary-900 tabular-nums whitespace-nowrap">
                       {formatDzd(row.volume, locale)}
                     </td>
                     <td className="py-2.5 px-3 font-semibold text-primary">{percent(row.share)}</td>
@@ -339,14 +360,14 @@ export default function StatsClient({
 
       {/* Revenue */}
       {activeTab === "revenue" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 p-6 space-y-4">
-          <h3 className="font-bold text-primary text-base">{t("revenue.title")}</h3>
+        <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
+          <h3 className="font-semibold text-primary-900 text-base">{t("revenue.title")}</h3>
           <p className="text-xs text-neutral-500">{t("revenue.subtitle")}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
             {REVENUE_SPLIT.map((r) => (
-              <div key={r.key} className="p-4 rounded-xl bg-darnaBg/40 border border-tertiary/40 space-y-1">
+              <div key={r.key} className="p-4 rounded-xl bg-darnaBg-100 space-y-1">
                 <span className="text-xs text-neutral-500">{t(`revenue.items.${r.key}`)}</span>
-                <p className="text-xl font-mono font-bold text-primary">{formatDzd(r.amount, locale)}</p>
+                <p className="text-2xl font-serif text-primary-900 tabular-nums whitespace-nowrap">{formatDzd(r.amount, locale)}</p>
               </div>
             ))}
           </div>
@@ -359,9 +380,9 @@ export default function StatsClient({
           {REPORT_KEYS.map((key) => {
             const title = t(`reports.items.${key}.title`);
             return (
-              <div key={key} className="p-5 rounded-2xl bg-white border border-tertiary/40 flex items-start justify-between gap-4">
+              <div key={key} className="p-5 rounded-2xl bg-white flex items-start justify-between gap-4 shadow-e1">
                 <div className="space-y-1">
-                  <span className="font-bold text-sm text-primary block">{title}</span>
+                  <span className="font-semibold text-sm text-primary block">{title}</span>
                   <p className="text-xs text-neutral-500 leading-relaxed">{t(`reports.items.${key}.desc`)}</p>
                 </div>
                 <Button
@@ -369,9 +390,7 @@ export default function StatsClient({
                   size="sm"
                   className="shrink-0"
                   aria-label={t("reports.exportAria", { report: title })}
-                  onClick={() => handleExport(key, title)}
-                >
-                  <Download className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+                  onClick={() => handleExport(key, title)} leftIcon={<Download className="w-3.5 h-3.5" aria-hidden="true" />}>
                   {t("reports.export")}
                 </Button>
               </div>

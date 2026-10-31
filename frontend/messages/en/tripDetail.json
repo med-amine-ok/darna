@@ -1,0 +1,14 @@
+{
+  "dateRange": "{start} – {end}",
+  "seatsLeft": "{count, plural, one {# seat left} other {# seats left}}",
+  "full": "Full",
+  "departure": "Departure",
+  "travelersCount": "{count, plural, one {# traveler} other {# travelers}}",
+  "organizedBy": "Organized by",
+  "verificationPending": "Verification pending",
+  "gallery": "Gallery",
+  "bookTitle": "Book this trip",
+  "editBooking": "Change departure and travelers",
+  "requestShort": "Request",
+  "loading": "Loading this trip"
+}

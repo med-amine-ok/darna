@@ -3,6 +3,7 @@
 import React from "react";
 import { useLocale } from "next-intl";
 import { formatNumber } from "@/lib/utils/format";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 export interface KpiCardItem {
   id: string;
@@ -34,29 +35,31 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
   const locale = useLocale();
   const cardList = cards || items || [];
 
+  // Icon tiles on palette tints (no borders): olive = positive, ochre = waiting,
+  // terracotta = refused/alert, ink tint = neutral counts.
   const getIconBg = (bg?: string, variant?: string) => {
     const val = variant || bg;
     switch (val) {
       case "secondary":
       case "success":
-        return "bg-secondary-100 text-secondary-800 border-secondary-200";
+        return "bg-secondary-100 text-secondary-800";
       case "tertiary":
       case "warning":
-        return "bg-tertiary-100 text-tertiary-900 border-tertiary-200";
+        return "bg-amber-100 text-amber-800";
       case "accent":
       case "danger":
-        return "bg-accent-100 text-accent-800 border-accent-200";
+        return "bg-accent-100 text-accent-800";
       case "blue":
       case "primary":
-        return "bg-primary-50 text-primary-800 border-primary-200";
+        return "bg-primary-100 text-primary-800";
       default:
-        return "bg-neutral-100 text-neutral-700 border-neutral-200";
+        return "bg-darnaBg-300 text-primary-700";
     }
   };
 
   return (
     <div
-      className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 w-full ${className}`}
+      className={`grid grid-cols-2 sm:grid-cols-[repeat(auto-fit,minmax(176px,1fr))] gap-2.5 sm:gap-3 lg:gap-4 w-full ${className}`}
     >
       {cardList.map((card) => {
         const isSelected =
@@ -66,7 +69,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
           if (!card.icon) return null;
           if (React.isValidElement(card.icon)) return card.icon;
           const IconComp = card.icon as React.ComponentType<{ className?: string }>;
-          return <IconComp className="w-4 h-4 sm:w-5 sm:h-5" />;
+          return <IconComp className="w-[18px] h-[18px]" />;
         };
 
         return (
@@ -78,16 +81,14 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
               if (card.onClick) card.onClick();
               if (onCardClick) onCardClick(card.id);
             }}
-            className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border text-start transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
-              isSelected
-                ? "bg-white border-primary shadow-darna-card ring-2 ring-primary/20"
-                : "bg-white/80 border-tertiary-200/70 hover:border-tertiary-400 hover:bg-white shadow-2xs"
+            className={`group relative flex items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-2xl text-start bg-white cursor-pointer min-h-[44px] transition-[box-shadow,transform] duration-fast ease-standard active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+              isSelected ? "shadow-e2 ring-2 ring-primary-800" : "shadow-e1 hover:shadow-e2"
             }`}
           >
             {/* Icon Tile */}
             <div
               aria-hidden="true"
-              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 border ${getIconBg(
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${getIconBg(
                 card.iconBg,
                 card.colorVariant
               )}`}
@@ -95,12 +96,12 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
               {renderIcon()}
             </div>
 
-            {/* Label & Value */}
+            {/* Value (Fraunces numerals) & label */}
             <div className="min-w-0 flex-1">
-              <span className="block font-mono text-base sm:text-lg font-bold text-primary leading-tight truncate">
-                {typeof card.value === "number" ? formatNumber(card.value, locale) : card.value}
+              <span className="block font-serif text-[1.375rem] sm:text-2xl text-primary-900 leading-none truncate">
+                <AnimatedNumber value={typeof card.value === "number" ? formatNumber(card.value, locale) : card.value} />
               </span>
-              <span className="block text-[10px] sm:text-[11px] font-medium text-neutral-500 truncate leading-snug mt-0.5">
+              <span className="block text-xs font-medium text-primary-600 truncate leading-snug mt-1">
                 {card.label}
               </span>
             </div>

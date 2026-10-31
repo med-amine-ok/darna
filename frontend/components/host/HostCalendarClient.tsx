@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useId } from "react";
+import React, { useState, useMemo, useId, useRef, useEffect, useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { AnimatePresence, m } from "framer-motion";
 import {
   format,
   addMonths,
@@ -12,7 +13,6 @@ import {
   endOfWeek,
   eachDayOfInterval,
   isSameMonth,
-  isSameDay,
   addWeeks,
   subWeeks,
   addDays,
@@ -21,22 +21,36 @@ import {
   subYears,
 } from "date-fns";
 import { DateAvailabilityOverride, Listing, Reservation, User } from "@/types";
-import { Link } from "@/navigation";
 import { setListingDatePriceAction, setListingDatesBlockedAction } from "@/app/actions/calendar";
 import { isValidPriceDzd, PRICE_MAX_DZD, PRICE_MIN_DZD } from "@/lib/booking/config";
-import { toDateKey } from "@/lib/booking/dates";
+import { addDaysToKey, fromDateKey, toDateKey } from "@/lib/booking/dates";
 import { formatDzd } from "@/lib/currency";
 import { dateFnsLocale } from "@/lib/i18n/date-locale";
-import Dialog from "@/components/ui/Dialog";
+import { dur, ease } from "@/lib/motion";
+import {
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogFooter,
+  IconButton,
+  Input,
+  KitEmptyState,
+  SegmentedControl,
+  Select,
+  Switch,
+  cn,
+  focusRing,
+  useIsRtl,
+} from "@/components/ui";
 import {
   BrandChevronLeftIcon,
   BrandChevronRightIcon,
-  BrandFilterIcon,
   BrandLockIcon,
   BrandDoorIcon,
-  BrandClockIcon,
   BrandBedIcon,
-  BrandCloseIcon,
+  BrandHomeIcon,
+  BrandCalendarIcon,
 } from "@/components/icons";
 import { toast } from "react-toastify";
 import { useActionError } from "@/hook/useActionError";
@@ -54,9 +68,6 @@ interface HostCalendarClientProps {
 /** Statuses that occupy a night on the host calendar. */
 const OCCUPYING = new Set(["confirmed", "pending", "completed"]);
 
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-
 const DAY_SLOTS = [
   { time: "08:00", key: "morning" },
   { time: "11:00", key: "checkout" },
@@ -64,6 +75,15 @@ const DAY_SLOTS = [
   { time: "15:00", key: "checkin" },
   { time: "20:00", key: "evening" },
 ] as const;
+
+/** Order used to pick the slide direction when switching views (finer to coarser). */
+const VIEW_ORDER: CalendarView[] = ["day", "week", "month", "year"];
+
+/** Diagonal hatching for blocked days (ink at low alpha, palette only). */
+const HATCH: React.CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(135deg, rgba(46,58,47,0.07) 0px, rgba(46,58,47,0.07) 2px, transparent 2px, transparent 7px)",
+};
 
 function overrideMaps(overrides: DateAvailabilityOverride[]) {
   const blocked: Record<string, boolean> = {};
@@ -75,37 +95,46 @@ function overrideMaps(overrides: DateAvailabilityOverride[]) {
   return { blocked, prices };
 }
 
-// Listing color palette for multi-listing indicators
+/** Every date key from a to b inclusive (either order). */
+function keysBetween(a: string, b: string): string[] {
+  const [lo, hi] = a <= b ? [a, b] : [b, a];
+  const out: string[] = [];
+  for (let k = lo; k <= hi && out.length < 400; k = addDaysToKey(k, 1)) out.push(k);
+  return out;
+}
+
+// Listing colours for multi-listing indicators (five DARNA hues).
 const LISTING_COLORS = [
-  { bg: "bg-emerald-600", border: "border-emerald-600", text: "text-emerald-700", light: "bg-emerald-50" },
-  { bg: "bg-[#C96F4F]", border: "border-[#C96F4F]", text: "text-accent-700", light: "bg-[#C96F4F]/10" },
-  { bg: "bg-[#6B7F5B]", border: "border-[#6B7F5B]", text: "text-[#55664A]", light: "bg-[#6B7F5B]/10" },
-  { bg: "bg-amber-600", border: "border-amber-600", text: "text-amber-800", light: "bg-amber-50" },
-  { bg: "bg-blue-600", border: "border-blue-600", text: "text-blue-700", light: "bg-blue-50" },
+  { dot: "bg-secondary-600", pill: "bg-secondary-100 text-secondary-800" },
+  { dot: "bg-accent-600", pill: "bg-accent-100 text-accent-800" },
+  { dot: "bg-primary-700", pill: "bg-primary/[0.08] text-primary-800" },
+  { dot: "bg-amber-600", pill: "bg-amber-100 text-amber-800" },
+  { dot: "bg-tertiary-600", pill: "bg-tertiary-200 text-tertiary-900" },
 ];
 
-export default function HostCalendarClient({
-  hostListings,
-  reservations,
-  overrides,
-}: HostCalendarClientProps) {
+export default function HostCalendarClient({ hostListings, reservations, overrides }: HostCalendarClientProps) {
   const t = useTranslations("hostCalendar");
   const tHost = useTranslations("host.calendar");
   const tCommon = useTranslations("common");
   const errorText = useActionError();
   const locale = useLocale();
+  const isRtl = useIsRtl();
   const dfLocale = dateFnsLocale(locale);
   const weekOpts = { locale: dfLocale };
   const fmt = (date: Date, pattern: string) => format(date, pattern, { locale: dfLocale });
   const money = (amount: number) => formatDzd(amount, locale);
-  const priceInputId = useId();
-  const priceHelpId = useId();
-  const priceErrorId = useId();
+  const compactMoney = (amount: number) =>
+    new Intl.NumberFormat(locale === "ar" ? "ar-DZ" : locale === "fr" ? "fr-DZ" : "en-US", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(amount);
+  const gridId = useId();
 
   const safeListings: Listing[] = useMemo(() => hostListings || [], [hostListings]);
 
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
   const [view, setView] = useState<CalendarView>("month");
+  const [direction, setDirection] = useState(1);
   const [selectedListingId, setSelectedListingId] = useState<string>("all");
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>("all");
 
@@ -127,18 +156,30 @@ export default function HostCalendarClient({
     setPriceOverrides((prev) => strip(prev, maps.prices));
   };
 
-  // Active selected day detail dialog
+  // Single day dialog
   const [activeDay, setActiveDay] = useState<Date | null>(null);
   const [overridePriceInput, setOverridePriceInput] = useState<string>("");
   const [priceError, setPriceError] = useState<string | null>(null);
 
-  // Map listing colors
+  // Range selection (drag with a mouse, Shift + arrows on a keyboard, tap-tap in range mode on touch).
+  const [selection, setSelection] = useState<{ anchor: string; end: string } | null>(null);
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
+  const draggingRef = useRef(false);
+  const suppressClickRef = useRef(false);
+  const [rangeMode, setRangeMode] = useState(false);
+  const [rangeOpen, setRangeOpen] = useState(false);
+  const [rangePriceInput, setRangePriceInput] = useState("");
+  const [rangePriceError, setRangePriceError] = useState<string | null>(null);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const todayKey = toDateKey(new Date());
+
   const listingColorMap = useMemo(() => {
-    const map: Record<string, typeof LISTING_COLORS[0]> = {};
+    const map: Record<string, (typeof LISTING_COLORS)[0]> = {};
     safeListings.forEach((l, idx) => {
-      if (l?.id) {
-        map[l.id] = LISTING_COLORS[idx % LISTING_COLORS.length];
-      }
+      if (l?.id) map[l.id] = LISTING_COLORS[idx % LISTING_COLORS.length];
     });
     return map;
   }, [safeListings]);
@@ -148,8 +189,61 @@ export default function HostCalendarClient({
     return safeListings.find((l) => l.id === selectedListingId) || safeListings[0];
   }, [safeListings, selectedListingId]);
 
+  const targetListingId = selectedListingId === "all" ? safeListings[0]?.id || "" : selectedListingId;
+
+  const selectedKeys = useMemo(
+    () => (selection ? keysBetween(selection.anchor, selection.end).filter((k) => k >= todayKey) : []),
+    [selection, todayKey]
+  );
+  const selectedSet = useMemo(() => new Set(selectedKeys), [selectedKeys]);
+
+  const openDayFromKey = useCallback(
+    (key: string) => {
+      const date = fromDateKey(key);
+      setActiveDay(date);
+      setPriceError(null);
+      const existing = priceOverrides[`${targetListingId}_${key}`];
+      setOverridePriceInput(existing ? existing.toString() : "");
+    },
+    [priceOverrides, targetListingId]
+  );
+
+  const finishSelection = useCallback(() => {
+    const sel = selectionRef.current;
+    if (!sel) return;
+    if (sel.anchor === sel.end) {
+      setSelection(null);
+      openDayFromKey(sel.anchor);
+      return;
+    }
+    const keys = keysBetween(sel.anchor, sel.end).filter((k) => k >= todayKey);
+    if (keys.length === 0) {
+      setSelection(null);
+      return;
+    }
+    setRangePriceInput("");
+    setRangePriceError(null);
+    setRangeOpen(true);
+  }, [openDayFromKey, todayKey]);
+
+  // End a mouse drag anywhere on the page.
+  useEffect(() => {
+    const up = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      suppressClickRef.current = true;
+      setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+      finishSelection();
+    };
+    window.addEventListener("pointerup", up);
+    return () => window.removeEventListener("pointerup", up);
+  }, [finishSelection]);
+
   // Navigate forward/back
   const handlePrev = () => {
+    setDirection(-1);
     if (view === "month") setCurrentDate(subMonths(currentDate, 1));
     else if (view === "week") setCurrentDate(subWeeks(currentDate, 1));
     else if (view === "day") setCurrentDate(subDays(currentDate, 1));
@@ -157,6 +251,7 @@ export default function HostCalendarClient({
   };
 
   const handleNext = () => {
+    setDirection(1);
     if (view === "month") setCurrentDate(addMonths(currentDate, 1));
     else if (view === "week") setCurrentDate(addWeeks(currentDate, 1));
     else if (view === "day") setCurrentDate(addDays(currentDate, 1));
@@ -164,7 +259,16 @@ export default function HostCalendarClient({
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date());
+    const now = new Date();
+    setDirection(now >= currentDate ? 1 : -1);
+    setCurrentDate(now);
+  };
+
+  const changeView = (next: CalendarView, date?: Date) => {
+    setDirection(VIEW_ORDER.indexOf(next) >= VIEW_ORDER.indexOf(view) ? 1 : -1);
+    if (date) setCurrentDate(date);
+    setView(next);
+    setSelection(null);
   };
 
   // Check if a day has bookings
@@ -196,23 +300,64 @@ export default function HostCalendarClient({
   const statusLabel = (blocked: boolean, booked: boolean) =>
     blocked ? t("status.blocked") : booked ? t("status.booked") : t("status.available");
 
-  // Toggle blocked status for day
-  const handleToggleBlock = async (date: Date) => {
-    const targetListingId = selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId;
-    if (!targetListingId || isSaving) return;
-    const dateKey = toDateKey(date);
-    const nextState = !blockedDates[`${targetListingId}_${dateKey}`];
+  const priceUnit = (listing?: Listing) => t("priceUnit", { category: listing?.category ?? "home" });
+
+  // Save blocked state for one or more dates (existing server action).
+  const saveBlocked = async (dates: string[], blocked: boolean, successMessage: string) => {
+    if (!targetListingId || isSaving || dates.length === 0) return false;
     setIsSaving(true);
     try {
-      const result = await setListingDatesBlockedAction({ listingId: targetListingId, dates: [dateKey], blocked: nextState });
+      const result = await setListingDatesBlockedAction({ listingId: targetListingId, dates, blocked });
       if (!result.ok) {
         toast.error(errorText(result));
-        return;
+        return false;
       }
       applyServerOverrides(targetListingId, result.data);
-      toast.info(nextState ? t("toast.dateBlocked") : t("toast.dateReopened"));
+      toast.info(successMessage);
+      return true;
     } catch {
       toast.error(t("toast.dateUpdateFailed"));
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Toggle blocked status for day
+  const handleToggleBlock = async (date: Date) => {
+    if (!targetListingId) return;
+    const dateKey = toDateKey(date);
+    const nextState = !blockedDates[`${targetListingId}_${dateKey}`];
+    await saveBlocked([dateKey], nextState, nextState ? t("toast.dateBlocked") : t("toast.dateReopened"));
+  };
+
+  /** Validates a price field: number, null (reset) or false (invalid; error already set). */
+  const parsePrice = (raw: string, setError: (msg: string | null) => void): number | null | false => {
+    const trimmed = raw.trim();
+    const parsed = trimmed === "" ? null : Number(trimmed);
+    if (parsed !== null && !isValidPriceDzd(parsed)) {
+      setError(t("toast.priceInvalid", { min: money(PRICE_MIN_DZD), max: money(PRICE_MAX_DZD) }));
+      return false;
+    }
+    setError(null);
+    return parsed;
+  };
+
+  const savePrice = async (dates: string[], price: number | null, successMessage: string) => {
+    if (!targetListingId || isSaving || dates.length === 0) return false;
+    setIsSaving(true);
+    try {
+      const result = await setListingDatePriceAction({ listingId: targetListingId, dates, price });
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return false;
+      }
+      applyServerOverrides(targetListingId, result.data);
+      toast.success(successMessage);
+      return true;
+    } catch {
+      toast.error(t("toast.priceSaveFailed"));
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -220,58 +365,123 @@ export default function HostCalendarClient({
 
   // Save price override
   const handleSavePriceOverride = async (date: Date) => {
-    const targetListingId = selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId;
-    if (!targetListingId || isSaving) return;
-    const trimmed = overridePriceInput.trim();
-    const parsed = trimmed === "" ? null : Number(trimmed);
-    if (parsed !== null && !isValidPriceDzd(parsed)) {
-      setPriceError(t("toast.priceInvalid", { min: money(PRICE_MIN_DZD), max: money(PRICE_MAX_DZD) }));
-      return;
-    }
-    setPriceError(null);
-    setIsSaving(true);
-    try {
-      const result = await setListingDatePriceAction({ listingId: targetListingId, dates: [toDateKey(date)], price: parsed });
-      if (!result.ok) {
-        toast.error(errorText(result));
-        return;
-      }
-      applyServerOverrides(targetListingId, result.data);
-      toast.success(parsed === null ? t("toast.priceReset") : t("toast.priceSet", { price: money(parsed) }));
-      setOverridePriceInput("");
-    } catch {
-      toast.error(t("toast.priceSaveFailed"));
-    } finally {
-      setIsSaving(false);
-    }
+    const parsed = parsePrice(overridePriceInput, setPriceError);
+    if (parsed === false) return;
+    const ok = await savePrice(
+      [toDateKey(date)],
+      parsed,
+      parsed === null ? t("toast.priceReset") : t("toast.priceSet", { price: money(parsed) })
+    );
+    if (ok) setOverridePriceInput("");
+  };
+
+  const closeRange = () => {
+    setRangeOpen(false);
+    setSelection(null);
+    setRangeMode(false);
+  };
+
+  const handleRangeBlock = async (blocked: boolean) => {
+    const count = selectedKeys.length;
+    const ok = await saveBlocked(
+      selectedKeys,
+      blocked,
+      blocked ? t("toast.rangeBlocked", { count }) : t("toast.rangeReopened", { count })
+    );
+    if (ok) closeRange();
+  };
+
+  const handleRangePrice = async () => {
+    const parsed = parsePrice(rangePriceInput, setRangePriceError);
+    if (parsed === false) return;
+    const count = selectedKeys.length;
+    const ok = await savePrice(
+      selectedKeys,
+      parsed,
+      parsed === null ? t("toast.rangePriceReset", { count }) : t("toast.rangePriceSet", { count, price: money(parsed) })
+    );
+    if (ok) closeRange();
   };
 
   // Open day detail
-  const handleDayClick = (date: Date) => {
-    setActiveDay(date);
-    setPriceError(null);
-    const targetListingId = selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId;
-    const key = `${targetListingId}_${format(date, "yyyy-MM-dd")}`;
-    if (priceOverrides[key]) {
-      setOverridePriceInput(priceOverrides[key].toString());
-    } else {
-      setOverridePriceInput("");
+  const handleDayClick = (date: Date) => openDayFromKey(toDateKey(date));
+
+  /* ---------------------------------------------------------------- month grid interaction */
+
+  const onCellPointerDown = (e: React.PointerEvent, key: string, past: boolean) => {
+    if (e.pointerType !== "mouse" || e.button !== 0 || past) return;
+    draggingRef.current = true;
+    setSelection({ anchor: key, end: key });
+  };
+
+  const onCellPointerEnter = (key: string, past: boolean) => {
+    setHoverKey(key);
+    if (draggingRef.current && !past) setSelection((s) => (s ? { ...s, end: key } : s));
+  };
+
+  const onCellClick = (key: string, past: boolean) => {
+    if (suppressClickRef.current) return;
+    if (rangeMode) {
+      if (past) return;
+      const sel = selectionRef.current;
+      if (!sel) {
+        setSelection({ anchor: key, end: key });
+        return;
+      }
+      const next = { ...sel, end: key };
+      setSelection(next);
+      selectionRef.current = next;
+      finishSelection();
+      return;
+    }
+    const sel = selectionRef.current;
+    if (sel && sel.anchor !== sel.end) {
+      finishSelection();
+      return;
+    }
+    setSelection(null);
+    openDayFromKey(key);
+  };
+
+  const onCellKeyDown = (e: React.KeyboardEvent, key: string) => {
+    const deltas: Record<string, number> = {
+      ArrowLeft: isRtl ? 1 : -1,
+      ArrowRight: isRtl ? -1 : 1,
+      ArrowUp: -7,
+      ArrowDown: 7,
+    };
+    if (e.key === "Escape" && selectionRef.current) {
+      e.stopPropagation();
+      setSelection(null);
+      return;
+    }
+    const delta = deltas[e.key];
+    if (delta === undefined) return;
+    const target = addDaysToKey(key, delta);
+    const el = gridRef.current?.querySelector<HTMLButtonElement>(`[data-date="${target}"]`);
+    if (!el) return;
+    e.preventDefault();
+    el.focus();
+    if (e.shiftKey) {
+      setSelection((s) => ({ anchor: s?.anchor ?? key, end: target }));
+    } else if (!rangeMode) {
+      setSelection(null);
     }
   };
 
+  /* ---------------------------------------------------------------- render */
+
   if (safeListings.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
-        <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-lg mx-auto shadow-sm">
-          <h1 className="text-xl font-serif font-black text-primary mb-2">{t("empty.title")}</h1>
-          <p className="text-sm text-neutral-600 mb-6">{t("empty.body")}</p>
-          <Link
-            href="/become-a-host"
-            className={`inline-flex items-center justify-center py-2.5 px-6 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm ${FOCUS_RING}`}
-          >
-            {t("empty.cta")}
-          </Link>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <Card padding="lg" className="mx-auto max-w-lg">
+          <KitEmptyState
+            variant="calendar"
+            title={t("empty.title")}
+            description={t("empty.body")}
+            action={<Button href="/become-a-host">{t("empty.cta")}</Button>}
+          />
+        </Card>
       </div>
     );
   }
@@ -286,608 +496,723 @@ export default function HostCalendarClient({
   const activeDayBlocked = activeDay ? isDayBlocked(activeDay, activeListing?.id || safeListings[0]?.id) : false;
   const activeDayBookings = activeDay ? getBookingsForDay(activeDay) : [];
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">{t("title")}</h1>
-          <p className="text-sm text-neutral-600 mt-1">{t("subtitle")}</p>
-        </div>
+  const periodLabel =
+    view === "year"
+      ? fmt(currentDate, "yyyy")
+      : view === "day"
+        ? fmt(currentDate, "PPPP")
+        : view === "week"
+          ? t("weekRange", {
+              start: fmt(startOfWeek(currentDate, weekOpts), "d MMM"),
+              end: fmt(endOfWeek(currentDate, weekOpts), "d MMM yyyy"),
+            })
+          : fmt(currentDate, "LLLL yyyy");
 
-        {/* View Switcher Pills */}
-        <div
-          role="group"
-          aria-label={t("viewSwitcherLabel")}
-          className="flex items-center bg-white p-1 rounded-2xl border border-tertiary/70 shadow-2xs self-start md:self-auto"
-        >
-          {(["month", "week", "day", "year"] as CalendarView[]).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setView(v)}
-              aria-pressed={view === v}
-              className={`px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition ${FOCUS_RING} ${
-                view === v ? "bg-primary text-white shadow-2xs" : "text-neutral-600 hover:text-primary"
-              }`}
-            >
-              {viewLabels[v]}
-            </button>
-          ))}
-        </div>
-      </div>
+  const periodKey =
+    view === "year"
+      ? fmt(currentDate, "yyyy")
+      : view === "month"
+        ? format(currentDate, "yyyy-MM")
+        : view === "week"
+          ? toDateKey(startOfWeek(currentDate, weekOpts))
+          : toDateKey(currentDate);
 
-      {/* Toolbar: Navigation & Listing Chips */}
-      <div className="bg-white rounded-2xl border border-tertiary/70 p-4 mb-6 shadow-2xs flex flex-col lg:flex-row items-center justify-between gap-4">
-        {/* Date Navigation */}
-        <div className="flex items-center gap-2 sm:gap-4 w-full lg:w-auto justify-between lg:justify-start">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handlePrev}
-              aria-label={t("previous", { view })}
-              className={`p-2 rounded-xl hover:bg-neutral-100 text-neutral-700 transition border border-tertiary/60 ${FOCUS_RING}`}
-            >
-              <BrandChevronLeftIcon size={18} className="rtl:rotate-180" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              aria-label={t("next", { view })}
-              className={`p-2 rounded-xl hover:bg-neutral-100 text-neutral-700 transition border border-tertiary/60 ${FOCUS_RING}`}
-            >
-              <BrandChevronRightIcon size={18} className="rtl:rotate-180" aria-hidden="true" />
-            </button>
+  const sign = isRtl ? -1 : 1;
+  const periodVariants = {
+    enter: (d: number) => ({ opacity: 0, x: d * sign * 32 }),
+    center: { opacity: 1, x: 0, transition: { duration: dur.base, ease: ease.out } },
+    exit: (d: number) => ({ opacity: 0, x: -d * sign * 32, transition: { duration: dur.fast, ease: ease.standard } }),
+  };
+
+  // Details panel (hovered / focused day, else today)
+  const detailKey = hoverKey ?? todayKey;
+  const detailDate = fromDateKey(detailKey);
+  const detailBookings = getBookingsForDay(detailDate);
+  const detailBlocked = isDayBlocked(detailDate, targetListingId);
+  const detailPast = detailKey < todayKey;
+  const detailCustom = !!priceOverrides[`${targetListingId}_${detailKey}`];
+
+  const legend = (
+    <ul aria-label={t("legend.title")} className="flex flex-wrap items-center gap-x-4 gap-y-2 text-meta text-primary-700">
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-3.5 w-3.5 rounded-md bg-white ring-1 ring-primary/15" />
+        {t("legend.available")}
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-3.5 w-3.5 rounded-md bg-secondary-100 ring-1 ring-secondary-600/30" />
+        {t("legend.booked")}
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-3.5 w-3.5 rounded-md bg-tertiary-100 ring-1 ring-primary/10" style={HATCH} />
+        {t("legend.blocked")}
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-2 w-2 rounded-full bg-accent-600" />
+        {t("legend.special")}
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-3.5 w-3.5 rounded-full ring-2 ring-accent-600" />
+        {t("legend.today")}
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-3.5 w-3.5 rounded-md bg-accent-100 ring-1 ring-accent-500/50" />
+        {t("legend.selected")}
+      </li>
+    </ul>
+  );
+
+  /* ---------------------------------------------------------------- views */
+
+  const renderMonth = () => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(monthStart);
+    const days = eachDayOfInterval({ start: startOfWeek(monthStart, weekOpts), end: endOfWeek(monthEnd, weekOpts) });
+
+    return (
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <Card padding="none" className="overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="grid grid-cols-7 border-b border-primary/[0.08] bg-darnaBg/60 py-2.5 text-center text-meta font-semibold text-primary-600"
+          >
+            {days.slice(0, 7).map((d) => (
+              <div key={d.toISOString()}>{fmt(d, "EEEEEE")}</div>
+            ))}
           </div>
 
-          <h2
-            aria-live="polite"
-            className="text-base sm:text-lg font-serif font-bold text-primary min-w-[160px] text-center"
+          <div
+            ref={gridRef}
+            id={gridId}
+            role="group"
+            aria-label={t("gridLabel", { month: fmt(monthStart, "LLLL yyyy") })}
+            onPointerLeave={() => setHoverKey(null)}
+            className="grid select-none grid-cols-7 gap-px bg-primary/[0.06]"
           >
-            {view === "year" ? fmt(currentDate, "yyyy") : view === "day" ? fmt(currentDate, "PPP") : fmt(currentDate, "LLLL yyyy")}
-          </h2>
+            {days.map((day) => {
+              const key = toDateKey(day);
+              const inMonth = isSameMonth(day, monthStart);
+              const isToday = key === todayKey;
+              const past = key < todayKey;
+              const dayBookings = getBookingsForDay(day);
+              const booked = dayBookings.length > 0;
+              const isBlocked = isDayBlocked(day, targetListingId);
+              const price = getDayPrice(day, activeListing);
+              const isCustomPrice = !!priceOverrides[`${targetListingId}_${key}`];
+              const selected = selectedSet.has(key);
+              const status = past ? t("status.past") : statusLabel(isBlocked, booked);
+              const dateLabel = fmt(day, "PPPP");
 
-          <button
-            type="button"
-            onClick={handleToday}
-            className={`px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition shadow-2xs ${FOCUS_RING}`}
-          >
-            {tHost("today")}
-          </button>
-        </div>
-
-        {/* Listing Filter Selector & Legend */}
-        <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap">
-          <label htmlFor="calendar-property-select" className="text-xs font-bold text-neutral-600 flex items-center gap-1">
-            <BrandFilterIcon size={14} aria-hidden="true" /> {t("propertyLabel")}
-          </label>
-          <select
-            id="calendar-property-select"
-            value={selectedListingId}
-            onChange={(e) => {
-              setSelectedListingId(e.target.value);
-              setSelectedRoomTypeId("all");
-            }}
-            className={`px-3 py-1.5 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary focus:border-primary flex-1 lg:flex-none lg:w-56 ${FOCUS_RING}`}
-          >
-            <option value="all">{t("allProperties", { count: safeListings.length })}</option>
-            {safeListings.map((l) => (
-              <option key={l.id} value={l.id}>
-                {t("listingOption", { title: l.title, city: l.city })}
-              </option>
-            ))}
-          </select>
-
-          {/* Room Type Sub-filter (Section 2) */}
-          {activeListing?.roomTypes && activeListing.roomTypes.length > 0 && (
-            <div className="flex items-center gap-1.5 ms-1">
-              <label htmlFor="calendar-room-select" className="text-xs font-bold text-neutral-600 flex items-center gap-1">
-                <BrandBedIcon size={14} className="text-secondary" aria-hidden="true" /> {t("unitLabel")}
-              </label>
-              <select
-                id="calendar-room-select"
-                value={selectedRoomTypeId}
-                onChange={(e) => setSelectedRoomTypeId(e.target.value)}
-                className={`px-3 py-1.5 bg-neutral-50 border border-secondary/60 rounded-xl text-xs font-semibold text-primary focus:border-primary ${FOCUS_RING}`}
-              >
-                <option value="all">{t("allUnits", { count: activeListing.roomTypes.length })}</option>
-                {activeListing.roomTypes.map((rt) => (
-                  <option key={rt.id} value={rt.id}>
-                    {t("unitOption", {
-                      name: rt.name,
-                      unit: rt.bookingUnit === "bed" ? "bed" : "room",
-                      count: rt.inventoryCount || rt.totalInventory || 0,
-                    })}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Listing Color Chips */}
-          <ul aria-label={t("listingLegend")} className="hidden sm:flex items-center gap-2 ms-2">
-            {safeListings.slice(0, 3).map((l) => {
-              const color = listingColorMap[l.id] || LISTING_COLORS[0];
               return (
-                <li
-                  key={l.id}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-neutral-600 bg-neutral-50 px-2 py-1 rounded-lg border border-tertiary/40"
+                <button
+                  type="button"
+                  key={key}
+                  data-date={key}
+                  onPointerDown={(e) => onCellPointerDown(e, key, past)}
+                  onPointerEnter={() => onCellPointerEnter(key, past)}
+                  onFocus={() => setHoverKey(key)}
+                  onClick={() => onCellClick(key, past)}
+                  onKeyDown={(e) => onCellKeyDown(e, key)}
+                  aria-haspopup="dialog"
+                  aria-pressed={selected || undefined}
+                  aria-current={isToday ? "date" : undefined}
+                  aria-label={
+                    !past && inMonth && !isBlocked
+                      ? t("dayCellLabelWithPrice", { date: dateLabel, status, price: money(price) })
+                      : t("dayCellLabel", { date: dateLabel, status })
+                  }
+                  style={isBlocked && !past ? HATCH : undefined}
+                  className={cn(
+                    "group relative flex min-h-[3.75rem] flex-col items-stretch p-1 text-start sm:min-h-[6rem] sm:p-2 xl:min-h-[6.75rem]",
+                    "transition-colors duration-fast ease-standard",
+                    "focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600",
+                    !inMonth
+                      ? "bg-darnaBg/70 text-primary-300"
+                      : past
+                        ? "bg-darnaBg/50 text-primary-400"
+                        : isBlocked
+                          ? "bg-tertiary-100/70 text-primary-600"
+                          : booked
+                            ? "bg-secondary-100/60 text-primary-800 hover:bg-secondary-100"
+                            : "bg-white text-primary-800 hover:bg-primary/[0.03]"
+                  )}
                 >
-                  <span className={`w-2 h-2 rounded-full ${color.bg}`} aria-hidden="true" />
-                  <span className="truncate max-w-[100px]" title={l.title}>
-                    {(l.title || t("untitledListing")).split(" ")[0]}
+                  {/* Live selection fill */}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "pointer-events-none absolute inset-0.5 rounded-lg bg-accent-100/80 ring-1 ring-inset ring-accent-500/50 transition-opacity duration-fast ease-standard",
+                      selected ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+
+                  <span className="relative flex w-full items-start justify-between gap-1">
+                    <span
+                      className={cn(
+                        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-meta tabular-nums sm:h-7 sm:w-7",
+                        isToday ? "bg-accent-600 font-semibold text-white shadow-e1" : "font-medium",
+                        !isToday && inMonth && !past && "text-primary-900"
+                      )}
+                    >
+                      {fmt(day, "d")}
+                    </span>
+
+                    {inMonth && !past && isBlocked && (
+                      <BrandLockIcon size={14} aria-hidden="true" className="mt-1 shrink-0 text-primary-500" />
+                    )}
+                    {inMonth && !past && !isBlocked && (
+                      <span
+                        className={cn(
+                          "mt-1 hidden min-w-0 items-center gap-1 truncate text-[0.6875rem] tabular-nums sm:inline-flex xl:text-meta",
+                          isCustomPrice ? "font-semibold text-accent-700" : "font-medium text-primary-500"
+                        )}
+                      >
+                        {isCustomPrice && <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent-600" />}
+                        <span className="truncate xl:hidden">{compactMoney(price)}</span>
+                        <span className="hidden truncate xl:inline">{money(price)}</span>
+                      </span>
+                    )}
                   </span>
-                </li>
+
+                  {/* Bookings: pills from sm, dots on phones */}
+                  {inMonth && booked && (
+                    <span className="relative mt-auto hidden w-full min-w-0 space-y-1 sm:block">
+                      {dayBookings.slice(0, 2).map((b) => {
+                        const color = listingColorMap[b.listingId] || LISTING_COLORS[0];
+                        const guest = b.user?.name || t("guestFallback");
+                        return (
+                          <span
+                            key={b.id}
+                            title={t("bookingTitle", { guest, listing: b.listing?.title || "" })}
+                            className={cn(
+                              "flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6875rem] font-semibold",
+                              color.pill
+                            )}
+                          >
+                            <span aria-hidden="true" className={cn("h-1.5 w-1.5 shrink-0 rounded-full", color.dot)} />
+                            <span className="truncate">{guest}</span>
+                          </span>
+                        );
+                      })}
+                      {dayBookings.length > 2 && (
+                        <span className="block ps-1 text-[0.6875rem] font-semibold text-primary-600">
+                          {t("moreBookings", { count: dayBookings.length - 2 })}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  {inMonth && (booked || (isCustomPrice && !isBlocked && !past)) && (
+                    <span aria-hidden="true" className="relative mt-auto flex gap-0.5 sm:hidden">
+                      {dayBookings.slice(0, 3).map((b) => (
+                        <span
+                          key={b.id}
+                          className={cn("h-1.5 w-1.5 rounded-full", (listingColorMap[b.listingId] || LISTING_COLORS[0]).dot)}
+                        />
+                      ))}
+                      {!booked && <span className="h-1.5 w-1.5 rounded-full bg-accent-600" />}
+                    </span>
+                  )}
+                  {inMonth && !past && isBlocked && (
+                    <span className="relative mt-auto hidden text-[0.6875rem] font-semibold text-primary-600 sm:block">
+                      {t("status.blocked")}
+                    </span>
+                  )}
+                </button>
               );
             })}
-          </ul>
-        </div>
-      </div>
-
-      {/* VIEW: MONTH GRID */}
-      {view === "month" && (
-        <div className="bg-white rounded-3xl border border-tertiary/70 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <div className="min-w-[320px] sm:min-w-0">
-              {(() => {
-                const monthStart = startOfMonth(currentDate);
-                const monthEnd = endOfMonth(monthStart);
-                const startDate = startOfWeek(monthStart, weekOpts);
-                const endDate = endOfWeek(monthEnd, weekOpts);
-                const days = eachDayOfInterval({ start: startDate, end: endDate });
-
-                return (
-                  <>
-                    {/* Day Headers (localized, locale week start) */}
-                    <div
-                      aria-hidden="true"
-                      className="grid grid-cols-7 border-b border-tertiary/60 bg-neutral-50 text-center py-2.5 text-xs font-bold text-neutral-600"
-                    >
-                      {days.slice(0, 7).map((d) => (
-                        <div key={d.toISOString()}>{fmt(d, "EEE")}</div>
-                      ))}
-                    </div>
-
-                    {/* Month Matrix */}
-                    <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-tertiary/40 rtl:divide-x-reverse">
-                      {days.map((day) => {
-                        const isCurrentMonth = isSameMonth(day, monthStart);
-                        const isToday = isSameDay(day, new Date());
-                        const dayBookings = getBookingsForDay(day);
-                        const isBlocked = isDayBlocked(
-                          day,
-                          selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
-                        );
-                        const price = getDayPrice(day, activeListing);
-                        const isCustomPrice = !!priceOverrides[`${activeListing?.id || safeListings[0]?.id}_${format(day, "yyyy-MM-dd")}`];
-                        const status = statusLabel(isBlocked, dayBookings.length > 0);
-                        const dateLabel = fmt(day, "PPPP");
-
-                        return (
-                          <button
-                            type="button"
-                            key={day.toISOString()}
-                            onClick={() => handleDayClick(day)}
-                            aria-haspopup="dialog"
-                            aria-current={isToday ? "date" : undefined}
-                            aria-label={
-                              isCurrentMonth && !isBlocked
-                                ? t("dayCellLabelWithPrice", { date: dateLabel, status, price: money(price) })
-                                : t("dayCellLabel", { date: dateLabel, status })
-                            }
-                            className={`min-h-[90px] sm:min-h-[120px] p-1.5 sm:p-2 transition flex flex-col justify-between text-start ${FOCUS_RING} focus-visible:ring-offset-0 focus-visible:z-10 ${
-                              !isCurrentMonth
-                                ? "bg-neutral-50/60 opacity-40"
-                                : isBlocked
-                                ? "bg-neutral-100/80"
-                                : "hover:bg-primary/5"
-                            }`}
-                          >
-                            {/* Top: Day Number + Price */}
-                            <span className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 min-w-0 w-full">
-                              <span
-                                className={`text-xs sm:text-sm font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full shrink-0 ${
-                                  isToday ? "bg-primary text-white" : "text-neutral-700"
-                                }`}
-                              >
-                                {fmt(day, "d")}
-                              </span>
-
-                              {/* Nightly Price Badge */}
-                              {isCurrentMonth && !isBlocked && (
-                                <span
-                                  className={`text-[9px] sm:text-[11px] font-mono font-bold px-1 py-0.5 sm:px-1.5 rounded-md truncate max-w-full ${
-                                    isCustomPrice ? "bg-accent/15 text-accent-700 border border-accent/30" : "text-neutral-600"
-                                  }`}
-                                >
-                                  {money(price)}
-                                </span>
-                              )}
-
-                              {/* Blocked icon */}
-                              {isBlocked && (
-                                <span className="text-neutral-500 shrink-0" aria-hidden="true">
-                                  <BrandLockIcon size={14} />
-                                </span>
-                              )}
-                            </span>
-
-                            {/* Middle: Booking indicators / pills */}
-                            <span className="block space-y-1 my-1 min-w-0 w-full">
-                              {dayBookings.slice(0, 2).map((b) => {
-                                const color = listingColorMap[b.listingId] || LISTING_COLORS[0];
-                                const guest = b.user?.name || t("guestFallback");
-                                return (
-                                  <span
-                                    key={b.id}
-                                    className={`text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-md truncate ${color.light} ${color.text} border ${color.border}/30 flex items-center gap-1 min-w-0`}
-                                    title={t("bookingTitle", { guest, listing: b.listing?.title || "" })}
-                                  >
-                                    <span className={`w-1.5 h-1.5 rounded-full ${color.bg} shrink-0`} aria-hidden="true" />
-                                    <span className="truncate">{guest}</span>
-                                  </span>
-                                );
-                              })}
-                              {dayBookings.length > 2 && (
-                                <span className="text-[9px] font-bold text-neutral-600 block ps-1">
-                                  {t("moreBookings", { count: dayBookings.length - 2 })}
-                                </span>
-                              )}
-                            </span>
-
-                            {/* Bottom: Blocked / Available status label */}
-                            <span className="block text-[10px] font-medium">
-                              {isBlocked ? (
-                                <span className="text-neutral-600 font-semibold">{t("status.blocked")}</span>
-                              ) : dayBookings.length > 0 ? (
-                                <span className="text-secondary font-bold">{t("status.booked")}</span>
-                              ) : (
-                                <span className="text-emerald-700 font-medium">{t("status.available")}</span>
-                              )}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
           </div>
-        </div>
-      )}
+        </Card>
 
-      {/* VIEW: WEEK VIEW */}
-      {view === "week" && (
-        <div className="bg-white rounded-3xl border border-tertiary/70 shadow-2xs overflow-x-auto">
-          <div className="min-w-[700px]">
-            {/* Week Header */}
-            <div aria-hidden="true" className="grid grid-cols-7 border-b border-tertiary/60 bg-neutral-50 text-center py-3">
-              {(() => {
-                const weekStart = startOfWeek(currentDate, weekOpts);
-                const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-                return weekDays.map((d) => (
-                  <div key={d.toISOString()} className="px-2">
-                    <span className="block text-xs font-bold text-neutral-600 uppercase">{fmt(d, "EEE")}</span>
+        {/* Details + legend */}
+        <aside className="space-y-4 lg:self-start">
+          {selectedKeys.length > 1 && !rangeOpen ? (
+            <Card padding="md" className="enter-up">
+              <p className="text-eyebrow uppercase text-accent-700">{t("details.selection")}</p>
+              <p className="mt-1 font-serif text-heading text-primary-900">{t("range.title", { count: selectedKeys.length })}</p>
+              <p className="mt-1 text-meta text-primary-600">
+                {t("range.dates", {
+                  start: fmt(fromDateKey(selectedKeys[0]), "d MMM"),
+                  end: fmt(fromDateKey(selectedKeys[selectedKeys.length - 1]), "d MMM"),
+                })}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => finishSelection()}>
+                  {t("range.edit")}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelection(null)}>
+                  {t("range.clear")}
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <Card padding="md" aria-live="polite">
+              <p className="text-eyebrow uppercase text-primary-500">{t("details.title")}</p>
+              <p className="mt-1 font-serif text-heading text-primary-900">{fmt(detailDate, "EEEE d MMMM")}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Badge
+                  tone={detailPast ? "neutral" : detailBlocked ? "sand" : detailBookings.length ? "success" : "olive"}
+                  dot
+                >
+                  {detailPast ? t("status.past") : statusLabel(detailBlocked, detailBookings.length > 0)}
+                </Badge>
+                {detailCustom && !detailPast && (
+                  <Badge tone="terracotta" dot>
+                    {t("status.special")}
+                  </Badge>
+                )}
+              </div>
+              {!detailPast && !detailBlocked && (
+                <p className="mt-4 flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="whitespace-nowrap font-serif text-heading tabular-nums text-primary-900">
+                    {money(getDayPrice(detailDate, activeListing))}
+                  </span>
+                  <span className="text-meta text-primary-600">{priceUnit(activeListing)}</span>
+                </p>
+              )}
+              <div className="mt-4 border-t border-primary/[0.08] pt-3">
+                {detailBookings.length === 0 ? (
+                  <p className="text-meta text-primary-600">{t("details.noBookings")}</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {detailBookings.map((b) => {
+                      const color = listingColorMap[b.listingId] || LISTING_COLORS[0];
+                      return (
+                        <li key={b.id} className="flex items-start gap-2 text-meta">
+                          <span aria-hidden="true" className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", color.dot)} />
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-primary-900">
+                              {t("guestLine", { name: b.user?.name || t("guestFallback"), count: b.guestsCount })}
+                            </span>
+                            <span className="block truncate text-primary-600">{b.listing?.title}</span>
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+              <p className="mt-4 hidden text-meta text-primary-500 lg:block">{t("details.hint")}</p>
+            </Card>
+          )}
+
+          <Card padding="md" variant="sunken">
+            <p className="mb-3 text-eyebrow uppercase text-primary-500">{t("legend.title")}</p>
+            {legend}
+          </Card>
+        </aside>
+      </div>
+    );
+  };
+
+  const renderWeek = () => {
+    const weekStart = startOfWeek(currentDate, weekOpts);
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    return (
+      <Card padding="none" className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="min-w-[46rem]">
+            <div
+              aria-hidden="true"
+              className="grid grid-cols-[12rem_repeat(7,minmax(0,1fr))] border-b border-primary/[0.08] bg-darnaBg/60"
+            >
+              <div />
+              {weekDays.map((d) => {
+                const isToday = toDateKey(d) === todayKey;
+                return (
+                  <div key={d.toISOString()} className="px-2 py-3 text-center">
+                    <span className="block text-meta font-medium text-primary-600">{fmt(d, "EEE")}</span>
                     <span
-                      className={`inline-block text-sm font-extrabold px-2 py-0.5 rounded-full mt-1 ${
-                        isSameDay(d, new Date()) ? "bg-primary text-white" : "text-primary"
-                      }`}
+                      className={cn(
+                        "mt-1 inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-body font-semibold tabular-nums",
+                        isToday ? "bg-accent-600 text-white shadow-e1" : "text-primary-900"
+                      )}
                     >
-                      {fmt(d, "d MMM")}
+                      {fmt(d, "d")}
                     </span>
                   </div>
-                ));
-              })()}
+                );
+              })}
             </div>
 
-            {/* Week Listings Rows */}
-            <div className="divide-y divide-tertiary/40">
+            <div className="divide-y divide-primary/[0.06]">
               {safeListings.map((listing) => {
                 const color = listingColorMap[listing.id] || LISTING_COLORS[0];
-                const weekStart = startOfWeek(currentDate, weekOpts);
-                const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
                 return (
-                  <div key={listing.id} className="p-3">
-                    <h3 className="flex items-center gap-2 mb-2 font-bold text-xs text-primary">
-                      <span className={`w-2.5 h-2.5 rounded-full ${color.bg}`} aria-hidden="true" />
-                      <span>{listing.title}</span>
-                      <span className="text-neutral-600 font-normal">({listing.city})</span>
-                    </h3>
-
-                    <div className="grid grid-cols-7 gap-2">
-                      {weekDays.map((d) => {
-                        const dKey = toDateKey(d);
-                        const dayBookings = reservations.filter(
-                          (r) =>
-                            r.listingId === listing.id &&
-                            OCCUPYING.has(r.status) &&
-                            r.startDate <= dKey &&
-                            dKey < r.endDate
-                        );
-                        const isBlocked = isDayBlocked(d, listing.id);
-                        const price = getDayPrice(d, listing);
-                        const status = statusLabel(isBlocked, dayBookings.length > 0);
-
-                        return (
-                          <button
-                            type="button"
-                            key={d.toISOString()}
-                            onClick={() => handleDayClick(d)}
-                            aria-haspopup="dialog"
-                            aria-current={isSameDay(d, new Date()) ? "date" : undefined}
-                            aria-label={t("weekCellLabel", {
-                              listing: listing.title,
-                              date: fmt(d, "PPPP"),
-                              status,
-                              price: money(price),
-                            })}
-                            className={`p-2 rounded-xl border text-xs min-h-[90px] flex flex-col justify-between text-start transition ${FOCUS_RING} ${
-                              isBlocked
-                                ? "bg-neutral-100 border-neutral-300 text-neutral-600"
-                                : dayBookings.length > 0
-                                ? `${color.light} ${color.border} ${color.text}`
-                                : "bg-neutral-50/50 border-tertiary/60 hover:bg-white hover:border-primary"
-                            }`}
-                          >
-                            <span className="flex justify-between items-center w-full gap-1">
-                              <span className="font-bold">{fmt(d, "d")}</span>
-                              <span className="text-[10px] font-mono font-semibold truncate">{money(price)}</span>
-                            </span>
-
-                            {dayBookings.length > 0 ? (
-                              <span className="block font-bold truncate text-[11px] w-full">
-                                {dayBookings[0].user?.name || t("guestFallback")}
-                              </span>
-                            ) : isBlocked ? (
-                              <span className="block text-[10px] font-semibold text-neutral-600">{t("status.blocked")}</span>
-                            ) : (
-                              <span className="block text-[10px] text-emerald-700 font-medium">{t("status.available")}</span>
-                            )}
-                          </button>
-                        );
-                      })}
+                  <div key={listing.id} className="grid grid-cols-[12rem_repeat(7,minmax(0,1fr))] items-stretch gap-1.5 p-2">
+                    <div className="flex min-w-0 items-center gap-2.5 px-2">
+                      <span aria-hidden="true" className={cn("h-2.5 w-2.5 shrink-0 rounded-full", color.dot)} />
+                      <span className="min-w-0">
+                        <span className="block truncate text-meta font-semibold text-primary-900">{listing.title}</span>
+                        <span className="block truncate text-meta text-primary-600">{listing.city}</span>
+                      </span>
                     </div>
+                    {weekDays.map((d) => {
+                      const dKey = toDateKey(d);
+                      const past = dKey < todayKey;
+                      const dayBookings = reservations.filter(
+                        (r) => r.listingId === listing.id && OCCUPYING.has(r.status) && r.startDate <= dKey && dKey < r.endDate
+                      );
+                      const isBlocked = isDayBlocked(d, listing.id);
+                      const price = getDayPrice(d, listing);
+                      const custom = !!priceOverrides[`${listing.id}_${dKey}`];
+                      const status = past ? t("status.past") : statusLabel(isBlocked, dayBookings.length > 0);
+
+                      return (
+                        <button
+                          type="button"
+                          key={dKey}
+                          onClick={() => handleDayClick(d)}
+                          aria-haspopup="dialog"
+                          aria-current={dKey === todayKey ? "date" : undefined}
+                          aria-label={t("weekCellLabel", { listing: listing.title, date: fmt(d, "PPPP"), status, price: money(price) })}
+                          style={isBlocked && !past ? HATCH : undefined}
+                          className={cn(
+                            "flex min-h-[4.5rem] flex-col justify-between rounded-xl p-2 text-start transition-[box-shadow,background-color] duration-fast ease-standard",
+                            focusRing,
+                            past
+                              ? "bg-darnaBg/60 text-primary-400"
+                              : isBlocked
+                                ? "bg-tertiary-100/70 text-primary-600"
+                                : dayBookings.length > 0
+                                  ? color.pill
+                                  : "bg-white text-primary-800 ring-1 ring-inset ring-primary/[0.08] hover:shadow-e2",
+                            dKey === todayKey && "ring-2 ring-inset ring-accent-600"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "truncate text-[0.6875rem] tabular-nums xl:text-meta",
+                              custom && !past ? "font-semibold text-accent-700" : "font-medium"
+                            )}
+                          >
+                            {past ? "" : isBlocked ? t("status.blocked") : money(price)}
+                          </span>
+                          {dayBookings.length > 0 && (
+                            <span className="block w-full truncate text-meta font-semibold">
+                              {dayBookings[0].user?.name || t("guestFallback")}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 );
               })}
             </div>
           </div>
         </div>
-      )}
+      </Card>
+    );
+  };
 
-      {/* VIEW: DAY VIEW (VERTICAL AGENDA) */}
-      {view === "day" && (
-        <div className="bg-white rounded-3xl border border-tertiary/70 shadow-2xs p-6 max-w-4xl mx-auto">
-          <div className="flex items-center justify-between pb-4 border-b border-tertiary/60 mb-6 gap-3">
-            <div>
-              <span className="text-xs font-bold text-neutral-600 uppercase tracking-wider">{t("dayView.eyebrow")}</span>
-              <h3 className="font-serif text-2xl font-black text-primary">{fmt(currentDate, "PPPP")}</h3>
+  const renderDay = () => {
+    const blocked = isDayBlocked(currentDate, targetListingId);
+    const bookings = getBookingsForDay(currentDate);
+    const past = toDateKey(currentDate) < todayKey;
+    return (
+      <Card padding="lg" className="mx-auto max-w-3xl">
+        <div className="mb-6 flex flex-col gap-4 border-b border-primary/[0.08] pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-eyebrow uppercase text-primary-500">{t("dayView.eyebrow")}</p>
+            <h3 className="mt-1 font-serif text-display-md text-primary-900">{fmt(currentDate, "EEEE d MMMM")}</h3>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge tone={past ? "neutral" : blocked ? "sand" : bookings.length ? "success" : "olive"} dot>
+                {past ? t("status.past") : statusLabel(blocked, bookings.length > 0)}
+              </Badge>
+              {!past && !blocked && (
+                <span className="text-meta tabular-nums text-primary-700">
+                  {money(getDayPrice(currentDate, activeListing))} {priceUnit(activeListing)}
+                </span>
+              )}
             </div>
-            {(() => {
-              const blocked = isDayBlocked(
-                currentDate,
-                selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
-              );
-              return (
-                <button
-                  type="button"
-                  onClick={() => handleToggleBlock(currentDate)}
-                  disabled={isSaving}
-                  aria-pressed={blocked}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border border-tertiary/80 hover:bg-neutral-50 transition flex items-center gap-1.5 disabled:opacity-60 ${FOCUS_RING}`}
-                >
-                  {blocked ? <BrandDoorIcon size={16} aria-hidden="true" /> : <BrandLockIcon size={16} aria-hidden="true" />}
-                  <span>{blocked ? t("dayView.unblock") : t("dayView.block")}</span>
-                </button>
-              );
-            })()}
           </div>
-
-          {/* Hourly Timeline */}
-          <ol className="space-y-4">
-            {DAY_SLOTS.map((slot) => {
-              const bookings = getBookingsForDay(currentDate);
-
-              return (
-                <li
-                  key={slot.time}
-                  className="flex items-start gap-4 p-4 rounded-2xl bg-neutral-50/70 border border-tertiary/40 hover:bg-white hover:shadow-xs transition"
-                >
-                  <div className="w-16 shrink-0 font-mono font-bold text-sm text-secondary flex items-center gap-1">
-                    <BrandClockIcon size={16} aria-hidden="true" />
-                    <time>{slot.time}</time>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-primary text-sm">{t(`dayView.slots.${slot.key}.title`)}</h4>
-                    <p className="text-xs text-neutral-600 mt-0.5">{t(`dayView.slots.${slot.key}.desc`)}</p>
-
-                    {slot.key === "checkin" && bookings.length > 0 && (
-                      <div className="mt-2.5 p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-                        <span className="block text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
-                          {t("dayView.arrivingToday")}
-                        </span>
-                        {bookings.map((b) => (
-                          <div key={b.id} className="flex items-center justify-between gap-2 text-xs mt-1 text-emerald-900 font-semibold">
-                            <span>{t("guestLine", { name: b.user?.name || t("guestFallback"), count: b.guestsCount })}</span>
-                            <span className="font-mono">{b.listing?.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+          <Button
+            variant="tertiary"
+            size="sm"
+            onClick={() => handleToggleBlock(currentDate)}
+            loading={isSaving}
+            aria-pressed={blocked}
+            leadingIcon={blocked ? <BrandDoorIcon size={16} aria-hidden="true" /> : <BrandLockIcon size={16} aria-hidden="true" />}
+          >
+            {blocked ? t("dayView.unblock") : t("dayView.block")}
+          </Button>
         </div>
-      )}
 
-      {/* VIEW: YEAR VIEW (12-MONTH DENSITY OVERVIEW) */}
-      {view === "year" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 12 }, (_, monthIdx) => {
-            const monthDate = new Date(currentDate.getFullYear(), monthIdx, 1);
-            const mStart = startOfMonth(monthDate);
-            const mEnd = endOfMonth(monthDate);
-            const sDate = startOfWeek(mStart, weekOpts);
-            const eDate = endOfWeek(mEnd, weekOpts);
-            const daysInMonth = eachDayOfInterval({ start: sDate, end: eDate });
-            const monthName = fmt(monthDate, "LLLL");
+        <ol className="relative space-y-3 before:absolute before:inset-y-3 before:start-[2.4rem] before:w-px before:bg-primary/[0.1]">
+          {DAY_SLOTS.map((slot) => (
+            <li key={slot.time} className="relative flex items-start gap-4">
+              <time className="relative z-[1] mt-2 inline-flex h-7 w-[4.8rem] shrink-0 items-center justify-center rounded-full bg-white text-meta font-semibold tabular-nums text-secondary-800 shadow-e1">
+                {slot.time}
+              </time>
+              <div className="min-w-0 flex-1 rounded-2xl bg-darnaBg/60 p-4 transition-shadow duration-fast ease-standard hover:bg-white hover:shadow-e2">
+                <h4 className="text-body font-semibold text-primary-900">{t(`dayView.slots.${slot.key}.title`)}</h4>
+                <p className="mt-0.5 text-meta text-primary-600">{t(`dayView.slots.${slot.key}.desc`)}</p>
+                {slot.key === "checkin" && bookings.length > 0 && (
+                  <div className="mt-3 rounded-xl bg-secondary-100 p-3">
+                    <p className="text-meta font-semibold text-secondary-800">{t("dayView.arrivingToday")}</p>
+                    <ul className="mt-1.5 space-y-1">
+                      {bookings.map((b) => (
+                        <li key={b.id} className="flex flex-wrap items-center justify-between gap-x-3 text-meta text-primary-800">
+                          <span className="font-semibold">
+                            {t("guestLine", { name: b.user?.name || t("guestFallback"), count: b.guestsCount })}
+                          </span>
+                          <span className="truncate text-primary-600">{b.listing?.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Card>
+    );
+  };
 
-            return (
-              <section
-                key={monthIdx}
-                aria-label={fmt(monthDate, "LLLL yyyy")}
-                className="bg-white rounded-3xl border border-tertiary/70 p-4 shadow-2xs hover:shadow-md transition"
+  const renderYear = () => (
+    <div className="space-y-5">
+      <div className="hidden sm:block">{legend}</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 12 }, (_, monthIdx) => {
+          const monthDate = new Date(currentDate.getFullYear(), monthIdx, 1);
+          const mStart = startOfMonth(monthDate);
+          const daysInMonth = eachDayOfInterval({ start: startOfWeek(mStart, weekOpts), end: endOfWeek(endOfMonth(monthDate), weekOpts) });
+          const bookedDays = daysInMonth.filter((d) => isSameMonth(d, monthDate) && getBookingsForDay(d).length > 0).length;
+
+          return (
+            <Card key={monthIdx} as="section" padding="sm" aria-label={fmt(monthDate, "LLLL yyyy")} className="transition-shadow duration-fast ease-standard hover:shadow-e2">
+              <button
+                type="button"
+                onClick={() => changeView("month", monthDate)}
+                aria-label={t("yearView.viewMonthLabel", { month: fmt(monthDate, "LLLL yyyy") })}
+                className={cn("group mb-2 flex w-full items-center justify-between gap-2 rounded-xl px-1 py-1", focusRing)}
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentDate(monthDate);
-                    setView("month");
-                  }}
-                  aria-label={t("yearView.viewMonthLabel", { month: fmt(monthDate, "LLLL yyyy") })}
-                  className={`w-full flex items-center justify-between pb-2 mb-2 border-b border-tertiary/40 group rounded-md ${FOCUS_RING}`}
-                >
-                  <span className="font-serif font-bold text-sm text-primary group-hover:text-accent-700 transition capitalize">
-                    {monthName}
+                <span className="min-w-0 text-start">
+                  <span className="block font-serif text-title font-normal capitalize text-primary-900 transition-colors duration-fast group-hover:text-accent-700">
+                    {fmt(monthDate, "LLLL")}
                   </span>
-                  <span className="text-[10px] font-bold text-neutral-600 group-hover:text-primary flex items-center gap-0.5">
-                    {t("yearView.viewMonth")}
-                    <BrandChevronRightIcon size={12} className="rtl:rotate-180" aria-hidden="true" />
+                  <span className="block text-meta text-primary-600">{t("yearView.bookedDays", { count: bookedDays })}</span>
+                </span>
+                <BrandChevronRightIcon size={16} aria-hidden="true" className="shrink-0 text-primary-400 transition-transform duration-fast group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+              </button>
+
+              <div aria-hidden="true" className="mb-1 grid grid-cols-7 text-center text-[0.6875rem] font-semibold text-primary-500">
+                {daysInMonth.slice(0, 7).map((d) => (
+                  <span key={d.toISOString()}>{fmt(d, "EEEEE")}</span>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {daysInMonth.map((d) => {
+                  if (!isSameMonth(d, monthDate)) return <span key={d.toISOString()} aria-hidden="true" className="h-7" />;
+                  const key = toDateKey(d);
+                  const bCount = getBookingsForDay(d).length;
+                  const isBlocked = isDayBlocked(d, targetListingId);
+                  const past = key < todayKey;
+                  const status = past ? t("status.past") : statusLabel(isBlocked, bCount > 0);
+                  return (
+                    <button
+                      type="button"
+                      key={key}
+                      onClick={() => changeView("month", d)}
+                      aria-label={t("dayCellLabel", { date: fmt(d, "PPPP"), status })}
+                      title={t("dayCellLabel", { date: fmt(d, "PP"), status })}
+                      style={isBlocked && !past && bCount === 0 ? HATCH : undefined}
+                      className={cn(
+                        "flex h-7 items-center justify-center rounded-md text-[0.6875rem] tabular-nums transition-colors duration-fast ease-standard",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600",
+                        bCount > 0
+                          ? past
+                            ? "bg-secondary-200 font-semibold text-secondary-800"
+                            : "bg-secondary-600 font-semibold text-white"
+                          : isBlocked && !past
+                            ? "bg-tertiary-100 text-primary-600"
+                            : past
+                              ? "text-primary-300"
+                              : "text-primary-700 hover:bg-primary/[0.06]",
+                        key === todayKey && "ring-2 ring-accent-600"
+                      )}
+                    >
+                      {fmt(d, "d")}
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const listingOptions = [
+    { value: "all", label: t("allProperties", { count: safeListings.length }) },
+    ...safeListings.map((l) => ({ value: l.id, label: t("listingOption", { title: l.title, city: l.city }) })),
+  ];
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      {/* Header */}
+      <header className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 enter-up">
+          <p className="text-eyebrow uppercase text-secondary-700">{t("eyebrow")}</p>
+          <h1 className="mt-2 text-balance font-serif text-display-md text-primary-900">{t("title")}</h1>
+          <p className="mt-2 max-w-2xl text-pretty text-body text-primary-600">{t("subtitle")}</p>
+        </div>
+        <SegmentedControl
+          ariaLabel={t("viewSwitcherLabel")}
+          options={VIEW_ORDER.map((v) => ({ value: v, label: viewLabels[v] }))}
+          value={view}
+          onChange={(v) => changeView(v)}
+          className="self-start lg:self-auto"
+        />
+      </header>
+
+      {/* Toolbar */}
+      <Card padding="sm" className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <IconButton
+            variant="tertiary"
+            size="sm"
+            onClick={handlePrev}
+            label={t("previous", { view })}
+            icon={<BrandChevronLeftIcon size={18} className="rtl:rotate-180" aria-hidden="true" />}
+          />
+          <IconButton
+            variant="tertiary"
+            size="sm"
+            onClick={handleNext}
+            label={t("next", { view })}
+            icon={<BrandChevronRightIcon size={18} className="rtl:rotate-180" aria-hidden="true" />}
+          />
+          <h2 aria-live="polite" className="min-w-0 flex-1 truncate px-1 font-serif text-heading font-normal capitalize text-primary-900 lg:min-w-[13rem] lg:flex-none">
+            {periodLabel}
+          </h2>
+          <Button variant="tertiary" size="sm" onClick={handleToday}>
+            {tHost("today")}
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Select
+            label={t("propertyLabel")}
+            prefix={<BrandHomeIcon size={16} aria-hidden="true" />}
+            value={selectedListingId}
+            onChange={(e) => {
+              setSelectedListingId(e.target.value);
+              setSelectedRoomTypeId("all");
+              setSelection(null);
+            }}
+            options={listingOptions}
+            containerClassName="sm:w-72"
+          />
+          {activeListing?.roomTypes && activeListing.roomTypes.length > 0 && (
+            <Select
+              label={t("unitLabel")}
+              prefix={<BrandBedIcon size={16} aria-hidden="true" />}
+              value={selectedRoomTypeId}
+              onChange={(e) => setSelectedRoomTypeId(e.target.value)}
+              options={[
+                { value: "all", label: t("allUnits", { count: activeListing.roomTypes.length }) },
+                ...activeListing.roomTypes.map((rt) => ({
+                  value: rt.id,
+                  label: t("unitOption", {
+                    name: rt.name,
+                    unit: rt.bookingUnit === "bed" ? "bed" : "room",
+                    count: rt.inventoryCount || rt.totalInventory || 0,
+                  }),
+                })),
+              ]}
+              containerClassName="sm:w-60"
+            />
+          )}
+        </div>
+      </Card>
+
+      {/* Range helper (month view) */}
+      {view === "month" && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setRangeMode((v) => !v);
+              setSelection(null);
+            }}
+            aria-pressed={rangeMode}
+            className={cn(
+              "inline-flex h-10 items-center gap-2 rounded-full px-4 text-meta font-semibold transition-[background-color,box-shadow,color] duration-fast ease-standard",
+              focusRing,
+              rangeMode ? "bg-primary-800 text-white shadow-e2" : "bg-white text-primary-800 shadow-e1 hover:shadow-e2"
+            )}
+          >
+            <BrandCalendarIcon size={16} aria-hidden="true" />
+            {t("range.modeLabel")}
+          </button>
+          <p className="text-meta text-primary-600" aria-live="polite">
+            {rangeMode ? (selection ? t("range.pickEnd") : t("range.pickStart")) : t("range.hint")}
+          </p>
+          {safeListings.length > 1 && (
+            <ul aria-label={t("listingLegend")} className="ms-auto hidden items-center gap-3 md:flex">
+              {safeListings.slice(0, 4).map((l) => (
+                <li key={l.id} className="flex max-w-[9rem] items-center gap-1.5 text-meta text-primary-700">
+                  <span aria-hidden="true" className={cn("h-2 w-2 shrink-0 rounded-full", (listingColorMap[l.id] || LISTING_COLORS[0]).dot)} />
+                  <span className="truncate" title={l.title}>
+                    {l.title || t("untitledListing")}
                   </span>
-                </button>
-
-                {/* Mini day of week headers */}
-                <div aria-hidden="true" className="grid grid-cols-7 text-center text-[9px] font-bold text-neutral-600 mb-1">
-                  {daysInMonth.slice(0, 7).map((d) => (
-                    <span key={d.toISOString()}>{fmt(d, "EEEEE")}</span>
-                  ))}
-                </div>
-
-                {/* Mini days grid */}
-                <div className="grid grid-cols-7 gap-1 text-center">
-                  {daysInMonth.map((d) => {
-                    const inThisMonth = isSameMonth(d, monthDate);
-                    if (!inThisMonth) {
-                      return <span key={d.toISOString()} aria-hidden="true" className="h-6" />;
-                    }
-                    const bCount = getBookingsForDay(d).length;
-                    const isBlocked = isDayBlocked(
-                      d,
-                      selectedListingId === "all" ? (safeListings[0]?.id || "") : selectedListingId
-                    );
-                    const status = statusLabel(isBlocked, bCount > 0);
-
-                    return (
-                      <button
-                        type="button"
-                        key={d.toISOString()}
-                        onClick={() => {
-                          setCurrentDate(d);
-                          setView("month");
-                        }}
-                        aria-label={t("dayCellLabel", { date: fmt(d, "PPPP"), status })}
-                        title={t("dayCellLabel", { date: fmt(d, "PP"), status })}
-                        className={`text-[9px] font-mono h-6 flex items-center justify-center rounded transition ${FOCUS_RING} focus-visible:ring-offset-1 ${
-                          bCount > 0
-                            ? "bg-emerald-700 text-white font-bold"
-                            : isBlocked
-                            ? "bg-neutral-200 text-neutral-600"
-                            : "hover:bg-neutral-100 text-neutral-700"
-                        }`}
-                      >
-                        {fmt(d, "d")}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
-      {/* Selected Day Dialog / Bottom Sheet */}
+      {/* Views with directional transitions */}
+      <div className="-mx-1 overflow-hidden px-1 pb-2">
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
+          <m.div
+            key={`${view}-${periodKey}`}
+            custom={direction}
+            variants={periodVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            {view === "month" && renderMonth()}
+            {view === "week" && renderWeek()}
+            {view === "day" && renderDay()}
+            {view === "year" && renderYear()}
+          </m.div>
+        </AnimatePresence>
+      </div>
+
+      {view !== "month" && view !== "year" && <div className="mt-4">{legend}</div>}
+
+      {/* Selected day */}
       <Dialog
         isOpen={!!activeDay}
         onClose={() => setActiveDay(null)}
         busy={isSaving}
         title={activeDay ? fmt(activeDay, "PPPP") : ""}
-        titleClassName="font-serif text-lg font-black text-primary pe-10"
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl border border-tertiary shadow-2xl p-6 max-h-[92dvh] overflow-y-auto"
+        description={activeListing ? t("listingOption", { title: activeListing.title, city: activeListing.city }) : t("untitledListing")}
+        showClose
+        size="sm"
       >
         {activeDay && (
-          <>
-            <p className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider pb-3 border-b border-tertiary/60 mb-4">
-              {t("dialog.eyebrow")}
-            </p>
-            <button
-              type="button"
-              onClick={() => setActiveDay(null)}
-              aria-label={tCommon("close")}
-              className={`absolute top-5 end-5 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center ${FOCUS_RING}`}
-            >
-              <BrandCloseIcon size={16} aria-hidden="true" />
-            </button>
-
-            {/* Target Property */}
-            <div className="mb-4">
-              <span className="text-xs font-bold text-neutral-600 block mb-1">{t("dialog.property")}</span>
-              <div className="text-xs font-bold text-primary bg-neutral-50 p-2.5 rounded-xl border border-tertiary/60 truncate">
-                {activeListing
-                  ? t("listingOption", { title: activeListing.title, city: activeListing.city })
-                  : t("untitledListing")}
-              </div>
-            </div>
-
-            {/* Availability status & Toggle */}
-            <div className="bg-neutral-50 p-4 rounded-2xl border border-tertiary/60 mb-4 flex items-center justify-between gap-3">
-              <div>
-                <span className="block text-xs font-bold text-primary">{t("dialog.availability")}</span>
-                <span className="text-xs text-neutral-600">
-                  {activeDayBlocked ? t("dialog.blockedDesc") : t("dialog.availableDesc")}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleToggleBlock(activeDay)}
+          <div className="space-y-5">
+            <Card variant="sunken" padding="sm">
+              <Switch
+                label={t("dialog.openForBookings")}
+                description={activeDayBlocked ? t("dialog.blockedDesc") : t("dialog.availableDesc")}
+                checked={!activeDayBlocked}
                 disabled={isSaving}
-                aria-pressed={activeDayBlocked}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-60 ${FOCUS_RING} ${
-                  activeDayBlocked
-                    ? "bg-emerald-700 text-white hover:bg-emerald-800"
-                    : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
-                }`}
-              >
-                {activeDayBlocked ? (
-                  <>
-                    <BrandDoorIcon size={15} aria-hidden="true" />
-                    <span>{t("dialog.unblock")}</span>
-                  </>
-                ) : (
-                  <>
-                    <BrandLockIcon size={15} aria-hidden="true" />
-                    <span>{t("dialog.block")}</span>
-                  </>
-                )}
-              </button>
-            </div>
+                onCheckedChange={() => handleToggleBlock(activeDay)}
+              />
+            </Card>
 
-            {/* Nightly Price Override */}
-            <div className="bg-neutral-50 p-4 rounded-2xl border border-tertiary/60 mb-6">
-              <span className="block text-xs font-bold text-primary mb-1">{t("dialog.priceTitle")}</span>
-              <p id={priceHelpId} className="text-[11px] text-neutral-600 mb-3">
-                {t("dialog.defaultRate", { price: money(activeListing?.price ?? 0) })}
-              </p>
-              <label htmlFor={priceInputId} className="sr-only">
-                {t("dialog.priceInputLabel")}
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id={priceInputId}
+            <div>
+              <p className="mb-2 text-body font-semibold text-primary-900">{t("dialog.priceTitle")}</p>
+              <div className="flex items-start gap-2">
+                <Input
+                  label={t("dialog.priceInputLabel")}
                   type="number"
                   inputMode="numeric"
                   value={overridePriceInput}
@@ -896,50 +1221,114 @@ export default function HostCalendarClient({
                     if (priceError) setPriceError(null);
                   }}
                   placeholder={String(activeListing?.price ?? "")}
-                  aria-invalid={priceError ? true : undefined}
-                  aria-describedby={priceError ? `${priceHelpId} ${priceErrorId}` : priceHelpId}
-                  className={`flex-1 min-w-0 px-3 py-2 bg-white border rounded-xl text-xs font-mono font-bold text-primary focus:border-primary ${FOCUS_RING} ${
-                    priceError ? "border-status-error" : "border-tertiary/80"
-                  }`}
+                  suffix={locale === "ar" ? "د.ج" : "DZD"}
+                  helper={t("dialog.defaultRate", { price: money(activeListing?.price ?? 0) })}
+                  error={priceError ?? undefined}
+                  containerClassName="flex-1"
                 />
-                <button
-                  type="button"
-                  onClick={() => handleSavePriceOverride(activeDay)}
-                  disabled={isSaving}
-                  className={`disabled:opacity-60 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs ${FOCUS_RING}`}
-                >
+                <Button className="mt-1.5" onClick={() => handleSavePriceOverride(activeDay)} loading={isSaving}>
                   {t("dialog.saveRate")}
-                </button>
+                </Button>
               </div>
-              {priceError && (
-                <p id={priceErrorId} role="alert" className="mt-2 text-[11px] font-semibold text-status-error">
-                  {priceError}
-                </p>
-              )}
             </div>
 
-            {/* Existing Bookings on date */}
             {activeDayBookings.length > 0 && (
-              <div className="p-3 bg-primary/5 rounded-2xl border border-primary/20 mb-4">
-                <span className="block text-xs font-bold text-primary mb-1">{t("dialog.reservationsOnDate")}</span>
-                {activeDayBookings.map((b) => (
-                  <div key={b.id} className="text-xs text-neutral-700 flex items-center justify-between gap-2">
-                    <span>{t("guestLine", { name: b.user?.name || t("guestFallback"), count: b.guestsCount })}</span>
-                    <span className="font-mono font-bold text-primary">{money(b.totalPrice)}</span>
-                  </div>
-                ))}
+              <div className="rounded-2xl bg-secondary-100/70 p-4">
+                <p className="mb-2 text-meta font-semibold text-secondary-800">{t("dialog.reservationsOnDate")}</p>
+                <ul className="space-y-1.5">
+                  {activeDayBookings.map((b) => (
+                    <li key={b.id} className="flex items-center justify-between gap-2 text-meta text-primary-800">
+                      <span>{t("guestLine", { name: b.user?.name || t("guestFallback"), count: b.guestsCount })}</span>
+                      <span className="font-semibold tabular-nums text-primary-900">{money(b.totalPrice)}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => setActiveDay(null)}
-              className={`w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-xl text-xs font-bold transition ${FOCUS_RING}`}
-            >
-              {tCommon("close")}
-            </button>
-          </>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setActiveDay(null)}>
+                {tCommon("close")}
+              </Button>
+            </DialogFooter>
+          </div>
         )}
+      </Dialog>
+
+      {/* Selected range */}
+      <Dialog
+        isOpen={rangeOpen}
+        onClose={closeRange}
+        busy={isSaving}
+        title={t("range.title", { count: selectedKeys.length })}
+        description={
+          selectedKeys.length > 0
+            ? t("range.dates", {
+                start: fmt(fromDateKey(selectedKeys[0]), "PPP"),
+                end: fmt(fromDateKey(selectedKeys[selectedKeys.length - 1]), "PPP"),
+              })
+            : undefined
+        }
+        showClose
+        size="sm"
+      >
+        <div className="space-y-5">
+          <p className="text-meta text-primary-600">
+            {activeListing ? t("listingOption", { title: activeListing.title, city: activeListing.city }) : t("untitledListing")}
+          </p>
+          {(() => {
+            const bookedInside = selectedKeys.filter((k) => getBookingsForDay(fromDateKey(k)).length > 0).length;
+            return bookedInside > 0 ? (
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-meta text-amber-900">{t("range.bookedInside", { count: bookedInside })}</p>
+            ) : null;
+          })()}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              variant="secondary"
+              onClick={() => handleRangeBlock(true)}
+              loading={isSaving}
+              leadingIcon={<BrandLockIcon size={16} aria-hidden="true" />}
+            >
+              {t("range.block")}
+            </Button>
+            <Button
+              variant="tertiary"
+              onClick={() => handleRangeBlock(false)}
+              disabled={isSaving}
+              leadingIcon={<BrandDoorIcon size={16} aria-hidden="true" />}
+            >
+              {t("range.reopen")}
+            </Button>
+          </div>
+          <div className="border-t border-primary/[0.08] pt-5">
+            <p className="mb-2 text-body font-semibold text-primary-900">{t("range.priceTitle")}</p>
+            <div className="flex items-start gap-2">
+              <Input
+                label={t("range.priceInputLabel")}
+                type="number"
+                inputMode="numeric"
+                value={rangePriceInput}
+                onChange={(e) => {
+                  setRangePriceInput(e.target.value);
+                  if (rangePriceError) setRangePriceError(null);
+                }}
+                placeholder={String(activeListing?.price ?? "")}
+                suffix={locale === "ar" ? "د.ج" : "DZD"}
+                helper={t("dialog.defaultRate", { price: money(activeListing?.price ?? 0) })}
+                error={rangePriceError ?? undefined}
+                containerClassName="flex-1"
+              />
+              <Button className="mt-1.5" onClick={handleRangePrice} disabled={isSaving}>
+                {t("range.savePrice")}
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={closeRange}>
+              {t("range.clear")}
+            </Button>
+          </DialogFooter>
+        </div>
       </Dialog>
     </div>
   );

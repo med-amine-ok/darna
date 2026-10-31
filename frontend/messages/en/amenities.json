@@ -11,5 +11,15 @@
   "patio": "Patio",
   "seaView": "Sea view",
   "fireplace": "Fireplace",
-  "courtyard": "Courtyard"
+  "courtyard": "Courtyard",
+  "breakfast": "Breakfast",
+  "spa": "Spa, hammam or jacuzzi",
+  "gym": "Gym",
+  "restaurant": "Restaurant",
+  "rooftop": "Rooftop terrace",
+  "garden": "Garden, balcony or patio",
+  "heating": "Heating",
+  "elevator": "Lift",
+  "lockers": "Lockers",
+  "airportTransfer": "Airport transfer"
 }

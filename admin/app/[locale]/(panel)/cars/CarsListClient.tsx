@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { listingImageSrc, listingImages } from "@/lib/placeholders";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
 import {
@@ -45,6 +46,9 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+
+/** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
+const SPLIT_HIDDEN_COLUMNS = ["id", "category", "location"];
 
 // value = filter value (unchanged), labelKey = translation key under cars.categoryOptions
 const CAR_CATEGORIES = [
@@ -223,7 +227,7 @@ export default function CarsListClient() {
       header: "#",
       className: "w-20",
       render: (row) => (
-        <span className="font-mono text-xs text-[#2E3A2F]/70 font-semibold">
+        <span className="text-xs text-primary-600 font-semibold tabular-nums whitespace-nowrap">
           {row.formattedId || `#V${row.id.replace("lst_", "").padStart(4, "0")}`}
         </span>
       ),
@@ -233,19 +237,19 @@ export default function CarsListClient() {
       header: t("columns.vehicle"),
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={row.imageSrc?.[0] || "/placeholder-car.jpg"}
+              src={listingImageSrc(row.imageSrc?.[0], "car")}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[240px]">
             <button
               type="button"
-              className={`block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded ${FOCUS_RING}`}
+              className={`block max-w-full font-semibold text-primary-900 truncate text-sm text-start hover:underline rounded ${FOCUS_RING}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectCar(row);
@@ -253,7 +257,7 @@ export default function CarsListClient() {
             >
               {row.title}
             </button>
-            <div className="text-xs text-[#2E3A2F]/70 mt-0.5">
+            <div className="text-xs text-primary-600 mt-0.5">
               {t("rowSpecs", { year: 2023 })}
             </div>
           </div>
@@ -264,8 +268,8 @@ export default function CarsListClient() {
       key: "category",
       header: t("columns.category"),
       render: (row) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#EAE5D9] text-[#2E3A2F] border border-[#D9C9B2]/50">
-          <Car className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-darnaBg-300/70 text-primary-800 whitespace-nowrap">
+          <Car className="w-3 h-3 text-secondary" aria-hidden="true" />
           <span>{row.propertyType || t("categoryOptions.suv")}</span>
         </span>
       ),
@@ -274,8 +278,8 @@ export default function CarsListClient() {
       key: "location",
       header: t("columns.city"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" aria-hidden="true" />
+        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
+          <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
           <span className="truncate">{t("locationValue", { city: row.city, code: row.wilayaCode })}</span>
         </div>
       ),
@@ -284,7 +288,7 @@ export default function CarsListClient() {
       key: "price",
       header: t("columns.pricePerDay"),
       render: (row) => (
-        <div className="text-xs font-semibold text-[#2E3A2F]">
+        <div className="text-xs font-semibold text-primary tabular-nums whitespace-nowrap">
           {formatDzd(row.price, locale)}
         </div>
       ),
@@ -303,7 +307,7 @@ export default function CarsListClient() {
           <button
             type="button"
             onClick={() => handleSelectCar(row)}
-            className={`p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors ${FOCUS_RING}`}
+            className={`p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors ${FOCUS_RING}`}
             title={t("quickPreview")}
             aria-label={t("quickPreviewOf", { title: row.title })}
           >
@@ -312,7 +316,7 @@ export default function CarsListClient() {
           <button
             type="button"
             onClick={() => router.push(`/cars/${row.id}`)}
-            className={`p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors ${FOCUS_RING}`}
+            className={`p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors ${FOCUS_RING}`}
             title={t("openFullPage")}
             aria-label={t("openFullPageOf", { title: row.title })}
           >
@@ -392,7 +396,7 @@ export default function CarsListClient() {
                   search: searchQuery || undefined,
                 })
               }
-              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-primary bg-white rounded-xl transition-colors shadow-e1 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-e2 duration-fast ${FOCUS_RING}`}
             >
               <Download className="w-4 h-4" aria-hidden="true" />
               <span>{t("export")}</span>
@@ -400,7 +404,7 @@ export default function CarsListClient() {
             <button
               type="button"
               onClick={() => router.push("/cars/categories")}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm ${FOCUS_RING}`}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-primary bg-white rounded-xl transition-colors shadow-e1 hover:shadow-e2 duration-fast ${FOCUS_RING}`}
             >
               <Tag className="w-4 h-4" aria-hidden="true" />
               <span>{t("categories")}</span>
@@ -409,7 +413,7 @@ export default function CarsListClient() {
             <button
               type="button"
               onClick={() => router.push("/cars/new")}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm ${FOCUS_RING}`}
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary-900 transition-colors shadow-e1 duration-fast ${FOCUS_RING}`}
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
               <span>{t("add")}</span>
@@ -508,9 +512,9 @@ export default function CarsListClient() {
       <SplitView
         isPanelOpen={!!selectedCar}
         mainContent={
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex flex-col gap-1">
             <DataTable
-              columns={columns}
+              columns={selectedCar ? columns.filter((c) => !SPLIT_HIDDEN_COLUMNS.includes(c.key)) : columns}
               data={data}
               keyExtractor={(c) => c.id}
               selectedRowId={selectedCarId || undefined}
@@ -522,7 +526,7 @@ export default function CarsListClient() {
                 onSelectionChange: setSelectedRowIds,
               }}
             />
-            <div className="p-4 border-t border-[#D9C9B2]/40 bg-[#FAF9F5]">
+            <div className="px-1">
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
@@ -549,7 +553,7 @@ export default function CarsListClient() {
                 <button
                   type="button"
                   onClick={() => router.push(`/cars/${selectedCar.id}`)}
-                  className={`p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded ${FOCUS_RING}`}
+                  className={`p-1 text-primary-600 hover:text-primary rounded ${FOCUS_RING}`}
                   title={t("fullScreen")}
                   aria-label={t("fullScreen")}
                 >
@@ -563,7 +567,7 @@ export default function CarsListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.changeStatus(selectedCar, "approved")}
-                        className="px-3 py-1.5 text-xs font-medium text-white bg-[#5a6b4c] rounded-lg hover:bg-[#4a5a3e] transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-white bg-secondary-700 rounded-xl hover:bg-secondary-800 transition-colors duration-fast"
                       >
                         {t("panel.approveDirectly")}
                       </button>
@@ -572,7 +576,7 @@ export default function CarsListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.restore(selectedCar)}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] border border-[#6B7F5B] bg-[#6B7F5B]/10 rounded-lg hover:bg-[#6B7F5B]/20 transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary border border-secondary bg-secondary/10 rounded-xl hover:bg-secondary/20 transition-colors duration-fast"
                       >
                         {tActions("restore")}
                       </button>
@@ -581,7 +585,7 @@ export default function CarsListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.changeStatus(selectedCar, "approved")}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] border border-[#6B7F5B] bg-[#6B7F5B]/10 rounded-lg hover:bg-[#6B7F5B]/20 transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary border border-secondary bg-secondary/10 rounded-xl hover:bg-secondary/20 transition-colors duration-fast"
                       >
                         {t("panel.reactivate")}
                       </button>
@@ -590,7 +594,7 @@ export default function CarsListClient() {
                       type="button"
                       disabled
                       title={tActions("unavailableHint")}
-                      className="px-3 py-1.5 text-xs font-medium text-[#7A5A26] border border-[#D9C9B2] rounded-lg opacity-50 cursor-not-allowed"
+                      className="px-3 py-1.5 text-xs font-medium text-amber-700 border border-primary/[0.12] rounded-lg opacity-50 cursor-not-allowed"
                     >
                       {t("panel.maintenance")}
                     </button>
@@ -598,7 +602,7 @@ export default function CarsListClient() {
                     <button
                       type="button"
                       onClick={() => setConfirmAction({ type: "delete", car: selectedCar })}
-                      className="px-3 py-1.5 text-xs font-medium text-[#A4532F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-accent-700 bg-white ring-1 ring-inset ring-accent/40 rounded-xl hover:bg-accent-50 transition-colors duration-fast"
                     >
                       {tCommon("delete")}
                     </button>
@@ -607,7 +611,7 @@ export default function CarsListClient() {
                   <button
                     type="button"
                     onClick={() => router.push(`/cars/${selectedCar.id}`)}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
+                    className="px-3.5 py-1.5 min-h-[34px] text-xs font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 shadow-e1 transition-colors duration-fast"
                   >
                     {t("panel.edit")}
                   </button>
@@ -616,17 +620,17 @@ export default function CarsListClient() {
             >
               <div className="space-y-5">
                 <ImageCarousel
-                  images={selectedCar.imageSrc?.length ? selectedCar.imageSrc : ["/placeholder-car.jpg"]}
+                  images={listingImages(selectedCar.imageSrc, "car")}
                   alt={selectedCar.title}
                 />
 
-                <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
+                <div className="flex items-center justify-between text-xs text-primary border-b border-primary/[0.08] pb-3">
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
                     <span className="font-semibold">{formatRating(selectedCar.rating)}</span>
-                    <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: selectedCar.reviewsCount })}</span>
+                    <span className="text-primary-600">{t("reviewsCount", { count: selectedCar.reviewsCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#4F5F43] font-medium">
+                  <div className="flex items-center gap-1 text-secondary-700 font-medium">
                     <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{t("locationValue", { city: selectedCar.city, code: selectedCar.wilayaCode })}</span>
                   </div>
@@ -648,7 +652,7 @@ export default function CarsListClient() {
                   <div className="space-y-4">
                     {/* About This Vehicle */}
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-2">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-2">
                         {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
@@ -662,73 +666,73 @@ export default function CarsListClient() {
                     </div>
 
                     {/* Price & Discounts Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2.5">
+                      <div className="text-xs font-semibold text-primary flex items-center justify-between">
                         <span>{t("pricing.title")}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                        <span className="font-semibold text-primary-900 text-sm tabular-nums whitespace-nowrap">
                           {formatDzd(selectedCar.price, locale)}{" "}
-                          <span className="text-[10px] text-[#2E3A2F]/70">{t("pricing.perDayUnit")}</span>
+                          <span className="text-[11px] text-primary-600">{t("pricing.perDayUnit")}</span>
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.weeklyDiscount", { percent: DISCOUNTS.weekly })}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, DISCOUNTS.weekly), locale) })}</span>
+                          <span className="text-primary-600 block">{t("pricing.weeklyDiscount", { percent: DISCOUNTS.weekly })}</span>
+                          <span className="font-medium text-secondary-700">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, DISCOUNTS.weekly), locale) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.monthlyDiscount", { percent: DISCOUNTS.monthly })}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, DISCOUNTS.monthly), locale) })}</span>
+                          <span className="text-primary-600 block">{t("pricing.monthlyDiscount", { percent: DISCOUNTS.monthly })}</span>
+                          <span className="font-medium text-secondary-700">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, DISCOUNTS.monthly), locale) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.deposit")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{formatDzd(50000, locale)}</span>
+                          <span className="text-primary-600 block">{t("pricing.deposit")}</span>
+                          <span className="font-medium text-primary">{formatDzd(50000, locale)}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.mileage")}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("pricing.mileageUnlimited", { days: 3 })}</span>
+                          <span className="text-primary-600 block">{t("pricing.mileage")}</span>
+                          <span className="font-medium text-secondary-700">{t("pricing.mileageUnlimited", { days: 3 })}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Rental times & conditions */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
+                      <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-secondary" aria-hidden="true" />
                         <span>{t("schedule.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.pickup")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.fromTime", { time: formatTime(8, 30) })}</span>
+                          <span className="text-primary-600 block">{t("schedule.pickup")}</span>
+                          <span className="font-medium text-primary">{t("schedule.fromTime", { time: formatTime(8, 30) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.return")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.beforeTime", { time: formatTime(19, 0) })}</span>
+                          <span className="text-primary-600 block">{t("schedule.return")}</span>
+                          <span className="font-medium text-primary">{t("schedule.beforeTime", { time: formatTime(19, 0) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.minDuration")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.minDays", { count: 2 })}</span>
+                          <span className="text-primary-600 block">{t("schedule.minDuration")}</span>
+                          <span className="font-medium text-primary">{t("schedule.minDays", { count: 2 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.fuelPolicy")}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("schedule.fullToFull")}</span>
+                          <span className="text-primary-600 block">{t("schedule.fuelPolicy")}</span>
+                          <span className="font-medium text-secondary-700">{t("schedule.fullToFull")}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
-                      <div className="text-xs font-semibold text-[#2E3A2F] mb-1">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl">
+                      <div className="text-xs font-semibold text-primary mb-1">
                         {t("owner.title")}
                       </div>
-                      <div className="text-sm font-medium text-[#2E3A2F]">{selectedCar.hostName}</div>
-                      <div className="text-xs text-[#2E3A2F]/70">{t("owner.licensed")}</div>
+                      <div className="text-sm font-medium text-primary">{selectedCar.hostName}</div>
+                      <div className="text-xs text-primary-600">{t("owner.licensed")}</div>
                     </div>
 
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
                         {t("description.title")}
                       </h4>
-                      <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
+                      <p className="text-xs text-primary-700 leading-relaxed bg-darnaBg-100 p-3 rounded-xl">
                         {selectedCar.description || t("description.empty")}
                       </p>
                     </div>
@@ -738,9 +742,9 @@ export default function CarsListClient() {
                 {panelTab === "pricing" && (
                   <div className="space-y-3 text-xs">
                     {tiers.map((tier) => (
-                      <div key={tier.label} className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40 flex justify-between">
-                        <span className="text-[#2E3A2F]/70">{tier.label}</span>
-                        <span className={`font-semibold ${tier.discount ? "text-[#4F5F43]" : "text-[#2E3A2F]"}`}>
+                      <div key={tier.label} className="p-3 bg-darnaBg-100 rounded-xl flex justify-between">
+                        <span className="text-primary-600">{tier.label}</span>
+                        <span className={`font-semibold ${tier.discount ? "text-secondary-700" : "text-primary"}`}>
                           {tier.discount
                             ? t("pricing.perDayDiscounted", {
                                 price: formatDzd(applyDiscount(selectedCar.price, tier.discount), locale),

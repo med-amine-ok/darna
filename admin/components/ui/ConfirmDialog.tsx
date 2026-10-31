@@ -66,17 +66,17 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   const iconBadges = {
     danger: (
-      <div className="w-12 h-12 rounded-2xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent-700 mb-3" aria-hidden="true">
+      <div className="w-12 h-12 rounded-2xl bg-accent-100 flex items-center justify-center text-accent-700 mb-3" aria-hidden="true">
         <Trash2 className="w-6 h-6" />
       </div>
     ),
     warning: (
-      <div className="w-12 h-12 rounded-2xl bg-[#F3EAD8] border border-[#D9C4A1] flex items-center justify-center text-[#71542C] mb-3" aria-hidden="true">
+      <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-800 mb-3" aria-hidden="true">
         <AlertTriangle className="w-6 h-6" />
       </div>
     ),
     primary: (
-      <div className="w-12 h-12 rounded-2xl bg-secondary/15 border border-secondary/25 flex items-center justify-center text-secondary-700 mb-3" aria-hidden="true">
+      <div className="w-12 h-12 rounded-2xl bg-secondary-100 flex items-center justify-center text-secondary-700 mb-3" aria-hidden="true">
         <CheckCircle2 className="w-6 h-6" />
       </div>
     ),
@@ -86,19 +86,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <Dialog isOpen={isOpen} onClose={handleClose} maxWidth="sm" labelledBy={titleId} describedBy={descId}>
       <div className="text-start">
         {iconBadges[activeVariant]}
-        <h2 id={titleId} className="text-base font-serif font-black text-primary leading-snug">
+        <h2 id={titleId} className="text-title font-semibold text-primary-900 leading-snug">
           {title}
         </h2>
-        <p id={descId} className="text-xs text-neutral-600 mt-2 leading-relaxed">
+        <p id={descId} className="text-meta text-primary-600 mt-2 leading-relaxed">
           {description}
         </p>
 
         {requireTypedConfirmation && (
-          <div className="mt-4 space-y-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
+          <div className="mt-4 space-y-1.5 p-3 rounded-xl bg-accent-50 ring-1 ring-inset ring-accent-200">
             <label htmlFor={typedId} className="block text-[11px] font-semibold text-accent-700">
               {t.rich("typeToConfirm", {
                 value: requireTypedConfirmation,
-                strong: (chunks) => <span className="font-bold underline">{chunks}</span>,
+                strong: (chunks) => <span className="font-semibold underline">{chunks}</span>,
               })}
             </label>
             <input
@@ -108,12 +108,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               value={typedInput}
               onChange={(e) => setTypedInput(e.target.value)}
               placeholder={requireTypedConfirmation}
-              className="w-full text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 bg-white focus:outline-none focus:ring-2 focus:ring-accent-600"
+              className="w-full text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 bg-white focus:outline-none focus:ring-4 focus:ring-accent/15"
             />
           </div>
         )}
 
-        <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-neutral-100">
+        <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-primary/[0.06]">
           <Button
             variant="outline"
             size="sm"

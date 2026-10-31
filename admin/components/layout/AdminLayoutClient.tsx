@@ -98,7 +98,7 @@ function AdminLayoutInner({ children, currentAdmin, approvalsCount = 0 }: AdminL
       {/* Skip link: first focusable element on every page */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-white focus:text-primary focus:font-semibold focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-600"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-white focus:text-primary focus:font-semibold focus:shadow-e3 focus:outline-none focus:ring-2 focus:ring-accent-600"
       >
         {t("skipToContent")}
       </a>
@@ -119,7 +119,7 @@ function AdminLayoutInner({ children, currentAdmin, approvalsCount = 0 }: AdminL
         />
 
         {/* Main Content Area: offset by the sidebar on desktop (218px, or 80px when the sidebar is collapsed), full-width on mobile & tablet */}
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ms-[218px] lg:[aside[data-collapsed=true]+&]:ms-20">
+        <div className="flex-1 flex flex-col min-w-0 transition-[margin] duration-base ease-out lg:ms-[218px] lg:[aside[data-collapsed=true]+&]:ms-20">
           <Header
             currentUser={currentAdmin}
             onMobileMenuToggle={toggleMobileSidebar}

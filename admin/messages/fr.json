@@ -256,7 +256,8 @@
     "paid": "Payée",
     "processed": "Traité",
     "invited": "Invité",
-    "failed": "Échoué"
+    "failed": "Échoué",
+    "pending_review": "En attente de validation"
   },
   "roles": {
     "super_admin": "Super Administrateur",
@@ -824,7 +825,7 @@
       "templateLabel": "Modèle de motif standard",
       "noteLabel": "Détails supplémentaires / note à l'hôte (facultatif)",
       "notePlaceholder": "ex : Merci de renvoyer le registre de commerce avec un cachet 2026 valide.",
-      "withNote": "{template} — Note : {note}",
+      "withNote": "{template}, Note : {note}",
       "templates": {
         "registration": "Document d'immatriculation commerciale ou fiscale incomplet",
         "photos": "Les photos de l'annonce contiennent des filigranes promotionnels ou sont de faible résolution",
@@ -1585,7 +1586,10 @@
       "unexpected": "Une erreur est survenue lors de la connexion. Veuillez réessayer."
     },
     "adminBadge": "Admin",
-    "demoFillLabel": "Remplir avec le compte démo {role} ({email})"
+    "demoFillLabel": "Remplir avec le compte démo {role} ({email})",
+    "panelEyebrow": "L'Algérie, de la côte au Tassili",
+    "panelTitle": "Chaque séjour, voyage et hôte, suivi avec soin.",
+    "panelImagesAlt": "Photographies de Djanet, Ghardaïa et de la baie d'Alger"
   },
   "auth": {
     "forbidden": {
@@ -1596,7 +1600,7 @@
   },
   "actions": {
     "reasonLabel": "Motif (obligatoire)",
-    "reasonPlaceholder": "Expliquez la décision — elle est conservée dans le journal d'audit.",
+    "reasonPlaceholder": "Expliquez la décision, elle est conservée dans le journal d'audit.",
     "reasonTooShort": "Veuillez saisir au moins {min} caractères.",
     "cancel": "Annuler",
     "confirm": "Confirmer",
@@ -1624,7 +1628,7 @@
   },
   "payments": {
     "title": "Paiements & Finances",
-    "subtitle": "Portefeuilles prestataires, grand livre, commissions, virements et remboursements — tous les soldes sont calculés à partir du grand livre.",
+    "subtitle": "Portefeuilles prestataires, grand livre, commissions, virements et remboursements, tous les soldes sont calculés à partir du grand livre.",
     "exportLedger": "Exporter le grand livre (CSV)",
     "exportWallets": "Exporter les portefeuilles (CSV)",
     "rechargeWallet": "Recharger un portefeuille",
@@ -2123,7 +2127,7 @@
     }
   },
   "stays": {
-    "photoAlt": "{title} — photo {index}",
+    "photoAlt": "{title}, photo {index}",
     "categoriesPage": {
       "title": "Catégories d'hébergements",
       "subtitle": "Configurez les catégories et types de propriétés affichés aux voyageurs.",
@@ -3269,9 +3273,9 @@
       "title": "Ventilation des revenus DARNA",
       "subtitle": "Revenus nets issus des commissions de la plateforme, hors fonds séquestres reversés aux prestataires.",
       "items": {
-        "individual": "Commissions — hôtes particuliers",
-        "agency": "Commissions — agences de voyages",
-        "carRental": "Commissions — loueurs de voitures"
+        "individual": "Commissions, hôtes particuliers",
+        "agency": "Commissions, agences de voyages",
+        "carRental": "Commissions, loueurs de voitures"
       }
     },
     "reports": {
@@ -3518,7 +3522,7 @@
     },
     "pages": {
       "home": {
-        "title": "Aide — Tableau de bord",
+        "title": "Aide, Tableau de bord",
         "whatFor": "Vous offre une vue claire en 10 secondes sur les validations en attente et la santé de DARNA.",
         "tasks": {
           "reviewHosts": {
@@ -3540,7 +3544,7 @@
         }
       },
       "approvals": {
-        "title": "Aide — À vérifier (boîte de validation)",
+        "title": "Aide, À vérifier (boîte de validation)",
         "whatFor": "Votre espace centralisé pour valider ou refuser les nouveaux hôtes et les annonces en attente.",
         "tasks": {
           "approveHost": {

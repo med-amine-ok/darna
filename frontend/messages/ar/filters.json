@@ -18,5 +18,80 @@
   "hotelResort": "فندق ومنتجع",
   "hostelDorms": "نُزل شباب ومهاجع",
   "villa": "فيلا",
-  "riad": "رياض وقصور تاريخية"
+  "riad": "رياض وقصور تاريخية",
+  "showStays": "{count, plural, =0 {لا توجد إقامات} one {عرض إقامة واحدة} two {عرض إقامتين} few {عرض # إقامات} many {عرض # إقامة} other {عرض # إقامة}}",
+  "sidebar": {
+    "label": "عوامل تصفية البحث",
+    "title": "التصفية",
+    "reset": "إعادة الضبط",
+    "seeMore": "عرض المزيد",
+    "seeLess": "عرض أقل",
+    "price": "السعر (دج)",
+    "pricePerPerson": "السعر للشخص (دج)",
+    "rating": "تقييم الضيوف",
+    "anyRating": "كل التقييمات",
+    "ratingAtLeast": "{rating} فأكثر",
+    "bedrooms": "غرف النوم",
+    "any": "الكل",
+    "atLeast": "{count}+",
+    "tripType": "مدة الرحلة",
+    "duration": {
+      "1-3": "من 1 إلى 3 أيام",
+      "4-7": "من 4 إلى 7 أيام",
+      "8-14": "من 8 إلى 14 يومًا",
+      "15+": "15 يومًا أو أكثر"
+    },
+    "departureMonth": "شهر الانطلاق",
+    "optionCount": "{count, plural, zero {لا نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}",
+    "category": "الفئة",
+    "wilaya": "الولاية",
+    "searchWilaya": "ابحث عن ولاية أو رقمها",
+    "noWilaya": "لا توجد ولاية مطابقة",
+    "seeAllWilayas": "عرض الولايات الـ{count}",
+    "commune": "البلدية",
+    "communeHint": "اختر ولاية لعرض بلدياتها فقط.",
+    "roomsAndBaths": "الغرف والحمّامات",
+    "bathrooms": "الحمّامات",
+    "bedroomsAtLeast": "{count}+ غرف نوم",
+    "bathroomsAtLeast": "{count}+ حمّامات",
+    "hotelStars": "تصنيف الفندق",
+    "starsAtLeast": "{count}+ نجوم",
+    "vehicleType": "نوع المركبة",
+    "transmission": "ناقل الحركة",
+    "transmissionTypes": {
+      "automatic": "أوتوماتيكي",
+      "manual": "يدوي"
+    },
+    "fuel": "الوقود",
+    "fuelTypes": {
+      "petrol": "بنزين",
+      "diesel": "ديزل",
+      "hybrid": "هجين",
+      "electric": "كهربائي"
+    },
+    "seats": "المقاعد",
+    "seatsAtLeast": "{count}+ مقاعد",
+    "experienceType": "نوع التجربة",
+    "experienceLength": "المدة",
+    "expLength": {
+      "upTo4h": "حتى 4 ساعات",
+      "halfDay": "من 4 إلى 12 ساعة",
+      "multiDay": "عدة أيام"
+    },
+    "languages": "اللغات",
+    "groupSize": "حجم المجموعة",
+    "groupAtLeast": "{count}+ مسافرين",
+    "agency": "الوكالة",
+    "bookingOptions": "خيارات الحجز",
+    "instantBook": "حجز فوري",
+    "guestFavorite": "مفضّل لدى الضيوف",
+    "freeCancellation": "إلغاء مجاني",
+    "hostType": "نوع المضيف",
+    "hostTypes": {
+      "individual": "مضيفون أفراد",
+      "organization": "فنادق ووكالات ومحترفون"
+    },
+    "activeFilters": "عوامل التصفية النشطة",
+    "remove": "إزالة عامل التصفية: {label}"
+  }
 }

@@ -25,7 +25,8 @@
     "travelForWork": "Travel for work",
     "new": "New",
     "hostingManagement": "Hosting management",
-    "proHosting": "Professional hosting tools"
+    "proHosting": "Professional hosting tools",
+    "accessibility": "Accessibility"
   },
   "personal": {
     "title": "Personal information",
@@ -183,5 +184,14 @@
     "removeCardConfirm": "Remove card",
     "removeCardCancel": "Keep card",
     "cardRemoved": "Payment card removed from your account."
+  },
+  "eyebrow": "Your account",
+  "accessibility": {
+    "title": "Accessibility",
+    "description": "Make DARNA comfortable to use on this device.",
+    "reduceMotion": "Reduce motion",
+    "reduceMotionDescription": "Turn off entrance animations, parallax and moving effects. By default DARNA follows your device setting.",
+    "previewFull": "Animations are on, unless your device asks for less motion.",
+    "previewReduced": "Motion is reduced on this device."
   }
 }

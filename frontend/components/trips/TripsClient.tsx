@@ -12,24 +12,29 @@ import {
   BrandUsersIcon,
   BrandReceiptIcon,
   BrandMessageIcon,
-  BrandCloseIcon,
   BrandCheckIcon,
+  BrandCloseIcon,
+  BrandCreditCardIcon,
 } from "@/components/icons";
-import ConfirmDialog from "@/components/common/ConfirmDialog";
-import Dialog from "@/components/ui/Dialog";
+import ConfirmDialog from "@/components/models/ConfirmDialog";
+import { Badge, Button, Card, Dialog, KitEmptyState, Pill, Tabs, TabPanel, cn } from "@/components/ui";
+import type { BadgeTone } from "@/components/ui";
 import { useLocale, useTranslations } from "next-intl";
 import { useCurrency } from "@/hook/useCurrency";
 import { computeGuestRefund, getCancellationPolicy } from "@/lib/booking/cancellation";
 import { formatDateRange } from "@/lib/booking/dates";
 import { useActionError } from "@/hook/useActionError";
 
+type TripTab = "upcoming" | "past" | "cancelled";
+
 /** Upcoming / past / cancelled bucket of a (server-settled) reservation status. */
-function tabOf(status: Reservation["status"]): "upcoming" | "past" | "cancelled" {
+function tabOf(status: Reservation["status"]): TripTab {
   if (status === "confirmed" || status === "pending") return "upcoming";
   if (status === "completed") return "past";
   return "cancelled"; // cancelled, declined, expired
 }
 
+const TABS: TripTab[] = ["upcoming", "past", "cancelled"];
 const VERTICALS = ["home", "hotel", "experience", "vehicle", "trip"] as const;
 const TAB_LABEL_KEYS = { upcoming: "tabUpcoming", past: "tabPast", cancelled: "tabCancelled" } as const;
 const TAB_EMPTY_KEYS = { upcoming: "noUpcoming", past: "noPast", cancelled: "noCancelled" } as const;
@@ -39,13 +44,21 @@ const TAB_EMPTY_DESC_KEYS = {
   cancelled: "emptyCancelledDesc",
 } as const;
 
-const STATUS_STYLES: Record<Reservation["status"], { className: string; icon?: "check" | "close" }> = {
-  confirmed: { className: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: "check" },
-  pending: { className: "bg-amber-100 text-amber-800 border-amber-200" },
-  completed: { className: "bg-neutral-100 text-neutral-700 border-neutral-200" },
-  cancelled: { className: "bg-rose-100 text-rose-800 border-rose-200", icon: "close" },
-  declined: { className: "bg-rose-100 text-rose-800 border-rose-200", icon: "close" },
-  expired: { className: "bg-neutral-100 text-neutral-700 border-neutral-200" },
+const STATUS_TONE: Record<Reservation["status"], { tone: BadgeTone; icon?: "check" | "close" }> = {
+  confirmed: { tone: "success", icon: "check" },
+  pending: { tone: "warning" },
+  completed: { tone: "neutral" },
+  cancelled: { tone: "danger", icon: "close" },
+  declined: { tone: "danger", icon: "close" },
+  expired: { tone: "sand" },
+};
+
+const PAYMENT_TONE: Record<string, BadgeTone> = {
+  paid: "success",
+  pending: "warning",
+  refunded: "sand",
+  partially_refunded: "sand",
+  voided: "neutral",
 };
 
 function policyOf(res: Reservation) {
@@ -62,6 +75,21 @@ function refundFor(res: Reservation) {
   });
 }
 
+/** 16:10 cover with sand placeholder that cross-fades into the photo and zooms slowly on hover. */
+function TripCover({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 560px"
+      className={cn(
+        "object-cover transition-transform [transition-duration:700ms] ease-out group-hover:scale-[1.04]"
+      )}
+    />
+  );
+}
+
 interface TripsClientProps {
   initialReservations: Reservation[];
 }
@@ -73,12 +101,11 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
   const errorText = useActionError();
   const { formatDzd, formatEur, convertToEur } = useCurrency();
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "cancelled">("upcoming");
+  const [activeTab, setActiveTab] = useState<TripTab>("upcoming");
   const [selectedReceipt, setSelectedReceipt] = useState<Reservation | null>(null);
   const [cancellingRes, setCancellingRes] = useState<Reservation | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Filter reservations based on active tab
   const filteredReservations = reservations.filter((r) => tabOf(r.status) === activeTab);
   const cancelPreview = cancellingRes ? refundFor(cancellingRes) : null;
 
@@ -117,17 +144,24 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
     }
   };
 
-  const getStatusBadge = (status: Reservation["status"]) => {
-    const style = STATUS_STYLES[status];
+  const statusBadge = (status: Reservation["status"]) => {
+    const style = STATUS_TONE[status];
     if (!style) return null;
     return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${style.className}`}
+      <Badge
+        tone={style.tone}
+        dot={!style.icon}
+        icon={
+          style.icon === "check" ? (
+            <BrandCheckIcon size={13} aria-hidden="true" />
+          ) : style.icon === "close" ? (
+            <BrandCloseIcon size={13} aria-hidden="true" />
+          ) : undefined
+        }
+        className="shadow-e1"
       >
-        {style.icon === "check" && <BrandCheckIcon size={14} aria-hidden="true" />}
-        {style.icon === "close" && <BrandCloseIcon size={14} aria-hidden="true" />}
         {t(`status.${status}`)}
-      </span>
+      </Badge>
     );
   };
 
@@ -138,186 +172,178 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
 
   const money = (amount: number) => formatDzd(amount);
   const eur = (amount: number) => formatEur(convertToEur(amount));
-  const focusRing =
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+
+  const counts = TABS.reduce(
+    (acc, tab) => ({ ...acc, [tab]: reservations.filter((r) => tabOf(r.status) === tab).length }),
+    {} as Record<TripTab, number>
+  );
 
   return (
     <div className="space-y-8">
-      {/* Page Title & Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-tertiary/50 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary font-serif">{t("pageTitle")}</h1>
-          <p className="text-sm text-neutral-500 mt-1">{t("pageSubtitle")}</p>
-        </div>
+      <Tabs
+        id="trips"
+        ariaLabel={t("tabsLabel")}
+        value={activeTab}
+        onChange={setActiveTab}
+        items={TABS.map((tab) => ({ value: tab, label: t(TAB_LABEL_KEYS[tab]), count: counts[tab] }))}
+      />
 
-        {/* Status Filter Tabs */}
-        <div
-          role="group"
-          aria-label={t("tabsLabel")}
-          className="flex items-center gap-1.5 bg-tertiary/20 p-1.5 rounded-2xl border border-tertiary/40"
-        >
-          {(["upcoming", "past", "cancelled"] as const).map((tab) => {
-            const count = reservations.filter((r) => tabOf(r.status) === tab).length;
+      <TabPanel tabsId="trips" value={activeTab} active={activeTab}>
+        {filteredReservations.length === 0 ? (
+          <Card padding="none" className="enter-up">
+            <KitEmptyState
+              variant="calendar"
+              title={t(TAB_EMPTY_KEYS[activeTab])}
+              description={t(TAB_EMPTY_DESC_KEYS[activeTab])}
+              className="min-h-0 py-14"
+              action={
+                <Button href="/search" leadingIcon={<BrandPinIcon size={18} aria-hidden="true" />}>
+                  {t("exploreCta")}
+                </Button>
+              }
+            />
+          </Card>
+        ) : (
+          <ul className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {filteredReservations.map((res, i) => {
+              const listing = res.listing;
+              const trip = res.trip;
+              const coverImage = listing?.imageSrc?.[0] || trip?.coverPhoto || "/assets/placeholder.jpg";
+              const vertical = trip ? "trip" : listing?.category || "home";
+              const refund = res.status === "confirmed" || res.status === "pending" ? refundFor(res) : null;
+              const title = listing?.title || trip?.title || t("fallbackTitle");
+              const city = listing?.city || trip?.city;
+              const href = trip ? `/trips/${trip.id}` : `/listings/${res.listingId}`;
 
-            return (
-              <button
-                key={tab}
-                type="button"
-                aria-pressed={activeTab === tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${focusRing} ${
-                  activeTab === tab ? "bg-white text-primary shadow-sm" : "text-neutral-600 hover:text-primary"
-                }`}
-              >
-                {t("tabWithCount", { tab: t(TAB_LABEL_KEYS[tab]), count })}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Trips List / Empty State */}
-      {filteredReservations.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-lg mx-auto shadow-sm my-8">
-          <div className="w-16 h-16 bg-tertiary/30 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <BrandCalendarIcon size={32} aria-hidden="true" />
-          </div>
-          <h2 className="text-lg font-bold text-primary mb-1">{t(TAB_EMPTY_KEYS[activeTab])}</h2>
-          <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">{t(TAB_EMPTY_DESC_KEYS[activeTab])}</p>
-          <Link
-            href="/search"
-            className={`inline-flex items-center justify-center py-2.5 px-6 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm ${focusRing}`}
-          >
-            {t("exploreCta")}
-          </Link>
-        </div>
-      ) : (
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredReservations.map((res) => {
-            const listing = res.listing;
-            const trip = res.trip;
-            const coverImage = listing?.imageSrc?.[0] || trip?.coverPhoto || "/assets/placeholder.jpg";
-            const vertical = trip ? "trip" : listing?.category || "home";
-            const refund = res.status === "confirmed" || res.status === "pending" ? refundFor(res) : null;
-            const title = listing?.title || trip?.title || t("fallbackTitle");
-            const city = listing?.city || trip?.city;
-
-            return (
-              <li
-                key={res.id}
-                className="bg-white rounded-3xl border border-tertiary overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
-              >
-                <div>
-                  {/* Image & Header */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-neutral-100">
-                    <Image
-                      src={coverImage}
-                      alt={t("coverAlt", { title })}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 start-3">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-primary shadow-xs">
-                        {verticalLabel(vertical)}
-                      </span>
-                    </div>
-                    <div className="absolute top-3 end-3">{getStatusBadge(res.status)}</div>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <h2 className="text-lg font-bold text-primary line-clamp-1 hover:text-accent-700 transition">
-                        <Link
-                          href={trip ? `/trips/${trip.id}` : `/listings/${res.listingId}`}
-                          className={`rounded ${focusRing}`}
-                        >
-                          {title}
-                        </Link>
-                      </h2>
-                      {city && (
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mt-1">
-                          <BrandPinIcon size={15} className="text-secondary shrink-0" aria-hidden="true" />
-                          <span>{t("locationLine", { city, country: listing?.country || t("countryAlgeria") })}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Booking Details Grid */}
-                    <dl className="grid grid-cols-2 gap-3 p-3 bg-neutral-50 rounded-2xl border border-tertiary/40 text-xs">
-                      <div>
-                        <dt className="text-neutral-500 font-medium">{t("dates")}</dt>
-                        <dd className="font-semibold text-primary mt-0.5">
-                          {formatDateRange(res.startDate, res.endDate, locale)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-neutral-500 font-medium">{t("guests")}</dt>
-                        <dd className="font-semibold text-primary mt-0.5 flex items-center gap-1">
-                          <BrandUsersIcon size={14} className="text-neutral-400" aria-hidden="true" />
-                          <span>{t("travelers", { count: res.guestsCount })}</span>
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-neutral-500 font-medium">{t("payment")}</dt>
-                        <dd className="font-semibold text-primary mt-0.5">
-                          {res.paymentMethod || t("defaultPaymentMethod")}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-neutral-500 font-medium">{t("totalPaid")}</dt>
-                        <dd className="font-bold text-primary mt-0.5">
-                          {money(res.totalPrice)}{" "}
-                          <span className="text-[11px] font-normal text-neutral-500">
-                            {t("eurApprox", { amount: eur(res.totalPrice) })}
-                          </span>
-                        </dd>
-                      </div>
-                    </dl>
-                  </div>
-                </div>
-
-                {/* Card Actions Footer */}
-                <div className="px-6 py-4 bg-tertiary/10 border-t border-tertiary/40 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2">
+              return (
+                <li
+                  key={`${activeTab}-${res.id}`}
+                  className="enter-up"
+                  style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}
+                >
+                  <Card as="article" padding="none" className="group flex h-full flex-col overflow-hidden">
                     <Link
-                      href="/messages"
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-tertiary rounded-xl font-semibold text-neutral-700 hover:bg-neutral-50 transition ${focusRing}`}
+                      href={href}
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="relative block aspect-[16/10] w-full overflow-hidden bg-tertiary-100"
                     >
-                      <BrandMessageIcon size={15} className="text-secondary" aria-hidden="true" />
-                      <span>{t("messageHost")}</span>
+                      <TripCover src={coverImage} alt={t("coverAlt", { title })} />
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-primary-900/30 to-transparent"
+                      />
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedReceipt(res)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-tertiary rounded-xl font-semibold text-neutral-700 hover:bg-neutral-50 transition ${focusRing}`}
-                    >
-                      <BrandReceiptIcon size={15} className="text-secondary" aria-hidden="true" />
-                      <span>{t("receipt")}</span>
-                    </button>
-                  </div>
+                    <div className="pointer-events-none absolute inset-x-3.5 top-3.5 flex items-start justify-between gap-2">
+                      <Pill tone="glass" className="shadow-e1">
+                        {verticalLabel(vertical)}
+                      </Pill>
+                      {statusBadge(res.status)}
+                    </div>
 
-                  {res.refundAmount !== undefined && res.status === "cancelled" && (
-                    <span className="text-neutral-500">{t("refundLine", { amount: money(res.refundAmount) })}</span>
-                  )}
-                  {refund?.allowed && (
-                    <button
-                      type="button"
-                      onClick={() => setCancellingRes(res)}
-                      className={`px-3 py-1.5 text-rose-700 hover:bg-rose-50 rounded-xl font-semibold transition ${focusRing}`}
-                    >
-                      {t("cancelBooking")}
-                    </button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                    <div className="flex flex-1 flex-col gap-5 p-5 sm:p-6">
+                      <div className="min-w-0">
+                        {city && (
+                          <p className="flex items-center gap-1.5 text-meta text-primary-600">
+                            <BrandPinIcon size={15} className="shrink-0 text-secondary-600" aria-hidden="true" />
+                            <span className="truncate">
+                              {t("locationLine", { city, country: listing?.country || t("countryAlgeria") })}
+                            </span>
+                          </p>
+                        )}
+                        <h2 className="mt-1.5 font-serif text-heading text-primary-900 line-clamp-2">
+                          <Link
+                            href={href}
+                            className="rounded transition-colors duration-fast ease-standard hover:text-accent-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                          >
+                            {title}
+                          </Link>
+                        </h2>
+                      </div>
 
-      {/* Cancel Confirmation Modal */}
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 rounded-xl bg-darnaBg-300/60 p-4 text-meta">
+                        <div className="min-w-0">
+                          <dt className="flex items-center gap-1.5 text-primary-600">
+                            <BrandCalendarIcon size={14} aria-hidden="true" />
+                            {t("dates")}
+                          </dt>
+                          <dd className="mt-1 font-semibold text-primary-900">
+                            {formatDateRange(res.startDate, res.endDate, locale)}
+                          </dd>
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="flex items-center gap-1.5 text-primary-600">
+                            <BrandUsersIcon size={14} aria-hidden="true" />
+                            {t("guests")}
+                          </dt>
+                          <dd className="mt-1 font-semibold text-primary-900">
+                            {t("travelers", { count: res.guestsCount })}
+                          </dd>
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="flex items-center gap-1.5 text-primary-600">
+                            <BrandCreditCardIcon size={14} aria-hidden="true" />
+                            {t("payment")}
+                          </dt>
+                          <dd className="mt-1 truncate font-semibold text-primary-900">
+                            {res.paymentMethod || t("defaultPaymentMethod")}
+                          </dd>
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="text-primary-600">{t("totalPaid")}</dt>
+                          <dd className="mt-1 font-semibold tabular-nums text-primary-900">
+                            {money(res.totalPrice)}{" "}
+                            <span className="font-medium text-primary-500">
+                              {t("eurApprox", { amount: eur(res.totalPrice) })}
+                            </span>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      {res.refundAmount !== undefined && res.status === "cancelled" && (
+                        <p className="text-meta text-primary-600">
+                          {t("refundLine", { amount: money(res.refundAmount) })}
+                        </p>
+                      )}
+
+                      <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-primary/[0.08] pt-4">
+                        <Button
+                          href="/messages"
+                          variant="tertiary"
+                          size="sm"
+                          leadingIcon={<BrandMessageIcon size={16} aria-hidden="true" />}
+                        >
+                          {t("messageHost")}
+                        </Button>
+                        <Button
+                          variant="tertiary"
+                          size="sm"
+                          onClick={() => setSelectedReceipt(res)}
+                          leadingIcon={<BrandReceiptIcon size={16} aria-hidden="true" />}
+                        >
+                          {t("receipt")}
+                        </Button>
+                        {refund?.allowed && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCancellingRes(res)}
+                            className="ms-auto !text-accent-700 hover:!bg-accent-50 hover:!text-accent-800"
+                          >
+                            {t("cancelBooking")}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </TabPanel>
+
+      {/* Cancel flow: policy and refund amount computed by lib/booking/cancellation. */}
       <ConfirmDialog
         isOpen={!!cancellingRes}
         title={t("cancelDialogTitle")}
@@ -332,87 +358,97 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
             ? t.rich("cancelDialogMessage", {
                 title: cancellingRes.listing?.title || cancellingRes.trip?.title || t("fallbackTitle"),
                 dates: formatDateRange(cancellingRes.startDate, cancellingRes.endDate, locale),
-                b: (chunks) => <span className="font-semibold text-primary">{chunks}</span>,
+                b: (chunks) => <span className="font-semibold text-primary-900">{chunks}</span>,
               })
             : ""
         }
         callout={
           cancellingRes &&
-          cancelPreview && (
-            <div className="flex items-center gap-2 text-amber-900 font-medium">
-              {cancellingRes.status === "pending" ? (
-                <span>{t("notChargedNote")}</span>
-              ) : (
-                <span>
-                  {t("policyLine", {
-                    policy: t(`policy.${policyOf(cancellingRes).id}.label`),
-                    summary: t(`policy.${policyOf(cancellingRes).id}.summary`),
-                  })}{" "}
-                  {t.rich(cancelPreview.refundPercent === 100 ? "refundPreviewFull" : "refundPreview", {
-                    refund: money(cancelPreview.refundAmount),
-                    total: money(cancellingRes.totalPrice),
-                    percent: cancelPreview.refundPercent,
-                    b: (chunks) => <span className="font-bold">{chunks}</span>,
-                  })}
+          cancelPreview &&
+          (cancellingRes.status === "pending" ? (
+            <p>{t("notChargedNote")}</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="font-semibold text-primary-800">{t("refundAmount")}</span>
+                <span className="font-serif text-heading tabular-nums text-primary-900">
+                  {money(cancelPreview.refundAmount)}
                 </span>
-              )}
+              </div>
+              <p className="text-primary-700">
+                {t.rich(cancelPreview.refundPercent === 100 ? "refundPreviewFull" : "refundPreview", {
+                  refund: money(cancelPreview.refundAmount),
+                  total: money(cancellingRes.totalPrice),
+                  percent: cancelPreview.refundPercent,
+                  b: (chunks) => <span className="font-semibold text-primary-900">{chunks}</span>,
+                })}
+              </p>
+              <p className="text-primary-600">
+                {t("policyLine", {
+                  policy: t(`policy.${policyOf(cancellingRes).id}.label`),
+                  summary: t(`policy.${policyOf(cancellingRes).id}.summary`),
+                })}
+              </p>
             </div>
-          )
+          ))
         }
       />
 
-      {/* Receipt Modal */}
+      {/* Receipt (printable: only .print-area is printed). */}
       <Dialog
         isOpen={!!selectedReceipt}
         onClose={() => setSelectedReceipt(null)}
         title={t("receiptDialog.title")}
         titleClassName="sr-only"
-        className="print-area relative bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-tertiary shadow-xl space-y-6 max-h-[92dvh] overflow-y-auto"
-        backdropClassName="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        showClose
+        className="print-area relative w-full space-y-6 overflow-y-auto overscroll-contain bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-e4 rounded-t-3xl max-h-[92dvh] sm:max-w-lg sm:rounded-3xl sm:p-8"
       >
         {selectedReceipt && (
           <>
-            <div className="flex items-center justify-between border-b border-tertiary/50 pb-4">
+            <div className="flex items-start justify-between gap-4 border-b border-primary/[0.08] pb-5 pe-10">
               <div>
                 <Image
                   src="/assets/logo-horizontal.png"
                   alt={t("receiptDialog.logoAlt")}
                   width={110}
                   height={35}
-                  className="h-7 w-auto object-contain mb-1"
+                  className="mb-2 h-7 w-auto object-contain"
                 />
-                <p className="text-xs text-neutral-500">{t("receiptDialog.subtitle")}</p>
+                <p className="font-serif text-heading text-primary-900">{t("receiptDialog.title")}</p>
+                <p className="mt-0.5 text-meta text-primary-600">{t("receiptDialog.subtitle")}</p>
               </div>
-              <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold uppercase">
+              <Badge tone={PAYMENT_TONE[selectedReceipt.paymentStatus ?? "paid"] ?? "neutral"} className="shrink-0">
                 {t(`paymentStatus.${selectedReceipt.paymentStatus ?? "paid"}`)}
-              </span>
+              </Badge>
             </div>
 
-            <dl className="space-y-3 text-sm">
+            <dl className="space-y-3 text-body">
               <div className="flex justify-between gap-4">
-                <dt className="text-neutral-500">{t("receiptDialog.receiptId")}</dt>
-                <dd className="font-mono font-semibold text-primary">{selectedReceipt.id}</dd>
+                <dt className="text-primary-600">{t("receiptDialog.receiptId")}</dt>
+                <dd className="font-mono text-meta font-semibold text-primary-900">{selectedReceipt.id}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-neutral-500">{t("receiptDialog.listing")}</dt>
-                <dd className="font-semibold text-primary text-end">
+                <dt className="shrink-0 text-primary-600">{t("receiptDialog.listing")}</dt>
+                <dd className="text-end font-semibold text-primary-900">
                   {selectedReceipt.listing?.title || selectedReceipt.trip?.title}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-neutral-500">{t("receiptDialog.dates")}</dt>
-                <dd className="text-primary text-end">
+                <dt className="text-primary-600">{t("receiptDialog.dates")}</dt>
+                <dd className="text-end text-primary-900">
                   {formatDateRange(selectedReceipt.startDate, selectedReceipt.endDate, locale)}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-neutral-500">{t("receiptDialog.paymentMethod")}</dt>
-                <dd className="text-primary text-end">{selectedReceipt.paymentMethod || t("defaultPaymentMethod")}</dd>
+                <dt className="text-primary-600">{t("receiptDialog.paymentMethod")}</dt>
+                <dd className="text-end text-primary-900">
+                  {selectedReceipt.paymentMethod || t("defaultPaymentMethod")}
+                </dd>
               </div>
             </dl>
-            <hr className="border-tertiary/50" />
-            <dl className="space-y-1 text-xs">
-              <div className="flex justify-between text-neutral-600">
+
+            <dl className="space-y-2 rounded-xl bg-darnaBg-300/60 p-4 text-meta tabular-nums">
+              <div className="flex justify-between gap-4 text-primary-700">
                 <dt>{t("receiptDialog.subtotal")}</dt>
                 <dd>
                   {money(
@@ -425,55 +461,50 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                 </dd>
               </div>
               {(selectedReceipt.cleaningFee ?? 0) > 0 && (
-                <div className="flex justify-between text-neutral-600">
+                <div className="flex justify-between gap-4 text-primary-700">
                   <dt>{t("receiptDialog.cleaningFee")}</dt>
                   <dd>{money(selectedReceipt.cleaningFee ?? 0)}</dd>
                 </div>
               )}
-              <div className="flex justify-between text-neutral-600">
+              <div className="flex justify-between gap-4 text-primary-700">
                 <dt>{t("receiptDialog.serviceFee")}</dt>
                 <dd>{money(selectedReceipt.serviceFee ?? 0)}</dd>
               </div>
               {(selectedReceipt.taxes ?? 0) > 0 && (
-                <div className="flex justify-between text-neutral-600">
+                <div className="flex justify-between gap-4 text-primary-700">
                   <dt>{t("receiptDialog.taxes")}</dt>
                   <dd>{money(selectedReceipt.taxes ?? 0)}</dd>
                 </div>
               )}
               {selectedReceipt.refundAmount !== undefined && (
-                <div className="flex justify-between text-emerald-700">
+                <div className="flex justify-between gap-4 font-semibold text-secondary-800">
                   <dt>{t("receiptDialog.refunded")}</dt>
                   <dd>{t("receiptDialog.refundedAmount", { amount: money(selectedReceipt.refundAmount) })}</dd>
                 </div>
               )}
             </dl>
-            <hr className="border-tertiary/50" />
-            <div className="flex justify-between gap-4 text-base font-bold text-primary">
-              <span>{t("receiptDialog.totalAmount")}</span>
+
+            <div className="flex items-baseline justify-between gap-4 border-t border-primary/[0.08] pt-5">
+              <span className="font-semibold text-primary-800">{t("receiptDialog.totalAmount")}</span>
               <span className="text-end">
-                {t("receiptDialog.totalWithEur", {
-                  dzd: money(selectedReceipt.totalPrice),
-                  eur: eur(selectedReceipt.totalPrice),
-                })}
+                <span className="block font-serif text-heading tabular-nums text-primary-900">
+                  {money(selectedReceipt.totalPrice)}
+                </span>
+                <span className="text-meta tabular-nums text-primary-500">{eur(selectedReceipt.totalPrice)}</span>
               </span>
             </div>
 
-            <div className="print:hidden flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className={`px-4 py-2 bg-primary text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-primary/95 transition flex items-center gap-1.5 ${focusRing}`}
-              >
-                <BrandReceiptIcon size={16} aria-hidden="true" />
-                <span>{t("receiptDialog.download")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedReceipt(null)}
-                className={`px-4 py-2 border border-tertiary rounded-xl text-xs sm:text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition ${focusRing}`}
-              >
+            <div className="flex flex-col-reverse gap-3 pt-1 print:hidden sm:flex-row sm:justify-end">
+              <Button variant="tertiary" onClick={() => setSelectedReceipt(null)}>
                 {t("receiptDialog.close")}
-              </button>
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => window.print()}
+                leadingIcon={<BrandReceiptIcon size={18} aria-hidden="true" />}
+              >
+                {t("receiptDialog.download")}
+              </Button>
             </div>
           </>
         )}

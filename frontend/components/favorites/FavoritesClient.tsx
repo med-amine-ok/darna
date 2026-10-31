@@ -1,37 +1,35 @@
 "use client";
 
 import React, { useState } from "react";
+import { AnimatePresence, m } from "framer-motion";
 import { useFavoriteIds } from "@/hook/useFavorite";
-import { Link } from "@/navigation";
 import { useTranslations } from "next-intl";
 import { Listing, User, ListingVertical } from "@/types";
 import ListingCard from "@/components/listing/ListingCard";
-import { BrandHeartIcon } from "@/components/icons";
+import { BrandSearchIcon } from "@/components/icons";
+import { Button, Card, KitEmptyState, Tabs, TabPanel } from "@/components/ui";
+import { dur, ease, spring } from "@/lib/motion";
 
 interface FavoritesClientProps {
   initialListings: Listing[];
   currentUser?: User | null;
 }
 
-export default function FavoritesClient({
-  initialListings,
-  currentUser,
-}: FavoritesClientProps) {
+type VerticalFilter = "all" | ListingVertical;
+
+export default function FavoritesClient({ initialListings, currentUser }: FavoritesClientProps) {
   const t = useTranslations("favorites");
   const tNav = useTranslations("nav");
-  // Server-backed favorites (initial list comes from the page props).
+  // Server-backed favorites (initial list comes from the page props). Un-hearting a card
+  // updates this list, and the card leaves the grid with a layout animation.
   const favoriteIds = useFavoriteIds(currentUser);
 
-  const [activeVertical, setActiveVertical] = useState<"all" | ListingVertical>("all");
+  const [activeVertical, setActiveVertical] = useState<VerticalFilter>("all");
 
-  // Filter listings by saved IDs and vertical
   const savedListings = initialListings.filter((l) => favoriteIds.includes(l.id));
-  const filteredListings = savedListings.filter((l) => {
-    if (activeVertical === "all") return true;
-    return l.category === activeVertical;
-  });
+  const filteredListings = savedListings.filter((l) => activeVertical === "all" || l.category === activeVertical);
 
-  const tabs: { id: "all" | ListingVertical; label: string }[] = [
+  const tabs: { id: VerticalFilter; label: string }[] = [
     { id: "all", label: tNav("tabAll") },
     { id: "home", label: tNav("tabHomes") },
     { id: "hotel", label: tNav("tabHotels") },
@@ -39,74 +37,80 @@ export default function FavoritesClient({
     { id: "experience", label: tNav("tabExperiences") },
     { id: "trip", label: tNav("tabTrips") },
   ];
+  const countFor = (id: VerticalFilter) =>
+    id === "all" ? savedListings.length : savedListings.filter((l) => l.category === id).length;
+  // Only show filters that have something in them (plus "All").
+  const visibleTabs = tabs.filter((tab) => tab.id === "all" || countFor(tab.id) > 0 || tab.id === activeVertical);
+
+  if (savedListings.length === 0) {
+    return (
+      <Card padding="none" className="enter-up">
+        <KitEmptyState
+          variant="favorites"
+          title={t("emptyTitle")}
+          description={t("noFavoritesDesc")}
+          className="min-h-0 py-16"
+          action={
+            <Button href="/search" leadingIcon={<BrandSearchIcon size={18} aria-hidden="true" />}>
+              {tNav("explore")}
+            </Button>
+          }
+        />
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-tertiary/50 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary font-serif">
-            {tNav("myFavorites")}
-          </h1>
-          <p className="text-sm text-neutral-500 mt-1">{t("savedPlaces", { count: savedListings.length })}</p>
-        </div>
-
-        {/* Vertical Tabs */}
-        {savedListings.length > 0 && (
-          <div
-            role="group"
-            aria-label={t("filterLabel")}
-            className="flex flex-wrap items-center gap-1.5 bg-tertiary/20 p-1.5 rounded-2xl border border-tertiary/40"
-          >
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveVertical(tab.id)}
-                aria-pressed={activeVertical === tab.id}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
-                  activeVertical === tab.id
-                    ? "bg-white text-primary shadow-xs"
-                    : "text-neutral-600 hover:text-primary"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <Tabs
+          id="favorites"
+          ariaLabel={t("filterLabel")}
+          value={activeVertical}
+          onChange={setActiveVertical}
+          items={visibleTabs.map((tab) => ({ value: tab.id, label: tab.label, count: countFor(tab.id) }))}
+          className="sm:flex-1"
+        />
+        <p aria-live="polite" className="shrink-0 text-meta text-primary-600 sm:pb-3">
+          {t("savedPlaces", { count: savedListings.length })}
+        </p>
       </div>
 
-      {/* Grid or Empty State */}
-      {filteredListings.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 border border-tertiary text-center max-w-lg mx-auto my-8 shadow-xs">
-          <div className="w-16 h-16 bg-accent/10 text-accent rounded-full flex items-center justify-center mx-auto mb-4 border border-accent/20">
-            <BrandHeartIcon size={32} aria-hidden="true" />
-          </div>
-          <h2 className="text-lg font-bold text-primary mb-1">
-            {savedListings.length === 0
-              ? t("emptyTitle")
-              : t("noSavedInTab", { tab: tabs.find((tab) => tab.id === activeVertical)?.label ?? "" })}
-          </h2>
-          <p className="text-sm text-neutral-500 mb-6 max-w-sm mx-auto">{t("noFavoritesDesc")}</p>
-          <Link
-            href="/search"
-            className="inline-flex items-center justify-center py-2.5 px-6 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/95 transition shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-          >
-            {tNav("explore")}
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              data={listing}
-              currentUser={currentUser}
+      <TabPanel tabsId="favorites" value={activeVertical} active={activeVertical}>
+        {filteredListings.length === 0 ? (
+          <Card padding="none">
+            <KitEmptyState
+              compact
+              variant="favorites"
+              title={t("noSavedInTab", { tab: tabs.find((tab) => tab.id === activeVertical)?.label ?? "" })}
+              description={t("noFavoritesDesc")}
+              action={
+                <Button variant="tertiary" onClick={() => setActiveVertical("all")}>
+                  {t("showAll")}
+                </Button>
+              }
             />
-          ))}
-        </div>
-      )}
+          </Card>
+        ) : (
+          <ul className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* initial={false}: cards in the server HTML are never hidden behind JS. */}
+            <AnimatePresence initial={false} mode="popLayout">
+              {filteredListings.map((listing) => (
+                <m.li
+                  key={listing.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1, transition: { duration: dur.base, ease: ease.out } }}
+                  exit={{ opacity: 0, scale: 0.92, transition: { duration: dur.base, ease: ease.standard } }}
+                  transition={{ layout: spring.layout }}
+                >
+                  <ListingCard data={listing} currentUser={currentUser} />
+                </m.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        )}
+      </TabPanel>
     </div>
   );
 }

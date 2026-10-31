@@ -103,5 +103,6 @@
     "defaultsSaved": "Booking parameters and approval mode saved.",
     "agencyUpgradeRequested": "Agency upgrade requested. Our team will verify your Trade Register (RC).",
     "communicationSaved": "Communication preferences saved."
-  }
+  },
+  "eyebrow": "Host settings"
 }

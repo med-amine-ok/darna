@@ -53,26 +53,26 @@ export const Stepper: React.FC<StepperProps> = ({
         >
           <div className="min-w-0 flex-1 pe-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-primary">{stepOf}</span>
-              <span className="text-neutral-300" aria-hidden="true">
+              <span className="text-xs font-semibold text-primary-900 tabular-nums">{stepOf}</span>
+              <span className="text-primary-300" aria-hidden="true">
                 •
               </span>
-              <span className="text-xs font-semibold text-neutral-600 truncate">
+              <span className="text-xs font-medium text-primary-600 truncate">
                 {currentStepObj?.title || currentStepObj?.label}
               </span>
             </div>
             {/* Progress bar */}
             <div
               aria-hidden="true"
-              className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden mt-2"
+              className="w-full bg-primary/[0.08] h-1.5 rounded-full overflow-hidden mt-2"
             >
               <div
-                className="bg-primary h-full rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
+                className="bg-secondary-600 h-full w-full rounded-full origin-left rtl:origin-right transition-transform duration-base ease-out"
+                style={{ transform: `scaleX(${progressPercent / 100})` }}
               />
             </div>
           </div>
-          <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-secondary-700 bg-secondary-50 px-2 py-1 rounded-md shrink-0">
+          <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-secondary-800 bg-secondary-100 px-2 py-1 rounded-lg shrink-0">
             {t("steps")}
             <ChevronDown className="w-3 h-3" aria-hidden="true" />
             <span className="sr-only">– {t("viewAll")}</span>
@@ -82,7 +82,7 @@ export const Stepper: React.FC<StepperProps> = ({
         {/* Step Sheet for Mobile */}
         {showStepSheet && (
           <div
-            className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
+            className="fixed inset-0 z-50 flex flex-col justify-end backdrop-ink animate-in fade-in duration-200"
             onClick={closeSheet}
           >
             <div
@@ -90,18 +90,18 @@ export const Stepper: React.FC<StepperProps> = ({
               role="dialog"
               aria-modal="true"
               aria-labelledby={sheetTitleId}
-              className="bg-white rounded-t-2xl p-5 max-h-[80dvh] overflow-y-auto space-y-3 shadow-xl"
+              className="bg-white rounded-t-3xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[80dvh] overflow-y-auto space-y-3 shadow-e4 animate-in slide-in-from-bottom-8 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between pb-2 border-b border-tertiary-200">
-                <h3 id={sheetTitleId} className="font-bold text-sm text-primary">
+              <div className="flex items-center justify-between pb-2 border-b border-primary/[0.06]">
+                <h3 id={sheetTitleId} className="font-semibold text-sm text-primary-900">
                   {t("allSteps")}
                 </h3>
                 <button
                   type="button"
                   onClick={closeSheet}
                   aria-label={tUi("closeDialog")}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-100 ${focusRing}`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-primary-500 hover:text-primary-900 hover:bg-primary/[0.06] transition-colors duration-fast ${focusRing}`}
                 >
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
@@ -112,23 +112,23 @@ export const Stepper: React.FC<StepperProps> = ({
                   const isDone = step.id < currentStep;
                   const isCurrent = step.id === currentStep;
                   const isClickable = Boolean(onStepClick && (isDone || isCurrent));
-                  const rowClass = `w-full flex items-center gap-3 p-3 rounded-xl transition text-start ${
+                  const rowClass = `w-full flex items-center gap-3 p-3 rounded-xl transition-colors duration-fast ease-standard text-start ${
                     isCurrent
-                      ? "bg-primary/5 border border-primary/20"
+                      ? "bg-darnaBg-100 ring-1 ring-inset ring-primary/10"
                       : isDone
-                      ? "hover:bg-neutral-50 cursor-pointer"
+                      ? "hover:bg-darnaBg-100 cursor-pointer"
                       : "opacity-60"
                   }`;
                   const content = (
                     <>
                       <span
                         aria-hidden="true"
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold tabular-nums shrink-0 ${
                           isDone
                             ? "bg-secondary-700 text-white"
                             : isCurrent
-                            ? "bg-primary text-white"
-                            : "border-2 border-neutral-300 text-neutral-500"
+                            ? "bg-primary-800 text-white ring-4 ring-primary/10"
+                            : "ring-1 ring-inset ring-primary/20 text-primary-500 bg-white"
                         }`}
                       >
                         {isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : formatNumber(step.id, locale)}
@@ -137,17 +137,17 @@ export const Stepper: React.FC<StepperProps> = ({
                         <span
                           className={`text-xs block truncate ${
                             isCurrent
-                              ? "font-bold text-primary"
+                              ? "font-semibold text-primary-900"
                               : isDone
-                              ? "font-semibold text-neutral-700"
-                              : "text-neutral-500"
+                              ? "font-medium text-primary-800"
+                              : "text-primary-600"
                           }`}
                         >
                           {step.title || step.label}
                         </span>
                       </span>
-                      {isDone && <span className="text-[10px] text-secondary-700 font-medium">{t("done")}</span>}
-                      {isCurrent && <span className="text-[10px] text-primary font-bold">{t("current")}</span>}
+                      {isDone && <span className="text-[11px] text-secondary-700 font-medium">{t("done")}</span>}
+                      {isCurrent && <span className="text-[11px] text-primary-800 font-semibold">{t("current")}</span>}
                     </>
                   );
 
@@ -177,7 +177,7 @@ export const Stepper: React.FC<StepperProps> = ({
       </div>
 
       {/* Desktop Responsive View (>= lg) */}
-      <ol className="hidden lg:flex items-center justify-between w-full py-2" aria-label={t("progress")}>
+      <ol className="hidden lg:flex items-center justify-between w-full py-1" aria-label={t("progress")}>
         {steps.map((step, idx) => {
           const isDone = step.id < currentStep;
           const isCurrent = step.id === currentStep;
@@ -187,12 +187,12 @@ export const Stepper: React.FC<StepperProps> = ({
             <>
               <span
                 aria-hidden="true"
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0 ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold tabular-nums transition-[background-color,box-shadow,color] duration-base ease-out shrink-0 ${
                   isDone
                     ? "bg-secondary-700 text-white"
                     : isCurrent
-                    ? "bg-primary text-white shadow-xs ring-4 ring-primary/10"
-                    : "border-2 border-neutral-300 text-neutral-500 bg-white"
+                    ? "bg-primary-800 text-white shadow-e1 ring-4 ring-primary/10"
+                    : "ring-1 ring-inset ring-primary/20 text-primary-500 bg-white"
                 }`}
               >
                 {isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : formatNumber(step.id, locale)}
@@ -200,10 +200,10 @@ export const Stepper: React.FC<StepperProps> = ({
               <span
                 className={`text-xs whitespace-nowrap transition-colors max-w-[70px] xl:max-w-none truncate ${
                   isCurrent
-                    ? "font-bold text-primary"
+                    ? "font-semibold text-primary-900"
                     : isDone
-                    ? "font-semibold text-neutral-700 group-hover:text-primary"
-                    : "font-medium text-neutral-500"
+                    ? "font-medium text-primary-800 group-hover:text-primary-900"
+                    : "font-medium text-primary-600"
                 }`}
               >
                 {step.title || step.label}
@@ -237,10 +237,14 @@ export const Stepper: React.FC<StepperProps> = ({
                 <li
                   aria-hidden="true"
                   role="presentation"
-                  className={`flex-1 h-0.5 mx-1.5 xl:mx-3 transition-colors min-w-[8px] ${
-                    step.id < currentStep ? "bg-secondary" : "bg-neutral-200"
-                  }`}
-                />
+                  className="relative flex-1 h-0.5 mx-1.5 xl:mx-3 min-w-[8px] rounded-full bg-primary/10 overflow-hidden"
+                >
+                  <span
+                    className={`absolute inset-0 rounded-full bg-secondary-600 origin-left rtl:origin-right transition-transform duration-base ease-out ${
+                      step.id < currentStep ? "scale-x-100" : "scale-x-0"
+                    }`}
+                  />
+                </li>
               )}
             </React.Fragment>
           );

@@ -50,5 +50,8 @@
   "declineDialogTitle": "رفض طلب الحجز",
   "declineDialogMessage": "هل أنت متأكد من رغبتك في رفض طلب الحجز هذا؟ سيتم إبلاغ الضيف فوراً وتحرير الحجز المؤقت.",
   "declineConfirm": "رفض الطلب",
-  "declineKeep": "الاحتفاظ بالطلب"
+  "declineKeep": "الاحتفاظ بالطلب",
+  "eyebrow": "الاستضافة",
+  "kpiLabel": "نظرة عامة على الحجوزات",
+  "kpiNotAvailable": "غير متاح"
 }

@@ -29,9 +29,9 @@ export const LocaleSwitcher: React.FC = () => {
     <div
       role="group"
       aria-label={t("groupLabel")}
-      className="flex items-center gap-1 bg-darnaBg/70 p-1 rounded-xl border border-tertiary/60"
+      className="flex items-center gap-0.5 bg-white/70 p-1 rounded-xl shadow-e1"
     >
-      <Globe className="w-3.5 h-3.5 text-neutral-400 ms-1 shrink-0" aria-hidden="true" />
+      <Globe className="w-3.5 h-3.5 text-primary-500 ms-1 me-0.5 shrink-0" aria-hidden="true" />
       {LANGUAGES.map((lang) => {
         const isCurrent = locale === lang.code;
         return (
@@ -41,10 +41,10 @@ export const LocaleSwitcher: React.FC = () => {
             onClick={() => handleSelect(lang.code)}
             aria-pressed={isCurrent}
             title={t(`switchTo.${lang.code}`)}
-            className={`px-2 py-0.5 rounded-lg text-xs font-bold transition-all select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
+            className={`min-w-[30px] h-7 px-2 rounded-lg text-xs font-semibold transition-colors duration-fast ease-standard select-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
               isCurrent
-                ? "bg-primary text-white shadow-2xs"
-                : "text-neutral-600 hover:text-primary hover:bg-white/60"
+                ? "bg-primary-800 text-white shadow-e1"
+                : "text-primary-600 hover:text-primary-900 hover:bg-primary/[0.05]"
             }`}
           >
             <span lang={lang.code} dir={lang.dir}>

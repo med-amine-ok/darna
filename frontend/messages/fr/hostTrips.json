@@ -71,7 +71,13 @@
       "description": "Présentation du circuit *",
       "descriptionPlaceholder": "Décrivez les paysages, les sites incontournables, l'intérêt culturel et le public visé…",
       "coverPhoto": "URL de la photo de couverture *",
-      "coverAlt": "Aperçu de la photo de couverture"
+      "coverAlt": "Aperçu de la photo de couverture",
+      "coverHint": "Choisissez une photo dans la bibliothèque ou collez un lien d’image. C’est la première chose que voient les voyageurs.",
+      "coverEmpty": "Pas encore de photo de couverture",
+      "coverBadge": "Photo de couverture",
+      "coverLibrary": "Bibliothèque de photos",
+      "coverChoice": "Utiliser la photo {number} en couverture",
+      "coverUrl": "Lien de l’image (URL)"
     },
     "itinerary": {
       "heading": "Itinéraire jour par jour",
@@ -178,6 +184,9 @@
       "exclusion2": "Sac de couchage personnel et chaussures de randonnée",
       "exclusion3": "Assurance médicale et voyage personnelle",
       "exclusion4": "Pourboires pour les chauffeurs, le cuisinier et les guides"
-    }
+    },
+    "previewLabel": "Aperçu en direct",
+    "previewBadge": "Aperçu",
+    "progressLabel": "Progression de la création du circuit"
   }
 }

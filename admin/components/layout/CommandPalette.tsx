@@ -3,10 +3,20 @@
 import React, { useState, useEffect, useRef, useCallback, useId } from "react";
 import { useRouter } from "@/navigation";
 import { useTranslations } from "next-intl";
-import { Search, Building, User, Calendar, Star, Sparkles, ArrowRight, X } from "lucide-react";
+import {
+  Search,
+  Building,
+  User,
+  Calendar,
+  Star,
+  Sparkles,
+  ArrowRight,
+  X,
+} from "lucide-react";
 import { searchGlobalCommandPalette } from "@/lib/actions/command-palette";
 import type { CommandPaletteResult } from "@/lib/types";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { dur, ease } from "@/lib/motion";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 export interface CommandPaletteProps {
@@ -15,15 +25,20 @@ export interface CommandPaletteProps {
 }
 
 const kbd = (chunks: React.ReactNode) => (
-  <kbd className="font-mono bg-white px-1 py-0.5 rounded border border-neutral-200">{chunks}</kbd>
+  <kbd className="inline-flex items-center h-5 min-w-[20px] justify-center px-1 rounded-md bg-white text-primary-700 font-semibold shadow-2xs">
+    {chunks}
+  </kbd>
 );
 
 /**
- * Global search palette — WAI-ARIA combobox (input) + listbox (results)
+ * Global search palette, WAI-ARIA combobox (input) + listbox (results)
  * inside a modal dialog. Arrow keys move the active option, Enter opens it,
  * Escape closes; focus returns to the opener.
  */
-export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
+export const CommandPalette: React.FC<CommandPaletteProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const router = useRouter();
   const tPalette = useTranslations("commandPalette");
   const [query, setQuery] = useState("");
@@ -61,13 +76,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       setQuery("");
       router.push(item.href);
     },
-    [onClose, router]
+    [onClose, router],
   );
 
   // Keep the active option visible.
   useEffect(() => {
     if (!isOpen) return;
-    document.getElementById(optionId(selectedIndex))?.scrollIntoView({ block: "nearest" });
+    document
+      .getElementById(optionId(selectedIndex))
+      ?.scrollIntoView({ block: "nearest" });
     // optionId is derived from a stable useId value
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIndex, isOpen]);
@@ -95,9 +112,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const typeIcons: Record<string, React.ReactNode> = {
     host: <Building className="w-4 h-4 text-secondary shrink-0" />,
     listing: <Building className="w-4 h-4 text-primary shrink-0" />,
-    user: <User className="w-4 h-4 text-[#79654A] shrink-0" />,
-    booking: <Calendar className="w-4 h-4 text-[#8F3517] shrink-0" />,
-    review: <Star className="w-4 h-4 text-amber-500 shrink-0" />,
+    user: <User className="w-4 h-4 text-tertiary-700 shrink-0" />,
+    booking: <Calendar className="w-4 h-4 text-accent-800 shrink-0" />,
+    review: <Star className="w-4 h-4 text-amber-600 shrink-0" />,
     action: <Sparkles className="w-4 h-4 text-secondary shrink-0" />,
   };
 
@@ -106,37 +123,49 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center pt-20 p-4 text-start">
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center pt-[12vh] p-4 text-start">
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: dur.fast, ease: ease.standard }}
             onClick={onClose}
             aria-hidden="true"
-            className="fixed inset-0 bg-black/55 backdrop-blur-xs"
+            className="fixed inset-0 backdrop-ink"
           />
 
           {/* Palette Modal */}
-          <motion.div
+          <m.div
             ref={containerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            initial={{ opacity: 0, scale: 0.96, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -10 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="relative w-full max-w-xl bg-white rounded-3xl shadow-darna-modal border border-tertiary/80 overflow-hidden z-10"
+            initial={{ opacity: 0, scale: 0.97, y: -8 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              transition: { duration: dur.base, ease: ease.out },
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.98,
+              y: -6,
+              transition: { duration: dur.fast, ease: ease.standard },
+            }}
+            className="relative w-full max-w-xl bg-white rounded-2xl sm:rounded-3xl shadow-e5 overflow-hidden z-10"
           >
             <h2 id={titleId} className="sr-only">
               {tPalette("title")}
             </h2>
 
             {/* Search Input Bar */}
-            <div className="p-4 flex items-center gap-3 border-b border-tertiary/60 bg-darnaBg/40 focus-within:ring-2 focus-within:ring-inset focus-within:ring-accent-600">
-              <Search className="w-5 h-5 text-neutral-400 shrink-0" aria-hidden="true" />
+            <div className="px-5 h-16 flex items-center gap-3 border-b border-primary/[0.06]">
+              <Search
+                className="w-5 h-5 text-primary-500 shrink-0"
+                aria-hidden="true"
+              />
               <label htmlFor={`${uid}-input`} className="sr-only">
                 {tPalette("inputLabel")}
               </label>
@@ -148,7 +177,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                 aria-expanded={hasResults}
                 aria-controls={listboxId}
                 aria-autocomplete="list"
-                aria-activedescendant={hasResults && results[selectedIndex] ? optionId(selectedIndex) : undefined}
+                aria-activedescendant={
+                  hasResults && results[selectedIndex]
+                    ? optionId(selectedIndex)
+                    : undefined
+                }
                 aria-describedby={hintId}
                 autoComplete="off"
                 spellCheck={false}
@@ -156,7 +189,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={onInputKeyDown}
                 placeholder={tPalette("placeholder")}
-                className="w-full text-sm bg-transparent border-none text-primary placeholder:text-neutral-500 focus:outline-none"
+                className="w-full text-body bg-transparent border-none text-primary-900 placeholder:text-primary-500 focus:outline-none focus:ring-0 focus:shadow-none"
               />
               {query && (
                 <button
@@ -166,23 +199,23 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                     inputRef.current?.focus();
                   }}
                   aria-label={tPalette("clear")}
-                  className="p-1 rounded text-neutral-500 hover:text-primary transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-primary-500 hover:text-primary-900 hover:bg-primary/[0.06] transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                 >
                   <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               )}
-              <kbd className="text-[10px] text-neutral-500 font-mono px-1.5 py-0.5 rounded border border-neutral-200 bg-white shrink-0">
+              <kbd className="text-[11px] text-primary-600 font-semibold px-1.5 h-6 inline-flex items-center rounded-md bg-darnaBg-300/80 shrink-0">
                 Esc
               </kbd>
             </div>
 
             {/* Results list */}
-            <div className="max-h-80 overflow-y-auto p-2 darna-admin-scrollbar">
+            <div className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
               <ul
                 id={listboxId}
                 role="listbox"
                 aria-label={tPalette("resultsLabel")}
-                className="space-y-1"
+                className="space-y-0.5"
               >
                 {results.map((item, index) => {
                   const isSelected = selectedIndex === index;
@@ -194,22 +227,26 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       aria-selected={isSelected}
                       onClick={() => handleSelect(item)}
                       onMouseEnter={() => setSelectedIndex(index)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer select-none transition ${
+                      className={`relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer select-none transition-colors duration-micro ease-standard ${
                         isSelected
-                          ? "bg-secondary/15 text-primary font-semibold ring-2 ring-inset ring-secondary/50"
-                          : "text-neutral-700 hover:bg-neutral-100"
+                          ? "bg-darnaBg-300/70 text-primary-900"
+                          : "text-primary-700"
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
-                          className="w-7 h-7 rounded-lg bg-white border border-tertiary/60 flex items-center justify-center shrink-0 shadow-2xs"
+                          className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-e1"
                           aria-hidden="true"
                         >
-                          {typeIcons[item.type] || <Sparkles className="w-4 h-4 text-secondary" />}
+                          {typeIcons[item.type] || (
+                            <Sparkles className="w-4 h-4 text-secondary" />
+                          )}
                         </div>
                         <div className="min-w-0">
-                          <span className="block font-bold text-primary truncate leading-tight">{item.title}</span>
-                          <span className="block text-[11px] text-neutral-500 truncate leading-snug">
+                          <span className="block font-semibold text-primary-900 truncate leading-tight">
+                            {item.title}
+                          </span>
+                          <span className="block text-xs text-primary-600 truncate leading-snug">
                             {item.subtitle}
                           </span>
                         </div>
@@ -217,19 +254,27 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
                       <div className="flex items-center gap-2 shrink-0 ms-2">
                         {item.badge && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-tertiary/60 uppercase">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white text-primary-700 ring-1 ring-inset ring-primary/10">
                             {item.badge}
                           </span>
                         )}
-                        <ArrowRight className="w-3.5 h-3.5 text-neutral-400 rtl:rotate-180" aria-hidden="true" />
+                        <ArrowRight
+                          className={`w-3.5 h-3.5 rtl:rotate-180 transition-[opacity,transform] duration-fast ease-out ${isSelected ? "opacity-100 text-primary-700 translate-x-0" : "opacity-0 -translate-x-1 rtl:translate-x-1"}`}
+                          aria-hidden="true"
+                        />
                       </div>
                     </li>
                   );
                 })}
               </ul>
               {!hasResults && (
-                <p className="p-8 text-center text-xs text-neutral-500" role="status">
-                  {query ? tPalette("noResultsFor", { query }) : tPalette("typeToSearch")}
+                <p
+                  className="p-8 text-center text-meta text-primary-600"
+                  role="status"
+                >
+                  {query
+                    ? tPalette("noResultsFor", { query })
+                    : tPalette("typeToSearch")}
                 </p>
               )}
             </div>
@@ -237,20 +282,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             {/* Palette Footer Hints */}
             <div
               id={hintId}
-              className="p-2.5 px-4 bg-darnaBg/50 border-t border-tertiary/50 flex items-center justify-between gap-2 text-[11px] text-neutral-600"
+              className="py-2.5 px-5 bg-darnaBg-100 border-t border-primary/[0.06] flex items-center justify-between gap-2 text-xs text-primary-600"
             >
               <span className="flex items-center gap-2">
                 <span>{tPalette.rich("navigateHint", { kbd })}</span>
                 <span>{tPalette.rich("selectHint", { kbd })}</span>
               </span>
-              <span className="text-[10px] text-neutral-600">
+              <span className="text-xs text-primary-600 hidden sm:inline">
                 {tPalette("tipLabel")}{" "}
                 <bdi dir="ltr" className="font-mono">
                   type:host wilaya:oran
                 </bdi>
               </span>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>

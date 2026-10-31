@@ -21,13 +21,15 @@
   "status": {
     "blocked": "Bloqué",
     "booked": "Réservé",
-    "available": "Disponible"
+    "available": "Disponible",
+    "past": "Passé",
+    "special": "Prix personnalisé"
   },
   "moreBookings": "+{count} de plus",
   "dayCellLabel": "{date} : {status}",
   "dayCellLabelWithPrice": "{date} : {status}, {price} la nuit",
-  "weekCellLabel": "{listing} – {date} : {status}, {price} la nuit",
-  "bookingTitle": "{guest} – {listing}",
+  "weekCellLabel": "{listing}, {date} : {status}, {price} la nuit",
+  "bookingTitle": "{guest}, {listing}",
   "dayView": {
     "eyebrow": "Déroulé de la journée",
     "block": "Bloquer ce jour",
@@ -59,7 +61,8 @@
   "guestLine": "{name} ({count, plural, one {# voyageur} other {# voyageurs}})",
   "yearView": {
     "viewMonth": "Voir le mois",
-    "viewMonthLabel": "Voir {month}"
+    "viewMonthLabel": "Voir {month}",
+    "bookedDays": "{count, plural, =0 {Aucune réservation} one {# jour réservé} other {# jours réservés}}"
   },
   "dialog": {
     "eyebrow": "Paramètres de la date",
@@ -73,7 +76,8 @@
     "defaultRate": "Tarif par défaut : {price} la nuit. Laissez vide pour réinitialiser.",
     "priceInputLabel": "Prix de la nuit pour cette date",
     "saveRate": "Enregistrer le tarif",
-    "reservationsOnDate": "Réservations à cette date"
+    "reservationsOnDate": "Réservations à cette date",
+    "openForBookings": "Ouvert aux réservations"
   },
   "toast": {
     "dateBlocked": "Date bloquée aux réservations",
@@ -82,6 +86,45 @@
     "priceInvalid": "Saisissez un nombre entier entre {min} et {max}, ou laissez vide pour réinitialiser.",
     "priceReset": "Prix standard de l’annonce rétabli.",
     "priceSet": "Tarif de la nuit fixé à {price}",
-    "priceSaveFailed": "Impossible d’enregistrer ce prix. Veuillez réessayer."
+    "priceSaveFailed": "Impossible d’enregistrer ce prix. Veuillez réessayer.",
+    "rangeBlocked": "{count, plural, one {# jour bloqué} other {# jours bloqués}}",
+    "rangeReopened": "{count, plural, one {# jour rouvert} other {# jours rouverts}}",
+    "rangePriceSet": "{count, plural, one {# jour fixé à {price}} other {# jours fixés à {price}}}",
+    "rangePriceReset": "{count, plural, one {Prix standard rétabli pour # jour} other {Prix standard rétabli pour # jours}}"
+  },
+  "eyebrow": "Disponibilités",
+  "weekRange": "du {start} au {end}",
+  "gridLabel": "Jours de {month}",
+  "priceUnit": "{category, select, vehicle {par jour} experience {par personne} trip {par personne} other {la nuit}}",
+  "legend": {
+    "title": "Légende",
+    "available": "Disponible",
+    "booked": "Réservé",
+    "blocked": "Bloqué",
+    "special": "Prix personnalisé",
+    "today": "Aujourd’hui",
+    "selected": "Sélection"
+  },
+  "details": {
+    "title": "Détails du jour",
+    "selection": "Sélection",
+    "noBookings": "Aucune réservation ce jour-là.",
+    "hint": "Survolez ou sélectionnez un jour pour voir ses détails. Faites glisser sur plusieurs jours pour choisir une période."
+  },
+  "range": {
+    "modeLabel": "Choisir une période",
+    "hint": "Faites glisser sur plusieurs jours, ou utilisez Maj avec les flèches, pour bloquer ou tarifer plusieurs jours d’un coup.",
+    "pickStart": "Touchez le premier jour de la période.",
+    "pickEnd": "Touchez maintenant le dernier jour de la période.",
+    "title": "{count, plural, one {# jour sélectionné} other {# jours sélectionnés}}",
+    "dates": "du {start} au {end}",
+    "edit": "Modifier ces jours",
+    "clear": "Effacer la sélection",
+    "bookedInside": "{count, plural, one {# de ces jours a déjà une réservation. Le blocage ne l’annule pas.} other {# de ces jours ont déjà des réservations. Le blocage ne les annule pas.}}",
+    "block": "Bloquer ces jours",
+    "reopen": "Rouvrir ces jours",
+    "priceTitle": "Prix pour ces jours",
+    "priceInputLabel": "Prix pour les jours sélectionnés",
+    "savePrice": "Appliquer le prix"
   }
 }

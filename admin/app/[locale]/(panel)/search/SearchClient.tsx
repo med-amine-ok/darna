@@ -22,6 +22,7 @@ import { searchNetwork } from "@/lib/actions/network";
 import { unwrap } from "@/lib/actions/result";
 import { Listing } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Tabs } from "@/components/ui/Tabs";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { formatDzd, intlLocale } from "@/lib/utils/format";
@@ -30,7 +31,7 @@ import { useToast } from "@/components/ui/Toast";
 
 const ListingsMapView = dynamic(
   () => import("@/components/features/listings/ListingsMapView"),
-  { ssr: false, loading: () => <div className="h-[520px] bg-neutral-100 rounded-2xl animate-pulse" /> }
+  { ssr: false, loading: () => <div className="h-[520px] rounded-2xl skeleton" /> }
 );
 
 export interface SearchClientProps {
@@ -109,17 +110,17 @@ export default function SearchClient({
       />
 
       {/* Query Bar */}
-      <div role="search" className="bg-white p-4 rounded-2xl border border-tertiary/40 shadow-2xs flex flex-wrap items-center gap-3">
+      <div role="search" className="bg-white p-4 rounded-2xl shadow-e1 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[280px]">
           <label htmlFor={ids.query} className="sr-only">{t("searchLabel")}</label>
-          <Search className="w-4 h-4 text-neutral-400 absolute start-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+          <Search className="w-4 h-4 text-neutral-500 absolute start-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
           <input
             id={ids.query}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("placeholder")}
-            className="w-full ps-9 pe-4 py-2 text-xs rounded-xl bg-darnaBg/40 border border-tertiary/70 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1"
+            className="w-full ps-9 pe-4 py-2 text-xs rounded-xl bg-white border border-primary/[0.12] text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] focus-visible:ring-offset-1 shadow-2xs hover:border-primary/25"
           />
         </div>
 
@@ -129,7 +130,7 @@ export default function SearchClient({
             id={ids.wilaya}
             value={wilayaCode}
             onChange={(e) => setWilayaCode(e.target.value)}
-            className="text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1 cursor-pointer"
+            className="text-xs rounded-xl bg-white border border-primary/[0.12] p-2 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] focus-visible:ring-offset-1 cursor-pointer shadow-2xs hover:border-primary/25"
           >
             <option value="all">{t("allWilayas")}</option>
             {WILAYAS.map((w) => (
@@ -149,20 +150,18 @@ export default function SearchClient({
 
       {/* Results */}
       {viewMode === "map" ? (
-        <div className="rounded-2xl overflow-hidden border border-tertiary/40 shadow-2xs">
+        <div className="rounded-2xl overflow-hidden bg-white shadow-e1">
           <ListingsMapView listings={results} />
         </div>
       ) : loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4" aria-busy="true">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-44 bg-white rounded-2xl border border-tertiary/40 animate-pulse" />
+            <div key={i} className="h-44 rounded-2xl skeleton" />
           ))}
         </div>
       ) : results.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-tertiary/40 p-12 text-center" role="status">
-          <Search className="w-10 h-10 text-neutral-300 mx-auto mb-2" aria-hidden="true" />
-          <h3 className="font-bold text-sm text-primary">{t("emptyTitle")}</h3>
-          <p className="text-xs text-neutral-500 mt-1">{t("emptyHint")}</p>
+        <div className="bg-white rounded-2xl shadow-e1" role="status">
+          <EmptyState title={t("emptyTitle")} description={t("emptyHint")} />
         </div>
       ) : (
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -171,24 +170,24 @@ export default function SearchClient({
             return (
               <li
                 key={item.id}
-                className="bg-white rounded-2xl border border-tertiary/40 p-4 space-y-3 shadow-2xs hover:border-secondary/40 transition-all flex flex-col justify-between"
+                className="bg-white rounded-2xl p-4 space-y-3 shadow-e1 transition-all flex flex-col justify-between"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] text-neutral-500">#{item.id}</span>
                     <StatusPill status={item.status} size="sm" />
                   </div>
-                  <h4 className="font-bold text-sm text-primary line-clamp-1">{item.title}</h4>
+                  <h4 className="font-semibold text-sm text-primary line-clamp-1">{item.title}</h4>
                   <p className="text-xs text-neutral-500 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                    <MapPin className="w-3.5 h-3.5 text-neutral-500" aria-hidden="true" />
                     {t("cityWilaya", { city: item.city, code: item.wilayaCode })}
                   </p>
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-mono font-bold text-primary">
+                    <span className="text-xs font-mono font-semibold text-primary">
                       {formatDzd(item.priceDzd || item.price || 0, locale)}
                     </span>
                     <div
-                      className="flex items-center text-xs text-amber-700 font-bold"
+                      className="flex items-center text-xs text-amber-700 font-semibold"
                       role="img"
                       aria-label={t("rating", { rating })}
                     >
@@ -198,7 +197,7 @@ export default function SearchClient({
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-neutral-100 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-primary/[0.08] flex items-center justify-between gap-2">
                   <span className="text-[11px] text-neutral-500">
                     {t.rich("host", {
                       name: item.hostName || t("hostFallback"),
@@ -216,7 +215,7 @@ export default function SearchClient({
                         : `/experiences/${item.id}`
                     }
                     aria-label={t("detailsLabel", { title: item.title })}
-                    className="text-xs font-bold text-secondary-700 hover:underline flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                    className="text-xs font-semibold text-secondary-700 hover:underline flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                   >
                     {t("details")}
                     <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />

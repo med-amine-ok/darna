@@ -13,6 +13,7 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { CategoryItem, ListingVertical } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Dialog } from "@/components/ui/Dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
@@ -137,8 +138,8 @@ export default function CategoriesClient({ locale }: Props) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary tracking-tight">{t("title")}</h1>
-          <p className="text-xs text-neutral-500 mt-1">
+          <h1 className="font-serif text-heading text-primary-900">{t("title")}</h1>
+          <p className="text-meta text-primary-600 mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -148,9 +149,7 @@ export default function CategoriesClient({ locale }: Props) {
           variant="primary"
           size="sm"
           onClick={() => setCreateModalOpen(true)}
-          className="text-xs font-bold"
-        >
-          <Plus className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+          className="text-xs font-semibold" leftIcon={<Plus className="w-3.5 h-3.5" aria-hidden="true" />}>
           {t("addNew")}
         </Button>
         )}
@@ -160,7 +159,7 @@ export default function CategoriesClient({ locale }: Props) {
       <div
         role="group"
         aria-label={t("filterLabel")}
-        className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/60"
+        className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-primary/[0.08]"
       >
         {VERTICAL_FILTERS.map((v) => (
           <button
@@ -168,10 +167,10 @@ export default function CategoriesClient({ locale }: Props) {
             type="button"
             aria-pressed={verticalFilter === v}
             onClick={() => setVerticalFilter(v)}
-            className={`px-4 py-2 text-xs font-semibold rounded-t-xl transition-all border-b-2 -mb-[2px] cursor-pointer ${FOCUS_RING} ${
+            className={`px-1 me-3 py-2 text-xs font-semibold transition-colors duration-fast border-b-2 -mb-[2px] cursor-pointer ${FOCUS_RING} ${
               verticalFilter === v
                 ? "border-primary text-primary bg-white shadow-2xs font-bold"
-                : "border-transparent text-neutral-500 hover:text-primary"
+                : "border-transparent text-primary-600 hover:text-primary-900"
             }`}
           >
             {v === "all" ? t("allVerticals") : tVerticals(v)}
@@ -180,10 +179,10 @@ export default function CategoriesClient({ locale }: Props) {
       </div>
 
       {/* Categories Table */}
-      <div className="bg-white rounded-2xl border border-tertiary/70 overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-e1">
+        <div className="relative overflow-x-auto">
           <table className="w-full text-xs text-start">
-            <thead className="bg-darnaBg/60 border-b border-tertiary/60 text-neutral-600 text-xs font-semibold">
+            <thead className="bg-darnaBg-100 border-b border-primary/[0.08] text-primary-600 [&_th]:whitespace-nowrap text-xs font-semibold">
               <tr>
                 <th scope="col" className="py-3 px-4 text-start">{t("order")}</th>
                 <th scope="col" className="py-3 px-4 text-start">{t("nameEn")}</th>
@@ -195,30 +194,35 @@ export default function CategoriesClient({ locale }: Props) {
                 <th scope="col" className="py-3 px-4 text-end">{tCommon("actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-tertiary/40">
+            <tbody className="divide-y divide-primary/[0.06]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-neutral-500" aria-live="polite">
-                    {tCommon("loading")}
+                  <td colSpan={8} className="py-4 px-4" aria-live="polite">
+                    <span className="sr-only">{tCommon("loading")}</span>
+                    <div aria-hidden="true" className="space-y-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="skeleton h-4 rounded-md" style={{ width: `${90 - i * 12}%` }} />
+                      ))}
+                    </div>
                   </td>
                 </tr>
               ) : filteredCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-neutral-500">
-                    {t("empty")}
+                  <td colSpan={8}>
+                    <EmptyState size="compact" title={t("empty")} />
                   </td>
                 </tr>
               ) : (
                 filteredCategories.map((c) => (
-                  <tr key={c.id} className="hover:bg-darnaBg/20 transition-colors">
-                    <td className="py-3 px-4 font-mono font-bold text-neutral-500">{formatNumber(c.order, locale)}</td>
-                    <td className="py-3 px-4 font-bold text-primary" lang="en">{c.name.en}</td>
+                  <tr key={c.id} className="hover:bg-darnaBg-100 transition-colors">
+                    <td className="py-3 px-4 tabular-nums font-semibold text-neutral-500 whitespace-nowrap">{formatNumber(c.order, locale)}</td>
+                    <td className="py-3 px-4 font-semibold text-primary" lang="en">{c.name.en}</td>
                     <td className="py-3 px-4 text-neutral-600" lang="fr">{c.name.fr}</td>
                     <td className="py-3 px-4 font-arabic text-neutral-600" lang="ar" dir="rtl">{c.name.ar}</td>
                     <td className="py-3 px-4 font-semibold text-secondary">
                       {tVerticals(c.vertical)}
                     </td>
-                    <td className="py-3 px-4 text-end font-bold tabular-nums text-neutral-700">
+                    <td className="py-3 px-4 text-end font-semibold tabular-nums text-neutral-700">
                       {formatNumber(c.listingCount, locale)}
                     </td>
                     <td className="py-3 px-4">
@@ -228,7 +232,7 @@ export default function CategoriesClient({ locale }: Props) {
                         disabled={!canManage}
                         aria-pressed={c.isActive}
                         title={t("toggleActive", { name: c.name.en })}
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer disabled:cursor-default ${FOCUS_RING} ${
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer disabled:cursor-default ${FOCUS_RING} ${
                           c.isActive
                             ? "bg-secondary/15 text-secondary border-secondary/30"
                             : "bg-neutral-100 text-neutral-600 border-neutral-300"
@@ -286,14 +290,14 @@ export default function CategoriesClient({ locale }: Props) {
       >
         <div className="space-y-4 text-start">
           <div>
-            <label htmlFor="category-vertical" className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-vertical" className="block text-xs font-semibold text-primary mb-1">
               {t("vertical")}
             </label>
             <select
               id="category-vertical"
               value={categoryVertical}
               onChange={(e) => setCategoryVertical(e.target.value as ListingVertical)}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              className="w-full p-2.5 rounded-xl text-xs bg-darnaBg-100 text-primary"
             >
               <option value="home">{tVerticals("home")}</option>
               <option value="hotel">{tVerticals("hotel")}</option>
@@ -304,7 +308,7 @@ export default function CategoriesClient({ locale }: Props) {
           </div>
 
           <div>
-            <label htmlFor="category-name-en" className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-name-en" className="block text-xs font-semibold text-primary mb-1">
               {t("nameEn")}
             </label>
             <input
@@ -316,12 +320,12 @@ export default function CategoriesClient({ locale }: Props) {
               value={nameEn}
               onChange={(e) => setNameEn(e.target.value)}
               placeholder={t("placeholderEn")}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              className="w-full p-2.5 rounded-xl text-xs bg-darnaBg-100 text-primary"
             />
           </div>
 
           <div>
-            <label htmlFor="category-name-fr" className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-name-fr" className="block text-xs font-semibold text-primary mb-1">
               {t("nameFr")}
             </label>
             <input
@@ -331,12 +335,12 @@ export default function CategoriesClient({ locale }: Props) {
               value={nameFr}
               onChange={(e) => setNameFr(e.target.value)}
               placeholder={t("placeholderFr")}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary"
+              className="w-full p-2.5 rounded-xl text-xs bg-darnaBg-100 text-primary"
             />
           </div>
 
           <div>
-            <label htmlFor="category-name-ar" className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor="category-name-ar" className="block text-xs font-semibold text-primary mb-1">
               {t("nameAr")}
             </label>
             <input
@@ -347,7 +351,7 @@ export default function CategoriesClient({ locale }: Props) {
               value={nameAr}
               onChange={(e) => setNameAr(e.target.value)}
               placeholder={t("placeholderAr")}
-              className="w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary font-arabic"
+              className="w-full p-2.5 rounded-xl text-xs bg-darnaBg-100 text-primary font-arabic"
             />
           </div>
 
@@ -363,7 +367,7 @@ export default function CategoriesClient({ locale }: Props) {
               variant="primary"
               size="sm"
               onClick={handleCreate}
-              className="font-bold text-xs"
+              className="font-semibold text-xs"
             >
               {tCommon("save")}
             </Button>

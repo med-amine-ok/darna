@@ -5,7 +5,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { BrandPlusIcon, BrandTrashIcon } from "@/components/icons";
 import { formatDate } from "@/lib/i18n/date-locale";
-import { FOCUS_RING, LINK_BUTTON_CLASS, SectionHeader } from "./settingsUi";
+import Button, { IconButton } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { LINK_BUTTON_CLASS, SectionHeader, SettingsCard } from "./settingsUi";
 
 /** Card expiry as a localized month/year (cards expire at the end of the month). */
 function formatExpiry(month: number, year: number, locale: string) {
@@ -26,68 +28,67 @@ export default function PaymentsSection({ onRemoveCard }: { onRemoveCard: (label
         description={t("payments.description")}
       />
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-primary text-sm">{t("payments.savedMethods")}</h3>
-          <button
+      <SettingsCard
+        title={t("payments.savedMethods")}
+        action={
+          <Button
             type="button"
+            variant="tertiary"
+            size="sm"
+            leadingIcon={<BrandPlusIcon size={16} aria-hidden="true" />}
             onClick={() => toast.info(t("payments.addMethodSoon"))}
-            className={`${LINK_BUTTON_CLASS} flex items-center gap-1`}
           >
-            <BrandPlusIcon size={16} aria-hidden="true" />
-            <span>{t("payments.addMethod")}</span>
-          </button>
-        </div>
-
-        <ul className="space-y-2">
-          <li className="p-4 bg-neutral-50 rounded-2xl border border-tertiary/70 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-3">
-              <span className="px-2 py-1 bg-primary text-white rounded font-mono font-bold text-[10px]">
+            {t("payments.addMethod")}
+          </Button>
+        }
+      >
+        <ul className="divide-y divide-primary/[0.08]">
+          <li className="flex items-center justify-between gap-4 pb-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span aria-hidden="true" className="grid h-10 w-14 shrink-0 place-items-center rounded-lg bg-primary-800 text-[11px] font-bold tracking-wide text-white shadow-e1">
                 CIB
               </span>
-              <div>
-                <div className="font-semibold text-primary">{t("payments.cibCard", { last4: "4242" })}</div>
-                <div className="text-neutral-600">
+              <div className="min-w-0">
+                <div className="text-body font-medium text-primary-900">{t("payments.cibCard", { last4: "4242" })}</div>
+                <div className="text-meta text-primary-600">
                   {t("payments.expiresDefault", { date: formatExpiry(9, 2028, locale) })}
                 </div>
               </div>
             </div>
-            <span className="text-emerald-700 font-bold">{t("payments.active")}</span>
+            <Badge tone="success" dot className="shrink-0">
+              {t("payments.active")}
+            </Badge>
           </li>
 
-          <li className="p-4 bg-neutral-50 rounded-2xl border border-tertiary/70 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-3">
-              <span className="px-2 py-1 bg-amber-700 text-white rounded font-mono font-bold text-[10px]">
+          <li className="flex items-center justify-between gap-4 pt-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span aria-hidden="true" className="grid h-10 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-tertiary-400 to-tertiary-700 text-[9px] font-bold tracking-wide text-white shadow-e1">
                 EDAHABIA
               </span>
-              <div>
-                <div className="font-semibold text-primary">{edahabiaLabel}</div>
-                <div className="text-neutral-600">
+              <div className="min-w-0">
+                <div className="text-body font-medium text-primary-900">{edahabiaLabel}</div>
+                <div className="text-meta text-primary-600">
                   {t("payments.expires", { date: formatExpiry(11, 2027, locale) })}
                 </div>
               </div>
             </div>
-            <button
-              type="button"
+            <IconButton
+              label={t("payments.removeCardLabel", { card: edahabiaLabel })}
+              icon={<BrandTrashIcon size={18} />}
               onClick={() => onRemoveCard(edahabiaLabel)}
-              aria-label={t("payments.removeCardLabel", { card: edahabiaLabel })}
               aria-haspopup="dialog"
-              className={`p-1 text-neutral-500 hover:text-rose-600 transition rounded ${FOCUS_RING}`}
-            >
-              <BrandTrashIcon size={16} aria-hidden="true" />
-            </button>
+            />
           </li>
         </ul>
-      </div>
+      </SettingsCard>
 
-      <div className="pt-4 border-t border-tertiary/50 space-y-3">
-        <h3 className="font-bold text-primary text-sm">{t("payments.payoutMethods")}</h3>
-        <div className="p-4 bg-neutral-50 rounded-2xl border border-tertiary/70 flex items-center justify-between text-xs">
-          <div>
-            <div className="font-semibold text-primary">{t("payments.bnaAccount")}</div>
-            <div className="text-neutral-600 mt-0.5">
+      <SettingsCard title={t("payments.payoutMethods")}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="text-body font-medium text-primary-900">{t("payments.bnaAccount")}</div>
+            <div className="mt-0.5 text-meta text-primary-600">
               {t("payments.ribLabel")}{" "}
-              <span className="font-mono" dir="ltr">
+              <span className="font-mono tabular-nums" dir="ltr">
                 001 00123 4567890123 45
               </span>
             </div>
@@ -96,12 +97,12 @@ export default function PaymentsSection({ onRemoveCard }: { onRemoveCard: (label
             type="button"
             onClick={() => toast.info(t("payments.editRibSoon"))}
             aria-label={t("payments.editRibLabel")}
-            className={LINK_BUTTON_CLASS}
+            className={`${LINK_BUTTON_CLASS} shrink-0`}
           >
             {t("edit")}
           </button>
         </div>
-      </div>
+      </SettingsCard>
     </section>
   );
 }

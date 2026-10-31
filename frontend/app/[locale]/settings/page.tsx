@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import Container from "@/components/Container";
 import { getSessionUser } from "@/lib/server/session";
 import SettingsClient from "@/components/settings/SettingsClient";
 
@@ -28,10 +27,10 @@ export default async function SettingsPage({
   }
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-8">
-      <Container>
+    <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-8 sm:pt-12">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <SettingsClient currentUser={currentUser} />
-      </Container>
+      </div>
     </div>
   );
 }

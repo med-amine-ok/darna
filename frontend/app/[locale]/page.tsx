@@ -3,6 +3,7 @@ import { getListings, getFeaturedListings } from "@/lib/data/listings";
 import { getVehicles } from "@/lib/data/vehicles";
 import { getExperiences } from "@/lib/data/experiences";
 import { getTrips } from "@/lib/data/trips";
+import { toCardListing, toCardTrip } from "@/lib/server/card-dto";
 
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -13,8 +14,16 @@ import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
 import Container from "@/components/Container";
 import EmptyState from "@/components/EmptyState";
-import { Link } from "@/navigation";
-import { BrandArrowRightIcon, BrandCompassIcon } from "@/components/icons";
+import SectionHeader from "@/components/ui/SectionHeader";
+import { RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import WilayaTiles from "@/components/home/WilayaTiles";
+import TrustBand from "@/components/home/TrustBand";
+import HostCta from "@/components/home/HostCta";
+import { POPULAR_DESTINATIONS } from "@/components/search/destinations";
+import { wilayaImagery } from "@/lib/imagery";
+
+// Order of the "Explore by wilaya" bento (first = large feature tile); only keys with curated imagery.
+const WILAYA_ORDER = ["djanet", "algiers", "constantine", "ghardaia", "oran", "taghit"];
 
 interface HomePageProps {
   params: { locale: string };
@@ -44,25 +53,25 @@ export async function generateMetadata({ params: { locale }, searchParams }: Hom
 }
 
 export default async function HomePage({ params: { locale }, searchParams }: HomePageProps) {
-  const t = await getTranslations({ locale, namespace: "homeHero" });
-  const currentUser = await getSessionUser();
-
   // If a specific category chip is active
   const categoryFilter = searchParams?.category;
 
-  // Fetch categorized data sets
-  const allListings = await getListings({
-    destination: searchParams?.destination,
-  });
+  // Independent reads run in parallel (sequential awaits put ~500 ms on time to first byte).
+  const [t, currentUser, allListings, vehicleListings, experienceListings, featuredListings, agencyTrips] =
+    await Promise.all([
+      getTranslations({ locale, namespace: "homeHero" }),
+      getSessionUser(),
+      getListings({ destination: searchParams?.destination }),
+      getVehicles(),
+      getExperiences(),
+      getFeaturedListings(),
+      getTrips({ destination: searchParams?.destination }),
+    ]);
 
   const homeListings = allListings.filter((l) => l.category === "home");
   const hotelAndHostelListings = allListings.filter(
     (l) => l.businessCategory === "hotel" || l.businessCategory === "hostel" || (l.roomTypes && l.roomTypes.length > 0)
   );
-  const vehicleListings = await getVehicles();
-  const experienceListings = await getExperiences();
-  const featuredListings = await getFeaturedListings();
-  const agencyTrips = await getTrips({ destination: searchParams?.destination });
 
   // Filtered listings if category selected
   const filteredListings = categoryFilter
@@ -86,13 +95,20 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
 
   const isTripVertical = categoryFilter === "Trips & Circuits" || searchParams?.vertical === "trip";
 
+  const normalize = (v?: string) => (v || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const wilayaTiles = WILAYA_ORDER.filter((key) => wilayaImagery[key]).map((key) => {
+    const dest = POPULAR_DESTINATIONS.find((d) => d.key === key);
+    const count = dest ? allListings.filter((l) => normalize(l.city) === normalize(dest.name)).length : 0;
+    return { key, count };
+  });
+
   return (
-    <div className="relative min-h-[100dvh] flex flex-col bg-darnaBg overflow-x-hidden">
+    <div className="relative min-h-[100dvh] flex flex-col overflow-x-hidden">
       {/* Authentic Algerian Hero Section */}
       <HomeHero />
 
       {/* Main Feed Section */}
-      <Container className="pt-2 sm:pt-4 pb-8 space-y-10 sm:space-y-12">
+      <Container className="max-w-[1360px] lg:px-10 pt-4 pb-20 space-y-20 sm:space-y-28">
         {isTripVertical ? (
           /* Trips vertical grid view */
           <div className="space-y-6">
@@ -158,91 +174,79 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
             )}
           </div>
         ) : (
-          /* Default Themed Carousel Feeds */
+          /* Default editorial feed */
           <>
-            {/* Section 1: Popular Homes in Algiers & Coastal Escapes */}
             <ListingCarouselSection
               title={t("sections.homesTitle")}
               subtitle={t("sections.homesSubtitle")}
               badge={t("sections.homesBadge")}
-              listings={homeListings}
+              listings={homeListings.map(toCardListing)}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=home"
             />
 
-            {/* Section 2: Desert & Sahara Expeditions */}
+            <WilayaTiles tiles={wilayaTiles} />
+
             <ListingCarouselSection
               title={t("sections.experiencesTitle")}
               subtitle={t("sections.experiencesSubtitle")}
               badge={t("sections.experiencesBadge")}
-              listings={experienceListings}
+              listings={experienceListings.map(toCardListing)}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=experience"
             />
 
-            {/* Section 3: Agency-Curated Multi-Day Trips & Circuits (Section 5) */}
-            <div className="space-y-6 pt-4">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-tertiary/60 pb-4">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/10 text-secondary-700 text-xs font-bold uppercase tracking-wider mb-2">
-                    <BrandCompassIcon size={14} />
-                    <span>{t("sections.agencyBadge")}</span>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-primary">
-                    {t("sections.agencyTitle")}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-neutral-600 mt-1">{t("sections.agencySubtitle")}</p>
-                </div>
-                <Link
+            {agencyTrips.length > 0 && (
+              <section aria-labelledby="agency-trips-heading" className="space-y-7">
+                <SectionHeader
+                  id="agency-trips-heading"
+                  eyebrow={t("sections.agencyBadge")}
+                  title={t("sections.agencyTitle")}
+                  subtitle={t("sections.agencySubtitle")}
                   href="/search?vertical=trip"
-                  className="text-xs font-bold text-primary hover:text-secondary-700 flex items-center gap-1 underline underline-offset-4 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-                >
-                  {t("sections.browseAllCircuits")}
-                  <BrandArrowRightIcon size={14} className="rtl:rotate-180" />
-                </Link>
-              </div>
+                  linkLabel={t("sections.browseAllCircuits")}
+                />
+                <RevealGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {agencyTrips.slice(0, 4).map((trip) => (
+                    <RevealItem key={trip.id}>
+                      <TripCard trip={toCardTrip(trip)} customHref={`/trips/${trip.slug || trip.id}`} />
+                    </RevealItem>
+                  ))}
+                </RevealGroup>
+              </section>
+            )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {agencyTrips.map((trip) => (
-                  <TripCard
-                    key={trip.id}
-                    trip={trip}
-                    customHref={`/search?vertical=trip&selectedId=${trip.id}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Section 4: Hotels, Palaces & Heritage Hostels */}
             {hotelAndHostelListings.length > 0 && (
               <ListingCarouselSection
                 title={t("sections.hotelsTitle")}
                 subtitle={t("sections.hotelsSubtitle")}
                 badge={t("sections.hotelsBadge")}
-                listings={hotelAndHostelListings}
+                listings={hotelAndHostelListings.map(toCardListing)}
                 currentUser={currentUser}
                 viewMoreHref="/search?propertyType=Hotel"
               />
             )}
 
-            {/* Section 5: All-Terrain Vehicles & 4x4s */}
+            <TrustBand />
+
             <ListingCarouselSection
               title={t("sections.vehiclesTitle")}
               subtitle={t("sections.vehiclesSubtitle")}
               badge={t("sections.vehiclesBadge")}
-              listings={vehicleListings}
+              listings={vehicleListings.map(toCardListing)}
               currentUser={currentUser}
               viewMoreHref="/search?vertical=vehicle"
             />
 
-            {/* Section 5: Available This Weekend */}
             <ListingCarouselSection
               title={t("sections.weekendTitle")}
               subtitle={t("sections.weekendSubtitle")}
-              listings={featuredListings}
+              listings={featuredListings.map(toCardListing)}
               currentUser={currentUser}
               viewMoreHref="/search?instantBook=true"
             />
+
+            <HostCta />
           </>
         )}
       </Container>

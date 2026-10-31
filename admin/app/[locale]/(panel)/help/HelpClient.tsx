@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { KpiStrip } from "@/components/ui/KpiStrip";
 import { Tabs } from "@/components/ui/Tabs";
 import {
@@ -141,17 +142,17 @@ export default function HelpClient() {
             return (
               <article
                 key={guide.id}
-                className="p-6 rounded-2xl bg-white border border-tertiary/40 space-y-3 shadow-2xs"
+                className="p-6 rounded-2xl bg-white space-y-3 shadow-e1"
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${guide.iconClass}`}>
                   <Icon className="w-5 h-5" aria-hidden="true" />
                 </div>
-                <h2 className="font-bold text-primary text-base">{t(`guides.${guide.id}.title`)}</h2>
+                <h2 className="font-semibold text-primary text-base">{t(`guides.${guide.id}.title`)}</h2>
                 <p className="text-xs text-neutral-500 leading-relaxed">{t(`guides.${guide.id}.body`)}</p>
                 <div className="pt-2">
                   <Link
                     href={guide.href}
-                    className={`text-xs font-bold inline-flex items-center gap-1 hover:underline rounded ${guide.linkClass} ${FOCUS_RING}`}
+                    className={`text-xs font-semibold inline-flex items-center gap-1 hover:underline rounded ${guide.linkClass} ${FOCUS_RING}`}
                   >
                     {t(`guides.${guide.id}.cta`)}
                     <ArrowRight className="w-3 h-3 rtl:rotate-180" aria-hidden="true" />
@@ -165,18 +166,18 @@ export default function HelpClient() {
 
       {/* Glossary */}
       {activeTab === "glossary" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 p-6 space-y-4">
-          <h2 className="font-bold text-primary text-base">{t("glossaryTitle")}</h2>
+        <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
+          <h2 className="font-semibold text-primary text-base">{t("glossaryTitle")}</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
             {HELP_TERMS.map((term) => (
-              <div key={term} className="p-3.5 rounded-xl bg-darnaBg/30 border border-tertiary/40 space-y-1">
-                <dt className="font-bold text-xs text-primary">{t(`terms.${term}.term`)}</dt>
+              <div key={term} className="p-3.5 rounded-xl bg-darnaBg-100 space-y-1">
+                <dt className="font-semibold text-xs text-primary">{t(`terms.${term}.term`)}</dt>
                 <dd className="text-xs text-neutral-600">{t(`terms.${term}.definition`)}</dd>
               </div>
             ))}
             {GLOSSARY_KEYS.map((key) => (
-              <div key={key} className="p-3.5 rounded-xl bg-darnaBg/30 border border-tertiary/40 space-y-1">
-                <dt className="font-bold text-xs text-primary">
+              <div key={key} className="p-3.5 rounded-xl bg-darnaBg-100 space-y-1">
+                <dt className="font-semibold text-xs text-primary">
                   {getPlainTerm(key)}{" "}
                   <span className="font-normal text-neutral-500">({getTerm(key)})</span>
                 </dt>
@@ -190,13 +191,13 @@ export default function HelpClient() {
       {/* Migration / Where did it go */}
       {activeTab === "migration" && (
         <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-white border border-tertiary/40">
+          <div className="p-4 rounded-2xl bg-white shadow-e1">
             <label htmlFor={searchId} className="sr-only">
               {tWhere("searchLabel")}
             </label>
             <div className="relative max-w-md">
               <Search
-                className="w-4 h-4 text-neutral-400 absolute start-3 top-1/2 -translate-y-1/2"
+                className="w-4 h-4 text-neutral-500 absolute start-3 top-1/2 -translate-y-1/2"
                 aria-hidden="true"
               />
               <input
@@ -205,16 +206,16 @@ export default function HelpClient() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={tWhere("searchPlaceholder")}
-                className={`w-full ps-9 pe-4 py-2 text-xs rounded-xl bg-darnaBg/50 border border-tertiary/70 text-primary focus:outline-none focus:border-secondary ${FOCUS_RING}`}
+                className={`w-full ps-9 pe-4 py-2 text-xs rounded-xl bg-white border border-primary/[0.12] text-primary focus:outline-none focus:border-primary-600 shadow-2xs hover:border-primary/25 ${FOCUS_RING}`}
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-hidden shadow-2xs">
-            <div className="overflow-x-auto">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-e1">
+            <div className="relative overflow-x-auto">
               <table className="w-full text-xs text-start">
                 <caption className="sr-only">{tWhere("tableCaption")}</caption>
-                <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+                <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
                   <tr>
                     <th scope="col" className="py-3 px-4 text-start">{tWhere("columns.oldName")}</th>
                     <th scope="col" className="py-3 px-4 text-start">{tWhere("columns.newName")}</th>
@@ -222,24 +223,24 @@ export default function HelpClient() {
                     <th scope="col" className="py-3 px-4 text-end">{tWhere("columns.link")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-primary/[0.06]">
                   {filteredMigration.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 px-4 text-center text-neutral-500">
-                        {tWhere("noResults", { query: searchQuery.trim() })}
+                      <td colSpan={4}>
+                        <EmptyState size="compact" title={tWhere("noResults", { query: searchQuery.trim() })} />
                       </td>
                     </tr>
                   ) : (
                     filteredMigration.map((item) => (
-                      <tr key={item.id} className="hover:bg-neutral-50/50">
+                      <tr key={item.id} className="hover:bg-darnaBg-100">
                         <td className="py-3 px-4 text-neutral-600">{item.oldName}</td>
-                        <td className="py-3 px-4 font-bold text-primary">{item.newName}</td>
+                        <td className="py-3 px-4 font-semibold text-primary">{item.newName}</td>
                         <td className="py-3 px-4 text-neutral-600">{item.description}</td>
                         <td className="py-3 px-4 text-end">
                           <Link
                             href={item.href}
                             aria-label={tWhere("jumpToLabel", { name: item.newName })}
-                            className={`text-xs font-bold text-secondary-700 hover:underline inline-flex items-center gap-1 rounded ${FOCUS_RING}`}
+                            className={`text-xs font-semibold text-secondary-700 hover:underline inline-flex items-center gap-1 rounded ${FOCUS_RING}`}
                           >
                             {t("open")}
                             <ArrowRight className="w-3 h-3 rtl:rotate-180" aria-hidden="true" />

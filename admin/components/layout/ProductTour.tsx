@@ -68,38 +68,38 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose }) => 
             {TOUR_STEPS.map((step, i) => (
               <span
                 key={step.id}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === stepIndex ? "w-8 bg-secondary" : i < stepIndex ? "w-3 bg-secondary/50" : "w-3 bg-neutral-200"
+                className={`h-1.5 rounded-full transition-all duration-base ease-out ${
+                  i === stepIndex ? "w-8 bg-secondary" : i < stepIndex ? "w-3 bg-secondary/50" : "w-3 bg-primary/10"
                 }`}
               />
             ))}
           </div>
-          <p className="text-[11px] font-bold text-neutral-600">
+          <p className="text-[11px] font-semibold text-primary-600">
             {t("stepCounter", { current: stepIndex + 1, total: TOUR_STEPS.length })}
           </p>
         </div>
 
         {/* Content Card (announced when the step changes) */}
         <div className="flex items-start gap-4" aria-live="polite">
-          <div className="w-12 h-12 rounded-2xl bg-secondary/15 border border-secondary/25 flex items-center justify-center shrink-0 text-secondary">
+          <div className="w-12 h-12 rounded-2xl bg-secondary-100 flex items-center justify-center shrink-0 text-secondary-700">
             <StepIcon className="w-6 h-6" aria-hidden="true" />
           </div>
           <div className="space-y-1.5 flex-1 min-w-0">
-            <h2 id={titleId} className="text-base font-bold text-primary">
+            <h2 id={titleId} className="text-title font-semibold text-primary-900">
               {t(`steps.${currentStep.id}.title`)}
             </h2>
-            <p id={descId} className="text-xs text-neutral-600 leading-relaxed">
+            <p id={descId} className="text-meta text-primary-600 leading-relaxed">
               {t(`steps.${currentStep.id}.description`)}
             </p>
           </div>
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-tertiary/60">
+        <div className="flex items-center justify-between pt-4 border-t border-primary/[0.08]">
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-neutral-600 hover:text-neutral-800 transition font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            className="text-xs text-primary-600 hover:text-primary-900 transition font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
             {t("skip")}
           </button>

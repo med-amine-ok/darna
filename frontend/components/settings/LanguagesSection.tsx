@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { usePathname, useRouter } from "@/navigation";
-import { FOCUS_RING, SectionHeader } from "./settingsUi";
+import { BrandCheckIcon } from "@/components/icons";
+import { FOCUS_RING, SectionHeader, SettingsCard } from "./settingsUi";
 
 /** Language names are shown in their own language (autonyms), so they are not translated. */
 const LANGUAGES = [
@@ -23,11 +24,17 @@ export default function LanguagesSection() {
   const [currency, setCurrency] = useState<string>("DZD");
 
   const optionClass = (active: boolean) =>
-    `p-3.5 rounded-2xl border text-start transition ${FOCUS_RING} ${
+    `relative min-h-[64px] rounded-2xl p-3.5 text-start transition-[background-color,box-shadow,color] duration-fast ease-standard ${FOCUS_RING} ${
       active
-        ? "bg-primary text-white border-primary shadow-xs"
-        : "bg-neutral-50 text-neutral-700 border-tertiary/70 hover:bg-neutral-100"
+        ? "bg-primary-800 text-white shadow-e2"
+        : "bg-white text-primary-800 ring-1 ring-primary/10 hover:shadow-e2"
     }`;
+
+  const check = (
+    <span aria-hidden="true" className="absolute end-3 top-3 grid h-5 w-5 place-items-center rounded-full bg-white/20 enter-pop">
+      <BrandCheckIcon size={12} strokeWidth={2.5} />
+    </span>
+  );
 
   return (
     <section aria-labelledby="settings-languages-title" className="space-y-6">
@@ -37,12 +44,12 @@ export default function LanguagesSection() {
         description={t("languages.description")}
       />
 
-      <div className="space-y-4">
+      <SettingsCard>
         <div role="group" aria-labelledby="settings-display-language">
-          <div id="settings-display-language" className="block text-xs font-semibold text-neutral-700 mb-2">
+          <h3 id="settings-display-language" className="mb-3 text-title font-semibold text-primary-900">
             {t("languages.displayLanguage")}
-          </div>
-          <div className="grid grid-cols-3 gap-3">
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {LANGUAGES.map((l) => {
               const active = currentLocale === l.code;
               return (
@@ -53,10 +60,11 @@ export default function LanguagesSection() {
                   onClick={() => router.replace(pathname, { locale: l.code })}
                   className={optionClass(active)}
                 >
-                  <div className="text-sm font-bold" lang={l.code} dir={l.dir}>
+                  {active && check}
+                  <div className="text-body font-semibold" lang={l.code} dir={l.dir}>
                     {l.label}
                   </div>
-                  <div className={`text-[11px] mt-0.5 ${active ? "text-white/90" : "text-neutral-600"}`}>
+                  <div className={`mt-0.5 text-meta ${active ? "text-white/85" : "text-primary-600"}`}>
                     {t(`languages.languageSub.${l.code}`)}
                   </div>
                 </button>
@@ -65,11 +73,14 @@ export default function LanguagesSection() {
           </div>
         </div>
 
-        <div role="group" aria-labelledby="settings-preferred-currency" className="pt-3">
-          <div id="settings-preferred-currency" className="block text-xs font-semibold text-neutral-700 mb-2">
+      </SettingsCard>
+
+      <SettingsCard>
+        <div role="group" aria-labelledby="settings-preferred-currency">
+          <h3 id="settings-preferred-currency" className="mb-3 text-title font-semibold text-primary-900">
             {t("languages.preferredCurrency")}
-          </div>
-          <div className="grid grid-cols-3 gap-3">
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {CURRENCIES.map((code) => {
               const active = currency === code;
               return (
@@ -83,8 +94,9 @@ export default function LanguagesSection() {
                   }}
                   className={optionClass(active)}
                 >
-                  <div className="text-sm font-bold">{code}</div>
-                  <div className={`text-[11px] mt-0.5 ${active ? "text-white/90" : "text-neutral-600"}`}>
+                  {active && check}
+                  <div className="text-body font-semibold tabular-nums">{code}</div>
+                  <div className={`mt-0.5 text-meta ${active ? "text-white/85" : "text-primary-600"}`}>
                     {t(`languages.currencies.${code}`)}
                   </div>
                 </button>
@@ -92,7 +104,7 @@ export default function LanguagesSection() {
             })}
           </div>
         </div>
-      </div>
+      </SettingsCard>
     </section>
   );
 }

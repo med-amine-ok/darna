@@ -17,7 +17,7 @@ export const SESSION_COOKIE = "darna_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 export interface SessionPayload {
-  /** Random session id — used for server-side revocation on logout. */
+  /** Random session id, used for server-side revocation on logout. */
   sid: string;
   userId: string;
   hostType: HostType | null;
@@ -36,13 +36,13 @@ function getSessionSecret(): string {
 
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "DARNA_SESSION_SECRET is missing or shorter than 32 characters. Set it in the environment."
+      "DARNA_SESSION_SECRET is missing or shorter than 32 characters. Set it in the environment.",
     );
   }
   if (!warnedAboutFallback) {
     warnedAboutFallback = true;
     console.warn(
-      "[darna] DARNA_SESSION_SECRET is not set — using an insecure development fallback secret."
+      "[darna] DARNA_SESSION_SECRET is not set, using an insecure development fallback secret.",
     );
   }
   return DEV_FALLBACK_SECRET;
@@ -53,8 +53,12 @@ const decoder = new TextDecoder();
 
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  for (let i = 0; i < bytes.length; i++)
+    binary += String.fromCharCode(bytes[i]);
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 function base64UrlToBytes(input: string): Uint8Array<ArrayBuffer> {
@@ -78,7 +82,7 @@ function getKey(): Promise<CryptoKey> {
         encoder.encode(secret),
         { name: "HMAC", hash: "SHA-256" },
         false,
-        ["sign", "verify"]
+        ["sign", "verify"],
       ),
     };
   }
@@ -88,19 +92,28 @@ function getKey(): Promise<CryptoKey> {
 export async function signSession(payload: SessionPayload): Promise<string> {
   const body = bytesToBase64Url(encoder.encode(JSON.stringify(payload)));
   const key = await getKey();
-  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(body)));
+  const sig = new Uint8Array(
+    await crypto.subtle.sign("HMAC", key, encoder.encode(body)),
+  );
   return `${body}.${bytesToBase64Url(sig)}`;
 }
 
 function isHostType(value: unknown): value is HostType {
-  return value === "individual" || value === "agency" || value === "hotel" || value === "hostel";
+  return (
+    value === "individual" ||
+    value === "agency" ||
+    value === "hotel" ||
+    value === "hostel"
+  );
 }
 
 /**
  * Verifies signature and expiry. Returns null for anything malformed,
  * tampered with or expired. Never throws for bad input.
  */
-export async function verifySession(token: string | undefined | null): Promise<SessionPayload | null> {
+export async function verifySession(
+  token: string | undefined | null,
+): Promise<SessionPayload | null> {
   if (!token || typeof token !== "string") return null;
   const parts = token.split(".");
   if (parts.length !== 2) return null;
@@ -112,11 +125,13 @@ export async function verifySession(token: string | undefined | null): Promise<S
       "HMAC",
       key,
       base64UrlToBytes(sig),
-      encoder.encode(body)
+      encoder.encode(body),
     );
     if (!valid) return null;
 
-    const parsed = JSON.parse(decoder.decode(base64UrlToBytes(body))) as Partial<SessionPayload>;
+    const parsed = JSON.parse(
+      decoder.decode(base64UrlToBytes(body)),
+    ) as Partial<SessionPayload>;
     if (
       typeof parsed.sid !== "string" ||
       typeof parsed.userId !== "string" ||
@@ -130,7 +145,10 @@ export async function verifySession(token: string | undefined | null): Promise<S
       sid: parsed.sid,
       userId: parsed.userId,
       hostType: isHostType(parsed.hostType) ? parsed.hostType : null,
-      organizationId: typeof parsed.organizationId === "string" ? parsed.organizationId : null,
+      organizationId:
+        typeof parsed.organizationId === "string"
+          ? parsed.organizationId
+          : null,
       exp: parsed.exp,
     };
   } catch {
@@ -138,7 +156,9 @@ export async function verifySession(token: string | undefined | null): Promise<S
   }
 }
 
-export function sessionCookieOptions(maxAgeSeconds: number = SESSION_MAX_AGE_SECONDS) {
+export function sessionCookieOptions(
+  maxAgeSeconds: number = SESSION_MAX_AGE_SECONDS,
+) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,

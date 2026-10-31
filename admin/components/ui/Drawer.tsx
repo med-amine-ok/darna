@@ -2,7 +2,8 @@
 
 import React, { useId } from "react";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { dur, ease, spring } from "@/lib/motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 
@@ -54,19 +55,19 @@ export const Drawer: React.FC<DrawerProps> = ({
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden text-start">
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            transition={{ duration: dur.fast, ease: ease.standard }}
             onClick={onClose}
             aria-hidden="true"
-            className="absolute inset-0 bg-black/45 backdrop-blur-xs"
+            className="absolute inset-0 backdrop-ink"
           />
 
           {/* Sliding Drawer Container */}
           <div className="fixed inset-y-0 end-0 flex max-w-full ps-10">
-            <motion.div
+            <m.div
               ref={containerRef}
               role="dialog"
               aria-modal="true"
@@ -76,19 +77,19 @@ export const Drawer: React.FC<DrawerProps> = ({
               initial={{ x: offscreen }}
               animate={{ x: 0 }}
               exit={{ x: offscreen }}
-              transition={{ type: "spring", stiffness: 400, damping: 35 }}
-              className={`w-screen ${sizeClasses[size]} bg-white shadow-darna-modal flex flex-col border-s border-tertiary/70 focus:outline-none ${className}`}
+              transition={spring.sheet}
+              className={`w-screen ${sizeClasses[size]} bg-white shadow-e4 flex flex-col focus:outline-none sm:rounded-s-3xl overflow-hidden ${className}`}
             >
               {/* Header */}
-              <div className="p-5 border-b border-tertiary/60 flex items-center justify-between gap-3 bg-darnaBg/30">
+              <div className="px-5 py-4 border-b border-primary/[0.06] flex items-center justify-between gap-3">
                 <div>
                   {title && (
-                    <h2 id={titleId} className="text-base sm:text-lg font-serif font-black text-primary">
+                    <h2 id={titleId} className="text-title font-semibold text-primary-900">
                       {title}
                     </h2>
                   )}
                   {effectiveSubtitle && (
-                    <p id={descId} className="text-xs text-neutral-600 mt-0.5">
+                    <p id={descId} className="text-meta text-primary-600 mt-0.5">
                       {effectiveSubtitle}
                     </p>
                   )}
@@ -96,7 +97,7 @@ export const Drawer: React.FC<DrawerProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="p-2 rounded-xl text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="p-2 rounded-xl text-primary-500 hover:text-primary-900 hover:bg-primary/[0.06] transition duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                   aria-label={t("closePanel")}
                 >
                   <X className="w-5 h-5" aria-hidden="true" />
@@ -108,11 +109,11 @@ export const Drawer: React.FC<DrawerProps> = ({
 
               {/* Footer */}
               {footer && (
-                <div className="p-4 border-t border-tertiary/60 bg-white flex items-center justify-end gap-2.5">
+                <div className="p-4 border-t border-primary/[0.06] bg-darnaBg-100 flex items-center justify-end gap-2.5">
                   {footer}
                 </div>
               )}
-            </motion.div>
+            </m.div>
           </div>
         </div>
       )}

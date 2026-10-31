@@ -17,7 +17,7 @@ export const TrainingModeBanner: React.FC<TrainingModeBannerProps> = ({ isActive
   return (
     <section
       aria-label={t("bannerLabel")}
-      className="sticky top-0 z-40 bg-accent-700 text-white px-4 py-2 flex items-center justify-between gap-3 text-xs shadow-md animate-in slide-in-from-top duration-200"
+      className="sticky top-0 z-40 bg-accent-700 text-white px-4 py-2 flex items-center justify-between gap-3 text-xs shadow-e2 animate-in slide-in-from-top duration-200"
     >
       <div className="flex items-center gap-2 font-medium">
         <ShieldAlert className="w-4 h-4 shrink-0 text-white" aria-hidden="true" />

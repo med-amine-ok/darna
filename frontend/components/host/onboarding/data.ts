@@ -92,24 +92,24 @@ export const HOSTEL_FACILITY_IDS = [
 export type PhotoPreset = { id: string; src: string };
 
 export const LISTING_PHOTO_PRESETS: PhotoPreset[] = [
-  { id: "tipazaVilla", src: "/assets/tipaza.jpg" },
-  { id: "oranSeaside", src: "/assets/oran.jpg" },
-  { id: "constantineBridges", src: "/assets/constantine.jpg" },
-  { id: "casbahTerrace", src: "/assets/hero.jpg" },
+  { id: "tipazaVilla", src: "https://images.unsplash.com/photo-1570133435807-5feefeb2d196?auto=format&fit=crop&w=1600&q=80" },
+  { id: "oranSeaside", src: "https://images.unsplash.com/photo-1653815129496-445487ae0479?auto=format&fit=crop&w=1600&q=80" },
+  { id: "constantineBridges", src: "https://images.unsplash.com/photo-1549145177-238518f1ec1a?auto=format&fit=crop&w=1600&q=80" },
+  { id: "casbahTerrace", src: "https://images.unsplash.com/photo-1552573033-b7bb437bf953?auto=format&fit=crop&w=1600&q=80" },
 ];
 
 export const HOTEL_PHOTO_PRESETS: PhotoPreset[] = [
-  { id: "grandLobby", src: "/assets/hero.jpg" },
-  { id: "seasideSuite", src: "/assets/oran.jpg" },
-  { id: "historicCourtyard", src: "/assets/constantine.jpg" },
-  { id: "poolPatio", src: "/assets/tipaza.jpg" },
+  { id: "grandLobby", src: "https://images.unsplash.com/photo-1552573033-b7bb437bf953?auto=format&fit=crop&w=1600&q=80" },
+  { id: "seasideSuite", src: "https://images.unsplash.com/photo-1653815129496-445487ae0479?auto=format&fit=crop&w=1600&q=80" },
+  { id: "historicCourtyard", src: "https://images.unsplash.com/photo-1549145177-238518f1ec1a?auto=format&fit=crop&w=1600&q=80" },
+  { id: "poolPatio", src: "https://images.unsplash.com/photo-1570133435807-5feefeb2d196?auto=format&fit=crop&w=1600&q=80" },
 ];
 
 export const HOSTEL_PHOTO_PRESETS: PhotoPreset[] = [
-  { id: "rooftopLounge", src: "/assets/hero.jpg" },
-  { id: "saharanOasis", src: "/assets/tipaza.jpg" },
-  { id: "historicCourtyard", src: "/assets/constantine.jpg" },
-  { id: "socialArea", src: "/assets/oran.jpg" },
+  { id: "rooftopLounge", src: "https://images.unsplash.com/photo-1552573033-b7bb437bf953?auto=format&fit=crop&w=1600&q=80" },
+  { id: "saharanOasis", src: "https://images.unsplash.com/photo-1570133435807-5feefeb2d196?auto=format&fit=crop&w=1600&q=80" },
+  { id: "historicCourtyard", src: "https://images.unsplash.com/photo-1549145177-238518f1ec1a?auto=format&fit=crop&w=1600&q=80" },
+  { id: "socialArea", src: "https://images.unsplash.com/photo-1653815129496-445487ae0479?auto=format&fit=crop&w=1600&q=80" },
 ];
 
 /** Agency business types: `value` is stored; label = `agencyRegistration.businessTypes.<id>`. */

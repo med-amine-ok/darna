@@ -36,11 +36,11 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
       onClose={onClose}
       size="sm"
       title={
-        <span className="flex items-center gap-2 text-sm font-bold font-sans">
+        <span className="flex items-center gap-2 text-sm font-semibold font-sans">
           <SlidersHorizontal className="w-4 h-4 text-secondary" aria-hidden="true" />
           <span>{title ?? t("advancedFilters")}</span>
           {activeFilterCount !== undefined && activeFilterCount > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary-700 text-white font-bold tabular-nums">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary-700 text-white font-semibold tabular-nums">
               {t("activeFilterCount", { count: activeFilterCount })}
             </span>
           )}
@@ -53,7 +53,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
             onClick={onReset}
             disabled={!isActive}
             className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] text-xs font-semibold rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
-              isActive ? "text-accent-700 hover:bg-accent/10 cursor-pointer" : "text-neutral-500 cursor-not-allowed"
+              isActive ? "text-accent-700 hover:bg-accent/10 cursor-pointer" : "text-primary-600 cursor-not-allowed"
             }`}
           >
             <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
@@ -66,7 +66,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
               onApply();
               onClose();
             }}
-            className="px-5 py-2.5 min-h-[44px] bg-primary hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            className="px-5 py-2.5 min-h-[44px] bg-primary-800 hover:bg-primary-900 text-white rounded-xl text-xs font-semibold transition duration-fast shadow-e1 cursor-pointer flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
             {t("applyFilters")}
           </button>

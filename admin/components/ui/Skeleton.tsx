@@ -8,7 +8,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className = "", ...props }) 
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse bg-tertiary/40 rounded-xl ${className}`}
+      className={`skeleton rounded-xl ${className}`}
       {...props}
     />
   );

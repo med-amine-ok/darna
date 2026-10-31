@@ -1,5 +1,5 @@
 /**
- * Cancellation policies — the single source of truth for refund rules (pure,
+ * Cancellation policies, the single source of truth for refund rules (pure,
  * client-safe). The cancel dialog previews with these functions and the
  * server applies them again when the cancellation is recorded.
  *
@@ -19,7 +19,12 @@
  */
 import type { CancellationPolicy, PaymentStatus, Reservation } from "@/types";
 import { STAY_RULE_DEFAULTS } from "./config";
-import { dateKeyInBusinessZone, nightsBetween, BUSINESS_TIME_ZONE, type DateKey } from "./dates";
+import {
+  dateKeyInBusinessZone,
+  nightsBetween,
+  BUSINESS_TIME_ZONE,
+  type DateKey,
+} from "./dates";
 import { roundDzd } from "./pricing";
 import type { ActionErrorCode } from "@/lib/action-result";
 
@@ -37,7 +42,10 @@ export interface CancellationPolicyDefinition {
   tiers: CancellationTier[];
 }
 
-export const CANCELLATION_POLICIES: Record<CancellationPolicy, CancellationPolicyDefinition> = {
+export const CANCELLATION_POLICIES: Record<
+  CancellationPolicy,
+  CancellationPolicyDefinition
+> = {
   flexible: {
     id: "flexible",
     tiers: [
@@ -63,8 +71,13 @@ export const CANCELLATION_POLICIES: Record<CancellationPolicy, CancellationPolic
   },
 };
 
-export function getCancellationPolicy(policy?: CancellationPolicy | null): CancellationPolicyDefinition {
-  return CANCELLATION_POLICIES[policy ?? "flexible"] ?? CANCELLATION_POLICIES.flexible;
+export function getCancellationPolicy(
+  policy?: CancellationPolicy | null,
+): CancellationPolicyDefinition {
+  return (
+    CANCELLATION_POLICIES[policy ?? "flexible"] ??
+    CANCELLATION_POLICIES.flexible
+  );
 }
 
 /** Current "HH:mm" in Algeria. */
@@ -78,10 +91,16 @@ function timeInBusinessZone(now: Date): string {
 }
 
 /** True once the check-in time on the arrival day has passed (Algeria time). */
-export function hasCheckInPassed(startDate: DateKey, checkInTime: string | undefined, now: Date = new Date()): boolean {
+export function hasCheckInPassed(
+  startDate: DateKey,
+  checkInTime: string | undefined,
+  now: Date = new Date(),
+): boolean {
   const today = dateKeyInBusinessZone(now);
   if (today !== startDate) return today > startDate;
-  return timeInBusinessZone(now) >= (checkInTime || STAY_RULE_DEFAULTS.checkInTime);
+  return (
+    timeInBusinessZone(now) >= (checkInTime || STAY_RULE_DEFAULTS.checkInTime)
+  );
 }
 
 export interface RefundBreakdown {
@@ -97,14 +116,23 @@ export interface RefundBreakdown {
 
 type RefundableReservation = Pick<
   Reservation,
-  "status" | "startDate" | "totalPrice" | "subtotal" | "cleaningFee" | "serviceFee" | "taxes" | "paymentStatus"
+  | "status"
+  | "startDate"
+  | "totalPrice"
+  | "subtotal"
+  | "cleaningFee"
+  | "serviceFee"
+  | "taxes"
+  | "paymentStatus"
 >;
 
 function moneyParts(res: RefundableReservation) {
   const cleaningFee = res.cleaningFee ?? 0;
   const serviceFee = res.serviceFee ?? 0;
   const taxes = res.taxes ?? 0;
-  const subtotal = res.subtotal ?? Math.max(0, res.totalPrice - cleaningFee - serviceFee - taxes);
+  const subtotal =
+    res.subtotal ??
+    Math.max(0, res.totalPrice - cleaningFee - serviceFee - taxes);
   return { subtotal, cleaningFee, serviceFee, taxes };
 }
 
@@ -123,11 +151,21 @@ export function computeGuestRefund(params: {
 }): RefundBreakdown {
   const { reservation: res } = params;
   const now = params.now ?? new Date();
-  const daysBeforeCheckIn = nightsBetween(dateKeyInBusinessZone(now), res.startDate);
+  const daysBeforeCheckIn = nightsBetween(
+    dateKeyInBusinessZone(now),
+    res.startDate,
+  );
 
   if (res.status === "pending") {
     // Never charged: nothing to refund, the authorization is voided.
-    return { allowed: true, daysBeforeCheckIn, refundPercent: 100, refundAmount: 0, nonRefundableAmount: 0, paymentStatus: "voided" };
+    return {
+      allowed: true,
+      daysBeforeCheckIn,
+      refundPercent: 100,
+      refundAmount: 0,
+      nonRefundableAmount: 0,
+      paymentStatus: "voided",
+    };
   }
   if (res.status !== "confirmed") {
     return {
@@ -153,12 +191,17 @@ export function computeGuestRefund(params: {
   }
 
   const policy = getCancellationPolicy(params.policy);
-  const tier = policy.tiers.find((t) => daysBeforeCheckIn >= t.minDaysBefore) ?? { minDaysBefore: 0, refundPercent: 0 };
+  const tier = policy.tiers.find(
+    (t) => daysBeforeCheckIn >= t.minDaysBefore,
+  ) ?? { minDaysBefore: 0, refundPercent: 0 };
   const pct = tier.refundPercent;
   const { subtotal, cleaningFee, serviceFee, taxes } = moneyParts(res);
   const refundAmount = Math.min(
     res.totalPrice,
-    roundDzd((subtotal * pct) / 100) + cleaningFee + roundDzd((taxes * pct) / 100) + (pct === 100 ? serviceFee : 0)
+    roundDzd((subtotal * pct) / 100) +
+      cleaningFee +
+      roundDzd((taxes * pct) / 100) +
+      (pct === 100 ? serviceFee : 0),
   );
   return {
     allowed: true,
@@ -171,10 +214,19 @@ export function computeGuestRefund(params: {
 }
 
 /** Host cancellations / declines: the guest is refunded in full. */
-export function computeHostRefund(reservation: RefundableReservation): RefundBreakdown {
+export function computeHostRefund(
+  reservation: RefundableReservation,
+): RefundBreakdown {
   const daysBeforeCheckIn = 0;
   if (reservation.status === "pending") {
-    return { allowed: true, daysBeforeCheckIn, refundPercent: 100, refundAmount: 0, nonRefundableAmount: 0, paymentStatus: "voided" };
+    return {
+      allowed: true,
+      daysBeforeCheckIn,
+      refundPercent: 100,
+      refundAmount: 0,
+      nonRefundableAmount: 0,
+      paymentStatus: "voided",
+    };
   }
   return {
     allowed: true,

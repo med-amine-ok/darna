@@ -11,5 +11,15 @@
   "patio": "فناء",
   "seaView": "إطلالة على البحر",
   "fireplace": "مدفأة",
-  "courtyard": "فناء داخلي"
+  "courtyard": "فناء داخلي",
+  "breakfast": "فطور الصباح",
+  "spa": "سبا أو حمّام أو جاكوزي",
+  "gym": "قاعة رياضة",
+  "restaurant": "مطعم",
+  "rooftop": "سطح مفتوح",
+  "garden": "حديقة أو شرفة أو فناء",
+  "heating": "تدفئة",
+  "elevator": "مصعد",
+  "lockers": "خزائن",
+  "airportTransfer": "نقل من المطار"
 }

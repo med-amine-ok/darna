@@ -27,5 +27,12 @@
   "sitemap": "Sitemap",
   "companyDetails": "Company details",
   "copyright": "© {year} DARNA, Inc.",
-  "currency": "DZD – Algerian dinar"
+  "currency": "DZD – Algerian dinar",
+  "bandEyebrow": "Algeria, from the coast to the Tassili",
+  "bandTitle": "Stay with verified hosts across 58 wilayas",
+  "bandText": "Homes, riads, desert camps and guided circuits, booked in dinars with local support.",
+  "exploreStays": "Explore stays",
+  "tagline": "A warm way to discover Algeria: verified hosts, prices in DZD and a local team that answers.",
+  "language": "Language",
+  "pricesInDzd": "Prices shown in Algerian dinars (DZD)"
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import Container from "@/components/Container";
+import { AccountPage } from "@/components/profile/AccountShell";
 import { getFavoriteListings } from "@/lib/data/favorites";
 import { getSessionUser } from "@/lib/server/session";
 import FavoritesClient from "@/components/favorites/FavoritesClient";
@@ -25,16 +25,15 @@ export default async function FavoritesPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/favorites`);
   }
 
-  const listings = await getFavoriteListings(currentUser.id);
+  const [listings, t, tNav] = await Promise.all([
+    getFavoriteListings(currentUser.id),
+    getTranslations({ locale, namespace: "favorites" }),
+    getTranslations({ locale, namespace: "nav" }),
+  ]);
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-10">
-      <Container>
-        <FavoritesClient
-          initialListings={listings}
-          currentUser={currentUser}
-        />
-      </Container>
-    </div>
+    <AccountPage width="wide" eyebrow={t("eyebrow")} title={tNav("myFavorites")} subtitle={t("pageSubtitle")}>
+      <FavoritesClient initialListings={listings} currentUser={currentUser} />
+    </AccountPage>
   );
 }

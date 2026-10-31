@@ -32,14 +32,14 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
           item.businessCategory === "hostel" ||
           item.category === "hotel" ||
           item.type?.toLowerCase().includes("hotel") ||
-          item.type?.toLowerCase().includes("hostel")
+          item.type?.toLowerCase().includes("hostel"),
       );
     } else if (params.vertical === "home") {
       results = results.filter(
         (item) =>
           item.category === "home" &&
           item.businessCategory !== "hotel" &&
-          item.businessCategory !== "hostel"
+          item.businessCategory !== "hostel",
       );
     } else {
       results = results.filter((item) => item.category === params.vertical);
@@ -52,8 +52,12 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
       (item) =>
         item.type?.toLowerCase().includes(cat) ||
         item.amenities?.some((a) => a.toLowerCase().includes(cat)) ||
-        (cat.includes("hotel") && (item.businessCategory === "hotel" || item.type?.toLowerCase().includes("hotel"))) ||
-        (cat.includes("hostel") && (item.businessCategory === "hostel" || item.type?.toLowerCase().includes("hostel")))
+        (cat.includes("hotel") &&
+          (item.businessCategory === "hotel" ||
+            item.type?.toLowerCase().includes("hotel"))) ||
+        (cat.includes("hostel") &&
+          (item.businessCategory === "hostel" ||
+            item.type?.toLowerCase().includes("hostel"))),
     );
   }
 
@@ -61,28 +65,33 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
     const pt = params.propertyType.toLowerCase();
     if (pt === "hotel") {
       results = results.filter(
-        (item) => item.businessCategory === "hotel" || item.type?.toLowerCase().includes("hotel")
+        (item) =>
+          item.businessCategory === "hotel" ||
+          item.type?.toLowerCase().includes("hotel"),
       );
     } else if (pt === "hostel") {
       results = results.filter(
-        (item) => item.businessCategory === "hostel" || item.type?.toLowerCase().includes("hostel")
+        (item) =>
+          item.businessCategory === "hostel" ||
+          item.type?.toLowerCase().includes("hostel"),
       );
     } else if (pt === "entire home" || pt === "entire") {
       results = results.filter(
         (item) =>
           item.businessCategory !== "hotel" &&
           item.businessCategory !== "hostel" &&
-          !item.roomTypes?.some((r) => r.bookingUnit === "bed")
+          !item.roomTypes?.some((r) => r.bookingUnit === "bed"),
       );
     } else if (pt === "private room" || pt === "private_room") {
       results = results.filter(
         (item) =>
           item.type?.toLowerCase().includes("room") ||
-          item.roomTypes?.some((r) => r.bookingUnit === "room")
+          item.roomTypes?.some((r) => r.bookingUnit === "room"),
       );
     } else {
       results = results.filter(
-        (item) => item.type?.toLowerCase() === pt || item.businessCategory === pt
+        (item) =>
+          item.type?.toLowerCase() === pt || item.businessCategory === pt,
       );
     }
   }
@@ -91,14 +100,18 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
     const targetAmenities = Array.isArray(params.amenities)
       ? params.amenities.map((a) => a.toLowerCase())
       : typeof params.amenities === "string"
-      ? (params.amenities as string).toLowerCase().split(",")
-      : [];
+        ? (params.amenities as string).toLowerCase().split(",")
+        : [];
 
     if (targetAmenities.length > 0) {
       results = results.filter((item) => {
-        const itemAmenities = (item.amenities || []).map((a) => a.toLowerCase());
+        const itemAmenities = (item.amenities || []).map((a) =>
+          a.toLowerCase(),
+        );
         return targetAmenities.every((target) =>
-          itemAmenities.some((ia) => ia.includes(target) || target.includes(ia))
+          itemAmenities.some(
+            (ia) => ia.includes(target) || target.includes(ia),
+          ),
         );
       });
     }
@@ -110,7 +123,7 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
       (item) =>
         item.city.toLowerCase().includes(dest) ||
         item.locationValue.toLowerCase().includes(dest) ||
-        item.country.toLowerCase().includes(dest)
+        item.country.toLowerCase().includes(dest),
     );
   }
 
@@ -119,13 +132,15 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
   }
 
   if (params.maxPrice) {
-    results = results.filter((item) => item.price <= (params.maxPrice || Infinity));
+    results = results.filter(
+      (item) => item.price <= (params.maxPrice || Infinity),
+    );
   }
 
   const guestCount = params.guests || (params as any).guestCount;
   if (guestCount && guestCount > 1) {
     results = results.filter(
-      (item) => !item.guestCount || item.guestCount >= guestCount
+      (item) => !item.guestCount || item.guestCount >= guestCount,
     );
   }
 
@@ -136,8 +151,14 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
   if (searchStart && searchEnd && searchStart < searchEnd) {
     results = results
       .map((item): Listing | null => {
-        const from = item.availableFrom && isDateKey(item.availableFrom) ? item.availableFrom : null;
-        const to = item.availableTo && isDateKey(item.availableTo) ? item.availableTo : null;
+        const from =
+          item.availableFrom && isDateKey(item.availableFrom)
+            ? item.availableFrom
+            : null;
+        const to =
+          item.availableTo && isDateKey(item.availableTo)
+            ? item.availableTo
+            : null;
         if (!from && !to) return item;
 
         // availableTo is the last possible checkout date.
@@ -145,7 +166,8 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
         const overlapEnd = to && to < searchEnd ? to : searchEnd;
         if (overlapStart >= overlapEnd) return null; // no overlap at all
 
-        const isPartial = overlapStart !== searchStart || overlapEnd !== searchEnd;
+        const isPartial =
+          overlapStart !== searchStart || overlapEnd !== searchEnd;
         return isPartial
           ? {
               ...item,
@@ -179,10 +201,14 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
           guestCount: Math.max(1, Number(guestCount) || 1),
           // Cards show "from" prices: quote the cheapest room type.
           selectedRoomTypeId: item.roomTypes?.length
-            ? [...item.roomTypes].sort((a, b) => roomTypePrice(a) - roomTypePrice(b))[0].id
+            ? [...item.roomTypes].sort(
+                (a, b) => roomTypePrice(a) - roomTypePrice(b),
+              )[0].id
             : undefined,
           unitCount: 1,
-          priceOverrides: item.roomTypes?.length ? undefined : priceOverridesFor(item.id),
+          priceOverrides: item.roomTypes?.length
+            ? undefined
+            : priceOverridesFor(item.id),
         });
         return { ...item, quotedTotal: quote.total };
       });
@@ -191,7 +217,7 @@ export async function getListings(params?: SearchParams): Promise<Listing[]> {
   return results;
 }
 
-/** Raw lookup (any status) — for ownership checks and owner pages. */
+/** Raw lookup (any status), for ownership checks and owner pages. */
 export async function getListingById(id: string): Promise<Listing | null> {
   await delay(40);
   const listing = listingsStore.find((l) => l.id === id);
@@ -204,7 +230,7 @@ export async function getListingById(id: string): Promise<Listing | null> {
  */
 export async function getPublicListingById(
   id: string,
-  canSeeUnpublished?: (listing: Listing) => boolean
+  canSeeUnpublished?: (listing: Listing) => boolean,
 ): Promise<Listing | null> {
   const listing = await getListingById(id);
   if (!listing) return null;
@@ -212,20 +238,34 @@ export async function getPublicListingById(
   return canSeeUnpublished?.(listing) ? listing : null;
 }
 
-export async function getFeaturedListings(vertical?: ListingVertical): Promise<Listing[]> {
+export async function getFeaturedListings(
+  vertical?: ListingVertical,
+): Promise<Listing[]> {
   await delay(40);
-  return clone(listingsStore.filter((l) => isPublicListing(l) && l.featured && (!vertical || l.category === vertical)));
+  return clone(
+    listingsStore.filter(
+      (l) =>
+        isPublicListing(l) &&
+        l.featured &&
+        (!vertical || l.category === vertical),
+    ),
+  );
 }
 
 /** Listings owned by an individual host (hostUserId) or by an organization. */
-export async function getHostListings(owner: { userId?: string; organizationId?: string }): Promise<Listing[]> {
+export async function getHostListings(owner: {
+  userId?: string;
+  organizationId?: string;
+}): Promise<Listing[]> {
   await delay(40);
   return clone(
     listingsStore.filter((l) =>
       owner.organizationId
         ? l.organizationId === owner.organizationId
-        : Boolean(owner.userId) && l.hostUserId === owner.userId && !l.organizationId
-    )
+        : Boolean(owner.userId) &&
+          l.hostUserId === owner.userId &&
+          !l.organizationId,
+    ),
   );
 }
 
@@ -239,7 +279,10 @@ export interface ListingOwner {
  * Creates a listing. Ownership, id, timestamps and stats are set here on the
  * server; everything else goes through the field whitelist.
  */
-export async function createListing(owner: ListingOwner, input: unknown): Promise<Listing> {
+export async function createListing(
+  owner: ListingOwner,
+  input: unknown,
+): Promise<Listing> {
   await delay(60);
   const id = newId("lst");
   const data = sanitizeListingInput(input, id);
@@ -265,7 +308,7 @@ export async function createListing(owner: ListingOwner, input: unknown): Promis
     instantBook: true,
     status: "active",
     ...data,
-    // Server-controlled fields — never taken from the client.
+    // Server-controlled fields, never taken from the client.
     id,
     ownerType: owner.organizationId ? "organization" : "individual",
     hostUserId: owner.hostUserId,
@@ -286,11 +329,16 @@ export async function createListing(owner: ListingOwner, input: unknown): Promis
 }
 
 /** Applies a whitelisted patch (see sanitizeListingInput). */
-export async function updateListing(id: string, input: unknown): Promise<Listing | null> {
+export async function updateListing(
+  id: string,
+  input: unknown,
+): Promise<Listing | null> {
   await delay(40);
   const listing = listingsStore.find((l) => l.id === id);
   if (!listing) return null;
-  Object.assign(listing, sanitizeListingInput(input, id), { updatedAt: new Date().toISOString() });
+  Object.assign(listing, sanitizeListingInput(input, id), {
+    updatedAt: new Date().toISOString(),
+  });
   return clone(listing);
 }
 

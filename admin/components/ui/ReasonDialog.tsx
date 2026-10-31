@@ -58,7 +58,7 @@ export function ReasonDialog({
   return (
     <Dialog isOpen={isOpen} onClose={onCancel} title={title} description={description} maxWidth="sm">
       <form onSubmit={submit} className="space-y-3 text-start text-xs">
-        <label className="block font-bold text-primary" htmlFor="reason-dialog-input">
+        <label className="block font-semibold text-primary-900" htmlFor="reason-dialog-input">
           {t("reasonLabel")}
         </label>
         <textarea
@@ -72,7 +72,7 @@ export function ReasonDialog({
           aria-invalid={showError || undefined}
           aria-describedby={showError ? "reason-dialog-error" : undefined}
           placeholder={t("reasonPlaceholder")}
-          className="w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/30"
+          className="w-full rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary-900 focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] hover:border-primary/25"
         />
         {showError && (
           <p id="reason-dialog-error" className="text-accent-700 text-[11px]" role="alert">

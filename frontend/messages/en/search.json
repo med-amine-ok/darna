@@ -159,7 +159,12 @@
     "trips": "No agency circuits in this map area",
     "tripsDesc": "Zoom out or pan across Algeria to discover expeditions in the Sahara, the M'zab and along the coast.",
     "listings": "No listings in this map area",
-    "listingsDesc": "Zoom out or pan across the map to discover listings across Algeria."
+    "listingsDesc": "Zoom out or pan across the map to discover listings across Algeria.",
+    "showAll": "Show all {count} results",
+    "noResults": "No exact matches",
+    "noResultsDesc": "Try other dates or explore a nearby wilaya.",
+    "noResultsFiltersDesc": "Try removing a filter, or explore a nearby wilaya.",
+    "nearby": "Nearby destinations"
   },
   "showList": "Show list",
   "mapDialogLabel": "Map of results",
@@ -170,11 +175,24 @@
     "closePreview": "Close preview",
     "tripDuration": "{days}D / {nights}N",
     "verifiedAgency": "Verified agency",
-    "maxGroup": "Max {count}"
+    "maxGroup": "Max {count}",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
   },
   "meta": {
     "title": "Search stays, experiences & vehicles in Algeria",
     "titleIn": "Stays & rentals in {place}",
     "description": "Compare homes, hotels, guided circuits and 4x4 rentals across Algeria on an interactive map, with prices in DZD."
+  },
+  "filterBarLabel": "Filters",
+  "activeFilters": "{count, plural, one {# active filter} other {# active filters}}",
+  "pricesIncludeFees": "Prices include all fees",
+  "updating": "Updating results…",
+  "loadingResults": "Loading results…",
+  "flex": {
+    "label": "Date flexibility",
+    "exact": "Exact dates",
+    "plusMinus": "± {count, plural, one {# day} other {# days}}",
+    "short": "±{count}"
   }
 }

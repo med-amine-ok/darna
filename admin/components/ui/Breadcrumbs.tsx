@@ -16,7 +16,7 @@ export interface BreadcrumbsProps {
 }
 
 const linkClass =
-  "font-semibold text-neutral-500 hover:text-primary transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+  "font-semibold text-primary-600 hover:text-primary-900 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = "" }) => {
   const t = useTranslations("uiKit.breadcrumbs");
@@ -25,7 +25,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = "" 
       <ol className="flex items-center gap-1.5 text-xs flex-wrap">
         <li className="flex items-center">
           {items.length === 0 ? (
-            <span aria-current="page" className="font-serif font-black text-primary text-sm sm:text-base">
+            <span aria-current="page" className="font-semibold text-primary-900 text-xs">
               {t("root")}
             </span>
           ) : (
@@ -38,7 +38,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = "" 
           const isLast = index === items.length - 1;
           return (
             <li key={index} className="flex items-center gap-1.5">
-              <ChevronRight className="w-3.5 h-3.5 text-neutral-300 rtl:rotate-180 shrink-0" aria-hidden="true" />
+              <ChevronRight className="w-3.5 h-3.5 text-primary-300 rtl:rotate-180 shrink-0" aria-hidden="true" />
               {item.href && !isLast ? (
                 <Link href={item.href} className={linkClass}>
                   {item.label}
@@ -46,7 +46,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = "" 
               ) : (
                 <span
                   aria-current={isLast ? "page" : undefined}
-                  className="font-serif font-black text-primary text-sm sm:text-base"
+                  className="font-semibold text-primary-900 text-xs"
                 >
                   {item.label}
                 </span>

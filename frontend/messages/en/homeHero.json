@@ -1,5 +1,5 @@
 {
-  "title": "Our home is your home — stays, trips and adventures across Algeria",
+  "title": "Our home is your home, stays, trips and adventures across Algeria",
   "subtitle": "Plan your next stay in Algeria & beyond.",
   "tabHomes": "Homes",
   "tabHotels": "Hotels / Hostels",
@@ -8,13 +8,13 @@
   "tabTrips": "Trips",
   "search": "Search",
   "brandLine": "الدار, دارك",
-  "promoLine": "Win DARNA in <city></city>.",
+  "promoLine": "Where next? <city></city>",
   "whereTo": "Where to?",
   "anywhereAnyWeek": "Anywhere in Algeria · Any week",
   "verticalSwitcher": "What are you looking for?",
   "meta": {
     "title": "DARNA | Stays, experiences, trips & vehicles in Algeria",
-    "description": "Book homes, hotels, desert expeditions, guided circuits and 4x4 rentals across Algeria — from the Casbah of Algiers to the dunes of Taghit and Djanet."
+    "description": "Book homes, hotels, desert expeditions, guided circuits and 4x4 rentals across Algeria, from the Casbah of Algiers to the dunes of Taghit and Djanet."
   },
   "sections": {
     "tripsGridTitle": "Curated agency trips & circuits",
@@ -42,6 +42,39 @@
     "vehiclesSubtitle": "Dune-ready 4x4s, rugged mountain crossovers and city cars",
     "vehiclesBadge": "Comprehensive insurance & unlimited mileage options",
     "weekendTitle": "Available this weekend across Algeria",
-    "weekendSubtitle": "Instant-book stays with verified local hosts"
-  }
+    "weekendSubtitle": "Instant-book stays with verified local hosts",
+    "wilayaEyebrow": "Explore by wilaya",
+    "wilayaTitle": "Pick a corner of Algeria",
+    "wilayaSubtitle": "From the white Casbah to the red dunes, each region has its own way of welcoming you.",
+    "wilayaCount": "{count, plural, =0 {Coming soon} one {# place to stay} other {# places to stay}}",
+    "sectionsEyebrow": "Curated for you",
+    "trustEyebrow": "Why DARNA",
+    "trustTitle": "Booked with confidence, hosted with care",
+    "trustVerifiedTitle": "Verified hosts and agencies",
+    "trustVerifiedBody": "Every host, hotel and travel agency is checked by our team before their first booking.",
+    "trustDinarTitle": "Prices in dinars, no surprises",
+    "trustDinarBody": "The total you see includes every fee. Pay in DZD, no foreign card needed to reserve.",
+    "trustSupportTitle": "Local help, 7 days a week",
+    "trustSupportBody": "A team in Algeria answers in Arabic, French and English, by message or phone.",
+    "hostEyebrow": "Host with DARNA",
+    "hostTitle": "Your home, your riad, your 4x4, welcome the world to Algeria.",
+    "hostBody": "List a room, a villa, a hotel or a guided circuit in minutes. You decide prices, dates and house rules.",
+    "hostCta": "Become a host",
+    "hostSecondary": "How hosting works",
+    "seeAll": "See all"
+  },
+  "eyebrow": "Algeria, from the coast to the Tassili",
+  "headlineLead": "Stay where Algeria",
+  "headlineAccent": "feels like home.",
+  "lede": "Riads in the Casbah, villas above Tipaza, camps under the Saharan sky, booked in dinars with verified local hosts.",
+  "chipRating": "Guest favourite in Djanet",
+  "chipVerified": "Verified hosts across Algeria",
+  "imageAlt": {
+    "tassili": "Sandstone arch in the Tassili n'Ajjer, Djanet",
+    "ghardaia": "The terraced ksar of Ghardaïa in the M'zab valley",
+    "algiers": "The bay of Algiers seen from the Casbah",
+    "constantine": "Sidi M'Cid bridge over the Rhumel gorge, Constantine",
+    "taghit": "Golden dunes of the Grand Erg near Taghit"
+  },
+  "chipPay": "Pay in DZD, no foreign card"
 }

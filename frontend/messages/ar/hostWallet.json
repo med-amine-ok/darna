@@ -1,5 +1,5 @@
 {
-  "title": "محفظة ورصيد المضيف مسبقة الدفع",
+  "title": "المحفظة المسبقة الدفع",
   "currentBalance": "الرصيد الإيداعي الحالي",
   "applicableCommission": "نسبة العمولة المطبقة",
   "rechargeProcess": "آلية الشحن المالي",
@@ -44,5 +44,6 @@
   "deposit": "إيداع",
   "commission": "عمولة",
   "bookingRef": "الحجز: {id}",
-  "noTransactions": "لا توجد معاملات لعرضها."
+  "noTransactions": "لا توجد معاملات لعرضها.",
+  "howItWorksShort": "كيف يعمل الرصيد"
 }

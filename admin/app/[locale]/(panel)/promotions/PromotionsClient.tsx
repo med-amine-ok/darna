@@ -21,6 +21,7 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { PromotionCoupon } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { KpiStrip } from "@/components/ui/KpiStrip";
 import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
@@ -38,7 +39,7 @@ const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(er
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 const FIELD =
-  "w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600";
+  "w-full rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
 
 // Mock featured placements (titles are listing data; labels are translated at render time).
 const FEATURED_PLACEMENTS = [
@@ -220,9 +221,9 @@ export default function PromotionsClient({
       {/* Coupons Tab */}
       {activeTab === "coupons" && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-tertiary/60 overflow-x-auto shadow-2xs">
+          <div className="relative bg-white rounded-2xl overflow-x-auto shadow-e1">
             <table className="w-full text-xs text-start">
-              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+              <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
                 <tr>
                   <th scope="col" className="py-3 px-4 text-start">{t("colCode")}</th>
                   <th scope="col" className="py-3 px-4 text-start">{t("colDiscount")}</th>
@@ -233,25 +234,30 @@ export default function PromotionsClient({
                   <th scope="col" className="py-3 px-4 text-end">{tCommon("actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-primary/[0.06]">
                 {loading && promotions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-neutral-500" aria-live="polite">
-                      {tCommon("loading")}
+                    <td colSpan={7} className="py-4 px-4" aria-live="polite">
+                      <span className="sr-only">{tCommon("loading")}</span>
+                      <div aria-hidden="true" className="space-y-3">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div key={i} className="skeleton h-4 rounded-md" style={{ width: `${90 - i * 12}%` }} />
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ) : promotions.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-neutral-500">
-                      {t("empty")}
+                    <td colSpan={7}>
+                      <EmptyState size="compact" title={t("empty")} />
                     </td>
                   </tr>
                 ) : (
                   promotions.map((p) => (
-                  <tr key={p.id} className="hover:bg-neutral-50/50">
+                  <tr key={p.id} className="hover:bg-darnaBg-100">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <span dir="ltr" className="font-mono font-bold text-primary px-2.5 py-1 rounded-lg bg-neutral-100 border border-neutral-200">
+                        <span dir="ltr" className="font-mono font-semibold text-primary px-2.5 py-1 rounded-lg bg-darnaBg-300/70 tracking-wide">
                           {p.code}
                         </span>
                         <Button
@@ -263,27 +269,25 @@ export default function PromotionsClient({
                           onClick={() => {
                             navigator.clipboard.writeText(p.code);
                             info(t("copied"));
-                          }}
-                        >
-                          <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                          }} leftIcon={<Copy className="w-3.5 h-3.5" aria-hidden="true" />}>
                         </Button>
                       </div>
                     </td>
-                    <td className="py-3 px-4 font-bold text-secondary">
+                    <td className="py-3 px-4 font-semibold text-secondary">
                       {p.discountType === "percentage"
                         ? `${formatNumber(p.discountValue, locale)}%`
                         : formatDzd(p.discountValue, locale)}
                     </td>
-                    <td className="py-3 px-4 font-mono text-neutral-600">
+                    <td className="py-3 px-4 tabular-nums text-neutral-600 whitespace-nowrap">
                       {p.minSpendDzd ? formatDzd(p.minSpendDzd, locale) : t("none")}
                     </td>
-                    <td className="py-3 px-4 font-mono text-neutral-700" dir="ltr">
+                    <td className="py-3 px-4 tabular-nums text-neutral-700 whitespace-nowrap" dir="ltr">
                       {t("usesValue", {
                         used: formatNumber(p.currentUses ?? 0, locale),
                         max: p.maxUses != null ? formatNumber(p.maxUses, locale) : t("unlimited"),
                       })}
                     </td>
-                    <td className="py-3 px-4 font-mono text-neutral-500">
+                    <td className="py-3 px-4 tabular-nums text-neutral-500 whitespace-nowrap">
                       {formatDate(p.expiresAt, locale)}
                     </td>
                     <td className="py-3 px-4">
@@ -293,7 +297,7 @@ export default function PromotionsClient({
                         disabled={!canManage}
                         aria-pressed={p.status === "active"}
                         title={t("toggleStatus", { code: p.code })}
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all cursor-pointer disabled:cursor-default ${FOCUS_RING} ${
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-all cursor-pointer disabled:cursor-default ${FOCUS_RING} ${
                           p.status === "active"
                             ? "bg-secondary/15 text-secondary hover:bg-secondary/25"
                             : "bg-neutral-200 text-neutral-600 hover:bg-neutral-300"
@@ -313,9 +317,7 @@ export default function PromotionsClient({
                         onClick={() => {
                           setPromoToDelete(p);
                           setDeleteModalOpen(true);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" aria-hidden="true" />
+                        }} leftIcon={<Trash2 className="w-4 h-4" aria-hidden="true" />}>
                       </Button>
                       )}
                     </td>
@@ -330,10 +332,10 @@ export default function PromotionsClient({
 
       {/* Featured Placements Tab */}
       {activeTab === "featured" && (
-        <div className="bg-white rounded-2xl border border-tertiary/60 p-6 space-y-4">
+        <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-primary text-base">{t("featured.title")}</h3>
+              <h3 className="font-semibold text-primary text-base">{t("featured.title")}</h3>
               <p className="text-xs text-neutral-500 mt-1">
                 {t("featured.subtitle")}
               </p>
@@ -350,21 +352,21 @@ export default function PromotionsClient({
 
           <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
             {FEATURED_PLACEMENTS.map((f) => (
-              <li key={f.id} className="p-4 rounded-xl border border-tertiary/60 bg-darnaBg/30 space-y-2">
+              <li key={f.id} className="p-4 rounded-xl bg-darnaBg-100 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-xs text-primary">{f.title}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary">
+                  <span className="font-semibold text-xs text-primary">{f.title}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-secondary/15 text-secondary">
                     {t(`featured.badge.${f.badgeKey}`)}
                   </span>
                 </div>
                 <p className="text-[11px] text-neutral-500">
                   {t("featured.placement", { place: t(`featured.place.${f.placeKey}`) })}
                 </p>
-                <div className="flex items-center justify-between pt-2 border-t border-tertiary/30 text-[11px]">
+                <div className="flex items-center justify-between pt-2 border-t border-primary/[0.08] text-[11px]">
                   <span className="text-neutral-500">
                     {t("featured.until", { date: formatDate(f.until, locale) })}
                   </span>
-                  <span className="font-bold text-primary">
+                  <span className="font-semibold text-primary">
                     {t("featured.clicks", { count: f.clicks })}
                   </span>
                 </div>
@@ -383,7 +385,7 @@ export default function PromotionsClient({
       >
         <div className="space-y-4 text-xs text-start">
           <div>
-            <label htmlFor="promo-code" className="block font-bold text-primary mb-1">
+            <label htmlFor="promo-code" className="block font-semibold text-primary mb-1">
               {t("form.code")}
               <span aria-hidden="true">*</span>
             </label>
@@ -401,7 +403,7 @@ export default function PromotionsClient({
                 setCode(e.target.value.toUpperCase());
                 if (codeError) setCodeError(false);
               }}
-              className={`${FIELD} font-mono font-bold`}
+              className={`${FIELD} font-mono font-semibold`}
             />
             {codeError && (
               <p id="promo-code-error" role="alert" className="mt-1 text-[11px] text-accent-700">
@@ -412,7 +414,7 @@ export default function PromotionsClient({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="promo-type" className="block font-bold text-primary mb-1">{t("form.type")}</label>
+              <label htmlFor="promo-type" className="block font-semibold text-primary mb-1">{t("form.type")}</label>
               <select
                 id="promo-type"
                 value={discountType}
@@ -424,7 +426,7 @@ export default function PromotionsClient({
               </select>
             </div>
             <div>
-              <label htmlFor="promo-value" className="block font-bold text-primary mb-1">
+              <label htmlFor="promo-value" className="block font-semibold text-primary mb-1">
                 {t("form.value")}
                 <span aria-hidden="true">*</span>
               </label>
@@ -436,14 +438,14 @@ export default function PromotionsClient({
                 aria-required="true"
                 value={discountValue}
                 onChange={(e) => setDiscountValue(Number(e.target.value))}
-                className={`${FIELD} font-mono font-bold`}
+                className={`${FIELD} font-mono font-semibold`}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="promo-min-spend" className="block font-bold text-primary mb-1">{t("form.minSpend")}</label>
+              <label htmlFor="promo-min-spend" className="block font-semibold text-primary mb-1">{t("form.minSpend")}</label>
               <input
                 id="promo-min-spend"
                 type="number"
@@ -455,7 +457,7 @@ export default function PromotionsClient({
               />
             </div>
             <div>
-              <label htmlFor="promo-max-uses" className="block font-bold text-primary mb-1">{t("form.maxUses")}</label>
+              <label htmlFor="promo-max-uses" className="block font-semibold text-primary mb-1">{t("form.maxUses")}</label>
               <input
                 id="promo-max-uses"
                 type="number"
@@ -468,7 +470,7 @@ export default function PromotionsClient({
           </div>
 
           <div>
-            <label htmlFor="promo-expires" className="block font-bold text-primary mb-1">{t("form.expiresAt")}</label>
+            <label htmlFor="promo-expires" className="block font-semibold text-primary mb-1">{t("form.expiresAt")}</label>
             <input
               id="promo-expires"
               type="date"

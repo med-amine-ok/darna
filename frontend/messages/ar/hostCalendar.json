@@ -21,13 +21,15 @@
   "status": {
     "blocked": "محجوب",
     "booked": "محجوز",
-    "available": "متاح"
+    "available": "متاح",
+    "past": "منقضٍ",
+    "special": "سعر مخصص"
   },
   "moreBookings": "+{count} أخرى",
   "dayCellLabel": "{date}: {status}",
   "dayCellLabelWithPrice": "{date}: {status}، {price} لليلة",
-  "weekCellLabel": "{listing} – {date}: {status}، {price} لليلة",
-  "bookingTitle": "{guest} – {listing}",
+  "weekCellLabel": "{listing}، {date}: {status}، {price} لليلة",
+  "bookingTitle": "{guest}، {listing}",
   "dayView": {
     "eyebrow": "الجدول اليومي للعمليات",
     "block": "حجب هذا اليوم",
@@ -59,7 +61,8 @@
   "guestLine": "{name} ({count, plural, zero {بدون ضيوف} one {ضيف واحد} two {ضيفان} few {# ضيوف} many {# ضيفًا} other {# ضيف}})",
   "yearView": {
     "viewMonth": "عرض الشهر",
-    "viewMonthLabel": "عرض {month}"
+    "viewMonthLabel": "عرض {month}",
+    "bookedDays": "{count, plural, zero {لا حجوزات} one {يوم محجوز واحد} two {يومان محجوزان} few {# أيام محجوزة} many {# يومًا محجوزًا} other {# يوم محجوز}}"
   },
   "dialog": {
     "eyebrow": "إعدادات التاريخ",
@@ -73,7 +76,8 @@
     "defaultRate": "السعر الافتراضي: {price} لليلة. اتركه فارغًا لإعادة الضبط.",
     "priceInputLabel": "سعر الليلة لهذا التاريخ",
     "saveRate": "حفظ السعر",
-    "reservationsOnDate": "الحجوزات في هذا التاريخ"
+    "reservationsOnDate": "الحجوزات في هذا التاريخ",
+    "openForBookings": "متاح للحجز"
   },
   "toast": {
     "dateBlocked": "تم حجب التاريخ عن الحجوزات",
@@ -82,6 +86,45 @@
     "priceInvalid": "أدخل عددًا صحيحًا بين {min} و{max}، أو اتركه فارغًا لإعادة الضبط.",
     "priceReset": "تمت استعادة السعر العادي للإعلان.",
     "priceSet": "تم تحديد سعر الليلة بـ {price}",
-    "priceSaveFailed": "تعذّر حفظ هذا السعر. يُرجى المحاولة مرة أخرى."
+    "priceSaveFailed": "تعذّر حفظ هذا السعر. يُرجى المحاولة مرة أخرى.",
+    "rangeBlocked": "{count, plural, zero {لم يُحجب أي يوم} one {حُجب يوم واحد} two {حُجب يومان} few {حُجبت # أيام} many {حُجب # يومًا} other {حُجب # يوم}}",
+    "rangeReopened": "{count, plural, zero {لم يُفتح أي يوم} one {أُعيد فتح يوم واحد} two {أُعيد فتح يومين} few {أُعيد فتح # أيام} many {أُعيد فتح # يومًا} other {أُعيد فتح # يوم}}",
+    "rangePriceSet": "{count, plural, zero {لم يتغير أي سعر} one {حُدد سعر يوم واحد بـ {price}} two {حُدد سعر يومين بـ {price}} few {حُدد سعر # أيام بـ {price}} many {حُدد سعر # يومًا بـ {price}} other {حُدد سعر # يوم بـ {price}}}",
+    "rangePriceReset": "{count, plural, zero {لم يتغير أي سعر} one {أُعيد السعر العادي ليوم واحد} two {أُعيد السعر العادي ليومين} few {أُعيد السعر العادي لـ # أيام} many {أُعيد السعر العادي لـ # يومًا} other {أُعيد السعر العادي لـ # يوم}}"
+  },
+  "eyebrow": "التوفر",
+  "weekRange": "من {start} إلى {end}",
+  "gridLabel": "أيام {month}",
+  "priceUnit": "{category, select, vehicle {لليوم} experience {للشخص} trip {للشخص} other {لليلة}}",
+  "legend": {
+    "title": "دليل الألوان",
+    "available": "متاح",
+    "booked": "محجوز",
+    "blocked": "محجوب",
+    "special": "سعر مخصص",
+    "today": "اليوم",
+    "selected": "محدد"
+  },
+  "details": {
+    "title": "تفاصيل اليوم",
+    "selection": "التحديد",
+    "noBookings": "لا توجد حجوزات في هذا اليوم.",
+    "hint": "مرّر المؤشر فوق يوم أو انتقل إليه لعرض تفاصيله. اسحب عبر عدة أيام لتحديد فترة."
+  },
+  "range": {
+    "modeLabel": "تحديد فترة",
+    "hint": "اسحب عبر عدة أيام، أو استخدم Shift مع الأسهم، لحجب عدة أيام أو تسعيرها دفعة واحدة.",
+    "pickStart": "اضغط على أول يوم في الفترة.",
+    "pickEnd": "اضغط الآن على آخر يوم في الفترة.",
+    "title": "{count, plural, zero {لم يُحدد أي يوم} one {يوم واحد محدد} two {يومان محددان} few {# أيام محددة} many {# يومًا محددًا} other {# يوم محدد}}",
+    "dates": "من {start} إلى {end}",
+    "edit": "تعديل هذه الأيام",
+    "clear": "مسح التحديد",
+    "bookedInside": "{count, plural, zero {لا حجوزات ضمن هذه الأيام.} one {يوم واحد من هذه الأيام عليه حجز، والحجب لا يلغيه.} two {يومان من هذه الأيام عليهما حجوزات، والحجب لا يلغيها.} few {# أيام من هذه الأيام عليها حجوزات، والحجب لا يلغيها.} many {# يومًا من هذه الأيام عليها حجوزات، والحجب لا يلغيها.} other {# يوم من هذه الأيام عليها حجوزات، والحجب لا يلغيها.}}",
+    "block": "حجب هذه الأيام",
+    "reopen": "إعادة فتح هذه الأيام",
+    "priceTitle": "سعر هذه الأيام",
+    "priceInputLabel": "سعر الأيام المحددة",
+    "savePrice": "تطبيق السعر"
   }
 }

@@ -24,7 +24,11 @@ const PROTECTED_USER_PREFIXES = [
   "/notifications",
 ];
 
-function redirectTo(request: NextRequest, pathname: string, callbackUrl?: string) {
+function redirectTo(
+  request: NextRequest,
+  pathname: string,
+  callbackUrl?: string,
+) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
   url.search = "";
@@ -35,7 +39,7 @@ function redirectTo(request: NextRequest, pathname: string, callbackUrl?: string
 /**
  * Coarse, cookie-only route guards. The session is verified (HMAC) here, but
  * pages and server actions still re-check everything against the server
- * store — the middleware is only a fast first line of defence.
+ * store, the middleware is only a fast first line of defence.
  */
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -44,15 +48,26 @@ export default async function middleware(request: NextRequest) {
   const locale = localeMatch?.[1] || defaultLocale;
   const pathWithoutLocale = localeMatch ? localeMatch[2] || "/" : pathname;
 
-  const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+  const session = await verifySession(
+    request.cookies.get(SESSION_COOKIE)?.value,
+  );
 
   const isProtectedUserRoute =
     PROTECTED_USER_EXACT.includes(pathWithoutLocale) ||
-    PROTECTED_USER_PREFIXES.some((prefix) => pathWithoutLocale === prefix || pathWithoutLocale.startsWith(`${prefix}/`));
-  const isHostRoute = pathWithoutLocale === "/host" || pathWithoutLocale.startsWith("/host/");
+    PROTECTED_USER_PREFIXES.some(
+      (prefix) =>
+        pathWithoutLocale === prefix ||
+        pathWithoutLocale.startsWith(`${prefix}/`),
+    );
+  const isHostRoute =
+    pathWithoutLocale === "/host" || pathWithoutLocale.startsWith("/host/");
 
   if ((isProtectedUserRoute || isHostRoute) && !session) {
-    return redirectTo(request, `/${locale}/login`, `/${locale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`);
+    return redirectTo(
+      request,
+      `/${locale}/login`,
+      `/${locale}${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`,
+    );
   }
 
   if (isHostRoute && session) {
@@ -62,7 +77,10 @@ export default async function middleware(request: NextRequest) {
     }
     // Org host (agency/hotel/hostel) without an organization -> finish org onboarding
     if (isOrgHostType(session.hostType) && !session.organizationId) {
-      return redirectTo(request, `/${locale}/become-a-host/${session.hostType}`);
+      return redirectTo(
+        request,
+        `/${locale}/become-a-host/${session.hostType}`,
+      );
     }
   }
 

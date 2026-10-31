@@ -19,7 +19,10 @@ import { resolveActiveOrganization } from "./active-org";
  * cookie stops working on the server even before it expires.
  * TODO: replace with Supabase auth sessions.
  */
-const revokedSessions = globalStore<Map<string, number>>("__darna_revoked_sessions__", () => new Map());
+const revokedSessions = globalStore<Map<string, number>>(
+  "__darna_revoked_sessions__",
+  () => new Map(),
+);
 
 function pruneRevoked() {
   const now = Date.now() / 1000;
@@ -48,15 +51,23 @@ export const getSessionUser = cache(async (): Promise<User | null> => {
 
 async function writeSessionCookie(payload: SessionPayload) {
   const token = await signSession(payload);
-  cookies().set(SESSION_COOKIE, token, sessionCookieOptions(Math.max(0, payload.exp - Math.floor(Date.now() / 1000))));
+  cookies().set(
+    SESSION_COOKIE,
+    token,
+    sessionCookieOptions(
+      Math.max(0, payload.exp - Math.floor(Date.now() / 1000)),
+    ),
+  );
 }
 
 /**
- * Starts a new session for `user` (route handlers / server actions only —
+ * Starts a new session for `user` (route handlers / server actions only ,
  * cookies can't be written during a page render).
  */
 export async function startSession(user: User): Promise<void> {
-  const active = user.hostType ? await resolveActiveOrganization(user, user.organizationId) : null;
+  const active = user.hostType
+    ? await resolveActiveOrganization(user, user.organizationId)
+    : null;
   await writeSessionCookie({
     sid: globalThis.crypto.randomUUID(),
     userId: user.id,
@@ -70,14 +81,22 @@ export async function startSession(user: User): Promise<void> {
  * Re-issues the cookie with fresh claims (e.g. after becoming a host) while
  * keeping the same session id and expiry.
  */
-export async function refreshSession(user: User, preferredOrganizationId?: string | null): Promise<void> {
+export async function refreshSession(
+  user: User,
+  preferredOrganizationId?: string | null,
+): Promise<void> {
   const current = await getSession();
   if (!current || current.userId !== user.id) {
     await startSession(user);
     return;
   }
   const active = user.hostType
-    ? await resolveActiveOrganization(user, preferredOrganizationId ?? current.organizationId ?? user.organizationId)
+    ? await resolveActiveOrganization(
+        user,
+        preferredOrganizationId ??
+          current.organizationId ??
+          user.organizationId,
+      )
     : null;
   await writeSessionCookie({
     ...current,

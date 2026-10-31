@@ -2,6 +2,7 @@
 
 import React, { useId, useState, useTransition } from "react";
 import Image from "next/image";
+import { listingImageSrc, type PlaceholderKind } from "@/lib/placeholders";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Home,
@@ -50,6 +51,8 @@ import { canTransitionListing } from "@/lib/domain/transitions";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import ListingsMapView from "@/components/features/listings/ListingsMapView";
+const placeholderKind = (category?: string): PlaceholderKind =>
+  category === "vehicle" ? "car" : category === "experience" ? "experience" : category === "trip" ? "trip" : "stay";
 
 export interface ListingsClientProps {
   initialData: PaginatedResult<Listing>;
@@ -337,16 +340,16 @@ export default function ListingsClient({
       sortable: true,
       render: (l) => (
         <div className="flex items-center gap-3">
-          <div className="relative w-12 h-10 rounded-xl overflow-hidden bg-neutral-100 shrink-0 border border-tertiary/60">
+          <div className="relative w-12 h-10 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={l.imageSrc[0] || "/assets/house.png"}
+              src={listingImageSrc(l.imageSrc[0], placeholderKind(l.category))}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[300px]">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -354,17 +357,17 @@ export default function ListingsClient({
                   e.stopPropagation();
                   setDetailListing(l);
                 }}
-                className="font-bold text-primary truncate leading-tight block text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                className="font-semibold text-primary-900 truncate leading-tight block text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               >
                 {l.title}
               </button>
               {l.isFeatured && (
-                <span className="text-[10px] font-bold px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded-md">
+                <span className="text-[11px] font-semibold px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-md whitespace-nowrap">
                   {t("featuredBadge")}
                 </span>
               )}
             </div>
-            <span className="block text-[11px] text-neutral-500 truncate leading-snug">
+            <span className="block text-xs text-primary-600 truncate leading-snug">
               {t("byHost", { host: l.hostName, type: hostTypeLabel(l.hostType) })}
             </span>
           </div>
@@ -375,7 +378,7 @@ export default function ListingsClient({
       key: "wilayaCode",
       header: t("columns.wilaya"),
       render: (l) => (
-        <span className="font-semibold text-neutral-600">
+        <span className="font-medium text-primary-700 whitespace-nowrap">
           {getWilayaName(l.wilayaCode, locale)}
         </span>
       ),
@@ -386,7 +389,7 @@ export default function ListingsClient({
       align: "right",
       sortable: true,
       render: (l) => (
-        <span className="font-mono font-bold text-primary tabular-nums">
+        <span className="font-semibold text-primary-900 tabular-nums whitespace-nowrap">
           {formatDzd(l.price, locale)}
         </span>
       ),
@@ -407,7 +410,7 @@ export default function ListingsClient({
       align: "center",
       sortable: true,
       render: (l) => (
-        <span className="font-semibold text-amber-700 tabular-nums">
+        <span className="font-semibold text-amber-700 tabular-nums whitespace-nowrap">
           <span aria-hidden="true">★ </span>
           {l.rating.toFixed(1)}
         </span>
@@ -418,7 +421,7 @@ export default function ListingsClient({
       header: t("columns.bookings"),
       align: "center",
       sortable: true,
-      render: (l) => <span className="font-bold tabular-nums">{l.bookingsCount}</span>,
+      render: (l) => <span className="font-semibold text-primary-800 tabular-nums">{l.bookingsCount}</span>,
     },
     {
       key: "actions",
@@ -431,7 +434,7 @@ export default function ListingsClient({
               variant="secondary"
               size="sm"
               onClick={() => handleApprove(l)}
-              className="text-[11px] py-1 px-2.5"
+              className="text-xs py-1 px-2.5 whitespace-nowrap"
             >
               {t("approveAction")}
             </Button>
@@ -440,9 +443,10 @@ export default function ListingsClient({
               variant="ghost"
               size="sm"
               onClick={() => setDetailListing(l)}
-              className="text-[11px] py-1 px-2 text-neutral-600"
+              className="text-xs py-1 px-2 text-primary-700 whitespace-nowrap"
+              leftIcon={<Eye className="w-3.5 h-3.5" aria-hidden="true" />}
             >
-              <Eye className="w-3.5 h-3.5 me-1" aria-hidden="true" /> {tCommon("view")}
+              {tCommon("view")}
             </Button>
           )}
 
@@ -513,10 +517,10 @@ export default function ListingsClient({
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">
+          <h1 className="font-serif text-heading text-primary-900">
             {t("title")}
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+          <p className="text-meta text-primary-600 mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -525,7 +529,7 @@ export default function ListingsClient({
         <div
           role="group"
           aria-label={t("viewModeLabel")}
-          className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-tertiary/70 shadow-2xs self-start sm:self-auto"
+          className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-e1 self-start sm:self-auto"
         >
           {viewModes.map((mode) => (
             <button
@@ -535,8 +539,8 @@ export default function ListingsClient({
               aria-pressed={viewMode === mode.id}
               aria-label={mode.label}
               title={mode.label}
-              className={`p-1.5 rounded-xl text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
-                viewMode === mode.id ? "bg-primary text-white shadow-2xs" : "text-neutral-500 hover:text-primary"
+              className={`p-1.5 rounded-xl text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+                viewMode === mode.id ? "bg-primary text-white shadow-2xs" : "text-primary-600 hover:text-primary"
               }`}
             >
               {mode.icon}
@@ -581,7 +585,7 @@ export default function ListingsClient({
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer select-none whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
               vertical === v.id
                 ? "bg-secondary-700 text-white shadow-xs"
-                : "bg-white border border-tertiary/70 text-neutral-600 hover:bg-darnaBg"
+                : "bg-white border border-tertiary/70 text-primary-700 hover:bg-darnaBg"
             }`}
           >
             {v.icon}
@@ -639,12 +643,12 @@ export default function ListingsClient({
                 type="button"
                 onClick={() => setDetailListing(listing)}
                 aria-label={t("grid.openLabel", { title: listing.title })}
-                className="group w-full h-full text-start rounded-3xl bg-white border border-tertiary/70 shadow-darna-card overflow-hidden hover:shadow-darna-hover transition cursor-pointer flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                className="group w-full h-full text-start rounded-2xl bg-white shadow-e1 overflow-hidden hover:shadow-e2 transition cursor-pointer flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
               >
                 <span className="block w-full">
                   <span className="relative block w-full h-44 bg-neutral-100 overflow-hidden">
                     <Image
-                      src={listing.imageSrc[0] || "/assets/house.png"}
+                      src={listingImageSrc(listing.imageSrc[0], placeholderKind(listing.category))}
                       alt=""
                       fill
                       sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -657,7 +661,7 @@ export default function ListingsClient({
                         size="sm"
                       />
                     </span>
-                    <span className="absolute bottom-2.5 end-2.5 font-mono font-bold text-xs bg-black/75 text-white px-2 py-0.5 rounded-md backdrop-blur-xs">
+                    <span className="absolute bottom-2.5 end-2.5 tabular-nums font-semibold text-xs bg-primary-950/75 text-white px-2 py-0.5 rounded-md backdrop-blur-xs">
                       {formatDzd(listing.price, locale)}
                     </span>
                   </span>
@@ -665,23 +669,23 @@ export default function ListingsClient({
                   <span className="block p-4 space-y-1.5">
                     <span className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-secondary-700">{verticalLabel(listing.category)}</span>
-                      <span className="text-amber-700 font-bold">
+                      <span className="text-amber-700 font-semibold">
                         <span aria-hidden="true">★ </span>
                         {listing.rating.toFixed(1)}
                       </span>
                     </span>
-                    <span className="block text-sm font-bold text-primary line-clamp-2 leading-tight">
+                    <span className="block text-sm font-semibold text-primary line-clamp-2 leading-tight">
                       {listing.title}
                     </span>
-                    <span className="block text-[11px] text-neutral-500">
+                    <span className="block text-[11px] text-primary-600">
                       {t("cityHost", { city: listing.city, host: listing.hostName })}
                     </span>
                   </span>
                 </span>
 
-                <span className="w-full p-3 px-4 border-t border-neutral-100 flex items-center justify-between text-xs bg-darnaBg/30">
-                  <span className="text-neutral-500 font-medium">{t("grid.bookings", { count: listing.bookingsCount })}</span>
-                  <span className="font-bold text-secondary-700 group-hover:underline inline-flex items-center gap-1">
+                <span className="w-full p-3 px-4 border-t border-primary/[0.08] flex items-center justify-between text-xs bg-darnaBg/30">
+                  <span className="text-primary-600 font-medium">{t("grid.bookings", { count: listing.bookingsCount })}</span>
+                  <span className="font-semibold text-secondary-700 group-hover:underline inline-flex items-center gap-1">
                     {t("grid.moderate")}
                     <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
                   </span>
@@ -833,9 +837,9 @@ export default function ListingsClient({
         >
           <div className="space-y-5 text-xs text-start">
             {/* Gallery Lightbox Preview */}
-            <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-neutral-100 border border-tertiary/70">
+            <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-neutral-100 border border-primary/[0.08]">
               <Image
-                src={detailListing.imageSrc[0] || "/assets/house.png"}
+                src={listingImageSrc(detailListing.imageSrc[0], placeholderKind(detailListing.category))}
                 alt={detailListing.title}
                 fill
                 sizes="(min-width: 768px) 640px, 100vw"
@@ -851,9 +855,9 @@ export default function ListingsClient({
             </div>
 
             {/* Moderation Checklist */}
-            <fieldset className="p-4 rounded-2xl bg-darnaBg/60 border border-tertiary/70 space-y-2.5">
+            <fieldset className="p-4 rounded-2xl bg-darnaBg/60 border border-primary/[0.08] space-y-2.5">
               <legend className="sr-only">{t("moderationChecklist")}</legend>
-              <h4 aria-hidden="true" className="font-bold text-primary flex items-center gap-1.5 text-xs">
+              <h4 aria-hidden="true" className="font-semibold text-primary flex items-center gap-1.5 text-xs">
                 <ShieldCheck className="w-4 h-4 text-secondary-700" aria-hidden="true" />
                 {t("moderationChecklist")}
               </h4>
@@ -861,7 +865,7 @@ export default function ListingsClient({
                 {CHECKLIST_KEYS.map((key) => (
                   <label
                     key={key}
-                    className="flex items-center gap-2 p-1.5 rounded-lg bg-white border border-tertiary/50 cursor-pointer"
+                    className="flex items-center gap-2 p-1.5 rounded-lg bg-white cursor-pointer shadow-e1"
                   >
                     <input
                       type="checkbox"
@@ -878,33 +882,33 @@ export default function ListingsClient({
             </fieldset>
 
             {/* Price Sanity Hint vs Wilaya Median */}
-            <div className="p-3.5 rounded-xl bg-white border border-tertiary/60 flex items-center justify-between text-xs">
+            <div className="p-3.5 rounded-2xl bg-white flex items-center justify-between text-xs shadow-e1">
               <div>
-                <span className="text-neutral-500 block text-[11px]">{t("detail.nightlyPrice")}</span>
-                <span className="font-bold font-mono text-primary text-sm">
+                <span className="text-primary-600 block text-[11px]">{t("detail.nightlyPrice")}</span>
+                <span className="font-semibold tabular-nums text-primary text-sm">
                   {formatDzd(detailListing.price, locale)}
                 </span>
               </div>
               <div className="text-end">
-                <span className="text-neutral-500 block text-[11px]">{t("detail.medianBenchmark")}</span>
-                <span className="font-bold text-secondary-700 text-xs">
+                <span className="text-primary-600 block text-[11px]">{t("detail.medianBenchmark")}</span>
+                <span className="font-semibold text-secondary-700 text-xs">
                   {t("detail.medianValue", { amount: formatDzd(16500, locale) })}
                 </span>
               </div>
             </div>
 
             {/* Price & Discounts Section */}
-            <div className="bg-[#FAF9F5] p-3.5 rounded-xl border border-tertiary/60 space-y-2">
-              <span className="text-xs font-bold text-primary block">
+            <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
+              <span className="text-xs font-semibold text-primary block">
                 {t("detail.pricingTitle")}
               </span>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.commission")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.commission")}</span>
                   <span className="font-semibold text-secondary-700">{t("detail.commissionValue", { rate: 12 })}</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.weeklyDiscount")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.weeklyDiscount")}</span>
                   <span className="font-semibold text-secondary-700">
                     {t("detail.weeklyDiscountValue", {
                       rate: DISCOUNTS.weekly,
@@ -912,38 +916,38 @@ export default function ListingsClient({
                     })}
                   </span>
                 </div>
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.cleaningFee")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.cleaningFee")}</span>
                   <span className="font-semibold text-primary">{formatDzd(3500, locale)}</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.deposit")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.deposit")}</span>
                   <span className="font-semibold text-primary">{formatDzd(20000, locale)}</span>
                 </div>
               </div>
             </div>
 
             {/* Time & Schedule Section */}
-            <div className="bg-[#FAF9F5] p-3.5 rounded-xl border border-tertiary/60 space-y-2">
-              <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+            <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
+              <span className="text-xs font-semibold text-primary flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-secondary-700" aria-hidden="true" />
                 <span>{t("detail.timesTitle")}</span>
               </span>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.checkIn")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.checkIn")}</span>
                   <span className="font-medium text-primary">{t("detail.checkInValue", { time: "15:00" })}</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.checkOut")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.checkOut")}</span>
                   <span className="font-medium text-primary">{t("detail.checkOutValue", { time: "11:00" })}</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.minStay")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.minStay")}</span>
                   <span className="font-medium text-primary">{t("detail.nights", { count: 2 })}</span>
                 </div>
-                <div className="p-2 rounded-lg bg-white border border-tertiary/40">
-                  <span className="text-neutral-500 block text-[10px]">{t("detail.cancellation")}</span>
+                <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                  <span className="text-primary-600 block text-[11px]">{t("detail.cancellation")}</span>
                   <span className="font-medium text-secondary-700">{t("detail.cancellationValue", { hours: 48 })}</span>
                 </div>
               </div>
@@ -952,7 +956,7 @@ export default function ListingsClient({
             {/* Request Changes Form */}
             {isRequestingChanges && (
               <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-3">
-                <label htmlFor={revisionId} className="block font-bold text-amber-900">
+                <label htmlFor={revisionId} className="block font-semibold text-amber-900">
                   {t("revision.title")}
                 </label>
                 <textarea
@@ -993,18 +997,18 @@ export default function ListingsClient({
 
             {/* Description & Amenities */}
             <div className="space-y-2">
-              <h4 className="font-bold text-primary">{t("detail.description")}</h4>
-              <p className="text-neutral-600 leading-relaxed">{detailListing.description}</p>
+              <h4 className="font-semibold text-primary">{t("detail.description")}</h4>
+              <p className="text-primary-700 leading-relaxed">{detailListing.description}</p>
             </div>
 
             {/* Amenities tags */}
             <div className="space-y-2">
-              <h4 className="font-bold text-primary">{t("detail.amenities")}</h4>
+              <h4 className="font-semibold text-primary">{t("detail.amenities")}</h4>
               <ul className="flex flex-wrap gap-1.5">
                 {detailListing.amenities.map((amenity, idx) => (
                   <li
                     key={idx}
-                    className="px-2.5 py-1 rounded-lg bg-neutral-100 text-neutral-600 font-medium text-[11px]"
+                    className="px-2.5 py-1 rounded-lg bg-neutral-100 text-primary-700 font-medium text-[11px]"
                   >
                     {amenity}
                   </li>

@@ -11,5 +11,15 @@
   "patio": "Patio",
   "seaView": "Vue sur mer",
   "fireplace": "Cheminée",
-  "courtyard": "Cour intérieure"
+  "courtyard": "Cour intérieure",
+  "breakfast": "Petit-déjeuner",
+  "spa": "Spa, hammam ou jacuzzi",
+  "gym": "Salle de sport",
+  "restaurant": "Restaurant",
+  "rooftop": "Terrasse sur le toit",
+  "garden": "Jardin, balcon ou patio",
+  "heating": "Chauffage",
+  "elevator": "Ascenseur",
+  "lockers": "Casiers",
+  "airportTransfer": "Transfert aéroport"
 }

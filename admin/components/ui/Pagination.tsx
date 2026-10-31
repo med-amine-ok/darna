@@ -18,8 +18,8 @@ export interface PaginationProps {
 }
 
 const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-const iconBtn = `w-8 h-8 rounded-lg border border-tertiary-200 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed transition ${focusRing}`;
-const mobileBtn = `min-h-[44px] px-3.5 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 flex items-center gap-1 text-primary font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs active:scale-95 ${focusRing}`;
+const iconBtn = `w-8 h-8 rounded-lg bg-white shadow-2xs ring-1 ring-inset ring-primary/10 hover:ring-primary/20 hover:bg-darnaBg-50 flex items-center justify-center text-primary-600 disabled:opacity-40 disabled:cursor-not-allowed transition duration-fast ease-standard ${focusRing}`;
+const mobileBtn = `min-h-[44px] px-3.5 rounded-xl bg-white shadow-e1 hover:bg-darnaBg-50 flex items-center gap-1 text-primary-800 font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition duration-fast active:scale-[0.98] ${focusRing}`;
 
 export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
@@ -66,7 +66,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <nav
       aria-label={t("nav")}
-      className={`flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-neutral-600 select-none py-3.5 px-2 ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 text-meta text-neutral-600 select-none py-3.5 px-2 ${className}`}
     >
       {/* Summary: "Showing 1 to 10 of 124 items" */}
       <div className="flex items-center gap-1.5 text-center sm:text-start text-neutral-500">
@@ -82,7 +82,7 @@ export const Pagination: React.FC<PaginationProps> = ({
       </div>
 
       {/* Mobile Compact Stepper (< sm) */}
-      <div className="flex sm:hidden items-center justify-between w-full pt-1 border-t border-neutral-100">
+      <div className="flex sm:hidden items-center justify-between w-full pt-1 border-t border-primary/[0.08]">
         <button
           type="button"
           disabled={currentPage <= 1}
@@ -93,7 +93,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <span>{t("previous")}</span>
         </button>
 
-        <span className="font-bold text-primary text-xs font-mono">
+        <span className="font-semibold text-primary text-meta tabular-nums">
           <span aria-hidden="true">
             {n(currentPage)} / {n(lastPage)}
           </span>
@@ -151,10 +151,10 @@ export const Pagination: React.FC<PaginationProps> = ({
                 onClick={() => onPageChange(p)}
                 aria-label={t("page", { page: n(p) })}
                 aria-current={currentPage === p ? "page" : undefined}
-                className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition ${focusRing} ${
+                className={`min-w-[32px] h-8 px-2 rounded-lg text-meta font-semibold tabular-nums transition duration-fast ease-standard ${focusRing} ${
                   currentPage === p
-                    ? "bg-primary text-white shadow-xs"
-                    : "border border-tertiary-200 bg-white hover:bg-neutral-50 text-neutral-700"
+                    ? "bg-primary-800 text-white shadow-e1"
+                    : "text-primary-700 hover:bg-primary/[0.06]"
                 }`}
               >
                 {n(p)}
@@ -197,7 +197,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               id={pageSizeId}
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="py-1 px-2 rounded-lg border border-tertiary-300 bg-white text-xs font-medium text-neutral-700 focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600/40 cursor-pointer"
+              className="h-8 py-1 ps-2.5 pe-7 rounded-lg border border-primary/[0.12] bg-white shadow-2xs text-meta font-medium text-primary-700 focus:outline-none focus:border-primary-600 focus-visible:ring-4 focus-visible:ring-primary/[0.08] cursor-pointer"
             >
               {[10, 12, 20, 50].map((size) => (
                 <option key={size} value={size}>

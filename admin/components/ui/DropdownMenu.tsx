@@ -93,7 +93,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
             e.stopPropagation();
             setIsOpen((o) => !o);
           }}
-          className="p-1.5 rounded-lg text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+          className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-primary-600 hover:text-primary-900 hover:bg-primary/[0.06] transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
         >
           {triggerIcon}
         </button>
@@ -105,8 +105,8 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
           role="menu"
           onKeyDown={onMenuKeyDown}
           onClick={(e) => e.stopPropagation()}
-          className={`absolute z-40 mt-1 w-44 rounded-2xl bg-white border border-tertiary/80 shadow-darna-dropdown p-1.5 animate-in fade-in zoom-in-95 ${
-            align === "right" ? "end-0" : "start-0"
+          className={`absolute z-40 mt-1.5 min-w-[11rem] rounded-2xl bg-white shadow-e3 p-1.5 animate-in fade-in zoom-in-95 duration-fast ${
+            align === "right" ? "end-0 origin-top-right rtl:origin-top-left" : "start-0 origin-top-left rtl:origin-top-right"
           }`}
         >
           {items.map((item, index) => (
@@ -119,12 +119,12 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
                 setIsOpen(false);
                 item.onClick();
               }}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold select-none transition text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 min-h-[38px] rounded-xl text-xs font-medium select-none transition-colors duration-fast text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
                 item.disabled
                   ? "opacity-40 pointer-events-none"
                   : item.variant === "danger"
-                  ? "text-accent-700 hover:bg-accent/10"
-                  : "text-neutral-700 hover:bg-darnaBg/80 hover:text-primary"
+                  ? "text-accent-700 hover:bg-accent-50"
+                  : "text-primary-800 hover:bg-primary/[0.05] hover:text-primary-900"
               }`}
             >
               {item.icon && (

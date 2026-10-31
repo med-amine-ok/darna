@@ -1,6 +1,6 @@
 import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-/** Legacy duplicate route — canonical page is /settings/onboarding. */
+/** Legacy duplicate route, canonical page is /settings/onboarding. */
 export default function OnboardingRedirect({
   searchParams,
 }: {

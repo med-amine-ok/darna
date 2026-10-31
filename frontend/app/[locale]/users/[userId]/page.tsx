@@ -2,7 +2,6 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import Container from "@/components/Container";
 import { getUserById } from "@/lib/data/auth";
 import { getListings } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
@@ -91,8 +90,8 @@ export default async function UserPublicProfilePage({ params }: UserPageProps) {
   const userListings = allListings.filter((l) => l.hostUserId === user.id && !l.organizationId);
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-10">
-      <Container>
+    <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <UserProfileClient
           // Owners get their full record; everyone else only the public projection.
           user={isOwner ? user : toPublicUser(user)}
@@ -100,7 +99,7 @@ export default async function UserPublicProfilePage({ params }: UserPageProps) {
           reviews={reviews}
           isOwner={isOwner}
         />
-      </Container>
+      </div>
     </div>
   );
 }

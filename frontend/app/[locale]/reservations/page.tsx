@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import Container from "@/components/Container";
+import { AccountPage } from "@/components/profile/AccountShell";
+import Button from "@/components/ui/Button";
 import { getSessionUser } from "@/lib/server/session";
 import { getHostContext, hostOwnerKey } from "@/lib/server/host-context";
 import { getReservations } from "@/lib/data/reservations";
@@ -34,16 +35,25 @@ export default async function ReservationsPage({ params }: { params: { locale: s
   }
 
   const owner = hostOwnerKey(ctx);
-  const [reservations, listings] = await Promise.all([
+  const [reservations, listings, t] = await Promise.all([
     getReservations({ hostId: owner.userId, organizationId: owner.organizationId }),
     getHostListings(owner),
+    getTranslations({ locale, namespace: "reservations" }),
   ]);
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-10">
-      <Container>
-        <ReservationsClient initialReservations={reservations} listings={listings} />
-      </Container>
-    </div>
+    <AccountPage
+      width="wide"
+      eyebrow={t("eyebrow")}
+      title={t("pageTitle")}
+      subtitle={t("pageSubtitle")}
+      actions={
+        <Button href="/host/listings" variant="tertiary">
+          {t("manageListings")}
+        </Button>
+      }
+    >
+      <ReservationsClient initialReservations={reservations} listings={listings} />
+    </AccountPage>
   );
 }

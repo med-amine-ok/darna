@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip, KpiCardItem } from "@/components/ui/KpiStrip";
+import { placeholderFor } from "@/lib/placeholders";
+import { m } from "framer-motion";
 import { Tabs, TabItem } from "@/components/ui/Tabs";
 import { FilterBar, FilterSelect } from "@/components/ui/FilterBar";
 import { FilterDrawer } from "@/components/ui/FilterDrawer";
@@ -261,9 +263,9 @@ export default function ProvidersValidationClient() {
       sortable: true,
       render: (h) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-neutral-100 border border-tertiary-200 shrink-0 relative">
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-tertiary-100 ring-1 ring-inset ring-primary/[0.06] shrink-0 relative">
             <Image
-              src="/assets/template.jpeg"
+              src={placeholderFor("stay")}
               alt=""
               fill
               sizes="40px"
@@ -271,10 +273,10 @@ export default function ProvidersValidationClient() {
             />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="font-bold text-primary truncate leading-tight">
+            <span className="font-semibold text-primary truncate leading-tight">
               {hostDisplayName(h)}
             </span>
-            <span className="text-[11px] text-neutral-500 truncate mt-0.5">
+            <span className="text-[11px] text-primary-600 truncate mt-0.5">
               {h.businessName ? h.ownerName : t("individual")}
             </span>
           </div>
@@ -294,7 +296,7 @@ export default function ProvidersValidationClient() {
       render: (h) => {
         const w = WILAYAS.find((item) => item.code === h.wilayaCode);
         return (
-          <span className="inline-flex items-center gap-1 text-neutral-600">
+          <span className="inline-flex items-center gap-1 text-primary-600">
             <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
             <span className="truncate">{w ? wilayaName(w, locale) : h.city}</span>
           </span>
@@ -306,7 +308,7 @@ export default function ProvidersValidationClient() {
       header: t("cols.requestedAt"),
       sortable: true,
       render: (h) => (
-        <span className="text-neutral-600 tabular-nums">
+        <span className="text-primary-600 tabular-nums">
           {formatDate(h.joinedAt, locale)}
         </span>
       ),
@@ -327,7 +329,7 @@ export default function ProvidersValidationClient() {
             e.stopPropagation();
             handleSelectHost(h.id);
           }}
-          className={`p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-primary transition ${FOCUS_RING}`}
+          className={`p-1.5 rounded-lg hover:bg-primary/[0.05] text-primary-600 hover:text-primary transition ${FOCUS_RING}`}
           title={t("view", { name: hostDisplayName(h) })}
           aria-label={t("view", { name: hostDisplayName(h) })}
         >
@@ -464,7 +466,7 @@ export default function ProvidersValidationClient() {
         actions={[
           {
             label: t("settings"),
-            icon: <Settings className="w-4 h-4 text-neutral-500" aria-hidden="true" />,
+            icon: <Settings className="w-4 h-4 text-primary-600" aria-hidden="true" />,
             onClick: () => setIsValidationRulesOpen(true),
             variant: "outline",
           },
@@ -512,7 +514,11 @@ export default function ProvidersValidationClient() {
         tableContent={
           <div className="space-y-3">
             <DataTable
-              columns={columns}
+              columns={
+                selectedHostId && selectedHost
+                  ? columns.filter((c) => !["providerCategory", "joinedAt", "actions"].includes(c.key))
+                  : columns
+              }
               data={data}
               keyExtractor={(h) => h.id}
               selectedIds={selectedHostId ? [selectedHostId] : []}
@@ -541,7 +547,7 @@ export default function ProvidersValidationClient() {
                       <button
                         type="button"
                         onClick={handleApprove}
-                        className={`px-3.5 py-2 rounded-xl bg-secondary-700 hover:bg-secondary-800 text-white text-xs font-bold transition shadow-xs cursor-pointer ${FOCUS_RING}`}
+                        className={`px-3.5 min-h-[38px] rounded-xl bg-secondary-700 hover:bg-secondary-800 text-white text-xs font-semibold transition-colors duration-fast shadow-e1 cursor-pointer ${FOCUS_RING}`}
                       >
                         {t("actions.approveDirectly")}
                       </button>
@@ -550,7 +556,7 @@ export default function ProvidersValidationClient() {
                       <button
                         type="button"
                         onClick={handleUnsuspend}
-                        className={`px-3.5 py-2 rounded-xl border border-secondary text-secondary-800 bg-secondary/10 hover:bg-secondary/20 text-xs font-semibold transition cursor-pointer ${FOCUS_RING}`}
+                        className={`px-3.5 min-h-[38px] rounded-xl ring-1 ring-inset ring-secondary-300 text-secondary-800 bg-white hover:bg-secondary-50 text-xs font-semibold transition-colors duration-fast cursor-pointer ${FOCUS_RING}`}
                       >
                         {t("actions.unsuspend")}
                       </button>
@@ -559,7 +565,7 @@ export default function ProvidersValidationClient() {
                     <button
                       type="button"
                       onClick={() => setDecisionModal("reject")}
-                      className={`px-3.5 py-2 rounded-xl border border-accent/40 text-accent-700 hover:bg-accent/10 text-xs font-semibold transition cursor-pointer ${FOCUS_RING}`}
+                      className={`px-3.5 min-h-[38px] rounded-xl ring-1 ring-inset ring-accent/40 bg-white text-accent-700 hover:bg-accent-50 text-xs font-semibold transition-colors duration-fast cursor-pointer ${FOCUS_RING}`}
                     >
                       {t("actions.reject")}
                     </button>
@@ -582,7 +588,7 @@ export default function ProvidersValidationClient() {
                   <button
                     type="button"
                     onClick={handleApprove}
-                    className={`px-4 py-2 rounded-xl bg-[#2E3A2F] hover:bg-[#242e25] text-white text-xs font-bold transition shadow-xs cursor-pointer ${FOCUS_RING}`}
+                    className={`px-4 min-h-[38px] rounded-xl bg-primary-800 hover:bg-primary-900 text-white text-xs font-semibold transition-colors duration-fast shadow-e1 cursor-pointer ${FOCUS_RING}`}
                   >
                     {t("actions.validatePublish")}
                   </button>
@@ -592,7 +598,7 @@ export default function ProvidersValidationClient() {
             >
               {/* Hero Image Carousel */}
               <ImageCarousel
-                images={["/assets/template.jpeg"]}
+                images={[placeholderFor("stay")]}
                 statusBadge={<StatusPill status={selectedHost.status} size="sm" />}
                 onClose={handleClosePanel}
                 alt={hostDisplayName(selectedHost)}
@@ -601,29 +607,29 @@ export default function ProvidersValidationClient() {
               {/* Title & Metadata Badges */}
               <div className="px-4 pt-1 space-y-2">
                 <div>
-                  <h3 className="text-base font-bold text-primary leading-tight">
+                  <h3 className="text-title font-semibold text-primary-900 leading-tight">
                     {hostDisplayName(selectedHost)}
                   </h3>
                   <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                    <span className="px-2 py-0.5 rounded-md bg-primary-50 text-primary-800 border border-primary-200 text-[10px] font-semibold">
+                    <span className="px-2 py-0.5 rounded-md bg-primary-100 text-primary-800 text-[11px] font-semibold">
                       {selectedHost.businessName ? t("professional") : t("individual")}
                     </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600 text-[10px] font-medium">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-darnaBg-300 text-primary-600 text-[11px] font-medium">
                       <MapPin className="w-3 h-3 text-secondary" aria-hidden="true" />
                       <span>{selectedHost.city}</span>
                     </span>
-                    <span className="text-[10px] text-neutral-500 font-medium">
+                    <span className="text-[11px] text-primary-600 font-medium">
                       {t("panel.requestedOn", { date: formatDate(selectedHost.joinedAt, locale) })}
                     </span>
                   </div>
                 </div>
 
                 {/* Detail Tabs */}
-                <div className="border-b border-neutral-100 pt-1">
+                <div className="border-b border-primary/[0.06] pt-1">
                   <div
                     role="tablist"
                     aria-label={t("panel.tabsLabel")}
-                    className="flex items-center gap-3 overflow-x-auto text-xs font-semibold text-neutral-500 py-1"
+                    className="flex items-center gap-4 overflow-x-auto scrollbar-none text-xs font-semibold text-primary-600 pt-1"
                   >
                     {PANEL_TABS.map((tabId, index) => (
                       <button
@@ -636,13 +642,18 @@ export default function ProvidersValidationClient() {
                         tabIndex={panelTab === tabId ? 0 : -1}
                         onClick={() => setPanelTab(tabId)}
                         onKeyDown={(e) => onPanelTabKeyDown(e, index)}
-                        className={`pb-1.5 whitespace-nowrap transition cursor-pointer rounded-t ${FOCUS_RING} ${
-                          panelTab === tabId
-                            ? "text-primary border-b-2 border-primary"
-                            : "hover:text-primary"
+                        className={`relative pb-2 whitespace-nowrap transition-colors duration-fast ease-standard cursor-pointer rounded-t ${FOCUS_RING} ${
+                          panelTab === tabId ? "text-primary-900" : "hover:text-primary-900"
                         }`}
                       >
                         {t(`panel.tabs.${tabId}`)}
+                        {panelTab === tabId && (
+                          <m.span
+                            layoutId="provider-panel-tab"
+                            aria-hidden="true"
+                            className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-accent-600"
+                          />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -653,39 +664,39 @@ export default function ProvidersValidationClient() {
                 {panelTab === "informations" && (
                   <div className="space-y-3.5 pt-1">
                     {/* General information card */}
-                    <div className="p-3.5 rounded-xl border border-tertiary-200/80 bg-neutral-50/60 space-y-3">
-                      <h4 className="text-xs font-bold text-primary">{t("panel.general")}</h4>
+                    <div className="p-3.5 rounded-xl bg-darnaBg-100 space-y-3">
+                      <h4 className="text-xs font-semibold text-primary">{t("panel.general")}</h4>
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="space-y-1.5">
-                          <span className="text-[10px] text-neutral-500 font-bold uppercase">
+                          <span className="text-[11px] text-primary-600 font-semibold uppercase tracking-[0.06em]">
                             {t("panel.contact")}
                           </span>
                           <p className="font-semibold text-primary">{selectedHost.ownerName}</p>
-                          <p className="text-neutral-600 flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-neutral-400" aria-hidden="true" />
+                          <p className="text-primary-600 flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-primary-600" aria-hidden="true" />
                             <span dir="ltr">{selectedHost.phone}</span>
                           </p>
-                          <p className="text-neutral-600 flex items-center gap-1 truncate">
-                            <Mail className="w-3 h-3 text-neutral-400" aria-hidden="true" />
+                          <p className="text-primary-600 flex items-center gap-1 truncate">
+                            <Mail className="w-3 h-3 text-primary-600" aria-hidden="true" />
                             <span className="truncate" dir="ltr">{selectedHost.email}</span>
                           </p>
                         </div>
 
                         <dl className="space-y-1.5">
-                          <span className="text-[10px] text-neutral-500 font-bold uppercase block">
+                          <span className="text-[11px] text-primary-600 font-semibold uppercase tracking-[0.06em] block">
                             {t("panel.specs")}
                           </span>
-                          <div className="text-neutral-600 flex gap-1">
+                          <div className="text-primary-600 flex gap-1">
                             <dt>{t("panel.type")}:</dt>
-                            <dd className="font-bold text-primary">{tHostTypes(selectedHost.hostType)}</dd>
+                            <dd className="font-semibold text-primary">{tHostTypes(selectedHost.hostType)}</dd>
                           </div>
-                          <div className="text-neutral-600 flex gap-1">
+                          <div className="text-primary-600 flex gap-1">
                             <dt>{t("panel.wilaya")}:</dt>
-                            <dd className="font-bold text-primary">{selectedHost.city}</dd>
+                            <dd className="font-semibold text-primary">{selectedHost.city}</dd>
                           </div>
-                          <div className="text-neutral-600 flex gap-1">
+                          <div className="text-primary-600 flex gap-1">
                             <dt>{t("panel.listings")}:</dt>
-                            <dd className="font-bold text-primary">{formatNumber(selectedHost.listingsCount, locale)}</dd>
+                            <dd className="font-semibold text-primary">{formatNumber(selectedHost.listingsCount, locale)}</dd>
                           </div>
                         </dl>
                       </div>
@@ -706,8 +717,8 @@ export default function ProvidersValidationClient() {
 
                     {/* Description */}
                     <div className="space-y-1">
-                      <h4 className="text-xs font-bold text-primary">{t("panel.description")}</h4>
-                      <p className="text-xs text-neutral-600 leading-relaxed">
+                      <h4 className="text-xs font-semibold text-primary">{t("panel.description")}</h4>
+                      <p className="text-xs text-primary-600 leading-relaxed">
                         {t("panel.descriptionText", { city: selectedHost.city })}
                       </p>
                     </div>
@@ -715,10 +726,10 @@ export default function ProvidersValidationClient() {
                     {/* Documents checklist */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-bold text-primary">
+                        <h4 className="text-xs font-semibold text-primary">
                           {t("panel.documentsProvided", { count: 4, total: 4 })}
                         </h4>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-[10px] font-bold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-100 text-secondary-800 text-[11px] font-semibold">
                           <Check className="w-3 h-3 stroke-[3]" aria-hidden="true" />
                           <span>{t("panel.allDocumentsProvided")}</span>
                         </span>
@@ -766,18 +777,18 @@ export default function ProvidersValidationClient() {
                         href={`${FRONTEND_URL}/${locale}/users/${selectedHost.id}`}
                         target="_blank"
                         rel="noreferrer"
-                        className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-tertiary-300 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition ${FOCUS_RING}`}
+                        className={`inline-flex items-center justify-center gap-2 px-3 min-h-[38px] rounded-xl bg-white shadow-e1 hover:shadow-e2 text-xs font-semibold text-primary-800 transition duration-fast ${FOCUS_RING}`}
                       >
-                        <ExternalLink className="w-3.5 h-3.5 text-neutral-400 rtl:-scale-x-100" aria-hidden="true" />
+                        <ExternalLink className="w-3.5 h-3.5 text-primary-600 rtl:-scale-x-100" aria-hidden="true" />
                         <span>{t("panel.publicProfile")}</span>
                         <span className="sr-only">{t("panel.newTab")}</span>
                       </a>
                       <button
                         type="button"
                         onClick={() => setIsContactModalOpen(true)}
-                        className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-tertiary-300 hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition ${FOCUS_RING}`}
+                        className={`inline-flex items-center justify-center gap-2 px-3 min-h-[38px] rounded-xl bg-white shadow-e1 hover:shadow-e2 text-xs font-semibold text-primary-800 transition duration-fast ${FOCUS_RING}`}
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                        <MessageSquare className="w-3.5 h-3.5 text-primary-600" aria-hidden="true" />
                         <span>{t("panel.contactAction")}</span>
                       </button>
                     </div>
@@ -785,9 +796,9 @@ export default function ProvidersValidationClient() {
                 )}
 
                 {panelTab !== "informations" && (
-                  <div className="py-8 text-center text-xs text-neutral-500 space-y-1">
+                  <div className="py-8 text-center text-xs text-primary-600 space-y-1">
                     <p>{t("panel.tabLoaded", { tab: t(`panel.tabs.${panelTab}`) })}</p>
-                    <p className="text-[11px] text-neutral-500">{t("panel.tabSynced")}</p>
+                    <p className="text-[11px] text-primary-600">{t("panel.tabSynced")}</p>
                   </div>
                 )}
                 </div>
@@ -812,10 +823,10 @@ export default function ProvidersValidationClient() {
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label htmlFor="providers-completeness" className="font-semibold text-neutral-700 block mb-1">
+            <label htmlFor="providers-completeness" className="font-semibold text-primary-700 block mb-1">
               {t("drawer.completeness")}
             </label>
-            <select id="providers-completeness" className="w-full p-2.5 rounded-xl border border-tertiary-200">
+            <select id="providers-completeness" className="w-full p-2.5 rounded-xl border border-primary/[0.12] bg-white">
               <option value="all">{t("drawer.completenessAll")}</option>
               <option value="complete">{t("drawer.completenessFull")}</option>
               <option value="partial">{t("drawer.completenessPartial")}</option>
@@ -824,10 +835,10 @@ export default function ProvidersValidationClient() {
           </div>
 
           <div>
-            <label htmlFor="providers-booking-mode" className="font-semibold text-neutral-700 block mb-1">
+            <label htmlFor="providers-booking-mode" className="font-semibold text-primary-700 block mb-1">
               {t("drawer.bookingMode")}
             </label>
-            <select id="providers-booking-mode" className="w-full p-2.5 rounded-xl border border-tertiary-200">
+            <select id="providers-booking-mode" className="w-full p-2.5 rounded-xl border border-primary/[0.12] bg-white">
               <option value="all">{t("drawer.bookingModeAll")}</option>
               <option value="instant">{t("drawer.bookingModeInstant")}</option>
               <option value="request">{t("drawer.bookingModeRequest")}</option>
@@ -835,10 +846,10 @@ export default function ProvidersValidationClient() {
           </div>
 
           <div>
-            <label htmlFor="providers-min-rating" className="font-semibold text-neutral-700 block mb-1">
+            <label htmlFor="providers-min-rating" className="font-semibold text-primary-700 block mb-1">
               {t("drawer.minRating")}
             </label>
-            <select id="providers-min-rating" className="w-full p-2.5 rounded-xl border border-tertiary-200">
+            <select id="providers-min-rating" className="w-full p-2.5 rounded-xl border border-primary/[0.12] bg-white">
               <option value="0">{t("drawer.minRatingAll")}</option>
               <option value="4.5">
                 {t("drawer.minRatingValue", { rating: formatNumber(4.5, locale) })}
@@ -866,16 +877,16 @@ export default function ProvidersValidationClient() {
           <button
             type="button"
             onClick={() => setIsValidationRulesOpen(false)}
-            className={`px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold ${FOCUS_RING}`}
+            className={`px-4 py-2 bg-primary text-white rounded-xl text-xs font-semibold ${FOCUS_RING}`}
           >
             {t("rules.save")}
           </button>
         }
       >
-        <div className="space-y-3 text-xs text-neutral-600">
-          <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2">
-            <span className="font-bold text-primary block">{t("rules.requiredDocs")}</span>
-            <ul className="list-disc ps-4 space-y-1 text-neutral-600">
+        <div className="space-y-3 text-xs text-primary-600">
+          <div className="p-3 rounded-xl bg-darnaBg-100 space-y-2">
+            <span className="font-semibold text-primary block">{t("rules.requiredDocs")}</span>
+            <ul className="list-disc ps-4 space-y-1 text-primary-600">
               <li>{t("rules.hosts")}</li>
               <li>{t("rules.hotels")}</li>
               <li>{t("rules.agencies")}</li>
@@ -884,14 +895,14 @@ export default function ProvidersValidationClient() {
           </div>
 
           <div>
-            <label htmlFor="providers-sla" className="font-semibold text-neutral-700 block mb-1">
+            <label htmlFor="providers-sla" className="font-semibold text-primary-700 block mb-1">
               {t("rules.sla")}
             </label>
             <input
               id="providers-sla"
               type="text"
               defaultValue={t("rules.slaDefault")}
-              className="w-full p-2 rounded-xl border border-tertiary-200 text-xs"
+              className="w-full p-2 rounded-xl border border-primary/[0.08] text-xs"
             />
           </div>
         </div>
@@ -908,7 +919,7 @@ export default function ProvidersValidationClient() {
             <button
               type="button"
               onClick={() => setIsContactModalOpen(false)}
-              className={`px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600 ${FOCUS_RING}`}
+              className={`px-4 py-2 rounded-xl border border-primary/[0.12] text-xs font-semibold text-primary-600 ${FOCUS_RING}`}
             >
               {tCommon("cancel")}
             </button>
@@ -917,7 +928,7 @@ export default function ProvidersValidationClient() {
               disabled
               aria-disabled="true"
               title={tActions("unavailableHint")}
-              className="px-4 py-2 rounded-xl bg-primary/40 text-white text-xs font-bold cursor-not-allowed"
+              className="px-4 py-2 rounded-xl bg-primary/40 text-white text-xs font-semibold cursor-not-allowed"
             >
               {t("contactModal.send")}
             </button>
@@ -931,7 +942,7 @@ export default function ProvidersValidationClient() {
           id="providers-contact-message"
           rows={4}
           placeholder={t("contactModal.placeholder")}
-          className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
+          className="w-full p-3 rounded-xl border border-primary/[0.08] text-xs focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
         />
       </Dialog>
 
@@ -946,7 +957,7 @@ export default function ProvidersValidationClient() {
             <button
               type="button"
               onClick={() => setDecisionModal(null)}
-              className={`px-4 py-2 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-600 ${FOCUS_RING}`}
+              className={`px-4 py-2 rounded-xl border border-primary/[0.12] text-xs font-semibold text-primary-600 ${FOCUS_RING}`}
             >
               {tCommon("cancel")}
             </button>
@@ -954,7 +965,7 @@ export default function ProvidersValidationClient() {
               type="button"
               onClick={handleConfirmDecision}
               disabled={reasonTooShort}
-              className={`px-4 py-2 rounded-xl text-xs font-bold text-white transition ${FOCUS_RING} ${
+              className={`px-4 py-2 rounded-xl text-xs font-semibold text-white transition ${FOCUS_RING} ${
                 decisionModal === "changes" ? "bg-amber-700 hover:bg-amber-800" : "bg-accent-600 hover:bg-accent-700"
               } ${reasonTooShort ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
@@ -964,7 +975,7 @@ export default function ProvidersValidationClient() {
         }
       >
         <div>
-          <label htmlFor="providers-decision-reason" className="block text-xs font-semibold text-neutral-700 mb-1">
+          <label htmlFor="providers-decision-reason" className="block text-xs font-semibold text-primary-700 mb-1">
             {tActions("reasonLabel")}
           </label>
           <textarea
@@ -977,11 +988,11 @@ export default function ProvidersValidationClient() {
             value={decisionReason}
             onChange={(e) => setDecisionReason(e.target.value)}
             placeholder={t("decision.placeholder")}
-            className="w-full p-3 rounded-xl border border-tertiary-200 text-xs focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
+            className="w-full p-3 rounded-xl border border-primary/[0.08] text-xs focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 resize-none"
           />
           <p
             id="providers-decision-reason-hint"
-            className={`mt-1 text-[11px] ${showReasonHint ? "text-accent-700" : "text-neutral-500"}`}
+            className={`mt-1 text-[11px] ${showReasonHint ? "text-accent-700" : "text-primary-600"}`}
             aria-live="polite"
           >
             {tActions("reasonTooShort", { min: MIN_REASON_LENGTH })}
@@ -999,14 +1010,14 @@ export default function ProvidersValidationClient() {
           <button
             type="button"
             onClick={() => setSelectedDocToView(null)}
-            className={`px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold ${FOCUS_RING}`}
+            className={`px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold ${FOCUS_RING}`}
           >
             {tCommon("close")}
           </button>
         }
       >
         {selectedDocToView && (
-          <div className="relative h-80 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
+          <div className="relative h-80 rounded-xl overflow-hidden bg-darnaBg-300 border border-primary/[0.12]">
             <Image
               src={selectedDocToView.url}
               alt={selectedDocToView.title}

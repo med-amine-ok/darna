@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { dur, ease, spring } from "@/lib/motion";
 import { useTranslations } from "next-intl";
 
 export type ToastType = "success" | "error" | "info" | "warning";
@@ -94,17 +95,17 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const icons: Record<ToastType, React.ReactNode> = {
-    success: <CheckCircle2 className="w-4 h-4 text-secondary shrink-0" />,
-    error: <AlertCircle className="w-4 h-4 text-accent-700 shrink-0" />,
-    warning: <AlertTriangle className="w-4 h-4 text-[#8C682E] shrink-0" />,
-    info: <Info className="w-4 h-4 text-primary shrink-0" />,
+    success: <CheckCircle2 className="w-4 h-4 text-secondary-700 shrink-0" aria-hidden="true" />,
+    error: <AlertCircle className="w-4 h-4 text-accent-700 shrink-0" aria-hidden="true" />,
+    warning: <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" aria-hidden="true" />,
+    info: <Info className="w-4 h-4 text-primary-700 shrink-0" aria-hidden="true" />,
   };
 
   const badgeBgs: Record<ToastType, string> = {
-    success: "bg-secondary/15 border-secondary/25",
-    error: "bg-accent/15 border-accent/25",
-    warning: "bg-[#F3EAD8] border-[#D9C4A1]",
-    info: "bg-primary/10 border-primary/20",
+    success: "bg-secondary-100",
+    error: "bg-accent-100",
+    warning: "bg-amber-100",
+    info: "bg-primary-100",
   };
 
   return (
@@ -121,19 +122,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       >
         <AnimatePresence>
           {toasts.map((item) => (
-            <motion.div
+            <m.div
               key={item.id}
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9, y: 8 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
+              layout="position"
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1, transition: spring.sheet }}
+              exit={{ opacity: 0, scale: 0.97, y: 8, transition: { duration: dur.fast, ease: ease.standard } }}
               role={item.type === "error" ? "alert" : "status"}
               aria-atomic="true"
-              className="pointer-events-auto relative w-full bg-white rounded-2xl shadow-darna-modal border border-tertiary/80 overflow-hidden text-start"
+              className="pointer-events-auto relative w-full bg-white rounded-2xl shadow-darna-modal overflow-hidden text-start"
             >
               <div className="p-3.5 flex items-start gap-3">
                 <div
-                  className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                     badgeBgs[item.type || "info"]
                   }`}
                 >
@@ -141,9 +142,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 </div>
 
                 <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="text-xs font-bold text-primary leading-tight">{item.title}</p>
+                  <p className="text-meta font-semibold text-primary-900 leading-snug">{item.title}</p>
                   {item.description && (
-                    <p className="text-[11px] text-neutral-500 mt-0.5 leading-snug">
+                    <p className="text-xs text-primary-600 mt-0.5 leading-snug">
                       {item.description}
                     </p>
                   )}
@@ -154,7 +155,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         item.undoAction?.();
                         removeToast(item.id);
                       }}
-                      className="mt-1.5 text-xs font-bold text-secondary-700 hover:text-[#526445] underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 rounded"
+                      className="mt-1.5 text-xs font-bold text-secondary-700 hover:text-secondary-800 underline underline-offset-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 rounded"
                     >
                       {item.undoLabel || t("undo")}
                     </button>
@@ -174,20 +175,23 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
               {/* Progress Bar */}
               {item.duration && item.duration > 0 && (
-                <motion.div
-                  initial={{ width: "100%" }}
-                  animate={{ width: "0%" }}
+                <m.div
+                  aria-hidden="true"
+                  initial={{ scaleX: 1 }}
+                  animate={{ scaleX: 0 }}
                   transition={{ duration: item.duration / 1000, ease: "linear" }}
-                  className={`h-0.5 ${
+                  className={`h-0.5 origin-left rtl:origin-right ${
                     item.type === "success"
                       ? "bg-secondary"
                       : item.type === "error"
                       ? "bg-accent"
-                      : "bg-primary"
+                      : item.type === "warning"
+                      ? "bg-amber-500"
+                      : "bg-primary-400"
                   }`}
                 />
               )}
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

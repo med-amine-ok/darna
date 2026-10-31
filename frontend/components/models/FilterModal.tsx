@@ -1,44 +1,53 @@
 "use client";
 
-import React, { useState, useCallback, useId } from "react";
+import React, { useState, useCallback, useEffect, useId, useMemo } from "react";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
-import { useFilterModal } from "@/hook/useFilterModal";
-import Modal from "./Modal";
-import Counter from "@/components/inputs/Counter";
 import { useTranslations } from "next-intl";
-import { CategoryHouseIcon } from "@/components/icons";
+import { useFilterModal } from "@/hook/useFilterModal";
+import Counter from "@/components/inputs/Counter";
+import { Accordion, Button, Chip, Dialog, Input, Sheet, IconButton, cn, useIsPhone, useIsRtl } from "@/components/ui";
+import { useSearchFacets, matchesFilters, parseSideFilters } from "@/components/search/searchFacets";
+import { BrandCloseIcon, BrandWifiIcon, BrandKitchenIcon, BrandWaterIcon, BrandAcIcon, BrandSunIcon, BrandFlameIcon, CategoryRiadIcon } from "@/components/icons";
 
+import PriceRange, { priceStats } from "@/components/search/PriceRange";
+
+/**
+ * Filters: kit Sheet on phones (bottom sheet), kit Dialog from `sm` up. Accordion sections,
+ * dual-handle price slider with a histogram of the current search, chip pickers, and a
+ * sticky footer with "Clear all" + "Show N stays" (N estimated client-side when the search
+ * page has published its listings).
+ */
 export default function FilterModal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isOpen = useFilterModal((s) => s.isOpen);
   const closeFilterModal = useFilterModal((s) => s.onClose);
+  const pool = useSearchFacets((s) => s.pool);
+  const isPhone = useIsPhone();
   const tCommon = useTranslations("common");
   const t = useTranslations("filters");
   const tAmenities = useTranslations("amenities");
-  const minId = useId();
-  const maxId = useId();
+  const titleId = useId();
 
-  const [minPrice, setMinPrice] = useState<string>(
-    searchParams?.get("minPrice") || ""
-  );
-  const [maxPrice, setMaxPrice] = useState<string>(
-    searchParams?.get("maxPrice") || ""
-  );
-  const [roomCount, setRoomCount] = useState<number>(
-    searchParams?.get("roomCount") ? parseInt(searchParams.get("roomCount")!, 10) : 1
-  );
-  const [bathroomCount, setBathroomCount] = useState<number>(
-    searchParams?.get("bathroomCount") ? parseInt(searchParams.get("bathroomCount")!, 10) : 1
-  );
-  const [selectedPropertyType, setSelectedPropertyType] = useState<string>(
-    searchParams?.get("propertyType") || "any"
-  );
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
-    searchParams?.get("amenities") ? searchParams.get("amenities")!.split(",") : []
-  );
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [roomCount, setRoomCount] = useState<number>(1);
+  const [bathroomCount, setBathroomCount] = useState<number>(1);
+  const [selectedPropertyType, setSelectedPropertyType] = useState<string>("any");
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+  // Re-sync with the URL each time the modal opens.
+  useEffect(() => {
+    if (!isOpen) return;
+    setMinPrice(searchParams?.get("minPrice") || "");
+    setMaxPrice(searchParams?.get("maxPrice") || "");
+    setRoomCount(searchParams?.get("roomCount") ? parseInt(searchParams.get("roomCount")!, 10) : 1);
+    setBathroomCount(searchParams?.get("bathroomCount") ? parseInt(searchParams.get("bathroomCount")!, 10) : 1);
+    setSelectedPropertyType(searchParams?.get("propertyType") || "any");
+    setSelectedAmenities(searchParams?.get("amenities") ? searchParams.get("amenities")!.split(",") : []);
+  }, [isOpen, searchParams]);
 
   // `id` is the value sent in the URL; the label is translated.
   const propertyTypes = [
@@ -53,21 +62,41 @@ export default function FilterModal() {
   ];
 
   const amenitiesList = [
-    { id: "Wifi", key: "wifi" },
-    { id: "Kitchen", key: "kitchen" },
-    { id: "Pool", key: "pool" },
-    { id: "Free parking", key: "freeParking" },
-    { id: "Air conditioning", key: "airConditioning" },
-    { id: "Sea view", key: "seaView" },
-    { id: "Fireplace", key: "fireplace" },
-    { id: "Courtyard", key: "courtyard" },
+    { id: "wifi", key: "wifi", Icon: BrandWifiIcon },
+    { id: "kitchen", key: "kitchen", Icon: BrandKitchenIcon },
+    { id: "pool", key: "pool", Icon: BrandWaterIcon },
+    { id: "freeParking", key: "freeParking", Icon: null },
+    { id: "airConditioning", key: "airConditioning", Icon: BrandAcIcon },
+    { id: "seaView", key: "seaView", Icon: BrandSunIcon },
+    { id: "fireplace", key: "fireplace", Icon: BrandFlameIcon },
+    { id: "courtyard", key: "courtyard", Icon: CategoryRiadIcon },
   ];
 
-  const toggleAmenity = (item: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item]
-    );
-  };
+  // Slider bounds + histogram from the published pool.
+  const { floor, ceil, histogram } = useMemo(() => priceStats(pool.map((f) => f.price)), [pool]);
+
+  const low = Math.min(Math.max(Number(minPrice) || floor, floor), ceil);
+  const high = Math.max(Math.min(Number(maxPrice) || ceil, ceil), floor);
+
+  // Sidebar-only filters (destinations, rating) stay applied while the modal edits the rest.
+  const base = useMemo(() => parseSideFilters((k) => searchParams?.get(k)), [searchParams]);
+
+  const estimate = useMemo(() => {
+    if (pool.length === 0) return null;
+    return pool.filter((f) =>
+      matchesFilters(f, {
+        minPrice: Number(minPrice) || undefined,
+        maxPrice: Number(maxPrice) || undefined,
+        propertyType: selectedPropertyType,
+        amenities: selectedAmenities,
+        minBedrooms: roomCount,
+        minBathrooms: bathroomCount,
+      }, base)
+    ).length;
+  }, [pool, minPrice, maxPrice, selectedPropertyType, selectedAmenities, roomCount, bathroomCount, base]);
+
+  const toggleAmenity = (item: string) =>
+    setSelectedAmenities((prev) => (prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item]));
 
   const handleReset = () => {
     setMinPrice("");
@@ -79,196 +108,144 @@ export default function FilterModal() {
   };
 
   const onSubmit = useCallback(() => {
-    let currentQuery = {};
-    if (searchParams) {
-      currentQuery = qs.parse(searchParams.toString());
-    }
-
-    const updatedQuery: qs.StringifiableRecord = {
-      ...currentQuery,
-    };
+    const updatedQuery: qs.StringifiableRecord = { ...(searchParams ? qs.parse(searchParams.toString()) : {}) };
 
     if (minPrice) updatedQuery.minPrice = minPrice;
     else delete updatedQuery.minPrice;
-
     if (maxPrice) updatedQuery.maxPrice = maxPrice;
     else delete updatedQuery.maxPrice;
-
     if (roomCount > 1) updatedQuery.roomCount = roomCount;
     else delete updatedQuery.roomCount;
-
     if (bathroomCount > 1) updatedQuery.bathroomCount = bathroomCount;
     else delete updatedQuery.bathroomCount;
-
-    if (selectedPropertyType && selectedPropertyType !== "any") {
-      updatedQuery.propertyType = selectedPropertyType;
-    } else {
-      delete updatedQuery.propertyType;
-    }
-
-    if (selectedAmenities.length > 0) {
-      updatedQuery.amenities = selectedAmenities.join(",");
-    } else {
-      delete updatedQuery.amenities;
-    }
-
-    const url = qs.stringifyUrl(
-      {
-        url: "/search",
-        query: updatedQuery,
-      },
-      { skipNull: true }
-    );
+    if (selectedPropertyType && selectedPropertyType !== "any") updatedQuery.propertyType = selectedPropertyType;
+    else delete updatedQuery.propertyType;
+    if (selectedAmenities.length > 0) updatedQuery.amenities = selectedAmenities.join(",");
+    else delete updatedQuery.amenities;
 
     closeFilterModal();
-    router.push(url);
-  }, [
-    searchParams,
-    minPrice,
-    maxPrice,
-    roomCount,
-    bathroomCount,
-    selectedPropertyType,
-    selectedAmenities,
-    closeFilterModal,
-    router,
-  ]);
+    router.push(qs.stringifyUrl({ url: "/search", query: updatedQuery }, { skipNull: true }), { scroll: false });
+  }, [searchParams, minPrice, maxPrice, roomCount, bathroomCount, selectedPropertyType, selectedAmenities, closeFilterModal, router]);
 
-  const bodyContent = (
-    <div className="flex flex-col gap-6 divide-y divide-tertiary/40">
-      {/* 1. Price Range Section */}
-      <div className="flex flex-col gap-3">
-        <h3 className="font-semibold text-base sm:text-lg text-primary">{t("priceRange")}</h3>
-        <p className="text-xs sm:text-sm text-neutral-600 font-normal">{t("priceRangeSubtitle")}</p>
-        <div className="grid grid-cols-2 gap-4 mt-2">
-          <div className="border border-tertiary rounded-xl p-3 focus-within:ring-2 focus-within:ring-accent-600">
-            <label htmlFor={minId} className="block text-[11px] font-bold text-neutral-600 uppercase">
-              {t("minimum")}
-            </label>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-xs text-neutral-600 font-bold" aria-hidden="true">
-                {tCommon("currencySymbol")}
-              </span>
-              <input
-                id={minId}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-                placeholder="5000"
-                className="w-full font-medium text-primary outline-none text-sm sm:text-base bg-transparent"
-              />
-            </div>
-          </div>
-          <div className="border border-tertiary rounded-xl p-3 focus-within:ring-2 focus-within:ring-accent-600">
-            <label htmlFor={maxId} className="block text-[11px] font-bold text-neutral-600 uppercase">
-              {t("maximum")}
-            </label>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="text-xs text-neutral-600 font-bold" aria-hidden="true">
-                {tCommon("currencySymbol")}
-              </span>
-              <input
-                id={maxId}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-                placeholder="35000"
-                className="w-full font-medium text-primary outline-none text-sm sm:text-base bg-transparent"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Rooms and Beds Section */}
-      <div className="flex flex-col gap-5 pt-6">
-        <h3 className="font-semibold text-base sm:text-lg text-primary">{t("roomsAndBeds")}</h3>
-        <Counter
-          title={t("bedrooms")}
-          subtitle={t("bedroomsSubtitle")}
-          value={roomCount}
-          onChange={(v) => setRoomCount(v)}
-        />
-        <Counter
-          title={t("bathrooms")}
-          subtitle={t("bathroomsSubtitle")}
-          value={bathroomCount}
-          onChange={(v) => setBathroomCount(v)}
-        />
-      </div>
-
-      {/* 3. Property Type Section */}
-      <div className="flex flex-col gap-3 pt-6">
-        <h3 className="font-semibold text-base sm:text-lg text-primary flex items-center gap-2">
-          <CategoryHouseIcon
-            size={20}
-            strokeWidth={1.8}
-            className="text-accent shrink-0"
+  const sections = [
+    {
+      id: "price",
+      title: t("priceRange"),
+      subtitle: t("priceRangeSubtitle"),
+      content: (
+        <div className="space-y-5 pb-5">
+          <PriceRange
+            floor={floor}
+            ceil={ceil}
+            low={low}
+            high={high}
+            histogram={histogram}
+            minLabel={t("minimum")}
+            maxLabel={t("maximum")}
+            onChange={(lo, hi) => {
+              setMinPrice(lo <= floor ? "" : String(lo));
+              setMaxPrice(hi >= ceil ? "" : String(hi));
+            }}
           />
-          <span>{t("propertyType")}</span>
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {propertyTypes.map((pt) => {
-            const isSelected = selectedPropertyType === pt.id;
-            return (
-              <button
-                key={pt.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => setSelectedPropertyType(pt.id)}
-                className={`py-3 px-3.5 rounded-xl border text-xs sm:text-sm font-semibold transition text-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
-                  isSelected
-                    ? "border-primary bg-primary text-white"
-                    : "border-tertiary text-neutral-700 hover:border-primary"
-                }`}
-              >
-                {pt.label}
-              </button>
-            );
-          })}
+          <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
+            <Input
+              label={t("minimum")}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              placeholder={String(floor)}
+              prefix={tCommon("currencySymbol")}
+            />
+            <Input
+              label={t("maximum")}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder={String(ceil)}
+              prefix={tCommon("currencySymbol")}
+            />
+          </div>
         </div>
-      </div>
+      ),
+    },
+    {
+      id: "type",
+      title: t("propertyType"),
+      content: (
+        <div className="flex flex-wrap gap-2 pb-5">
+          {propertyTypes.map((pt) => (
+            <Chip key={pt.id} selected={selectedPropertyType === pt.id} onSelectedChange={() => setSelectedPropertyType(pt.id)}>
+              {pt.label}
+            </Chip>
+          ))}
+        </div>
+      ),
+    },
+    {
+      id: "amenities",
+      title: t("amenities"),
+      content: (
+        <div className="flex flex-wrap gap-2 pb-5">
+          {amenitiesList.map(({ id, key, Icon }) => (
+            <Chip key={id} selected={selectedAmenities.includes(id)} onSelectedChange={() => toggleAmenity(id)} icon={Icon ? <Icon size={16} /> : undefined}>
+              {tAmenities(key)}
+            </Chip>
+          ))}
+        </div>
+      ),
+    },
+    {
+      id: "rooms",
+      title: t("roomsAndBeds"),
+      content: (
+        <div className="space-y-5 pb-5">
+          <Counter title={t("bedrooms")} subtitle={t("bedroomsSubtitle")} value={roomCount} onChange={setRoomCount} />
+          <Counter title={t("bathrooms")} subtitle={t("bathroomsSubtitle")} value={bathroomCount} onChange={setBathroomCount} />
+        </div>
+      ),
+    },
+  ];
 
-      {/* 4. Amenities Section */}
-      <div className="flex flex-col gap-3 pt-6">
-        <h3 className="font-semibold text-base sm:text-lg text-primary">{t("amenities")}</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {amenitiesList.map((amenity) => {
-            const isChecked = selectedAmenities.includes(amenity.id);
-            return (
-              <label
-                key={amenity.id}
-                className="flex items-center gap-3 p-3 rounded-xl border border-tertiary/60 hover:border-tertiary transition cursor-pointer select-none"
-              >
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={() => toggleAmenity(amenity.id)}
-                  className="w-4 h-4 rounded text-accent focus:ring-accent accent-accent"
-                />
-                <span className="text-xs sm:text-sm font-medium text-primary">{tAmenities(amenity.key)}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
+  const body = <Accordion type="multiple" appearance="plain" defaultOpen={["price", "type", "amenities"]} items={sections} />;
+
+  const footer = (
+    <div className="flex items-center justify-between gap-3">
+      <Button variant="ghost" onClick={handleReset} className="-ms-3 underline underline-offset-4">
+        {tCommon("clearAll")}
+      </Button>
+      <Button variant="secondary" size="lg" onClick={onSubmit} className="min-w-[10rem]">
+        {estimate === null ? tCommon("showListings") : t("showStays", { count: estimate })}
+      </Button>
     </div>
   );
 
+  if (isPhone) {
+    return (
+      <Sheet isOpen={isOpen} onClose={closeFilterModal} title={tCommon("filters")} footer={footer} bodyClassName="py-1">
+        {body}
+      </Sheet>
+    );
+  }
+
   return (
-    <Modal
+    <Dialog
       isOpen={isOpen}
       onClose={closeFilterModal}
-      onSubmit={onSubmit}
-      title={tCommon("filters")}
-      actionLabel={tCommon("showListings")}
-      secondaryAction={handleReset}
-      secondaryActionLabel={tCommon("clearAll")}
-      body={bodyContent}
-    />
+      ariaLabel={tCommon("filters")}
+      className="relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-3xl bg-white shadow-e4 sm:max-w-2xl"
+    >
+      <header className="relative flex shrink-0 items-center justify-center border-b border-primary/[0.08] px-6 py-4">
+        <IconButton label={tCommon("close")} icon={<BrandCloseIcon size={18} />} onClick={closeFilterModal} size="sm" className="!absolute start-4" />
+        <h2 id={titleId} className="font-serif text-heading text-primary-900">
+          {tCommon("filters")}
+        </h2>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-1">{body}</div>
+      <div className="shrink-0 border-t border-primary/[0.08] bg-white px-6 py-4">{footer}</div>
+    </Dialog>
   );
 }

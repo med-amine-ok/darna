@@ -38,28 +38,37 @@ export default function HostLayoutShell({
   }
 
   // New organizations can use the workspace while DARNA reviews their documents.
+  const rejected = organization?.verificationStatus === "rejected";
   const verificationBanner =
     organization && organization.verificationStatus !== "verified" ? (
       <div
         role="status"
-        className={`px-4 sm:px-8 py-2.5 text-xs font-semibold border-b ${
-          organization.verificationStatus === "rejected"
-            ? "bg-rose-50 text-rose-900 border-rose-200"
-            : "bg-amber-50 text-amber-900 border-amber-200"
-        }`}
+        className={`border-b border-primary/[0.06] ${rejected ? "bg-accent-50" : "bg-amber-50"}`}
       >
-        {organization.verificationStatus === "rejected"
-          ? t("verificationRejected", { name: organization.name })
-          : t("verificationPending", { name: organization.name })}
+        <p
+          className={`mx-auto flex max-w-7xl items-start gap-2.5 px-4 py-2.5 text-meta font-medium sm:px-6 lg:px-8 ${
+            rejected ? "text-accent-800" : "text-amber-900"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${rejected ? "bg-accent-600" : "bg-amber-600"}`}
+          />
+          <span className="min-w-0">
+            {rejected
+              ? t("verificationRejected", { name: organization.name })
+              : t("verificationPending", { name: organization.name })}
+          </span>
+        </p>
       </div>
     ) : null;
 
   // 2. Standard host pages (Today, Listings, Bookings, Calendar, Settings, Team, Trips)
   return (
-    <div className="min-h-screen bg-bg-light/40 flex flex-col">
+    <div className="flex min-h-[100dvh] flex-col bg-darnaBg">
       <HostNavbar currentUser={currentUser} organization={organization} />
       {verificationBanner}
-      <main className="flex-1 pb-20 md:pb-12">{children}</main>
+      <main className="flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-12">{children}</main>
       <HostBottomNav hostType={hostType} />
     </div>
   );

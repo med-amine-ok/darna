@@ -40,18 +40,19 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             type="checkbox"
             checked={checked}
             onChange={onChange}
+            readOnly={onChange ? undefined : true}
             className="sr-only peer"
             {...props}
           />
           <div
             aria-hidden="true"
-            className={`w-4 h-4 rounded-md border transition-all flex items-center justify-center shadow-2xs peer-focus-visible:ring-2 peer-focus-visible:ring-accent-600 peer-focus-visible:ring-offset-2 peer-disabled:opacity-50 ${
+            className={`w-[18px] h-[18px] rounded-[6px] border transition-[background-color,border-color,transform] duration-fast ease-standard flex items-center justify-center peer-focus-visible:ring-2 peer-focus-visible:ring-accent-600 peer-focus-visible:ring-offset-2 peer-disabled:opacity-50 peer-active:scale-90 ${
               checked || indeterminate
-                ? "bg-primary border-primary text-white"
-                : "border-tertiary/90 bg-white hover:border-secondary"
+                ? "bg-primary-800 border-primary-800 text-white"
+                : "border-primary/25 bg-white hover:border-primary/50"
             }`}
           >
-            {checked && <Check className="w-3 h-3 stroke-[3]" />}
+            {checked && <Check className="w-3 h-3 stroke-[3] animate-in zoom-in-50 fade-in duration-150" />}
             {indeterminate && !checked && (
               <div className="w-2 h-0.5 bg-white rounded-full" />
             )}
@@ -93,11 +94,11 @@ export const Switch: React.FC<SwitchProps> = ({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
-          checked ? "bg-secondary-700" : "bg-neutral-300"
+          checked ? "bg-secondary-700" : "bg-primary/20"
         }`}
       >
         <span
-          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-e2 ring-0 transition-transform duration-fast ease-out ${
             checked ? "translate-x-4 rtl:-translate-x-4" : "translate-x-0"
           }`}
         />

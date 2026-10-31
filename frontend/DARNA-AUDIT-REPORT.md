@@ -1,7 +1,7 @@
-# DARNA — Full Code Audit Report
+# DARNA, Full Code Audit Report
 
-**Date:** 2026-10-28  ·  **Scope:** `darna/frontend` (guest + host app), `darna/admin` (back-office), repo hygiene, Airbnb feature parity
-**Mode:** read-only — no source code was modified.
+**Date:** 2026-10-28 · **Scope:** `darna/frontend` (guest + host app), `darna/admin` (back-office), repo hygiene, Airbnb feature parity
+**Mode:** read-only, no source code was modified.
 **Skills applied** (from `C:\Users\OASIS\Documents\skills`): `codebase-audit-pre-push`, `cc-skill-security-review`, `frontend-security-coder`, `api-security-best-practices`, `idor-testing`, `nextjs-best-practices`, `nextjs-seo-indexing`, `accessibility-compliance-accessibility-audit`, `i18n-localization` (incl. its `i18n_checker.py`), `performance-optimizer`.
 **Tools run:** `tsc --noEmit`, `next lint`, `npm audit --omit=dev` (both apps), admin `check-i18n.mjs`, node key-parity scripts, grep of the built `.next/static` bundles.
 
@@ -13,7 +13,7 @@ DARNA has a **solid UI/product skeleton**: three verticals (stays, cars, experie
 
 However, **it is a prototype, not a deployable product**:
 
-1. **There is no real backend.** All data lives in in-memory mock stores (`// TODO: replace with Supabase`). Worse, most mutations run *in the browser* against a client copy of the store, so bookings, accept/decline, messages, team changes and admin actions **disappear on refresh** and never reach the server.
+1. **There is no real backend.** All data lives in in-memory mock stores (`// TODO: replace with Supabase`). Worse, most mutations run _in the browser_ against a client copy of the store, so bookings, accept/decline, messages, team changes and admin actions **disappear on refresh** and never reach the server.
 2. **Authentication and authorization are effectively absent:**
    - Frontend login accepts any email with no password.
    - The session is an unsigned, readable cookie holding a user id.
@@ -37,6 +37,7 @@ However, **it is a prototype, not a deployable product**:
    - There are many contrast failures.
 
 **Recommended order:**
+
 1. Upgrade Next and next-intl.
 2. Build the real backend: a database (Supabase/Postgres) with Row Level Security (RLS), real auth, and all mutations in server actions or route handlers.
 3. Rebuild the booking/pricing/availability engine on the server.
@@ -47,12 +48,12 @@ However, **it is a prototype, not a deployable product**:
 
 ### Severity counts (verified findings)
 
-| Area | Critical | High | Medium | Low |
-|---|---|---|---|---|
-| Frontend – security & business logic | 4 + 4 known | 8 | 21 | 7 |
-| Frontend – UI / a11y / i18n / SEO / perf | – | 11 | 19 | 12 |
-| Admin app | 3 + 2 known | 10 | 16 | 8 |
-| Dependencies / repo | 1 | 2 | 2 | 3 |
+| Area                                     | Critical    | High | Medium | Low |
+| ---------------------------------------- | ----------- | ---- | ------ | --- |
+| Frontend – security & business logic     | 4 + 4 known | 8    | 21     | 7   |
+| Frontend – UI / a11y / i18n / SEO / perf | –           | 11   | 19     | 12  |
+| Admin app                                | 3 + 2 known | 10   | 16     | 8   |
+| Dependencies / repo                      | 1           | 2    | 2      | 3   |
 
 Findings marked ✅ were re-checked by me directly in the code.
 
@@ -60,30 +61,31 @@ Findings marked ✅ were re-checked by me directly in the code.
 
 ## 1. Dependencies & tooling
 
-| Sev | Finding | Fix |
-|---|---|---|
-| **Critical** ✅ | `npm audit`: **next 14.2.35** has a critical advisory: *Unauthenticated RCE on Windows-hosted servers* (GHSA-p293-qw3h-jr36). It also has RCE in the Image Optimization API via AVIF/SVG, plus several DoS, SSRF, cache-poisoning and server-action advisories. Frontend: 9 vulns (1 critical, 4 high). Admin: 3 (1 critical, 1 high). | Upgrade Next to a patched release. The audit suggests 16.x (breaking). Plan the migration, then re-read `node_modules/next/dist/docs` per `AGENTS.md`. |
-| High ✅ | **next-intl ≤ 4.9.1** has an **open-redirect** advisory (GHSA-8f24-v5vv-gm5j) and prototype pollution. | Upgrade to next-intl 4.x (breaking API: `createNavigation`, `setRequestLocale`, `defineRouting`). |
-| High ✅ | `postcss` (bundled in next) has XSS and path-traversal advisories. | Fixed by the Next upgrade. |
-| Medium ✅ | `AGENTS.md` says "This is NOT the Next.js you know… re-added by `next dev`", but the installed Next is 14.2.35 and `generate-agent-files.js` does not exist. The file is stale and misleading. | Delete it, or update it after the upgrade. |
-| Medium | Frontend `package.json`: `@types/*`, `typescript`, `eslint-config-next` and `sharp` are in `dependencies`. `@types/date-fns` is obsolete. `recharts` is unused. `world-countries`, `react-world-flags` and `react-select` are only reached through the unused `CountrySelect.tsx` (≈1 MB of JSON). `query-string` is likely unused. | Move them to devDependencies or remove them. |
-| Low ✅ | `tsc --noEmit` passes in both apps. `next lint` shows only `react-hooks/exhaustive-deps` warnings (3 frontend, 12 admin) and one `<img>` in admin `NetworkClient.tsx:319`. | Fix the hook deps, since some cause stale closures (`ApprovalsClient` `handleApprove`, `CommandPalette` `handleSelect`). |
+| Sev             | Finding                                                                                                                                                                                                                                                                                                                                | Fix                                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Critical** ✅ | `npm audit`: **next 14.2.35** has a critical advisory: _Unauthenticated RCE on Windows-hosted servers_ (GHSA-p293-qw3h-jr36). It also has RCE in the Image Optimization API via AVIF/SVG, plus several DoS, SSRF, cache-poisoning and server-action advisories. Frontend: 9 vulns (1 critical, 4 high). Admin: 3 (1 critical, 1 high). | Upgrade Next to a patched release. The audit suggests 16.x (breaking). Plan the migration, then re-read `node_modules/next/dist/docs` per `AGENTS.md`. |
+| High ✅         | **next-intl ≤ 4.9.1** has an **open-redirect** advisory (GHSA-8f24-v5vv-gm5j) and prototype pollution.                                                                                                                                                                                                                                 | Upgrade to next-intl 4.x (breaking API: `createNavigation`, `setRequestLocale`, `defineRouting`).                                                      |
+| High ✅         | `postcss` (bundled in next) has XSS and path-traversal advisories.                                                                                                                                                                                                                                                                     | Fixed by the Next upgrade.                                                                                                                             |
+| Medium ✅       | `AGENTS.md` says "This is NOT the Next.js you know… re-added by `next dev`", but the installed Next is 14.2.35 and `generate-agent-files.js` does not exist. The file is stale and misleading.                                                                                                                                         | Delete it, or update it after the upgrade.                                                                                                             |
+| Medium          | Frontend `package.json`: `@types/*`, `typescript`, `eslint-config-next` and `sharp` are in `dependencies`. `@types/date-fns` is obsolete. `recharts` is unused. `world-countries`, `react-world-flags` and `react-select` are only reached through the unused `CountrySelect.tsx` (≈1 MB of JSON). `query-string` is likely unused.    | Move them to devDependencies or remove them.                                                                                                           |
+| Low ✅          | `tsc --noEmit` passes in both apps. `next lint` shows only `react-hooks/exhaustive-deps` warnings (3 frontend, 12 admin) and one `<img>` in admin `NetworkClient.tsx:319`.                                                                                                                                                             | Fix the hook deps, since some cause stale closures (`ApprovalsClient` `handleApprove`, `CommandPalette` `handleSelect`).                               |
 
 ## 2. Repository hygiene (`codebase-audit-pre-push`)
 
-| Sev | Finding | Fix |
-|---|---|---|
-| High ✅ | `frontend.backup-before-admin-removal/` is a full copy of the frontend (265 tracked files, including ~8 MB of duplicated images) committed to git. | Delete it; git history already keeps the old version. |
-| Medium ✅ | `admin/test-results/.last-run.json` is committed. `admin/.gitignore` has no `test-results/` or `playwright-report/`. | Add them to `.gitignore` and untrack the file. |
-| Medium ✅ | `.gitignore` uses `.env*`, which also ignores **`.env.example`**, so the env template is never committed. `.env.local` files are correctly ignored. | Add `!.env.example`. |
-| Low ✅ | The repo has no root `.gitignore` or README. `frontend/README.md` is the create-next-app boilerplate. Git user is "Your Name". 3 untracked admin docs. | Write a real README with architecture, run steps, env vars and seed accounts. Set `git config user.name`. |
-| Low | Duplicated image assets across `frontend/public`, `admin/public` and the backup folder. | Share them, or keep only what each app uses. |
+| Sev       | Finding                                                                                                                                                | Fix                                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| High ✅   | `frontend.backup-before-admin-removal/` is a full copy of the frontend (265 tracked files, including ~8 MB of duplicated images) committed to git.     | Delete it; git history already keeps the old version.                                                     |
+| Medium ✅ | `admin/test-results/.last-run.json` is committed. `admin/.gitignore` has no `test-results/` or `playwright-report/`.                                   | Add them to `.gitignore` and untrack the file.                                                            |
+| Medium ✅ | `.gitignore` uses `.env*`, which also ignores **`.env.example`**, so the env template is never committed. `.env.local` files are correctly ignored.    | Add `!.env.example`.                                                                                      |
+| Low ✅    | The repo has no root `.gitignore` or README. `frontend/README.md` is the create-next-app boilerplate. Git user is "Your Name". 3 untracked admin docs. | Write a real README with architecture, run steps, env vars and seed accounts. Set `git config user.name`. |
+| Low       | Duplicated image assets across `frontend/public`, `admin/public` and the backup folder.                                                                | Share them, or keep only what each app uses.                                                              |
 
 ---
 
-## 3. Frontend — Security, Auth & Authorization
+## 3. Frontend, Security, Auth & Authorization
 
 ### Critical
+
 1. ✅ **Login has no password check.**
    - `app/api/auth/login/route.ts` and `register/route.ts` call `authenticateUser(email)`, which never checks a password.
    - `lib/data/auth.ts:57-65` matches by **substring**: any email containing "amina", "karim" or "yacine" (e.g. `notamina@x.com`) logs in as that seeded user.
@@ -109,6 +111,7 @@ Findings marked ✅ were re-checked by me directly in the code.
    - Trips pages default to `"org_atlas_escapes"`. Team and settings fall back to `allOrgs[0]`.
 
 ### High
+
 9. ✅ `/reservations` calls `getReservations()` with **no filter** (`reservations/page.tsx:24`). Every logged-in user sees every platform reservation, with guest email and phone, and can accept or decline any of them.
 10. The host "Today" dashboard (`host/page.tsx:36`) also loads all reservations. A host can accept other hosts' requests.
 11. **Notifications aren't scoped.**
@@ -123,12 +126,13 @@ Findings marked ✅ were re-checked by me directly in the code.
 16. **The whole mock DB ships in the client JS bundle** (all emails, phones and wallet balances). Add `import "server-only"` to `lib/data/*` and `lib/mock-data/*`.
 
 ### Medium / Low (security-adjacent)
+
 - No role checks inside an org: any member can delete the org or promote themselves to owner (`organizations.ts:170-215`). Editing the registration number keeps the org's "verified" status.
 - Host pages **create data during a GET render**. `host/layout.tsx:47-66` auto-creates a public 18,500 DZD listing, and `:99-114` auto-creates a verified org with placeholder legal data.
 - **Agency onboarding gaps.**
   - The org id is pre-filled with `org_${Date.now()}`, so a failed API call leaves the cookie pointing at a non-existent org.
   - Blank form fields default to Atlas Escapes' registration number (`BecomeHostFlow.tsx:533-538`).
-- **Wallet balance and commission rates live in `localStorage`** (`wallet.ts:230-296`), so a host can edit them. Commission is also deducted in the *guest's* browser.
+- **Wallet balance and commission rates live in `localStorage`** (`wallet.ts:230-296`), so a host can edit them. Commission is also deducted in the _guest's_ browser.
 - "Change password" and "Revoke session" in Settings show success toasts but do nothing (`SettingsClient.tsx:486-491, 1074-1076`).
 - **Favorites and host drafts aren't user-scoped.** `darna_favorites` and `darna_host_draft` in `localStorage` aren't keyed per user and aren't cleared on logout.
 - The API routes return raw `error.message` to clients.
@@ -137,32 +141,32 @@ Findings marked ✅ were re-checked by me directly in the code.
 
 ---
 
-## 4. Frontend — Booking / pricing / availability correctness
+## 4. Frontend, Booking / pricing / availability correctness
 
-| Sev | Finding | Location |
-|---|---|---|
-| High | **Blocked and booked dates are not enforced.** `getAvailabilityOverrides` is never called, the guest calendar gets no `disabledDates`, and host "block dates" and price overrides only change local state (with success toasts). | `lib/data/calendar.ts:22`, `ListingReservation.tsx:319`, `HostCalendarClient.tsx:190-205` |
-| High | **A hotel with 12 rooms becomes unavailable after one room booking.** The overlap check ignores `selectedRoomTypeId` and `inventoryCount`. | `reservations.ts:116-127`, `listings.ts:183-192` |
-| High | **Experiences are charged price × days, not × guests** (the label says "/ person"). | `ListingReservation.tsx:139-143` |
-| High | **Zero-night bookings pass.** Start = end is forced to 1 day, and the server skips the overlap check when `start >= end`, so the same day can be booked repeatedly. | `ListingReservation.tsx:133-137`, `reservations.ts:119` |
-| Medium ✅ | `cleaningFee: 0` becomes 3500 and `serviceFee: 0` becomes 10%, because the code uses `\|\|` instead of `??`. | `reservations.ts:149-151` |
-| Medium | Hostel bed bookings charge for 1 bed regardless of count. | `HotelHostelDetailClient.tsx:200-203` |
-| Medium | **Trips break for group bookings.** A second traveller can't book the same departure (the listing overlap check rejects it). There is no seat-capacity check against `maxGroupSize`, and the trip end date is one day too long. | `TripDetailClient.tsx:57,87-92` |
-| Medium | The guest count has no maximum ("Max N" is shown but not enforced). | `Counter.tsx`, `ListingReservation.tsx:349` |
-| Medium | **Timezone (Algeria UTC+1).** Dates are stored with `toISOString()`, so a Nov 15 check-in is saved as `2026-11-14T23:00Z`. `availableFrom` parsed as UTC rejects the first valid day. Back-to-back stays are hidden in search. | `ListingReservation.tsx:43-50,177`, `listings.ts:189` |
-| Medium | Request-to-book never expires. `expiresAt` is set but never enforced, and pending requests block dates forever. | `reservations.ts:137-139` |
-| Medium | **Cancellation ignores policy.** Every cancellation is marked "refunded", even past stays. Stays never move to `completed`. | `reservations.ts:191-203`, `TripsClient.tsx:35-50` |
-| Medium | **Commission errors.** Commission is charged on the total *including* DARNA's service fee and the cleaning fee. It is never reversed on cancel, is double-charged on re-confirm, and hotels get the agency rate. | `reservations.ts:173-178,225`, `wallet.ts:383,400` |
-| Medium | Hotel and hostel hosts see empty bookings, listings and calendar pages, because only `"agency"` is treated as an org. | `host/bookings|listings|calendar/page.tsx` |
-| Medium | Draft or unpublished listings and trips are public and bookable (no status filter). | `listings.ts:12-22,199-217`, `trips.ts:66` |
-| Medium | Deleted listings reappear, because `getListings` re-merges `mockListings`. | `listings.ts:17,276-280` |
-| Medium | Membership changes are not saved to `globalThis`, so they are lost on HMR and across bundles. | `organizations.ts:109,166,189,213` |
-| Medium | Switching conversation thread shows an empty thread, because messages are only fetched for the first one. | `MessagesClient.tsx:44,83-95` |
-| Low | Listing price can be 0 or negative. Trips allow `minGroupSize > maxGroupSize`. A free-text cover-image URL outside `remotePatterns` crashes the trips list. The EUR rate is hardcoded at 153 in one place and 152.47 in another. `getReviewsByUserId` always adds the Tipaza reviews. | various |
+| Sev       | Finding                                                                                                                                                                                                                                                                               | Location                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------- | ------------------ |
+| High      | **Blocked and booked dates are not enforced.** `getAvailabilityOverrides` is never called, the guest calendar gets no `disabledDates`, and host "block dates" and price overrides only change local state (with success toasts).                                                      | `lib/data/calendar.ts:22`, `ListingReservation.tsx:319`, `HostCalendarClient.tsx:190-205` |
+| High      | **A hotel with 12 rooms becomes unavailable after one room booking.** The overlap check ignores `selectedRoomTypeId` and `inventoryCount`.                                                                                                                                            | `reservations.ts:116-127`, `listings.ts:183-192`                                          |
+| High      | **Experiences are charged price × days, not × guests** (the label says "/ person").                                                                                                                                                                                                   | `ListingReservation.tsx:139-143`                                                          |
+| High      | **Zero-night bookings pass.** Start = end is forced to 1 day, and the server skips the overlap check when `start >= end`, so the same day can be booked repeatedly.                                                                                                                   | `ListingReservation.tsx:133-137`, `reservations.ts:119`                                   |
+| Medium ✅ | `cleaningFee: 0` becomes 3500 and `serviceFee: 0` becomes 10%, because the code uses `\|\|` instead of `??`.                                                                                                                                                                          | `reservations.ts:149-151`                                                                 |
+| Medium    | Hostel bed bookings charge for 1 bed regardless of count.                                                                                                                                                                                                                             | `HotelHostelDetailClient.tsx:200-203`                                                     |
+| Medium    | **Trips break for group bookings.** A second traveller can't book the same departure (the listing overlap check rejects it). There is no seat-capacity check against `maxGroupSize`, and the trip end date is one day too long.                                                       | `TripDetailClient.tsx:57,87-92`                                                           |
+| Medium    | The guest count has no maximum ("Max N" is shown but not enforced).                                                                                                                                                                                                                   | `Counter.tsx`, `ListingReservation.tsx:349`                                               |
+| Medium    | **Timezone (Algeria UTC+1).** Dates are stored with `toISOString()`, so a Nov 15 check-in is saved as `2026-11-14T23:00Z`. `availableFrom` parsed as UTC rejects the first valid day. Back-to-back stays are hidden in search.                                                        | `ListingReservation.tsx:43-50,177`, `listings.ts:189`                                     |
+| Medium    | Request-to-book never expires. `expiresAt` is set but never enforced, and pending requests block dates forever.                                                                                                                                                                       | `reservations.ts:137-139`                                                                 |
+| Medium    | **Cancellation ignores policy.** Every cancellation is marked "refunded", even past stays. Stays never move to `completed`.                                                                                                                                                           | `reservations.ts:191-203`, `TripsClient.tsx:35-50`                                        |
+| Medium    | **Commission errors.** Commission is charged on the total _including_ DARNA's service fee and the cleaning fee. It is never reversed on cancel, is double-charged on re-confirm, and hotels get the agency rate.                                                                      | `reservations.ts:173-178,225`, `wallet.ts:383,400`                                        |
+| Medium    | Hotel and hostel hosts see empty bookings, listings and calendar pages, because only `"agency"` is treated as an org.                                                                                                                                                                 | `host/bookings                                                                            | listings | calendar/page.tsx` |
+| Medium    | Draft or unpublished listings and trips are public and bookable (no status filter).                                                                                                                                                                                                   | `listings.ts:12-22,199-217`, `trips.ts:66`                                                |
+| Medium    | Deleted listings reappear, because `getListings` re-merges `mockListings`.                                                                                                                                                                                                            | `listings.ts:17,276-280`                                                                  |
+| Medium    | Membership changes are not saved to `globalThis`, so they are lost on HMR and across bundles.                                                                                                                                                                                         | `organizations.ts:109,166,189,213`                                                        |
+| Medium    | Switching conversation thread shows an empty thread, because messages are only fetched for the first one.                                                                                                                                                                             | `MessagesClient.tsx:44,83-95`                                                             |
+| Low       | Listing price can be 0 or negative. Trips allow `minGroupSize > maxGroupSize`. A free-text cover-image URL outside `remotePatterns` crashes the trips list. The EUR rate is hardcoded at 153 in one place and 152.47 in another. `getReviewsByUserId` always adds the Tipaza reviews. | various                                                                                   |
 
 ---
 
-## 5. Frontend — i18n / RTL (`i18n-localization`)
+## 5. Frontend, i18n / RTL (`i18n-localization`)
 
 - **High: most of the UI is untranslated.**
   - Only **18 of 115** `.tsx` files use `useTranslations`. There are about **560 hardcoded JSX text lines** and **185 hardcoded `alt`/`aria-label`/`placeholder` strings**.
@@ -189,7 +193,7 @@ Findings marked ✅ were re-checked by me directly in the code.
   - `globals.css` uses `left`/`right` for toast and dropdown positioning.
   - `LanguageSwitcher` drops the query string.
 
-## 6. Frontend — Accessibility (WCAG 2.2 AA)
+## 6. Frontend, Accessibility (WCAG 2.2 AA)
 
 - **High:**
   - **Listing cards are `<div onClick>`** (`ListingCard.tsx:176`, `ListingCarouselCard.tsx:65`), so keyboard users can't open listings and crawlers can't follow them.
@@ -211,7 +215,7 @@ Findings marked ✅ were re-checked by me directly in the code.
   - The password toggle has no `aria-label`.
 - **Low:** dropdowns lack `aria-expanded`, and some alt text is English-only or wrong on decorative images.
 
-## 7. Frontend — Next.js, SEO, performance
+## 7. Frontend, Next.js, SEO, performance
 
 - **High: SEO metadata.**
   - **No page has `metadata`/`generateMetadata`.** Every listing, agency, profile and trip shares one English title, with no OG image, canonical or hreflang. `og.locale` is fixed to `en_US`.
@@ -242,9 +246,10 @@ Findings marked ✅ were re-checked by me directly in the code.
 ## 8. Admin app
 
 ### Critical
+
 1. ✅ **RBAC is not enforced server-side.**
    - `login/actions.ts` is the only `'use server'` file. Every admin mutation in `lib/data/*` (approve host, approve payout, recharge wallet, change member role, delete user…) is called from `"use client"` components.
-   - Each client passes a **hardcoded actor `{ role: "super_admin" }`** (`ApprovalsClient.tsx:235,275,307`, `BookingsClient.tsx:587`, `CarsListClient.tsx:535`, `FinanceClient`, `TeamClient`…). An *analyst* can approve payouts or promote themselves.
+   - Each client passes a **hardcoded actor `{ role: "super_admin" }`** (`ApprovalsClient.tsx:235,275,307`, `BookingsClient.tsx:587`, `CarsListClient.tsx:535`, `FinanceClient`, `TeamClient`…). An _analyst_ can approve payouts or promote themselves.
    - `hasPermission` is never used in any UI, so every role sees every action.
 2. ✅ **All seed admin passwords are in public JS.**
    - `lib/mock-data/store.ts:17` imports `MOCK_ADMIN_ACCOUNTS` from `lib/auth/session.ts`, and client components import the store.
@@ -254,6 +259,7 @@ Findings marked ✅ were re-checked by me directly in the code.
 4. ✅ (known) **Hardcoded fallback JWT secret and plaintext seed passwords** in `lib/auth/session.ts` (moderator, support, finance and analyst passwords have no env override). The same secret is copied into `tests/responsive/sweep.spec.ts:36`.
 
 ### High
+
 5. ✅ **The login page pre-fills `admin@darna.dz` / `DarnaAdmin2026!`** (`login/page.tsx:21-22`) and shows one-click "quick account" buttons with passwords (`:137-151`).
 6. ✅ **Open redirect after login.** `router.push(searchParams.get("returnTo"))` is not validated (`login/page.tsx:19,41`).
 7. **Sessions can't be revoked.** Role and `isActive` are frozen in the JWT for 8 hours. `toggleMemberActive` and `updateMemberRole` modify `store.team`, but login checks `MOCK_ADMIN_ACCOUNTS`, so deactivated admins can still log in.
@@ -278,6 +284,7 @@ Findings marked ✅ were re-checked by me directly in the code.
     - Yet the UI calls the trail "immutable".
 
 ### Medium
+
 - **Auth gate gaps.** The `(panel)/layout.tsx` renders even with a null session, so middleware is the only gate. Middleware skips **any path containing a `.`** (`middleware.ts:21-25`), so `/en/stays/a.b` renders the panel unauthenticated. `isLoginPage` also matches `/loginx`.
 - **CSV exports.** No formula-injection protection (`=`, `+`, `-`, `@`), host-controlled names are not quote-escaped, only the current page is exported, and exports are not audited.
 - **Wrong finance KPIs.**
@@ -304,6 +311,7 @@ Findings marked ✅ were re-checked by me directly in the code.
   - 34 directional icons don't flip in RTL, and there are physical `text-left`/`text-right` classes.
 
 ### Low
+
 - Server pages fetch data and discard it (`bookings/page.tsx`), and client components refetch on mount.
 - Hydration risk: `new Date()` is formatted during render in `DashboardClient`.
 - Favicon paths point to `/icons/*`, but the files are in the `public/` root.
@@ -321,16 +329,17 @@ Findings marked ✅ were re-checked by me directly in the code.
 
 These need to be unified **before** building a shared backend:
 
-| Concept | Admin | Frontend |
-|---|---|---|
-| Listing status | 11 values (`pending`/`pending_review`, `published`/`approved`, `refused`/`rejected`…), no `active` | `active \| pending \| suspended \| draft` |
-| Booking status | has `disputed` and `refunded`, no `declined` or `expired` | has `declined` and `expired`, no `disputed` or `refunded` |
-| Transaction types | `wallet_recharge`, `host_payout`, `booking_payment`, `booking_refund` | `recharge`, `payout` |
-| Onboarding field types | `multiselect`, `file`, `boolean`, `radio`, `location`, `amenities` | `multi-select`, `image-upload`, `toggle` |
-| Service fee | 7% of base | 10% of total, nightly = 85% |
-| Commission defaults | copied in `generator.ts`, `store.ts`, and the frontend's `wallet.ts` | |
+| Concept                | Admin                                                                                              | Frontend                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Listing status         | 11 values (`pending`/`pending_review`, `published`/`approved`, `refused`/`rejected`…), no `active` | `active \| pending \| suspended \| draft`                 |
+| Booking status         | has `disputed` and `refunded`, no `declined` or `expired`                                          | has `declined` and `expired`, no `disputed` or `refunded` |
+| Transaction types      | `wallet_recharge`, `host_payout`, `booking_payment`, `booking_refund`                              | `recharge`, `payout`                                      |
+| Onboarding field types | `multiselect`, `file`, `boolean`, `radio`, `location`, `amenities`                                 | `multi-select`, `image-upload`, `toggle`                  |
+| Service fee            | 7% of base                                                                                         | 10% of total, nightly = 85%                               |
+| Commission defaults    | copied in `generator.ts`, `store.ts`, and the frontend's `wallet.ts`                               |                                                           |
 
 **Recommendation:**
+
 - Create a shared package (`packages/shared`: types, enums, pricing and commission functions, zod schemas) used by both apps, ideally in a monorepo (pnpm/turbo workspaces).
 - Create one database schema with Row Level Security (RLS) and a single source of truth for pricing.
 
@@ -340,28 +349,29 @@ These need to be unified **before** building a shared backend:
 
 Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summer Release with Services and relaunched Experiences), Guesty, RentalScaleUp, Hostfully (review policy 2026).
 
-| Feature | DARNA status |
-|---|---|
-| Category tabs, map search, photo gallery, amenities, location map, host "Today" dashboard, listing wizard, en/fr/ar + RTL, experiences, car rental (DARNA-only), admin back-office | **Done (mock)** |
-| Instant Book vs request-to-book | Done (mock), but requests never expire |
-| Filters | Partial: no accessibility or family filters |
-| Guest types | Partial: one counter, no adults/children/infants/pets split |
-| House rules, cancellation policy | Partial: no refund engine, hardcoded "48h" text |
-| Review display | Partial: 5 sub-ratings instead of 6 |
-| ID verification | Partial: a flag plus the admin approval queue |
-| Messaging | Partial: no attachments, translation or real-time |
-| Wishlists | Partial: single list |
-| Multi-currency | Partial: selector not wired |
-| Co-hosts | Partial: agencies only |
-| **Total price incl. fees on cards** | **Missing** (Airbnb standard): cards show "/ night" |
-| **Guest checkout & payment** | **Missing (critical)**: no payment step at all |
-| **Calendar blocks booked dates** | **Missing** |
-| **Min/max nights, advance notice, check-in/out times** | **Missing** |
-| **Write a review** (double-blind, 14-day window, host rates guest) | **Missing** |
-| Flexible dates, smart pricing, weekly/monthly discounts, iCal sync, guarantee (AirCover-like), Services vertical | Missing or toast-only |
-| Payouts, refunds, notifications (push/SMS/email), report listing | Mock-only |
+| Feature                                                                                                                                                                            | DARNA status                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Category tabs, map search, photo gallery, amenities, location map, host "Today" dashboard, listing wizard, en/fr/ar + RTL, experiences, car rental (DARNA-only), admin back-office | **Done (mock)**                                             |
+| Instant Book vs request-to-book                                                                                                                                                    | Done (mock), but requests never expire                      |
+| Filters                                                                                                                                                                            | Partial: no accessibility or family filters                 |
+| Guest types                                                                                                                                                                        | Partial: one counter, no adults/children/infants/pets split |
+| House rules, cancellation policy                                                                                                                                                   | Partial: no refund engine, hardcoded "48h" text             |
+| Review display                                                                                                                                                                     | Partial: 5 sub-ratings instead of 6                         |
+| ID verification                                                                                                                                                                    | Partial: a flag plus the admin approval queue               |
+| Messaging                                                                                                                                                                          | Partial: no attachments, translation or real-time           |
+| Wishlists                                                                                                                                                                          | Partial: single list                                        |
+| Multi-currency                                                                                                                                                                     | Partial: selector not wired                                 |
+| Co-hosts                                                                                                                                                                           | Partial: agencies only                                      |
+| **Total price incl. fees on cards**                                                                                                                                                | **Missing** (Airbnb standard): cards show "/ night"         |
+| **Guest checkout & payment**                                                                                                                                                       | **Missing (critical)**: no payment step at all              |
+| **Calendar blocks booked dates**                                                                                                                                                   | **Missing**                                                 |
+| **Min/max nights, advance notice, check-in/out times**                                                                                                                             | **Missing**                                                 |
+| **Write a review** (double-blind, 14-day window, host rates guest)                                                                                                                 | **Missing**                                                 |
+| Flexible dates, smart pricing, weekly/monthly discounts, iCal sync, guarantee (AirCover-like), Services vertical                                                                   | Missing or toast-only                                       |
+| Payouts, refunds, notifications (push/SMS/email), report listing                                                                                                                   | Mock-only                                                   |
 
 ### Top 10 product gaps to build next
+
 1. **Real checkout and payments.** SATIM CIB/Edahabia, BaridiMob, cash-on-arrival with a deposit, and CCP transfer with receipt upload. Store the payment status on the reservation.
 2. **Availability engine.** Booked and blocked dates disabled in the calendar, a server-side double-booking guard, and per-room-type inventory.
 3. **Listing rules.** Min/max nights, advance notice, check-in/out times, and a guest-count maximum.
@@ -374,6 +384,7 @@ Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summ
 10. **Host pricing tools.** Weekly/monthly/last-minute discounts, seasonal pricing (summer coast, Ramadan, Sahara winter), and real iCal import/export.
 
 **Algeria-specific ideas:**
+
 - A "families only" / "proof of marriage for couples" policy field and filter.
 - Halal-friendly and women-only filters.
 - Wilaya selector in search.
@@ -386,6 +397,7 @@ Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summ
 ## 11. Suggested roadmap
 
 **Phase 0 – Stop the bleeding (1–2 days)**
+
 - Upgrade Next and next-intl.
 - Remove the pre-filled admin credentials and quick-login buttons.
 - Mark `lib/auth/*`, `lib/data/*` and `lib/mock-data/*` as `server-only` in both apps.
@@ -393,17 +405,20 @@ Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summ
 - Delete the backup folder and fix `.gitignore`.
 
 **Phase 1 – Real backend and auth (Supabase/Postgres)**
+
 - Schema with Row Level Security (RLS), shared types package, real auth (email + password/OTP), httpOnly signed sessions.
 - All mutations in Server Actions or route handlers that derive the user from the session.
 - Admin `requirePermission()` on the server, real logout, session revocation, server-written audit log.
 
 **Phase 2 – Booking engine**
+
 - Server-side price calculation.
 - Availability (overrides, inventory, min/max nights, timezone-safe `yyyy-MM-dd` dates).
 - Request expiry, cancellation-policy refunds, commission on the subtotal with reversals.
 - Payments.
 
 **Phase 3 – Quality**
+
 - Wire up i18n (use the existing unused namespaces) and add a no-literal-string lint rule.
 - One accessible Dialog primitive, links and buttons instead of clickable `div`s, contrast fixes, visible focus.
 - `generateMetadata`, sitemap and robots.
@@ -412,4 +427,5 @@ Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summ
 - Tests for RBAC, booking math and auth.
 
 **Phase 4 – Feature parity**
+
 - Reviews, total-price display, wishlists, real-time messaging, notifications, host pricing tools, iCal.

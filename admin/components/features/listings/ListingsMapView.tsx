@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { listingImageSrc } from "@/lib/placeholders";
 import { useLocale, useTranslations } from "next-intl";
 import { Listing } from "@/lib/types";
 import { formatDzd, intlLocale } from "@/lib/utils/format";
@@ -25,18 +26,18 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
   });
 
   return (
-    <div className="relative w-full h-[600px] rounded-3xl overflow-hidden border border-tertiary/70 shadow-darna-card bg-[#E5E0D5] flex flex-col md:flex-row text-start">
+    <div className="relative w-full h-[600px] rounded-3xl overflow-hidden border border-primary/[0.08] shadow-darna-card bg-darnaBg-400 flex flex-col md:flex-row text-start">
       {/* Map Interactive Canvas / Stylized View */}
-      <div className="flex-1 relative bg-[#EFECE0] overflow-hidden p-6 flex flex-col justify-between">
+      <div className="flex-1 relative bg-darnaBg-300 overflow-hidden p-6 flex flex-col justify-between">
         <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#2E3A2F_1px,transparent_1px)] [background-size:16px_16px]" />
 
         {/* Top Floating Controls */}
-        <div className="relative z-10 flex items-center justify-between gap-3 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-tertiary/70 shadow-xs max-w-sm">
-          <div className="flex items-center gap-2 text-xs font-bold text-primary">
+        <div className="relative z-10 flex items-center justify-between gap-3 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-primary/[0.08] shadow-xs max-w-sm">
+          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
             <MapPin className="w-4 h-4 text-accent" aria-hidden="true" />
             <span id="listings-map-title">{t("title")}</span>
           </div>
-          <span className="text-[11px] font-bold text-secondary-700 tabular-nums">
+          <span className="text-[11px] font-semibold text-secondary-700 tabular-nums">
             {t("pins", { count: listings.length })}
           </span>
         </div>
@@ -67,7 +68,7 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
                 aria-pressed={isSelected}
               >
                 <div
-                  className={`px-2 py-1 rounded-full text-[10px] font-bold shadow-xs transition-colors flex items-center gap-1 ${
+                  className={`px-2 py-1 rounded-full text-[11px] font-semibold shadow-xs transition-colors flex items-center gap-1 ${
                     isSelected
                       ? "bg-accent-600 text-white ring-2 ring-white"
                       : "bg-white text-primary hover:bg-secondary-700 hover:text-white border border-tertiary/80"
@@ -81,37 +82,37 @@ export default function ListingsMapView({ listings, onSelectListing }: ListingsM
         </div>
 
         {/* Territory Guide */}
-        <div className="relative z-10 text-[10px] text-neutral-600">
+        <div className="relative z-10 text-[11px] text-primary-700">
           {t("legend")}
         </div>
       </div>
 
       {/* Side Preview Card */}
       {selectedListing && (
-        <div className="w-full md:w-80 bg-white p-5 border-t md:border-t-0 md:border-s border-tertiary/60 flex flex-col justify-between shrink-0">
+        <div className="w-full md:w-80 bg-white p-5 border-t md:border-t-0 md:border-s border-primary/[0.08] flex flex-col justify-between shrink-0">
           <div>
             <div className="relative w-full h-40 rounded-2xl overflow-hidden mb-3 bg-neutral-100">
               <Image
-                src={selectedListing.imageSrc[0] || "/assets/house.png"}
+                src={listingImageSrc(selectedListing.imageSrc[0], selectedListing.category === "vehicle" ? "car" : selectedListing.category === "experience" ? "experience" : selectedListing.category === "trip" ? "trip" : "stay")}
                 alt={selectedListing.title}
                 fill
                 sizes="(min-width: 768px) 320px, 100vw"
                 className="object-cover"
               />
-              <span className="absolute top-2 start-2 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-black/60 text-white backdrop-blur-xs">
+              <span className="absolute top-2 start-2 px-2 py-0.5 rounded-md text-[11px] font-semibold uppercase bg-primary-950/60 text-white backdrop-blur-xs">
                 {tVerticals.has(selectedListing.category) ? tVerticals(selectedListing.category) : selectedListing.category}
               </span>
             </div>
 
-            <h4 className="text-sm font-bold text-primary leading-tight line-clamp-2">
+            <h4 className="text-sm font-semibold text-primary leading-tight line-clamp-2">
               {selectedListing.title}
             </h4>
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-primary-600 mt-1">
               {t("cityHost", { city: selectedListing.city, host: selectedListing.hostName })}
             </p>
 
             <div className="mt-3 flex items-center justify-between text-xs">
-              <span className="font-bold font-mono text-primary text-sm">
+              <span className="font-semibold tabular-nums text-primary text-sm">
                 {formatDzd(selectedListing.price, locale)}
               </span>
               <span className="font-semibold text-amber-700 flex items-center gap-1">

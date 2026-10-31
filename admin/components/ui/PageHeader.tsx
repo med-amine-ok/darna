@@ -29,13 +29,13 @@ const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible
 const getButtonClass = (variant?: string) => {
   switch (variant) {
     case "primary":
-      return "bg-primary hover:bg-primary-700 text-white shadow-xs border border-primary";
+      return "bg-primary-800 hover:bg-primary-900 text-white shadow-e1 shadow-highlight";
     case "secondary":
-      return "bg-secondary-700 hover:bg-secondary-800 text-white shadow-xs border border-secondary-700";
+      return "bg-secondary-700 hover:bg-secondary-800 text-white shadow-e1";
     case "accent":
-      return "border border-accent/40 text-accent-700 hover:bg-accent/10";
+      return "bg-white text-accent-700 ring-1 ring-inset ring-accent/40 hover:bg-accent-50";
     default:
-      return "border border-tertiary-300 bg-white hover:bg-neutral-50 text-neutral-700";
+      return "bg-white text-primary-800 shadow-e1 hover:shadow-e2 hover:bg-darnaBg-50";
   }
 };
 
@@ -70,17 +70,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   const secondaryActions = actionList.filter((a) => a !== primaryAction);
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
       {/* Title & Subtitle */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight break-words">
+          <h1 className="font-serif text-heading text-primary-900 break-words">
             {title}
           </h1>
           {badge}
         </div>
         {subtitle && (
-          <p className="text-xs text-neutral-500 mt-0.5 sm:mt-1 line-clamp-2 leading-relaxed">
+          <p className="text-meta text-primary-600 mt-1 line-clamp-2">
             {subtitle}
           </p>
         )}
@@ -92,9 +92,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <button
             type="button"
             onClick={onExport}
-            className={`inline-flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[38px] px-3.5 py-2 rounded-xl border border-tertiary-300 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 transition shadow-2xs cursor-pointer active:scale-95 ${focusRing}`}
+            className={`inline-flex items-center justify-center gap-2 min-h-[44px] sm:min-h-[38px] px-3.5 py-2 rounded-xl bg-white shadow-e1 hover:shadow-e2 hover:bg-darnaBg-50 text-meta font-semibold text-primary-800 transition duration-fast ease-standard cursor-pointer active:scale-[0.98] ${focusRing}`}
           >
-            <Download className="w-4 h-4 text-neutral-500" aria-hidden="true" />
+            <Download className="w-4 h-4 text-primary-500" aria-hidden="true" />
             <span>{exportLabel ?? t("export")}</span>
           </button>
         )}
@@ -112,7 +112,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                     <ActionLink
                       key={idx}
                       href={act.href}
-                      className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-xs font-semibold transition select-none ${btnClass} ${focusRing}`}
+                      className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-meta font-semibold transition duration-fast ease-standard select-none ${btnClass} ${focusRing}`}
                     >
                       {act.icon}
                       <span>{act.label}</span>
@@ -125,7 +125,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                     key={idx}
                     type="button"
                     onClick={act.onClick}
-                    className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none active:scale-95 ${btnClass} ${focusRing}`}
+                    className={`inline-flex items-center justify-center gap-2 min-h-[38px] px-4 py-2 rounded-xl text-meta font-semibold transition duration-fast ease-standard cursor-pointer select-none active:scale-[0.98] ${btnClass} ${focusRing}`}
                   >
                     {act.icon}
                     <span>{act.label}</span>
@@ -140,7 +140,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 (primaryAction.href ? (
                   <ActionLink
                     href={primaryAction.href}
-                    className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold transition select-none ${getButtonClass(
+                    className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-meta font-semibold transition duration-fast ease-standard select-none ${getButtonClass(
                       primaryAction.variant
                     )} ${focusRing}`}
                   >
@@ -151,7 +151,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                   <button
                     type="button"
                     onClick={primaryAction.onClick}
-                    className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none active:scale-95 ${getButtonClass(
+                    className={`flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl text-meta font-semibold transition duration-fast ease-standard cursor-pointer select-none active:scale-[0.98] ${getButtonClass(
                       primaryAction.variant
                     )} ${focusRing}`}
                   >

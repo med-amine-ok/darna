@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { listingImageSrc, listingImages } from "@/lib/placeholders";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
 import {
@@ -46,6 +47,9 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+
+/** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
+const SPLIT_HIDDEN_COLUMNS = ["id", "destination", "departure", "duration"];
 
 // value = filter value (unchanged), labelKey = translation key under trips.categoryOptions
 const TRIP_CATEGORIES = [
@@ -229,7 +233,7 @@ export default function TripsListClient() {
       header: "#",
       className: "w-20",
       render: (row) => (
-        <span className="font-mono text-xs text-[#2E3A2F]/70 font-semibold">
+        <span className="text-xs text-primary-600 font-semibold tabular-nums whitespace-nowrap">
           {row.formattedId || `#T${row.id.replace("lst_", "").padStart(4, "0")}`}
         </span>
       ),
@@ -239,19 +243,19 @@ export default function TripsListClient() {
       header: t("columns.trip"),
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={row.imageSrc?.[0] || "/placeholder-trip.jpg"}
+              src={listingImageSrc(row.imageSrc?.[0], "trip")}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[240px]">
             <button
               type="button"
-              className={`block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded ${FOCUS_RING}`}
+              className={`block max-w-full font-semibold text-primary-900 truncate text-sm text-start hover:underline rounded ${FOCUS_RING}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectTrip(row);
@@ -259,7 +263,7 @@ export default function TripsListClient() {
             >
               {row.title}
             </button>
-            <div className="text-xs text-[#2E3A2F]/70 capitalize mt-0.5">
+            <div className="text-xs text-primary-600 capitalize mt-0.5">
               {row.propertyType || t("categoryFallback")}
             </div>
           </div>
@@ -270,8 +274,8 @@ export default function TripsListClient() {
       key: "destination",
       header: t("columns.destination"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
-          <MapPin className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" aria-hidden="true" />
+        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
+          <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
           <span className="truncate">{t("locationValue", { city: row.city, code: row.wilayaCode })}</span>
         </div>
       ),
@@ -280,8 +284,8 @@ export default function TripsListClient() {
       key: "departure",
       header: t("columns.departure"),
       render: () => (
-        <div className="text-xs text-[#2E3A2F] flex items-center gap-1">
-          <Calendar className="w-3.5 h-3.5 text-[#2E3A2F]/50" aria-hidden="true" />
+        <div className="text-xs text-primary-800 flex items-center gap-1 whitespace-nowrap tabular-nums">
+          <Calendar className="w-3.5 h-3.5 text-primary-500" aria-hidden="true" />
           <span>{departureLabel}</span>
         </div>
       ),
@@ -289,13 +293,13 @@ export default function TripsListClient() {
     {
       key: "duration",
       header: t("columns.duration"),
-      render: () => <span className="text-xs text-[#2E3A2F]">{durationLabel}</span>,
+      render: () => <span className="text-xs text-primary">{durationLabel}</span>,
     },
     {
       key: "price",
       header: t("columns.price"),
       render: (row) => (
-        <div className="text-xs font-semibold text-[#2E3A2F]">
+        <div className="text-xs font-semibold text-primary tabular-nums whitespace-nowrap">
           {formatDzd(row.price, locale)}
         </div>
       ),
@@ -314,7 +318,7 @@ export default function TripsListClient() {
           <button
             type="button"
             onClick={() => handleSelectTrip(row)}
-            className={`p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors ${FOCUS_RING}`}
+            className={`p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors ${FOCUS_RING}`}
             title={t("quickPreview")}
             aria-label={t("quickPreviewOf", { title: row.title })}
           >
@@ -323,7 +327,7 @@ export default function TripsListClient() {
           <button
             type="button"
             onClick={() => router.push(`/trips/${row.id}`)}
-            className={`p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors ${FOCUS_RING}`}
+            className={`p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors ${FOCUS_RING}`}
             title={t("openFullPage")}
             aria-label={t("openFullPageOf", { title: row.title })}
           >
@@ -389,7 +393,7 @@ export default function TripsListClient() {
                   search: searchQuery || undefined,
                 })
               }
-              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS_RING}`}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-primary bg-white rounded-xl transition-colors shadow-e1 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-e2 duration-fast ${FOCUS_RING}`}
             >
               <Download className="w-4 h-4" aria-hidden="true" />
               <span>{t("export")}</span>
@@ -397,7 +401,7 @@ export default function TripsListClient() {
             <button
               type="button"
               onClick={() => router.push("/trips/categories")}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm ${FOCUS_RING}`}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-primary bg-white rounded-xl transition-colors shadow-e1 hover:shadow-e2 duration-fast ${FOCUS_RING}`}
             >
               <Tag className="w-4 h-4" aria-hidden="true" />
               <span>{t("categories")}</span>
@@ -406,7 +410,7 @@ export default function TripsListClient() {
             <button
               type="button"
               onClick={() => router.push("/trips/new")}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm ${FOCUS_RING}`}
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary-900 transition-colors shadow-e1 duration-fast ${FOCUS_RING}`}
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
               <span>{t("add")}</span>
@@ -491,9 +495,9 @@ export default function TripsListClient() {
       <SplitView
         isPanelOpen={!!selectedTrip}
         mainContent={
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex flex-col gap-1">
             <DataTable
-              columns={columns}
+              columns={selectedTrip ? columns.filter((c) => !SPLIT_HIDDEN_COLUMNS.includes(c.key)) : columns}
               data={data}
               keyExtractor={(trip) => trip.id}
               selectedRowId={selectedTripId || undefined}
@@ -505,7 +509,7 @@ export default function TripsListClient() {
                 onSelectionChange: setSelectedRowIds,
               }}
             />
-            <div className="p-4 border-t border-[#D9C9B2]/40 bg-[#FAF9F5]">
+            <div className="px-1">
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
@@ -532,7 +536,7 @@ export default function TripsListClient() {
                 <button
                   type="button"
                   onClick={() => router.push(`/trips/${selectedTrip.id}`)}
-                  className={`p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded ${FOCUS_RING}`}
+                  className={`p-1 text-primary-600 hover:text-primary rounded ${FOCUS_RING}`}
                   title={t("fullScreen")}
                   aria-label={t("fullScreen")}
                 >
@@ -546,7 +550,7 @@ export default function TripsListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.changeStatus(selectedTrip, "suspended")}
-                        className="px-3 py-1.5 text-xs font-medium text-[#7A5A26] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-amber-800 bg-white shadow-e1 rounded-xl hover:bg-amber-50 transition-colors duration-fast"
                       >
                         {t("panel.suspend")}
                       </button>
@@ -567,7 +571,7 @@ export default function TripsListClient() {
                               addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-white bg-[#5a6b4c] hover:bg-[#4a5a3e] rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-secondary-700 hover:bg-secondary-800 rounded-xl shadow-e1 flex items-center gap-1.5 transition-colors duration-fast"
                         >
                           <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>{t("panel.approveDirectly")}</span>
@@ -589,9 +593,9 @@ export default function TripsListClient() {
                             addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                           }
                         }}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl flex items-center gap-1.5 transition-colors bg-white shadow-e1 hover:shadow-e2 duration-fast"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <RotateCcw className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                         <span>{t("panel.cancelSuspension")}</span>
                       </button>
                     ) : null}
@@ -599,7 +603,7 @@ export default function TripsListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.restore(selectedTrip)}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl transition-colors bg-white shadow-e1 hover:shadow-e2 duration-fast"
                       >
                         {tActions("restore")}
                       </button>
@@ -608,7 +612,7 @@ export default function TripsListClient() {
                     <button
                       type="button"
                       onClick={() => setConfirmAction({ type: "delete", trip: selectedTrip })}
-                      className="px-3 py-1.5 text-xs font-medium text-[#A4532F] border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-accent-700 bg-white ring-1 ring-inset ring-accent/40 rounded-xl hover:bg-accent-50 transition-colors duration-fast"
                     >
                       {tCommon("delete")}
                     </button>
@@ -617,7 +621,7 @@ export default function TripsListClient() {
                   <button
                     type="button"
                     onClick={() => router.push(`/trips/${selectedTrip.id}`)}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
+                    className="px-3.5 py-1.5 min-h-[34px] text-xs font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 shadow-e1 transition-colors duration-fast"
                   >
                     {t("panel.edit")}
                   </button>
@@ -626,17 +630,17 @@ export default function TripsListClient() {
             >
               <div className="space-y-5">
                 <ImageCarousel
-                  images={selectedTrip.imageSrc?.length ? selectedTrip.imageSrc : ["/placeholder-trip.jpg"]}
+                  images={listingImages(selectedTrip.imageSrc, "trip")}
                   alt={selectedTrip.title}
                 />
 
-                <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
+                <div className="flex items-center justify-between text-xs text-primary border-b border-primary/[0.08] pb-3">
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
                     <span className="font-semibold">{formatRating(selectedTrip.rating)}</span>
-                    <span className="text-[#2E3A2F]/70">{t("reviewsCount", { count: selectedTrip.reviewsCount })}</span>
+                    <span className="text-primary-600">{t("reviewsCount", { count: selectedTrip.reviewsCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#4F5F43] font-medium">
+                  <div className="flex items-center gap-1 text-secondary-700 font-medium">
                     <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{t("locationValue", { city: selectedTrip.city, code: selectedTrip.wilayaCode })}</span>
                   </div>
@@ -657,7 +661,7 @@ export default function TripsListClient() {
                   <div className="space-y-4">
                     {/* About This Trip */}
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-2">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-2">
                         {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
@@ -669,80 +673,80 @@ export default function TripsListClient() {
                     </div>
 
                     {/* Price & Discounts Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2.5">
+                      <div className="text-xs font-semibold text-primary flex items-center justify-between">
                         <span>{t("pricing.title")}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                        <span className="font-semibold text-primary-900 text-sm tabular-nums whitespace-nowrap">
                           {formatDzd(selectedTrip.price, locale)}{" "}
-                          <span className="text-[10px] text-[#2E3A2F]/70">{t("pricing.perPerson")}</span>
+                          <span className="text-[11px] text-primary-600">{t("pricing.perPerson")}</span>
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.earlyBird")}</span>
-                          <span className="font-medium text-[#4F5F43]">
+                          <span className="text-primary-600 block">{t("pricing.earlyBird")}</span>
+                          <span className="font-medium text-secondary-700">
                             {t("pricing.discountValue", { percent: DISCOUNTS.group, price: formatDzd(applyDiscount(selectedTrip.price, DISCOUNTS.group), locale) })}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.commission")}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("pricing.commissionIncluded", { rate: 12 })}</span>
+                          <span className="text-primary-600 block">{t("pricing.commission")}</span>
+                          <span className="font-medium text-secondary-700">{t("pricing.commissionIncluded", { rate: 12 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.deposit")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("pricing.depositValue", { percent: 30 })}</span>
+                          <span className="text-primary-600 block">{t("pricing.deposit")}</span>
+                          <span className="font-medium text-primary">{t("pricing.depositValue", { percent: 30 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.cancellation")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("pricing.cancellationValue", { days: 7 })}</span>
+                          <span className="text-primary-600 block">{t("pricing.cancellation")}</span>
+                          <span className="font-medium text-primary">{t("pricing.cancellationValue", { days: 7 })}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Time & Schedule Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
+                      <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-secondary" aria-hidden="true" />
                         <span>{t("schedule.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.gathering")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.gatheringValue", { time: formatTime(7, 30) })}</span>
+                          <span className="text-primary-600 block">{t("schedule.gathering")}</span>
+                          <span className="font-medium text-primary">{t("schedule.gatheringValue", { time: formatTime(7, 30) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.return")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.returnValue", { time: formatTime(18, 0) })}</span>
+                          <span className="text-primary-600 block">{t("schedule.return")}</span>
+                          <span className="font-medium text-primary">{t("schedule.returnValue", { time: formatTime(18, 0) })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.dailyWalk")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("schedule.dailyWalkValue", { min: 3, max: 4 })}</span>
+                          <span className="text-primary-600 block">{t("schedule.dailyWalk")}</span>
+                          <span className="font-medium text-primary">{t("schedule.dailyWalkValue", { min: 3, max: 4 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("schedule.meetingPoint")}</span>
-                          <span className="font-medium text-[#4F5F43]">{t("schedule.meetingPointValue", { city: selectedTrip.city })}</span>
+                          <span className="text-primary-600 block">{t("schedule.meetingPoint")}</span>
+                          <span className="font-medium text-secondary-700">{t("schedule.meetingPointValue", { city: selectedTrip.city })}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
-                      <div className="text-xs font-semibold text-[#2E3A2F] mb-1">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl">
+                      <div className="text-xs font-semibold text-primary mb-1">
                         {t("agency.title")}
                       </div>
-                      <div className="text-sm font-medium text-[#2E3A2F]">{selectedTrip.hostName}</div>
-                      <div className="text-xs text-[#4F5F43] flex items-center gap-1 mt-0.5">
+                      <div className="text-sm font-medium text-primary">{selectedTrip.hostName}</div>
+                      <div className="text-xs text-secondary-700 flex items-center gap-1 mt-0.5">
                         <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("agency.licensed")}
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
                         {t("highlights.title")}
                       </h4>
-                      <ul className="space-y-1.5 text-xs text-[#2E3A2F]">
+                      <ul className="space-y-1.5 text-xs text-primary">
                         {(["bivouac", "fullBoard", "transport"] as const).map((key) => (
                           <li key={key} className="flex items-center gap-2">
-                            <Check className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                            <Check className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                             <span>{t(`highlights.${key}`)}</span>
                           </li>
                         ))}
@@ -751,10 +755,10 @@ export default function TripsListClient() {
 
                     {/* Description Section */}
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
                         {t("description.title")}
                       </h4>
-                      <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
+                      <p className="text-xs text-primary-700 leading-relaxed bg-darnaBg-100 p-3 rounded-xl">
                         {selectedTrip.description || t("description.empty")}
                       </p>
                     </div>

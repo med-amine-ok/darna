@@ -27,8 +27,9 @@ export default function Calendar({
   const t = useTranslations("common");
 
   return (
-    // In RTL the month arrows swap sides with the flex row, so flip their glyphs too.
-    <div className="darna-calendar-wrapper rtl:[&_.rdrNextPrevButton_i]:rotate-180">
+    // Styled by the "DARNA kit, date range picker" block in styles/globals.css (range tint,
+    // today dot, muted past days, chevron arrows mirrored in RTL).
+    <div className="darna-calendar-wrapper w-full flex justify-center">
       <DateRange
         locale={dateFnsLocale(locale)}
         ariaLabels={{
@@ -37,7 +38,7 @@ export default function Calendar({
           monthPicker: t("monthPicker"),
           yearPicker: t("yearPicker"),
         }}
-        rangeColors={["#C96F4F"]}
+        rangeColors={["#B65634"]}
         ranges={[value]}
         date={new Date()}
         onChange={onChange}

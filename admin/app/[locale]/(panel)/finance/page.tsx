@@ -1,6 +1,6 @@
 import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-/** Legacy duplicate route — canonical page is /payments. */
+/** Legacy duplicate route, canonical page is /payments. */
 export default function FinanceRedirect({
   searchParams,
 }: {

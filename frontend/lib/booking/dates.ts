@@ -2,12 +2,19 @@
  * Calendar-date helpers for bookings (pure, client-safe).
  *
  * Stay dates are stored and exchanged as plain `yyyy-MM-dd` strings ("date
- * keys") — never as ISO timestamps — so a 15 Nov check-in stays 15 Nov in
+ * keys"), never as ISO timestamps, so a 15 Nov check-in stays 15 Nov in
  * every timezone (Algeria is UTC+1; `toISOString()` used to shift it to the
  * 14th). Keys compare correctly as strings, and stays are half-open
  * intervals [checkIn, checkOut): the checkout day is free for the next guest.
  */
-import { addDays, differenceInCalendarDays, format, isValid, parseISO, startOfDay } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  isValid,
+  parseISO,
+  startOfDay,
+} from "date-fns";
 
 export type DateKey = string;
 
@@ -70,7 +77,7 @@ export function nightsBetween(start: DateKey, end: DateKey): number {
   return differenceInCalendarDays(fromDateKey(end), fromDateKey(start));
 }
 
-/** Every night of a stay: [start, end) — the checkout day is not included. */
+/** Every night of a stay: [start, end), the checkout day is not included. */
 export function eachNightKey(start: DateKey, end: DateKey): DateKey[] {
   const out: DateKey[] = [];
   const n = nightsBetween(start, end);
@@ -79,7 +86,12 @@ export function eachNightKey(start: DateKey, end: DateKey): DateKey[] {
 }
 
 /** Half-open overlap: back-to-back stays (A.end === B.start) do not overlap. */
-export function rangesOverlap(aStart: DateKey, aEnd: DateKey, bStart: DateKey, bEnd: DateKey): boolean {
+export function rangesOverlap(
+  aStart: DateKey,
+  aEnd: DateKey,
+  bStart: DateKey,
+  bEnd: DateKey,
+): boolean {
   return aStart < bEnd && bStart < aEnd;
 }
 
@@ -87,17 +99,28 @@ export function rangesOverlap(aStart: DateKey, aEnd: DateKey, bStart: DateKey, b
 export function formatDateKey(
   key: string | null | undefined,
   locale: string = "en",
-  options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }
+  options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  },
 ): string {
   if (!key) return "";
   const normalized = normalizeDateKey(key);
   if (!normalized) return key;
-  const intlLocale = locale === "ar" ? "ar-DZ" : locale === "fr" ? "fr-FR" : "en-US";
-  return new Intl.DateTimeFormat(intlLocale, options).format(fromDateKey(normalized));
+  const intlLocale =
+    locale === "ar" ? "ar-DZ" : locale === "fr" ? "fr-FR" : "en-US";
+  return new Intl.DateTimeFormat(intlLocale, options).format(
+    fromDateKey(normalized),
+  );
 }
 
 /** "Nov 15 – Nov 20, 2026" style range. */
-export function formatDateRange(start: string | null | undefined, end: string | null | undefined, locale = "en"): string {
+export function formatDateRange(
+  start: string | null | undefined,
+  end: string | null | undefined,
+  locale = "en",
+): string {
   if (!start) return "";
   if (!end || end === start) return formatDateKey(start, locale);
   return `${formatDateKey(start, locale)} – ${formatDateKey(end, locale)}`;

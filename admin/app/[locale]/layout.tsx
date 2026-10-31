@@ -1,25 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Tajawal } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { locales, Locale } from "@/i18n";
 import { ToastProvider } from "@/components/ui/Toast";
+import MotionProvider from "@/components/motion/MotionProvider";
+import { fontVariables } from "@/lib/fonts";
 import "../globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
-const tajawal = Tajawal({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700"],
-  variable: "--font-arabic",
-  display: "swap",
-});
 
 export const dynamic = "force-dynamic";
 
@@ -76,11 +63,13 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={dir}
-      className={`${inter.variable} ${tajawal.variable} font-sans h-full`}
+      className={`${fontVariables} font-sans h-full`}
     >
-      <body className="min-h-[100dvh] flex flex-col bg-darnaBg text-primary antialiased font-sans selection:bg-accent selection:text-white">
+      <body className="min-h-[100dvh] flex flex-col bg-darnaBg text-primary antialiased font-sans selection:bg-accent-200 selection:text-primary-900">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ToastProvider>{children}</ToastProvider>
+          <MotionProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </MotionProvider>
         </NextIntlClientProvider>
       </body>
     </html>

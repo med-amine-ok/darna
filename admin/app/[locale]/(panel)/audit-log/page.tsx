@@ -1,6 +1,6 @@
 import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-/** Legacy duplicate route — canonical page is /settings/audit-log. */
+/** Legacy duplicate route, canonical page is /settings/audit-log. */
 export default function AuditLogRedirect({
   searchParams,
 }: {

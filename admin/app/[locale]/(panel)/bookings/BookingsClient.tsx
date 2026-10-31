@@ -39,6 +39,7 @@ import {
   exportBookings,
 } from "@/lib/actions/bookings";
 import { formatDzd, formatDate, intlLocale } from "@/lib/utils/format";
+import { listingImageSrc } from "@/lib/placeholders";
 import { downloadCsv } from "@/lib/utils/download";
 import { canCancelBooking, canRefundBooking, refundedSoFar } from "@/lib/domain/transitions";
 import { unwrap } from "@/lib/actions/result";
@@ -199,20 +200,20 @@ export default function BookingsClient({
       key: "booking",
       header: t("cols.booking"),
       render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
+        <div className="flex items-center gap-2.5">
+          <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-tertiary-100 shrink-0 ring-1 ring-inset ring-primary/[0.06]">
             <Image
-              src={row.listingImage || "/placeholder-booking.jpg"}
+              src={listingImageSrc(row.listingImage, "booking")}
               alt=""
               fill
-              sizes="48px"
+              sizes="36px"
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
             <button
               type="button"
-              className="font-medium text-[#2E3A2F] text-xs font-mono hover:underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="font-semibold text-primary-900 text-xs whitespace-nowrap tabular-nums link-underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectBooking(row);
@@ -220,7 +221,7 @@ export default function BookingsClient({
             >
               {row.reference || `#R${row.id.replace("bkg_", "").padStart(4, "0")}`}
             </button>
-            <div className="text-[11px] text-[#2E3A2F]/70 mt-0.5">
+            <div className="text-[11px] text-primary-600 mt-0.5 whitespace-nowrap tabular-nums">
               {formatDate(row.checkInDate, locale)}
             </div>
           </div>
@@ -232,12 +233,12 @@ export default function BookingsClient({
       header: t("guest"),
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
+          <div className="w-7 h-7 rounded-full bg-darnaBg-300 flex items-center justify-center font-semibold text-xs text-primary-800 shrink-0">
             {row.guestName.charAt(0)}
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-medium text-[#2E3A2F] truncate">{row.guestName}</div>
-            <div className="text-[11px] text-[#2E3A2F]/70 truncate">{row.guestEmail}</div>
+            <div className="text-xs font-medium text-primary-900 truncate max-w-[132px]">{row.guestName}</div>
+            <div dir="ltr" className="text-[11px] text-primary-600 truncate max-w-[132px] rtl:text-end">{row.guestEmail}</div>
           </div>
         </div>
       ),
@@ -247,19 +248,19 @@ export default function BookingsClient({
       header: t("cols.type"),
       render: (row) => {
         let label = t("types.home");
-        let icon = <Home className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
+        let icon = <Home className="w-3 h-3 text-secondary" aria-hidden="true" />;
         if (row.vertical === "experience") {
           label = t("types.experience");
-          icon = <Compass className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
+          icon = <Compass className="w-3 h-3 text-secondary" aria-hidden="true" />;
         } else if (row.vertical === "trip") {
           label = t("types.trip");
-          icon = <Plane className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
+          icon = <Plane className="w-3 h-3 text-secondary" aria-hidden="true" />;
         } else if (row.vertical === "vehicle") {
           label = t("types.vehicle");
-          icon = <Car className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />;
+          icon = <Car className="w-3 h-3 text-secondary" aria-hidden="true" />;
         }
         return (
-          <span className="inline-flex items-center gap-1 text-xs text-[#2E3A2F] font-medium">
+          <span className="inline-flex items-center gap-1.5 text-xs text-primary-800 font-medium whitespace-nowrap">
             {icon}
             <span>{label}</span>
           </span>
@@ -271,11 +272,11 @@ export default function BookingsClient({
       header: t("cols.details"),
       render: (row) => (
         <div className="min-w-0">
-          <div className="text-xs font-medium text-[#2E3A2F] truncate max-w-[180px]">
+          <div className="text-xs font-medium text-primary-900 truncate max-w-[132px]">
             {row.listingTitle}
           </div>
-          <div className="text-[11px] text-[#2E3A2F]/70 flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-[#6B7F5B]" aria-hidden="true" />
+          <div className="text-[11px] text-primary-600 flex items-center gap-1 whitespace-nowrap">
+            <MapPin className="w-3 h-3 text-secondary" aria-hidden="true" />
             <span>{getWilayaName(row.wilayaCode, locale)}</span>
           </div>
         </div>
@@ -285,17 +286,18 @@ export default function BookingsClient({
       key: "dates",
       header: t("cols.dates"),
       render: (row) => (
-        <div className="text-xs text-[#2E3A2F]">
+        <div className="text-xs text-primary-800 whitespace-nowrap tabular-nums">
           <div>{t("dateRange", { from: shortDate(row.checkInDate), to: shortDate(row.checkOutDate) })}</div>
-          <div className="text-[11px] text-[#2E3A2F]/70">{t("nights", { count: row.nightsCount })}</div>
+          <div className="text-[11px] text-primary-600">{t("nights", { count: row.nightsCount })}</div>
         </div>
       ),
     },
     {
       key: "amount",
       header: t("cols.amount"),
+      align: "right",
       render: (row) => (
-        <div className="text-xs font-semibold text-[#2E3A2F]">
+        <div className="text-xs font-semibold text-primary-900 whitespace-nowrap tabular-nums text-end">
           {formatDzd(row.totalAmountDzd, locale)}
         </div>
       ),
@@ -315,7 +317,7 @@ export default function BookingsClient({
           <button
             type="button"
             onClick={() => handleSelectBooking(row)}
-            className="p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="p-1.5 rounded-lg text-primary-600 hover:bg-darnaBg-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             title={t("quickView")}
             aria-label={t("quickViewOf", { reference: row.reference || row.id })}
           >
@@ -325,7 +327,7 @@ export default function BookingsClient({
             type="button"
             disabled
             aria-disabled="true"
-            className="p-1.5 rounded-lg text-[#2E3A2F]/30 cursor-not-allowed"
+            className="p-1.5 rounded-lg text-primary/30 cursor-not-allowed"
             title={tActions("unavailableHint")}
             aria-label={t("invoiceUnavailable")}
           >
@@ -363,7 +365,7 @@ export default function BookingsClient({
       />
 
       {/* 2. Vertical Tabs (Mockup 11) */}
-      <div className="flex items-center justify-between border-b border-[#D9C9B2]/50 pb-1">
+      <div className="flex items-end justify-between gap-4">
         <Tabs
           items={verticalTabs}
           activeId={currentVertical}
@@ -373,8 +375,8 @@ export default function BookingsClient({
           variant="line"
         />
 
-        <div className="hidden sm:flex items-center gap-2 text-xs text-[#2E3A2F]/70">
-          <Calendar className="w-4 h-4 text-[#6B7F5B]" aria-hidden="true" />
+        <div className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-xl bg-white shadow-e1 text-xs text-primary-700 tabular-nums whitespace-nowrap mb-2">
+          <Calendar className="w-4 h-4 text-secondary" aria-hidden="true" />
           <span>{t("dateRange", { from: formatDate("2024-03-01", locale), to: formatDate("2024-03-31", locale) })}</span>
         </div>
       </div>
@@ -430,9 +432,13 @@ export default function BookingsClient({
       <SplitView
         isPanelOpen={!!selectedBooking}
         mainContent={
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex flex-col gap-1">
             <DataTable
-              columns={columns}
+              columns={
+                selectedBooking
+                  ? columns.filter((c) => !["type", "details", "dates", "actions"].includes(c.key))
+                  : columns
+              }
               data={data}
               keyExtractor={(b) => b.id}
               selectedRowId={selectedBookingId || undefined}
@@ -444,7 +450,7 @@ export default function BookingsClient({
                 onSelectionChange: setSelectedRowIds,
               }}
             />
-            <div className="p-4 border-t border-[#D9C9B2]/40 bg-[#FAF9F5]">
+            <div>
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
@@ -472,7 +478,7 @@ export default function BookingsClient({
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-primary-500 hover:text-primary-900 hover:bg-primary/[0.06] transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                     title={t("print")}
                     aria-label={t("print")}
                   >
@@ -487,7 +493,7 @@ export default function BookingsClient({
                       <button
                         type="button"
                         onClick={() => setConfirmModal({ type: "cancel", booking: selectedBooking })}
-                        className="px-3 py-1.5 text-xs font-medium text-accent-700 border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                        className="px-3 min-h-[36px] text-xs font-semibold text-accent-700 bg-white ring-1 ring-inset ring-accent/40 rounded-xl hover:bg-accent-50 transition-colors duration-fast"
                       >
                         {tOps("cancel")}
                       </button>
@@ -496,7 +502,7 @@ export default function BookingsClient({
                       <button
                         type="button"
                         onClick={() => setConfirmModal({ type: "refund", booking: selectedBooking })}
-                        className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        className="px-3 min-h-[36px] text-xs font-semibold text-amber-800 bg-white ring-1 ring-inset ring-amber-300 rounded-xl hover:bg-amber-50 transition-colors duration-fast"
                       >
                         {tOps("refund")}
                       </button>
@@ -505,7 +511,7 @@ export default function BookingsClient({
                       <button
                         type="button"
                         onClick={() => setConfirmModal({ type: "dispute", booking: selectedBooking })}
-                        className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        className="px-3 min-h-[36px] text-xs font-semibold text-amber-800 bg-white ring-1 ring-inset ring-amber-300 rounded-xl hover:bg-amber-50 transition-colors duration-fast"
                       >
                         {tOps("resolveDispute")}
                       </button>
@@ -516,7 +522,7 @@ export default function BookingsClient({
                     disabled
                     aria-disabled="true"
                     title={tActions("unavailableHint")}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F]/40 rounded-lg cursor-not-allowed"
+                    className="px-3.5 min-h-[36px] text-xs font-semibold text-white bg-primary-800/40 rounded-xl cursor-not-allowed"
                   >
                     {t("editBooking")}
                   </button>
@@ -524,9 +530,9 @@ export default function BookingsClient({
               }
             >
               <div className="space-y-5">
-                <div className="relative aspect-[16/9] rounded-lg overflow-hidden border border-[#D9C9B2]/40 bg-[#E5DFD3]">
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-tertiary-100">
                   <Image
-                    src={selectedBooking.listingImage || "/placeholder-booking.jpg"}
+                    src={listingImageSrc(selectedBooking.listingImage, "booking")}
                     alt={selectedBooking.listingTitle}
                     fill
                     sizes="(min-width: 1024px) 420px, 100vw"
@@ -534,9 +540,9 @@ export default function BookingsClient({
                   />
                 </div>
 
-                <div className="border-b border-[#D9C9B2]/40 pb-3">
-                  <h4 className="font-bold text-sm text-[#2E3A2F]">{selectedBooking.listingTitle}</h4>
-                  <div className="flex items-center gap-1 text-xs text-[#6B7F5B] mt-0.5">
+                <div className="border-b border-primary/[0.06] pb-3">
+                  <h4 className="font-semibold text-sm text-primary-900">{selectedBooking.listingTitle}</h4>
+                  <div className="flex items-center gap-1 text-xs text-secondary-700 mt-0.5">
                     <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>{getWilayaName(selectedBooking.wilayaCode, locale)}</span>
                   </div>
@@ -551,6 +557,7 @@ export default function BookingsClient({
                   ]}
                   activeId={panelTab}
                   onChange={setPanelTab}
+                  variant="line"
                 />
 
                 {panelTab === "details" && (
@@ -563,19 +570,19 @@ export default function BookingsClient({
                     </div>
 
                     {/* Breakdown */}
-                    <div className="p-3.5 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-2">
-                      <div className="font-semibold text-[#2E3A2F] pb-1 border-b border-[#D9C9B2]/40">
+                    <div className="p-3.5 bg-darnaBg-100 rounded-xl text-xs space-y-2 tabular-nums">
+                      <div className="font-semibold text-primary-900 pb-1.5 border-b border-primary/[0.06]">
                         {t("priceBreakdown")}
                       </div>
-                      <div className="flex justify-between text-[#2E3A2F]/70">
+                      <div className="flex justify-between text-primary-600">
                         <span>{t("basePrice", { count: selectedBooking.nightsCount })}</span>
                         <span>{formatDzd(selectedBooking.basePriceDzd, locale)}</span>
                       </div>
-                      <div className="flex justify-between text-[#2E3A2F]/70">
+                      <div className="flex justify-between text-primary-600">
                         <span>{t("serviceFee")}</span>
                         <span>{formatDzd(selectedBooking.serviceFeeDzd, locale)}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-sm text-[#2E3A2F] pt-1.5 border-t border-[#D9C9B2]/40">
+                      <div className="flex justify-between font-semibold text-sm text-primary-900 pt-1.5 border-t border-primary/[0.06]">
                         <span>{t("totalPaid")}</span>
                         <span className="text-secondary-700">{formatDzd(selectedBooking.totalAmountDzd, locale)}</span>
                       </div>
@@ -590,23 +597,23 @@ export default function BookingsClient({
                 )}
 
                 {panelTab === "guest" && (
-                  <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-3">
+                  <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
+                      <div className="w-10 h-10 rounded-full bg-darnaBg-400 flex items-center justify-center font-semibold text-sm text-primary-800">
                         {selectedBooking.guestName.charAt(0)}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-[#2E3A2F]">{selectedBooking.guestName}</div>
-                        <div className="text-xs text-[#2E3A2F]/70">{selectedBooking.guestEmail}</div>
+                        <div className="text-sm font-medium text-primary">{selectedBooking.guestName}</div>
+                        <div dir="ltr" className="text-xs text-primary-600 rtl:text-end">{selectedBooking.guestEmail}</div>
                       </div>
                     </div>
-                    <div className="text-xs text-[#2E3A2F] pt-2 border-t border-[#D9C9B2]/40 space-y-1">
+                    <div className="text-xs text-primary-800 pt-2 border-t border-primary/[0.06] space-y-1">
                       <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <Phone className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                         <span dir="ltr">{selectedBooking.guestPhone || "+213 555 12 34 56"}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#6B7F5B]" aria-hidden="true" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
                         <span>{t("verifiedAccount")}</span>
                       </div>
                     </div>
@@ -614,12 +621,12 @@ export default function BookingsClient({
                 )}
 
                 {panelTab === "payment" && (
-                  <div className="p-3.5 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/50 text-xs space-y-3">
-                    <div className="flex items-center justify-between pb-2 border-b border-[#D9C9B2]/40">
-                      <span className="font-semibold text-[#2E3A2F]">{t("paymentReceived")}</span>
-                      <span className="font-bold text-primary">{formatDzd(selectedBooking.totalAmountDzd, locale)}</span>
+                  <div className="p-3.5 bg-darnaBg-100 rounded-xl text-xs space-y-3 tabular-nums">
+                    <div className="flex items-center justify-between pb-2 border-b border-primary/[0.06]">
+                      <span className="font-semibold text-primary">{t("paymentReceived")}</span>
+                      <span className="font-semibold text-primary">{formatDzd(selectedBooking.totalAmountDzd, locale)}</span>
                     </div>
-                    <div className="space-y-1 text-[#2E3A2F]/70">
+                    <div className="space-y-1 text-primary-600">
                       <p>{t("paymentMethodLine", { method: t(`paymentMethods.${selectedBooking.paymentMethod}`) })}</p>
                       <p className="flex items-center gap-2">
                         {t("labelValue", { label: tOps("paymentStatus"), value: "" })}
@@ -639,7 +646,7 @@ export default function BookingsClient({
                       disabled
                       aria-disabled="true"
                       title={tActions("unavailableHint")}
-                      className="w-full mt-2 py-2 bg-white border border-[#D9C9B2] rounded-lg font-medium text-xs text-[#2E3A2F]/40 cursor-not-allowed"
+                      className="w-full mt-2 min-h-[40px] bg-white shadow-e1 rounded-xl font-medium text-xs text-primary/40 cursor-not-allowed"
                     >
                       {t("downloadInvoice")}
                     </button>

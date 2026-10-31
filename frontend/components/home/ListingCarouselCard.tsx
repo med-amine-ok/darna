@@ -9,7 +9,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { formatRating } from "@/lib/i18n/date-locale";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import { listingHref, priceSuffixKey } from "@/components/listing/cardLabels";
-import { BrandStarIcon, BrandPinIcon, CategoryVehicleIcon } from "@/components/icons";
+import { BrandStarIcon } from "@/components/icons";
 
 interface ListingCarouselCardProps {
   listing: Listing;
@@ -19,54 +19,53 @@ interface ListingCarouselCardProps {
   onClick?: () => void;
 }
 
-export default function ListingCarouselCard({
-  listing,
-  currentUser,
-  customHref,
-  onClick,
-}: ListingCarouselCardProps) {
+/**
+ * Editorial listing card (home rails): 20:19 photo with 20px radius, glass badge,
+ * slow photo zoom + lift on hover, stretched link for keyboard/screen readers.
+ */
+export default function ListingCarouselCard({ listing, currentUser, customHref, onClick }: ListingCarouselCardProps) {
   const tNav = useTranslations("nav");
   const t = useTranslations("listing");
   const locale = useLocale();
   const rating = formatRating(listing.rating, locale);
 
   const href = customHref ?? listingHref(listing, { onSearchPage: false });
-
   const hasRoomTypes = Boolean(listing.roomTypes && listing.roomTypes.length > 0);
   const isHostel = listing.businessCategory === "hostel" || listing.roomTypes?.some((r) => r.bookingUnit === "bed");
-
   const displayImage = Array.isArray(listing.imageSrc) ? listing.imageSrc[0] : listing.imageSrc;
 
+  const kicker = hasRoomTypes
+    ? `${isHostel ? t("hostel") : t("hotel")} · ${t("roomTypesCount", { count: listing.roomTypes?.length ?? 0 })}`
+    : listing.city
+      ? t("cityCountry", { city: listing.city })
+      : null;
+
   return (
-    <div className="relative flex-shrink-0 w-52 sm:w-60 group select-none transition-transform card-hover-lift">
-      {/* Image Container */}
-      <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-100 border border-tertiary/40 mb-2">
+    <article className="group relative select-none">
+      <div className="relative aspect-[20/19] w-full rounded-2xl overflow-hidden bg-tertiary-100 shadow-e1 transition-[box-shadow,transform] duration-base ease-out group-hover:shadow-e3 group-hover:-translate-y-1">
         <Image
           src={displayImage || "/assets/template.jpeg"}
           alt=""
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 640px) 208px, 240px"
+          sizes="(max-width: 640px) 72vw, 280px"
+          className={`object-cover transition-transform [transition-duration:700ms] ease-out group-hover:scale-[1.045]`}
         />
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-primary-900/25 to-transparent" />
 
-        {/* Guest favorite Badge */}
         {listing.isGuestFavorite && (
-          <div className="absolute top-2.5 start-2.5 z-[2] bg-white/95 backdrop-blur-xs text-primary text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+          <div className="absolute top-3 start-3 z-[2] glass-chip text-primary-900 text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-e1">
             {tNav("guestFavorite")}
           </div>
         )}
 
-        {/* Heart Favorite Button (above the card link overlay) */}
-        <div className="absolute top-2.5 end-2.5 z-10">
+        <div className="absolute top-1.5 end-1.5 z-10">
           <HeartButton listingId={listing.id} currentUser={currentUser} />
         </div>
       </div>
 
-      {/* Card Details */}
-      <div className="space-y-0.5">
-        <div className="flex items-center justify-between gap-1.5">
-          <h3 className="font-semibold text-xs sm:text-sm text-primary truncate flex items-center gap-1 min-w-0">
-            <BrandPinIcon size={13} strokeWidth={1.8} className="shrink-0 text-accent" />
+      <div className="pt-3.5 space-y-1">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-[0.9375rem] font-semibold text-primary-900 leading-snug line-clamp-1 min-w-0">
             {/* Stretched link: its ::after covers the whole card. */}
             <Link
               href={href}
@@ -79,51 +78,35 @@ export default function ListingCarouselCard({
                     }
                   : undefined
               }
-              className="truncate rounded after:absolute after:inset-0 after:z-[1] after:rounded-xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent-600 focus-visible:after:ring-offset-2"
+              className="rounded after:absolute after:inset-0 after:z-[1] after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent-600 focus-visible:after:ring-offset-4 focus-visible:after:ring-offset-darnaBg"
             >
-              <span className="sr-only">{listing.title} – </span>
-              {listing.city ? t("cityCountry", { city: listing.city }) : listing.title}
+              {listing.title}
             </Link>
           </h3>
-          <span className="flex items-center gap-0.5 text-xs font-semibold text-neutral-800 flex-shrink-0">
+          <span className="flex items-center gap-1 text-meta font-semibold text-primary-800 shrink-0 tabular-nums pt-0.5">
             {rating ? (
               <>
-                <BrandStarIcon size={13} className="text-accent" />
+                <BrandStarIcon size={13} className="text-accent-600" />
                 <span className="sr-only">{t("ratingLabel", { rating })}</span>
                 <span aria-hidden="true">{rating}</span>
               </>
             ) : (
-              t("ratingNew")
+              <span className="text-secondary-700">{t("ratingNew")}</span>
             )}
           </span>
         </div>
 
-        <p className="text-[11px] text-neutral-600 font-normal truncate flex items-center gap-1">
-          {hasRoomTypes ? (
-            <>
-              <span className="font-semibold text-secondary-700">{isHostel ? t("hostel") : t("hotel")}</span>
-              <span aria-hidden="true">·</span>
-              <span>{t("roomTypesCount", { count: listing.roomTypes?.length ?? 0 })}</span>
-            </>
-          ) : listing.category === "vehicle" ? (
-            <>
-              <CategoryVehicleIcon size={13} strokeWidth={1.8} className="shrink-0 text-accent" />
-              <span className="truncate">{listing.title}</span>
-            </>
-          ) : (
-            <span className="truncate">{listing.title}</span>
-          )}
-        </p>
+        {kicker && <p className="text-meta text-primary-500 truncate">{kicker}</p>}
 
-        <div className="pt-0.5">
-          <PriceDisplay
-            price={listing.price}
-            originalPrice={listing.originalPrice}
-            period={t(priceSuffixKey(listing))}
-            priceClassName="font-bold text-xs sm:text-sm text-primary"
-          />
-        </div>
+        <PriceDisplay
+          price={listing.price}
+          originalPrice={listing.originalPrice}
+          period={t(priceSuffixKey(listing))}
+          className="pt-1"
+          priceClassName="font-semibold text-[0.9375rem] text-primary-900 tabular-nums"
+          eurClassName="text-meta text-primary-500 tabular-nums"
+        />
       </div>
-    </div>
+    </article>
   );
 }

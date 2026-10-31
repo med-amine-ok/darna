@@ -19,6 +19,7 @@ import {
 } from "@/components/icons";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
+import { Badge, Button, Card, Input, RadioGroup, Select, Textarea, cn, focusRing } from "@/components/ui";
 import HostWalletWidget from "@/components/host/HostWalletWidget";
 import { useActionError } from "@/hook/useActionError";
 
@@ -30,11 +31,6 @@ interface AgencySettingsClientProps {
 }
 
 type TeamSize = NonNullable<Organization["teamSizeEstimate"]>;
-
-const FIELD_CLASS =
-  "w-full bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function AgencySettingsClient({
   organization: initialOrg,
@@ -73,7 +69,6 @@ export default function AgencySettingsClient({
     address: `${baseId}-address`,
     teamSize: `${baseId}-team-size`,
     description: `${baseId}-description`,
-    approvalLabel: `${baseId}-approval-label`,
     readOnlyNote: `${baseId}-read-only`,
     deleteInput: `${baseId}-delete-input`,
   };
@@ -131,319 +126,192 @@ export default function AgencySettingsClient({
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
-      {/* Back button */}
-      <div className="mb-6">
-        <Link
-          href="/host"
-          className={`inline-flex items-center gap-1.5 text-xs font-bold text-neutral-600 hover:text-primary transition rounded ${FOCUS_RING}`}
-        >
-          <BrandArrowLeftIcon size={16} className="rtl:rotate-180" aria-hidden="true" />
-          <span>{t("backToHost")}</span>
-        </Link>
-      </div>
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <Link
+        href="/host"
+        className={cn(
+          "mb-6 inline-flex min-h-[44px] items-center gap-1.5 rounded-full text-meta font-semibold text-primary-600 transition-colors duration-fast ease-standard hover:text-primary-900",
+          focusRing
+        )}
+      >
+        <BrandArrowLeftIcon size={16} className="rtl:rotate-180" aria-hidden="true" />
+        <span>{t("backToHost")}</span>
+      </Link>
 
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">{t("title")}</h1>
-          <p className="text-sm text-neutral-600 mt-1">{t("subtitle")}</p>
+      <header className="enter-up mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-eyebrow uppercase text-secondary-700">{org.name}</p>
+          <h1 className="mt-2 font-serif text-display-md text-primary-900">{t("title")}</h1>
+          <p className="mt-2 max-w-2xl text-body text-primary-600 [text-wrap:pretty]">{t("subtitle")}</p>
         </div>
-
-        {/* Public profile button */}
         <Link
           href={`/agencies/${org.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className={`px-4 py-2 border border-tertiary/80 hover:bg-neutral-50 rounded-xl text-xs font-bold text-neutral-700 transition flex items-center gap-1.5 shadow-2xs self-start sm:self-auto ${FOCUS_RING}`}
+          className={cn(
+            "inline-flex h-11 shrink-0 items-center gap-2 self-start rounded-full bg-white px-5 text-meta font-semibold text-primary-800 shadow-e1 transition-shadow duration-fast ease-standard hover:shadow-e2 sm:self-auto",
+            focusRing
+          )}
         >
           <BrandExternalLinkIcon size={16} aria-hidden="true" />
           <span>{t("viewPublicProfile")}</span>
           <span className="sr-only">{t("opensInNewTab")}</span>
         </Link>
-      </div>
+      </header>
 
-      {/* Verification Badge Re-surfaced */}
-      <div className="bg-white rounded-3xl border border-tertiary/70 p-6 shadow-2xs mb-8 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div
-            aria-hidden="true"
-            className="w-12 h-12 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0"
-          >
-            <BrandBadgeCheckIcon size={26} />
+      {/* Verification */}
+      <Card padding="md" radius="3xl" className="mb-8 flex items-center gap-4">
+        <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary-100 text-secondary-800">
+          <BrandBadgeCheckIcon size={24} />
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-title text-primary-900">{t("verification.label")}</h2>
+            {org.verificationStatus === "verified" ? (
+              <Badge tone="success" dot>
+                {t("verification.verified")}
+              </Badge>
+            ) : (
+              <Badge tone="warning" dot>
+                {t("verificationPending")}
+              </Badge>
+            )}
           </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="font-serif font-bold text-primary text-base">{t("verification.label")}</h2>
-              {org.verificationStatus === "verified" ? (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  {t("verification.verified")}
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                  {t("verificationPending")}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-neutral-600 mt-0.5">{t("verification.description")}</p>
-          </div>
+          <p className="mt-0.5 text-meta text-primary-600">{t("verification.description")}</p>
         </div>
-      </div>
+      </Card>
 
-      {/* Host Prepaid Wallet & Solvency Widget */}
       <HostWalletWidget className="mb-8" />
 
-      {/* Edit Form */}
-      <form
-        onSubmit={handleSave}
-        aria-describedby={!canEdit ? ids.readOnlyNote : undefined}
-        className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-6 mb-8"
+      {/* Profile form */}
+      <Card
+        as="section"
+        padding="lg"
+        radius="3xl"
+        className="mb-8"
+        aria-labelledby={`${baseId}-form-title`}
       >
-        <h2 className="font-serif text-lg font-bold text-primary pb-3 border-b border-tertiary/60">
-          {t("form.title")}
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor={ids.name} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("form.name")}
-            </label>
-            <input
-              id={ids.name}
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`${FIELD_CLASS} px-3 py-2 font-semibold`}
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor={ids.rc} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("form.rcNumber")}
-            </label>
-            <input
+        <form onSubmit={handleSave} aria-describedby={!canEdit ? ids.readOnlyNote : undefined} className="space-y-5">
+          <h2 id={`${baseId}-form-title`} className="font-serif text-heading text-primary-900">
+            {t("form.title")}
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input id={ids.name} label={t("form.name")} value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input
               id={ids.rc}
-              type="text"
+              label={t("form.rcNumber")}
               dir="ltr"
               value={rcNumber}
               onChange={(e) => setRcNumber(e.target.value)}
-              className={`${FIELD_CLASS} px-3 py-2 font-mono text-start`}
+              required
+              className="tabular-nums"
+            />
+            <Input
+              id={ids.email}
+              type="email"
+              dir="ltr"
+              autoComplete="email"
+              label={t("form.email")}
+              value={businessEmail}
+              onChange={(e) => setBusinessEmail(e.target.value)}
+              prefix={<BrandMailIcon size={16} aria-hidden="true" />}
               required
             />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor={ids.email} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("form.email")}
-            </label>
-            <div className="relative">
-              <BrandMailIcon
-                size={16}
-                aria-hidden="true"
-                className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
-              />
-              <input
-                id={ids.email}
-                type="email"
-                dir="ltr"
-                autoComplete="email"
-                value={businessEmail}
-                onChange={(e) => setBusinessEmail(e.target.value)}
-                className={`${FIELD_CLASS} ps-9 pe-3 py-2 text-start`}
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor={ids.phone} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("form.phone")}
-            </label>
-            <div className="relative">
-              <BrandPhoneIcon
-                size={16}
-                aria-hidden="true"
-                className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
-              />
-              <input
-                id={ids.phone}
-                type="tel"
-                dir="ltr"
-                autoComplete="tel"
-                value={businessPhone}
-                onChange={(e) => setBusinessPhone(e.target.value)}
-                className={`${FIELD_CLASS} ps-9 pe-3 py-2 text-start`}
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor={ids.address} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("form.address")}
-            </label>
-            <div className="relative">
-              <BrandPinIcon
-                size={16}
-                aria-hidden="true"
-                className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400"
-              />
-              <input
-                id={ids.address}
-                type="text"
-                autoComplete="street-address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className={`${FIELD_CLASS} ps-9 pe-3 py-2`}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor={ids.teamSize} className="text-xs font-bold text-neutral-600 block mb-1">
-              {t("form.teamSize")}
-            </label>
-            <select
-              id={ids.teamSize}
-              value={teamSize}
-              onChange={(e) => setTeamSize(e.target.value as TeamSize)}
-              className={`${FIELD_CLASS} px-3 py-2`}
-            >
+            <Input
+              id={ids.phone}
+              type="tel"
+              dir="ltr"
+              autoComplete="tel"
+              label={t("form.phone")}
+              value={businessPhone}
+              onChange={(e) => setBusinessPhone(e.target.value)}
+              prefix={<BrandPhoneIcon size={16} aria-hidden="true" />}
+              required
+              className="tabular-nums"
+            />
+            <Input
+              id={ids.address}
+              autoComplete="street-address"
+              label={t("form.address")}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              prefix={<BrandPinIcon size={16} aria-hidden="true" />}
+            />
+            <Select id={ids.teamSize} label={t("form.teamSize")} value={teamSize} onChange={(e) => setTeamSize(e.target.value as TeamSize)}>
               <option value="1">{t("form.teamSize1")}</option>
               <option value="2-10">{t("form.teamSizeRange", { min: 2, max: 10 })}</option>
               <option value="11-50">{t("form.teamSizeRange", { min: 11, max: 50 })}</option>
               <option value="50+">{t("form.teamSizeOver", { min: 50 })}</option>
-            </select>
+            </Select>
           </div>
-        </div>
+          <Textarea id={ids.description} label={t("form.description")} rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
 
-        <div>
-          <label htmlFor={ids.description} className="text-xs font-bold text-neutral-600 block mb-1">
-            {t("form.description")}
-          </label>
-          <textarea
-            id={ids.description}
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className={`${FIELD_CLASS} p-3 leading-relaxed`}
-          />
-        </div>
-
-        {/* Default Booking Approval Mode */}
-        <div
-          className="space-y-2 pt-2 border-t border-tertiary/40"
-          role="group"
-          aria-labelledby={ids.approvalLabel}
-        >
-          <span id={ids.approvalLabel} className="text-xs font-bold text-neutral-700 block">
-            {t("form.approvalMode")}
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              aria-pressed={bookingApprovalMode === "instant"}
-              onClick={() => setBookingApprovalMode("instant")}
-              className={`p-3.5 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${FOCUS_RING} ${
-                bookingApprovalMode === "instant"
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
-              }`}
-            >
-              <div
-                aria-hidden="true"
-                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                  bookingApprovalMode === "instant" ? "bg-primary text-white" : "bg-neutral-200 text-neutral-600"
-                }`}
-              >
-                <BrandLightningIcon size={16} />
-              </div>
-              <div>
-                <span className="font-bold text-xs text-primary block">{t("form.instantTitle")}</span>
-                <span className="text-[10px] text-neutral-600 leading-snug block">{t("form.instantDesc")}</span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              aria-pressed={bookingApprovalMode === "request"}
-              onClick={() => setBookingApprovalMode("request")}
-              className={`p-3.5 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${FOCUS_RING} ${
-                bookingApprovalMode === "request"
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
-              }`}
-            >
-              <div
-                aria-hidden="true"
-                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                  bookingApprovalMode === "request" ? "bg-amber-700 text-white" : "bg-neutral-200 text-neutral-600"
-                }`}
-              >
-                <BrandClockIcon size={16} />
-              </div>
-              <div>
-                <span className="font-bold text-xs text-primary block">{t("form.requestTitle")}</span>
-                <span className="text-[10px] text-neutral-600 leading-snug block">{t("form.requestDesc")}</span>
-              </div>
-            </button>
+          <div className="border-t border-primary/[0.08] pt-5">
+            <RadioGroup
+              legend={t("form.approvalMode")}
+              name={`${baseId}-approval`}
+              value={bookingApprovalMode}
+              onChange={(v) => setBookingApprovalMode(v as "instant" | "request")}
+              appearance="card"
+              orientation="horizontal"
+              options={[
+                {
+                  value: "instant",
+                  label: (
+                    <span className="flex items-center gap-2">
+                      <BrandLightningIcon size={16} aria-hidden="true" className="text-secondary-700" />
+                      {t("form.instantTitle")}
+                    </span>
+                  ),
+                  description: t("form.instantDesc"),
+                },
+                {
+                  value: "request",
+                  label: (
+                    <span className="flex items-center gap-2">
+                      <BrandClockIcon size={16} aria-hidden="true" className="text-amber-700" />
+                      {t("form.requestTitle")}
+                    </span>
+                  ),
+                  description: t("form.requestDesc"),
+                },
+              ]}
+            />
           </div>
-        </div>
 
-        <div className="flex justify-end pt-4 border-t border-tertiary/40">
-          {!canEdit && (
-            <span id={ids.readOnlyNote} className="me-auto self-center text-xs text-neutral-600">
-              {t("form.readOnly")}
-            </span>
-          )}
-          <button
-            type="submit"
-            disabled={isSaving || !canEdit}
-            aria-busy={isSaving || undefined}
-            className={`px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs disabled:opacity-50 ${FOCUS_RING}`}
-          >
-            {isSaving ? t("form.saving") : t("form.save")}
-          </button>
-        </div>
-      </form>
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-primary/[0.08] pt-5">
+            {!canEdit && (
+              <span id={ids.readOnlyNote} className="me-auto text-meta text-primary-600">
+                {t("form.readOnly")}
+              </span>
+            )}
+            <Button type="submit" variant="primary" size="md" loading={isSaving} disabled={!canEdit}>
+              {isSaving ? t("form.saving") : t("form.save")}
+            </Button>
+          </div>
+        </form>
+      </Card>
 
-      {/* Danger Zone (owner only) */}
+      {/* Danger zone (owner only) */}
       {canDelete && (
-        <section
-          aria-labelledby={`${baseId}-danger-title`}
-          className="bg-rose-50/50 rounded-3xl border border-rose-200 p-6 sm:p-8"
-        >
-          <div className="flex items-start gap-3 mb-4">
-            <div aria-hidden="true" className="p-2 rounded-xl bg-rose-100 text-rose-700 shrink-0 mt-0.5">
+        <section aria-labelledby={`${baseId}-danger-title`} className="rounded-3xl bg-accent-50 p-6 ring-1 ring-inset ring-accent-200 sm:p-8">
+          <div className="mb-5 flex items-start gap-3">
+            <span aria-hidden="true" className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-100 text-accent-700">
               <BrandExclamationIcon size={20} />
-            </div>
+            </span>
             <div>
-              <h2 id={`${baseId}-danger-title`} className="font-serif font-bold text-rose-900 text-base">
+              <h2 id={`${baseId}-danger-title`} className="font-serif text-heading text-accent-900">
                 {t("dangerZone")}
               </h2>
-              <p className="text-xs text-rose-700 mt-1 leading-relaxed">
-                {t("danger.description", { name: org.name })}
-              </p>
+              <p className="mt-1 text-meta leading-relaxed text-accent-800">{t("danger.description", { name: org.name })}</p>
             </div>
           </div>
-
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            onClick={() => setIsDeleteModalOpen(true)}
-            className={`px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-2xs ${FOCUS_RING}`}
-          >
+          <Button variant="destructive" size="md" aria-haspopup="dialog" onClick={() => setIsDeleteModalOpen(true)}>
             {t("disbandAgency")}
-          </button>
+          </Button>
         </section>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isDeleteModalOpen}
         variant="destructive"
@@ -453,7 +321,7 @@ export default function AgencySettingsClient({
           <label htmlFor={ids.deleteInput}>
             {t.rich("danger.confirmPrompt", {
               name: org.name,
-              strong: (chunks) => <strong className="text-primary font-bold">{chunks}</strong>,
+              strong: (chunks) => <strong className="font-semibold text-primary-900">{chunks}</strong>,
             })}
           </label>
         }
@@ -467,14 +335,14 @@ export default function AgencySettingsClient({
           setDeleteConfirmInput("");
         }}
       >
-        <input
+        <Input
           id={ids.deleteInput}
-          type="text"
+          label={org.name}
+          hideLabel
           autoComplete="off"
           value={deleteConfirmInput}
           onChange={(e) => setDeleteConfirmInput(e.target.value)}
-          placeholder={org.name}
-          className="w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/80 rounded-2xl text-xs text-primary focus:outline-none focus:border-rose-600 focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 font-semibold"
+          containerClassName="mt-3"
         />
       </ConfirmDialog>
     </div>

@@ -180,5 +180,6 @@
     "requestSent": "Trip booking request sent to {agency}! They have 24 hours to review.",
     "reserved": "Expedition reserved! Pack your bags for Algeria.",
     "bookFailed": "Failed to book trip. Please check the details."
-  }
+  },
+  "eyebrow": "Your journeys"
 }

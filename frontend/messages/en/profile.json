@@ -130,6 +130,15 @@
     "reviewsHeading": "{count, plural, =0 {Community reviews} other {Community reviews (#)}}",
     "noReviews": "No reviews received yet.",
     "anonymousTraveler": "Traveler",
-    "ratingOutOf": "Rated {rating} out of 5"
+    "ratingOutOf": "Rated {rating} out of 5",
+    "roleHost": "Host on DARNA",
+    "roleTraveler": "Traveler on DARNA",
+    "memberSince": "Member since {year}",
+    "memberSinceLabel": "Member since",
+    "listingsStat": "Listings",
+    "reviewsStat": "Reviews",
+    "listingsTabLabel": "Listings",
+    "reviewsTabLabel": "Reviews",
+    "statsLabel": "Profile highlights"
   }
 }

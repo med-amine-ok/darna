@@ -1,10 +1,11 @@
-# DARNA Admin — Responsive & Mobile Issues Log
+# DARNA Admin, Responsive & Mobile Issues Log
 
 This log catalogs root-cause issues identified during the mobile audit and how they were permanently fixed in shared primitives and components.
 
 ---
 
 ### ISS-001: Horizontal Page Overflow on Mobile Data Tables
+
 - **Affected Routes**: `/users`, `/stays`, `/cars`, `/trips`, `/bookings`, `/payments/transactions`, `/settings/audit-log`.
 - **Viewports**: All phone viewports (320px–430px) in `fr`, `en`, and `ar`.
 - **Root Cause**: Fixed `<table>` markup forced `scrollWidth` to 700px–1100px on 360px screens.
@@ -14,6 +15,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-002: Off-Canvas Sidebar Overflow in RTL Mode
+
 - **Affected Routes**: All routes in Arabic (`ar`).
 - **Viewports**: All mobile viewports (< 1024px).
 - **Root Cause**: Closed sidebar drawer positioned via `translate-x-full` remained in the layout flow, causing `scrollWidth > innerWidth` in RTL.
@@ -23,15 +25,17 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-003: Fixed Width Stepper in Wizards
+
 - **Affected Routes**: `/stays/new`, `/experiences/new`, `/trips/new`.
 - **Viewports**: Small and common phones (320px–430px).
 - **Root Cause**: Desktop stepper required `min-w-[600px]`, pushing the viewport horizontally and causing layout breakage.
-- **Root Fix**: Added compact progress header ("Étape X sur Y — [Nom]") with progress bar on `< lg` in `components/ui/Stepper.tsx`. Tapping the header opens a bottom sheet with all steps.
+- **Root Fix**: Added compact progress header ("Étape X sur Y, [Nom]") with progress bar on `< lg` in `components/ui/Stepper.tsx`. Tapping the header opens a bottom sheet with all steps.
 - **Status**: FIXED.
 
 ---
 
 ### ISS-004: Page Header Action Button Collisions
+
 - **Affected Routes**: `/bookings`, `/experiences`, `/stays`.
 - **Viewports**: Small and common phones (< 640px).
 - **Root Cause**: Passing 3 un-collapsible action buttons in a row created a 430px strip that overflowed phone viewports.
@@ -41,6 +45,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-005: Form Input iOS Safari Auto-Zoom
+
 - **Affected Routes**: All forms, wizards, modals, search inputs.
 - **Viewports**: iOS Safari at 375px–430px portrait and landscape.
 - **Root Cause**: `text-xs` (12px) and `text-sm` (14px) on `<input>`, `<select>`, and `<textarea>` triggered iOS Safari's default auto-zoom, breaking page framing.
@@ -50,6 +55,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-006: Sub-44px Touch Targets
+
 - **Affected Routes**: All routes with icon buttons, tab bars, filter buttons.
 - **Viewports**: Touch devices (< 1024px).
 - **Root Cause**: `IconButton`, tab buttons, and action pills used desktop dimensions (`w-8 h-8` or `h-8`).
@@ -59,6 +65,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-007: Content Occlusion by Mobile Bottom Navigation
+
 - **Affected Routes**: All routes on mobile.
 - **Viewports**: `< lg` (< 1024px).
 - **Root Cause**: Sticky `<MobileBottomNav>` covered the bottom-most list items and actions.
@@ -68,6 +75,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-008: Missing Spacing Scale Consistency
+
 - **Affected Routes**: Various list and detail pages.
 - **Viewports**: All phone viewports.
 - **Root Cause**: Inconsistent padding and hardcoded margins.
@@ -77,6 +85,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-009: SplitView Detail Panel Collision on Mobile
+
 - **Affected Routes**: `/stays`, `/bookings`, `/moderation/providers`.
 - **Viewports**: `< 1024px`.
 - **Root Cause**: Two-column layout attempted to display list and panel side-by-side.
@@ -86,6 +95,7 @@ This log catalogs root-cause issues identified during the mobile audit and how t
 ---
 
 ### ISS-010: Dialog Button Squeezing on Small Phones
+
 - **Affected Routes**: Confirm dialogs, delete modals, approval popups.
 - **Viewports**: Small phones (320px–375px).
 - **Root Cause**: Horizontal button rows forced long French buttons to truncate or collide.

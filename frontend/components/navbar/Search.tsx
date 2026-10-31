@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useId } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
+import { AnimatePresence, m } from "framer-motion";
 import { BrandSearchIcon, BrandPinIcon } from "@/components/icons";
 import { Range } from "react-date-range";
 import { useLocale, useTranslations } from "next-intl";
@@ -10,22 +11,31 @@ import { useVertical } from "@/hook/useVertical";
 import { useDismiss } from "@/hook/useDismiss";
 import { useDestinationLabel } from "@/hook/useDestinationLabel";
 import { shortDayLabel } from "@/components/search/dateLabels";
+import { Popover, cn } from "@/components/ui";
+import { dur, ease, spring } from "@/lib/motion";
 
 import WherePopover, { DestinationItem } from "./search/WherePopover";
-import WhenPopover from "./search/WhenPopover";
+import WhenPopover, { type FlexDays } from "./search/WhenPopover";
 import WhoPopover from "./search/WhoPopover";
 
 type PopoverType = "where" | "when" | "who" | null;
 
 interface SearchProps {
   isHero?: boolean;
-  scrollProgress?: number; 
+  scrollProgress?: number;
 }
 
-export default function Search({
-  isHero = false,
-  scrollProgress = 0,
-}: SearchProps) {
+const segmentBase =
+  "relative flex h-full w-full min-w-0 flex-col justify-center rounded-full px-5 text-start cursor-pointer select-none " +
+  "transition-[background-color,box-shadow] duration-fast ease-standard " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600";
+
+/**
+ * Header search: a segmented glass bar (Where · When · Who) with kit Popovers that scale
+ * from the corner nearest their segment. On the home hero it morphs with scroll; elsewhere
+ * it rests as a compact pill that expands into the full bar when clicked.
+ */
+export default function Search({ isHero = false, scrollProgress = 0 }: SearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -34,49 +44,32 @@ export default function Search({
   const t = useTranslations("search");
   const destinationLabel = useDestinationLabel();
   const activeVertical = useVertical((s) => s.activeVertical);
-  const popoverId = useId();
 
   const [activePopover, setActivePopover] = useState<PopoverType>(null);
+  const [expanded, setExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const whereRef = useRef<HTMLButtonElement>(null);
-  const whenRef = useRef<HTMLButtonElement>(null);
-  const whoRef = useRef<HTMLButtonElement>(null);
   const summaryRef = useRef<HTMLButtonElement>(null);
 
-  // Search state
-  const [destination, setDestination] = useState<string>(
-    searchParams?.get("destination") || ""
-  );
-
+  const [destination, setDestination] = useState<string>(searchParams?.get("destination") || "");
   const [dateRange, setDateRange] = useState<Range>({
-    startDate: searchParams?.get("startDate")
-      ? new Date(searchParams.get("startDate")!)
-      : undefined,
-    endDate: searchParams?.get("endDate")
-      ? new Date(searchParams.get("endDate")!)
-      : undefined,
+    startDate: searchParams?.get("startDate") ? new Date(searchParams.get("startDate")!) : undefined,
+    endDate: searchParams?.get("endDate") ? new Date(searchParams.get("endDate")!) : undefined,
     key: "selection",
   });
+  const [flexDays, setFlexDays] = useState<FlexDays>(0);
+  const [guestCount, setGuestCount] = useState<number>(searchParams?.get("guests") ? parseInt(searchParams.get("guests")!, 10) : 1);
 
-  const [guestCount, setGuestCount] = useState<number>(
-    searchParams?.get("guests")
-      ? parseInt(searchParams.get("guests")!, 10)
-      : 1
-  );
+  // On non-hero pages progress is always 1 (docked).
+  const progress = isHero ? scrollProgress : 1;
+  const docked = progress >= 0.5;
+  const showBar = !docked || expanded;
 
-  // Close the open popover on outside click or Escape; Escape returns focus to its trigger.
-  const triggerRef =
-    activePopover === "where"
-      ? whereRef
-      : activePopover === "when"
-      ? whenRef
-      : activePopover === "who"
-      ? whoRef
-      : summaryRef;
-  const closePopover = useCallback(() => setActivePopover(null), []);
-  useDismiss(activePopover !== null, containerRef, closePopover, triggerRef);
+  const collapse = useCallback(() => {
+    setActivePopover(null);
+    setExpanded(false);
+  }, []);
+  useDismiss(expanded || activePopover !== null, containerRef, collapse, summaryRef);
 
-  // Field labels depend on the active vertical (stays, hotels, vehicles...).
   const vertical = activeVertical || "home";
   const labels = {
     whereTitle: t(`bar.${vertical}.whereTitle`),
@@ -98,48 +91,28 @@ export default function Search({
 
   const formattedDates =
     dateRange.startDate && dateRange.endDate
-      ? tCommon("dateRange", {
-          start: shortDayLabel(dateRange.startDate, locale),
-          end: shortDayLabel(dateRange.endDate, locale),
-        })
+      ? tCommon("dateRange", { start: shortDayLabel(dateRange.startDate, locale), end: shortDayLabel(dateRange.endDate, locale) }) +
+        (flexDays ? ` · ${t("flex.short", { count: flexDays })}` : "")
       : "";
 
   const guestSummary =
-    guestCount > 1
-      ? vertical === "vehicle"
-        ? t("passengerCount", { count: guestCount })
-        : t("guestCount", { count: guestCount })
-      : "";
+    guestCount > 1 ? (vertical === "vehicle" ? t("passengerCount", { count: guestCount }) : t("guestCount", { count: guestCount })) : "";
 
   const destinationText = destination ? destinationLabel(destination) : "";
 
-  const segmentProps = (type: Exclude<PopoverType, null>) => ({
-    "aria-haspopup": "dialog" as const,
-    "aria-expanded": activePopover === type,
-    "aria-controls": activePopover === type ? `${popoverId}-${type}` : undefined,
-  });
-
   const handleSearch = useCallback(
     (e?: React.MouseEvent) => {
-      if (e) e.stopPropagation();
-      setActivePopover(null);
+      e?.stopPropagation();
+      collapse();
       const query = new URLSearchParams();
-
       if (destination) query.set("destination", destination);
       if (activeVertical) query.set("vertical", activeVertical);
-      if (dateRange.startDate) {
-        query.set("startDate", dateRange.startDate.toISOString());
-      }
-      if (dateRange.endDate) {
-        query.set("endDate", dateRange.endDate.toISOString());
-      }
-      if (guestCount > 1) {
-        query.set("guests", guestCount.toString());
-      }
-
+      if (dateRange.startDate) query.set("startDate", dateRange.startDate.toISOString());
+      if (dateRange.endDate) query.set("endDate", dateRange.endDate.toISOString());
+      if (guestCount > 1) query.set("guests", guestCount.toString());
       router.push(`/search?${query.toString()}`);
     },
-    [destination, activeVertical, dateRange, guestCount, router]
+    [destination, activeVertical, dateRange, guestCount, router, collapse]
   );
 
   const handleSelectDestination = (item: DestinationItem) => {
@@ -147,251 +120,173 @@ export default function Search({
     setActivePopover("when");
   };
 
-  // On non-hero pages, progress is always 1 (docked at rest)
-  const progress = isHero ? scrollProgress : 1;
+  const openFor = (type: Exclude<PopoverType, null>) => (open: boolean) => {
+    if (open) setActivePopover(type);
+    else setActivePopover((cur) => (cur === type ? null : cur));
+  };
 
-  // Transform calculations for continuous scroll motion (GPU accelerated)
-  // 88px provides comfortable breathing space (~25px gap) between the fixed navbar and hero search bar at rest
+  // Hero scroll morph (GPU transform only).
   const translateY = isHero ? (1 - progress) * 88 : 0;
   const scale = isHero ? 1 - progress * 0.14 : 1;
+  const anyOpen = activePopover !== null;
+
+  const segment = (type: Exclude<PopoverType, null>, title: string, value: string, placeholder: string, withIcon = false) => (
+    <button
+      type="button"
+      className={cn(
+        segmentBase,
+        withIcon && "ps-4",
+        activePopover === type ? "bg-white shadow-e2" : anyOpen ? "hover:bg-white/70" : "hover:bg-primary/[0.04]"
+      )}
+    >
+      <span className="flex items-center gap-2.5 min-w-0">
+        {withIcon && <BrandPinIcon size={20} strokeWidth={1.75} className="shrink-0 text-accent-600" aria-hidden="true" />}
+        <span className="flex min-w-0 flex-col">
+          <span className="text-eyebrow uppercase font-semibold text-primary-900">{title}</span>
+          <span className={cn("mt-0.5 truncate text-sm", value ? "font-medium text-primary-900" : "text-primary-500")}>{value || placeholder}</span>
+        </span>
+      </span>
+    </button>
+  );
+
+  const divider = (hidden: boolean) => (
+    <span aria-hidden="true" className={cn("h-7 w-px shrink-0 bg-primary/[0.1] transition-opacity duration-fast", hidden && "opacity-0")} />
+  );
 
   return (
     <div
       ref={containerRef}
-      className={`relative ${activePopover ? "z-[100]" : "z-30"}`}
+      className={cn("relative", anyOpen || expanded ? "z-[100]" : "z-30")}
       style={{
         transform: `translate3d(0, ${translateY}px, 0) scale(${scale})`,
         transformOrigin: "center center",
         transition: "transform 75ms cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
-      {/* Outer Morphing Pill Container */}
-      <div
-        className={`
-          relative mx-auto rounded-full transition-all duration-150
-          bg-white backdrop-blur-md 
-          ${activePopover ? "shadow-darna-dropdown ring-2 ring-accent/30" : "shadow-darna-sm hover:shadow-darna"}
-          ${progress >= 0.7 ? "cursor-pointer" : ""}
-        `}
-        style={{
-          width: isHero
-            ? progress >= 0.8
-              ? "auto"
-              : `calc(100vw - 32px)`
-            : "auto",
-          maxWidth: isHero
-            ? progress >= 0.8
-              ? "420px"
-              : "768px"
-            : "420px",
-        }}
-      >
-        {/* ======================================================== */}
-        {/* STATE A: EXPANDED HERO SEARCH BAR (visible when progress < 0.6) */}
-        {/* ======================================================== */}
-        <div
-          className={`
-            items-center w-full p-1.5 sm:p-2 transition-opacity duration-150
-            ${progress >= 0.5 ? "hidden pointer-events-none opacity-0" : "flex opacity-100"}
-          `}
-          style={{
-            opacity: Math.max(0, 1 - progress * 2.2),
-          }}
-        >
-          {/* Segment 1: Where */}
-          <button
-            ref={whereRef}
-            type="button"
-            {...segmentProps("where")}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActivePopover(activePopover === "where" ? null : "where");
-            }}
-            className={`
-              flex-1 flex items-center gap-2.5 text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
-              ${
-                activePopover === "where"
-                  ? "bg-white shadow-md ring-1 ring-black/5"
-                  : "hover:bg-neutral-100/70"
-              }
-            `}
+      <AnimatePresence initial={false} mode="popLayout">
+        {showBar ? (
+          <m.div
+            key="bar"
+            role="search"
+            aria-label={tNav("search")}
+            initial={{ opacity: 0, scaleX: 0.62, scaleY: 0.8 }}
+            animate={{ opacity: Math.max(0, isHero && !expanded ? 1 - progress * 2.2 : 1), scaleX: 1, scaleY: 1, transition: spring.layout }}
+            exit={{ opacity: 0, scaleX: 0.7, scaleY: 0.85, transition: { duration: dur.fast, ease: ease.standard } }}
+            className={cn(
+              "mx-auto flex h-[66px] items-center rounded-full p-1.5 transition-[background-color,box-shadow] duration-base ease-standard",
+              anyOpen ? "bg-darnaBg-300 shadow-e3" : "bg-white shadow-e3 hover:shadow-e4"
+            )}
+            style={{ width: isHero && !expanded ? "calc(100vw - 32px)" : "min(640px, calc(100vw - 32px))", maxWidth: 768 }}
           >
-            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-accent">
-              <BrandPinIcon
-                size={20}
-                strokeWidth={1.8}
-                className="shrink-0 text-accent"
+            <Popover
+              ariaLabel={labels.whereTitle}
+              align="start"
+              open={activePopover === "where"}
+              onOpenChange={openFor("where")}
+              wrapperClassName="h-full flex-[1.25] min-w-0"
+              className="p-3 rounded-3xl shadow-e4 mt-1"
+              trigger={segment("where", labels.whereTitle, destinationText, labels.wherePlaceholder, true)}
+            >
+              <WherePopover query={destination} onQueryChange={setDestination} onSelect={handleSelectDestination} placeholder={labels.wherePlaceholder} />
+            </Popover>
+
+            {divider(activePopover === "where" || activePopover === "when")}
+
+            <Popover
+              ariaLabel={labels.whenTitle}
+              align="center"
+              open={activePopover === "when"}
+              onOpenChange={openFor("when")}
+              wrapperClassName="h-full flex-1 min-w-0"
+              className="p-5 rounded-3xl shadow-e4 mt-1"
+              trigger={segment("when", labels.whenTitle, formattedDates, labels.whenPlaceholder)}
+            >
+              <WhenPopover
+                dateRange={dateRange}
+                onChangeDateRange={setDateRange}
+                onClear={() => setDateRange({ startDate: undefined, endDate: undefined, key: "selection" })}
+                onApply={() => setActivePopover("who")}
+                label={labels.whenPlaceholder}
+                flexDays={flexDays}
+                onFlexDaysChange={setFlexDays}
               />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-                {labels.whereTitle}
+            </Popover>
+
+            {divider(activePopover === "when" || activePopover === "who")}
+
+            <Popover
+              ariaLabel={labels.whoTitle}
+              align="end"
+              open={activePopover === "who"}
+              onOpenChange={openFor("who")}
+              wrapperClassName="h-full flex-1 min-w-0"
+              className="p-5 rounded-3xl shadow-e4 mt-1"
+              trigger={segment("who", labels.whoTitle, guestSummary, labels.whoPlaceholder)}
+            >
+              <WhoPopover
+                guestCount={guestCount}
+                onChangeGuests={setGuestCount}
+                title={labels.whoTitle}
+                subtitle={labels.whoSubtitle}
+                onApply={() => setActivePopover(null)}
+              />
+            </Popover>
+
+            <m.button
+              type="button"
+              onClick={handleSearch}
+              aria-label={tNav("search")}
+              whileTap={{ scale: 0.95 }}
+              transition={spring.press}
+              className="ms-1 flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-full bg-cta px-5 text-sm font-semibold text-white shadow-glow cursor-pointer transition-[filter,padding] duration-fast ease-standard hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            >
+              <BrandSearchIcon size={18} strokeWidth={2.2} />
+              <span className={cn("hidden lg:inline", !anyOpen && "lg:hidden xl:inline")} aria-hidden="true">
+                {tNav("search")}
               </span>
-              <span className="text-xs sm:text-sm font-medium text-neutral-600 truncate mt-0.5">
-                {destinationText || labels.wherePlaceholder}
+            </m.button>
+          </m.div>
+        ) : (
+          <m.div
+            key="pill"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: Math.max(0, isHero ? (progress - 0.4) * 1.66 : 1), scale: 1, transition: { duration: dur.base, ease: ease.out } }}
+            exit={{ opacity: 0, scale: 0.94, transition: { duration: dur.micro } }}
+            className="mx-auto flex h-12 max-w-[440px] items-center gap-2 rounded-full bg-white ps-1.5 pe-1.5 shadow-e2 transition-shadow duration-fast ease-standard hover:shadow-e3"
+          >
+            <button
+              ref={summaryRef}
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={false}
+              onClick={() => {
+                setExpanded(true);
+                setActivePopover("where");
+              }}
+              className="flex h-full min-w-0 items-center rounded-full ps-3 text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            >
+              <span className="flex min-w-0 max-w-[150px] items-center gap-1.5 font-semibold text-primary-900">
+                <BrandPinIcon size={15} strokeWidth={2} className="shrink-0 text-accent-600" aria-hidden="true" />
+                <span className="truncate">{destinationText || t("anywhereInAlgeria")}</span>
               </span>
-            </div>
-          </button>
-
-          <div className="h-6 w-[1px] bg-tertiary/60 shrink-0 mx-1" />
-
-          {/* Segment 2: When */}
-          <button
-            ref={whenRef}
-            type="button"
-            {...segmentProps("when")}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActivePopover(activePopover === "when" ? null : "when");
-            }}
-            className={`
-              flex-1 flex flex-col text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
-              ${
-                activePopover === "when"
-                  ? "bg-white shadow-md ring-1 ring-black/5"
-                  : "hover:bg-neutral-100/70"
-              }
-            `}
-          >
-            <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-              {labels.whenTitle}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-neutral-600 truncate mt-0.5">
-              {formattedDates || labels.whenPlaceholder}
-            </span>
-          </button>
-
-          <div className="h-6 w-[1px] bg-tertiary/60 shrink-0 mx-1" />
-
-          {/* Segment 3: Who */}
-          <button
-            ref={whoRef}
-            type="button"
-            {...segmentProps("who")}
-            onClick={(e) => {
-              e.stopPropagation();
-              setActivePopover(activePopover === "who" ? null : "who");
-            }}
-            className={`
-              flex-1 flex flex-col text-start px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full transition cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
-              ${
-                activePopover === "who"
-                  ? "bg-white shadow-md ring-1 ring-black/5"
-                  : "hover:bg-neutral-100/70"
-              }
-            `}
-          >
-            <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
-              {labels.whoTitle}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-neutral-600 truncate mt-0.5">
-              {guestSummary || labels.whoPlaceholder}
-            </span>
-          </button>
-
-          {/* Action Button: Search */}
-          <div className="pe-1 sm:pe-1.5 shrink-0">
+              <span aria-hidden="true" className="mx-3 h-5 w-px shrink-0 bg-primary/[0.12]" />
+              <span className="max-w-[120px] truncate font-medium text-primary-800">
+                {formattedDates || verticalTabLabel[vertical] || tCommon("anyWeek")}
+              </span>
+              <span aria-hidden="true" className="mx-3 h-5 w-px shrink-0 bg-primary/[0.12]" />
+              <span className="max-w-[100px] truncate text-primary-600">{guestSummary || tNav("addGuests")}</span>
+            </button>
             <button
               type="button"
               onClick={handleSearch}
               aria-label={tNav("search")}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-accent-600 text-white font-semibold text-xs sm:text-sm shadow-xs hover:bg-accent-700 transition select-none cursor-pointer btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              className="ms-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cta text-white shadow-glow cursor-pointer transition-[filter] duration-fast hover:brightness-110 before:absolute before:-inset-1 before:content-[''] relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
             >
-              <BrandSearchIcon size={16} strokeWidth={2.4} className="text-white" />
-              <span className="hidden md:inline" aria-hidden="true">
-                {tNav("search")}
-              </span>
+              <BrandSearchIcon size={15} strokeWidth={2.4} />
             </button>
-          </div>
-        </div>
-
-        {/* ======================================================== */}
-        {/* STATE B: DOCKED COMPACT SUMMARY PILL (visible when progress >= 0.4) */}
-        {/* ======================================================== */}
-        <div
-          className={`
-            items-center justify-between py-1.5 px-3 sm:px-4 text-xs sm:text-sm gap-2 sm:gap-3 transition-opacity duration-150 select-none
-            ${progress < 0.4 ? "hidden pointer-events-none opacity-0" : "flex opacity-100"}
-          `}
-          style={{
-            opacity: Math.max(0, (progress - 0.4) * 1.66),
-          }}
-        >
-          <button
-            ref={summaryRef}
-            type="button"
-            {...segmentProps("where")}
-            onClick={() => setActivePopover(activePopover ? null : "where")}
-            className="flex items-center gap-2 sm:gap-3 min-w-0 rounded-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-          >
-            <span className="font-semibold text-primary truncate max-w-[96px] lg:max-w-[140px] flex items-center gap-1.5">
-              <BrandPinIcon size={14} strokeWidth={2} className="shrink-0 text-accent" />
-              <span className="truncate">{destinationText || t("anywhereInAlgeria")}</span>
-            </span>
-
-            <span className="text-tertiary" aria-hidden="true">|</span>
-
-            <span className="font-semibold text-neutral-600 truncate max-w-[72px] lg:max-w-[100px]">
-              {formattedDates || verticalTabLabel[vertical] || tCommon("anyWeek")}
-            </span>
-
-            <span className="text-tertiary" aria-hidden="true">|</span>
-
-            <span className="text-neutral-600 font-normal truncate max-w-[56px] lg:max-w-[90px]">
-              {guestSummary || tNav("addGuests")}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="p-1.5 bg-accent-600 rounded-full text-white flex items-center justify-center shrink-0 shadow-xs hover:bg-accent-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-            aria-label={tNav("search")}
-          >
-            <BrandSearchIcon size={13} strokeWidth={2.5} className="text-white" />
-          </button>
-        </div>
-      </div>
-
-      {/* Floating Popovers (Positioned below the pill) */}
-      {activePopover === "where" && (
-        <div id={`${popoverId}-where`} role="dialog" aria-label={labels.whereTitle} className="absolute top-full start-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
-          <WherePopover
-            query={destination}
-            onSelect={handleSelectDestination}
-          />
-        </div>
-      )}
-
-      {activePopover === "when" && (
-        <div id={`${popoverId}-when`} role="dialog" aria-label={labels.whenTitle} className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
-          <WhenPopover
-            dateRange={dateRange}
-            onChangeDateRange={(range) => setDateRange(range)}
-            onClear={() =>
-              setDateRange({
-                startDate: undefined,
-                endDate: undefined,
-                key: "selection",
-              })
-            }
-            onApply={() => setActivePopover("who")}
-            label={labels.whenPlaceholder}
-          />
-        </div>
-      )}
-
-      {activePopover === "who" && (
-        <div id={`${popoverId}-who`} role="dialog" aria-label={labels.whoTitle} className="absolute top-full end-0 mt-3 z-[100] animate-in fade-in zoom-in-95 duration-150">
-          <WhoPopover
-            guestCount={guestCount}
-            onChangeGuests={setGuestCount}
-            title={labels.whoTitle}
-            subtitle={labels.whoSubtitle}
-            onApply={() => setActivePopover(null)}
-          />
-        </div>
-      )}
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

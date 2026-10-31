@@ -31,9 +31,16 @@ import {
 } from "@/lib/actions/finance";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
-import type { HostWallet, WalletTransaction, PayoutRequest, HostType, TransactionType } from "@/lib/types";
+import type {
+  HostWallet,
+  WalletTransaction,
+  PayoutRequest,
+  HostType,
+  TransactionType,
+} from "@/lib/types";
 import type { FinanceSummary } from "@/lib/data/finance";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { KpiStrip } from "@/components/ui/KpiStrip";
 import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
@@ -53,7 +60,13 @@ import {
   isValidDzdAmount,
 } from "@/lib/pricing";
 
-type TabId = "overview" | "wallets" | "transactions" | "commissions" | "payouts" | "refunds";
+type TabId =
+  | "overview"
+  | "wallets"
+  | "transactions"
+  | "commissions"
+  | "payouts"
+  | "refunds";
 
 export interface PaymentsClientProps {
   locale: string;
@@ -85,17 +98,24 @@ type RefundRow = {
 
 /** Account identifier for a payout, masked to its last 4 characters. */
 function payoutAccount(p: PayoutRequest): string {
-  return maskAccount(p.accountDetails?.ccpRip ?? p.accountDetails?.rib ?? p.accountDetails?.phone);
+  return maskAccount(
+    p.accountDetails?.ccpRip ??
+      p.accountDetails?.rib ??
+      p.accountDetails?.phone,
+  );
 }
 
 const inputCls =
-  "w-full text-xs rounded-xl bg-darnaBg/50 border border-tertiary/60 py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40";
+  "w-full text-xs rounded-xl bg-white border border-primary/[0.12] py-2 ps-9 pe-3 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
 const selectCls =
-  "text-xs rounded-xl bg-white border border-tertiary/60 p-2 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40 cursor-pointer";
+  "text-xs rounded-xl bg-white border border-primary/[0.12] p-2 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] cursor-pointer shadow-2xs hover:border-primary/25";
 const fieldCls =
-  "w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40";
+  "w-full rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
 
-export default function PaymentsClient({ locale, initialTab = "overview" }: PaymentsClientProps) {
+export default function PaymentsClient({
+  locale,
+  initialTab = "overview",
+}: PaymentsClientProps) {
   const t = useTranslations("payments");
   const tActions = useTranslations("actions");
   const tHostTypes = useTranslations("hostTypes");
@@ -125,13 +145,19 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
   const [txSearch, setTxSearch] = useState("");
 
   // Commissions
-  const [commissionRates, setCommissionRates] = useState<Record<HostType, number>>({ ...DEFAULT_COMMISSION_RATES });
+  const [commissionRates, setCommissionRates] = useState<
+    Record<HostType, number>
+  >({ ...DEFAULT_COMMISSION_RATES });
   const [commissionSaving, setCommissionSaving] = useState(false);
 
   // Payouts
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
-  const [payoutToApprove, setPayoutToApprove] = useState<PayoutRequest | null>(null);
-  const [payoutToReject, setPayoutToReject] = useState<PayoutRequest | null>(null);
+  const [payoutToApprove, setPayoutToApprove] = useState<PayoutRequest | null>(
+    null,
+  );
+  const [payoutToReject, setPayoutToReject] = useState<PayoutRequest | null>(
+    null,
+  );
   const [payoutBusy, setPayoutBusy] = useState(false);
 
   // Refunds
@@ -143,7 +169,8 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<HostWallet | null>(null);
   const [rechargeAmount, setRechargeAmount] = useState<string>("50000");
-  const [rechargeMethod, setRechargeMethod] = useState<(typeof RECHARGE_METHODS)[number]>("ccp");
+  const [rechargeMethod, setRechargeMethod] =
+    useState<(typeof RECHARGE_METHODS)[number]>("ccp");
   const [rechargeReason, setRechargeReason] = useState("");
   const [rechargeReceipt, setRechargeReceipt] = useState("");
   const [rechargeSubmitting, setRechargeSubmitting] = useState(false);
@@ -151,8 +178,9 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
   const [exporting, setExporting] = useState(false);
 
   const fail = useCallback(
-    (err: unknown) => error(t("loadError"), err instanceof Error ? err.message : String(err)),
-    [error, t]
+    (err: unknown) =>
+      error(t("loadError"), err instanceof Error ? err.message : String(err)),
+    [error, t],
   );
 
   const loadSummary = useCallback(async () => {
@@ -173,14 +201,22 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           search: walletSearch || undefined,
           page: walletsPage,
           pageSize: walletsPageSize,
-        })
+        }),
       );
       setWallets(res.rows);
       setWalletsTotal(res.total);
     } catch (err) {
       fail(err);
     }
-  }, [hostTypeFilter, wilayaFilter, negativeOnly, walletSearch, walletsPage, walletsPageSize, fail]);
+  }, [
+    hostTypeFilter,
+    wilayaFilter,
+    negativeOnly,
+    walletSearch,
+    walletsPage,
+    walletsPageSize,
+    fail,
+  ]);
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -190,7 +226,7 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           search: txSearch || undefined,
           page: txPage,
           pageSize: 10,
-        })
+        }),
       );
       setTransactions(res.rows);
       setTxTotal(res.total);
@@ -217,7 +253,9 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
   const loadRefunds = useCallback(async () => {
     try {
-      const res = unwrap(await listRefunds({ page: refundsPage, pageSize: 10 }));
+      const res = unwrap(
+        await listRefunds({ page: refundsPage, pageSize: 10 }),
+      );
       setRefunds(res.rows);
       setRefundsTotal(res.total);
     } catch (err) {
@@ -241,7 +279,9 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
   }, [loadRefunds]);
 
   // ---- Commissions -------------------------------------------------------
-  const ratesValid = HOST_TYPES.every((h) => isValidCommissionRate(commissionRates[h]));
+  const ratesValid = HOST_TYPES.every((h) =>
+    isValidCommissionRate(commissionRates[h]),
+  );
 
   const handleSaveCommissions = async () => {
     if (!ratesValid) {
@@ -253,7 +293,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
       setCommissionRates(unwrap(await updateCommissionRates(commissionRates)));
       success(t("ratesSaved"));
     } catch (err) {
-      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
+      error(
+        tActions("actionFailed"),
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setCommissionSaving(false);
     }
@@ -286,7 +329,7 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           method: rechargeMethod,
           reason: rechargeReason,
           receiptReference: rechargeReceipt,
-        })
+        }),
       );
       success(t("rechargeDone"), formatDzd(parsedRecharge, locale));
       setRechargeDialogOpen(false);
@@ -294,7 +337,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
       loadTransactions();
       loadSummary();
     } catch (err) {
-      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
+      error(
+        tActions("actionFailed"),
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setRechargeSubmitting(false);
     }
@@ -313,9 +359,15 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
     setPayoutBusy(true);
     try {
       unwrap(await approvePayout(payoutToApprove.id));
-      success(t("payoutApproved"), formatDzd(payoutToApprove.amountDzd, locale));
+      success(
+        t("payoutApproved"),
+        formatDzd(payoutToApprove.amountDzd, locale),
+      );
     } catch (err) {
-      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
+      error(
+        tActions("actionFailed"),
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setPayoutToApprove(null);
       setPayoutBusy(false);
@@ -330,7 +382,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
       success(t("payoutRejected"));
       setPayoutToReject(null);
     } catch (err) {
-      error(tActions("actionFailed"), err instanceof Error ? err.message : String(err));
+      error(
+        tActions("actionFailed"),
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       refreshAfterPayout();
     }
@@ -353,19 +408,25 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
               wilayaCode: wilayaFilter === "all" ? undefined : wilayaFilter,
               onlyNegative: negativeOnly || undefined,
               search: walletSearch || undefined,
-            })
+            }),
       );
       downloadCsv(res.filename, res.csv);
-      info(tActions("exportStarted"), tActions("exportRows", { count: res.rowCount }));
+      info(
+        tActions("exportStarted"),
+        tActions("exportRows", { count: res.rowCount }),
+      );
     } catch (err) {
-      error(tActions("exportFailed"), err instanceof Error ? err.message : String(err));
+      error(
+        tActions("exportFailed"),
+        err instanceof Error ? err.message : String(err),
+      );
     } finally {
       setExporting(false);
     }
   };
 
   // ---- KPIs ------------------------------------------------------------------
-  const dash = "—";
+  const dash = ",";
   const kpis = [
     {
       id: "wallets",
@@ -407,16 +468,46 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
   const pendingCount = payouts.filter((p) => p.status === "pending").length;
   const tabsList = [
-    { id: "overview", label: t("tabs.overview"), icon: <DollarSign className="w-4 h-4" aria-hidden="true" /> },
-    { id: "wallets", label: t("tabs.wallets"), count: walletsTotal, icon: <Wallet className="w-4 h-4" aria-hidden="true" /> },
-    { id: "transactions", label: t("tabs.transactions"), count: txTotal, icon: <FileText className="w-4 h-4" aria-hidden="true" /> },
-    { id: "commissions", label: t("tabs.commissions"), icon: <Percent className="w-4 h-4" aria-hidden="true" /> },
-    { id: "payouts", label: t("tabs.payouts"), count: pendingCount, icon: <ArrowUpRight className="w-4 h-4" aria-hidden="true" /> },
-    { id: "refunds", label: t("tabs.refunds"), count: refundsTotal, icon: <RotateCcw className="w-4 h-4" aria-hidden="true" /> },
+    {
+      id: "overview",
+      label: t("tabs.overview"),
+      icon: <DollarSign className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "wallets",
+      label: t("tabs.wallets"),
+      count: walletsTotal,
+      icon: <Wallet className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "transactions",
+      label: t("tabs.transactions"),
+      count: txTotal,
+      icon: <FileText className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "commissions",
+      label: t("tabs.commissions"),
+      icon: <Percent className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "payouts",
+      label: t("tabs.payouts"),
+      count: pendingCount,
+      icon: <ArrowUpRight className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "refunds",
+      label: t("tabs.refunds"),
+      count: refundsTotal,
+      icon: <RotateCcw className="w-4 h-4" aria-hidden="true" />,
+    },
   ];
 
-  const txTypeLabel = (type: string) => (TX_TYPES.includes(type as TransactionType) ? t(`txTypes.${type}`) : type);
-  const hostTypeLabel = (type: string) => (HOST_TYPES.includes(type as HostType) ? tHostTypes(type) : type);
+  const txTypeLabel = (type: string) =>
+    TX_TYPES.includes(type as TransactionType) ? t(`txTypes.${type}`) : type;
+  const hostTypeLabel = (type: string) =>
+    HOST_TYPES.includes(type as HostType) ? tHostTypes(type) : type;
 
   const headerActions = [
     ...(canExport
@@ -446,30 +537,52 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
   const ledgerTable = (rows: WalletTransaction[], withBalance: boolean) => (
     <table className="w-full text-xs text-start">
-      <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+      <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
         <tr>
-          <th scope="col" className="py-3 px-4 text-start">{t("cols.date")}</th>
-          <th scope="col" className="py-3 px-4 text-start">{t("cols.reference")}</th>
-          <th scope="col" className="py-3 px-4 text-start">{t("cols.host")}</th>
-          <th scope="col" className="py-3 px-4 text-start">{t("cols.type")}</th>
-          <th scope="col" className="py-3 px-4 text-start">{t("cols.description")}</th>
-          <th scope="col" className="py-3 px-4 text-end">{t("cols.amount")}</th>
-          {withBalance && <th scope="col" className="py-3 px-4 text-end">{t("cols.balanceAfter")}</th>}
+          <th scope="col" className="py-3 px-4 text-start">
+            {t("cols.date")}
+          </th>
+          <th scope="col" className="py-3 px-4 text-start">
+            {t("cols.reference")}
+          </th>
+          <th scope="col" className="py-3 px-4 text-start">
+            {t("cols.host")}
+          </th>
+          <th scope="col" className="py-3 px-4 text-start">
+            {t("cols.type")}
+          </th>
+          <th scope="col" className="py-3 px-4 text-start">
+            {t("cols.description")}
+          </th>
+          <th scope="col" className="py-3 px-4 text-end">
+            {t("cols.amount")}
+          </th>
+          {withBalance && (
+            <th scope="col" className="py-3 px-4 text-end">
+              {t("cols.balanceAfter")}
+            </th>
+          )}
         </tr>
       </thead>
-      <tbody className="divide-y divide-neutral-100">
+      <tbody className="divide-y divide-primary/[0.06]">
         {rows.length === 0 && (
           <tr>
-            <td colSpan={withBalance ? 7 : 6} className="py-6 px-4 text-center text-neutral-500">
-              {t("noTransactions")}
+            <td colSpan={withBalance ? 7 : 6}>
+              <EmptyState size="compact" title={t("noTransactions")} />
             </td>
           </tr>
         )}
         {rows.map((tx) => (
-          <tr key={tx.id} className="hover:bg-neutral-50/50">
-            <td className="py-3 px-4 font-mono text-neutral-500">{formatDate(tx.createdAt, locale)}</td>
-            <td className="py-3 px-4 font-mono font-bold text-primary">{tx.reference}</td>
-            <td className="py-3 px-4 font-semibold text-primary">{tx.hostName}</td>
+          <tr key={tx.id} className="hover:bg-darnaBg-100">
+            <td className="py-3 px-4 tabular-nums text-neutral-500 whitespace-nowrap">
+              {formatDate(tx.createdAt, locale)}
+            </td>
+            <td className="py-3 px-4 tabular-nums font-semibold text-primary whitespace-nowrap">
+              {tx.reference}
+            </td>
+            <td className="py-3 px-4 font-semibold text-primary">
+              {tx.hostName}
+            </td>
             <td className="py-3 px-4">
               <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-neutral-100 text-neutral-700">
                 {txTypeLabel(tx.type)}
@@ -477,14 +590,17 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
             </td>
             <td className="py-3 px-4 text-neutral-600">{tx.description}</td>
             <td
-              className={`py-3 px-4 font-mono font-bold text-end ${tx.amount >= 0 ? "text-secondary-700" : "text-accent-700"}`}
+              className={`py-3 px-4 tabular-nums whitespace-nowrap font-semibold text-end ${tx.amount >= 0 ? "text-secondary-700" : "text-accent-700"}`}
               dir="ltr"
             >
               {tx.amount >= 0 ? "+" : ""}
               {formatDzd(tx.amount, locale)}
             </td>
             {withBalance && (
-              <td className="py-3 px-4 font-mono text-end text-neutral-600" dir="ltr">
+              <td
+                className="py-3 px-4 tabular-nums text-end text-neutral-600 whitespace-nowrap"
+                dir="ltr"
+              >
                 {formatDzd(tx.balanceAfter, locale)}
               </td>
             )}
@@ -496,68 +612,98 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
   return (
     <div className="space-y-6 text-start">
-      <PageHeader title={t("title")} subtitle={t("subtitle")} actions={headerActions} />
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={headerActions}
+      />
 
       <KpiStrip cards={kpis} />
 
-      <Tabs items={tabsList} activeId={activeTab} onChange={(id) => setActiveTab(id as TabId)} />
+      <Tabs
+        items={tabsList}
+        activeId={activeTab}
+        onChange={(id) => setActiveTab(id as TabId)}
+      />
 
       {/* Overview */}
       {activeTab === "overview" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-3">
+            <div className="p-5 rounded-2xl bg-white space-y-3 shadow-e1">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-primary">{t("overview.escrow")}</span>
+                <span className="font-semibold text-sm text-primary">
+                  {t("overview.escrow")}
+                </span>
                 <span className="p-2 rounded-xl bg-secondary/10 text-secondary">
                   <CreditCard className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
-              <p className="text-2xl font-serif font-black text-primary">
+              <p className="text-2xl font-serif text-primary">
                 {summary ? formatDzd(summary.escrowDzd, locale) : dash}
               </p>
-              <p className="text-xs text-neutral-500">{t("overview.escrowHint")}</p>
+              <p className="text-xs text-neutral-500">
+                {t("overview.escrowHint")}
+              </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-3">
+            <div className="p-5 rounded-2xl bg-white space-y-3 shadow-e1">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-primary">{t("overview.monthPayouts")}</span>
+                <span className="font-semibold text-sm text-primary">
+                  {t("overview.monthPayouts")}
+                </span>
                 <span className="p-2 rounded-xl bg-primary/10 text-primary">
                   <ArrowUpRight className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
-              <p className="text-2xl font-serif font-black text-primary">
+              <p className="text-2xl font-serif text-primary">
                 {summary ? formatDzd(summary.monthPayoutsDzd, locale) : dash}
               </p>
               <p className="text-xs text-neutral-500">
-                {t("overview.monthPayoutsHint", { count: summary?.monthPayoutsCount ?? 0 })}
+                {t("overview.monthPayoutsHint", {
+                  count: summary?.monthPayoutsCount ?? 0,
+                })}
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-tertiary/40 space-y-3">
+            <div className="p-5 rounded-2xl bg-white space-y-3 shadow-e1">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-primary">{t("overview.monthCommissions")}</span>
+                <span className="font-semibold text-sm text-primary">
+                  {t("overview.monthCommissions")}
+                </span>
                 <span className="p-2 rounded-xl bg-tertiary/20 text-primary">
                   <Percent className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
-              <p className="text-2xl font-serif font-black text-secondary-700">
-                {summary ? formatDzd(summary.monthCommissionsDzd, locale) : dash}
+              <p className="text-2xl font-serif text-secondary-700">
+                {summary
+                  ? formatDzd(summary.monthCommissionsDzd, locale)
+                  : dash}
               </p>
               <p className="text-xs text-neutral-500">
-                {t("overview.monthCommissionsHint", { date: summary ? formatDate(summary.monthStart, locale) : dash })}
+                {t("overview.monthCommissionsHint", {
+                  date: summary ? formatDate(summary.monthStart, locale) : dash,
+                })}
               </p>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-tertiary/40 space-y-4">
+          <div className="p-6 rounded-2xl bg-white space-y-4 shadow-e1">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-primary text-base">{t("overview.latest")}</h3>
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab("transactions")}>
+              <h3 className="font-semibold text-primary text-base">
+                {t("overview.latest")}
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab("transactions")}
+              >
                 {t("overview.seeAll")}
               </Button>
             </div>
-            <div className="overflow-x-auto">{ledgerTable(transactions.slice(0, 5), false)}</div>
+            <div className="relative overflow-x-auto">
+              {ledgerTable(transactions.slice(0, 5), false)}
+            </div>
           </div>
         </div>
       )}
@@ -565,9 +711,12 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
       {/* Wallets */}
       {activeTab === "wallets" && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-tertiary/40">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white shadow-e1">
             <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+              <Search
+                className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500"
+                aria-hidden="true"
+              />
               <input
                 type="search"
                 aria-label={t("filters.searchWallets")}
@@ -623,56 +772,86 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                   }}
                 />
                 {t("filters.negativeOnly")}
-                {summary && <span className="text-neutral-600">({summary.negativeWalletCount})</span>}
+                {summary && (
+                  <span className="text-neutral-600">
+                    ({summary.negativeWalletCount})
+                  </span>
+                )}
               </label>
               {canExport && (
-                <Button variant="outline" size="sm" onClick={() => runExport("wallets")} disabled={exporting}>
-                  <Download className="w-4 h-4" aria-hidden="true" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => runExport("wallets")}
+                  disabled={exporting}
+                  leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
+                >
                   {t("exportWallets")}
                 </Button>
               )}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto">
+          <div className="relative bg-white rounded-2xl overflow-x-auto shadow-e1">
             <table className="w-full text-xs text-start">
-              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+              <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
                 <tr>
-                  <th scope="col" className="py-3 px-4 text-start">{t("cols.host")}</th>
-                  <th scope="col" className="py-3 px-4 text-start">{t("cols.type")}</th>
-                  <th scope="col" className="py-3 px-4 text-start">{t("cols.location")}</th>
-                  <th scope="col" className="py-3 px-4 text-end">{t("cols.balance")}</th>
-                  <th scope="col" className="py-3 px-4 text-end">{t("cols.commissionsPaid")}</th>
-                  <th scope="col" className="py-3 px-4 text-end">{t("cols.actions")}</th>
+                  <th scope="col" className="py-3 px-4 text-start">
+                    {t("cols.host")}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-start">
+                    {t("cols.type")}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-start">
+                    {t("cols.location")}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-end">
+                    {t("cols.balance")}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-end">
+                    {t("cols.commissionsPaid")}
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-end">
+                    {t("cols.actions")}
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-primary/[0.06]">
                 {wallets.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-6 px-4 text-center text-neutral-500">
-                      {t("noWallets")}
+                    <td colSpan={6}>
+                      <EmptyState size="compact" title={t("noWallets")} />
                     </td>
                   </tr>
                 )}
                 {wallets.map((w) => (
-                  <tr key={w.hostId} className="hover:bg-neutral-50/50">
+                  <tr key={w.hostId} className="hover:bg-darnaBg-100">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-primary">{w.businessName || w.ownerName}</div>
-                      <div className="text-[11px] text-neutral-500">{w.hostId}</div>
+                      <div className="font-semibold text-primary">
+                        {w.businessName || w.ownerName}
+                      </div>
+                      <div className="text-[11px] text-neutral-500">
+                        {w.hostId}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-neutral-100 text-primary">
                         {hostTypeLabel(w.hostType)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-neutral-600">{getWilayaName(w.wilayaCode, locale)}</td>
+                    <td className="py-3 px-4 text-neutral-600">
+                      {getWilayaName(w.wilayaCode, locale)}
+                    </td>
                     <td
-                      className={`py-3 px-4 font-mono font-bold text-end ${w.balance < 0 ? "text-accent-700" : "text-primary"}`}
+                      className={`py-3 px-4 tabular-nums whitespace-nowrap font-semibold text-end ${w.balance < 0 ? "text-accent-700" : "text-primary"}`}
                       dir="ltr"
                     >
                       {formatDzd(w.balance, locale)}
                     </td>
-                    <td className="py-3 px-4 font-mono text-end text-neutral-500" dir="ltr">
+                    <td
+                      className="py-3 px-4 tabular-nums text-end text-neutral-500 whitespace-nowrap"
+                      dir="ltr"
+                    >
                       {formatDzd(w.totalCommissionsPaid, locale)}
                     </td>
                     <td className="py-3 px-4 text-end">
@@ -681,7 +860,9 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                           variant="outline"
                           size="sm"
                           onClick={() => openRecharge(w)}
-                          aria-label={t("rechargeFor", { host: w.businessName || w.ownerName })}
+                          aria-label={t("rechargeFor", {
+                            host: w.businessName || w.ownerName,
+                          })}
                         >
                           {t("recharge")}
                         </Button>
@@ -711,9 +892,12 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
       {/* Ledger */}
       {activeTab === "transactions" && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-tertiary/40">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white shadow-e1">
             <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+              <Search
+                className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500"
+                aria-hidden="true"
+              />
               <input
                 type="search"
                 aria-label={t("filters.searchTransactions")}
@@ -744,15 +928,22 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                 ))}
               </select>
               {canExport && (
-                <Button variant="outline" size="sm" onClick={() => runExport("ledger")} disabled={exporting}>
-                  <Download className="w-4 h-4" aria-hidden="true" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => runExport("ledger")}
+                  disabled={exporting}
+                  leftIcon={<Download className="w-4 h-4" aria-hidden="true" />}
+                >
                   {t("exportLedger")}
                 </Button>
               )}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto">{ledgerTable(transactions, true)}</div>
+          <div className="relative bg-white rounded-2xl overflow-x-auto shadow-e1">
+            {ledgerTable(transactions, true)}
+          </div>
 
           <Pagination
             currentPage={txPage}
@@ -767,10 +958,14 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
       {/* Commissions */}
       {activeTab === "commissions" && (
-        <div className="max-w-2xl bg-white rounded-2xl border border-tertiary/40 p-6 space-y-6">
+        <div className="max-w-2xl bg-white rounded-2xl p-6 space-y-6 shadow-e1">
           <div>
-            <h3 className="font-bold text-primary text-base">{t("commissionsTitle")}</h3>
-            <p className="text-xs text-neutral-500 mt-1">{t("commissionsHint")}</p>
+            <h3 className="font-semibold text-primary text-base">
+              {t("commissionsTitle")}
+            </h3>
+            <p className="text-xs text-neutral-500 mt-1">
+              {t("commissionsHint")}
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -780,9 +975,12 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
               return (
                 <div
                   key={h}
-                  className="flex items-center justify-between p-3 rounded-xl bg-darnaBg/40 border border-tertiary/40"
+                  className="flex items-center justify-between p-3 rounded-xl bg-darnaBg-100  "
                 >
-                  <label htmlFor={`rate-${h}`} className="font-bold text-xs text-primary">
+                  <label
+                    htmlFor={`rate-${h}`}
+                    className="font-semibold text-xs text-primary"
+                  >
                     {t(`commissionLabels.${h}`)}
                   </label>
                   <div className="flex items-center gap-1.5">
@@ -794,26 +992,42 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                       step={0.01}
                       inputMode="decimal"
                       aria-invalid={!valid}
-                      aria-describedby={!ratesValid ? "commission-rates-error" : undefined}
+                      aria-describedby={
+                        !ratesValid ? "commission-rates-error" : undefined
+                      }
                       value={Number.isFinite(value) ? value : ""}
                       disabled={!can("commissions.manage")}
                       onChange={(e) =>
                         setCommissionRates({
                           ...commissionRates,
-                          [h]: e.target.value === "" ? NaN : Number(e.target.value),
+                          [h]:
+                            e.target.value === ""
+                              ? NaN
+                              : Number(e.target.value),
                         })
                       }
-                      className={`w-20 text-center font-mono font-bold text-xs rounded-lg border py-1 bg-white ${
-                        valid ? "border-tertiary/70" : "border-accent-700 text-accent-700"
+                      className={`w-20 text-center font-mono font-semibold text-xs rounded-lg border py-1 bg-white ${
+                        valid
+                          ? "border-tertiary/70"
+                          : "border-accent-700 text-accent-700"
                       } focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600/40`}
                     />
-                    <span className="font-bold text-xs text-primary" aria-hidden="true">%</span>
+                    <span
+                      className="font-semibold text-xs text-primary"
+                      aria-hidden="true"
+                    >
+                      %
+                    </span>
                   </div>
                 </div>
               );
             })}
             {!ratesValid && (
-              <p id="commission-rates-error" className="text-[11px] text-accent-700" role="alert">
+              <p
+                id="commission-rates-error"
+                className="text-[11px] text-accent-700"
+                role="alert"
+              >
                 {t("invalidRate")}
               </p>
             )}
@@ -821,7 +1035,11 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
           {can("commissions.manage") && (
             <div className="pt-2 flex justify-end">
-              <Button variant="primary" onClick={handleSaveCommissions} disabled={commissionSaving || !ratesValid}>
+              <Button
+                variant="primary"
+                onClick={handleSaveCommissions}
+                disabled={commissionSaving || !ratesValid}
+              >
                 {t("saveRates")}
               </Button>
             </div>
@@ -831,42 +1049,70 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
       {/* Payouts */}
       {activeTab === "payouts" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 overflow-x-auto">
+        <div className="relative bg-white rounded-2xl overflow-x-auto shadow-e1">
           <table className="w-full text-xs text-start">
-            <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+            <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
               <tr>
-                <th scope="col" className="py-3 px-4 text-start">{t("cols.requestedAt")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("cols.host")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("cols.method")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("cols.account")}</th>
-                <th scope="col" className="py-3 px-4 text-end">{t("cols.amount")}</th>
-                <th scope="col" className="py-3 px-4 text-start">{t("cols.status")}</th>
-                <th scope="col" className="py-3 px-4 text-end">{t("cols.actions")}</th>
+                <th scope="col" className="py-3 px-4 text-start">
+                  {t("cols.requestedAt")}
+                </th>
+                <th scope="col" className="py-3 px-4 text-start">
+                  {t("cols.host")}
+                </th>
+                <th scope="col" className="py-3 px-4 text-start">
+                  {t("cols.method")}
+                </th>
+                <th scope="col" className="py-3 px-4 text-start">
+                  {t("cols.account")}
+                </th>
+                <th scope="col" className="py-3 px-4 text-end">
+                  {t("cols.amount")}
+                </th>
+                <th scope="col" className="py-3 px-4 text-start">
+                  {t("cols.status")}
+                </th>
+                <th scope="col" className="py-3 px-4 text-end">
+                  {t("cols.actions")}
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-primary/[0.06]">
               {payouts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 px-4 text-center text-neutral-500">
-                    {t("noPayouts")}
+                  <td colSpan={7}>
+                    <EmptyState size="compact" title={t("noPayouts")} />
                   </td>
                 </tr>
               )}
               {payouts.map((p) => (
-                <tr key={p.id} className="hover:bg-neutral-50/50">
-                  <td className="py-3 px-4 font-mono text-neutral-500">{formatDate(p.requestedAt, locale)}</td>
-                  <td className="py-3 px-4 font-bold text-primary">{p.hostName}</td>
-                  <td className="py-3 px-4 text-neutral-600">{t(`payoutMethods.${p.payoutMethod}`)}</td>
-                  <td className="py-3 px-4 font-mono text-neutral-600" dir="ltr">
+                <tr key={p.id} className="hover:bg-darnaBg-100">
+                  <td className="py-3 px-4 tabular-nums text-neutral-500 whitespace-nowrap">
+                    {formatDate(p.requestedAt, locale)}
+                  </td>
+                  <td className="py-3 px-4 font-semibold text-primary">
+                    {p.hostName}
+                  </td>
+                  <td className="py-3 px-4 text-neutral-600">
+                    {t(`payoutMethods.${p.payoutMethod}`)}
+                  </td>
+                  <td
+                    className="py-3 px-4 tabular-nums text-neutral-600 whitespace-nowrap"
+                    dir="ltr"
+                  >
                     {payoutAccount(p)}
                   </td>
-                  <td className="py-3 px-4 font-mono font-bold text-end text-primary" dir="ltr">
+                  <td
+                    className="py-3 px-4 tabular-nums font-semibold text-end text-primary whitespace-nowrap"
+                    dir="ltr"
+                  >
                     {formatDzd(p.amountDzd, locale)}
                   </td>
                   <td className="py-3 px-4">
                     <StatusPill status={p.status} />
                     {p.status === "rejected" && p.rejectionReason && (
-                      <div className="text-[10px] text-neutral-500 mt-1 max-w-[220px]">{p.rejectionReason}</div>
+                      <div className="text-[11px] text-neutral-500 mt-1 max-w-[220px]">
+                        {p.rejectionReason}
+                      </div>
                     )}
                   </td>
                   <td className="py-3 px-4 text-end">
@@ -876,7 +1122,9 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                           variant="secondary"
                           size="sm"
                           onClick={() => setPayoutToApprove(p)}
-                          aria-label={t("approvePayoutFor", { host: p.hostName })}
+                          aria-label={t("approvePayoutFor", {
+                            host: p.hostName,
+                          })}
                         >
                           {t("approvePayout")}
                         </Button>
@@ -884,7 +1132,9 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                           variant="dangerOutline"
                           size="sm"
                           onClick={() => setPayoutToReject(p)}
-                          aria-label={t("rejectPayoutFor", { host: p.hostName })}
+                          aria-label={t("rejectPayoutFor", {
+                            host: p.hostName,
+                          })}
                         >
                           {t("rejectPayout")}
                         </Button>
@@ -892,7 +1142,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
                     ) : p.processedAt ? (
                       <span className="text-[11px] text-neutral-500">
                         {p.processedBy
-                          ? t("processedOnBy", { date: formatDate(p.processedAt, locale), name: p.processedBy })
+                          ? t("processedOnBy", {
+                              date: formatDate(p.processedAt, locale),
+                              name: p.processedBy,
+                            })
                           : formatDate(p.processedAt, locale)}
                       </span>
                     ) : null}
@@ -906,40 +1159,70 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
 
       {/* Refunds */}
       {activeTab === "refunds" && (
-        <div className="bg-white rounded-2xl border border-tertiary/40 p-6 space-y-4">
-          <h3 className="font-bold text-primary text-base">{t("refundsTitle")}</h3>
+        <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
+          <h3 className="font-semibold text-primary text-base">
+            {t("refundsTitle")}
+          </h3>
           <p className="text-xs text-neutral-500">{t("refundsHint")}</p>
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full text-xs text-start">
-              <thead className="bg-darnaBg/60 text-neutral-600 font-semibold border-b border-tertiary/40">
+              <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
                 <tr>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.date")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.booking")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.guest")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.host")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-end">{t("cols.total")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-end">{t("cols.refunded")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("cols.status")}</th>
+                  <th scope="col" className="py-2.5 px-3 text-start">
+                    {t("cols.date")}
+                  </th>
+                  <th scope="col" className="py-2.5 px-3 text-start">
+                    {t("cols.booking")}
+                  </th>
+                  <th scope="col" className="py-2.5 px-3 text-start">
+                    {t("cols.guest")}
+                  </th>
+                  <th scope="col" className="py-2.5 px-3 text-start">
+                    {t("cols.host")}
+                  </th>
+                  <th scope="col" className="py-2.5 px-3 text-end">
+                    {t("cols.total")}
+                  </th>
+                  <th scope="col" className="py-2.5 px-3 text-end">
+                    {t("cols.refunded")}
+                  </th>
+                  <th scope="col" className="py-2.5 px-3 text-start">
+                    {t("cols.status")}
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-primary/[0.06]">
                 {refunds.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-6 px-3 text-center text-neutral-500">
-                      {t("noRefunds")}
+                    <td colSpan={7}>
+                      <EmptyState size="compact" title={t("noRefunds")} />
                     </td>
                   </tr>
                 )}
                 {refunds.map((r) => (
-                  <tr key={r.id} className="hover:bg-neutral-50/50">
-                    <td className="py-2.5 px-3 font-mono text-neutral-500">{formatDate(r.date, locale)}</td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-primary">{r.reference}</td>
-                    <td className="py-2.5 px-3 font-semibold text-primary">{r.guestName}</td>
-                    <td className="py-2.5 px-3 text-neutral-600">{r.hostName}</td>
-                    <td className="py-2.5 px-3 font-mono text-end text-neutral-600" dir="ltr">
+                  <tr key={r.id} className="hover:bg-darnaBg-100">
+                    <td className="py-2.5 px-3 tabular-nums text-neutral-500 whitespace-nowrap">
+                      {formatDate(r.date, locale)}
+                    </td>
+                    <td className="py-2.5 px-3 tabular-nums font-semibold text-primary whitespace-nowrap">
+                      {r.reference}
+                    </td>
+                    <td className="py-2.5 px-3 font-semibold text-primary">
+                      {r.guestName}
+                    </td>
+                    <td className="py-2.5 px-3 text-neutral-600">
+                      {r.hostName}
+                    </td>
+                    <td
+                      className="py-2.5 px-3 tabular-nums text-end text-neutral-600 whitespace-nowrap"
+                      dir="ltr"
+                    >
                       {formatDzd(r.totalAmountDzd, locale)}
                     </td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-end text-accent-700" dir="ltr">
+                    <td
+                      className="py-2.5 px-3 tabular-nums font-semibold text-end text-accent-700 whitespace-nowrap"
+                      dir="ltr"
+                    >
                       {formatDzd(r.refundedAmountDzd, locale)}
                     </td>
                     <td className="py-2.5 px-3">
@@ -976,7 +1259,13 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
               })
             : ""
         }
-        confirmLabel={payoutToApprove ? t("approveConfirm", { amount: formatDzd(payoutToApprove.amountDzd, locale) }) : ""}
+        confirmLabel={
+          payoutToApprove
+            ? t("approveConfirm", {
+                amount: formatDzd(payoutToApprove.amountDzd, locale),
+              })
+            : ""
+        }
         cancelLabel={tActions("cancel")}
         isLoading={payoutBusy}
         onConfirm={confirmApprovePayout}
@@ -988,7 +1277,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
         title={t("rejectTitle")}
         description={
           payoutToReject
-            ? t("rejectDescription", { amount: formatDzd(payoutToReject.amountDzd, locale), host: payoutToReject.hostName })
+            ? t("rejectDescription", {
+                amount: formatDzd(payoutToReject.amountDzd, locale),
+                host: payoutToReject.hostName,
+              })
             : undefined
         }
         confirmLabel={t("rejectPayout")}
@@ -1003,20 +1295,34 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
         title={t("rechargeTitle")}
         description={t("rechargeDescription")}
       >
-        <form onSubmit={handleRechargeSubmit} className="space-y-4 text-xs text-start">
+        <form
+          onSubmit={handleRechargeSubmit}
+          className="space-y-4 text-xs text-start"
+        >
           <div>
-            <label className="block font-bold text-primary mb-1" htmlFor="recharge-host">
+            <label
+              className="block font-semibold text-primary mb-1"
+              htmlFor="recharge-host"
+            >
               {t("rechargeHost")}
             </label>
             <select
               id="recharge-host"
               value={selectedWallet?.hostId ?? ""}
-              onChange={(e) => setSelectedWallet(wallets.find((w) => w.hostId === e.target.value) ?? selectedWallet)}
-              className={`${fieldCls} font-bold`}
+              onChange={(e) =>
+                setSelectedWallet(
+                  wallets.find((w) => w.hostId === e.target.value) ??
+                    selectedWallet,
+                )
+              }
+              className={`${fieldCls} font-semibold`}
             >
-              {selectedWallet && !wallets.some((w) => w.hostId === selectedWallet.hostId) && (
-                <option value={selectedWallet.hostId}>{selectedWallet.businessName || selectedWallet.ownerName}</option>
-              )}
+              {selectedWallet &&
+                !wallets.some((w) => w.hostId === selectedWallet.hostId) && (
+                  <option value={selectedWallet.hostId}>
+                    {selectedWallet.businessName || selectedWallet.ownerName}
+                  </option>
+                )}
               {wallets.map((w) => (
                 <option key={w.hostId} value={w.hostId}>
                   {w.businessName || w.ownerName}
@@ -1026,7 +1332,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1" htmlFor="recharge-amount">
+            <label
+              className="block font-semibold text-primary mb-1"
+              htmlFor="recharge-amount"
+            >
               {t("rechargeAmount")}
             </label>
             <input
@@ -1037,33 +1346,55 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
               step={1}
               inputMode="numeric"
               required
-              aria-invalid={!isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)}
+              aria-invalid={
+                !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)
+              }
               aria-describedby="recharge-amount-hint"
               value={rechargeAmount}
               onChange={(e) => setRechargeAmount(e.target.value)}
-              className={`${fieldCls} font-mono font-bold`}
+              className={`${fieldCls} font-mono font-semibold`}
             />
             <p
               id="recharge-amount-hint"
-              role={rechargeAmount && !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD) ? "alert" : undefined}
+              role={
+                rechargeAmount &&
+                !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)
+                  ? "alert"
+                  : undefined
+              }
               className={`mt-1 text-[11px] ${
-                rechargeAmount && !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD) ? "text-accent-700" : "text-neutral-500"
+                rechargeAmount &&
+                !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)
+                  ? "text-accent-700"
+                  : "text-neutral-500"
               }`}
             >
-              {rechargeAmount && !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)
-                ? t("invalidAmount", { max: formatDzd(MAX_RECHARGE_DZD, locale) })
-                : t("rechargeAmountHint", { max: formatDzd(MAX_RECHARGE_DZD, locale) })}
+              {rechargeAmount &&
+              !isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD)
+                ? t("invalidAmount", {
+                    max: formatDzd(MAX_RECHARGE_DZD, locale),
+                  })
+                : t("rechargeAmountHint", {
+                    max: formatDzd(MAX_RECHARGE_DZD, locale),
+                  })}
             </p>
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1" htmlFor="recharge-method">
+            <label
+              className="block font-semibold text-primary mb-1"
+              htmlFor="recharge-method"
+            >
               {t("rechargeMethod")}
             </label>
             <select
               id="recharge-method"
               value={rechargeMethod}
-              onChange={(e) => setRechargeMethod(e.target.value as (typeof RECHARGE_METHODS)[number])}
+              onChange={(e) =>
+                setRechargeMethod(
+                  e.target.value as (typeof RECHARGE_METHODS)[number],
+                )
+              }
               className={`${fieldCls} cursor-pointer`}
             >
               {RECHARGE_METHODS.map((m) => (
@@ -1075,7 +1406,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1" htmlFor="recharge-receipt">
+            <label
+              className="block font-semibold text-primary mb-1"
+              htmlFor="recharge-receipt"
+            >
               {t("rechargeReceipt")}
             </label>
             <input
@@ -1090,7 +1424,10 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           </div>
 
           <div>
-            <label className="block font-bold text-primary mb-1" htmlFor="recharge-reason">
+            <label
+              className="block font-semibold text-primary mb-1"
+              htmlFor="recharge-reason"
+            >
               {t("rechargeReason")}
             </label>
             <input
@@ -1104,10 +1441,18 @@ export default function PaymentsClient({ locale, initialTab = "overview" }: Paym
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3">
-            <Button type="button" variant="outline" onClick={() => setRechargeDialogOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRechargeDialogOpen(false)}
+            >
               {tActions("cancel")}
             </Button>
-            <Button type="submit" variant="primary" disabled={rechargeSubmitting || !rechargeValid}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={rechargeSubmitting || !rechargeValid}
+            >
               {t("rechargeConfirm")}
             </Button>
           </div>

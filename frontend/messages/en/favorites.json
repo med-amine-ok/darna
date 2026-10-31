@@ -8,5 +8,8 @@
   "filterLabel": "Filter saved places by type",
   "metaTitle": "My favorites",
   "toastSaved": "Saved to favorites",
-  "toastRemoved": "Removed from favorites"
+  "toastRemoved": "Removed from favorites",
+  "eyebrow": "Wishlist",
+  "pageSubtitle": "Homes, stays and journeys you have saved, ready when you are.",
+  "showAll": "Show all saved places"
 }

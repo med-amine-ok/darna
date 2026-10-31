@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { listingImageSrc } from "@/lib/placeholders";
 import {
   Search,
   Compass,
@@ -37,13 +38,12 @@ import { useTranslations } from "next-intl";
 
 const ListingsMapView = dynamic(
   () => import("@/components/features/listings/ListingsMapView"),
-  { ssr: false, loading: () => <div className="h-[520px] bg-neutral-100 rounded-2xl animate-pulse" /> }
+  { ssr: false, loading: () => <div className="h-[520px] skeleton rounded-2xl" /> }
 );
 
 const FIELD_CLASS =
-  "w-full text-xs rounded-xl border border-tertiary text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1";
+  "w-full text-xs rounded-xl border border-primary/[0.12] text-primary focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1";
 
-const FALLBACK_IMAGE = "/assets/house.png";
 
 interface Props {
   locale: string;
@@ -135,7 +135,7 @@ export default function NetworkClient({ locale }: Props) {
 
   const viewToggleClass = (active: boolean) =>
     `p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1 ${
-      active ? "bg-primary text-white" : "text-neutral-500 hover:text-primary"
+      active ? "bg-primary text-white" : "text-primary-600 hover:text-primary"
     }`;
 
   return (
@@ -144,13 +144,13 @@ export default function NetworkClient({ locale }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">{t("title")}</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary/15 text-secondary-700 border border-secondary/25 flex items-center gap-1">
+            <h1 className="font-serif text-heading text-primary-900">{t("title")}</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-100 text-secondary-700 border border-secondary/25 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
               {t("liveMirror")}
             </span>
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-xs text-primary-600 mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -159,7 +159,7 @@ export default function NetworkClient({ locale }: Props) {
         <div
           role="group"
           aria-label={t("viewMode")}
-          className="flex items-center gap-1 bg-white p-1 rounded-xl border border-tertiary/70 shadow-2xs"
+          className="flex items-center gap-1 bg-white p-1 rounded-xl border border-primary/[0.08] shadow-2xs"
         >
           <button
             type="button"
@@ -186,7 +186,7 @@ export default function NetworkClient({ locale }: Props) {
       <div
         role="group"
         aria-label={t("verticalsLabel")}
-        className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-tertiary/60"
+        className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-primary/[0.08]"
       >
         {verticals.map((v) => {
           const Icon = v.icon;
@@ -197,10 +197,10 @@ export default function NetworkClient({ locale }: Props) {
               type="button"
               aria-pressed={isActive}
               onClick={() => setVertical(v.key)}
-              className={`flex items-center gap-2 px-5 py-3 text-xs font-bold rounded-t-xl transition-all border-b-2 -mb-[2px] cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
+              className={`flex items-center gap-2 px-5 py-3 text-xs font-semibold rounded-t-xl transition-all border-b-2 -mb-[2px] cursor-pointer whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
                 isActive
                   ? "border-secondary text-primary bg-white shadow-2xs"
-                  : "border-transparent text-neutral-500 hover:text-primary"
+                  : "border-transparent text-primary-600 hover:text-primary"
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? "text-secondary" : "text-neutral-400"}`} aria-hidden="true" />
@@ -211,11 +211,11 @@ export default function NetworkClient({ locale }: Props) {
       </div>
 
       {/* Guest-Style Omnibar Search */}
-      <div className="bg-white p-4 rounded-2xl border border-tertiary/80 shadow-darna-card space-y-4">
+      <div className="bg-white p-4 rounded-2xl shadow-e1 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Destination */}
           <div className="relative">
-            <label htmlFor={ids.destination} className="block text-xs font-semibold text-neutral-600 mb-1">
+            <label htmlFor={ids.destination} className="block text-xs font-semibold text-primary-600 mb-1">
               {t("where")}
             </label>
             <div className="relative">
@@ -233,7 +233,7 @@ export default function NetworkClient({ locale }: Props) {
 
           {/* Wilaya Picker */}
           <div>
-            <label htmlFor={ids.wilaya} className="block text-xs font-semibold text-neutral-600 mb-1">
+            <label htmlFor={ids.wilaya} className="block text-xs font-semibold text-primary-600 mb-1">
               {t("wilaya")}
             </label>
             <select
@@ -253,11 +253,11 @@ export default function NetworkClient({ locale }: Props) {
 
           {/* Guests */}
           <div>
-            <label htmlFor={ids.guests} className="block text-xs font-semibold text-neutral-600 mb-1">
+            <label htmlFor={ids.guests} className="block text-xs font-semibold text-primary-600 mb-1">
               {t("guestsCapacity")}
             </label>
             <div className="relative">
-              <Users className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+              <Users className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-primary-600" aria-hidden="true" />
               <input
                 id={ids.guests}
                 type="number"
@@ -272,7 +272,7 @@ export default function NetworkClient({ locale }: Props) {
 
           {/* Host Type Filter */}
           <div>
-            <label htmlFor={ids.hostType} className="block text-xs font-semibold text-neutral-600 mb-1">
+            <label htmlFor={ids.hostType} className="block text-xs font-semibold text-primary-600 mb-1">
               {t("hostType")}
             </label>
             <select
@@ -291,7 +291,7 @@ export default function NetworkClient({ locale }: Props) {
         </div>
 
         {/* Dual Handle Price Slider */}
-        <div className="pt-2 border-t border-tertiary/40">
+        <div className="pt-2 border-t border-primary/[0.08]">
           <RangeSlider
             min={0}
             max={150000}
@@ -305,9 +305,9 @@ export default function NetworkClient({ locale }: Props) {
 
       {/* Results Section */}
       {viewMode === "map" ? (
-        <div className="bg-white rounded-2xl border border-tertiary/80 overflow-hidden shadow-2xs">
-          <div className="p-4 border-b border-tertiary/50 flex justify-between items-center text-xs">
-            <span className="font-bold text-primary" aria-live="polite">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-e1">
+          <div className="p-4 border-b border-primary/[0.08] flex justify-between items-center text-xs">
+            <span className="font-semibold text-primary" aria-live="polite">
               {t("mapCount", { count: results.length })}
             </span>
           </div>
@@ -318,7 +318,7 @@ export default function NetworkClient({ locale }: Props) {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="text-xs text-neutral-500 font-medium" aria-live="polite">
+          <div className="text-xs text-primary-600 font-medium" aria-live="polite">
             {t.rich("foundCount", {
               count: results.length,
               strong: (chunks) => <strong>{chunks}</strong>,
@@ -328,14 +328,14 @@ export default function NetworkClient({ locale }: Props) {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-busy="true">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-64 bg-white rounded-2xl border border-tertiary/60 animate-pulse" />
+                <div key={i} className="h-64 bg-white rounded-2xl animate-pulse shadow-e1" />
               ))}
             </div>
           ) : results.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-tertiary/70 p-12 text-center">
-              <Search className="w-10 h-10 text-neutral-300 mx-auto mb-2" aria-hidden="true" />
-              <h3 className="text-sm font-bold text-primary">{t("emptyTitle")}</h3>
-              <p className="text-xs text-neutral-500 mt-1">
+            <div className="bg-white rounded-2xl p-12 text-center shadow-e1">
+              <Search className="w-10 h-10 text-primary-300 mx-auto mb-2" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-primary">{t("emptyTitle")}</h3>
+              <p className="text-xs text-primary-600 mt-1">
                 {t("emptyHint")}
               </p>
             </div>
@@ -344,56 +344,56 @@ export default function NetworkClient({ locale }: Props) {
               {results.map((item) => (
                 <li
                   key={item.id}
-                  className="bg-white rounded-2xl border border-tertiary/80 overflow-hidden shadow-2xs hover:shadow-darna-card transition flex flex-col justify-between"
+                  className="group bg-white rounded-2xl overflow-hidden shadow-e1 hover:shadow-e2 hover:-translate-y-0.5 transition-[box-shadow,transform] duration-fast ease-standard flex flex-col justify-between"
                 >
                   {/* Photo & Status Badge */}
-                  <div className="relative h-44 bg-neutral-100 overflow-hidden">
+                  <div className="relative h-44 bg-tertiary-100 overflow-hidden">
                     <Image
-                      src={item.images?.[0] || item.imageSrc?.[0] || FALLBACK_IMAGE}
+                      src={listingImageSrc(item.images?.[0] || item.imageSrc?.[0], item.category === "vehicle" ? "car" : "stay")}
                       alt={t("photoAlt", { title: item.title })}
                       fill
                       sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover hover:scale-105 transition duration-300"
+                      className="object-cover group-hover:scale-[1.04] transition-transform [transition-duration:700ms] ease-out"
                     />
                     <div className="absolute top-2.5 start-2.5">
                       <StatusPill status={item.status} size="sm" />
                     </div>
-                    <div className="absolute top-2.5 end-2.5 bg-primary/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-white font-bold text-[11px]">
+                    <div className="absolute top-2.5 end-2.5 bg-primary/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-white font-semibold text-[11px]">
                       {formatDzd(item.price, locale)}
                     </div>
                   </div>
 
                   {/* Body Content */}
                   <div className="p-4 space-y-2 flex-1">
-                    <div className="flex items-center justify-between gap-2 text-[11px] text-neutral-500">
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-primary-600">
                       <span className="font-semibold text-secondary-700">
                         {tVerticals.has(item.category) ? tVerticals(item.category) : item.category}
                       </span>
                       <span>{t("wilayaCity", { code: item.wilayaCode, city: item.city })}</span>
                     </div>
 
-                    <h3 className="text-xs font-bold text-primary line-clamp-1">{item.title}</h3>
-                    <p className="text-[11px] text-neutral-500 line-clamp-2">{item.description}</p>
+                    <h3 className="text-xs font-semibold text-primary line-clamp-1">{item.title}</h3>
+                    <p className="text-[11px] text-primary-600 line-clamp-2">{item.description}</p>
 
-                    <div className="text-[11px] text-neutral-500 pt-1 border-t border-tertiary/40 flex justify-between gap-2">
+                    <div className="text-[11px] text-primary-600 pt-1 border-t border-primary/[0.08] flex justify-between gap-2">
                       <span>
                         {t.rich("host", {
                           name: item.hostName,
                           strong: (chunks) => <strong>{chunks}</strong>,
                         })}
                       </span>
-                      <span className="text-neutral-500">
+                      <span className="text-primary-600">
                         {tHostTypes.has(item.hostType) ? tHostTypes(item.hostType) : item.hostType}
                       </span>
                     </div>
                   </div>
 
                   {/* Admin Quick Action Footer */}
-                  <div className="p-3 bg-darnaBg/50 border-t border-tertiary/60 flex items-center justify-between gap-2">
+                  <div className="p-3 bg-darnaBg-100 border-t border-primary/[0.08] flex items-center justify-between gap-2">
                     <Link
                       href={`/listings/${item.id}`}
                       aria-label={t("inspectLabel", { title: item.title })}
-                      className="text-xs font-bold text-primary hover:text-secondary-700 flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                      className="text-xs font-semibold text-primary hover:text-secondary-700 flex items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
                     >
                       <Eye className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>{t("inspect")}</span>
@@ -406,20 +406,20 @@ export default function NetworkClient({ locale }: Props) {
                           size="sm"
                           onClick={() => handleQuickApprove(item.id)}
                           disabled={!can("listings.approve") || !canTransitionListing(item.status, "approved")}
-                          className="text-[11px] font-bold py-1 px-2.5"
+                          className="text-xs"
+                          leftIcon={<CheckCircle className="w-3 h-3" aria-hidden="true" />}
                         >
-                          <CheckCircle className="w-3 h-3 me-1" aria-hidden="true" />
                           {t("approve")}
                         </Button>
                       ) : (
                         <Button
-                          variant="outline"
+                          variant="dangerOutline"
                           size="sm"
                           onClick={() => setSuspendTarget({ id: item.id, title: item.title })}
                           disabled={!can("listings.suspend") || !canTransitionListing(item.status, "suspended")}
-                          className="text-[11px] font-bold py-1 px-2.5 text-accent-700 border-accent/40 hover:bg-accent/10"
+                          className="text-xs"
+                          leftIcon={<XCircle className="w-3 h-3" aria-hidden="true" />}
                         >
-                          <XCircle className="w-3 h-3 me-1" aria-hidden="true" />
                           {t("suspend")}
                         </Button>
                       )}

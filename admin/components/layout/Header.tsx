@@ -136,17 +136,17 @@ export const Header: React.FC<HeaderProps> = ({
   const userName = currentUser?.name || tHeader("adminFallback");
 
   const menuItemClass =
-    "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
+    "w-full flex items-center gap-2.5 px-3 py-2 min-h-[40px] rounded-xl text-xs font-medium text-primary-800 hover:bg-primary/[0.05] transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-tertiary-200/80 px-3.5 sm:px-6 h-14 flex items-center justify-between gap-2.5 sm:gap-4 shadow-2xs shrink-0">
+    <header className="sticky top-0 z-30 glass border-b border-primary/[0.07] px-3.5 sm:px-6 h-16 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0">
       {/* Start: Mobile Toggle & Search Field */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-2xl">
         {/* Mobile Hamburger Button */}
         <button
           type="button"
           onClick={onMobileMenuToggle}
-          className="lg:hidden p-2 rounded-xl border border-tertiary/70 text-neutral-700 hover:bg-neutral-100 transition shrink-0"
+          className="lg:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-white shadow-e1 text-primary-800 hover:shadow-e2 transition duration-fast shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           aria-label={tHeader("openNavigation")}
         >
           <Menu className="w-5 h-5" aria-hidden="true" />
@@ -156,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
         <form onSubmit={handleSearchSubmit} role="search" className="relative flex-1 min-w-0">
           <div className="relative flex items-center">
             <Search
-              className="w-4 h-4 text-neutral-400 absolute start-3 pointer-events-none shrink-0"
+              className="w-4 h-4 text-primary-500 absolute start-3.5 pointer-events-none shrink-0"
               aria-hidden="true"
             />
             <input
@@ -165,12 +165,12 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={tHeader(`searchPlaceholders.${placeholderKey}`)}
               aria-label={tHeader("searchLabel")}
-              className="w-full ps-9 pe-10 sm:pe-16 py-1.5 sm:py-2 rounded-xl bg-darnaBg/70 hover:bg-darnaBg border border-tertiary-300/80 focus:border-primary focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600/40 text-base sm:text-xs text-neutral-800 placeholder-neutral-500 transition shadow-2xs truncate"
+              className="w-full h-10 ps-10 pe-10 sm:pe-16 rounded-xl bg-white/80 hover:bg-white shadow-e1 border-0 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/[0.08] text-base sm:text-sm text-primary-900 placeholder:text-primary-500 transition duration-fast ease-standard truncate"
             />
             <button
               type="button"
               onClick={onOpenCommandPalette}
-              className="absolute end-2 hidden sm:inline-flex items-center font-mono text-[10px] bg-white border border-tertiary-200 px-1.5 py-0.5 rounded text-neutral-600 hover:border-secondary hover:text-neutral-800 shadow-2xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="absolute end-2 hidden sm:inline-flex items-center h-6 text-[11px] font-semibold bg-darnaBg-300/80 px-1.5 rounded-md text-primary-600 hover:text-primary-900 hover:bg-darnaBg-400 transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
               title={tHeader("openCommandPalette")}
             >
               <span dir="ltr" aria-hidden="true">⌘K</span>
@@ -184,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Training Mode Indicator */}
         {isTrainingMode && (
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-500/15 border border-accent-500/30 text-accent-800 text-[11px] font-bold">
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-100 text-accent-800 text-[11px] font-semibold ring-1 ring-inset ring-accent-200">
             <ShieldAlert className="w-3 h-3" aria-hidden="true" />
             <span>{tTraining("badge")}</span>
           </span>
@@ -201,18 +201,18 @@ export const Header: React.FC<HeaderProps> = ({
             ref={notificationsTriggerRef}
             type="button"
             onClick={() => setOpenPopover(isNotificationsOpen ? null : "notifications")}
-            className="p-2 rounded-xl text-neutral-600 hover:text-primary hover:bg-neutral-100 transition relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-primary-700 hover:text-primary-900 hover:bg-primary/[0.06] transition-colors duration-fast relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             title={tUi("notifications")}
             aria-label={unreadCount > 0 ? tHeader("notificationsUnread", { count: unreadCount }) : tUi("notifications")}
             aria-haspopup="dialog"
             aria-expanded={isNotificationsOpen}
             aria-controls={isNotificationsOpen ? notificationsPanelId : undefined}
           >
-            <Bell className="w-4 h-4 text-neutral-700" aria-hidden="true" />
+            <Bell className="w-[18px] h-[18px]" aria-hidden="true" />
             {unreadCount > 0 && (
               <span
                 aria-hidden="true"
-                className="absolute top-1 end-1 min-w-[16px] h-4 px-1 rounded-full bg-accent-700 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white"
+                className="absolute top-1.5 end-1.5 min-w-[16px] h-4 px-1 rounded-full bg-accent-600 text-white text-[11px] font-semibold tabular-nums flex items-center justify-center ring-2 ring-darnaBg"
               >
                 {format.number(unreadCount)}
               </span>
@@ -225,10 +225,10 @@ export const Header: React.FC<HeaderProps> = ({
               id={notificationsPanelId}
               role="dialog"
               aria-labelledby={notificationsTitleId}
-              className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white border border-tertiary-200 shadow-darna-dropdown p-3 z-40 animate-in fade-in zoom-in-95 text-start"
+              className="absolute end-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white shadow-e3 p-3 z-40 animate-in fade-in zoom-in-95 origin-top-right rtl:origin-top-left text-start"
             >
-              <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                <h2 id={notificationsTitleId} className="text-xs font-bold text-primary">
+              <div className="flex items-center justify-between pb-2 border-b border-primary/[0.08]">
+                <h2 id={notificationsTitleId} className="text-sm font-semibold text-primary-900">
                   {tUi("notifications")}
                 </h2>
                 {unreadCount > 0 && (
@@ -248,22 +248,21 @@ export const Header: React.FC<HeaderProps> = ({
                   return (
                     <li
                       key={notif.id}
-                      className={`p-2.5 rounded-xl border text-xs transition ${
-                        read
-                          ? "bg-neutral-50/70 border-neutral-100 text-neutral-600"
-                          : "bg-tertiary-50 border-tertiary-200/80 text-neutral-800 font-medium"
+                      className={`relative p-2.5 ps-4 rounded-xl text-xs transition-colors duration-fast ${
+                        read ? "text-primary-600" : "bg-darnaBg-100 text-primary-800"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-primary">
+                        {!read && <span aria-hidden="true" className="absolute start-1.5 top-4 w-1.5 h-1.5 rounded-full bg-accent-500" />}
+                        <span className="font-semibold text-primary-900">
                           {!read && <span className="sr-only">{tHeader("unread")}: </span>}
                           {tHeader(`sampleNotifications.${notif.id}.title`)}
                         </span>
-                        <span className="text-[10px] text-neutral-500 shrink-0">
+                        <span className="text-[11px] text-primary-500 shrink-0 tabular-nums">
                           {format.relativeTime(now.getTime() - notif.minutesAgo * 60_000, now)}
                         </span>
                       </div>
-                      <p className="text-[11px] text-neutral-600 mt-0.5">
+                      <p className="text-xs text-primary-600 mt-0.5">
                         {tHeader(`sampleNotifications.${notif.id}.description`)}
                       </p>
                     </li>
@@ -283,19 +282,19 @@ export const Header: React.FC<HeaderProps> = ({
             aria-haspopup="dialog"
             aria-expanded={isUserMenuOpen}
             aria-controls={isUserMenuOpen ? userMenuId : undefined}
-            className="flex items-center gap-2.5 ps-2.5 border-s border-tertiary-200/80 cursor-pointer rounded-e-xl group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+            className="flex items-center gap-2.5 ps-2.5 border-s border-primary/[0.08] cursor-pointer rounded-e-xl group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
           >
             <Avatar src={currentUser?.avatar || "/assets/avatar.png"} size={32} />
             <span className="sr-only sm:hidden">{userName}</span>
             <div className="hidden sm:block text-start leading-tight">
-              <span className="block text-xs font-bold text-primary group-hover:text-secondary-700 transition">
+              <span className="block text-xs font-semibold text-primary-900 group-hover:text-secondary-700 transition-colors duration-fast">
                 {userName}
               </span>
-              <span className="text-[10px] text-neutral-500 font-medium">{roleName}</span>
+              <span className="text-[11px] text-primary-500 font-medium">{roleName}</span>
             </div>
             <ChevronDown
               aria-hidden="true"
-              className={`w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-700 transition ${
+              className={`w-3.5 h-3.5 text-primary-500 group-hover:text-primary-800 transition duration-fast ${
                 isUserMenuOpen ? "rotate-180" : ""
               }`}
             />
@@ -307,22 +306,22 @@ export const Header: React.FC<HeaderProps> = ({
               id={userMenuId}
               role="dialog"
               aria-label={tHeader("accountMenu", { name: userName })}
-              className="absolute end-0 mt-2 w-56 rounded-2xl bg-white border border-tertiary-200 shadow-darna-dropdown p-1.5 z-40 animate-in fade-in zoom-in-95 text-start"
+              className="absolute end-0 mt-2 w-56 rounded-2xl bg-white shadow-e3 p-1.5 z-40 animate-in fade-in zoom-in-95 origin-top-right rtl:origin-top-left text-start"
             >
-              <div className="px-3 py-2 border-b border-neutral-100">
-                <p className="text-xs font-bold text-primary">{userName}</p>
-                <p className="text-[10px] text-secondary-700 font-semibold">{roleName}</p>
+              <div className="px-3 py-2 border-b border-primary/[0.08]">
+                <p className="text-sm font-semibold text-primary-900">{userName}</p>
+                <p className="text-[11px] text-secondary-700 font-semibold">{roleName}</p>
               </div>
 
               {/* Language Switcher for mobile (< 640px) */}
-              <div className="sm:hidden px-3 py-2 border-b border-neutral-100 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-neutral-600">{tHeader("language")}</span>
+              <div className="sm:hidden px-3 py-2 border-b border-primary/[0.08] flex items-center justify-between">
+                <span className="text-xs font-semibold text-primary-600">{tHeader("language")}</span>
                 <LocaleSwitcher />
               </div>
 
               {canAccessPath("/settings", currentUser?.permissions ?? []) && (
                 <Link href="/settings" onClick={closePopover} className={menuItemClass}>
-                  <User className="w-3.5 h-3.5 text-neutral-500" aria-hidden="true" />
+                  <User className="w-3.5 h-3.5 text-primary-500" aria-hidden="true" />
                   <span>{tHeader("myProfileSecurity")}</span>
                 </Link>
               )}
@@ -365,7 +364,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <input type="hidden" name="locale" value={locale} />
                 <button
                   type="submit"
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-accent-700 hover:bg-accent/10 transition text-start cursor-pointer border-t border-neutral-100 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-accent-700 hover:bg-accent/10 transition text-start cursor-pointer border-t border-primary/[0.08] mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                 >
                   <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>{tHeader("signOut")}</span>

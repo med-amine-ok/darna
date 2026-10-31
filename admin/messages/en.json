@@ -256,7 +256,8 @@
     "paid": "Paid",
     "processed": "Processed",
     "invited": "Invited",
-    "failed": "Failed"
+    "failed": "Failed",
+    "pending_review": "Pending review"
   },
   "roles": {
     "super_admin": "Super Admin",
@@ -824,7 +825,7 @@
       "templateLabel": "Standard reason template",
       "noteLabel": "Additional details / note to host (optional)",
       "notePlaceholder": "e.g. Please re-upload the commercial register with a valid 2026 stamp.",
-      "withNote": "{template} — Note: {note}",
+      "withNote": "{template}, Note: {note}",
       "templates": {
         "registration": "Incomplete commercial or tax registration document",
         "photos": "Listing photos contain promotional watermarks or are low resolution",
@@ -1585,7 +1586,10 @@
       "unexpected": "Something went wrong while signing in. Please try again."
     },
     "adminBadge": "Admin",
-    "demoFillLabel": "Fill in the {role} demo account ({email})"
+    "demoFillLabel": "Fill in the {role} demo account ({email})",
+    "panelEyebrow": "Algeria, from the coast to the Tassili",
+    "panelTitle": "Every stay, trip and host, looked after with care.",
+    "panelImagesAlt": "Photographs of Djanet, Ghardaïa and the bay of Algiers"
   },
   "auth": {
     "forbidden": {
@@ -1596,7 +1600,7 @@
   },
   "actions": {
     "reasonLabel": "Reason (required)",
-    "reasonPlaceholder": "Explain the decision — it is stored in the audit trail.",
+    "reasonPlaceholder": "Explain the decision, it is stored in the audit trail.",
     "reasonTooShort": "Please enter at least {min} characters.",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -1624,7 +1628,7 @@
   },
   "payments": {
     "title": "Payments & Finance",
-    "subtitle": "Host wallets, ledger, commissions, payouts and refunds — all balances are derived from the ledger.",
+    "subtitle": "Host wallets, ledger, commissions, payouts and refunds, all balances are derived from the ledger.",
     "exportLedger": "Export ledger (CSV)",
     "exportWallets": "Export wallets (CSV)",
     "rechargeWallet": "Recharge a wallet",
@@ -2123,7 +2127,7 @@
     }
   },
   "stays": {
-    "photoAlt": "{title} — photo {index}",
+    "photoAlt": "{title}, photo {index}",
     "categoriesPage": {
       "title": "Stay categories",
       "subtitle": "Configure the categories and property types shown to travelers.",
@@ -3269,9 +3273,9 @@
       "title": "DARNA revenue breakdown",
       "subtitle": "Net revenue from platform commissions, excluding escrowed funds paid out to providers.",
       "items": {
-        "individual": "Commissions — individual hosts",
-        "agency": "Commissions — travel agencies",
-        "carRental": "Commissions — car rental agencies"
+        "individual": "Commissions, individual hosts",
+        "agency": "Commissions, travel agencies",
+        "carRental": "Commissions, car rental agencies"
       }
     },
     "reports": {

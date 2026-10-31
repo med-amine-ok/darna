@@ -8,7 +8,13 @@ import { DomainError, ValidationError } from "./errors";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const ADMIN_ROLES: AdminRole[] = ["super_admin", "moderator", "support", "finance", "analyst"];
+const ADMIN_ROLES: AdminRole[] = [
+  "super_admin",
+  "moderator",
+  "support",
+  "finance",
+  "analyst",
+];
 
 export async function listTeamMembers(): Promise<AdminUser[]> {
   await delay(120);
@@ -24,7 +30,9 @@ export async function getTeamMemberById(id: string): Promise<AdminUser | null> {
   return member ? { ...member } : null;
 }
 
-export async function findTeamMemberByEmail(email: string): Promise<AdminUser | null> {
+export async function findTeamMemberByEmail(
+  email: string,
+): Promise<AdminUser | null> {
   const normalized = email.trim().toLowerCase();
   if (!normalized) return null;
   const member = store.team.find((u) => u.email.toLowerCase() === normalized);
@@ -34,13 +42,16 @@ export async function findTeamMemberByEmail(email: string): Promise<AdminUser | 
 export async function recordTeamMemberLogin(id: string): Promise<void> {
   const idx = store.team.findIndex((u) => u.id === id);
   if (idx === -1) return;
-  store.team[idx] = { ...store.team[idx], lastLoginAt: new Date().toISOString() };
+  store.team[idx] = {
+    ...store.team[idx],
+    lastLoginAt: new Date().toISOString(),
+  };
 }
 
 export async function updateMemberRole(
   userId: string,
   newRole: AdminRole,
-  actor: AdminActor
+  actor: AdminActor,
 ): Promise<AdminUser> {
   assertCan(actor.role, "team.manage");
   if (!ADMIN_ROLES.includes(newRole)) throw new Error("Invalid role");
@@ -50,8 +61,14 @@ export async function updateMemberRole(
   if (idx === -1) throw new Error("Team member not found");
 
   // Protection: cannot demote the last ACTIVE super_admin (inactive ones can't sign in)
-  if (store.team[idx].role === "super_admin" && store.team[idx].isActive && newRole !== "super_admin") {
-    const superAdminCount = store.team.filter((u) => u.role === "super_admin" && u.isActive).length;
+  if (
+    store.team[idx].role === "super_admin" &&
+    store.team[idx].isActive &&
+    newRole !== "super_admin"
+  ) {
+    const superAdminCount = store.team.filter(
+      (u) => u.role === "super_admin" && u.isActive,
+    ).length;
     if (superAdminCount <= 1) {
       throw new Error("Cannot demote the last remaining Super Admin.");
     }
@@ -70,7 +87,7 @@ export async function updateMemberRole(
     userId,
     `Changed role of ${prev.name} from ${prev.role} to ${newRole}`,
     prev,
-    store.team[idx]
+    store.team[idx],
   );
 
   return store.team[idx];
@@ -78,7 +95,7 @@ export async function updateMemberRole(
 
 export async function toggleMemberActive(
   userId: string,
-  actor: AdminActor
+  actor: AdminActor,
 ): Promise<AdminUser> {
   assertCan(actor.role, "team.manage");
   await delay(180);
@@ -87,11 +104,15 @@ export async function toggleMemberActive(
   if (idx === -1) throw new Error("Team member not found");
 
   if (store.team[idx].status === "invited") {
-    throw new DomainError("An invited member becomes active only after accepting the invitation");
+    throw new DomainError(
+      "An invited member becomes active only after accepting the invitation",
+    );
   }
 
   if (store.team[idx].role === "super_admin" && store.team[idx].isActive) {
-    const activeSuperAdmins = store.team.filter((u) => u.role === "super_admin" && u.isActive).length;
+    const activeSuperAdmins = store.team.filter(
+      (u) => u.role === "super_admin" && u.isActive,
+    ).length;
     if (activeSuperAdmins <= 1) {
       throw new Error("Cannot deactivate the last active Super Admin.");
     }
@@ -108,7 +129,7 @@ export async function toggleMemberActive(
     "TEAM_STATUS_TOGGLE",
     "user",
     userId,
-    `Toggled staff member ${store.team[idx].name} active to ${store.team[idx].isActive}`
+    `Toggled staff member ${store.team[idx].name} active to ${store.team[idx].isActive}`,
   );
 
   return store.team[idx];
@@ -116,19 +137,21 @@ export async function toggleMemberActive(
 
 /**
  * Creates an INVITED staff account: inactive, no password (no entry in
- * store.credentials) until the invitation is accepted — it cannot sign in.
+ * store.credentials) until the invitation is accepted, it cannot sign in.
  * Mock only: no email is actually sent.
  */
 export async function inviteMember(
   input: { name: string; email: string; role: AdminRole },
-  actor: AdminActor
+  actor: AdminActor,
 ): Promise<AdminUser> {
   assertCan(actor.role, "team.manage");
-  if (!ADMIN_ROLES.includes(input.role)) throw new ValidationError("Invalid role");
+  if (!ADMIN_ROLES.includes(input.role))
+    throw new ValidationError("Invalid role");
   const email = input.email.trim().toLowerCase();
   const name = input.name.trim();
   if (!name) throw new ValidationError("A name is required");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ValidationError("A valid email address is required");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new ValidationError("A valid email address is required");
   await delay(180);
 
   if (store.team.some((u) => u.email.toLowerCase() === email)) {
@@ -156,7 +179,7 @@ export async function inviteMember(
     member.id,
     `Invited ${name} <${email}> as ${input.role}`,
     undefined,
-    { email, role: input.role, status: "invited" }
+    { email, role: input.role, status: "invited" },
   );
 
   return { ...member };

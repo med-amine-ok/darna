@@ -72,13 +72,13 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         type="button"
         onClick={() => fileInputRef.current?.click()}
         aria-describedby={hintId}
-        className="w-full p-5 rounded-2xl border-2 border-dashed border-tertiary-300 hover:border-secondary bg-neutral-50/60 hover:bg-neutral-50 flex flex-col items-center justify-center text-center cursor-pointer transition group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+        className="w-full p-5 rounded-2xl border-2 border-dashed border-primary/[0.12] hover:border-primary/25 bg-darnaBg-100 hover:bg-primary/[0.05] flex flex-col items-center justify-center text-center cursor-pointer transition group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
       >
-        <span className="w-10 h-10 rounded-xl bg-white border border-tertiary-200/80 flex items-center justify-center text-secondary group-hover:scale-105 transition shadow-2xs mb-2">
+        <span className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-secondary-700 group-hover:scale-105 transition-transform duration-fast ease-out shadow-e1 mb-2">
           <UploadCloud className="w-5 h-5" aria-hidden="true" />
         </span>
-        <span className="text-xs font-bold text-primary">{displayLabel}</span>
-        <span id={hintId} className="text-[11px] text-neutral-500 mt-0.5">
+        <span className="text-xs font-semibold text-primary-900">{displayLabel}</span>
+        <span id={hintId} className="text-[11px] text-primary-600 mt-0.5">
           {displayHint}
         </span>
       </button>
@@ -89,7 +89,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           {files.map((fileUrl, idx) => (
             <li
               key={idx}
-              className="relative aspect-video rounded-xl overflow-hidden border border-tertiary-200 bg-neutral-100 group"
+              className="relative aspect-video rounded-xl overflow-hidden bg-tertiary-100 shadow-e1 group"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -103,7 +103,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
                   e.stopPropagation();
                   handleRemove(idx);
                 }}
-                className="absolute top-1 end-1 w-5 h-5 rounded-full bg-black/60 text-white hover:bg-accent-600 flex items-center justify-center transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="absolute top-1 end-1 w-5 h-5 rounded-full bg-primary-950/60 text-white hover:bg-accent-600 flex items-center justify-center transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 aria-label={t("removePhoto", { index: idx + 1 })}
               >
                 <X className="w-3 h-3" aria-hidden="true" />
@@ -118,10 +118,10 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 aria-label={t("addMore")}
-                className="w-full h-full aspect-video rounded-xl border border-dashed border-tertiary-300 hover:border-secondary bg-white hover:bg-neutral-50 flex flex-col items-center justify-center text-neutral-500 hover:text-primary transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                className="w-full h-full aspect-video rounded-xl border border-dashed border-primary/[0.12] hover:border-primary/25 bg-white hover:bg-primary/[0.05] flex flex-col items-center justify-center text-primary-600 hover:text-primary-900 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
               >
                 <Plus className="w-4 h-4" aria-hidden="true" />
-                <span className="text-[10px] font-bold mt-1" aria-hidden="true">
+                <span className="text-[11px] font-semibold mt-1" aria-hidden="true">
                   {t("add")}
                 </span>
               </button>

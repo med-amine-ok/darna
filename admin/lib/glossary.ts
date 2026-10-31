@@ -1,5 +1,5 @@
 /**
- * DARNA Admin — Plain-Language Glossary & "Where did it go?" structure
+ * DARNA Admin, Plain-Language Glossary & "Where did it go?" structure
  * Implements IHM course rules (§3.2, T3: Hick's Law, Langage employé)
  *
  * Strict rule: Never display raw system jargon, database codes, or cryptic abbreviations.
@@ -54,21 +54,21 @@ export function useGlossary() {
   const getPlainTerm = useCallback(
     (key: string, ..._legacyLocale: unknown[]): string =>
       isGlossaryKey(key) ? t(`${key}.plainTerm`) : key,
-    [t]
+    [t],
   );
   const getDefinition = useCallback(
     (key: string, ..._legacyLocale: unknown[]): string =>
       isGlossaryKey(key) ? t(`${key}.definition`) : "",
-    [t]
+    [t],
   );
   const getHowItIsCounted = useCallback(
     (key: string, ..._legacyLocale: unknown[]): string =>
       KEYS_WITH_HOW_COUNTED.has(key) ? t(`${key}.howItIsCounted`) : "",
-    [t]
+    [t],
   );
   const getTerm = useCallback(
     (key: string): string => (isGlossaryKey(key) ? t(`${key}.term`) : key),
-    [t]
+    [t],
   );
 
   return { getPlainTerm, getDefinition, getHowItIsCounted, getTerm };
@@ -79,7 +79,13 @@ export function useGlossary() {
  * Accompanies change to avoid "Syndrome de l'oisillon" (T6)
  * Text: whereDidItGo.items.<id>.{oldName, newName, location, description}
  */
-export type MigrationItemId = "guests" | "onboarding" | "auditLog" | "money" | "team" | "disputes";
+export type MigrationItemId =
+  | "guests"
+  | "onboarding"
+  | "auditLog"
+  | "money"
+  | "team"
+  | "disputes";
 
 export interface MigrationItem {
   id: MigrationItemId;
@@ -114,7 +120,7 @@ export function useMigrationItems(): LocalizedMigrationItem[] {
         location: t(`${item.id}.location`),
         description: t(`${item.id}.description`),
       })),
-    [t]
+    [t],
   );
 }
 
@@ -122,13 +128,13 @@ export function useMigrationItems(): LocalizedMigrationItem[] {
 export function filterMigrationItems(
   items: LocalizedMigrationItem[],
   query: string,
-  locale: string
+  locale: string,
 ): LocalizedMigrationItem[] {
   const q = query.trim().toLocaleLowerCase(locale);
   if (!q) return items;
   return items.filter((item) =>
     [item.oldName, item.newName, item.description].some((s) =>
-      s.toLocaleLowerCase(locale).includes(q)
-    )
+      s.toLocaleLowerCase(locale).includes(q),
+    ),
   );
 }

@@ -54,5 +54,8 @@
   "profilePassport": "الملف الشخصي وجواز السفر",
   "accountSettings": "إعدادات الحساب",
   "helpCenter": "مركز المساعدة",
-  "mobileNavigation": "التنقل الرئيسي"
+  "mobileNavigation": "التنقل الرئيسي",
+  "groupToday": "اليوم",
+  "groupThisWeek": "هذا الأسبوع",
+  "groupEarlier": "سابقًا"
 }

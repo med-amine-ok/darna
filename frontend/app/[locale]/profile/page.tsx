@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import Container from "@/components/Container";
 import { getSessionUser } from "@/lib/server/session";
 import { getHostListings } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
@@ -31,15 +30,15 @@ export default async function ProfilePage({
   const reviews = await getReviewsByUserId(currentUser.id);
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-10">
-      <Container>
+    <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <UserProfileClient
           user={currentUser}
           listings={userListings}
           reviews={reviews}
           isOwner={true}
         />
-      </Container>
+      </div>
     </div>
   );
 }

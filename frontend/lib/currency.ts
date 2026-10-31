@@ -50,7 +50,8 @@ export function formatEur(eurAmount: number, locale = "en"): string {
     return `~ ${rounded} €`;
   }
   if (locale === "ar") {
-    return `(~ ${rounded} €)`;
+    // No parentheses here: callers (PriceDisplay, formatPriceWithEur) add their own.
+    return `~ ${rounded} €`;
   }
   return `~€${rounded}`;
 }

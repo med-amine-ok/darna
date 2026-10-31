@@ -3,7 +3,7 @@ import "server-only";
 /**
  * In-memory login throttling, keyed separately per email and per client IP.
  * Kept on globalThis so it survives dev hot reloads (one map per server
- * process — a real deployment would use Redis or the DB).
+ * process, a real deployment would use Redis or the DB).
  */
 
 const MAX_FAILURES = 5;
@@ -25,7 +25,8 @@ function read(key: string, now: number): AttemptRecord | undefined {
   const rec = attempts.get(key);
   if (!rec) return undefined;
   const lockExpired = rec.lockedUntil !== undefined && rec.lockedUntil <= now;
-  const windowExpired = rec.lockedUntil === undefined && now - rec.firstAt > WINDOW_MS;
+  const windowExpired =
+    rec.lockedUntil === undefined && now - rec.firstAt > WINDOW_MS;
   if (lockExpired || windowExpired) {
     attempts.delete(key);
     return undefined;
@@ -37,16 +38,24 @@ export function loginRateLimitKeys(email: string, ip: string): string[] {
   return [`email:${email.trim().toLowerCase()}`, `ip:${ip}`];
 }
 
-export function checkLoginRateLimit(keys: string[]): { allowed: boolean; retryAfterSecs?: number } {
+export function checkLoginRateLimit(keys: string[]): {
+  allowed: boolean;
+  retryAfterSecs?: number;
+} {
   const now = Date.now();
   let retryAfter = 0;
   for (const key of keys) {
     const rec = read(key, now);
     if (rec?.lockedUntil && rec.lockedUntil > now) {
-      retryAfter = Math.max(retryAfter, Math.ceil((rec.lockedUntil - now) / 1000));
+      retryAfter = Math.max(
+        retryAfter,
+        Math.ceil((rec.lockedUntil - now) / 1000),
+      );
     }
   }
-  return retryAfter > 0 ? { allowed: false, retryAfterSecs: retryAfter } : { allowed: true };
+  return retryAfter > 0
+    ? { allowed: false, retryAfterSecs: retryAfter }
+    : { allowed: true };
 }
 
 export function recordFailedLogin(keys: string[]): void {

@@ -1,5 +1,5 @@
 {
-  "title": "Portefeuille Prépayé Hôte & Solde",
+  "title": "Portefeuille prépayé",
   "currentBalance": "Solde Actuel du Dépôt",
   "applicableCommission": "Commission Applicable",
   "rechargeProcess": "Processus de Recharge",
@@ -44,5 +44,6 @@
   "deposit": "Dépôt",
   "commission": "Commission",
   "bookingRef": "Réservation : {id}",
-  "noTransactions": "Aucune transaction à afficher."
+  "noTransactions": "Aucune transaction à afficher.",
+  "howItWorksShort": "Fonctionnement du solde"
 }

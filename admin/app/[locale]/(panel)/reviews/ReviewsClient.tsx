@@ -11,7 +11,6 @@ import {
   Flag,
   CheckCircle,
   AlertTriangle,
-  MessageSquare,
   Download,
   ShieldAlert,
   Eye,
@@ -33,6 +32,7 @@ import { DetailPanel } from "@/components/ui/DetailPanel";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Pagination } from "@/components/ui/Pagination";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { formatDate, intlLocale } from "@/lib/utils/format";
@@ -45,7 +45,7 @@ export interface ReviewsClientProps {
 
 const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
 const SELECT =
-  "w-full px-3 py-1.5 text-xs rounded-xl border border-tertiary/80 bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 cursor-pointer";
+  "w-full px-3 py-1.5 text-xs rounded-xl border border-primary/[0.12] bg-white text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] cursor-pointer shadow-2xs hover:border-primary/25";
 const VERTICAL_OPTIONS = ["home", "hotel", "trip", "vehicle", "experience"] as const;
 // Mock date shown for the provider flag (no flag timestamp in the data yet).
 const MOCK_FLAG_DATE = "2024-03-14";
@@ -232,18 +232,18 @@ export default function ReviewsClient({
       <KpiStrip cards={kpis} />
 
       {/* Filters Bar */}
-      <div className="bg-white p-3.5 rounded-2xl border border-tertiary/70 shadow-2xs space-y-3">
+      <div className="bg-white p-3.5 rounded-2xl shadow-e1 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="relative">
             <label htmlFor="reviews-search" className="sr-only">{t("filters.search")}</label>
-            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />
             <input
               id="reviews-search"
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full ps-9 pe-3 py-1.5 text-xs rounded-xl border border-tertiary/80 bg-darnaBg/30 focus:bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="w-full ps-9 pe-3 py-1.5 text-xs rounded-xl border border-primary/[0.12] bg-white shadow-2xs text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08]"
             />
           </div>
 
@@ -314,14 +314,12 @@ export default function ReviewsClient({
           loading ? (
             <div className="space-y-4" aria-busy="true">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-28 bg-white rounded-2xl border border-tertiary/70 animate-pulse" />
+                <div key={i} className="h-28 rounded-2xl skeleton" />
               ))}
             </div>
           ) : reviews.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-tertiary/70 p-12 text-center">
-              <MessageSquare className="w-10 h-10 text-neutral-300 mx-auto mb-2" aria-hidden="true" />
-              <h3 className="text-sm font-bold text-primary">{t("emptyTitle")}</h3>
-              <p className="text-xs text-neutral-500 mt-1">{t("emptyDesc")}</p>
+            <div className="bg-white rounded-2xl shadow-e1">
+              <EmptyState title={t("emptyTitle")} description={t("emptyDesc")} />
             </div>
           ) : (
             <div className="space-y-3">
@@ -337,17 +335,17 @@ export default function ReviewsClient({
                     aria-label={t("openReview", { name: r.guestName })}
                     onClick={() => setSelectedReview(r)}
                     onKeyDown={(e) => onCardKeyDown(e, r)}
-                    className={`bg-white rounded-2xl border p-4 shadow-2xs transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+                    className={`rounded-2xl p-4 transition-[box-shadow,background-color] duration-fast ease-standard cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? "border-secondary ring-2 ring-secondary/20 bg-secondary/5"
-                        : "border-tertiary/60 hover:border-secondary/40"
+                        ? "bg-secondary-50 shadow-e2 ring-2 ring-secondary-600/50"
+                        : "bg-white shadow-e1 hover:shadow-e2"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-2 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <div
-                            className="flex items-center gap-0.5 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200"
+                            className="flex items-center gap-0.5 px-2 py-0.5 rounded-lg bg-amber-50 ring-1 ring-inset ring-amber-200"
                             role="img"
                             aria-label={t("ratingAria", { rating: fmtRating(r.rating) })}
                           >
@@ -362,23 +360,23 @@ export default function ReviewsClient({
                                 }`}
                               />
                             ))}
-                            <span className="text-xs font-bold text-amber-900 ms-1" aria-hidden="true">
+                            <span className="text-xs font-semibold text-amber-900 ms-1" aria-hidden="true">
                               {fmtRating(r.rating)}
                             </span>
                           </div>
 
                           <StatusPill status={r.status} size="sm" />
-                          <span className="text-xs text-neutral-500">
+                          <span className="text-xs text-neutral-500 tabular-nums">
                             {formatDate(r.createdAt, locale)}
                           </span>
                         </div>
 
-                        <p className="text-xs text-primary leading-relaxed line-clamp-2">
+                        <p className="text-sm text-primary-800 leading-relaxed line-clamp-2">
                           {t("quoted", { text: r.comment })}
                         </p>
 
                         {r.flagReason && (
-                          <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-accent/10 border border-accent/20 text-accent-700 text-[11px]">
+                          <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-accent/10 ring-1 ring-inset ring-accent/20 text-accent-700 text-[11px]">
                             <Flag className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                             <span>{t("flagReasonInline", { reason: r.flagReason })}</span>
                           </div>
@@ -430,9 +428,7 @@ export default function ReviewsClient({
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => handleDismissFlag(selectedReview)}
-                    >
-                      <CheckCircle className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+                      onClick={() => handleDismissFlag(selectedReview)} leftIcon={<CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />}>
                       {t("dismiss")}
                     </Button>
                   )}
@@ -440,18 +436,14 @@ export default function ReviewsClient({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleHide(selectedReview)}
-                    >
-                      <EyeOff className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+                      onClick={() => handleHide(selectedReview)} leftIcon={<EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}>
                       {t("hide")}
                     </Button>
                   ) : (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRestore(selectedReview)}
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+                      onClick={() => handleRestore(selectedReview)} leftIcon={<RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />}>
                       {t("restore")}
                     </Button>
                   )}
@@ -462,9 +454,7 @@ export default function ReviewsClient({
                       onClick={() => {
                         setReviewToDelete(selectedReview);
                         setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+                      }} leftIcon={<Trash2 className="w-3.5 h-3.5" aria-hidden="true" />}>
                       {t("delete")}
                     </Button>
                   )}
@@ -472,43 +462,43 @@ export default function ReviewsClient({
               }
             >
               <div className="space-y-4 text-xs">
-                <div className="p-4 rounded-xl bg-darnaBg border border-tertiary/40 space-y-2">
+                <div className="p-4 rounded-xl bg-darnaBg-100 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-primary text-sm">{t("ratingGiven")}</span>
-                    <div className="flex items-center text-amber-800 font-bold">
+                    <span className="font-semibold text-primary text-sm">{t("ratingGiven")}</span>
+                    <div className="flex items-center text-amber-800 font-semibold">
                       <Star className="w-4 h-4 fill-amber-500 text-amber-500 me-1" aria-hidden="true" />
                       <span dir="ltr">{t("ratingValue", { rating: fmtRating(selectedReview.rating) })}</span>
                     </div>
                   </div>
-                  <p className="text-primary italic bg-white p-3 rounded-lg border border-tertiary/40">
+                  <p className="text-primary-800 italic bg-white p-3 rounded-lg shadow-2xs">
                     {t("quoted", { text: selectedReview.comment })}
                   </p>
                 </div>
 
                 {selectedReview.flagReason && (
-                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-accent-700">
+                  <div className="p-3 rounded-xl bg-accent/10 ring-1 ring-inset ring-accent/20 space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-accent-700">
                       <Flag className="w-4 h-4" aria-hidden="true" /> {t("flagReasonTitle")}
                     </div>
                     <p className="text-neutral-700">{selectedReview.flagReason}</p>
-                    <span className="text-[10px] text-neutral-500 block mt-1">
+                    <span className="text-[11px] text-neutral-500 block mt-1">
                       {t("flaggedByProvider", { date: formatDate(MOCK_FLAG_DATE, locale) })}
                     </span>
                   </div>
                 )}
 
-                <div className="p-4 rounded-xl bg-white border border-tertiary/40 space-y-3">
-                  <h5 className="font-bold text-primary">{t("contextTitle")}</h5>
+                <div className="p-4 rounded-xl bg-darnaBg-100 space-y-3">
+                  <h5 className="font-semibold text-primary">{t("contextTitle")}</h5>
                   <dl className="space-y-2">
-                    <div className="flex items-center justify-between gap-3 py-1 border-b border-neutral-100">
+                    <div className="flex items-center justify-between gap-3 py-1 border-b border-primary/[0.08]">
                       <dt className="text-neutral-500">{t("ctxListing")}</dt>
                       <dd className="font-semibold text-primary text-end">{selectedReview.listingTitle}</dd>
                     </div>
-                    <div className="flex items-center justify-between gap-3 py-1 border-b border-neutral-100">
+                    <div className="flex items-center justify-between gap-3 py-1 border-b border-primary/[0.08]">
                       <dt className="text-neutral-500">{t("ctxGuest")}</dt>
                       <dd className="font-semibold text-primary text-end">{selectedReview.guestName}</dd>
                     </div>
-                    <div className="flex items-center justify-between gap-3 py-1 border-b border-neutral-100">
+                    <div className="flex items-center justify-between gap-3 py-1 border-b border-primary/[0.08]">
                       <dt className="text-neutral-500">{t("ctxHost")}</dt>
                       <dd className="font-semibold text-primary text-end">{selectedReview.hostName}</dd>
                     </div>
@@ -521,8 +511,8 @@ export default function ReviewsClient({
                   </dl>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                  <h5 className="font-bold text-primary">{t("rulesTitle")}</h5>
+                <div className="p-4 rounded-xl bg-darnaBg-100 space-y-2">
+                  <h5 className="font-semibold text-primary">{t("rulesTitle")}</h5>
                   <p className="text-[11px] text-neutral-500">
                     {t("rulesText")}
                   </p>

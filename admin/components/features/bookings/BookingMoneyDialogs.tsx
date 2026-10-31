@@ -14,24 +14,24 @@ type RefundableBooking = Pick<
 >;
 
 const fieldCls =
-  "w-full rounded-xl bg-white border border-tertiary/70 p-2.5 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600/40 aria-[invalid=true]:border-accent-700";
+  "w-full rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary-900 focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] aria-[invalid=true]:border-accent-700 hover:border-primary/25";
 
 function AmountBreakdown({ booking }: { booking: RefundableBooking }) {
   const t = useTranslations("bookingOps");
   const locale = useLocale();
   return (
-    <dl className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-darnaBg/50 border border-tertiary/40 text-[11px]">
+    <dl className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-darnaBg-100 text-xs">
       <div>
-        <dt className="text-neutral-500">{t("total")}</dt>
-        <dd className="font-mono font-bold text-primary" dir="ltr">{formatDzd(booking.totalAmountDzd, locale)}</dd>
+        <dt className="text-primary-600">{t("total")}</dt>
+        <dd className="font-mono font-semibold text-primary-900" dir="ltr">{formatDzd(booking.totalAmountDzd, locale)}</dd>
       </div>
       <div>
-        <dt className="text-neutral-500">{t("alreadyRefunded")}</dt>
-        <dd className="font-mono font-bold text-primary" dir="ltr">{formatDzd(refundedSoFar(booking), locale)}</dd>
+        <dt className="text-primary-600">{t("alreadyRefunded")}</dt>
+        <dd className="font-mono font-semibold text-primary-900" dir="ltr">{formatDzd(refundedSoFar(booking), locale)}</dd>
       </div>
       <div>
-        <dt className="text-neutral-500">{t("refundable")}</dt>
-        <dd className="font-mono font-bold text-primary" dir="ltr">{formatDzd(refundableAmount(booking), locale)}</dd>
+        <dt className="text-primary-600">{t("refundable")}</dt>
+        <dd className="font-mono font-semibold text-primary-900" dir="ltr">{formatDzd(refundableAmount(booking), locale)}</dd>
       </div>
     </dl>
   );
@@ -96,7 +96,7 @@ export function RefundDialog({
         <form onSubmit={submit} className="space-y-3 text-xs text-start">
           <AmountBreakdown booking={booking} />
           <div>
-            <label htmlFor="refund-amount" className="block font-bold text-primary mb-1">
+            <label htmlFor="refund-amount" className="block font-semibold text-primary-900 mb-1">
               {t("refundAmount")}
             </label>
             <input
@@ -111,7 +111,7 @@ export function RefundDialog({
               aria-describedby={invalidAmount && amount !== "" ? "refund-amount-error" : undefined}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className={`${fieldCls} font-mono font-bold`}
+              className={`${fieldCls} font-mono font-semibold`}
             />
             {invalidAmount && amount !== "" && (
               <p id="refund-amount-error" className="text-accent-700 text-[11px] mt-1" role="alert">
@@ -120,7 +120,7 @@ export function RefundDialog({
             )}
           </div>
           <div>
-            <label htmlFor="refund-reason" className="block font-bold text-primary mb-1">
+            <label htmlFor="refund-reason" className="block font-semibold text-primary-900 mb-1">
               {tActions("reasonLabel")}
             </label>
             <textarea
@@ -136,7 +136,7 @@ export function RefundDialog({
             />
             <p
               id="refund-reason-hint"
-              className={`text-[11px] mt-1 ${invalidReason && reason !== "" ? "text-accent-700" : "text-neutral-500"}`}
+              className={`text-[11px] mt-1 ${invalidReason && reason !== "" ? "text-accent-700" : "text-primary-600"}`}
             >
               {tActions("reasonTooShort", { min: MIN_REASON_LENGTH })}
             </p>
@@ -146,7 +146,7 @@ export function RefundDialog({
               {tActions("cancel")}
             </Button>
             <Button type="submit" size="sm" disabled={invalidAmount || invalidReason || busy} isLoading={busy}>
-              {t("refundConfirm", { amount: invalidAmount ? "—" : formatDzd(Number(amount), locale) })}
+              {t("refundConfirm", { amount: invalidAmount ? ", " : formatDzd(Number(amount), locale) })}
             </Button>
           </div>
         </form>
@@ -220,12 +220,12 @@ export function DisputeDialog({
         <form onSubmit={submit} className="space-y-3 text-xs text-start">
           <AmountBreakdown booking={booking} />
           <fieldset className="space-y-1.5">
-            <legend className="font-bold text-primary mb-1">{t("outcome")}</legend>
+            <legend className="font-semibold text-primary-900 mb-1">{t("outcome")}</legend>
             {options.map((o) => (
               <label
                 key={o.id}
-                className={`flex items-start gap-2 p-2 rounded-lg border ${
-                  outcome === o.id ? "border-secondary bg-secondary/5" : "border-tertiary/50"
+                className={`flex items-start gap-2 p-2.5 rounded-xl border transition-colors duration-fast ${
+                  outcome === o.id ? "border-secondary-600 bg-secondary-50" : "border-primary/[0.12] hover:border-primary/25"
                 } ${o.disabled ? "opacity-50" : "cursor-pointer"}`}
               >
                 <input
@@ -238,15 +238,15 @@ export function DisputeDialog({
                   className="mt-0.5 focus-visible:ring-2 focus-visible:ring-accent-600"
                 />
                 <span>
-                  <span className="font-semibold text-primary block">{t(`outcomes.${o.id}`)}</span>
-                  <span className="text-neutral-600">{t(`outcomeHints.${o.id}`)}</span>
+                  <span className="font-semibold text-primary-900 block">{t(`outcomes.${o.id}`)}</span>
+                  <span className="text-primary-600">{t(`outcomeHints.${o.id}`)}</span>
                 </span>
               </label>
             ))}
           </fieldset>
           {outcome === "refund_partial" && (
             <div>
-              <label htmlFor="dispute-amount" className="block font-bold text-primary mb-1">
+              <label htmlFor="dispute-amount" className="block font-semibold text-primary-900 mb-1">
                 {t("refundAmount")}
               </label>
               <input
@@ -260,7 +260,7 @@ export function DisputeDialog({
                 aria-describedby={invalidAmount ? "dispute-amount-error" : undefined}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className={`${fieldCls} font-mono font-bold`}
+                className={`${fieldCls} font-mono font-semibold`}
               />
               {invalidAmount && (
                 <p id="dispute-amount-error" className="text-accent-700 text-[11px] mt-1" role="alert">
@@ -270,7 +270,7 @@ export function DisputeDialog({
             </div>
           )}
           <div>
-            <label htmlFor="dispute-note" className="block font-bold text-primary mb-1">
+            <label htmlFor="dispute-note" className="block font-semibold text-primary-900 mb-1">
               {t("resolutionNote")}
             </label>
             <textarea
@@ -286,7 +286,7 @@ export function DisputeDialog({
             />
             <p
               id="dispute-note-hint"
-              className={`text-[11px] mt-1 ${invalidNote && note !== "" ? "text-accent-700" : "text-neutral-500"}`}
+              className={`text-[11px] mt-1 ${invalidNote && note !== "" ? "text-accent-700" : "text-primary-600"}`}
             >
               {tActions("reasonTooShort", { min: MIN_REASON_LENGTH })}
             </p>

@@ -138,5 +138,8 @@
     "declineFailed": "Impossible de refuser la réservation.",
     "cancelled": "Réservation annulée conformément à la politique d'annulation de l'hôte.",
     "cancelFailed": "Impossible d'annuler la réservation."
-  }
+  },
+  "eyebrow": "Réservations",
+  "reference": "Réf. {code}",
+  "requestHeading": "Demande de réservation, répondez avant l’expiration"
 }

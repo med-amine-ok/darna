@@ -27,27 +27,29 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer";
+      "inline-flex items-center justify-center font-semibold rounded-xl transition-[background-color,box-shadow,color,transform] duration-fast ease-standard active:scale-[0.98] active:duration-micro focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer";
 
+    // DARNA kit (docs/design/ROLLOUT-GUIDE.md §2): ink solid primary, olive positive,
+    // white e1 tertiary, terracotta only for destructive/alert.
     const variantStyles = {
       primary:
-        "bg-primary text-white hover:bg-[#232C24] active:bg-[#1A221B] shadow-xs focus-visible:ring-primary",
+        "bg-primary-800 text-white hover:bg-primary-900 shadow-e1 shadow-highlight focus-visible:ring-primary-700",
       secondary:
-        "bg-secondary-700 text-white hover:bg-secondary-800 active:bg-secondary-900 shadow-xs focus-visible:ring-secondary-700",
+        "bg-secondary-700 text-white hover:bg-secondary-800 shadow-e1 focus-visible:ring-secondary-700",
       outline:
-        "border border-tertiary/80 text-primary bg-white hover:bg-darnaBg/80 active:bg-darnaBg shadow-2xs focus-visible:ring-primary",
+        "bg-white text-primary-800 shadow-e1 hover:shadow-e2 hover:bg-darnaBg-50 focus-visible:ring-primary-700",
       ghost:
-        "text-primary hover:bg-neutral-100 active:bg-neutral-200 focus-visible:ring-primary",
+        "text-primary-800 hover:bg-primary/[0.06] active:bg-primary/10 focus-visible:ring-primary-700",
       danger:
-        "bg-accent-600 text-white hover:bg-accent-700 active:bg-accent-800 shadow-xs focus-visible:ring-accent-600",
+        "bg-accent-600 text-white hover:bg-accent-700 shadow-e1 focus-visible:ring-accent-600",
       dangerOutline:
-        "border border-accent text-accent-700 bg-transparent hover:bg-accent/10 active:bg-accent/20 shadow-2xs focus-visible:ring-accent-600",
+        "bg-white text-accent-700 ring-1 ring-inset ring-accent/40 hover:bg-accent-50 focus-visible:ring-accent-600",
     };
 
     const sizeStyles = {
-      sm: "text-xs px-3 py-1.5 min-h-[44px] sm:min-h-[34px] gap-1.5",
-      md: "text-sm px-4 py-2 min-h-[44px] sm:min-h-[40px] gap-2",
-      lg: "text-base px-5 py-2.5 min-h-[44px] sm:min-h-[46px] gap-2.5",
+      sm: "text-meta px-3 py-1.5 min-h-[44px] sm:min-h-[34px] gap-1.5",
+      md: "text-meta px-4 py-2 min-h-[44px] sm:min-h-[40px] gap-2",
+      lg: "text-body px-5 py-2.5 min-h-[44px] sm:min-h-[46px] gap-2.5",
     };
 
     return (
@@ -63,7 +65,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           leftIcon && <span className="shrink-0">{leftIcon}</span>
         )}
-        <span>{children}</span>
+        <span className="inline-flex items-center gap-[inherit] min-w-0">{children}</span>
         {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
       </button>
     );

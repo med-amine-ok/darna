@@ -86,5 +86,11 @@
     "email": "Email support",
     "emailResponse": "Average response time: under 2 hours",
     "urgentNote": "For urgent check-in issues, hosts and guests can also talk instantly in the <strong>Messages</strong> tab."
-  }
+  },
+  "browseEyebrow": "Browse",
+  "browseTitle": "Find answers by topic",
+  "faqEyebrow": "Answers",
+  "contactEyebrow": "Support",
+  "noResultsTitle": "No matching articles",
+  "clearSearch": "Clear search"
 }

@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useId, useRef, useState } from "react";
+import React, { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/navigation";
 import { User, Organization } from "@/types";
 import {
   BrandCreditCardIcon,
@@ -14,11 +13,25 @@ import {
   BrandUsersIcon,
   BrandClockIcon,
   BrandLightningIcon,
-  BrandCrossIcon,
 } from "@/components/icons";
 import { toast } from "react-toastify";
 import { setBookingApprovalModeAction } from "@/app/actions/host";
-import Dialog from "@/components/ui/Dialog";
+import {
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogFooter,
+  Input,
+  RadioGroup,
+  SegmentedControl,
+  Select,
+  Switch,
+  TabPanel,
+  Tabs,
+  Textarea,
+  cn,
+} from "@/components/ui";
 import { formatDate } from "@/lib/i18n/date-locale";
 import { formatDzd } from "@/lib/currency";
 import { useActionError } from "@/hook/useActionError";
@@ -53,11 +66,6 @@ const PAYOUT_HISTORY: { date: string; id: string; channel: PayoutChannel; amount
   { date: "2026-08-25", id: "PAY-2026-08-25", channel: "BNA", amount: 106700 },
 ];
 
-const FIELD_CLASS =
-  "w-full px-3 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs text-primary focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-
 export default function HostSettingsClient({
   currentUser,
   organization,
@@ -66,12 +74,6 @@ export default function HostSettingsClient({
   const errorText = useActionError();
   const locale = useLocale();
   const baseId = useId();
-  const tabRefs = useRef<Record<TabId, HTMLButtonElement | null>>({
-    payouts: null,
-    identity: null,
-    defaults: null,
-    notifications: null,
-  });
   const [activeTab, setActiveTab] = useState<TabId>("payouts");
 
   // Payout state
@@ -161,23 +163,6 @@ export default function HostSettingsClient({
     toast.success(t("toasts.defaultsSaved"));
   };
 
-  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    const isRtl = locale === "ar";
-    let next: number | null = null;
-    if (e.key === "ArrowRight") next = isRtl ? index - 1 : index + 1;
-    else if (e.key === "ArrowLeft") next = isRtl ? index + 1 : index - 1;
-    else if (e.key === "Home") next = 0;
-    else if (e.key === "End") next = TABS.length - 1;
-    if (next === null) return;
-    e.preventDefault();
-    const target = TABS[(next + TABS.length) % TABS.length].id;
-    setActiveTab(target);
-    tabRefs.current[target]?.focus();
-  };
-
-  const tabId = (id: TabId) => `${baseId}-tab-${id}`;
-  const panelId = (id: TabId) => `${baseId}-panel-${id}`;
-
   const payoutDetails = (m: PayoutMethod) =>
     m.channel === "CCP"
       ? t("payouts.ccpDetails", { number: m.accountNumber, key: m.accountKey || "00" })
@@ -189,615 +174,372 @@ export default function HostSettingsClient({
     checkIn: `${baseId}-check-in`,
     checkOut: `${baseId}-check-out`,
     cancellation: `${baseId}-cancellation`,
-    approvalLabel: `${baseId}-approval-label`,
     sms: `${baseId}-sms`,
-    smsDesc: `${baseId}-sms-desc`,
     email: `${baseId}-email`,
-    emailDesc: `${baseId}-email-desc`,
     welcome: `${baseId}-welcome`,
     channelLabel: `${baseId}-channel-label`,
     accountNumber: `${baseId}-account-number`,
     accountKey: `${baseId}-account-key`,
-    accountError: `${baseId}-account-error`,
   };
 
+  const tabsId = `host-settings${baseId.replace(/:/g, "")}`;
+
+  const sectionHead = (title: string, description: string, action?: React.ReactNode) => (
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <h2 className="font-serif text-heading text-primary-900">{title}</h2>
+        <p className="mt-1 max-w-xl text-meta text-primary-600 [text-wrap:pretty]">{description}</p>
+      </div>
+      {action}
+    </div>
+  );
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
-      {/* Top Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">{t("title")}</h1>
-        <p className="text-sm text-neutral-600 mt-1">{t("subtitle")}</p>
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <header className="enter-up mb-8">
+        <p className="text-eyebrow uppercase text-secondary-700">{t("eyebrow")}</p>
+        <h1 className="mt-2 font-serif text-display-md text-primary-900">{t("title")}</h1>
+        <p className="mt-2 max-w-2xl text-body text-primary-600 [text-wrap:pretty]">{t("subtitle")}</p>
+      </header>
+
+      <div className="-mx-4 mb-8 overflow-x-auto scrollbar-none px-4 sm:mx-0 sm:px-0">
+        <Tabs
+          id={tabsId}
+          ariaLabel={t("tabs.ariaLabel")}
+          value={activeTab}
+          onChange={setActiveTab}
+          items={TABS.map(({ id, icon: Icon }) => ({
+            value: id,
+            label: t(`tabs.${id}`),
+            icon: <Icon size={16} aria-hidden="true" />,
+          }))}
+          className="min-w-max"
+        />
       </div>
 
-      {/* Tabs */}
-      <div
-        role="tablist"
-        aria-label={t("tabs.ariaLabel")}
-        className="flex items-center gap-2 border-b border-tertiary/60 overflow-x-auto pb-1 mb-8 scrollbar-none"
-      >
-        {TABS.map((tab, index) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              ref={(el) => {
-                tabRefs.current[tab.id] = el;
-              }}
-              type="button"
-              role="tab"
-              id={tabId(tab.id)}
-              aria-selected={isActive}
-              aria-controls={panelId(tab.id)}
-              tabIndex={isActive ? 0 : -1}
-              onClick={() => setActiveTab(tab.id)}
-              onKeyDown={(e) => handleTabKeyDown(e, index)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition whitespace-nowrap ${FOCUS_RING} ${
-                isActive
-                  ? "border-primary text-primary bg-primary/5 rounded-t-xl"
-                  : "border-transparent text-neutral-600 hover:text-primary hover:border-tertiary"
-              }`}
+      {/* Payouts */}
+      <TabPanel tabsId={tabsId} value="payouts" active={activeTab} className="space-y-6">
+        <Card as="section" padding="lg" radius="3xl">
+          {sectionHead(
+            t("payouts.title"),
+            t("payouts.description"),
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setIsAddPayoutOpen(true)}
+              aria-haspopup="dialog"
+              leadingIcon={<BrandPlusIcon size={16} aria-hidden="true" />}
+              className="self-start"
             >
-              <Icon size={16} aria-hidden="true" />
-              <span>{t(`tabs.${tab.id}`)}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* TAB 1: PAYOUTS */}
-      {activeTab === "payouts" && (
-        <div
-          role="tabpanel"
-          id={panelId("payouts")}
-          aria-labelledby={tabId("payouts")}
-          className="space-y-8 animate-in fade-in"
-        >
-          {/* Active Payout Accounts Card */}
-          <div className="bg-white rounded-3xl border border-tertiary/70 p-6 shadow-2xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-tertiary/60 mb-6">
-              <div>
-                <h2 className="font-serif text-lg font-bold text-primary">{t("payouts.title")}</h2>
-                <p className="text-xs text-neutral-600">{t("payouts.description")}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAddPayoutOpen(true)}
-                aria-haspopup="dialog"
-                className={`px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 shadow-2xs self-start sm:self-auto ${FOCUS_RING}`}
+              {t("payouts.add")}
+            </Button>
+          )}
+          <ul className="space-y-3">
+            {payoutMethods.map((m) => (
+              <li
+                key={m.id}
+                className={cn(
+                  "flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 transition-shadow duration-fast ease-standard",
+                  m.isDefault ? "bg-secondary-50 ring-1 ring-inset ring-secondary-200" : "bg-darnaBg-300/50"
+                )}
               >
-                <BrandPlusIcon size={16} aria-hidden="true" />
-                <span>{t("payouts.add")}</span>
-              </button>
-            </div>
-
-            {/* Methods list */}
-            <ul className="space-y-3">
-              {payoutMethods.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-tertiary/60 bg-neutral-50/60 hover:bg-white transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      aria-hidden="true"
-                      className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm"
-                    >
-                      {m.channel === "CCP" ? t("payouts.badgeCcp") : t("payouts.badgeRib")}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-primary text-sm">{t(`channels.${m.channel}`)}</span>
-                        {m.isDefault && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                            {t("payouts.defaultBadge")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs font-mono text-neutral-600 mt-0.5">
-                        <bdi dir="ltr">{payoutDetails(m)}</bdi>
-                        {m.holder && <> • {m.holder}</>}
-                      </div>
-                    </div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-meta font-semibold text-primary-800 shadow-e1"
+                  >
+                    {m.channel === "CCP" ? t("payouts.badgeCcp") : t("payouts.badgeRib")}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 text-body font-semibold text-primary-900">
+                      {t(`channels.${m.channel}`)}
+                      {m.isDefault && (
+                        <Badge tone="success" dot>
+                          {t("payouts.defaultBadge")}
+                        </Badge>
+                      )}
+                    </p>
+                    <p className="mt-0.5 truncate text-meta tabular-nums text-primary-600">
+                      <bdi dir="ltr">{payoutDetails(m)}</bdi>
+                      {m.holder && <> · {m.holder}</>}
+                    </p>
                   </div>
+                </div>
+                {!m.isDefault && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSetDefaultPayout(m.id)}
+                    aria-label={t("payouts.setDefaultFor", { method: t(`channels.${m.channel}`) })}
+                  >
+                    {t("payouts.setDefault")}
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Card>
 
-                  <div>
-                    {!m.isDefault && (
-                      <button
-                        type="button"
-                        onClick={() => handleSetDefaultPayout(m.id)}
-                        aria-label={t("payouts.setDefaultFor", { method: t(`channels.${m.channel}`) })}
-                        className={`text-xs font-bold text-secondary hover:text-primary transition rounded ${FOCUS_RING}`}
-                      >
-                        {t("payouts.setDefault")}
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Recent Payout History Table */}
-          <div className="bg-white rounded-3xl border border-tertiary/70 p-6 shadow-2xs">
-            <h2 className="font-serif text-lg font-bold text-primary mb-1">{t("history.title")}</h2>
-            <p className="text-xs text-neutral-600 mb-4">{t("history.description")}</p>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-start text-xs">
-                <caption className="sr-only">{t("history.title")}</caption>
-                <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-600 font-bold uppercase tracking-wider">
-                  <tr>
-                    <th scope="col" className="py-2.5 px-3 text-start">{t("history.colDate")}</th>
-                    <th scope="col" className="py-2.5 px-3 text-start">{t("history.colReference")}</th>
-                    <th scope="col" className="py-2.5 px-3 text-start">{t("history.colMethod")}</th>
-                    <th scope="col" className="py-2.5 px-3 text-end">{t("history.colAmount")}</th>
-                    <th scope="col" className="py-2.5 px-3 text-end">{t("history.colStatus")}</th>
+        <Card as="section" padding="lg" radius="3xl">
+          {sectionHead(t("history.title"), t("history.description"))}
+          <div className="-mx-2 overflow-x-auto">
+            <table className="w-full min-w-[34rem] text-start text-meta">
+              <caption className="sr-only">{t("history.title")}</caption>
+              <thead className="text-primary-600">
+                <tr className="border-b border-primary/[0.08]">
+                  <th scope="col" className="px-2 py-2.5 text-start font-semibold">{t("history.colDate")}</th>
+                  <th scope="col" className="px-2 py-2.5 text-start font-semibold">{t("history.colReference")}</th>
+                  <th scope="col" className="px-2 py-2.5 text-start font-semibold">{t("history.colMethod")}</th>
+                  <th scope="col" className="px-2 py-2.5 text-end font-semibold">{t("history.colAmount")}</th>
+                  <th scope="col" className="px-2 py-2.5 text-end font-semibold">{t("history.colStatus")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-primary/[0.06]">
+                {PAYOUT_HISTORY.map((row) => (
+                  <tr key={row.id} className="transition-colors duration-fast ease-standard hover:bg-darnaBg/70">
+                    <td className="px-2 py-3 tabular-nums text-primary-700">{formatDate(row.date, locale)}</td>
+                    <td className="px-2 py-3 tabular-nums text-primary-600">
+                      <bdi dir="ltr">{row.id}</bdi>
+                    </td>
+                    <td className="px-2 py-3 text-primary-800">{t(`channels.${row.channel}`)}</td>
+                    <td className="px-2 py-3 text-end font-semibold tabular-nums text-primary-900">
+                      {formatDzd(row.amount, locale)}
+                    </td>
+                    <td className="px-2 py-3 text-end">
+                      <Badge tone="success">{t("history.statusTransferred")}</Badge>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-tertiary/40 font-semibold">
-                  {PAYOUT_HISTORY.map((row) => (
-                    <tr key={row.id} className="hover:bg-neutral-50/50">
-                      <td className="py-3 px-3 text-neutral-600">{formatDate(row.date, locale)}</td>
-                      <td className="py-3 px-3 font-mono text-neutral-600">
-                        <bdi dir="ltr">{row.id}</bdi>
-                      </td>
-                      <td className="py-3 px-3 text-primary">{t(`channels.${row.channel}`)}</td>
-                      <td className="py-3 px-3 font-mono font-bold text-primary text-end">
-                        {formatDzd(row.amount, locale)}
-                      </td>
-                      <td className="py-3 px-3 text-end">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                          {t("history.statusTransferred")}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
+        </Card>
+      </TabPanel>
 
-      {/* TAB 2: IDENTITY & AGENCY STATUS */}
-      {activeTab === "identity" && (
-        <div
-          role="tabpanel"
-          id={panelId("identity")}
-          aria-labelledby={tabId("identity")}
-          className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-6 animate-in fade-in"
-        >
-          <div>
-            <h2 className="font-serif text-lg font-bold text-primary">{t("identity.title")}</h2>
-            <p className="text-xs text-neutral-600">{t("identity.description")}</p>
-          </div>
-
-          {/* Current Status Box */}
-          <div className="bg-neutral-50 rounded-2xl p-5 border border-tertiary/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div
-                aria-hidden="true"
-                className="w-12 h-12 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center"
-              >
+      {/* Identity */}
+      <TabPanel tabsId={tabsId} value="identity" active={activeTab}>
+        <Card as="section" padding="lg" radius="3xl" className="space-y-6">
+          {sectionHead(t("identity.title"), t("identity.description"))}
+          <div className="flex flex-col gap-4 rounded-2xl bg-darnaBg-300/50 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary-100 text-secondary-800">
                 {organization ? <BrandBuildingIcon size={24} /> : <BrandShieldIcon size={24} />}
-              </div>
-              <div>
-                <span className="text-xs font-bold text-neutral-600 uppercase tracking-wider">
-                  {t("identity.currentStatus")}
-                </span>
-                <h3 className="font-serif font-black text-primary text-base">
+              </span>
+              <div className="min-w-0">
+                <p className="text-meta text-primary-600">{t("identity.currentStatus")}</p>
+                <h3 className="font-serif text-title font-normal text-primary-900">
                   {organization ? organization.name : t("identity.individualHost")}
                 </h3>
-                <div className="text-xs text-neutral-600">
+                <p className="text-meta text-primary-600">
                   {organization
                     ? t("identity.verifiedAgency", { rc: organization.businessRegistrationNumber })
                     : t("identity.individualVerified")}
-                </div>
+                </p>
               </div>
             </div>
-
             {organization ? (
-              <Link
+              <Button
                 href="/host/agency/team"
-                className={`px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition flex items-center gap-1.5 self-start sm:self-auto ${FOCUS_RING}`}
+                variant="secondary"
+                size="md"
+                leadingIcon={<BrandUsersIcon size={16} aria-hidden="true" />}
+                className="self-start sm:self-auto"
               >
-                <BrandUsersIcon size={16} aria-hidden="true" />
-                <span>{t("identity.manageTeam")}</span>
-              </Link>
+                {t("identity.manageTeam")}
+              </Button>
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  toast.info(t("toasts.agencyUpgradeRequested"));
-                }}
-                className={`px-4 py-2 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-secondary/90 transition self-start sm:self-auto ${FOCUS_RING}`}
+              <Button
+                variant="tertiary"
+                size="md"
+                onClick={() => toast.info(t("toasts.agencyUpgradeRequested"))}
+                className="self-start sm:self-auto"
               >
                 {t("identity.upgrade")}
-              </button>
+              </Button>
             )}
           </div>
-
-          <div className="border-t border-tertiary/40 pt-4">
-            <h3 className="font-bold text-primary text-sm mb-2">{t("identity.complianceTitle")}</h3>
-            <p className="text-xs text-neutral-600 leading-relaxed">{t("identity.complianceBody")}</p>
+          <div className="border-t border-primary/[0.08] pt-5">
+            <h3 className="text-title text-primary-900">{t("identity.complianceTitle")}</h3>
+            <p className="mt-1.5 text-meta leading-relaxed text-primary-700">{t("identity.complianceBody")}</p>
           </div>
-        </div>
-      )}
+        </Card>
+      </TabPanel>
 
-      {/* TAB 3: BOOKING DEFAULTS */}
-      {activeTab === "defaults" && (
-        <div
-          role="tabpanel"
-          id={panelId("defaults")}
-          aria-labelledby={tabId("defaults")}
-          className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-6 animate-in fade-in"
-        >
-          <div>
-            <h2 className="font-serif text-lg font-bold text-primary">{t("defaults.title")}</h2>
-            <p className="text-xs text-neutral-600">{t("defaults.description")}</p>
+      {/* Booking defaults */}
+      <TabPanel tabsId={tabsId} value="defaults" active={activeTab}>
+        <Card as="section" padding="lg" radius="3xl" className="space-y-6">
+          {sectionHead(t("defaults.title"), t("defaults.description"))}
+          <RadioGroup
+            legend={t("defaults.approvalModeLabel")}
+            name={`${baseId}-approval`}
+            value={approvalMode}
+            onChange={(v) => setApprovalMode(v as "instant" | "request")}
+            appearance="card"
+            orientation="horizontal"
+            options={[
+              {
+                value: "instant",
+                label: (
+                  <span className="flex items-center gap-2">
+                    <BrandLightningIcon size={16} aria-hidden="true" className="text-secondary-700" />
+                    {t("defaults.instantTitle")}
+                  </span>
+                ),
+                description: t("defaults.instantDesc"),
+              },
+              {
+                value: "request",
+                label: (
+                  <span className="flex items-center gap-2">
+                    <BrandClockIcon size={16} aria-hidden="true" className="text-amber-700" />
+                    {t("defaults.requestTitle")}
+                  </span>
+                ),
+                description: t("defaults.requestDesc"),
+              },
+            ]}
+          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Select id={ids.advanceNotice} label={t("defaults.advanceNoticeLabel")} value={advanceNotice} onChange={(e) => setAdvanceNotice(e.target.value)}>
+              <option value="same_day">{t("defaults.advanceSameDay")}</option>
+              <option value="1_day">{t("defaults.advanceDays", { count: 1 })}</option>
+              <option value="2_days">{t("defaults.advanceDays", { count: 2 })}</option>
+            </Select>
+            <Select id={ids.prepTime} label={t("defaults.prepTimeLabel")} value={prepTime} onChange={(e) => setPrepTime(e.target.value)}>
+              <option value="none">{t("defaults.prepNone")}</option>
+              <option value="1_night">{t("defaults.prepOneNight")}</option>
+            </Select>
+            <Input
+              id={ids.checkIn}
+              label={t("defaults.checkInLabel")}
+              inputMode="numeric"
+              dir="ltr"
+              value={checkInTime}
+              onChange={(e) => setCheckInTime(e.target.value)}
+              prefix={<BrandClockIcon size={16} aria-hidden="true" />}
+              className="tabular-nums"
+            />
+            <Input
+              id={ids.checkOut}
+              label={t("defaults.checkOutLabel")}
+              inputMode="numeric"
+              dir="ltr"
+              value={checkOutTime}
+              onChange={(e) => setCheckOutTime(e.target.value)}
+              prefix={<BrandClockIcon size={16} aria-hidden="true" />}
+              className="tabular-nums"
+            />
           </div>
-
-          <div className="space-y-4">
-            {/* Booking Approval Mode 2-Card Selector */}
-            <div className="space-y-2" role="group" aria-labelledby={ids.approvalLabel}>
-              <span id={ids.approvalLabel} className="text-xs font-bold text-neutral-700 block">
-                {t("defaults.approvalModeLabel")}
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  aria-pressed={approvalMode === "instant"}
-                  onClick={() => setApprovalMode("instant")}
-                  className={`p-4 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${FOCUS_RING} ${
-                    approvalMode === "instant"
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
-                  }`}
-                >
-                  <div
-                    aria-hidden="true"
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      approvalMode === "instant" ? "bg-primary text-white" : "bg-neutral-200 text-neutral-600"
-                    }`}
-                  >
-                    <BrandLightningIcon size={18} />
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm text-primary block">{t("defaults.instantTitle")}</span>
-                    <span className="text-[11px] text-neutral-600 leading-snug block mt-0.5">
-                      {t("defaults.instantDesc")}
-                    </span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  aria-pressed={approvalMode === "request"}
-                  onClick={() => setApprovalMode("request")}
-                  className={`p-4 rounded-2xl border text-start transition flex items-start gap-3 cursor-pointer ${FOCUS_RING} ${
-                    approvalMode === "request"
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-tertiary/70 bg-neutral-50 hover:bg-neutral-100/60"
-                  }`}
-                >
-                  <div
-                    aria-hidden="true"
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                      approvalMode === "request" ? "bg-amber-700 text-white" : "bg-neutral-200 text-neutral-600"
-                    }`}
-                  >
-                    <BrandClockIcon size={18} />
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm text-primary block">{t("defaults.requestTitle")}</span>
-                    <span className="text-[11px] text-neutral-600 leading-snug block mt-0.5">
-                      {t("defaults.requestDesc")}
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Advance Notice */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor={ids.advanceNotice} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("defaults.advanceNoticeLabel")}
-                </label>
-                <select
-                  id={ids.advanceNotice}
-                  value={advanceNotice}
-                  onChange={(e) => setAdvanceNotice(e.target.value)}
-                  className={FIELD_CLASS}
-                >
-                  <option value="same_day">{t("defaults.advanceSameDay")}</option>
-                  <option value="1_day">{t("defaults.advanceDays", { count: 1 })}</option>
-                  <option value="2_days">{t("defaults.advanceDays", { count: 2 })}</option>
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor={ids.prepTime} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("defaults.prepTimeLabel")}
-                </label>
-                <select
-                  id={ids.prepTime}
-                  value={prepTime}
-                  onChange={(e) => setPrepTime(e.target.value)}
-                  className={FIELD_CLASS}
-                >
-                  <option value="none">{t("defaults.prepNone")}</option>
-                  <option value="1_night">{t("defaults.prepOneNight")}</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Check-in / check-out times */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor={ids.checkIn} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("defaults.checkInLabel")}
-                </label>
-                <input
-                  id={ids.checkIn}
-                  type="text"
-                  inputMode="numeric"
-                  dir="ltr"
-                  value={checkInTime}
-                  onChange={(e) => setCheckInTime(e.target.value)}
-                  className={`${FIELD_CLASS} text-start`}
-                />
-              </div>
-
-              <div>
-                <label htmlFor={ids.checkOut} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("defaults.checkOutLabel")}
-                </label>
-                <input
-                  id={ids.checkOut}
-                  type="text"
-                  inputMode="numeric"
-                  dir="ltr"
-                  value={checkOutTime}
-                  onChange={(e) => setCheckOutTime(e.target.value)}
-                  className={`${FIELD_CLASS} text-start`}
-                />
-              </div>
-            </div>
-
-            {/* Cancellation Policy */}
-            <div>
-              <label htmlFor={ids.cancellation} className="text-xs font-bold text-neutral-600 block mb-1">
-                {t("defaults.cancellationLabel")}
-              </label>
-              <select
-                id={ids.cancellation}
-                value={cancellationPolicy}
-                onChange={(e) => setCancellationPolicy(e.target.value)}
-                className={FIELD_CLASS}
-              >
-                <option value="flexible">{t("defaults.cancellationFlexible")}</option>
-                <option value="moderate">{t("defaults.cancellationModerate")}</option>
-                <option value="strict">{t("defaults.cancellationStrict")}</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-tertiary/40 flex justify-end">
-            <button
-              type="button"
-              onClick={handleSaveDefaults}
-              className={`px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs ${FOCUS_RING}`}
-            >
+          <Select id={ids.cancellation} label={t("defaults.cancellationLabel")} value={cancellationPolicy} onChange={(e) => setCancellationPolicy(e.target.value)}>
+            <option value="flexible">{t("defaults.cancellationFlexible")}</option>
+            <option value="moderate">{t("defaults.cancellationModerate")}</option>
+            <option value="strict">{t("defaults.cancellationStrict")}</option>
+          </Select>
+          <div className="flex justify-end border-t border-primary/[0.08] pt-5">
+            <Button variant="primary" size="md" onClick={handleSaveDefaults}>
               {t("defaults.save")}
-            </button>
+            </Button>
           </div>
-        </div>
-      )}
+        </Card>
+      </TabPanel>
 
-      {/* TAB 4: NOTIFICATIONS & GUEST COMMUNICATION */}
-      {activeTab === "notifications" && (
-        <div
-          role="tabpanel"
-          id={panelId("notifications")}
-          aria-labelledby={tabId("notifications")}
-          className="bg-white rounded-3xl border border-tertiary/70 p-6 sm:p-8 shadow-2xs space-y-6 animate-in fade-in"
-        >
-          <div>
-            <h2 className="font-serif text-lg font-bold text-primary">{t("notifications.title")}</h2>
-            <p className="text-xs text-neutral-600">{t("notifications.description")}</p>
+      {/* Notifications */}
+      <TabPanel tabsId={tabsId} value="notifications" active={activeTab}>
+        <Card as="section" padding="lg" radius="3xl" className="space-y-6">
+          {sectionHead(t("notifications.title"), t("notifications.description"))}
+          <div className="divide-y divide-primary/[0.08] rounded-2xl bg-darnaBg-300/50 px-4">
+            <Switch
+              id={ids.sms}
+              label={t("notifications.smsTitle")}
+              description={t("notifications.smsDesc")}
+              checked={smsBookings}
+              onCheckedChange={setSmsBookings}
+              className="py-4"
+            />
+            <Switch
+              id={ids.email}
+              label={t("notifications.emailTitle")}
+              description={t("notifications.emailDesc")}
+              checked={emailInquiries}
+              onCheckedChange={setEmailInquiries}
+              className="py-4"
+            />
           </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4 p-4 bg-neutral-50 rounded-2xl border border-tertiary/60">
-              <div>
-                <label htmlFor={ids.sms} className="block font-bold text-sm text-primary cursor-pointer">
-                  {t("notifications.smsTitle")}
-                </label>
-                <span id={ids.smsDesc} className="text-xs text-neutral-600">
-                  {t("notifications.smsDesc")}
-                </span>
-              </div>
-              <input
-                id={ids.sms}
-                type="checkbox"
-                role="switch"
-                aria-checked={smsBookings}
-                aria-describedby={ids.smsDesc}
-                checked={smsBookings}
-                onChange={(e) => setSmsBookings(e.target.checked)}
-                className="w-5 h-5 shrink-0 text-primary rounded focus:ring-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-4 p-4 bg-neutral-50 rounded-2xl border border-tertiary/60">
-              <div>
-                <label htmlFor={ids.email} className="block font-bold text-sm text-primary cursor-pointer">
-                  {t("notifications.emailTitle")}
-                </label>
-                <span id={ids.emailDesc} className="text-xs text-neutral-600">
-                  {t("notifications.emailDesc")}
-                </span>
-              </div>
-              <input
-                id={ids.email}
-                type="checkbox"
-                role="switch"
-                aria-checked={emailInquiries}
-                aria-describedby={ids.emailDesc}
-                checked={emailInquiries}
-                onChange={(e) => setEmailInquiries(e.target.checked)}
-                className="w-5 h-5 shrink-0 text-primary rounded focus:ring-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-              />
-            </div>
-
-            <div>
-              <label htmlFor={ids.welcome} className="text-xs font-bold text-neutral-600 block mb-1">
-                {t("notifications.welcomeLabel")}
-              </label>
-              <textarea
-                id={ids.welcome}
-                rows={4}
-                value={autoWelcomeMessage}
-                onChange={(e) => setAutoWelcomeMessage(e.target.value)}
-                className={`${FIELD_CLASS} p-3 leading-relaxed`}
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-tertiary/40 flex justify-end">
-            <button
-              type="button"
-              onClick={() => toast.success(t("toasts.communicationSaved"))}
-              className={`px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs ${FOCUS_RING}`}
-            >
+          <Textarea
+            id={ids.welcome}
+            label={t("notifications.welcomeLabel")}
+            rows={4}
+            value={autoWelcomeMessage}
+            onChange={(e) => setAutoWelcomeMessage(e.target.value)}
+          />
+          <div className="flex justify-end border-t border-primary/[0.08] pt-5">
+            <Button variant="primary" size="md" onClick={() => toast.success(t("toasts.communicationSaved"))}>
               {t("notifications.save")}
-            </button>
+            </Button>
           </div>
-        </div>
-      )}
+        </Card>
+      </TabPanel>
 
-      {/* Add Payout Account Modal */}
-      <Dialog
-        isOpen={isAddPayoutOpen}
-        onClose={closeAddPayout}
-        title={t("addPayout.title")}
-        titleClassName="font-serif text-lg font-black text-primary pe-10 pb-3 border-b border-tertiary/60 mb-4"
-        className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl border border-tertiary shadow-2xl p-6 sm:p-8 max-h-[92dvh] overflow-y-auto animate-in fade-in zoom-in-95"
-      >
-        <button
-          type="button"
-          onClick={closeAddPayout}
-          className={`absolute top-6 end-6 sm:top-8 sm:end-8 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center transition ${FOCUS_RING}`}
-          aria-label={t("addPayout.close")}
-        >
-          <BrandCrossIcon size={16} aria-hidden="true" />
-        </button>
-
-        <form onSubmit={handleAddPayout} noValidate className="space-y-4">
-          <div role="group" aria-labelledby={ids.channelLabel}>
-            <span id={ids.channelLabel} className="text-xs font-bold text-neutral-600 block mb-1">
+      {/* Add payout account */}
+      <Dialog isOpen={isAddPayoutOpen} onClose={closeAddPayout} title={t("addPayout.title")} showClose size="sm">
+        <form onSubmit={handleAddPayout} noValidate className="mt-6 space-y-5">
+          <div>
+            <p id={ids.channelLabel} className="mb-2 text-meta font-semibold text-primary-700">
               {t("addPayout.channelLabel")}
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              {(["CCP", "BNA", "BEA"] as const).map((ch) => (
-                <button
-                  key={ch}
-                  type="button"
-                  aria-pressed={newAccountType === ch}
-                  aria-label={t(`channels.${ch}`)}
-                  onClick={() => setNewAccountType(ch)}
-                  className={`py-2 text-xs font-bold rounded-xl border transition ${FOCUS_RING} ${
-                    newAccountType === ch
-                      ? "bg-primary text-white border-primary"
-                      : "border-tertiary/80 text-neutral-600 hover:bg-neutral-50"
-                  }`}
-                >
-                  {t(`channelsShort.${ch}`)}
-                </button>
-              ))}
-            </div>
+            </p>
+            <SegmentedControl
+              ariaLabel={t("addPayout.channelLabel")}
+              value={newAccountType}
+              onChange={setNewAccountType}
+              fullWidth
+              options={(["CCP", "BNA", "BEA"] as const).map((ch) => ({ value: ch, label: t(`channelsShort.${ch}`) }))}
+            />
           </div>
-
           {newAccountType === "CCP" ? (
             <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2">
-                <label htmlFor={ids.accountNumber} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("addPayout.ccpNumberLabel")}
-                </label>
-                <input
-                  id={ids.accountNumber}
-                  type="text"
-                  inputMode="numeric"
-                  dir="ltr"
-                  placeholder="0012345678"
-                  value={newAccountNumber}
-                  onChange={(e) => setNewAccountNumber(e.target.value)}
-                  aria-required="true"
-                  aria-invalid={accountError ? true : undefined}
-                  aria-describedby={accountError ? ids.accountError : undefined}
-                  className={`${FIELD_CLASS} font-mono font-bold text-start`}
-                />
-              </div>
-              <div>
-                <label htmlFor={ids.accountKey} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("addPayout.ccpKeyLabel")}
-                </label>
-                <input
-                  id={ids.accountKey}
-                  type="text"
-                  inputMode="numeric"
-                  dir="ltr"
-                  placeholder="45"
-                  value={newAccountCle}
-                  onChange={(e) => setNewAccountCle(e.target.value)}
-                  className={`${FIELD_CLASS} font-mono font-bold text-start`}
-                />
-              </div>
-            </div>
-          ) : (
-            <div>
-              <label htmlFor={ids.accountNumber} className="text-xs font-bold text-neutral-600 block mb-1">
-                {t("addPayout.ribLabel")}
-              </label>
-              <input
+              <Input
                 id={ids.accountNumber}
-                type="text"
+                label={t("addPayout.ccpNumberLabel")}
                 inputMode="numeric"
                 dir="ltr"
-                placeholder="001 00234 1234567890 44"
                 value={newAccountNumber}
                 onChange={(e) => setNewAccountNumber(e.target.value)}
                 aria-required="true"
-                aria-invalid={accountError ? true : undefined}
-                aria-describedby={accountError ? ids.accountError : undefined}
-                className={`${FIELD_CLASS} font-mono font-bold text-start`}
+                error={accountError ?? undefined}
+                containerClassName="col-span-2"
+                className="tabular-nums"
+              />
+              <Input
+                id={ids.accountKey}
+                label={t("addPayout.ccpKeyLabel")}
+                inputMode="numeric"
+                dir="ltr"
+                value={newAccountCle}
+                onChange={(e) => setNewAccountCle(e.target.value)}
+                className="tabular-nums"
               />
             </div>
+          ) : (
+            <Input
+              id={ids.accountNumber}
+              label={t("addPayout.ribLabel")}
+              inputMode="numeric"
+              dir="ltr"
+              value={newAccountNumber}
+              onChange={(e) => setNewAccountNumber(e.target.value)}
+              aria-required="true"
+              error={accountError ?? undefined}
+              className="tabular-nums"
+            />
           )}
-
-          {accountError && (
-            <p id={ids.accountError} role="alert" className="text-xs font-semibold text-status-error">
-              {accountError}
-            </p>
-          )}
-
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={closeAddPayout}
-              className={`px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition ${FOCUS_RING}`}
-            >
+          <DialogFooter>
+            <Button type="button" variant="tertiary" size="md" onClick={closeAddPayout}>
               {t("addPayout.cancel")}
-            </button>
-            <button
-              type="submit"
-              className={`px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition shadow-2xs ${FOCUS_RING}`}
-            >
+            </Button>
+            <Button type="submit" variant="primary" size="md">
               {t("addPayout.save")}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
       </Dialog>
     </div>

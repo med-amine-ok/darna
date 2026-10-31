@@ -70,7 +70,7 @@
     "property": "Logement",
     "type": "Type",
     "status": "Statut",
-    "rate": "Tarif par nuit",
+    "rate": "Tarif de base",
     "bookings": "Réservations",
     "rating": "Note",
     "actions": "Actions",
@@ -81,14 +81,15 @@
     "close": "Fermer la modification rapide",
     "titleLabel": "Titre de l'annonce",
     "titleError": "Veuillez saisir un titre.",
-    "priceLabel": "Tarif de base par nuit (DZD)",
+    "priceLabel": "Tarif de base (DZD)",
     "priceError": "Saisissez un prix entier compris entre {min} et {max}.",
     "currency": "DZD",
     "instantBook": "Réservation instantanée",
     "instantBookHint": "Permettre aux voyageurs de réserver sans confirmation manuelle de l'hôte",
     "cancel": "Annuler",
     "saving": "Enregistrement...",
-    "save": "Enregistrer les modifications"
+    "save": "Enregistrer les modifications",
+    "priceLabelUnit": "Tarif de base {unit} (DZD)"
   },
   "roomTypesModal": {
     "title": "Gérer les types de chambre et l'inventaire",
@@ -122,5 +123,11 @@
     "roomTypesFailed": "Impossible de mettre à jour les types de chambre.",
     "deleted": "Annonce supprimée de votre parc.",
     "deleteFailed": "Impossible de supprimer l'annonce."
+  },
+  "unit": {
+    "night": "/ nuit",
+    "day": "/ jour",
+    "person": "/ personne",
+    "bed": "/ lit"
   }
 }

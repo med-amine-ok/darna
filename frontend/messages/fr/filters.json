@@ -18,5 +18,80 @@
   "hotelResort": "Hôtel & resort",
   "hostelDorms": "Auberge de jeunesse & dortoirs",
   "villa": "Villa",
-  "riad": "Riad & ksar historiques"
+  "riad": "Riad & ksar historiques",
+  "showStays": "{count, plural, =0 {Aucun logement} one {Afficher # logement} other {Afficher # logements}}",
+  "sidebar": {
+    "label": "Filtres de recherche",
+    "title": "Filtres",
+    "reset": "Réinitialiser",
+    "seeMore": "Voir plus",
+    "seeLess": "Voir moins",
+    "price": "Prix (DZD)",
+    "pricePerPerson": "Prix par personne (DZD)",
+    "rating": "Note des voyageurs",
+    "anyRating": "Toutes les notes",
+    "ratingAtLeast": "{rating} et plus",
+    "bedrooms": "Chambres",
+    "any": "Tous",
+    "atLeast": "{count}+",
+    "tripType": "Durée du voyage",
+    "duration": {
+      "1-3": "1 à 3 jours",
+      "4-7": "4 à 7 jours",
+      "8-14": "8 à 14 jours",
+      "15+": "15 jours ou plus"
+    },
+    "departureMonth": "Mois de départ",
+    "optionCount": "{count, plural, one {# résultat} other {# résultats}}",
+    "category": "Catégorie",
+    "wilaya": "Wilaya",
+    "searchWilaya": "Rechercher une wilaya ou son numéro",
+    "noWilaya": "Aucune wilaya trouvée",
+    "seeAllWilayas": "Voir les {count} wilayas",
+    "commune": "Commune",
+    "communeHint": "Choisissez une wilaya pour ne voir que ses communes.",
+    "roomsAndBaths": "Chambres et salles de bain",
+    "bathrooms": "Salles de bain",
+    "bedroomsAtLeast": "{count}+ chambres",
+    "bathroomsAtLeast": "{count}+ salles de bain",
+    "hotelStars": "Catégorie d'hôtel",
+    "starsAtLeast": "{count}+ étoiles",
+    "vehicleType": "Type de véhicule",
+    "transmission": "Boîte de vitesses",
+    "transmissionTypes": {
+      "automatic": "Automatique",
+      "manual": "Manuelle"
+    },
+    "fuel": "Carburant",
+    "fuelTypes": {
+      "petrol": "Essence",
+      "diesel": "Diesel",
+      "hybrid": "Hybride",
+      "electric": "Électrique"
+    },
+    "seats": "Places",
+    "seatsAtLeast": "{count}+ places",
+    "experienceType": "Type d'expérience",
+    "experienceLength": "Durée",
+    "expLength": {
+      "upTo4h": "Jusqu'à 4 heures",
+      "halfDay": "4 à 12 heures",
+      "multiDay": "Plusieurs jours"
+    },
+    "languages": "Langues",
+    "groupSize": "Taille du groupe",
+    "groupAtLeast": "{count}+ voyageurs",
+    "agency": "Agence",
+    "bookingOptions": "Options de réservation",
+    "instantBook": "Réservation instantanée",
+    "guestFavorite": "Coup de cœur voyageurs",
+    "freeCancellation": "Annulation gratuite",
+    "hostType": "Type d'hôte",
+    "hostTypes": {
+      "individual": "Hôtes particuliers",
+      "organization": "Hôtels, agences et pros"
+    },
+    "activeFilters": "Filtres actifs",
+    "remove": "Retirer le filtre : {label}"
+  }
 }

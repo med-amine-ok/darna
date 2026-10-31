@@ -1,39 +1,57 @@
 "use client";
 
-import React, { useState, useEffect, useId } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Wallet } from "@/types";
 import { getMyWalletAction } from "@/app/actions/wallet";
-import Dialog from "@/components/ui/Dialog";
-import { formatDzd } from "@/lib/currency";
+import { formatAmountNumber, formatDzd } from "@/lib/currency";
 import { formatDate, formatNumber } from "@/lib/i18n/date-locale";
+import {
+  Accordion,
+  Badge,
+  Banner,
+  Button,
+  Card,
+  Dialog,
+  DialogFooter,
+  KitEmptyState,
+  Popover,
+  SegmentedControl,
+  Skeleton,
+  StatCard,
+  cn,
+  focusRing,
+} from "@/components/ui";
 import {
   BrandAlertCircleIcon,
   BrandReceiptIcon,
-  BrandCloseIcon,
-  BrandChevronUpIcon,
-  BrandChevronDownIcon,
+  BrandArrowUpIcon,
+  BrandArrowDownIcon,
+  BrandCashIcon,
   WalletWarningIcon,
   WalletSolventIcon,
 } from "@/components/icons";
 
 interface HostWalletWidgetProps {
   className?: string;
+  /**
+   * "full": balance StatCard with a running-balance sparkline (Today dashboard side column).
+   * "compact": one slim row so listings stay first on /host/listings.
+   */
+  variant?: "full" | "compact";
 }
 
 type LedgerFilter = "all" | "recharge" | "commission_deduction";
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-
 /**
  * Shows the current host's prepaid wallet. The wallet owner (user or org) is
- * resolved on the server from the session — the browser never chooses it.
+ * resolved on the server from the session, the browser never chooses it.
  */
-export default function HostWalletWidget({ className = "" }: HostWalletWidgetProps) {
+export default function HostWalletWidget({ className = "", variant = "full" }: HostWalletWidgetProps) {
   const t = useTranslations("hostWallet");
   const locale = useLocale();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentRate, setCurrentRate] = useState<number>(0);
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
   const [ledgerFilter, setLedgerFilter] = useState<LedgerFilter>("all");
@@ -47,289 +65,302 @@ export default function HostWalletWidget({ className = "" }: HostWalletWidgetPro
         setWallet(result.data.wallet);
         setCurrentRate(result.data.commissionRate);
       })
-      .catch(() => {});
-
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
     return () => {
       isMounted = false;
     };
   }, []);
 
+  // Running balance after each movement, oldest first (real ledger data only).
+  const balanceTrail = useMemo(() => {
+    if (!wallet) return [];
+    const sorted = [...wallet.transactions].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    let running = 0;
+    return sorted.map((tx) => (running += tx.amount));
+  }, [wallet]);
+
   if (!wallet) {
-    return null;
+    if (!loading) return null;
+    return variant === "compact" ? (
+      <Skeleton className={cn("h-[4.5rem] w-full rounded-2xl", className)} />
+    ) : (
+      <Skeleton className={cn("h-56 w-full rounded-2xl", className)} />
+    );
   }
 
   const isNegative = wallet.balance < 0;
   const rate = formatNumber(currentRate / 100, locale, { style: "percent", maximumFractionDigits: 2 });
-  const filters: { id: LedgerFilter; label: string }[] = [
-    { id: "all", label: t("filters.all") },
-    { id: "recharge", label: t("filters.recharge") },
-    { id: "commission_deduction", label: t("filters.commission") },
+  const dzdUnit = locale === "ar" ? "د.ج" : "DZD";
+  const filters: { value: LedgerFilter; label: string }[] = [
+    { value: "all", label: t("filters.all") },
+    { value: "recharge", label: t("filters.recharge") },
+    { value: "commission_deduction", label: t("filters.commission") },
   ];
   const visibleTransactions = wallet.transactions.filter((tx) =>
     ledgerFilter === "all" ? true : tx.type === ledgerFilter
   );
 
-  return (
-    <div className={`space-y-4 ${className}`}>
-      {/* High-visibility negative balance alert */}
-      {isNegative && (
-        <div
-          role="alert"
-          className="p-4 bg-rose-50 border-2 border-rose-300 rounded-3xl flex flex-col sm:flex-row items-start gap-4 text-rose-950 shadow-sm animate-in fade-in"
-        >
-          <div className="p-2 rounded-2xl bg-rose-100 text-rose-700 shrink-0">
-            <BrandAlertCircleIcon size={26} aria-hidden="true" />
-          </div>
-          <div className="text-xs space-y-1.5 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-rose-900">
-                {t("negativeNoticeAmount", { amount: formatDzd(wallet.balance, locale) })}
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-200 text-rose-900">
-                {t("overdue")}
-              </span>
-            </div>
-            <p className="text-rose-800 leading-relaxed">{t("negativeBody")}</p>
-            <div className="pt-2 flex flex-wrap items-center gap-3 text-[11px] font-mono text-rose-900">
-              <span className="bg-white/80 px-2.5 py-1 rounded-lg border border-rose-200">
-                {t("ccpAccount")} <strong dir="ltr">0021445982 Clé 41</strong>
-              </span>
-              <span className="bg-white/80 px-2.5 py-1 rounded-lg border border-rose-200">
-                {t("baridiMobRip")} <strong dir="ltr">00799999002144598241</strong>
-              </span>
-              <span className="text-rose-800 font-sans">
-                {t("adminSupport")} <strong dir="ltr">+213 21 74 12 00</strong>
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+  const statusBadge = isNegative ? (
+    <Badge tone="danger" icon={<WalletWarningIcon size={12} aria-hidden="true" />}>
+      {t("deficit")}
+    </Badge>
+  ) : (
+    <Badge tone="success" icon={<WalletSolventIcon size={12} aria-hidden="true" />}>
+      {t("solvent")}
+    </Badge>
+  );
 
-      {/* Main balance card */}
-      <section
-        aria-labelledby={titleId}
-        className="bg-white rounded-3xl border border-tertiary/70 p-5 sm:p-6 shadow-2xs space-y-4"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-tertiary/60">
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shrink-0 ${
-                isNegative ? "bg-rose-100 text-rose-700" : "bg-primary text-white"
-              }`}
+  const explainer = (
+    <div className="space-y-3 text-meta text-primary-700">
+      <p className="text-pretty">{t("howItWorksBody")}</p>
+      <dl className="space-y-1 rounded-xl bg-darnaBg p-3">
+        <dt className="font-semibold text-primary-900">{t("rechargeProcess")}</dt>
+        <dd>{t("offlineTransfer")}</dd>
+        <dd className="text-primary-600">{t("creditedManually")}</dd>
+      </dl>
+    </div>
+  );
+
+  const negativeAlert = isNegative && (
+    <Banner tone="danger" title={t("negativeNoticeAmount", { amount: formatDzd(wallet.balance, locale) })}>
+      <p className="text-pretty">{t("negativeBody")}</p>
+      <ul className="mt-2 flex flex-wrap gap-2 text-meta">
+        <li className="rounded-lg bg-white/80 px-2.5 py-1">
+          {t("ccpAccount")} <strong dir="ltr" className="tabular-nums">0021445982 Clé 41</strong>
+        </li>
+        <li className="rounded-lg bg-white/80 px-2.5 py-1">
+          {t("baridiMobRip")} <strong dir="ltr" className="tabular-nums">00799999002144598241</strong>
+        </li>
+        <li className="px-1 py-1">
+          {t("adminSupport")} <strong dir="ltr" className="tabular-nums">+213 21 74 12 00</strong>
+        </li>
+      </ul>
+    </Banner>
+  );
+
+  const statementButton = (
+    <Button
+      variant="tertiary"
+      size="sm"
+      onClick={() => setIsLedgerOpen(true)}
+      aria-haspopup="dialog"
+      leadingIcon={<BrandReceiptIcon size={16} aria-hidden="true" />}
+    >
+      {t("statementHistory")}
+    </Button>
+  );
+
+  return (
+    <div className={cn("space-y-3", className)}>
+      {negativeAlert}
+
+      {variant === "compact" ? (
+        <Card
+          as="section"
+          padding="sm"
+          aria-labelledby={titleId}
+          className="flex flex-wrap items-center gap-x-5 gap-y-3"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <span
+              aria-hidden="true"
+              className={cn(
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                isNegative ? "bg-accent-100 text-accent-700" : "bg-secondary-100 text-secondary-800"
+              )}
             >
-              <BrandReceiptIcon size={20} aria-hidden="true" />
-            </div>
-            <div>
-              <h3 id={titleId} className="font-serif text-lg font-bold text-primary">
-                {t("title")}
-              </h3>
-              <p className="text-xs text-neutral-600">
-                {t("ledgerSubtitle", { rate })}
+              <BrandCashIcon size={20} />
+            </span>
+            <div className="min-w-0">
+              <h2 id={titleId} className="text-meta font-medium text-primary-600">
+                {t("currentBalance")}
+              </h2>
+              <p
+                className={cn(
+                  "font-serif text-heading leading-tight tabular-nums",
+                  isNegative ? "text-accent-700" : "text-primary-900"
+                )}
+              >
+                {formatDzd(wallet.balance, locale)}
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsLedgerOpen(true)}
-              aria-haspopup="dialog"
-              className={`px-3.5 py-2 bg-neutral-100 hover:bg-neutral-200 text-primary rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${focusRing}`}
+          <div className="flex flex-wrap items-center gap-2">
+            {statusBadge}
+            <Badge tone="sand">
+              {t("applicableCommission")} · <bdi className="tabular-nums">{rate}</bdi>
+            </Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:ms-auto">
+            <Popover
+              ariaLabel={t("howItWorksShort")}
+              align="end"
+              className="w-80 max-w-[calc(100vw-2rem)]"
+              trigger={
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-meta font-semibold text-primary-700 hover:bg-primary/[0.05]",
+                    "transition-colors duration-fast ease-standard",
+                    focusRing
+                  )}
+                >
+                  <BrandAlertCircleIcon size={16} aria-hidden="true" className="text-secondary-700" />
+                  {t("howItWorksShort")}
+                </button>
+              }
             >
-              <BrandReceiptIcon size={15} aria-hidden="true" />
-              <span>{t("statementHistory")}</span>
-            </button>
+              {explainer}
+            </Popover>
+            {statementButton}
           </div>
-        </div>
-
-        {/* Balance metrics */}
-        <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-neutral-50/80 p-4 rounded-2xl border border-tertiary/60 space-y-1">
-            <dt className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider block">
-              {t("currentBalance")}
-            </dt>
-            <dd className={`text-2xl font-serif font-black ${isNegative ? "text-rose-700" : "text-primary"}`}>
-              {formatDzd(wallet.balance, locale)}
-            </dd>
-            <dd
-              className={`text-[11px] font-semibold flex items-center gap-1 mt-0.5 ${
-                isNegative ? "text-rose-700 font-bold" : "text-emerald-700"
-              }`}
-            >
-              {isNegative ? (
-                <>
-                  <WalletWarningIcon size={13} className="text-rose-700 shrink-0" aria-hidden="true" />
-                  <span>{t("deficit")}</span>
-                </>
-              ) : (
-                <>
-                  <WalletSolventIcon size={13} className="text-emerald-700 shrink-0" aria-hidden="true" />
-                  <span>{t("solvent")}</span>
-                </>
-              )}
-            </dd>
+        </Card>
+      ) : (
+        <Card as="section" padding="none" aria-labelledby={titleId} className="overflow-hidden">
+          <div className="flex items-start justify-between gap-3 px-5 pt-5">
+            <div className="min-w-0">
+              <h2 id={titleId} className="font-serif text-heading text-primary-900">
+                {t("title")}
+              </h2>
+              <p className="mt-0.5 text-meta text-primary-600">{t("ledgerSubtitle", { rate })}</p>
+            </div>
+            {statusBadge}
           </div>
-
-          <div className="bg-neutral-50/80 p-4 rounded-2xl border border-tertiary/60 space-y-1">
-            <dt className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider block">
-              {t("applicableCommission")}
-            </dt>
-            <dd className="text-2xl font-serif font-black text-primary">{rate}</dd>
-            <dd className="text-[11px] text-neutral-600 block">{t(`deductedPer.${wallet.hostType}`)}</dd>
+          <StatCard
+            label={t("currentBalance")}
+            value={wallet.balance}
+            unit={dzdUnit}
+            format={(n) => formatAmountNumber(n, locale)}
+            sparkline={balanceTrail.length > 1 ? balanceTrail : undefined}
+            hint={t(`deductedPer.${wallet.hostType}`)}
+            icon={<BrandCashIcon size={18} />}
+            className="shadow-none"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/[0.06] px-5 py-3">
+            <p className="text-meta text-primary-600">
+              {t("applicableCommission")}{" "}
+              <strong className="font-semibold text-primary-900 tabular-nums">{rate}</strong>
+            </p>
+            {statementButton}
           </div>
-
-          <div className="bg-neutral-50/80 p-4 rounded-2xl border border-tertiary/60 space-y-1">
-            <dt className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider block">
-              {t("rechargeProcess")}
-            </dt>
-            <dd className="text-xs font-bold text-primary block">{t("offlineTransfer")}</dd>
-            <dd className="text-[11px] text-neutral-600 block leading-tight">{t("creditedManually")}</dd>
+          <div className="border-t border-primary/[0.06] px-2 pb-1">
+            <Accordion
+              appearance="plain"
+              headingLevel={3}
+              items={[{ id: "how", title: t("howItWorksShort"), content: explainer }]}
+            />
           </div>
-        </dl>
-
-        {/* Note banner */}
-        <div className="p-3 bg-neutral-50/60 rounded-xl border border-tertiary/40 flex items-start gap-2.5 text-xs text-neutral-600">
-          <BrandAlertCircleIcon size={16} className="text-secondary shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="text-[11px] leading-relaxed">
-            <strong>{t("howItWorksTitle")}</strong> {t("howItWorksBody")}
-          </p>
-        </div>
-      </section>
+        </Card>
+      )}
 
       {/* Read-only transaction ledger */}
       <Dialog
         isOpen={isLedgerOpen}
         onClose={() => setIsLedgerOpen(false)}
-        ariaLabel={t("statementTitle")}
-        className="relative bg-white rounded-3xl max-w-2xl w-full border border-tertiary shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95 my-8 space-y-5 max-h-[92dvh] overflow-y-auto"
-        backdropClassName="fixed inset-0 z-[90] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        title={t("statementTitle")}
+        description={t("statementSubtitle")}
+        size="lg"
+        showClose
       >
-        <div className="flex items-center justify-between pb-4 border-b border-tertiary/60">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-bold">
-              <BrandReceiptIcon size={20} aria-hidden="true" />
-            </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3 rounded-2xl bg-darnaBg p-4">
             <div>
-              <h2 className="font-serif text-lg font-black text-primary">{t("statementTitle")}</h2>
-              <p className="text-xs text-neutral-600">{t("statementSubtitle")}</p>
+              <p className="text-meta text-primary-600">{t("netBalance")}</p>
+              <p
+                className={cn(
+                  "font-serif text-heading tabular-nums",
+                  isNegative ? "text-accent-700" : "text-primary-900"
+                )}
+              >
+                {formatDzd(wallet.balance, locale)}
+              </p>
+            </div>
+            <div className="text-end">
+              <p className="text-meta text-primary-600">{t("takeRate")}</p>
+              <p className="text-title text-primary-900 tabular-nums">{rate}</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsLedgerOpen(false)}
-            aria-label={t("closeStatement")}
-            className={`w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center ${focusRing}`}
-          >
-            <BrandCloseIcon size={16} aria-hidden="true" />
-          </button>
-        </div>
 
-        {/* Current summary */}
-        <div className="p-3.5 bg-neutral-50 rounded-2xl border border-tertiary/60 flex items-center justify-between text-xs">
-          <div>
-            <span className="text-neutral-600 block font-bold uppercase tracking-wider text-[10px]">
-              {t("netBalance")}
-            </span>
-            <span className={`text-lg font-serif font-black ${isNegative ? "text-rose-700" : "text-primary"}`}>
-              {formatDzd(wallet.balance, locale)}
-            </span>
-          </div>
-          <div className="text-end">
-            <span className="text-neutral-600 block font-bold uppercase tracking-wider text-[10px]">
-              {t("takeRate")}
-            </span>
-            <span className="font-bold text-primary font-mono">{rate}</span>
-          </div>
-        </div>
+          <SegmentedControl
+            options={filters}
+            value={ledgerFilter}
+            onChange={setLedgerFilter}
+            ariaLabel={t("filterLabel")}
+            size="sm"
+            className="max-w-full overflow-x-auto scrollbar-none"
+          />
 
-        {/* Filter buttons */}
-        <div role="group" aria-label={t("filterLabel")} className="flex items-center gap-2">
-          {filters.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setLedgerFilter(tab.id)}
-              aria-pressed={ledgerFilter === tab.id}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition ${focusRing} ${
-                ledgerFilter === tab.id
-                  ? "bg-primary text-white"
-                  : "bg-neutral-100 hover:bg-neutral-200 text-neutral-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Table */}
-        <div className="border border-tertiary/70 rounded-2xl overflow-hidden max-h-72 overflow-y-auto text-xs">
-          <table className="w-full text-start border-collapse">
-            <caption className="sr-only">{t("table.caption")}</caption>
-            <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-600 font-bold sticky top-0">
-              <tr>
-                <th scope="col" className="py-2.5 px-3 text-start">{t("table.date")}</th>
-                <th scope="col" className="py-2.5 px-3 text-start">{t("table.activity")}</th>
-                <th scope="col" className="py-2.5 px-3 text-start">{t("table.amount")}</th>
-                <th scope="col" className="py-2.5 px-3 text-start">{t("table.reference")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-tertiary/40">
-              {visibleTransactions.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-4 px-3 text-center text-neutral-600">
-                    {t("noTransactions")}
-                  </td>
-                </tr>
-              )}
-              {visibleTransactions.map((tx) => {
-                const isCredit = tx.amount > 0;
-                return (
-                  <tr key={tx.id} className="hover:bg-neutral-50/50">
-                    <td className="py-2.5 px-3 text-neutral-600 font-mono whitespace-nowrap">
-                      <time dateTime={tx.timestamp}>{formatDate(tx.timestamp, locale)}</time>
-                    </td>
-                    <td className="py-2.5 px-3 whitespace-nowrap">
-                      {tx.type === "recharge" ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                          <BrandChevronUpIcon size={12} aria-hidden="true" /> {t("deposit")}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-rose-700 font-bold">
-                          <BrandChevronDownIcon size={12} aria-hidden="true" /> {t("commission")}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 font-mono font-bold whitespace-nowrap">
-                      <span className={isCredit ? "text-emerald-700" : "text-rose-700"} dir="ltr">
-                        {isCredit ? "+" : ""}
-                        {formatDzd(tx.amount, locale)}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-neutral-600">
-                      <div>{tx.note || "—"}</div>
-                      {tx.relatedBookingId && (
-                        <span className="text-[10px] text-neutral-600 font-mono">
-                          {t("bookingRef", { id: tx.relatedBookingId })}
-                        </span>
-                      )}
-                    </td>
+          {visibleTransactions.length === 0 ? (
+            <KitEmptyState compact variant="generic" title={t("noTransactions")} />
+          ) : (
+            <div className="max-h-80 overflow-auto rounded-2xl ring-1 ring-primary/[0.08]">
+              <table className="w-full border-collapse text-meta">
+                <caption className="sr-only">{t("table.caption")}</caption>
+                <thead className="sticky top-0 bg-white text-primary-600 shadow-[0_1px_0_rgba(30,38,31,0.08)]">
+                  <tr>
+                    <th scope="col" className="px-3 py-2.5 text-start font-semibold">
+                      {t("table.date")}
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-start font-semibold">
+                      {t("table.activity")}
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-end font-semibold">
+                      {t("table.amount")}
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-start font-semibold">
+                      {t("table.reference")}
+                    </th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-primary/[0.06]">
+                  {visibleTransactions.map((tx) => {
+                    const isCredit = tx.amount > 0;
+                    return (
+                      <tr key={tx.id} className="transition-colors duration-fast hover:bg-darnaBg/60">
+                        <td className="whitespace-nowrap px-3 py-2.5 text-primary-600 tabular-nums">
+                          <time dateTime={tx.timestamp}>{formatDate(tx.timestamp, locale)}</time>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5">
+                          {tx.type === "recharge" ? (
+                            <Badge tone="success" icon={<BrandArrowUpIcon size={12} aria-hidden="true" />}>
+                              {t("deposit")}
+                            </Badge>
+                          ) : (
+                            <Badge tone="terracotta" icon={<BrandArrowDownIcon size={12} aria-hidden="true" />}>
+                              {t("commission")}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-end font-semibold tabular-nums">
+                          <bdi dir="ltr" className={isCredit ? "text-secondary-800" : "text-accent-700"}>
+                            {isCredit ? "+" : ""}
+                            {formatDzd(tx.amount, locale)}
+                          </bdi>
+                        </td>
+                        <td className="px-3 py-2.5 text-primary-700">
+                          {tx.note && <div>{tx.note}</div>}
+                          {tx.relatedBookingId && (
+                            <span className="text-[0.6875rem] text-primary-500 tabular-nums">
+                              {t("bookingRef", { id: tx.relatedBookingId })}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-
-        {/* Footer */}
-        <div className="flex justify-end pt-3 border-t border-tertiary/60">
-          <button
-            type="button"
-            onClick={() => setIsLedgerOpen(false)}
-            className={`px-5 py-2 bg-neutral-100 hover:bg-neutral-200 text-primary font-bold rounded-xl text-xs transition ${focusRing}`}
-          >
+        <DialogFooter>
+          <Button variant="tertiary" onClick={() => setIsLedgerOpen(false)}>
             {t("closeStatement")}
-          </button>
-        </div>
+          </Button>
+        </DialogFooter>
       </Dialog>
     </div>
   );

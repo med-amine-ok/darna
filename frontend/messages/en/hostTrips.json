@@ -71,7 +71,13 @@
       "description": "Trip overview *",
       "descriptionPlaceholder": "Describe the landscapes, key landmarks, cultural significance and who this circuit is suited for…",
       "coverPhoto": "Cover photo URL *",
-      "coverAlt": "Cover photo preview"
+      "coverAlt": "Cover photo preview",
+      "coverHint": "Pick a photo from the library or paste an image link. Travellers see it first.",
+      "coverEmpty": "No cover photo yet",
+      "coverBadge": "Cover photo",
+      "coverLibrary": "Photo library",
+      "coverChoice": "Use photo {number} as cover",
+      "coverUrl": "Image link (URL)"
     },
     "itinerary": {
       "heading": "Day-by-day itinerary",
@@ -178,6 +184,9 @@
       "exclusion2": "Personal sleeping bag and hiking boots",
       "exclusion3": "Personal medical and travel insurance",
       "exclusion4": "Tips for drivers, cook and guides"
-    }
+    },
+    "previewLabel": "Live preview",
+    "previewBadge": "Preview",
+    "progressLabel": "Circuit setup progress"
   }
 }

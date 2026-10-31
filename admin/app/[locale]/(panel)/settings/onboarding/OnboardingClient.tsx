@@ -21,6 +21,7 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { OnboardingConfig, HostType, OnboardingStepConfig } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Dialog } from "@/components/ui/Dialog";
 import { useToast } from "@/components/ui/Toast";
 
@@ -187,14 +188,14 @@ export default function OnboardingClient({ locale }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-primary tracking-tight">
+            <h1 className="font-serif text-heading text-primary-900">
               {t("title")}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary/15 text-secondary-700 border border-secondary/25">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary-100 text-secondary-900 ring-1 ring-inset ring-secondary-200">
               {t("contractVersionValue", { version: config?.version || 1 })}
             </span>
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-meta text-primary-600 mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -204,9 +205,7 @@ export default function OnboardingClient({ locale }: Props) {
             variant="outline"
             size="sm"
             onClick={() => setExportModalOpen(true)}
-            className="text-xs font-bold"
-          >
-            <Download className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+            className="text-xs font-semibold" leftIcon={<Download className="w-3.5 h-3.5" aria-hidden="true" />}>
             {t("exportJson")}
           </Button>
           <Button
@@ -214,9 +213,7 @@ export default function OnboardingClient({ locale }: Props) {
             size="sm"
             onClick={handlePublish}
             disabled={saving || !can("onboarding.edit")}
-            className="text-xs font-bold"
-          >
-            <Check className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+            className="text-xs font-semibold" leftIcon={<Check className="w-3.5 h-3.5" aria-hidden="true" />}>
             {saving ? t("publishing") : t("publishFlow")}
           </Button>
         </div>
@@ -247,7 +244,7 @@ export default function OnboardingClient({ locale }: Props) {
                 <Icon className="w-4 h-4" aria-hidden="true" />
               </div>
               <div>
-                <span className="block text-xs font-bold text-primary">{c.label}</span>
+                <span className="block text-xs font-semibold text-primary">{c.label}</span>
                 <span className="block text-[11px] text-neutral-500 mt-0.5">
                   {c.maxPages
                     ? t("categoryCapped", { max: c.maxPages })
@@ -261,10 +258,10 @@ export default function OnboardingClient({ locale }: Props) {
 
       {/* Enforcement Alert Notice for Individual */}
       {activeHostType === "individual" && (
-        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-xs text-amber-900">
+        <div className="p-3.5 rounded-2xl bg-amber-50 ring-1 ring-inset ring-amber-200 flex items-start gap-3 text-xs text-amber-900">
           <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <span className="font-bold">{t("soloCapTitle")}</span>
+            <span className="font-semibold">{t("soloCapTitle")}</span>
             <p className="text-amber-800 mt-0.5">
               {t("soloCapNotice")}
             </p>
@@ -273,10 +270,10 @@ export default function OnboardingClient({ locale }: Props) {
       )}
 
       {/* Step Sequence Editor */}
-      <div className="bg-white p-6 rounded-2xl border border-tertiary/80 shadow-2xs space-y-5">
-        <div className="flex items-center justify-between border-b border-tertiary/50 pb-3">
+      <div className="bg-white p-6 rounded-2xl shadow-e1 space-y-5">
+        <div className="flex items-center justify-between border-b border-primary/[0.08] pb-3">
           <div>
-            <h2 className="text-sm font-bold text-primary">
+            <h2 className="text-sm font-semibold text-primary">
               {t("stepsHeading", { hostType: tHostTypes(activeHostType), count: steps.length })}
             </h2>
             <p className="text-xs text-neutral-500">
@@ -288,18 +285,21 @@ export default function OnboardingClient({ locale }: Props) {
             variant="outline"
             size="sm"
             onClick={handleAddStep}
-            className="text-xs font-bold text-secondary-700 border-secondary/40 hover:bg-secondary/10"
-          >
-            <Plus className="w-3.5 h-3.5 me-1" aria-hidden="true" />
+            className="text-xs font-semibold text-secondary-700 border-secondary/40 hover:bg-secondary/10" leftIcon={<Plus className="w-3.5 h-3.5" aria-hidden="true" />}>
             {t("addStep")}
           </Button>
         </div>
 
         {/* Steps List */}
         {loading && steps.length === 0 ? (
-          <p className="text-xs text-neutral-500 py-4 text-center">{tCommon("loading")}</p>
+          <div role="status" className="space-y-2.5 py-2">
+            <span className="sr-only">{tCommon("loading")}</span>
+            {[0, 1].map((i) => (
+              <div key={i} aria-hidden="true" className="skeleton h-14 rounded-xl" />
+            ))}
+          </div>
         ) : steps.length === 0 ? (
-          <p className="text-xs text-neutral-500 py-4 text-center">{t("noSteps")}</p>
+          <EmptyState size="compact" title={t("noSteps")} />
         ) : null}
         <ol className="space-y-3">
           {steps.map((s, index) => {
@@ -307,25 +307,25 @@ export default function OnboardingClient({ locale }: Props) {
             return (
             <li
               key={s.id}
-              className="p-4 rounded-xl border border-tertiary/70 bg-darnaBg/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-4 rounded-xl bg-darnaBg-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="w-7 h-7 rounded-lg bg-primary text-white font-mono font-bold text-xs flex items-center justify-center shrink-0"
+                  className="w-7 h-7 rounded-lg bg-primary text-white font-mono font-semibold text-xs flex items-center justify-center shrink-0"
                   aria-hidden="true"
                 >
                   {s.order}
                 </span>
 
                 <div>
-                  <h3 className="text-xs font-bold text-primary">
+                  <h3 className="text-xs font-semibold text-primary">
                     <span className="sr-only">{t("stepNumber", { number: s.order ?? index + 1 })} </span>
                     {stepName}
                   </h3>
                   <p className="text-[11px] text-neutral-500 mt-0.5">{pickLocalized(s.description, locale)}</p>
 
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-100 text-neutral-600 font-medium">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-neutral-100 text-neutral-600 font-medium">
                       {t("fieldsCount", { count: s.fields.length })}
                     </span>
                     <button
@@ -333,7 +333,7 @@ export default function OnboardingClient({ locale }: Props) {
                       onClick={() => handleToggleRequired(index)}
                       aria-pressed={!!s.isRequired}
                       aria-label={t("requiredToggleLabel", { name: stepName })}
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
                         s.isRequired
                           ? "bg-secondary/15 text-secondary-700 border-secondary/30"
                           : "bg-neutral-100 text-neutral-600 border-neutral-200"
@@ -351,7 +351,7 @@ export default function OnboardingClient({ locale }: Props) {
                   type="button"
                   disabled={index === 0}
                   onClick={() => handleMoveUp(index)}
-                  className={`${ICON_BUTTON} border-tertiary bg-white text-neutral-600 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed`}
+                  className={`${ICON_BUTTON} border-primary/[0.12] bg-white text-neutral-600 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed`}
                   title={t("moveUp")}
                   aria-label={t("moveUpLabel", { name: stepName })}
                 >
@@ -361,7 +361,7 @@ export default function OnboardingClient({ locale }: Props) {
                   type="button"
                   disabled={index === steps.length - 1}
                   onClick={() => handleMoveDown(index)}
-                  className={`${ICON_BUTTON} border-tertiary bg-white text-neutral-600 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed`}
+                  className={`${ICON_BUTTON} border-primary/[0.12] bg-white text-neutral-600 hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed`}
                   title={t("moveDown")}
                   aria-label={t("moveDownLabel", { name: stepName })}
                 >
@@ -395,7 +395,7 @@ export default function OnboardingClient({ locale }: Props) {
             {t.rich("exportDialog.description", {
               schema: "OnboardingConfig",
               flow: "BecomeHostFlow",
-              code: (chunks) => <code className="text-secondary-700 font-bold">{chunks}</code>,
+              code: (chunks) => <code className="text-secondary-700 font-semibold">{chunks}</code>,
             })}
           </p>
           <pre dir="ltr" className="p-4 rounded-xl bg-primary text-tertiary font-mono text-[11px] overflow-x-auto max-h-96 text-left">
@@ -409,7 +409,7 @@ export default function OnboardingClient({ locale }: Props) {
                 navigator.clipboard?.writeText(JSON.stringify(config, null, 2));
                 info(t("toasts.copiedTitle"), t("toasts.copiedBody"));
               }}
-              className="text-xs font-bold"
+              className="text-xs font-semibold"
             >
               {t("exportDialog.copy")}
             </Button>

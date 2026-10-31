@@ -124,7 +124,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   return (
     <div ref={containerRef} className={`relative space-y-1.5 text-start ${className}`}>
       {label && (
-        <label id={labelId} htmlFor={`${baseId}-trigger`} className="block text-xs font-semibold text-primary">
+        <label id={labelId} htmlFor={`${baseId}-trigger`} className="block text-xs font-semibold text-primary-900">
           {label}
         </label>
       )}
@@ -146,11 +146,11 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           aria-expanded={isOpen}
           aria-controls={isOpen ? listboxId : undefined}
           aria-labelledby={label ? `${labelId} ${valueId}` : valueId}
-          className="w-full min-h-[38px] rounded-xl bg-white border border-tertiary/70 ps-3 pe-14 py-1.5 text-xs text-primary shadow-2xs flex flex-wrap items-center gap-1.5 cursor-pointer hover:border-secondary transition-colors text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1"
+          className="w-full min-h-[38px] rounded-xl bg-white border border-primary/[0.08] ps-3 pe-14 py-1.5 text-xs text-primary-900 shadow-2xs flex flex-wrap items-center gap-1.5 cursor-pointer hover:border-primary/25 transition-colors text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-1"
         >
           <span
             id={valueId}
-            className={activeSelected.length === 0 ? "text-neutral-500 select-none" : "font-semibold text-primary"}
+            className={activeSelected.length === 0 ? "text-primary-600 select-none" : "font-semibold text-primary-900"}
           >
             {selectedSummary}
           </span>
@@ -159,7 +159,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           <button
             type="button"
             onClick={() => onChange([])}
-            className="absolute end-8 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-neutral-200 text-neutral-500 hover:text-neutral-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="absolute end-8 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-primary/[0.08] text-primary-600 hover:text-primary-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             title={t("clearAll")}
             aria-label={t("clearAll")}
           >
@@ -168,7 +168,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         )}
         <ChevronDown
           aria-hidden="true"
-          className={`w-4 h-4 text-neutral-500 absolute end-2.5 top-1/2 -translate-y-1/2 transition-transform duration-150 pointer-events-none ${
+          className={`w-4 h-4 text-primary-600 absolute end-2.5 top-1/2 -translate-y-1/2 transition-transform duration-fast pointer-events-none ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -176,10 +176,10 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 start-0 mt-1 w-full min-w-[240px] max-w-sm rounded-xl bg-white border border-tertiary/80 shadow-darna-dropdown p-2 animate-in fade-in zoom-in-95">
+        <div className="absolute z-50 start-0 mt-1 w-full min-w-[240px] max-w-sm rounded-xl bg-white shadow-e3 p-2 animate-in fade-in zoom-in-95">
           {/* Search box inside dropdown */}
           <div className="relative mb-2">
-            <Search className="w-3.5 h-3.5 text-neutral-400 absolute start-2.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
+            <Search className="w-3.5 h-3.5 text-primary-600 absolute start-2.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
             <input
               type="text"
               value={search}
@@ -195,17 +195,17 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
               aria-controls={listboxId}
               aria-autocomplete="list"
               aria-activedescendant={filteredOptions.length > 0 ? optionId(safeActiveIndex) : undefined}
-              className="w-full text-xs bg-darnaBg/60 rounded-lg ps-8 pe-3 py-1.5 border border-tertiary/50 focus:outline-none focus:ring-2 focus:ring-accent-600/50"
+              className="w-full text-xs bg-white rounded-lg ps-8 pe-3 py-1.5 border border-primary/[0.12] focus:outline-none focus:ring-4 focus:ring-primary/[0.08] hover:border-primary/25 focus:border-primary-600"
               autoFocus
             />
           </div>
 
           {/* Quick Select Actions */}
-          <div className="flex items-center justify-between px-1 mb-2 text-[10px] text-neutral-500 font-semibold border-b border-neutral-100 pb-1">
+          <div className="flex items-center justify-between px-1 mb-2 text-[11px] text-primary-600 font-semibold border-b border-primary/[0.08] pb-1">
             <button
               type="button"
               onClick={() => onChange(options.map((o) => o.value))}
-              className="hover:text-primary transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="hover:text-primary-900 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
               {t("selectAll", { count: formatNumber(options.length, locale) })}
             </button>
@@ -220,7 +220,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
           {/* Options List */}
           {filteredOptions.length === 0 ? (
-            <p className="p-2 text-center text-xs text-neutral-500" role="status">
+            <p className="p-2 text-center text-xs text-primary-600" role="status">
               {t("noMatches")}
             </p>
           ) : (
@@ -247,7 +247,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                     className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs cursor-pointer select-none transition ${
                       isSelected
                         ? "bg-secondary/15 text-primary font-semibold"
-                        : "hover:bg-neutral-100 text-neutral-700"
+                        : "hover:bg-primary/[0.05] text-primary-800"
                     } ${isActive ? "ring-1 ring-inset ring-accent-600/60" : ""}`}
                   >
                     <span className="flex items-center gap-2">
@@ -256,7 +256,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                         className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${
                           isSelected
                             ? "bg-secondary-700 border-secondary-700 text-white"
-                            : "border-neutral-400 bg-white"
+                            : "border-primary/30 bg-white"
                         }`}
                       >
                         {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -264,7 +264,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                       <span>{opt.label}</span>
                     </span>
                     {opt.count !== undefined && (
-                      <span className="text-[10px] text-neutral-500 font-medium tabular-nums">
+                      <span className="text-[11px] text-primary-600 font-medium tabular-nums">
                         {formatNumber(opt.count, locale)}
                       </span>
                     )}

@@ -28,20 +28,20 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
 
   return (
     <div role="group" aria-label={t("activeFiltersLabel")} className={`flex flex-wrap items-center gap-1.5 py-1 ${className}`}>
-      <span className="text-xs font-semibold text-neutral-500 me-1" aria-hidden="true">
+      <span className="text-xs font-semibold text-primary-600 me-1" aria-hidden="true">
         {t("activeFilters")}
       </span>
       {filters.map((f) => (
         <span
           key={f.key}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-tertiary/70 text-xs text-primary shadow-2xs animate-in fade-in"
+          className="inline-flex items-center gap-1.5 ps-2.5 pe-1 py-1 rounded-full bg-white text-xs text-primary-900 shadow-e1 animate-in fade-in zoom-in-95"
         >
-          <span className="text-neutral-500 font-normal">{f.label}</span>
+          <span className="text-primary-600 font-normal">{f.label}</span>
           <span className="font-semibold">{f.valueDisplay}</span>
           <button
             type="button"
             onClick={() => onRemove(f.key)}
-            className="p-0.5 rounded-full hover:bg-neutral-100 text-neutral-500 hover:text-primary transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="w-5 h-5 inline-flex items-center justify-center rounded-full hover:bg-primary/[0.08] text-primary-600 hover:text-primary-900 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             aria-label={t("removeFilter", { label: `${f.label} ${f.valueDisplay}` })}
           >
             <X className="w-3 h-3" aria-hidden="true" />
@@ -51,7 +51,7 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
       <button
         type="button"
         onClick={onClearAll}
-        className="text-xs font-bold text-secondary-700 hover:text-secondary-800 underline px-2 py-1 transition cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+        className="text-xs font-semibold text-secondary-700 hover:text-secondary-800 underline px-2 py-1 transition cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
       >
         {t("clearAll")}
       </button>

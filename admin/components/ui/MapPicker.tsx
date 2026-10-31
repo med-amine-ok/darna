@@ -28,15 +28,15 @@ export const MapPicker: React.FC<MapPickerProps> = ({
   const address = addressText ?? t("sampleAddress");
 
   const toggleClass = (active: boolean) =>
-    `px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
-      active ? "bg-primary text-white shadow-2xs" : "text-neutral-600 hover:text-primary"
+    `px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
+      active ? "bg-primary text-white shadow-2xs" : "text-primary-600 hover:text-primary-900"
     }`;
   const zoomClass =
-    "p-1.5 rounded-lg text-neutral-600 hover:bg-neutral-100 hover:text-primary transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
+    "p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.05] hover:text-primary-900 transition disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
 
   return (
     <div
-      className={`relative w-full h-64 sm:h-72 rounded-2xl overflow-hidden border border-tertiary-300 bg-neutral-100 shadow-2xs ${className}`}
+      className={`relative w-full h-64 sm:h-72 rounded-2xl overflow-hidden bg-tertiary-100 shadow-e1 ${className}`}
     >
       {/* Visual Map Representation */}
       <div
@@ -44,8 +44,8 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         aria-label={address ? `${t("label")} – ${address}` : t("label")}
         className={`w-full h-full relative transition-all ${
           mapType === "satellite"
-            ? "bg-[#6d6148] bg-[radial-gradient(#8a7a5c_1px,transparent_1px)] [background-size:16px_16px]"
-            : "bg-[#e8ece9] bg-[linear-gradient(to_right,#dfe3e0_1px,transparent_1px),linear-gradient(to_bottom,#dfe3e0_1px,transparent_1px)] bg-[size:24px_24px]"
+            ? "bg-tertiary-800 bg-[radial-gradient(#8a7a5c_1px,transparent_1px)] [background-size:16px_16px]"
+            : "bg-primary-100 bg-[linear-gradient(to_right,#dfe3e0_1px,transparent_1px),linear-gradient(to_bottom,#dfe3e0_1px,transparent_1px)] bg-[size:24px_24px]"
         }`}
       >
         {/* Decorative topographic / road curves */}
@@ -68,11 +68,11 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none z-10" aria-hidden="true">
           <div className="relative">
             <div className="w-9 h-9 rounded-full bg-accent/20 animate-ping absolute -top-1 -start-1" />
-            <div className="w-8 h-8 rounded-full bg-accent-600 text-white flex items-center justify-center shadow-md">
+            <div className="w-8 h-8 rounded-full bg-accent-600 text-white flex items-center justify-center shadow-e3">
               <MapPin className="w-5 h-5 fill-white" />
             </div>
           </div>
-          <div className="mt-1 px-2 py-0.5 rounded bg-black/75 text-white text-[10px] font-bold shadow-xs whitespace-nowrap">
+          <div className="mt-1.5 px-2 py-0.5 rounded-full bg-primary-900 text-white text-[11px] font-semibold shadow-e2 whitespace-nowrap">
             {t("selectedPoint")}
           </div>
         </div>
@@ -82,7 +82,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       <div
         role="group"
         aria-label={t("mapType")}
-        className="absolute top-3 end-3 flex items-center bg-white/95 backdrop-blur-xs rounded-xl border border-tertiary-200 p-0.5 shadow-xs z-20"
+        className="absolute top-3 end-3 flex items-center glass-light rounded-xl p-0.5 shadow-e2 z-20"
       >
         <button
           type="button"
@@ -103,7 +103,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
       </div>
 
       {/* Zoom Controls */}
-      <div className="absolute end-3 top-16 flex flex-col gap-1 bg-white/95 backdrop-blur-xs rounded-xl border border-tertiary-200 p-1 shadow-xs z-20">
+      <div className="absolute end-3 top-16 flex flex-col gap-1 glass-light rounded-xl p-1 shadow-e2 z-20">
         <button
           type="button"
           onClick={() => setZoom((z) => Math.min(z + 1, MAX_ZOOM))}
@@ -114,7 +114,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
-        <div className="h-[1px] bg-neutral-200 my-0.5" aria-hidden="true" />
+        <div className="h-[1px] bg-primary/[0.08] my-0.5" aria-hidden="true" />
         <button
           type="button"
           onClick={() => setZoom((z) => Math.max(z - 1, MIN_ZOOM))}
@@ -129,10 +129,10 @@ export const MapPicker: React.FC<MapPickerProps> = ({
 
       {/* Bottom Floating Address Chip */}
       {address && (
-        <div className="absolute bottom-3 inset-x-3 flex items-center justify-between px-3.5 py-2 bg-white/95 backdrop-blur-md rounded-xl border border-tertiary-200 shadow-sm z-20">
+        <div className="absolute bottom-3 inset-x-3 flex items-center justify-between px-3.5 py-2 glass-light rounded-xl shadow-e2 z-20">
           <div className="flex items-center gap-2 truncate">
             <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
-            <span className="text-xs font-semibold text-primary truncate">
+            <span className="text-xs font-semibold text-primary-900 truncate">
               {address}
             </span>
           </div>
@@ -140,7 +140,7 @@ export const MapPicker: React.FC<MapPickerProps> = ({
             <button
               type="button"
               onClick={onAddressClear}
-              className="p-1 rounded-md text-neutral-500 hover:text-accent-700 hover:bg-neutral-100 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+              className="p-1 rounded-md text-primary-600 hover:text-accent-700 hover:bg-primary/[0.05] transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
               aria-label={t("clearAddress")}
               title={t("clearAddress")}
             >

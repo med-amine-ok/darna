@@ -44,7 +44,8 @@
     "makeOwner": "Make owner",
     "makeOwnerFor": "Make {name} the owner",
     "revoke": "Revoke access",
-    "revokeFor": "Revoke access for {name}"
+    "revokeFor": "Revoke access for {name}",
+    "menuFor": "More actions for {name}"
   },
   "matrix": {
     "title": "The 3 permission levels explained",
@@ -73,7 +74,8 @@
     "managerHint": "Bookings & guest messaging",
     "adminHint": "Listings, fleet & team management",
     "sending": "Sending…",
-    "send": "Send invitation"
+    "send": "Send invitation",
+    "description": "They get an email invitation and join your workspace with the role you choose."
   },
   "removeDialog": {
     "title": "Revoke team access",
@@ -96,5 +98,6 @@
     "removeFailed": "Couldn't remove the member.",
     "resendComingSoon": "Invitation emails are coming soon. For now, share the invitation with {email} directly.",
     "ownershipTransferred": "Ownership transferred."
-  }
+  },
+  "eyebrow": "Team"
 }

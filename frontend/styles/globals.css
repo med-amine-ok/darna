@@ -9,22 +9,288 @@
   --color-accent: #C96F4F;
   --color-bg: #F8F6EE;
   --color-surface: #FFFFFF;
+  --ink-rgb: 30, 38, 31;
+
+  /* Active type faces (docs/design/DESIGN-DIRECTION.md §3); swapped for Arabic below. */
+  --font-ui: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+
+  /* Motion tokens mirrored from lib/motion.ts for CSS transitions. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 200ms;
+  --dur-base: 280ms;
+}
+
+[dir="rtl"] {
+  --font-ui: var(--font-plex-arabic), "IBM Plex Sans Arabic", Tahoma, var(--font-jakarta), sans-serif;
+  --font-display: var(--font-messiri), "El Messiri", var(--font-plex-arabic), serif;
 }
 
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: var(--font-sans), "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-ui);
   background-color: var(--color-bg);
   color: var(--color-primary);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* RTL Specific rules */
-[dir="rtl"] {
-  font-family: var(--font-arabic), "Tajawal", "IBM Plex Sans Arabic", var(--font-sans), system-ui, -apple-system, sans-serif;
+/* Arabic needs more line-height and never takes Latin tracking/caps. */
+[dir="rtl"] body {
+  line-height: 1.7;
+}
+[dir="rtl"] .tracking-tight,
+[dir="rtl"] .tracking-tighter,
+[dir="rtl"] .tracking-wide,
+[dir="rtl"] .tracking-wider,
+[dir="rtl"] .tracking-widest,
+[dir="rtl"] .text-eyebrow {
+  letter-spacing: 0 !important;
+}
+[dir="rtl"] .uppercase {
+  text-transform: none;
+}
+
+/* Display type: optical sizing + soft terminals on Fraunces. */
+.font-serif,
+.font-display {
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 50;
+  font-weight: 400;
+}
+h1,
+h2,
+h3,
+.text-balance {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* Prices, KPIs and dates: aligned digits. font-mono is mapped to the UI face. */
+.font-mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Reduced motion: OS setting or the in-app switch (<html data-reduce-motion>). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+html[data-reduce-motion] *,
+html[data-reduce-motion] *::before,
+html[data-reduce-motion] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@layer utilities {
+  /* Frosted surface for sticky headers, floating bars and sheets (solid fallback). */
+  .glass {
+    background-color: rgba(248, 246, 238, 0.96);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background-color: rgba(248, 246, 238, 0.78);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      backdrop-filter: blur(18px) saturate(1.4);
+    }
+  }
+  .glass-light {
+    background-color: rgba(255, 255, 255, 0.92);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-light {
+      background-color: rgba(255, 255, 255, 0.72);
+      -webkit-backdrop-filter: blur(14px) saturate(1.5);
+      backdrop-filter: blur(14px) saturate(1.5);
+    }
+  }
+
+  /* Small badges/chips on photos: the glass look without a live backdrop blur. Cards repeat
+     these dozens of times per page and backdrop-filter is expensive to paint on phones. */
+  .glass-chip {
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  /* Moorish arch mask (the shape inside the DARNA logo) for editorial imagery. */
+  /* Tall arch window: the arch head keeps its proportions at any height (head = 52% of the
+     width, measured with container units on the parent, which must set container-type). */
+  .mask-arch-tall {
+    -webkit-mask-image: url("/brand/arch-head-mask.svg"), linear-gradient(#000, #000);
+    mask-image: url("/brand/arch-head-mask.svg"), linear-gradient(#000, #000);
+    -webkit-mask-size: 100% 53cqw, 100% calc(100% - 52cqw);
+    mask-size: 100% 53cqw, 100% calc(100% - 52cqw);
+    -webkit-mask-position: top, bottom;
+    mask-position: top, bottom;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  .mask-arch {
+    -webkit-mask-image: url("/brand/arch-mask.svg");
+    mask-image: url("/brand/arch-mask.svg");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Paper grain + zellige rosette textures (very low opacity, decorative). */
+  .texture-grain {
+    background-image: url("/brand/grain.svg");
+    background-size: 180px 180px;
+  }
+  .texture-zellige {
+    background-image: url("/brand/zellige.svg");
+    background-size: 96px 96px;
+  }
+
+  /* Image scrim for text on photos. */
+  .scrim-bottom {
+    background-image: linear-gradient(to top, rgba(var(--ink-rgb), 0.72) 0%, rgba(var(--ink-rgb), 0.28) 38%, rgba(var(--ink-rgb), 0) 64%);
+  }
+
+  /* Terracotta CTA gradient (accent family only). */
+  .bg-cta {
+    background-image: linear-gradient(135deg, #C96F4F 0%, #B65634 55%, #974426 100%);
+  }
+
+  /* Skeleton with travelling shimmer. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #EFE7DA;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shimmer 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  [dir="rtl"] .skeleton::after {
+    transform: translateX(100%);
+    animation-name: shimmer-rtl;
+  }
+
+  /* Animated link underline that grows from the reading start. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size var(--dur-base) var(--ease-out);
+  }
+  [dir="rtl"] .link-underline {
+    background-position: 100% 100%;
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible,
+  .group:hover .link-underline,
+  .group:focus-visible .link-underline {
+    background-size: 100% 1px;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Reveal-on-scroll for markup tagged data-reveal (components/motion/ScrollReveal.tsx). */
+.reveal-ready [data-reveal]:not([data-revealed]),
+.reveal-ready [data-reveal-item]:not([data-revealed]) {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.reveal-ready [data-reveal],
+.reveal-ready [data-reveal-item] {
+  transition:
+    opacity 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Bars that grow from the reading start when their section is revealed. */
+.reveal-bar {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms;
+}
+[dir="rtl"] .reveal-bar {
+  transform-origin: right;
+}
+[data-revealed] .reveal-bar,
+html:not(.reveal-ready) .reveal-bar {
+  transform: scaleX(1);
+}
+
+/* CSS entrances for above-the-fold content: run from the server HTML (no JS wait, no LCP
+   delay). fill-mode "backwards" so inline transforms (e.g. parallax) win after the end. */
+.enter-up {
+  animation: enter-up 600ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.enter-rise {
+  animation: enter-rise 800ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.enter-lift {
+  animation: enter-lift 600ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.enter-pop {
+  animation: enter-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(14px); }
+}
+/* Big imagery and LCP candidates move but never fade: Chrome only records LCP once an
+   element paints with opacity > 0, so a fade-in would tie LCP to main-thread availability. */
+@keyframes enter-rise {
+  from { transform: translateY(40px) scale(0.97); }
+}
+@keyframes enter-lift {
+  from { transform: translateY(12px); }
+}
+/* Hero badges: a slow, small bob (stops under reduced motion via the global rule). */
+.float-soft {
+  animation: float-soft 6s ease-in-out infinite;
+}
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes enter-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes shimmer-rtl {
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 /* Custom scrollbar utility */
@@ -174,372 +440,397 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ==========================================================================
-   DARNA Premium Toast Notification System
-   Earthy Minimal palette, multi-layer shadows, variant-coded badges & indicators
+   DARNA kit, toasts (components/ToastContainerBar.tsx)
+   Glass-light card, e3, rounded-2xl, coloured accent on the reading-start edge,
+   thin progress bar, slide in from the start edge + collapse stack. RTL-aware.
    ========================================================================== */
 
-/* Toast Container Viewport Anchors */
 .Toastify__toast-container {
-  z-index: 99999 !important;
+  z-index: 100 !important;
   box-sizing: border-box !important;
+  width: 380px !important;
+  max-width: calc(100vw - 2.5rem) !important;
+  padding: 0 !important;
 }
-
 .Toastify__toast-container--bottom-left {
-  bottom: 1.5rem !important;
-  left: 1.5rem !important;
-  width: 400px !important;
-  max-width: calc(100vw - 3rem) !important;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  left: 1.25rem !important;
 }
-
 .Toastify__toast-container--bottom-right {
-  bottom: 1.5rem !important;
-  right: 1.5rem !important;
-  width: 400px !important;
-  max-width: calc(100vw - 3rem) !important;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  right: 1.25rem !important;
 }
-
 @media only screen and (max-width: 640px) {
   .Toastify__toast-container {
-    left: 1rem !important;
-    right: 1rem !important;
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    /* Clear the mobile bottom nav / sticky booking bar. */
+    bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
     width: auto !important;
-    max-width: calc(100vw - 2rem) !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
   }
 }
 
-/* Base Toast Card */
-.Toastify__toast,
 .darna-toast {
-  position: relative !important;
-  min-height: 62px !important;
-  margin-bottom: 0.75rem !important;
-  padding: 14px 16px 14px 20px !important;
-  border-radius: 1rem !important; /* rounded-2xl */
-  background-color: #FFFFFF !important;
-  border: 1px solid rgba(217, 201, 178, 0.75) !important;
-  box-shadow: 0 4px 14px -2px rgba(46, 58, 47, 0.08), 0 16px 36px -4px rgba(46, 58, 47, 0.14), 0 0 0 1px rgba(217, 201, 178, 0.45) !important;
-  overflow: hidden !important;
-  font-family: inherit !important;
-  color: #2E3A2F !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  cursor: default !important;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
-  direction: ltr !important;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 3.75rem;
+  margin-bottom: 0.625rem;
+  padding-block: 0.875rem 1rem;
+  padding-inline: 1.125rem 0.625rem;
+  border-radius: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.04), 0 4px 8px rgba(30, 38, 31, 0.05), 0 16px 36px -8px rgba(30, 38, 31, 0.16);
+  color: #2E3A2F;
+  font-family: inherit;
+  overflow: hidden;
+  cursor: default;
+  box-sizing: border-box;
+  transition: box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
 }
-
-[dir="rtl"] .Toastify__toast,
-[dir="rtl"] .darna-toast,
-.Toastify__toast--rtl,
-.darna-toast--rtl {
-  direction: rtl !important;
-  padding: 14px 20px 14px 16px !important;
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .darna-toast {
+    background-color: rgba(255, 255, 255, 0.8);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
 }
-
-/* Clean Toast Hover elevation */
-.Toastify__toast:hover,
 .darna-toast:hover {
-  box-shadow: 0 6px 18px -2px rgba(46, 58, 47, 0.10), 0 20px 44px -4px rgba(46, 58, 47, 0.18), 0 0 0 1px rgba(217, 201, 178, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.05), 0 12px 24px rgba(30, 38, 31, 0.08), 0 32px 64px -12px rgba(30, 38, 31, 0.24);
 }
-
-/* Leading Edge Vertical Indicator Bar */
-.Toastify__toast::before,
+/* Accent bar on the reading-start edge. */
 .darna-toast::before {
   content: "";
   position: absolute;
-  top: 10px;
-  bottom: 10px;
-  width: 4px;
-  left: 0;
-  border-radius: 0 9999px 9999px 0;
-  transition: background-color 0.2s ease;
-  z-index: 3;
+  inset-block: 0.75rem;
+  inset-inline-start: 0;
+  width: 3px;
+  border-start-end-radius: 9999px;
+  border-end-end-radius: 9999px;
+  background-color: var(--toast-accent, #C96F4F);
 }
+.darna-toast--success { --toast-accent: #6B7F5B; }
+.darna-toast--error { --toast-accent: #974426; }
+.darna-toast--warning { --toast-accent: #A56C3C; }
+.darna-toast--info { --toast-accent: #967F5E; }
+.darna-toast--default { --toast-accent: #C96F4F; }
 
-[dir="rtl"] .Toastify__toast::before,
-[dir="rtl"] .darna-toast::before,
-.Toastify__toast--rtl::before,
-.darna-toast--rtl::before {
-  left: auto;
-  right: 0;
-  border-radius: 9999px 0 0 9999px;
-}
-
-/* Variant Colored Indicators */
-.Toastify__toast--success::before,
-.darna-toast--success::before {
-  background-color: #6B7F5B !important; /* Sage green / Secondary */
-}
-
-.Toastify__toast--error::before,
-.darna-toast--error::before {
-  background-color: #C94A4A !important; /* Brick red / Destructive */
-}
-
-.Toastify__toast--info::before,
-.darna-toast--info::before {
-  background-color: #B09875 !important; /* Warm camel tan / Tertiary */
-}
-
-.Toastify__toast--warning::before,
-.darna-toast--warning::before {
-  background-color: #D9822B !important; /* Warm amber / Status amber */
-}
-
-.Toastify__toast--default::before,
-.darna-toast--default::before {
-  background-color: #C96F4F !important; /* Terracotta / Accent */
-}
-
-/* Toast Body Layout */
-.Toastify__toast-body,
 .darna-toast-body {
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  flex: 1 1 auto !important;
-  z-index: 2 !important;
-  font-family: inherit !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #1E261F;
+}
+.darna-toast-body > div:last-child {
+  flex: 1 1 auto;
+  padding-top: 0.375rem;
+  word-break: break-word;
+}
+.darna-toast .Toastify__toast-icon {
+  margin: 0;
+  width: auto;
+  flex-shrink: 0;
+  display: flex;
 }
 
-.Toastify__toast-body > div:last-child {
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  line-height: 1.4 !important;
-  color: #2E3A2F !important;
-  letter-spacing: -0.01em !important;
-  word-break: break-word !important;
+/* Progress: react-toastify keeps its own animated class (we append ours). */
+.darna-toast .Toastify__progress-bar {
+  height: 2px;
+  bottom: 0;
+  opacity: 0.85 !important;
+  background: var(--toast-accent, #C96F4F) !important;
+}
+.darna-toast .Toastify__progress-bar--rtl {
+  right: 0;
+  left: auto;
+  transform-origin: right;
 }
 
-/* Hide default react-toastify raw icons if not replaced */
-.Toastify__toast-icon {
-  margin: 0 !important;
-  width: auto !important;
-  display: flex !important;
+@keyframes darnaToastInStart {
+  from { opacity: 0; transform: translate3d(-24px, 8px, 0) scale(0.96); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
-
-/* Shrinking Bottom Progress Indicator */
-.Toastify__progress-bar,
-.darna-toast-progress {
-  position: absolute !important;
-  height: 3px !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  transform-origin: left !important;
-  opacity: 0.95 !important;
-  z-index: 4 !important;
+@keyframes darnaToastInEnd {
+  from { opacity: 0; transform: translate3d(24px, 8px, 0) scale(0.96); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
-
-[dir="rtl"] .Toastify__progress-bar,
-[dir="rtl"] .darna-toast-progress,
-.Toastify__progress-bar--rtl,
-.darna-toast--rtl .Toastify__progress-bar {
-  transform-origin: right !important;
+@keyframes darnaToastInUp {
+  from { opacity: 0; transform: translate3d(0, 20px, 0) scale(0.96); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
-
-.Toastify__progress-bar--success,
-.darna-toast-progress--success {
-  background: #6B7F5B !important;
-}
-
-.Toastify__progress-bar--error,
-.darna-toast-progress--error {
-  background: #C94A4A !important;
-}
-
-.Toastify__progress-bar--info,
-.darna-toast-progress--info {
-  background: #B09875 !important;
-}
-
-.Toastify__progress-bar--warning,
-.darna-toast-progress--warning {
-  background: #D9822B !important;
-}
-
-.Toastify__progress-bar--default,
-.darna-toast-progress--default {
-  background: #C96F4F !important;
-}
-
-/* Subtle Track Behind Progress Bar */
-.Toastify__progress-bar::before,
-.darna-toast-progress::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: rgba(217, 201, 178, 0.3) !important;
-  z-index: -1;
-}
-
-/* Close Button */
-.Toastify__close-button {
-  color: #8C8275 !important;
-  opacity: 0.7 !important;
-  align-self: center !important;
-  transition: opacity 0.15s ease, color 0.15s ease !important;
-  margin-inline-start: 8px !important;
-  margin-inline-end: 2px !important;
-  z-index: 3 !important;
-}
-
-.Toastify__close-button:hover,
-.Toastify__close-button:focus {
-  opacity: 1 !important;
-  color: #2E3A2F !important;
-}
-
-/* Confident Motion Animations with Spring Overshoot */
-@keyframes darnaToastInLeft {
-  0% {
-    opacity: 0;
-    transform: translate3d(-28px, 14px, 0) scale(0.94);
-  }
-  70% {
-    transform: translate3d(3px, -2px, 0) scale(1.01);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes darnaToastInRight {
-  0% {
-    opacity: 0;
-    transform: translate3d(28px, 14px, 0) scale(0.94);
-  }
-  70% {
-    transform: translate3d(-3px, -2px, 0) scale(1.01);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-@keyframes darnaToastMobileIn {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 24px, 0) scale(0.94);
-  }
-  70% {
-    transform: translate3d(0, -3px, 0) scale(1.01);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
 @keyframes darnaToastOut {
-  0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0) scale(0.93);
-  }
+  to { opacity: 0; transform: translate3d(0, 8px, 0) scale(0.95); }
 }
-
-.darna-toast-enter {
-  animation-duration: 250ms !important;
-  animation-fill-mode: both !important;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
+/* cssTransition(appendPosition) adds the position suffix to both enter and exit classes. */
 .darna-toast-enter--bottom-left {
-  animation-name: darnaToastInLeft !important;
+  animation: darnaToastInStart 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-
 .darna-toast-enter--bottom-right {
-  animation-name: darnaToastInRight !important;
+  animation: darnaToastInEnd 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-
-.darna-toast-exit {
-  animation-name: darnaToastOut !important;
-  animation-duration: 180ms !important;
-  animation-fill-mode: both !important;
-  animation-timing-function: cubic-bezier(0.4, 0, 1, 1) !important;
+.darna-toast-exit--bottom-left,
+.darna-toast-exit--bottom-right {
+  animation: darnaToastOut 200ms cubic-bezier(0.2, 0, 0, 1) both;
 }
-
 @media only screen and (max-width: 640px) {
   .darna-toast-enter--bottom-left,
   .darna-toast-enter--bottom-right {
-    animation-name: darnaToastMobileIn !important;
+    animation-name: darnaToastInUp;
   }
 }
 
 /* ==========================================================================
-   DARNA Silky Smooth Map Pin & Multi-Item Cluster System
+   DARNA kit, date range picker (react-date-range, components/inputs/Calendar.tsx)
+   Range = terracotta edges on a soft tint band; today = terracotta dot; past /
+   disabled days = muted, struck-through numbers on no fill (never look selected).
    ========================================================================== */
 
-/* Leaflet DivIcon Wrapper adjustments */
-.custom-price-pin,
-.custom-cluster-pin {
+.darna-calendar-wrapper .rdrCalendarWrapper {
+  width: 100%;
+  max-width: 24rem;
+  background: transparent;
+  color: #2E3A2F;
+  font-family: inherit;
+  font-size: 13px;
+}
+.darna-calendar-wrapper .rdrMonth {
+  width: 100%;
+  padding: 0 0.25rem 0.75rem;
+}
+.darna-calendar-wrapper .rdrMonthAndYearWrapper {
+  height: 3.25rem;
+  padding: 0.25rem 0 0;
+}
+.darna-calendar-wrapper .rdrMonthAndYearPickers select {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1E261F;
+  padding: 0.375rem 1.75rem 0.375rem 0.625rem;
+  border-radius: 0.625rem;
+  transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.darna-calendar-wrapper .rdrMonthAndYearPickers select:hover {
+  background-color: rgba(30, 38, 31, 0.05);
+}
+[dir="rtl"] .darna-calendar-wrapper .rdrMonthAndYearPickers select {
+  padding: 0.375rem 0.625rem 0.375rem 1.75rem;
+  background-position: left 0.5rem center;
+}
+.darna-calendar-wrapper .rdrMonthName {
+  font-weight: 600;
+  color: #1E261F;
+  padding: 0.75rem 0.5rem;
+}
+.darna-calendar-wrapper .rdrNextPrevButton {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0 0.25rem;
+  padding: 0;
+  border-radius: 9999px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1), box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.darna-calendar-wrapper .rdrNextPrevButton:hover {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.05), 0 1px 2px rgba(30, 38, 31, 0.05), 0 2px 6px rgba(30, 38, 31, 0.05);
+}
+.darna-calendar-wrapper .rdrNextPrevButton i {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0;
+  border: 0 solid #2E3A2F;
+  border-width: 0 0 1.75px 1.75px;
+  border-radius: 1px;
+}
+.darna-calendar-wrapper .rdrPprevButton i { transform: translateX(1px) rotate(45deg); }
+.darna-calendar-wrapper .rdrNextButton i { transform: translateX(-1px) rotate(-135deg); }
+[dir="rtl"] .darna-calendar-wrapper .rdrPprevButton i { transform: translateX(-1px) rotate(-135deg); }
+[dir="rtl"] .darna-calendar-wrapper .rdrNextButton i { transform: translateX(1px) rotate(45deg); }
+.darna-calendar-wrapper .rdrNextPrevButton:disabled { opacity: 0.35; }
+
+.darna-calendar-wrapper .rdrWeekDay {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5C6C5A;
+}
+.darna-calendar-wrapper .rdrDay {
+  height: 2.9em;
+}
+.darna-calendar-wrapper .rdrDayNumber span {
+  color: #1E261F;
+  font-weight: 500;
+}
+/* Today: small terracotta dot instead of a bar. */
+.darna-calendar-wrapper .rdrDayToday .rdrDayNumber span::after {
+  width: 4px;
+  height: 4px;
+  bottom: 2px;
+  border-radius: 9999px;
+  background: #C96F4F;
+}
+/* Range: tint band + solid edges (inline rangeColors are overridden). */
+.darna-calendar-wrapper .rdrInRange {
+  background: #F9EAE5 !important;
+}
+.darna-calendar-wrapper .rdrStartEdge,
+.darna-calendar-wrapper .rdrEndEdge,
+.darna-calendar-wrapper .rdrSelected {
+  background: #B65634 !important;
+}
+.darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span {
+  color: #1E261F;
+}
+.darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
+.darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
+.darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span {
+  color: #fff;
+  font-weight: 600;
+}
+.darna-calendar-wrapper .rdrDayToday:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span::after,
+.darna-calendar-wrapper .rdrDayToday:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span::after,
+.darna-calendar-wrapper .rdrDayToday:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span::after {
+  background: #fff;
+}
+/* Hover preview: soft terracotta outline. */
+.darna-calendar-wrapper .rdrDayStartPreview,
+.darna-calendar-wrapper .rdrDayInPreview,
+.darna-calendar-wrapper .rdrDayEndPreview {
+  border-color: rgba(182, 86, 52, 0.45) !important;
+}
+/* Past / unavailable: no fill, muted + struck number, not-allowed cursor. */
+.darna-calendar-wrapper .rdrDayDisabled {
+  background-color: transparent !important;
+  cursor: not-allowed;
+}
+.darna-calendar-wrapper .rdrDayDisabled .rdrDayNumber span {
+  color: #A4AEA3;
+  font-weight: 400;
+  text-decoration: line-through;
+  text-decoration-color: rgba(30, 38, 31, 0.25);
+}
+.darna-calendar-wrapper .rdrDayDisabled .rdrInRange,
+.darna-calendar-wrapper .rdrDayDisabled .rdrStartEdge,
+.darna-calendar-wrapper .rdrDayDisabled .rdrEndEdge,
+.darna-calendar-wrapper .rdrDayDisabled .rdrSelected,
+.darna-calendar-wrapper .rdrDayDisabled .rdrDayStartPreview,
+.darna-calendar-wrapper .rdrDayDisabled .rdrDayInPreview,
+.darna-calendar-wrapper .rdrDayDisabled .rdrDayEndPreview {
+  filter: none;
   background: transparent !important;
-  border: none !important;
-  overflow: visible !important;
-  pointer-events: auto !important;
+  border-color: transparent !important;
+}
+.darna-calendar-wrapper .rdrDayPassive .rdrDayNumber span {
+  color: transparent;
+  text-decoration: none;
+}
+.darna-calendar-wrapper .rdrDay:focus-visible {
+  outline: 2px solid #B65634;
+  outline-offset: -2px;
+  border-radius: 9999px;
 }
 
-/* Base Price Pin Button - GPU accelerated smooth spring motion */
-.custom-price-pin .price-pin-btn {
-  transform: translate3d(0, 0, 0) scale(1);
-  box-shadow: 0 2px 8px -1px rgba(46, 58, 47, 0.12), 0 1px 3px 0 rgba(46, 58, 47, 0.06);
-  transition: transform 240ms cubic-bezier(0.2, 0, 0, 1),
-              box-shadow 240ms cubic-bezier(0.2, 0, 0, 1),
-              background-color 160ms ease,
-              border-color 160ms ease,
-              color 160ms ease;
-  will-change: transform, box-shadow;
-  backface-visibility: hidden;
-  -webkit-font-smoothing: antialiased;
+/* ==========================================================================
+   DARNA kit, fields, line drawings, loaders
+   ========================================================================== */
+
+/* Field control (components/ui/Field.tsx): hairline ring at rest, terracotta focus ring. */
+.field-control {
+  border: 0;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.16), 0 1px 2px rgba(30, 38, 31, 0.04);
+  transition: box-shadow 200ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.field-control:hover {
+  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.32), 0 1px 2px rgba(30, 38, 31, 0.04);
+}
+.field-control:focus,
+.field-control:focus-visible {
+  outline: none;
+  border: 0;
+  box-shadow: 0 0 0 1.5px #B65634, 0 0 0 5px rgba(201, 111, 79, 0.16);
+}
+.field-control[aria-invalid="true"] {
+  box-shadow: 0 0 0 1.5px #974426, 0 1px 2px rgba(30, 38, 31, 0.04);
+  background-color: #FCF6F4;
+}
+.field-control[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 1.5px #974426, 0 0 0 5px rgba(151, 68, 38, 0.14);
+}
+.field-control:disabled {
+  cursor: not-allowed;
+  background-color: #EFECE0;
+  color: #7E8D7C;
+  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.08);
 }
 
-/* Hover & Active states for Price Pins */
-.custom-price-pin:hover .price-pin-btn,
-.custom-price-pin.is-active .price-pin-btn,
-.custom-price-pin.is-hovered .price-pin-btn {
-  transform: translate3d(0, -3px, 0) scale(1.09);
-  box-shadow: 0 12px 24px -4px rgba(46, 58, 47, 0.28), 0 4px 8px -2px rgba(46, 58, 47, 0.14);
-  background-color: #2E3A2F !important;
-  color: #ffffff !important;
-  border-color: #C96F4F !important;
+/* Line drawings that draw themselves once (use pathLength={1}). Runs from server HTML. */
+.draw-in {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: darna-draw 1100ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+}
+@keyframes darna-draw {
+  from { stroke-dashoffset: 1; }
 }
 
-.custom-price-pin .price-pin-btn:active {
-  transform: translate3d(0, -1px, 0) scale(1.02);
-  transition-duration: 80ms;
+/* BrandLoader (components/ui/Loader.tsx): arch outline drawing on a loop. */
+.loader-arch {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: darna-loader-arch 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes darna-loader-arch {
+  0% { stroke-dashoffset: 1; }
+  55% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -1; }
+}
+.loader-rosette {
+  transform-origin: 28.5px 32px;
+  animation: darna-loader-rosette 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes darna-loader-rosette {
+  0%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.5; }
+  50% { transform: scale(1) rotate(45deg); opacity: 1; }
+}
+html[data-reduce-motion] .loader-arch,
+html[data-reduce-motion] .loader-rosette {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-arch,
+  .loader-rosette {
+    animation: none;
+  }
 }
 
-/* Base Multi-Item Cluster Pin (Compact circular count button) */
-.custom-cluster-pin .cluster-pin-btn {
-  transform: translate3d(0, 0, 0) scale(1);
-  box-shadow: 0 4px 12px -2px rgba(46, 58, 47, 0.22), 0 2px 4px -1px rgba(46, 58, 47, 0.12);
-  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 200ms ease;
-  will-change: transform, box-shadow;
-  backface-visibility: hidden;
+/* Indeterminate progress (components/ui/Feedback.tsx). */
+.progress-indeterminate {
+  animation: darna-indeterminate 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
-
-/* Hover & Active states for Cluster Pins */
-.custom-cluster-pin:hover .cluster-pin-btn,
-.custom-cluster-pin.is-active .cluster-pin-btn {
-  transform: translate3d(0, -4px, 0) scale(1.15);
-  box-shadow: 0 14px 26px -4px rgba(201, 111, 79, 0.45), 0 4px 10px -2px rgba(46, 58, 47, 0.2);
-  background-color: #B55F40 !important;
-  color: #ffffff !important;
+@keyframes darna-indeterminate {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(260%); }
+}
+[dir="rtl"] .progress-indeterminate {
+  animation-name: darna-indeterminate-rtl;
+}
+@keyframes darna-indeterminate-rtl {
+  from { transform: translateX(110%); }
+  to { transform: translateX(-260%); }
 }
 
 /* Custom Sleek Scrollbar for Cluster Drawer */
@@ -578,5 +869,15 @@ input:focus, textarea:focus, select:focus {
     margin: 0 !important;
     border: 0 !important;
     box-shadow: none !important;
+  }
+}
+
+/* Map attribution ("Leaflet | © OpenStreetMap · OpenFreeMap"): small glass label, required by the tile licence. */
+@layer components {
+  .leaflet-container .leaflet-control-container .leaflet-control-attribution {
+    @apply m-2 rounded-full bg-white/80 px-2.5 py-0.5 text-[11px] leading-5 text-primary-600 backdrop-blur-sm;
+  }
+  .leaflet-container .leaflet-control-container .leaflet-control-attribution a {
+    @apply text-primary-800 underline-offset-2 hover:underline;
   }
 }

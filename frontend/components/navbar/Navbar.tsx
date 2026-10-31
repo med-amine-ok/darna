@@ -57,17 +57,13 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
   }, [isHero]);
 
   // Navbar dynamic styles based on scroll progress
+  // Hero: transparent at the top, then warm paper glass with a hairline as the search docks.
   const navBackgroundStyle = isHero
     ? {
-        backgroundColor: `rgba(255, 255, 255, ${scrollProgress * 0.95})`,
-        backdropFilter: scrollProgress > 0.05 ? "blur(12px)" : "none",
-        WebkitBackdropFilter: scrollProgress > 0.05 ? "blur(12px)" : "none",
-        borderBottomColor:
-          scrollProgress > 0.4 ? "rgba(217, 201, 178, 0.6)" : "transparent",
-        boxShadow:
-          scrollProgress > 0.7
-            ? "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)"
-            : "none",
+        backgroundColor: `rgba(248, 246, 238, ${scrollProgress * 0.8})`,
+        backdropFilter: scrollProgress > 0.05 ? "blur(18px) saturate(1.4)" : "none",
+        WebkitBackdropFilter: scrollProgress > 0.05 ? "blur(18px) saturate(1.4)" : "none",
+        borderBottomColor: `rgba(46, 58, 47, ${scrollProgress * 0.08})`,
       }
     : undefined;
 
@@ -77,7 +73,7 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
       className={`w-full z-40 transition-colors duration-200 ${
         isHero
           ? "fixed top-0 start-0 border-b border-transparent"
-          : "sticky top-0 bg-white/95 backdrop-blur-md border-b border-tertiary/60 shadow-2xs"
+          : "sticky top-0 glass border-b border-primary/[0.08]"
       }`}
     >
       <div className="py-2.5 sm:py-3.5 relative">
@@ -131,9 +127,8 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
                 aria-hidden={isHero && scrollProgress < 0.35 ? true : undefined}
                 aria-label={tNav("search")}
                 className={`
-                  w-full max-w-[210px] flex items-center justify-between gap-1.5 py-1.5 px-3 
-                  rounded-full bg-white/95 backdrop-blur-md border border-tertiary/80 shadow-xs 
-                  hover:border-primary text-xs font-semibold text-primary transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
+                  w-full max-w-[240px] h-11 flex items-center justify-between gap-2 ps-4 pe-1.5
+                  rounded-full bg-white shadow-e2 text-sm font-semibold text-primary-900 transition-[opacity,transform,box-shadow] duration-base ease-out cursor-pointer select-none hover:shadow-e3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600
                   ${
                     isHero && scrollProgress < 0.35
                       ? "opacity-0 pointer-events-none scale-90 translate-y-2"
@@ -141,23 +136,15 @@ export default function Navbar({ currentUser, isHero = false }: NavbarProps) {
                   }
                 `}
               >
-                <div className="flex items-center gap-1.5 min-w-0 truncate">
-                  <BrandPinIcon
-                    size={14}
-                    strokeWidth={2}
-                    className="text-accent shrink-0"
-                  />
-                  <span className="truncate text-xs font-semibold text-primary">
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <BrandPinIcon size={15} strokeWidth={2} className="text-accent-600 shrink-0" />
+                  <span className="truncate">
                     {destination ? destinationLabel(destination) : tSearch("anywhereInAlgeria")}
                   </span>
-                </div>
-                <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                  <BrandSearchIcon
-                    size={11}
-                    strokeWidth={2.4}
-                    className="text-accent"
-                  />
-                </div>
+                </span>
+                <span className="w-8 h-8 rounded-full bg-cta shadow-glow flex items-center justify-center shrink-0">
+                  <BrandSearchIcon size={14} strokeWidth={2.4} className="text-white" />
+                </span>
               </button>
             </div>
 

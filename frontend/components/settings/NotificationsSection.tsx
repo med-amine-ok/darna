@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
-import { SectionHeader } from "./settingsUi";
+import { Switch } from "@/components/ui/Choice";
+import { SectionHeader, SettingsCard } from "./settingsUi";
 
 const ROWS = ["booking", "messages", "promo", "account"] as const;
 const CHANNELS = ["Email", "Push", "Sms"] as const;
@@ -41,40 +42,40 @@ export default function NotificationsSection() {
         description={t("notifications.description")}
       />
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs text-start">
+      <SettingsCard padding="none" className="overflow-hidden">
+        <table className="w-full text-start">
           <caption className="sr-only">{t("notifications.title")}</caption>
           <thead>
-            <tr className="border-b border-tertiary/60 text-neutral-600">
-              <th scope="col" className="py-3 text-start font-semibold">
+            <tr className="border-b border-primary/[0.08] bg-darnaBg-300/40 text-meta text-primary-600">
+              <th scope="col" className="px-4 py-3 text-start font-semibold sm:px-6">
                 {t("notifications.type")}
               </th>
               {CHANNELS.map((ch) => (
-                <th key={ch} scope="col" className="py-3 text-center font-semibold">
+                <th key={ch} scope="col" className="w-16 px-1 py-3 text-center font-semibold sm:w-24">
                   {t(`notifications.channel${ch}`)}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-tertiary/30">
+          <tbody className="divide-y divide-primary/[0.08]">
             {ROWS.map((row) => (
               <tr key={row}>
-                <th scope="row" className="py-3 text-start font-semibold text-primary">
+                <th scope="row" className="px-4 py-4 text-start text-body font-medium text-primary-900 sm:px-6">
                   {t(`notifications.rows.${row}`)}
                 </th>
                 {CHANNELS.map((ch) => {
                   const key = `${row}${ch}` as MatrixKey;
                   return (
-                    <td key={ch} className="text-center py-3">
-                      <input
-                        type="checkbox"
+                    <td key={ch} className="px-1 py-4 text-center">
+                      <Switch
+                        size="sm"
                         checked={notifMatrix[key]}
-                        onChange={() => toggleNotif(key)}
-                        aria-label={t("notifications.toggleLabel", {
+                        onCheckedChange={() => toggleNotif(key)}
+                        ariaLabel={t("notifications.toggleLabel", {
                           type: t(`notifications.rows.${row}`),
                           channel: t(`notifications.channel${ch}`),
                         })}
-                        className="rounded text-primary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                        className="inline-flex"
                       />
                     </td>
                   );
@@ -83,7 +84,7 @@ export default function NotificationsSection() {
             ))}
           </tbody>
         </table>
-      </div>
+      </SettingsCard>
     </section>
   );
 }

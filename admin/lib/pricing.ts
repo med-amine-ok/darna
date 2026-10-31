@@ -1,5 +1,5 @@
 /**
- * Pricing & money constants for the admin back-office — defined ONCE here and
+ * Pricing & money constants for the admin back-office, defined ONCE here and
  * imported by the seed generator, the mock store, the data layer, server-side
  * validation and client inputs. Client-safe (no server-only imports).
  *
@@ -12,12 +12,13 @@ import type { HostType } from "@/lib/types";
 export const GUEST_SERVICE_FEE_PERCENT = 7;
 
 /** Default platform commission (percent of base price) per host type. */
-export const DEFAULT_COMMISSION_RATES: Readonly<Record<HostType, number>> = Object.freeze({
-  individual: 12,
-  agency: 15,
-  hotel: 18,
-  hostel: 10,
-});
+export const DEFAULT_COMMISSION_RATES: Readonly<Record<HostType, number>> =
+  Object.freeze({
+    individual: 12,
+    agency: 15,
+    hotel: 18,
+    hostel: 10,
+  });
 
 /** Largest single manual wallet recharge an admin may record. */
 export const MAX_RECHARGE_DZD = 10_000_000;
@@ -37,13 +38,27 @@ export const DISCOUNTS = Object.freeze({
 });
 
 /** Price after a percentage discount, rounded to integer DZD. */
-export function applyDiscount(priceDzd: number, discountPercent: number, units = 1): number {
+export function applyDiscount(
+  priceDzd: number,
+  discountPercent: number,
+  units = 1,
+): number {
   return Math.round(priceDzd * units * (1 - discountPercent / 100));
 }
 
 /** Integer DZD amount within [min, max]. */
-export function isValidDzdAmount(value: unknown, min = 1, max = MAX_MONEY_DZD): value is number {
-  return typeof value === "number" && Number.isFinite(value) && Number.isInteger(value) && value >= min && value <= max;
+export function isValidDzdAmount(
+  value: unknown,
+  min = 1,
+  max = MAX_MONEY_DZD,
+): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= min &&
+    value <= max
+  );
 }
 
 /** Commission rate: finite, 0..100, at most 2 decimals. */
@@ -55,8 +70,13 @@ export function isValidCommissionRate(value: unknown): value is number {
 }
 
 /** Booking price breakdown from a base price (all integer DZD). */
-export function computeBookingAmounts(basePriceDzd: number, commissionRate: number) {
-  const serviceFeeDzd = Math.round((basePriceDzd * GUEST_SERVICE_FEE_PERCENT) / 100);
+export function computeBookingAmounts(
+  basePriceDzd: number,
+  commissionRate: number,
+) {
+  const serviceFeeDzd = Math.round(
+    (basePriceDzd * GUEST_SERVICE_FEE_PERCENT) / 100,
+  );
   const commissionAmountDzd = Math.round((basePriceDzd * commissionRate) / 100);
   return {
     basePriceDzd,

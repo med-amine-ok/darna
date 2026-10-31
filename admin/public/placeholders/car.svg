@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" role="img" aria-label="DARNA">
+<defs><pattern id="z" width="48" height="48" patternUnits="userSpaceOnUse"><g fill="none" stroke="#2E3A2F" stroke-opacity=".06"><path d="M24 9l4.4 10.6L39 24l-10.6 4.4L24 39l-4.4-10.6L9 24l10.6-4.4z"/><circle cx="24" cy="24" r="3"/></g></pattern>
+<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4EFE7"/><stop offset="1" stop-color="#E9DFD0"/></linearGradient></defs>
+<rect width="400" height="300" fill="url(#g)"/><rect width="400" height="300" fill="url(#z)"/>
+<path d="M140 236V146c0-26 17-44 36-52 10-4 17-7 24-12 7 5 14 8 24 12 19 8 36 26 36 52v90" fill="#FAF8F5" fill-opacity=".7" stroke="#2E3A2F" stroke-opacity=".35" stroke-width="2" stroke-linejoin="round"/>
+<path d="M118 236h164" stroke="#2E3A2F" stroke-opacity=".25" stroke-width="2" stroke-linecap="round"/>
+<path d="M170 196l8-16h44l8 16v12h-60z" stroke="#C96F4F" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="182" cy="210" r="5" stroke="#C96F4F" stroke-width="2" fill="#F4EFE7"/><circle cx="218" cy="210" r="5" stroke="#C96F4F" stroke-width="2" fill="#F4EFE7"/>
+</svg>

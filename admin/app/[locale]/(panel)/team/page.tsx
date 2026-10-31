@@ -1,6 +1,6 @@
 import { redirectToCanonical } from "@/lib/canonical-redirect";
 
-/** Legacy duplicate route — canonical page is /settings/team. */
+/** Legacy duplicate route, canonical page is /settings/team. */
 export default function TeamRedirect({
   searchParams,
 }: {

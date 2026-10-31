@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useTransition } from "react";
 import Image from "next/image";
+import { listingImageSrc, listingImages } from "@/lib/placeholders";
 import { useSearchParams } from "next/navigation";
 import { useRouter, usePathname } from "@/navigation";
 import {
@@ -49,6 +50,9 @@ import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
 
+/** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
+const SPLIT_HIDDEN_COLUMNS = ["host", "location", "type", "rating", "bookings"];
+
 /** Filter values (kept as before) → translation key under `stays.propertyTypes`. */
 const PROPERTY_TYPES: { value: string; key: string }[] = [
   { value: "villa", key: "villa" },
@@ -68,7 +72,7 @@ function errorMessage(err: unknown): string | undefined {
 }
 
 const iconBtn =
-  "p-1.5 rounded-lg text-[#2E3A2F]/70 hover:bg-[#EAE5D9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+  "p-1.5 rounded-lg text-primary-600 hover:bg-primary/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
 
 export default function StaysListClient() {
   const locale = useLocale() as "en" | "fr" | "ar";
@@ -228,30 +232,30 @@ export default function StaysListClient() {
       header: t("list.columns.stay"),
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-[#E5DFD3] shrink-0 border border-[#D9C9B2]/40">
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={row.imageSrc?.[0] || row.images?.[0] || "/placeholder-stay.jpg"}
+              src={listingImageSrc(row.imageSrc?.[0] || row.images?.[0], "stay")}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[220px]">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelectStay(row);
               }}
-              className="block max-w-full font-medium text-[#2E3A2F] truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              className="block max-w-full font-semibold text-primary-900 truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
             >
               {row.title}
             </button>
-            <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5 mt-0.5">
+            <div className="text-xs text-primary-600 flex items-center gap-1.5 mt-0.5 min-w-0 whitespace-nowrap">
               <span dir="ltr">{row.formattedId || `#H${row.id.replace("lst_", "").padStart(5, "0")}`}</span>
               <span aria-hidden="true">•</span>
-              <span className="capitalize">{row.propertyType}</span>
+              <span className="capitalize truncate">{row.propertyType}</span>
             </div>
           </div>
         </div>
@@ -262,12 +266,12 @@ export default function StaysListClient() {
       header: t("list.columns.host"),
       render: (row) => (
         <div className="flex items-center gap-2">
-          <div aria-hidden="true" className="w-7 h-7 rounded-full bg-[#EAE5D9] flex items-center justify-center font-semibold text-xs text-[#2E3A2F] border border-[#D9C9B2]/50">
+          <div aria-hidden="true" className="w-7 h-7 shrink-0 rounded-full bg-darnaBg-300 flex items-center justify-center font-semibold text-xs text-primary-800">
             {row.hostName.charAt(0)}
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-medium text-[#2E3A2F] truncate">{row.hostName}</div>
-            <div className="text-[11px] text-[#2E3A2F]/70">{hostTypeLabel(row.hostType)}</div>
+            <div className="text-xs font-medium text-primary truncate">{row.hostName}</div>
+            <div className="text-[11px] text-primary-600">{hostTypeLabel(row.hostType)}</div>
           </div>
         </div>
       ),
@@ -276,7 +280,7 @@ export default function StaysListClient() {
       key: "location",
       header: t("list.columns.location"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
+        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
           <MapPin className="w-3.5 h-3.5 text-secondary-700 shrink-0" aria-hidden="true" />
           <span className="truncate">{row.city}, {row.wilayaCode}</span>
         </div>
@@ -291,7 +295,7 @@ export default function StaysListClient() {
       key: "price",
       header: t("list.columns.price"),
       render: (row) => (
-        <div className="text-xs font-medium text-[#2E3A2F]">
+        <div className="text-xs font-medium text-primary tabular-nums whitespace-nowrap">
           {formatDzd(row.price, locale)}
         </div>
       ),
@@ -305,10 +309,10 @@ export default function StaysListClient() {
       key: "rating",
       header: t("list.columns.rating"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-[#2E3A2F]">
+        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
           <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
           <span className="font-medium">{row.rating.toFixed(1)}</span>
-          <span className="text-[#2E3A2F]/70">{t("values.reviewsShort", { count: row.reviewsCount })}</span>
+          <span className="text-primary-600">{t("values.reviewsShort", { count: row.reviewsCount })}</span>
         </div>
       ),
     },
@@ -316,7 +320,7 @@ export default function StaysListClient() {
       key: "bookings",
       header: t("list.columns.bookings"),
       render: (row) => (
-        <span className="text-xs font-medium text-[#2E3A2F]">{row.bookingsCount}</span>
+        <span className="text-xs font-medium text-primary">{row.bookingsCount}</span>
       ),
     },
     {
@@ -410,7 +414,7 @@ export default function StaysListClient() {
                   search: searchQuery || undefined,
                 })
               }
-              className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-[#2E3A2F] bg-white border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-3.5 py-2 min-h-[40px] text-meta font-semibold text-primary-800 bg-white rounded-xl transition-colors shadow-e1 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-e2 duration-fast"
             >
               <Download className="w-4 h-4" aria-hidden="true" />
               <span>{t("list.export")}</span>
@@ -419,7 +423,7 @@ export default function StaysListClient() {
             <button
               type="button"
               onClick={() => router.push("/stays/new")}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 min-h-[40px] text-meta font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 transition-colors shadow-e1 shadow-highlight duration-fast"
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
               <span>{t("list.add")}</span>
@@ -503,9 +507,9 @@ export default function StaysListClient() {
       <SplitView
         isPanelOpen={!!selectedStay}
         mainContent={
-          <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex flex-col gap-1">
             <DataTable
-              columns={columns}
+              columns={selectedStay ? columns.filter((c) => !SPLIT_HIDDEN_COLUMNS.includes(c.key)) : columns}
               data={data}
               keyExtractor={(s) => s.id}
               selectedRowId={selectedStayId || undefined}
@@ -517,7 +521,7 @@ export default function StaysListClient() {
                 onSelectionChange: setSelectedRowIds,
               }}
             />
-            <div className="p-4 border-t border-[#D9C9B2]/40 bg-[#FAF9F5]">
+            <div className="px-1">
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
@@ -544,7 +548,7 @@ export default function StaysListClient() {
                 <button
                   type="button"
                   onClick={() => router.push(`/stays/${selectedStay.id}`)}
-                  className="p-1 text-[#2E3A2F]/70 hover:text-[#2E3A2F] rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="p-1 text-primary-600 hover:text-primary rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                   title={t("list.actions.fullscreen")}
                   aria-label={t("list.actions.fullscreen")}
                 >
@@ -558,7 +562,7 @@ export default function StaysListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.changeStatus(selectedStay, "suspended")}
-                        className="px-3 py-1.5 text-xs font-medium text-[#8C682E] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                        className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-amber-800 bg-white shadow-e1 rounded-xl hover:bg-amber-50 transition-colors duration-fast"
                       >
                         {tActions("suspend")}
                       </button>
@@ -580,7 +584,7 @@ export default function StaysListClient() {
                               addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                             }
                           }}
-                          className="px-3 py-1.5 text-xs font-semibold text-white bg-secondary-700 hover:bg-secondary-800 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-secondary-700 hover:bg-secondary-800 rounded-xl shadow-e1 flex items-center gap-1.5 transition-colors duration-fast"
                         >
                           <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>{t("list.actions.approveDirect")}</span>
@@ -589,7 +593,7 @@ export default function StaysListClient() {
                         <button
                           type="button"
                           onClick={() => router.push(`/stays/${selectedStay.id}/review`)}
-                          className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] border border-[#D9C9B2] rounded-lg hover:bg-[#F8F6EE]"
+                          className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl bg-white shadow-e1 hover:shadow-e2 transition duration-fast"
                         >
                           {t("list.actions.reviewFile")}
                         </button>
@@ -610,7 +614,7 @@ export default function StaysListClient() {
                             addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
                           }
                         }}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg flex items-center gap-1.5 transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl flex items-center gap-1.5 transition-colors bg-white shadow-e1 hover:shadow-e2 duration-fast"
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-secondary-700" aria-hidden="true" />
                         <span>{t("list.actions.cancelSuspension")}</span>
@@ -620,7 +624,7 @@ export default function StaysListClient() {
                       <button
                         type="button"
                         onClick={() => statusActions.restore(selectedStay)}
-                        className="px-3 py-1.5 text-xs font-medium text-[#2E3A2F] bg-[#D9C9B2]/40 hover:bg-[#D9C9B2]/70 border border-[#D9C9B2] rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-semibold text-primary rounded-xl transition-colors bg-white shadow-e1 hover:shadow-e2 duration-fast"
                       >
                         {tActions("restore")}
                       </button>
@@ -629,7 +633,7 @@ export default function StaysListClient() {
                     <button
                       type="button"
                       onClick={() => setConfirmAction({ type: "delete", stay: selectedStay })}
-                      className="px-3 py-1.5 text-xs font-medium text-accent-700 border border-[#C96F4F]/40 rounded-lg hover:bg-[#C96F4F]/10"
+                      className="px-3 py-1.5 min-h-[34px] text-xs font-semibold text-accent-700 bg-white ring-1 ring-inset ring-accent/40 rounded-xl hover:bg-accent-50 transition-colors duration-fast"
                     >
                       {tCommon("delete")}
                     </button>
@@ -638,7 +642,7 @@ export default function StaysListClient() {
                   <button
                     type="button"
                     onClick={() => router.push(`/stays/${selectedStay.id}`)}
-                    className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25]"
+                    className="px-3.5 py-1.5 min-h-[34px] text-xs font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 shadow-e1 transition-colors duration-fast"
                   >
                     {tCommon("edit")}
                   </button>
@@ -648,16 +652,16 @@ export default function StaysListClient() {
               <div className="space-y-5">
                 {/* Carousel */}
                 <ImageCarousel
-                  images={selectedStay.imageSrc?.length ? selectedStay.imageSrc : [selectedStay.imageSrc?.[0] || "/placeholder-stay.jpg"]}
+                  images={listingImages(selectedStay.imageSrc, "stay")}
                   alt={selectedStay.title}
                 />
 
                 {/* Rating & Location */}
-                <div className="flex items-center justify-between text-xs text-[#2E3A2F] border-b border-[#D9C9B2]/40 pb-3">
+                <div className="flex items-center justify-between text-xs text-primary border-b border-primary/[0.08] pb-3">
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" aria-hidden="true" />
                     <span className="font-semibold">{selectedStay.rating.toFixed(1)}</span>
-                    <span className="text-[#2E3A2F]/70">{t("values.reviews", { count: selectedStay.reviewsCount })}</span>
+                    <span className="text-primary-600">{t("values.reviews", { count: selectedStay.reviewsCount })}</span>
                   </div>
                   <div className="flex items-center gap-1 text-secondary-700 font-medium">
                     <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
@@ -683,7 +687,7 @@ export default function StaysListClient() {
                     {/* About / General specs */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70">
+                        <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500">
                           {t("list.panel.about")}
                         </h4>
                         <button
@@ -705,67 +709,67 @@ export default function StaysListClient() {
                     </div>
 
                     {/* Price & Discount Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2.5">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center justify-between">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2.5">
+                      <div className="text-xs font-semibold text-primary flex items-center justify-between">
                         <span>{t("pricing.title")}</span>
-                        <span className="font-bold text-[#2E3A2F] text-sm font-mono">
+                        <span className="font-semibold text-primary-900 text-sm tabular-nums whitespace-nowrap">
                           {t.rich("values.pricePerNight", {
                             price: formatDzd(selectedStay.price, locale),
-                            unit: (chunks) => <span className="text-[10px] text-[#2E3A2F]/70">{chunks}</span>,
+                            unit: (chunks) => <span className="text-[11px] text-primary-600">{chunks}</span>,
                           })}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-[#D9C9B2]/40">
+                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.cleaningFee")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{formatDzd(3500, locale)}</span>
+                          <span className="text-primary-600 block">{t("pricing.cleaningFee")}</span>
+                          <span className="font-medium text-primary">{formatDzd(3500, locale)}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.commission")}</span>
+                          <span className="text-primary-600 block">{t("pricing.commission")}</span>
                           <span className="font-medium text-secondary-700">{t("pricing.commissionValue", { rate: 12 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.weeklyDiscount", { rate: DISCOUNTS.weekly })}</span>
+                          <span className="text-primary-600 block">{t("pricing.weeklyDiscount", { rate: DISCOUNTS.weekly })}</span>
                           <span className="font-medium text-secondary-700">
                             {t("pricing.weeklyPrice", { amount: formatDzd(applyDiscount(selectedStay.price, DISCOUNTS.weekly, 7), locale) })}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("pricing.deposit")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{formatDzd(20000, locale)}</span>
+                          <span className="text-primary-600 block">{t("pricing.deposit")}</span>
+                          <span className="font-medium text-primary">{formatDzd(20000, locale)}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Time & Schedule Section */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 space-y-2">
-                      <div className="text-xs font-semibold text-[#2E3A2F] flex items-center gap-1.5">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
+                      <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-secondary-700" aria-hidden="true" />
                         <span>{t("times.title")}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("times.checkIn")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("times.checkInValue", { time: "15:00" })}</span>
+                          <span className="text-primary-600 block">{t("times.checkIn")}</span>
+                          <span className="font-medium text-primary">{t("times.checkInValue", { time: "15:00" })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("times.checkOut")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("times.checkOutValue", { time: "11:00" })}</span>
+                          <span className="text-primary-600 block">{t("times.checkOut")}</span>
+                          <span className="font-medium text-primary">{t("times.checkOutValue", { time: "11:00" })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("times.minStay")}</span>
-                          <span className="font-medium text-[#2E3A2F]">{t("times.minStayValue", { count: 2 })}</span>
+                          <span className="text-primary-600 block">{t("times.minStay")}</span>
+                          <span className="font-medium text-primary">{t("times.minStayValue", { count: 2 })}</span>
                         </div>
                         <div>
-                          <span className="text-[#2E3A2F]/70 block">{t("times.cancellation")}</span>
+                          <span className="text-primary-600 block">{t("times.cancellation")}</span>
                           <span className="font-medium text-secondary-700">{t("times.cancellationValue", { hours: 48 })}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Host Mini Card */}
-                    <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50">
-                      <div className="text-xs font-semibold text-[#2E3A2F] mb-2 flex items-center justify-between">
+                    <div className="bg-darnaBg-100 p-3.5 rounded-xl">
+                      <div className="text-xs font-semibold text-primary mb-2 flex items-center justify-between">
                         <span>{t("host.title")}</span>
                         <button
                           type="button"
@@ -776,12 +780,12 @@ export default function StaysListClient() {
                         </button>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div aria-hidden="true" className="w-10 h-10 rounded-full bg-[#E5DFD3] flex items-center justify-center font-bold text-sm text-[#2E3A2F]">
+                        <div aria-hidden="true" className="w-10 h-10 rounded-full bg-darnaBg-400 flex items-center justify-center font-semibold text-sm text-primary">
                           {selectedStay.hostName.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-[#2E3A2F]">{selectedStay.hostName}</div>
-                          <div className="text-xs text-[#2E3A2F]/70 flex items-center gap-1.5">
+                          <div className="text-sm font-medium text-primary">{selectedStay.hostName}</div>
+                          <div className="text-xs text-primary-600 flex items-center gap-1.5">
                             <span>{hostTypeLabel(selectedStay.hostType)}</span>
                             <span aria-hidden="true">•</span>
                             <span className="text-secondary-700 flex items-center gap-0.5">
@@ -794,10 +798,10 @@ export default function StaysListClient() {
 
                     {/* Description snippet */}
                     <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-[#2E3A2F]/70 mb-1.5">
+                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
                         {t("fields.description")}
                       </h4>
-                      <p className="text-xs text-[#2E3A2F]/80 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
+                      <p className="text-xs text-primary-700 leading-relaxed bg-darnaBg-100 p-3 rounded-xl">
                         {selectedStay.description || t("list.panel.noDescription")}
                       </p>
                     </div>
@@ -806,8 +810,8 @@ export default function StaysListClient() {
 
                 {panelTab === "photos" && (
                   <ul className="grid grid-cols-2 gap-2">
-                    {(selectedStay.imageSrc?.length ? selectedStay.imageSrc : ["/placeholder-stay.jpg"]).map((img, i) => (
-                      <li key={i} className="relative aspect-video rounded-lg overflow-hidden border border-[#D9C9B2]/40">
+                    {listingImages(selectedStay.imageSrc, "stay").map((img, i) => (
+                      <li key={i} className="relative aspect-video rounded-lg overflow-hidden border border-primary/[0.08]">
                         <Image
                           src={img}
                           alt={t("photoAlt", { title: selectedStay.title, index: i + 1 })}
@@ -823,7 +827,7 @@ export default function StaysListClient() {
                 {panelTab === "amenities" && (
                   <ul className="flex flex-wrap gap-1.5">
                     {selectedStay.amenities.map((am, i) => (
-                      <li key={i} className="px-2.5 py-1 text-xs bg-[#FAF9F5] border border-[#D9C9B2]/50 text-[#2E3A2F] rounded-md">
+                      <li key={i} className="px-2.5 py-1 text-xs bg-darnaBg-100 text-primary rounded-md">
                         {am}
                       </li>
                     ))}
@@ -831,9 +835,9 @@ export default function StaysListClient() {
                 )}
 
                 {panelTab === "calendar" && (
-                  <div className="bg-[#FAF9F5] p-3.5 rounded-lg border border-[#D9C9B2]/50 text-center">
+                  <div className="bg-darnaBg-100 p-3.5 rounded-xl text-center">
                     <Calendar className="w-8 h-8 text-secondary-700 mx-auto mb-2 opacity-70" aria-hidden="true" />
-                    <p className="text-xs text-[#2E3A2F]/70">
+                    <p className="text-xs text-primary-600">
                       {t("list.panel.calendarText")}
                     </p>
                     <button
@@ -853,12 +857,12 @@ export default function StaysListClient() {
                       { ref: "#R1248", guest: "Karim L.", start: "2024-03-12", end: "2024-03-15", status: "confirmed" },
                       { ref: "#R1190", guest: "Sarah B.", start: "2024-02-02", end: "2024-02-06", status: "completed" },
                     ].map((b) => (
-                      <li key={b.ref} className="p-3 bg-[#FAF9F5] rounded-lg border border-[#D9C9B2]/40 flex justify-between items-center">
+                      <li key={b.ref} className="p-3 bg-darnaBg-100 rounded-xl flex justify-between items-center">
                         <div>
-                          <div className="font-medium text-[#2E3A2F]">
+                          <div className="font-medium text-primary">
                             <span dir="ltr">{b.ref}</span> • {b.guest}
                           </div>
-                          <div className="text-[11px] text-[#2E3A2F]/70">
+                          <div className="text-[11px] text-primary-600">
                             {t("values.dateRange", { start: formatDate(b.start, locale), end: formatDate(b.end, locale) })}
                           </div>
                         </div>
@@ -890,36 +894,36 @@ export default function StaysListClient() {
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label htmlFor="stays-adv-capacity" className="font-semibold text-[#2E3A2F] block mb-1.5">{t("list.advanced.minCapacity")}</label>
+            <label htmlFor="stays-adv-capacity" className="font-semibold text-primary block mb-1.5">{t("list.advanced.minCapacity")}</label>
             <input
               id="stays-adv-capacity"
               type="number"
               min="1"
               max="30"
               defaultValue="1"
-              className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+              className="w-full px-3 py-2 bg-white border border-primary/[0.12] rounded-lg text-primary"
             />
           </div>
           <fieldset>
-            <legend className="font-semibold text-[#2E3A2F] block mb-1.5">{t("list.advanced.priceRange")}</legend>
+            <legend className="font-semibold text-primary block mb-1.5">{t("list.advanced.priceRange")}</legend>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 aria-label={t("list.advanced.min")}
                 placeholder={t("list.advanced.min")}
-                className="w-1/2 px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                className="w-1/2 px-3 py-2 bg-white border border-primary/[0.12] rounded-lg text-primary"
               />
               <input
                 type="number"
                 aria-label={t("list.advanced.max")}
                 placeholder={t("list.advanced.max")}
-                className="w-1/2 px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]"
+                className="w-1/2 px-3 py-2 bg-white border border-primary/[0.12] rounded-lg text-primary"
               />
             </div>
           </fieldset>
           <div>
-            <label htmlFor="stays-adv-approval" className="font-semibold text-[#2E3A2F] block mb-1.5">{t("fields.approvalMode")}</label>
-            <select id="stays-adv-approval" className="w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F]">
+            <label htmlFor="stays-adv-approval" className="font-semibold text-primary block mb-1.5">{t("fields.approvalMode")}</label>
+            <select id="stays-adv-approval" className="w-full px-3 py-2 bg-white border border-primary/[0.12] rounded-lg text-primary">
               <option value="all">{t("list.advanced.allModes")}</option>
               <option value="instant">{t("values.instantBooking")}</option>
               <option value="request">{t("values.onRequest")}</option>

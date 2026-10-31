@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { ShieldAlert } from "lucide-react";
 import { Link } from "@/navigation";
+import { ArchRosette } from "@/components/ui/EmptyState";
 
 /** 403 view rendered by guardPage() when the admin's role lacks a permission. */
 export async function ForbiddenView() {
@@ -8,17 +8,17 @@ export async function ForbiddenView() {
   return (
     <div
       role="alert"
-      className="max-w-lg mx-auto mt-10 py-12 px-6 flex flex-col items-center justify-center text-center rounded-3xl border border-dashed border-tertiary/80 bg-white/60"
+      className="max-w-lg mx-auto mt-10 py-10 px-6 sm:px-10 flex flex-col items-center justify-center text-center rounded-2xl bg-white shadow-e1"
     >
-      <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent-700 mb-3.5" aria-hidden="true">
-        <ShieldAlert className="w-6 h-6" aria-hidden="true" />
+      <div className="w-20 h-20 rounded-full bg-darnaBg-300/70 grid place-items-center mb-4" aria-hidden="true">
+        <ArchRosette className="w-14 h-14" />
       </div>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">403</p>
-      <h1 className="text-lg font-serif font-black text-primary mt-1">{t("title")}</h1>
-      <p className="text-xs text-neutral-500 mt-1.5 max-w-sm">{t("description")}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-700">403</p>
+      <h1 className="font-serif text-heading text-primary-900 mt-1">{t("title")}</h1>
+      <p className="text-meta text-primary-600 mt-2 max-w-sm">{t("description")}</p>
       <Link
         href="/"
-        className="mt-5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:opacity-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+        className="mt-6 inline-flex items-center px-4 min-h-[44px] sm:min-h-[40px] rounded-xl bg-primary-800 hover:bg-primary-900 text-white text-meta font-semibold shadow-e1 shadow-highlight transition duration-fast ease-standard active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
       >
         {t("backHome")}
       </Link>

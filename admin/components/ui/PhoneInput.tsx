@@ -43,7 +43,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   return (
     <div className={`space-y-1.5 ${className}`}>
       {label && (
-        <label htmlFor={inputId} className="block text-xs font-semibold text-neutral-700">
+        <label htmlFor={inputId} className="block text-xs font-semibold text-primary-800">
           {label}{" "}
           {required && (
             <span className="text-accent-700" aria-hidden="true">
@@ -54,16 +54,16 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       )}
       <div
         dir="ltr"
-        className={`flex items-center rounded-xl border bg-white overflow-hidden shadow-2xs focus-within:border-primary focus-within:ring-2 focus-within:ring-accent-600/40 transition ${
+        className={`flex items-center rounded-xl border bg-white overflow-hidden shadow-2xs hover:border-primary/25 focus-within:border-primary-600 focus-within:ring-4 focus-within:ring-primary/[0.08] transition duration-fast ease-standard ${
           invalid ? "border-accent-600" : "border-tertiary-300"
         }`}
       >
         {/* Algerian dialling prefix */}
-        <div className="flex items-center gap-1.5 px-3 py-2 bg-neutral-50 border-e border-neutral-200 shrink-0 select-none">
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-darnaBg-100 border-e border-primary/[0.12] shrink-0 select-none">
           <span className="text-base leading-none" aria-hidden="true">
             🇩🇿
           </span>
-          <span className="text-xs font-bold text-neutral-700" aria-hidden="true">
+          <span className="text-xs font-semibold text-primary-800" aria-hidden="true">
             +213
           </span>
           <span id={prefixId} className="sr-only">
@@ -84,7 +84,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           aria-label={ariaLabel}
           aria-invalid={ariaInvalid}
           aria-describedby={describedBy}
-          className="flex-1 px-3 py-2 text-xs text-neutral-800 placeholder-neutral-500 focus:outline-none bg-transparent"
+          className="flex-1 px-3 py-2 text-xs text-primary-900 placeholder:text-primary-500 focus:outline-none bg-transparent"
         />
       </div>
     </div>

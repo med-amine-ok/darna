@@ -54,5 +54,8 @@
   "profilePassport": "Profil & passeport",
   "accountSettings": "Paramètres du compte",
   "helpCenter": "Centre d'aide",
-  "mobileNavigation": "Navigation principale"
+  "mobileNavigation": "Navigation principale",
+  "groupToday": "Aujourd'hui",
+  "groupThisWeek": "Cette semaine",
+  "groupEarlier": "Plus tôt"
 }

@@ -84,17 +84,19 @@ export const StatusPill: React.FC<StatusPillProps> = ({
     }
   }
 
+  // Palette-derived status tones (docs/design-reference/ANALYSIS.md §2): olive = done/positive,
+  // ochre = waiting, terracotta = refused/danger, ink tint = in progress, warm grey = neutral.
   const variantStyles: Record<StatusVariant, string> = {
-    success: "bg-secondary/15 text-[#35432E] border-secondary/30",
-    warning: "bg-[#F3EAD8] text-[#71542C] border-[#D9C4A1]",
-    danger: "bg-accent/15 text-[#8F3517] border-accent/30",
-    info: "bg-primary/10 text-primary border-primary/20",
-    neutral: "bg-neutral-100 text-neutral-700 border-neutral-200",
+    success: "bg-secondary-100 text-secondary-900 ring-secondary-200",
+    warning: "bg-amber-100 text-amber-800 ring-amber-200",
+    danger: "bg-accent-100 text-accent-800 ring-accent-200",
+    info: "bg-primary-100 text-primary-800 ring-primary-200",
+    neutral: "bg-neutral-100 text-neutral-700 ring-neutral-200",
   };
 
   const sizeStyles = {
-    sm: "text-[10px] px-2 py-0.5 gap-1",
-    md: "text-xs px-2.5 py-1 gap-1.5",
+    sm: "text-[11px] leading-4 px-2 py-0.5 gap-1",
+    md: "text-meta leading-5 px-2.5 py-0.5 gap-1.5",
   };
 
   const renderIcon = () => {
@@ -143,7 +145,7 @@ export const StatusPill: React.FC<StatusPillProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center font-semibold rounded-full border shadow-2xs select-none whitespace-nowrap ${
+      className={`inline-flex items-center font-semibold rounded-full ring-1 ring-inset select-none whitespace-nowrap ${
         variantStyles[derivedVariant]
       } ${sizeStyles[size]} ${className}`}
     >

@@ -4,8 +4,8 @@
   "tryAgain": "Try again",
   "returnHome": "Return home",
   "notFoundMetaTitle": "Page not found",
-  "notFoundTitle": "Page not found",
-  "notFoundBody": "We couldn't find the page you're looking for. It might have been moved or doesn't exist.",
+  "notFoundTitle": "This page wandered off the map",
+  "notFoundBody": "The link may be old or the page may have moved. Search for a place to stay, or start from one of our favourite wilayas.",
   "explore": "Explore DARNA",
   "generic": "Something went wrong. Please try again.",
   "codes": {
@@ -75,5 +75,13 @@
     "AGENCY_ONLY": "Only agencies can publish trips.",
     "GROUP_SIZE_RANGE": "Minimum group size can't be larger than the maximum group size.",
     "TRIP_TITLE_REQUIRED": "Please enter a circuit title."
-  }
+  },
+  "errorEyebrow": "Unexpected error",
+  "errorReference": "Reference:",
+  "notFoundEyebrow": "Error 404",
+  "notFoundSearchLabel": "Where to? A city or wilaya",
+  "notFoundSearchSubmit": "Search",
+  "notFoundPopular": "Popular wilayas",
+  "notFoundHelp": "Visit the help center",
+  "notFoundImageAlt": "A natural rock arch in the Tassili n'Ajjer"
 }

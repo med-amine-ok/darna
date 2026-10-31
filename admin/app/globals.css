@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* DARNA admin foundation, ported from frontend/styles/globals.css (docs/design/DESIGN-DIRECTION.md §9). */
+
 :root {
   --color-primary: #2E3A2F;
   --color-secondary: #6B7F5B;
@@ -9,17 +11,91 @@
   --color-accent: #C96F4F;
   --color-bg: #F8F6EE;
   --color-surface: #FFFFFF;
+  --ink-rgb: 30, 38, 31;
+
+  /* Active type faces; swapped for the Arabic pair under dir="rtl". */
+  --font-ui: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+
+  /* Motion tokens mirrored from lib/motion.ts for CSS transitions. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-micro: 120ms;
+  --dur-fast: 200ms;
+  --dur-base: 280ms;
+}
+
+[dir="rtl"] {
+  --font-ui: var(--font-plex-arabic), "IBM Plex Sans Arabic", Tahoma, var(--font-jakarta), sans-serif;
+  --font-display: var(--font-messiri), "El Messiri", var(--font-plex-arabic), serif;
 }
 
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: var(--font-sans), "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-ui);
   background-color: var(--color-bg);
   color: var(--color-primary);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Arabic: a little more line-height, never Latin tracking or caps. */
+[dir="rtl"] body {
+  line-height: 1.65;
+}
+[dir="rtl"] .tracking-tight,
+[dir="rtl"] .tracking-tighter,
+[dir="rtl"] .tracking-wide,
+[dir="rtl"] .tracking-wider,
+[dir="rtl"] .tracking-widest,
+[dir="rtl"] .text-eyebrow {
+  letter-spacing: 0 !important;
+}
+[dir="rtl"] .uppercase {
+  text-transform: none;
+}
+
+/* Display type: Fraunces with optical sizing + soft terminals, always regular weight. */
+.font-serif,
+.font-display {
+  font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 50;
+  font-weight: 400 !important;
+  letter-spacing: -0.015em;
+}
+[dir="rtl"] .font-serif,
+[dir="rtl"] .font-display {
+  font-weight: 500 !important;
+  letter-spacing: 0;
+}
+h1,
+h2,
+h3,
+.text-balance {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+
+/* Money, KPIs, dates, codes: aligned digits (font-mono is mapped to the UI face). */
+.font-mono,
+.tabular-nums,
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Native controls take the palette instead of browser blue. */
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+progress {
+  accent-color: #2E3A2F;
 }
 
 /* Touch ergonomics & manipulation */
@@ -43,62 +119,166 @@ textarea,
   }
 }
 
-/* RTL Specific rules */
-[dir="rtl"] {
-  font-family: var(--font-arabic), "Tajawal", "IBM Plex Sans Arabic", var(--font-sans), system-ui, -apple-system, sans-serif;
+/* Reduced motion (OS setting). Framer Motion follows via MotionConfig reducedMotion="user". */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-/* Tabular numerals for dense admin data */
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
+@layer utilities {
+  /* Frosted surface for the sticky top bar and floating bars (solid fallback). */
+  .glass {
+    background-color: rgba(248, 246, 238, 0.96);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background-color: rgba(248, 246, 238, 0.78);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      backdrop-filter: blur(18px) saturate(1.4);
+    }
+  }
+  .glass-light {
+    background-color: rgba(255, 255, 255, 0.94);
+  }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-light {
+      background-color: rgba(255, 255, 255, 0.74);
+      -webkit-backdrop-filter: blur(14px) saturate(1.5);
+      backdrop-filter: blur(14px) saturate(1.5);
+    }
+  }
+  /* Blurred ink backdrop behind dialogs, drawers and sheets. */
+  .backdrop-ink {
+    background-color: rgba(var(--ink-rgb), 0.42);
+    -webkit-backdrop-filter: blur(6px) saturate(1.1);
+    backdrop-filter: blur(6px) saturate(1.1);
+  }
+
+  /* Moorish arch mask (logo shape), login imagery and empty-state art only. */
+  .mask-arch {
+    -webkit-mask-image: url("/brand/arch-mask.svg");
+    mask-image: url("/brand/arch-mask.svg");
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Brand textures: the admin only uses them on the login screen. */
+  .texture-grain {
+    background-image: url("/brand/grain.svg");
+    background-size: 180px 180px;
+  }
+  .texture-zellige {
+    background-image: url("/brand/zellige.svg");
+    background-size: 96px 96px;
+  }
+
+  .scrim-bottom {
+    background-image: linear-gradient(to top, rgba(var(--ink-rgb), 0.72) 0%, rgba(var(--ink-rgb), 0.28) 38%, rgba(var(--ink-rgb), 0) 64%);
+  }
+
+  /* Terracotta CTA gradient (accent family only). */
+  .bg-cta {
+    background-image: linear-gradient(135deg, #C96F4F 0%, #B65634 55%, #974426 100%);
+  }
+
+  /* Skeleton with travelling shimmer. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: #EFE7DA;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shimmer 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  [dir="rtl"] .skeleton::after {
+    transform: translateX(100%);
+    animation-name: shimmer-rtl;
+  }
+
+  /* Animated link underline that grows from the reading start. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size var(--dur-base) var(--ease-out);
+  }
+  [dir="rtl"] .link-underline {
+    background-position: 100% 100%;
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible,
+  .group:hover .link-underline,
+  .group:focus-visible .link-underline {
+    background-size: 100% 1px;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* Custom scrollbar utility */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+@keyframes shimmer-rtl {
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #D9C9B2;
   border-radius: 9999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: #B09875;
 }
 
-/* DARNA Admin Sidebar Custom Scrollbar */
+/* Sidebar / dark-surface scrollbar */
 .darna-admin-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #3A493B transparent;
+  scrollbar-color: rgba(176, 152, 117, 0.45) transparent;
 }
-
 .darna-admin-scrollbar::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
-
 .darna-admin-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .darna-admin-scrollbar::-webkit-scrollbar-thumb {
-  background: #3A493B;
+  background: rgba(176, 152, 117, 0.45);
   border-radius: 9999px;
-  transition: background 0.2s ease;
 }
-
 .darna-admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #6B7F5B;
-}
-
-.darna-admin-scrollbar::-webkit-scrollbar-thumb:active {
-  background: #C96F4F;
+  background: #96AC85;
 }
 
 /* Hide scrollbar utility */
@@ -107,7 +287,6 @@ textarea,
   width: 0 !important;
   height: 0 !important;
 }
-
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
@@ -115,26 +294,29 @@ textarea,
 
 /* Focus styles */
 *:focus-visible {
-  outline: 2px solid #C96F4F;
+  outline: 2px solid #B65634;
   outline-offset: 2px;
 }
 
-/* Elevated Surface Layering */
+/* Legacy surface helpers, now on the elevation scale (e1 / e3 / e4). */
 .elevated-card {
   background-color: #FFFFFF;
-  border: 1px solid rgba(217, 201, 178, 0.5);
-  box-shadow: 0 2px 8px -2px rgba(46, 58, 47, 0.06), 0 6px 18px -4px rgba(46, 58, 47, 0.05);
+  box-shadow: 0 0 0 1px rgba(var(--ink-rgb), 0.05), 0 1px 2px rgba(var(--ink-rgb), 0.05), 0 2px 6px rgba(var(--ink-rgb), 0.05);
 }
-
 .elevated-panel {
   background-color: #FFFFFF;
-  border: 1px solid rgba(217, 201, 178, 0.6);
-  box-shadow: 0 4px 20px -2px rgba(46, 58, 47, 0.08), 0 2px 6px -1px rgba(46, 58, 47, 0.04);
+  box-shadow: 0 0 0 1px rgba(var(--ink-rgb), 0.04), 0 4px 8px rgba(var(--ink-rgb), 0.05), 0 16px 36px -8px rgba(var(--ink-rgb), 0.16);
 }
-
 .elevated-modal {
   background-color: #FFFFFF;
-  box-shadow: 0 20px 48px -8px rgba(46, 58, 47, 0.18), 0 8px 20px -4px rgba(46, 58, 47, 0.08);
+  box-shadow: 0 0 0 1px rgba(var(--ink-rgb), 0.05), 0 12px 24px rgba(var(--ink-rgb), 0.08), 0 32px 64px -12px rgba(var(--ink-rgb), 0.24);
+}
+
+/* Recharts: UI face + aligned digits on axes. */
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Leaflet DivIcon Wrapper adjustments */
@@ -167,4 +349,37 @@ textarea,
   background-color: #2E3A2F !important;
   color: #ffffff !important;
   border-color: #C96F4F !important;
+}
+
+/* KPI sparkline / chart line draw-in (decorative; reduced motion shows the final state). */
+.sparkline-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: draw-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes draw-in {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+/* Horizontal bars grow from the reading start (dashboard wilaya bars). */
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* CSS entrances for server-rendered content (login only in the admin). */
+.enter-up {
+  animation: enter-up 450ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.enter-rise {
+  animation: enter-rise 600ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(10px); }
+}
+@keyframes enter-rise {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
 }

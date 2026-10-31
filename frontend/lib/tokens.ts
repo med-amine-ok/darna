@@ -1,6 +1,6 @@
 /**
- * Centralized Design System Tokens — Earthy Minimal Palette
- * 
+ * Centralized Design System Tokens, Earthy Minimal Palette
+ *
  * 1. Primary: #2E3A2F (Dark charcoal-green)
  * 2. Secondary: #6B7F5B (Sage green)
  * 3. Tertiary: #D9C9B2 (Warm tan/beige)

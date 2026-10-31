@@ -15,10 +15,17 @@ import {
   BrandKeyIcon,
   BrandBriefcaseIcon,
   BrandFilterIcon,
+  BrandSparklesIcon,
 } from "@/components/icons";
+import { m } from "framer-motion";
+import { Card } from "@/components/ui/Surface";
+import { Badge } from "@/components/ui/Badge";
+import { AccountHeader } from "@/components/profile/AccountShell";
+import { spring } from "@/lib/motion";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import { FOCUS_RING } from "./settingsUi";
-import PersonalSection from "./PersonalSection";
+import PersonalSection, { maskEmail } from "./PersonalSection";
+import AccessibilitySection from "./AccessibilitySection";
 import SecuritySection from "./SecuritySection";
 import NotificationsSection from "./NotificationsSection";
 import PaymentsSection from "./PaymentsSection";
@@ -36,6 +43,7 @@ interface SettingsClientProps {
 }
 
 type SectionId =
+  | "accessibility"
   | "personal"
   | "security"
   | "privacy"
@@ -47,7 +55,9 @@ type SectionId =
   | "travel_for_work"
   | "pro_hosting";
 
-const NAV_ITEMS: { id: SectionId; labelKey: string; icon: typeof BrandUserIcon; isNew?: boolean }[] = [
+type NavItem = { id: SectionId; labelKey: string; icon: typeof BrandUserIcon; isNew?: boolean };
+
+const NAV_ITEMS: NavItem[] = [
   { id: "personal", labelKey: "nav.personal", icon: BrandUserIcon },
   { id: "security", labelKey: "nav.security", icon: BrandShieldIcon },
   { id: "privacy", labelKey: "nav.privacy", icon: BrandEyeIcon },
@@ -55,9 +65,12 @@ const NAV_ITEMS: { id: SectionId; labelKey: string; icon: typeof BrandUserIcon; 
   { id: "taxes", labelKey: "nav.taxes", icon: BrandReceiptIcon },
   { id: "payments", labelKey: "nav.payments", icon: BrandCreditCardIcon },
   { id: "languages", labelKey: "nav.languages", icon: BrandGlobeIcon },
+  { id: "accessibility", labelKey: "nav.accessibility", icon: BrandSparklesIcon },
   { id: "booking_permissions", labelKey: "nav.bookingPermissions", icon: BrandKeyIcon, isNew: true },
   { id: "travel_for_work", labelKey: "nav.travelForWork", icon: BrandBriefcaseIcon },
 ];
+
+const HOSTING_ITEM: NavItem = { id: "pro_hosting", labelKey: "nav.proHosting", icon: BrandFilterIcon };
 
 export default function SettingsClient({ currentUser }: SettingsClientProps) {
   const t = useTranslations("settings");
@@ -65,11 +78,6 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
   const [activeSection, setActiveSection] = useState<SectionId>("personal");
   const [isDeactivateAccountOpen, setIsDeactivateAccountOpen] = useState(false);
   const [cardToRemove, setCardToRemove] = useState<string | null>(null);
-
-  const navButtonClass = (isActive: boolean) =>
-    `w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition text-start ${FOCUS_RING} ${
-      isActive ? "bg-primary text-white shadow-xs" : "text-neutral-700 hover:bg-tertiary/20"
-    }`;
 
   const panelId = (id: SectionId) => `settings-panel-${id}`;
 
@@ -80,6 +88,7 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
     { id: "notifications", node: <NotificationsSection /> },
     { id: "payments", node: <PaymentsSection onRemoveCard={setCardToRemove} /> },
     { id: "languages", node: <LanguagesSection /> },
+    { id: "accessibility", node: <AccessibilitySection /> },
     { id: "booking_permissions", node: <BookingPermissionsSection /> },
     { id: "taxes", node: <TaxesSection /> },
     { id: "privacy", node: <PrivacySection /> },
@@ -87,80 +96,108 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
     { id: "pro_hosting", node: <ProHostingSection /> },
   ];
 
+  const select = (id: SectionId) => {
+    setActiveSection(id);
+    // On phones the nav sits above the panel: bring the panel's title into view.
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() =>
+        document.getElementById(panelId(id))?.scrollIntoView({ block: "start", behavior: "smooth" }),
+      );
+    }
+  };
+
+  const navButton = (item: NavItem, layout: "rail" | "pills") => {
+    const Icon = item.icon;
+    const isActive = activeSection === item.id;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        aria-current={isActive ? "true" : undefined}
+        aria-controls={panelId(item.id)}
+        onClick={() => select(item.id)}
+        className={
+          layout === "rail"
+            ? `relative flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-start text-body font-medium transition-colors duration-fast ease-standard ${FOCUS_RING} ${
+                isActive ? "text-white" : "text-primary-700 hover:bg-primary/[0.05] hover:text-primary-900"
+              }`
+            : `relative flex min-h-[44px] shrink-0 items-center gap-2 rounded-full px-4 text-meta font-semibold transition-colors duration-fast ease-standard ${FOCUS_RING} ${
+                isActive ? "text-white" : "bg-white text-primary-700 shadow-e1 hover:text-primary-900"
+              }`
+        }
+      >
+        {isActive && (
+          <m.span
+            layoutId={`settings-nav-active-${layout}`}
+            transition={spring.layout}
+            aria-hidden="true"
+            className={`absolute inset-0 bg-primary-800 shadow-e2 ${layout === "rail" ? "rounded-xl" : "rounded-full"}`}
+          />
+        )}
+        <span className="relative flex min-w-0 items-center gap-2.5">
+          <Icon
+            size={layout === "rail" ? 18 : 16}
+            aria-hidden="true"
+            className={`shrink-0 ${isActive ? "text-tertiary-200" : "text-secondary-700"}`}
+          />
+          <span className={layout === "rail" ? "min-w-0 [text-wrap:balance]" : "whitespace-nowrap"}>{t(item.labelKey)}</span>
+        </span>
+        {item.isNew && (
+          <Badge tone={isActive ? "ink" : "terracotta"} size="sm" className="relative shrink-0">
+            {t("nav.new")}
+          </Badge>
+        )}
+      </button>
+    );
+  };
+
+  const subtitle = [currentUser?.name || t("member"), currentUser?.email ? maskEmail(currentUser.email) : null]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-6">
-      <div className="md:col-span-4 lg:col-span-3 space-y-6">
-        <div>
-          <h1 className="text-xl font-bold text-primary font-serif mb-1">{t("title")}</h1>
-          <p className="text-xs text-neutral-600">
-            {currentUser?.name || t("member")}
-            {currentUser?.email ? ` · ${currentUser.email}` : ""}
-          </p>
+    <div>
+      <AccountHeader eyebrow={t("eyebrow")} title={t("title")} subtitle={subtitle} />
+
+      {/* Phones and tablets: horizontally scrolling pills. */}
+      <nav aria-label={t("navLabel")} className="-mx-4 mt-6 overflow-x-auto px-4 pb-2 lg:hidden [scrollbar-width:none]">
+        <div className="flex w-max gap-2 py-1">{[...NAV_ITEMS, HOSTING_ITEM].map((item) => navButton(item, "pills"))}</div>
+      </nav>
+
+      <div className="mt-6 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10">
+        <aside className="hidden lg:block">
+          <div className="sticky top-28 space-y-4">
+            <Card padding="sm">
+              <nav aria-label={t("navLabel")} className="space-y-0.5">
+                {NAV_ITEMS.map((item) => navButton(item, "rail"))}
+              </nav>
+            </Card>
+            <Card padding="sm">
+              <nav aria-labelledby="settings-hosting-nav-label">
+                <p
+                  id="settings-hosting-nav-label"
+                  className="px-3.5 pb-2 pt-1 text-eyebrow uppercase font-semibold text-primary-500"
+                >
+                  {t("nav.hostingManagement")}
+                </p>
+                {navButton(HOSTING_ITEM, "rail")}
+              </nav>
+            </Card>
+          </div>
+        </aside>
+
+        <div className="min-w-0 scroll-mt-28">
+          {panels.map((p) => (
+            <div
+              key={p.id}
+              id={panelId(p.id)}
+              hidden={activeSection !== p.id}
+              className={`scroll-mt-28 ${activeSection === p.id ? "enter-up" : ""}`}
+            >
+              {p.node}
+            </div>
+          ))}
         </div>
-
-        <nav aria-label={t("navLabel")} className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                aria-current={isActive ? "true" : undefined}
-                aria-controls={panelId(item.id)}
-                onClick={() => setActiveSection(item.id)}
-                className={navButtonClass(isActive)}
-              >
-                <span className="flex items-center gap-2.5">
-                  <Icon size={17} aria-hidden="true" className={isActive ? "text-white" : "text-secondary"} />
-                  <span>{t(item.labelKey)}</span>
-                </span>
-                {item.isNew && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                      isActive ? "bg-white/20 text-white" : "bg-accent/15 text-accent-700"
-                    }`}
-                  >
-                    {t("nav.new")}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        <nav aria-labelledby="settings-hosting-nav-label" className="pt-4 border-t border-tertiary/50">
-          <div
-            id="settings-hosting-nav-label"
-            className="text-[11px] font-bold text-neutral-600 uppercase tracking-wider mb-2 px-3"
-          >
-            {t("nav.hostingManagement")}
-          </div>
-          <button
-            type="button"
-            aria-current={activeSection === "pro_hosting" ? "true" : undefined}
-            aria-controls={panelId("pro_hosting")}
-            onClick={() => setActiveSection("pro_hosting")}
-            className={navButtonClass(activeSection === "pro_hosting")}
-          >
-            <span className="flex items-center gap-2.5">
-              <BrandFilterIcon
-                size={17}
-                aria-hidden="true"
-                className={activeSection === "pro_hosting" ? "text-white" : "text-secondary"}
-              />
-              <span>{t("nav.proHosting")}</span>
-            </span>
-          </button>
-        </nav>
-      </div>
-
-      <div className="md:col-span-8 lg:col-span-9 bg-white rounded-3xl p-6 sm:p-10 border border-tertiary shadow-sm">
-        {panels.map((p) => (
-          <div key={p.id} id={panelId(p.id)} hidden={activeSection !== p.id}>
-            {p.node}
-          </div>
-        ))}
       </div>
 
       <ConfirmDialog

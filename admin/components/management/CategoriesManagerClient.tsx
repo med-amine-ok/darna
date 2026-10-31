@@ -122,7 +122,7 @@ export default function CategoriesManagerClient({
       header: t("columns.icon"),
       className: "w-16 text-center",
       render: () => (
-        <div className="w-8 h-8 rounded-lg bg-[#FAF9F5] border border-[#D9C9B2]/50 flex items-center justify-center text-xs font-semibold text-[#2E3A2F]">
+        <div className="w-8 h-8 rounded-lg bg-darnaBg-300/70 flex items-center justify-center text-xs font-semibold text-primary-900">
           <Tag className="w-4 h-4 text-secondary-700" aria-hidden="true" />
         </div>
       ),
@@ -130,27 +130,27 @@ export default function CategoriesManagerClient({
     {
       key: "nameFr",
       header: t("columns.nameFr"),
-      render: (row) => <span lang="fr" className="font-medium text-[#2E3A2F] text-xs">{row.name.fr}</span>,
+      render: (row) => <span lang="fr" className="font-medium text-primary-900 text-xs">{row.name.fr}</span>,
     },
     {
       key: "nameEn",
       header: t("columns.nameEn"),
-      render: (row) => <span lang="en" className="text-[#2E3A2F]/80 text-xs">{row.name.en}</span>,
+      render: (row) => <span lang="en" className="text-primary/80 text-xs">{row.name.en}</span>,
     },
     {
       key: "nameAr",
       header: t("columns.nameAr"),
-      render: (row) => <span lang="ar" dir="rtl" className="text-[#2E3A2F]/80 text-xs font-arabic">{row.name.ar}</span>,
+      render: (row) => <span lang="ar" dir="rtl" className="text-primary/80 text-xs font-arabic">{row.name.ar}</span>,
     },
     {
       key: "slug",
       header: t("columns.slug"),
-      render: (row) => <span dir="ltr" className="font-mono text-[11px] text-[#2E3A2F]/70">/{row.slug}</span>,
+      render: (row) => <span dir="ltr" className="font-mono text-[11px] text-primary/70">/{row.slug}</span>,
     },
     {
       key: "count",
       header: t("columns.activeListings"),
-      render: (row) => <span className="font-medium text-xs text-[#2E3A2F]">{row.listingCount}</span>,
+      render: (row) => <span className="font-medium text-xs text-primary-900">{row.listingCount}</span>,
     },
     {
       key: "status",
@@ -165,7 +165,7 @@ export default function CategoriesManagerClient({
           className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
             row.isActive
               ? "bg-secondary/15 text-secondary-800 hover:bg-secondary/25"
-              : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+              : "bg-primary/[0.07] text-primary-800 hover:bg-primary/[0.12]"
           }`}
         >
           {row.isActive ? t("visible") : t("hidden")}
@@ -175,7 +175,7 @@ export default function CategoriesManagerClient({
   ];
 
   const inputClass =
-    "w-full px-3 py-2 bg-white border border-[#D9C9B2] rounded-lg text-[#2E3A2F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
+    "w-full px-3 py-2 bg-white border border-primary/[0.12] rounded-xl shadow-2xs text-primary-900 hover:border-primary/25 focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] transition duration-fast ease-standard";
 
   return (
     <div className="space-y-6">
@@ -183,7 +183,7 @@ export default function CategoriesManagerClient({
         <button
           type="button"
           onClick={() => router.push(backRoute)}
-          className="inline-flex items-center gap-1.5 text-xs text-[#2E3A2F]/70 hover:text-[#2E3A2F] font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary-900 font-medium"
         >
           <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
           <span>{t("back")}</span>
@@ -198,7 +198,7 @@ export default function CategoriesManagerClient({
           <button
             type="button"
             onClick={() => setIsAddDrawerOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[#2E3A2F] rounded-lg hover:bg-[#242e25] shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-primary-800 rounded-xl hover:bg-primary-900 shadow-e1 transition duration-fast"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             <span>{t("add", { item })}</span>
@@ -207,7 +207,7 @@ export default function CategoriesManagerClient({
         }
       />
 
-      <div className="bg-white rounded-xl border border-[#D9C9B2]/60 shadow-sm overflow-hidden">
+      <div>
         <DataTable
           columns={columns}
           data={categories}
@@ -227,7 +227,7 @@ export default function CategoriesManagerClient({
       >
         <div className="space-y-4 text-xs">
           <div>
-            <label htmlFor={`${formId}-nameFr`} className="block font-semibold text-[#2E3A2F] mb-1">
+            <label htmlFor={`${formId}-nameFr`} className="block font-semibold text-primary-900 mb-1">
               {t("form.nameFr")} <span aria-hidden="true">*</span>
             </label>
             <input
@@ -252,7 +252,7 @@ export default function CategoriesManagerClient({
             )}
           </div>
           <div>
-            <label htmlFor={`${formId}-nameEn`} className="block font-semibold text-[#2E3A2F] mb-1">{t("form.nameEn")}</label>
+            <label htmlFor={`${formId}-nameEn`} className="block font-semibold text-primary-900 mb-1">{t("form.nameEn")}</label>
             <input
               id={`${formId}-nameEn`}
               type="text"
@@ -264,7 +264,7 @@ export default function CategoriesManagerClient({
             />
           </div>
           <div>
-            <label htmlFor={`${formId}-nameAr`} className="block font-semibold text-[#2E3A2F] mb-1">{t("form.nameAr")}</label>
+            <label htmlFor={`${formId}-nameAr`} className="block font-semibold text-primary-900 mb-1">{t("form.nameAr")}</label>
             <input
               id={`${formId}-nameAr`}
               type="text"
@@ -277,7 +277,7 @@ export default function CategoriesManagerClient({
             />
           </div>
           <div>
-            <label htmlFor={`${formId}-slug`} className="block font-semibold text-[#2E3A2F] mb-1">{t("form.slug")}</label>
+            <label htmlFor={`${formId}-slug`} className="block font-semibold text-primary-900 mb-1">{t("form.slug")}</label>
             <input
               id={`${formId}-slug`}
               type="text"

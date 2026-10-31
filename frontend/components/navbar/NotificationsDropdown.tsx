@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useId } from "react";
+import type { IconProps } from "@/components/icons/BrandIcons";
+import React, { useState, useEffect, useMemo } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/navigation";
 import { Notification } from "@/types";
@@ -10,7 +11,7 @@ import {
   markAllNotificationsReadAction,
 } from "@/app/actions/notifications";
 import { toast } from "react-toastify";
-import { useDismiss } from "@/hook/useDismiss";
+import { Popover, Illustration, cn, focusRing, focusRingInset } from "@/components/ui";
 import {
   BrandBellIcon,
   BrandCalendarIcon,
@@ -21,24 +22,27 @@ import {
   BrandChevronRightIcon,
 } from "@/components/icons";
 
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+type Group = "today" | "week" | "earlier";
 
+const typeStyle: Record<string, { tint: string; Icon: React.ComponentType<IconProps> }> = {
+  booking: { tint: "bg-secondary-50 text-secondary-700", Icon: BrandCalendarIcon },
+  message: { tint: "bg-tertiary-100 text-primary-700", Icon: BrandMessageIcon },
+  price: { tint: "bg-accent-50 text-accent-700", Icon: BrandTagIcon },
+  system: { tint: "bg-primary/[0.06] text-primary-800", Icon: BrandShieldIcon },
+};
+
+/** Bell + popover: notifications grouped by day (Today · This week · Earlier) with unread dots. */
 export default function NotificationsDropdown() {
   const router = useRouter();
   const t = useTranslations("nav");
   const format = useFormatter();
-  const panelId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  // Load notifications
   useEffect(() => {
     let isMounted = true;
-    async function fetchNotifs() {
+    (async () => {
       try {
         // Scoped to the logged-in user on the server; logged-out users get none.
         const result = await getMyNotificationsAction();
@@ -46,22 +50,21 @@ export default function NotificationsDropdown() {
       } catch {
         if (isMounted) setNotifications([]);
       }
-    }
-    fetchNotifs();
+    })();
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Close on outside click or Escape (focus returns to the bell).
-  useDismiss(isOpen, dropdownRef, () => setIsOpen(false), triggerRef);
-
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const formatTime = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
+  const dateOf = (n: Notification) => {
+    const d = new Date(n.createdAt || n.timestamp || "");
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const formatTime = (date: Date | null) => {
+    if (!date) return "";
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     if (diffMs < 60_000) return t("justNow");
@@ -69,7 +72,20 @@ export default function NotificationsDropdown() {
     return format.dateTime(date, { month: "short", day: "numeric" });
   };
 
-  const handleMarkAsRead = async (id: string, link?: string) => {
+  const groups = useMemo(() => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const weekAgo = startOfToday.getTime() - 6 * 24 * 60 * 60_000;
+    const out: Record<Group, Notification[]> = { today: [], week: [], earlier: [] };
+    for (const n of notifications.slice(0, 8)) {
+      const d = dateOf(n);
+      const key: Group = d && d >= startOfToday ? "today" : d && d.getTime() >= weekAgo ? "week" : "earlier";
+      out[key].push(n);
+    }
+    return (["today", "week", "earlier"] as Group[]).filter((g) => out[g].length).map((g) => ({ key: g, items: out[g] }));
+  }, [notifications]);
+
+  const handleOpenItem = async (id: string, link?: string) => {
     const result = await markNotificationReadAction(id);
     if (!result.ok) {
       toast.error(t("notificationsUpdateFailed"));
@@ -94,158 +110,121 @@ export default function NotificationsDropdown() {
     toast.success(t("allNotificationsRead"));
   };
 
-  const handleViewAll = () => {
-    setIsOpen(false);
-    router.push("/notifications");
-  };
-
-  const getCategoryIcon = (type: string) => {
-    switch (type) {
-      case "booking":
-        return <BrandCalendarIcon size={16} className="text-emerald-700" />;
-      case "message":
-        return <BrandMessageIcon size={16} className="text-secondary" />;
-      case "price":
-        return <BrandTagIcon size={16} className="text-accent" />;
-      case "system":
-        return <BrandShieldIcon size={16} className="text-primary" />;
-      default:
-        return <BrandBellIcon size={16} className="text-primary" />;
-    }
-  };
-
-  const triggerLabel =
-    unreadCount > 0 ? t("notificationsWithUnread", { count: unreadCount }) : t("notifications");
+  const groupLabel = { today: t("groupToday"), week: t("groupThisWeek"), earlier: t("groupEarlier") };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Bell Trigger Button */}
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-label={triggerLabel}
-        aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        aria-controls={isOpen ? panelId : undefined}
-        title={t("notifications")}
-        className={`relative p-2 rounded-full transition select-none btn-press cursor-pointer ${focusRing} ${
-          isOpen ? "bg-black/10 text-primary" : "hover:bg-black/5 text-primary"
-        }`}
-      >
-        <BrandBellIcon size={18} />
-        {unreadCount > 0 && (
-          <span aria-hidden="true" className="absolute top-1.5 end-1.5 flex h-2 w-2">
-            <span className="motion-safe:animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent ring-2 ring-white" />
-          </span>
-        )}
-      </button>
-
-      {/* Dropdown Panel */}
-      {isOpen && (
-        <div
-          id={panelId}
-          role="dialog"
-          aria-labelledby={`${panelId}-title`}
-          className="absolute end-0 top-full mt-2.5 w-80 sm:w-96 max-w-[calc(100vw-24px)] bg-white/95 backdrop-blur-xl border border-tertiary/80 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+    <Popover
+      ariaLabel={t("notifications")}
+      align="end"
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-3xl p-0 shadow-e4"
+      trigger={
+        <button
+          type="button"
+          aria-label={unreadCount > 0 ? t("notificationsWithUnread", { count: unreadCount }) : t("notifications")}
+          className={cn(
+            "relative flex h-11 w-11 items-center justify-center rounded-full text-primary-900 cursor-pointer select-none",
+            "transition-colors duration-fast ease-standard hover:bg-primary/[0.06] aria-expanded:bg-primary/[0.08]",
+            focusRing
+          )}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-tertiary/40 bg-white/60">
-            <div className="flex items-center gap-2">
-              <h2 id={`${panelId}-title`} className="font-bold text-sm sm:text-base text-primary">
-                {t("notifications")}
-              </h2>
-              {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent-700 text-[11px] font-bold">
-                  {t("newCount", { count: unreadCount })}
-                </span>
-              )}
-            </div>
-
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                disabled={isLoading}
-                onClick={handleMarkAllRead}
-                className={`text-xs font-semibold text-neutral-600 hover:text-accent-700 transition cursor-pointer flex items-center gap-1 rounded ${focusRing}`}
-              >
-                <BrandCheckIcon size={13} />
-                <span>{t("markAllRead")}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Notifications List */}
-          <div className="max-h-[380px] overflow-y-auto no-scrollbar">
-            {notifications.length === 0 ? (
-              <div className="py-12 px-6 text-center text-neutral-600 flex flex-col items-center justify-center">
-                <div className="w-12 h-12 rounded-2xl bg-tertiary/20 flex items-center justify-center mb-3">
-                  <BrandBellIcon size={22} className="text-tertiary" />
-                </div>
-                <p className="text-xs font-semibold text-primary">{t("noNotifications")}</p>
-                <p className="text-[11px] text-neutral-600 mt-0.5">{t("noNotificationsDesc")}</p>
-              </div>
-            ) : (
-              <ul className="divide-y divide-tertiary/30">
-                {notifications.slice(0, 5).map((notif) => (
-                  <li key={notif.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleMarkAsRead(notif.id, notif.link)}
-                      className={`w-full text-start p-4 transition cursor-pointer flex items-start gap-3 relative hover:bg-neutral-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600 ${
-                        !notif.read ? "bg-accent/[0.04]" : "bg-transparent"
-                      }`}
-                    >
-                      {/* Category Icon Badge */}
-                      <span className="w-9 h-9 rounded-xl bg-white border border-tertiary/60 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
-                        {getCategoryIcon(notif.type)}
-                      </span>
-
-                      {/* Content */}
-                      <span className="flex-1 min-w-0">
-                        <span className="flex items-center justify-between gap-2">
-                          <span
-                            className={`text-xs font-bold truncate ${!notif.read ? "text-primary" : "text-neutral-700"}`}
-                          >
-                            {notif.title}
-                          </span>
-                          <span className="text-[10px] text-neutral-600 whitespace-nowrap shrink-0">
-                            {formatTime(notif.createdAt || notif.timestamp)}
-                          </span>
-                        </span>
-                        <span className="block text-[11px] text-neutral-600 line-clamp-2 mt-0.5 leading-snug">
-                          {notif.message}
-                        </span>
-                      </span>
-
-                      {/* Unread Indicator Dot */}
-                      {!notif.read && (
-                        <>
-                          <span aria-hidden="true" className="w-2 h-2 rounded-full bg-accent shrink-0 mt-2" />
-                          <span className="sr-only">{t("unread")}</span>
-                        </>
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Footer with "See All" button */}
-          <div className="p-3 border-t border-tertiary/40 bg-neutral-50/70 flex items-center justify-center">
-            <button
-              type="button"
-              onClick={handleViewAll}
-              className={`w-full py-2.5 px-4 rounded-xl bg-white border border-tertiary/80 hover:border-primary text-primary hover:bg-primary hover:text-white transition-all text-xs font-bold flex items-center justify-center gap-2 shadow-2xs cursor-pointer btn-press ${focusRing}`}
-            >
-              <span>{t("seeAllNotifications")}</span>
-              <BrandChevronRightIcon size={14} className="rtl:rotate-180" />
-            </button>
-          </div>
+          <BrandBellIcon size={19} />
+          {unreadCount > 0 && (
+            <span aria-hidden="true" className="absolute end-2.5 top-2.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-accent-500 opacity-60 motion-safe:animate-ping" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent-600 ring-2 ring-darnaBg" />
+            </span>
+          )}
+        </button>
+      }
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-primary/[0.08] px-5 py-4">
+        <div className="flex items-center gap-2">
+          <h2 className="font-serif text-title font-normal text-primary-900">{t("notifications")}</h2>
+          {unreadCount > 0 && (
+            <span className="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-semibold text-accent-700">{t("newCount", { count: unreadCount })}</span>
+          )}
         </div>
-      )}
-    </div>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={handleMarkAllRead}
+            className={cn("flex items-center gap-1 rounded-full px-2 py-1 text-meta font-semibold text-primary-700 cursor-pointer hover:text-primary-900 disabled:opacity-50", focusRing)}
+          >
+            <BrandCheckIcon size={14} />
+            {t("markAllRead")}
+          </button>
+        )}
+      </div>
+
+      <div className="max-h-[420px] overflow-y-auto overscroll-contain">
+        {notifications.length === 0 ? (
+          <div className="flex flex-col items-center px-6 py-10 text-center">
+            <Illustration variant="messages" size={104} />
+            <p className="mt-3 text-sm font-semibold text-primary-900">{t("noNotifications")}</p>
+            <p className="mt-1 max-w-[30ch] text-meta text-primary-600">{t("noNotificationsDesc")}</p>
+          </div>
+        ) : (
+          groups.map((group) => (
+            <section key={group.key} aria-label={groupLabel[group.key]} className="py-1.5">
+              <h3 className="px-5 pb-1 pt-2 text-eyebrow uppercase font-semibold text-primary-500">{groupLabel[group.key]}</h3>
+              <ul>
+                {group.items.map((n) => {
+                  const style = typeStyle[n.type] ?? { tint: "bg-primary/[0.06] text-primary-800", Icon: BrandBellIcon };
+                  return (
+                    <li key={n.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenItem(n.id, n.link)}
+                        className={cn(
+                          "relative flex w-full items-start gap-3 px-5 py-3 text-start cursor-pointer transition-colors duration-fast ease-standard hover:bg-primary/[0.03]",
+                          focusRingInset
+                        )}
+                      >
+                        <span className={cn("mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", style.tint)}>
+                          <style.Icon size={18} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-baseline justify-between gap-2">
+                            <span className={cn("truncate text-sm", n.read ? "font-medium text-primary-700" : "font-semibold text-primary-900")}>{n.title}</span>
+                            <span className="shrink-0 whitespace-nowrap text-[11px] text-primary-500">{formatTime(dateOf(n))}</span>
+                          </span>
+                          <span className="mt-0.5 block text-meta leading-snug text-primary-600 line-clamp-2">{n.message}</span>
+                        </span>
+                        {!n.read && (
+                          <>
+                            <span aria-hidden="true" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent-600" />
+                            <span className="sr-only">{t("unread")}</span>
+                          </>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
+        )}
+      </div>
+
+      <div className="border-t border-primary/[0.08] p-2">
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(false);
+            router.push("/notifications");
+          }}
+          className={cn(
+            "flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl text-sm font-semibold text-primary-900 cursor-pointer transition-colors duration-fast hover:bg-primary/[0.05]",
+            focusRingInset
+          )}
+        >
+          {t("seeAllNotifications")}
+          <BrandChevronRightIcon size={16} className="rtl:rotate-180" />
+        </button>
+      </div>
+    </Popover>
   );
 }

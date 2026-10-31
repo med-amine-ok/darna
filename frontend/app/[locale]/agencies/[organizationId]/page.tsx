@@ -2,7 +2,6 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import Container from "@/components/Container";
 import { getOrganizationById, getOrganizationMembers } from "@/lib/data/organizations";
 import { getHostListings } from "@/lib/data/listings";
 import { toPublicMembers, toPublicOrganization } from "@/lib/server/dto";
@@ -66,14 +65,14 @@ export default async function AgencyPublicProfilePage({ params }: AgencyPageProp
   ]);
 
   return (
-    <div className="min-h-screen bg-bg-light/40 py-10">
-      <Container>
+    <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <AgencyProfileClient
           organization={toPublicOrganization(organization)}
           members={toPublicMembers(members)}
           listings={listings.filter((l) => l.status === "active")}
         />
-      </Container>
+      </div>
     </div>
   );
 }

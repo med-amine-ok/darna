@@ -58,7 +58,7 @@
     "selectHostMode": "Select host mode"
   },
   "hostType": {
-    "eyebrow": "Step 1 of 2 · Partner account type",
+    "eyebrow": "Become a host on DARNA",
     "individual": {
       "badge": "Solo Host",
       "cta": "Continue as Individual"
@@ -78,6 +78,16 @@
       "title": "Hostel & Community",
       "desc": "Shared dorm rooms, per-bed booking, private rooms, communal kitchen, lockers, and a social backpacker atmosphere.",
       "cta": "Register Hostel Property"
+    },
+    "chooseTitle": "Choose how you host",
+    "points": {
+      "draft": "Guided setup: save a draft and come back any time",
+      "dzd": "Set your prices in Algerian dinars",
+      "types": "Homes, tours, hotels and hostels each get their own workspace"
+    },
+    "imageAlt": {
+      "ghardaia": "Houses of the M'zab valley in Ghardaia",
+      "riad": "A tiled courtyard in a traditional Algerian house"
     }
   },
   "intro": {
@@ -90,7 +100,8 @@
     "step2Desc": "Add at least 4 photos, amenities, and an authentic title.",
     "step3Title": "Set pricing & publish",
     "step3Desc": "Choose your nightly price in DZD and welcome your first guests.",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "imageAlt": "A riad courtyard with a carved Moorish doorway"
   },
   "categories": {
     "villa": "Villa",
@@ -175,7 +186,7 @@
     "photoAlt": "Property photo {number}",
     "removeLabel": "Remove photo {number}",
     "urlLabel": "Add a photo by URL",
-    "presetsLabel": "Presets:",
+    "presetsLabel": "From the DARNA photo library",
     "addPreset": "Add preset photo: {name}",
     "added": "Photo added to the gallery!",
     "minOne": "Your gallery must have at least one photo.",
@@ -191,7 +202,15 @@
       "rooftopLounge": "Rooftop lounge",
       "saharanOasis": "Saharan oasis",
       "socialArea": "Social area"
-    }
+    },
+    "dropTitle": "Drag a photo link here, or paste it below",
+    "dropHint": "Drop an image from another browser tab, paste a link, or pick from the library. The first photo is your cover.",
+    "dropFilesNote": "File uploads are not available yet. Drop an image from a web page or paste its link instead.",
+    "dropUnknownNote": "That did not look like an image link. Try pasting the photo address instead.",
+    "galleryLabel": "{count, plural, one {# photo} other {# photos}} in your gallery",
+    "reorderHint": "Drag to reorder, or use the arrows",
+    "moveEarlier": "Move photo {number} earlier",
+    "moveLater": "Move photo {number} later"
   },
   "titleStep": {
     "title": "Now, let's give your place a title",
@@ -218,9 +237,17 @@
     "preview": "{amount} per night",
     "eurEquivalent": "Equivalent to {amount} per night",
     "breakdown": "Earnings estimate",
-    "base": "Base nightly price",
+    "base": "Base price",
     "commission": "DARNA commission ({rate}%)",
-    "payout": "Your net payout"
+    "payout": "Your net payout",
+    "priceLabel": {
+      "home": "Price per night",
+      "vehicle": "Price per day",
+      "experience": "Price per person"
+    },
+    "currency": "DZD",
+    "previewUnit": "{amount} {unit}",
+    "eurUnit": "About {amount} {unit}"
   },
   "booking": {
     "title": "Choose your reservation settings",
@@ -250,7 +277,8 @@
     "editPrice": "Edit price",
     "publishing": "Publishing listing...",
     "published": "Congratulations! Your listing is now live on DARNA.",
-    "empty": "—"
+    "empty": "Not provided",
+    "perUnit": "{unit} ({eur})"
   },
   "bookingMode": {
     "title": "How do you want to accept bookings?",
@@ -355,7 +383,7 @@
     },
     "registering": "Registering hotel...",
     "register": "Register hotel workspace",
-    "success": "Hotel workspace registered! It is pending verification — you can start setting up your property."
+    "success": "Hotel workspace registered! It is pending verification, you can start setting up your property."
   },
   "hostel": {
     "s1": {
@@ -423,7 +451,7 @@
     },
     "registering": "Registering hostel...",
     "register": "Register hostel workspace",
-    "success": "Hostel workspace registered! It is pending verification — you can start setting up your property."
+    "success": "Hostel workspace registered! It is pending verification, you can start setting up your property."
   },
   "customStep": {
     "additionalInfo": "Additional information",
@@ -446,5 +474,22 @@
     "hostelName": "Please enter your hostel name.",
     "hostelAddress": "Please enter the hostel address."
   },
-  "discarded": "Unsaved changes discarded."
+  "discarded": "Unsaved changes discarded.",
+  "units": {
+    "home": "per night",
+    "vehicle": "per day",
+    "experience": "per person"
+  },
+  "preview": {
+    "eyebrow": "Live preview",
+    "note": "This is how guests will see your card in search. It updates as you type.",
+    "titlePlaceholder": "Your listing title",
+    "hotelPlaceholder": "Your hotel name",
+    "hostelPlaceholder": "Your hostel name",
+    "beds": "{count, plural, one {# bed} other {# beds}}"
+  },
+  "complete": {
+    "cta": "Go to my host workspace",
+    "redirecting": "Taking you to your workspace in a moment."
+  }
 }

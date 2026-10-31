@@ -7,10 +7,10 @@ export const namespaces = [
   "search",
   "listing",
   "trips",
+  "tripDetail",
   "reservations",
   "properties",
   "favorites",
-  "modals",
   "footer",
   "filters",
   "hostFlow",
@@ -36,4 +36,5 @@ export const namespaces = [
   "settings",
   "notifications",
   "help",
+  "ui",
 ] as const;

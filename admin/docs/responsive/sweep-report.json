@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-29T17:50:08.283Z",
+  "timestamp": "2026-10-31T05:44:20.396Z",
   "totalRoutesChecked": 16,
   "localesChecked": [
     "fr",
@@ -13,8 +13,18 @@
     "tablet_768 (768x1024)",
     "desktop_1280 (1280x720)"
   ],
-  "totalFindings": 0,
-  "blockingCount": 0,
+  "totalFindings": 1,
+  "blockingCount": 1,
   "warningCount": 0,
-  "findings": []
+  "findings": [
+    {
+      "type": "horizontal_overflow",
+      "route": "/stats",
+      "locale": "fr",
+      "viewport": "390x844",
+      "message": "Document width (402px) exceeds viewport (390px)",
+      "element": "span.tabular-nums ",
+      "severity": "blocking"
+    }
+  ]
 }

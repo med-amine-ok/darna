@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useId } from "react";
-import Dialog from "@/components/ui/Dialog";
 import { formatDzd } from "@/lib/currency";
 import { useActionError } from "@/hook/useActionError";
 import { Range } from "react-date-range";
@@ -9,7 +8,9 @@ import { Listing, User } from "@/types";
 import Calendar from "@/components/inputs/Calendar";
 import Counter from "@/components/inputs/Counter";
 import PriceDisplay from "@/components/common/PriceDisplay";
-import Button from "@/components/Button";
+import { AnimatedNumber, Banner, Button, Sheet, Textarea } from "@/components/ui";
+import BookingSuccessDialog, { type BookingSummaryRow } from "./detail/BookingSuccessDialog";
+import MobileBookingBar from "./detail/MobileBookingBar";
 import { useLoginModal } from "@/hook/useLoginModal";
 import { createBookingAction } from "@/app/actions/bookings";
 import {
@@ -29,15 +30,8 @@ import {
   toDateKey,
   type DateKey,
 } from "@/lib/booking/dates";
-import { useRouter } from "@/navigation";
 import { toast } from "react-toastify";
-import {
-  BrandStarIcon,
-  BrandFlagIcon,
-  BrandCloseIcon,
-  BrandAlertCircleIcon,
-  BrandClockIcon,
-} from "@/components/icons";
+import { BrandStarIcon, BrandFlagIcon, BrandClockIcon } from "@/components/icons";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { formatNumber, formatRating } from "@/lib/i18n/date-locale";
@@ -57,7 +51,6 @@ export default function ListingReservation({
   availability,
   priceOverrides = {},
 }: ListingReservationProps) {
-  const router = useRouter();
   const openLogin = useLoginModal((s) => s.onOpen);
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -151,6 +144,24 @@ export default function ListingReservation({
 
   const validationMessage = validationError ? errorText(validationError) : null;
 
+  const [success, setSuccess] = useState<{ status: "confirmed" | "pending"; rows: BookingSummaryRow[] } | null>(null);
+
+  const periodLabel = t(`perUnit.${unitLabel(quote.model)}`);
+  const rating = formatRating(listing.rating, locale);
+  const reviewCount = listing.reviewCount ?? 0;
+  const durationLabel = isExperience
+    ? t("peopleCount", { count: quote.quantity })
+    : isVehicle
+    ? t("daysCount", { count: quote.nights })
+    : t("nightsCount", { count: quote.nights });
+  const money = (amount: number) => formatDzd(amount, locale);
+  const fmt = (key: DateKey) => formatDateKey(key, locale);
+  const fmtShort = (key: DateKey) => formatDateKey(key, locale, { month: "short", day: "numeric" });
+  const datesLabel = isExperience
+    ? fmt(startKey)
+    : tCommon("dateRange", { start: fmtShort(startKey), end: fmtShort(endKey) });
+  const guestsLabel = isVehicle ? t("passengerCount", { count: guestCount }) : t("guestCount", { count: guestCount });
+
   const handleReserve = async () => {
     if (!currentUser) {
       openLogin();
@@ -179,32 +190,22 @@ export default function ListingReservation({
         return;
       }
 
-      if (result.data.status === "pending") {
-        toast.success(t("requestSubmitted"));
-      } else {
-        toast.success(t("reservationConfirmed"));
-      }
       setIsMobileSheetOpen(false);
-      router.push("/trips");
-      router.refresh();
+      // Celebrate in place; the guest chooses where to go next (no automatic redirect).
+      setSuccess({
+        status: result.data.status === "pending" ? "pending" : "confirmed",
+        rows: [
+          { label: t("success.dates"), value: datesLabel },
+          { label: isVehicle ? t("passengers") : t("guests"), value: guestsLabel },
+          { label: tCommon("total"), value: money(quote.total) },
+        ],
+      });
     } catch {
       toast.error(errorText({ code: "BOOKING_FAILED" }));
     } finally {
       setIsLoading(false);
     }
   };
-
-  const periodLabel = t(`perUnit.${unitLabel(quote.model)}`);
-  const rating = formatRating(listing.rating, locale);
-  const reviewCount = listing.reviewCount ?? 0;
-  const durationLabel = isExperience
-    ? t("peopleCount", { count: quote.quantity })
-    : isVehicle
-    ? t("daysCount", { count: quote.nights })
-    : t("nightsCount", { count: quote.nights });
-  const money = (amount: number) => formatDzd(amount, locale);
-  const fmt = (key: DateKey) => formatDateKey(key, locale);
-  const fmtShort = (key: DateKey) => formatDateKey(key, locale, { month: "short", day: "numeric" });
 
   const handleRangeChange = (sel: Range) => {
     if (isExperience && sel.startDate) {
@@ -214,9 +215,58 @@ export default function ListingReservation({
     }
   };
 
+  const partialNotice = partialAvailabilityInfo && (
+    <Banner tone="warning" title={tListing("partialAvailabilityNoticeTitle")}>
+      {tListing("partialAvailabilityNotice", {
+        searched: tCommon("dateRange", {
+          start: fmtShort(partialAvailabilityInfo.searchedStart),
+          end: fmtShort(partialAvailabilityInfo.searchedEnd),
+        }),
+        available: tCommon("dateRange", {
+          start: fmtShort(partialAvailabilityInfo.overlapStart),
+          end: fmtShort(partialAvailabilityInfo.overlapEnd),
+        }),
+      })}
+    </Banner>
+  );
+
+  const modeNotice = isRequestToBook ? (
+    <Banner tone="info" title={t("hostApprovalRequired")} icon={<BrandClockIcon size={18} />}>
+      {t("hostApprovalDesc")}
+    </Banner>
+  ) : (
+    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-secondary-50 text-secondary-800">
+      <span className="relative flex w-2 h-2 shrink-0" aria-hidden="true">
+        <span className="absolute inset-0 rounded-full bg-secondary-500 animate-ping opacity-60" />
+        <span className="relative w-2 h-2 rounded-full bg-secondary-600" />
+      </span>
+      <span className="font-semibold text-meta">{t("instantConfirmation")}</span>
+    </div>
+  );
+
+  const noteField = (idSuffix: string) =>
+    isRequestToBook && (
+      <Textarea
+        id={`${baseId}-note-${idSuffix}`}
+        label={t("noteToHost")}
+        helper={t("noteToHostPlaceholder")}
+        rows={3}
+        maxLength={1000}
+        showCount
+        value={guestMessage}
+        onChange={(e) => setGuestMessage(e.target.value)}
+      />
+    );
+
+  const validationAlert = validationMessage && (
+    <p role="alert" className="text-meta font-semibold text-accent-700">
+      {validationMessage}
+    </p>
+  );
+
   const priceBreakdown = (
     <>
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-4">
         <span>
           {t.rich(quote.hasPriceOverrides ? "averageTimes" : "priceTimes", {
             price: () => (
@@ -228,47 +278,51 @@ export default function ListingReservation({
             duration: durationLabel,
           })}
         </span>
-        <span>{money(quote.subtotal)}</span>
+        <AnimatedNumber value={quote.subtotal} format={money} className="tabular-nums" />
       </div>
 
       {quote.cleaningFee > 0 && (
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-4">
           <span>{t("cleaningFee")}</span>
-          <span>{money(quote.cleaningFee)}</span>
+          <AnimatedNumber value={quote.cleaningFee} format={money} className="tabular-nums" />
         </div>
       )}
 
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-4">
         <span>{t("serviceFee")}</span>
-        <span>{money(quote.serviceFee)}</span>
+        <AnimatedNumber value={quote.serviceFee} format={money} className="tabular-nums" />
       </div>
 
       {quote.taxes > 0 && (
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-4">
           <span>{t("taxes")}</span>
-          <span>{money(quote.taxes)}</span>
+          <AnimatedNumber value={quote.taxes} format={money} className="tabular-nums" />
         </div>
       )}
     </>
   );
 
+  const eyebrow = "block text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-500 rtl:normal-case rtl:tracking-normal";
+
   return (
     <>
-      {/* 1. Desktop Sticky Sidebar Card */}
-      <div className="hidden lg:block sticky top-28 w-full max-w-sm bg-white rounded-3xl p-6 border border-tertiary/60 shadow-darna-widget hover:shadow-darna-modal transition-shadow duration-300 space-y-5">
-        {/* Price & Rating Header */}
-        <div className="flex items-baseline justify-between border-b border-tertiary/40 pb-4">
+      {/* 1. Desktop sticky booking card */}
+      <div className="hidden lg:block sticky top-28 w-full max-w-sm ms-auto bg-white rounded-3xl p-7 shadow-e3 space-y-5">
+        {/* Price & rating */}
+        <div className="flex items-start justify-between gap-3 pb-1">
           <div>
-            <PriceDisplay
-              price={listing.price}
-              period={periodLabel}
-              priceClassName="text-xl sm:text-2xl font-bold text-primary"
-            />
+            <p className="flex items-baseline gap-1.5 flex-wrap">
+              <AnimatedNumber value={quote.total} format={money} className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums" />
+              <span className="text-body text-primary-500">{tCommon("total")}</span>
+            </p>
+            <p className="mt-1.5 text-meta text-primary-500 tabular-nums">
+              {money(listing.price)} {periodLabel} · {durationLabel}
+            </p>
           </div>
-          <div className="text-xs font-semibold text-neutral-600 flex items-center gap-1">
+          <div className="text-meta font-semibold text-primary-800 flex items-center gap-1 tabular-nums pt-1">
             {rating ? (
               <>
-                <BrandStarIcon size={12} className="text-accent fill-accent" />
+                <BrandStarIcon size={13} className="text-accent-600" />
                 <span className="sr-only">
                   {t("ratingLabel", { rating })}
                   {reviewCount > 0 && <>, {t("reviewsCount", { count: reviewCount })}</>}
@@ -284,62 +338,31 @@ export default function ListingReservation({
           </div>
         </div>
 
-        {/* Partial Availability Notice Banner (Section 6) */}
-        {partialAvailabilityInfo && (
-          <div className="p-3 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 animate-in fade-in">
-            <BrandAlertCircleIcon size={16} className="text-amber-600 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <p className="font-semibold text-amber-950">
-                {tListing("partialAvailabilityNoticeTitle")}
-              </p>
-              <p className="text-amber-800 leading-relaxed text-[11px]">
-                {tListing("partialAvailabilityNotice", {
-                  searched: tCommon("dateRange", {
-                    start: fmtShort(partialAvailabilityInfo.searchedStart),
-                    end: fmtShort(partialAvailabilityInfo.searchedEnd),
-                  }),
-                  available: tCommon("dateRange", {
-                    start: fmtShort(partialAvailabilityInfo.overlapStart),
-                    end: fmtShort(partialAvailabilityInfo.overlapEnd),
-                  }),
-                })}
-              </p>
-            </div>
-          </div>
-        )}
+        {partialNotice}
 
-        {/* Date & Guest Input Box */}
-        <div className="border border-tertiary rounded-2xl overflow-hidden divide-y divide-tertiary text-xs">
-          {/* Check-in / Checkout Selector */}
+        {/* Dates & guests */}
+        <div className="rounded-2xl ring-1 ring-primary/15 overflow-hidden divide-y divide-primary/10 text-sm transition-shadow duration-fast hover:ring-primary/25">
           <button
             type="button"
             onClick={() => setIsCalendarOpen((prev) => !prev)}
             aria-expanded={isCalendarOpen}
             aria-controls={calendarPanelId}
-            className={`w-full grid ${isExperience ? "grid-cols-1" : "grid-cols-2"} p-3 text-start hover:bg-neutral-50 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600`}
+            className={`w-full grid ${isExperience ? "grid-cols-1" : "grid-cols-2"} px-4 py-3 text-start hover:bg-darnaBg/60 transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600`}
           >
             <div>
-              <span className="block font-bold text-[10px] text-neutral-600 uppercase">
-                {isVehicle ? t("pickup") : isExperience ? t("date") : t("checkInLabel")}
-              </span>
-              <span className="font-semibold text-primary">{fmt(startKey)}</span>
+              <span className={eyebrow}>{isVehicle ? t("pickup") : isExperience ? t("date") : t("checkInLabel")}</span>
+              <span className="block mt-0.5 font-medium text-primary-900 tabular-nums">{fmt(startKey)}</span>
             </div>
             {!isExperience && (
-              <div className="border-s border-tertiary ps-3">
-                <span className="block font-bold text-[10px] text-neutral-600 uppercase">
-                  {isVehicle ? t("return") : t("checkoutLabel")}
-                </span>
-                <span className="font-semibold text-primary">{fmt(endKey)}</span>
+              <div className="border-s border-primary/10 ps-4">
+                <span className={eyebrow}>{isVehicle ? t("return") : t("checkoutLabel")}</span>
+                <span className="block mt-0.5 font-medium text-primary-900 tabular-nums">{fmt(endKey)}</span>
               </div>
             )}
           </button>
 
-          {/* Calendar Picker Drawer */}
           {isCalendarOpen && (
-            <div
-              id={calendarPanelId}
-              className="p-2 bg-white flex justify-center border-t border-tertiary/50 animate-in fade-in duration-150"
-            >
+            <div id={calendarPanelId} className="p-2 bg-white flex justify-center animate-in fade-in slide-in-from-top-1 duration-200">
               <Calendar
                 value={dateRange}
                 onChange={(val) => handleRangeChange(val.selection)}
@@ -350,8 +373,7 @@ export default function ListingReservation({
             </div>
           )}
 
-          {/* Guest Count Selector */}
-          <div className="p-3">
+          <div className="px-4 py-3">
             <button
               type="button"
               onClick={() => setIsGuestOpen((prev) => !prev)}
@@ -360,20 +382,16 @@ export default function ListingReservation({
               className="w-full text-start cursor-pointer flex justify-between items-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
               <span>
-                <span className="block font-bold text-[10px] text-neutral-600 uppercase">
-                  {isVehicle ? t("passengers") : t("guests")}
-                </span>
-                <span className="font-semibold text-primary">
-                  {isVehicle ? t("passengerCount", { count: guestCount }) : t("guestCount", { count: guestCount })}
-                </span>
+                <span className={eyebrow}>{isVehicle ? t("passengers") : t("guests")}</span>
+                <span className="font-semibold text-primary-900">{guestsLabel}</span>
               </span>
-              <span className="text-xs font-bold text-neutral-600" aria-hidden="true">
+              <span className="text-meta font-semibold text-primary-900 underline underline-offset-4 decoration-primary/30" aria-hidden="true">
                 {isGuestOpen ? tCommon("close") : t("change")}
               </span>
             </button>
 
             {isGuestOpen && (
-              <div id={guestPanelId} className="pt-3 border-t border-tertiary/40 mt-2">
+              <div id={guestPanelId} className="pt-3 border-t border-primary/10 mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
                 <Counter
                   title={t("totalTravelers")}
                   subtitle={t("maxCount", { count: maxGuests })}
@@ -388,82 +406,39 @@ export default function ListingReservation({
 
         {/* Stay rules */}
         {!isExperience && (rules.minNights > 1 || rules.advanceNoticeDays > 0) && (
-          <p className="text-[11px] text-neutral-600">
+          <p className="text-meta text-primary-500">
             {rules.minNights > 1 &&
-              (isVehicle
-                ? t("minimumDays", { count: rules.minNights })
-                : t("minimumNights", { count: rules.minNights }))}{" "}
+              (isVehicle ? t("minimumDays", { count: rules.minNights }) : t("minimumNights", { count: rules.minNights }))}{" "}
             {rules.advanceNoticeDays > 0 && t("bookAhead", { count: rules.advanceNoticeDays })}
           </p>
         )}
 
-        {/* Host Approval / Instant Booking Mode Indicator */}
-        {isRequestToBook ? (
-          <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs">
-            <BrandClockIcon size={16} strokeWidth={1.8} className="text-amber-700 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <span className="font-bold block text-amber-950">{t("hostApprovalRequired")}</span>
-              <p className="text-[11px] text-amber-800 leading-snug">{t("hostApprovalDesc")}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-50/70 border border-emerald-200/70 text-emerald-900 text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" aria-hidden="true" />
-            <span className="font-semibold text-emerald-900 text-[11px]">{t("instantConfirmation")}</span>
-          </div>
-        )}
+        {modeNotice}
+        {noteField("desktop")}
+        {validationAlert}
 
-        {/* Optional Note to Host when in Request Mode */}
-        {isRequestToBook && (
-          <div className="space-y-1.5 pt-1">
-            <label htmlFor="desktop-guest-msg" className="text-xs font-bold text-neutral-700 flex items-center justify-between">
-              <span>{t("noteToHost")}</span>
-              <span className="text-[10px] text-neutral-600 font-normal">{t("noteToHostHint")}</span>
-            </label>
-            <textarea
-              id="desktop-guest-msg"
-              rows={2}
-              value={guestMessage}
-              onChange={(e) => setGuestMessage(e.target.value)}
-              placeholder={t("noteToHostPlaceholder")}
-              className="w-full text-xs p-2.5 rounded-xl border border-tertiary/70 bg-neutral-50/50 focus:bg-white focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 transition resize-none placeholder:text-neutral-500"
-            />
-          </div>
-        )}
+        <Button size="lg" fullWidth onClick={handleReserve} loading={isLoading} disabled={Boolean(validationError)}>
+          {isRequestToBook ? t("requestToBook") : t("reserve")}
+        </Button>
 
-        {validationMessage && (
-          <p role="alert" className="text-xs font-semibold text-rose-700">
-            {validationMessage}
-          </p>
-        )}
-
-        {/* Reserve Button */}
-        <Button
-          label={isRequestToBook ? t("requestToBook") : t("reserve")}
-          disabled={isLoading || Boolean(validationError)}
-          onClick={handleReserve}
-        />
-
-        <p className="text-center text-xs text-neutral-600">
+        <p className="text-center text-meta text-primary-500">
           {isRequestToBook ? t("freeCancelNoResponse") : t("youWontBeCharged")}
         </p>
 
-        {/* Price Breakdown Calculation */}
-        <div className="space-y-2.5 text-xs sm:text-sm text-neutral-700 border-t border-tertiary/40 pt-4">
+        {/* Price breakdown */}
+        <div className="space-y-3 text-body text-primary-600 border-t border-primary/10 pt-5 [&_.flex>span:first-child]:underline [&_.flex>span:first-child]:decoration-primary/20 [&_.flex>span:first-child]:underline-offset-4">
           {priceBreakdown}
-
-          <div className="flex justify-between font-bold text-sm sm:text-base text-primary border-t border-tertiary/60 pt-3">
+          <div className="flex justify-between items-baseline font-semibold text-title text-primary-900 border-t border-primary/10 pt-4 [&>span:first-child]:no-underline">
             <span>{tCommon("total")}</span>
-            <PriceDisplay price={quote.total} priceClassName="font-bold text-primary" />
+            <AnimatedNumber value={quote.total} format={money} className="tabular-nums" />
           </div>
         </div>
 
-        {/* Report Listing */}
-        <div className="pt-2 text-center">
+        <div className="pt-1 text-center">
           <button
             type="button"
             onClick={() => toast.info(t("reportSuccess"))}
-            className="inline-flex items-center gap-1.5 text-xs text-neutral-600 hover:text-neutral-800 transition cursor-pointer btn-press rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="inline-flex items-center gap-1.5 min-h-[44px] px-2 text-meta text-primary-500 hover:text-primary-900 transition-colors cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             <BrandFlagIcon size={14} strokeWidth={1.8} />
             <span>{t("reportListing")}</span>
@@ -471,143 +446,79 @@ export default function ListingReservation({
         </div>
       </div>
 
-      {/* 2. Mobile Sticky Bottom Bar & Drawer */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-tertiary/80 p-3.5 shadow-2xl flex items-center justify-between pb-[calc(0.8rem+env(safe-area-inset-bottom))]">
-        <div>
-          <PriceDisplay
-            price={listing.price}
-            period={periodLabel}
-            priceClassName="font-bold text-sm text-primary"
-          />
-          <div className="text-[11px] text-neutral-600">
-            {isExperience
-              ? fmtShort(startKey)
-              : tCommon("dateRange", { start: fmtShort(startKey), end: fmtShort(endKey) })}
-          </div>
-        </div>
+      {/* 2. Phones and tablets: sticky bottom bar + booking sheet */}
+      <MobileBookingBar
+        price={<AnimatedNumber value={quote.total} format={money} />}
+        priceSuffix={tCommon("total")}
+        detail={datesLabel}
+        detailLabel={t("editDates", { dates: datesLabel })}
+        ctaLabel={isRequestToBook ? t("request") : t("reserve")}
+        onCta={() => setIsMobileSheetOpen(true)}
+      />
 
-        <button
-          type="button"
-          onClick={() => setIsMobileSheetOpen(true)}
-          aria-haspopup="dialog"
-          className="bg-accent-600 hover:bg-accent-700 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-        >
-          {isRequestToBook ? t("request") : t("reserve")}
-        </button>
-      </div>
-
-      {/* Mobile Reservation Modal Sheet */}
-      <Dialog
+      <Sheet
         isOpen={isMobileSheetOpen}
         onClose={() => setIsMobileSheetOpen(false)}
         busy={isLoading}
-        ariaLabel={isRequestToBook ? t("requestBooking") : t("confirmReservation")}
-        backdropClassName="lg:hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-xs flex flex-col justify-end"
-        className="bg-white rounded-t-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto"
+        title={isRequestToBook ? t("requestBooking") : t("confirmReservation")}
+        description={listing.title}
+        size="lg"
+        bodyClassName="space-y-5"
+        footer={
+          <div className="flex items-center justify-between gap-4">
+            <p className="min-w-0">
+              <AnimatedNumber value={quote.total} format={money} className="block font-semibold text-title text-primary-900 tabular-nums" />
+              <span className="block text-meta text-primary-500 truncate">
+                {datesLabel} · {guestsLabel}
+              </span>
+            </p>
+            <Button size="lg" onClick={handleReserve} loading={isLoading} disabled={Boolean(validationError)} className="shrink-0">
+              {isRequestToBook ? t("submitBookingRequest") : t("completeReservation")}
+            </Button>
+          </div>
+        }
       >
-            <div className="flex items-center justify-between border-b border-tertiary/50 pb-3">
-              <h3 className="font-bold text-base text-primary">
-                {isRequestToBook ? t("requestBooking") : t("confirmReservation")}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsMobileSheetOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition btn-press focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-                aria-label={tCommon("close")}
-              >
-                <BrandCloseIcon size={18} strokeWidth={2.2} />
-              </button>
-            </div>
+        {partialNotice}
+        {modeNotice}
 
-            {/* Host Approval Notice */}
-            {isRequestToBook && (
-              <div className="flex items-start gap-2 p-3 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs">
-                <BrandClockIcon size={16} strokeWidth={1.8} className="text-amber-700 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <span className="font-bold block text-amber-950">{t("hostApprovalRequired")}</span>
-                  <p className="text-[11px] text-amber-800 leading-snug">{t("hostApprovalDesc")}</p>
-                </div>
-              </div>
-            )}
+        <div className="flex justify-center -mx-2">
+          <Calendar
+            value={dateRange}
+            onChange={(val) => handleRangeChange(val.selection)}
+            minDate={calendarMinDate}
+            maxDate={calendarMaxDate}
+            disabledDates={disabledDates}
+          />
+        </div>
 
-            {/* Partial Availability Notice in Mobile Sheet */}
-            {partialAvailabilityInfo && (
-              <div className="p-3 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900">
-                <BrandAlertCircleIcon size={16} strokeWidth={1.8} className="text-amber-600 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <p className="font-semibold text-amber-950">
-                    {tListing("partialAvailabilityNoticeTitle")}
-                  </p>
-                  <p className="text-amber-800 leading-relaxed text-[11px]">
-                    {tListing("partialAvailabilityNotice", {
-                      searched: tCommon("dateRange", {
-                    start: fmtShort(partialAvailabilityInfo.searchedStart),
-                    end: fmtShort(partialAvailabilityInfo.searchedEnd),
-                  }),
-                      available: tCommon("dateRange", {
-                    start: fmtShort(partialAvailabilityInfo.overlapStart),
-                    end: fmtShort(partialAvailabilityInfo.overlapEnd),
-                  }),
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
+        <Counter
+          title={isVehicle ? t("passengers") : t("guests")}
+          subtitle={t("maxCount", { count: maxGuests })}
+          value={guestCount}
+          maxValue={maxGuests}
+          onChange={(v) => setGuestCount(Math.min(v, maxGuests))}
+        />
 
-            <Calendar
-              value={dateRange}
-              onChange={(val) => handleRangeChange(val.selection)}
-              minDate={calendarMinDate}
-              maxDate={calendarMaxDate}
-              disabledDates={disabledDates}
-            />
+        {noteField("sheet")}
 
-            <Counter
-              title={isVehicle ? t("passengers") : t("guests")}
-              subtitle={t("maxCount", { count: maxGuests })}
-              value={guestCount}
-              maxValue={maxGuests}
-              onChange={(v) => setGuestCount(Math.min(v, maxGuests))}
-            />
+        <div className="border-t border-primary/10 pt-4 space-y-2.5 text-body text-primary-600">
+          {priceBreakdown}
+          <div className="flex justify-between items-baseline font-semibold text-title text-primary-900 border-t border-primary/10 pt-3">
+            <span>{t("totalAmount")}</span>
+            <AnimatedNumber value={quote.total} format={money} className="tabular-nums" />
+          </div>
+        </div>
 
-            {/* Optional note in mobile sheet */}
-            {isRequestToBook && (
-              <div className="space-y-1.5 pt-1">
-                <label htmlFor="mobile-guest-msg" className="text-xs font-bold text-neutral-700 flex items-center justify-between">
-                  <span>{t("noteToHost")}</span>
-                  <span className="text-[10px] text-neutral-600 font-normal">{t("noteToHostHint")}</span>
-                </label>
-                <textarea
-                  id="mobile-guest-msg"
-                  rows={2}
-                  value={guestMessage}
-                  onChange={(e) => setGuestMessage(e.target.value)}
-                  placeholder={t("noteToHostPlaceholder")}
-                  className="w-full text-xs p-2.5 rounded-xl border border-tertiary/70 bg-neutral-50/50 focus:bg-white focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600 transition resize-none placeholder:text-neutral-500"
-                />
-              </div>
-            )}
+        {validationAlert}
+      </Sheet>
 
-            <div className="border-t border-tertiary/40 pt-3 space-y-1.5 text-xs text-neutral-600">
-              {priceBreakdown}
-              <div className="flex justify-between font-bold text-sm text-primary">
-                <span>{t("totalAmount")}</span>
-                <PriceDisplay price={quote.total} />
-              </div>
-            </div>
-
-            {validationMessage && (
-              <p role="alert" className="text-xs font-semibold text-rose-700">
-                {validationMessage}
-              </p>
-            )}
-
-            <Button
-              label={isRequestToBook ? t("submitBookingRequest") : t("completeReservation")}
-              disabled={isLoading || Boolean(validationError)}
-              onClick={handleReserve}
-            />
-      </Dialog>
+      <BookingSuccessDialog
+        isOpen={success !== null}
+        onClose={() => setSuccess(null)}
+        status={success?.status ?? "confirmed"}
+        itemTitle={listing.title}
+        rows={success?.rows ?? []}
+      />
     </>
   );
 }

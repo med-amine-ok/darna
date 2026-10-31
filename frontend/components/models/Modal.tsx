@@ -1,8 +1,17 @@
 "use client";
 
-import React, { useCallback, useEffect, useId, useState } from "react";
+/**
+ * Form modal shell used by Login / Register / Search / Filter modals. API unchanged.
+ * Built on the kit Dialog: blurred ink backdrop, rounded-3xl e4 panel that scales in on
+ * tablet/desktop and becomes a draggable bottom sheet on phones; focus trap, Escape and
+ * focus restore come from hook/useDialogA11y. Header (close + serif title), scrolling body,
+ * footer with kit buttons (secondary = white tertiary, primary = terracotta glow).
+ */
+
+import React, { useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
-import { useDialogA11y } from "@/hook/useDialogA11y";
+import Dialog from "@/components/ui/Dialog";
+import { IconButton } from "@/components/ui/Button";
 import { BrandCloseIcon } from "@/components/icons";
 import Button from "@/components/Button";
 
@@ -32,25 +41,12 @@ export default function Modal({
   secondaryActionLabel,
 }: ModalProps) {
   const t = useTranslations("common");
-  const [showModal, setShowModal] = useState(isOpen);
-
-  useEffect(() => {
-    setShowModal(isOpen);
-  }, [isOpen]);
+  const titleId = useId();
 
   const handleClose = useCallback(() => {
     if (disabled) return;
-    setShowModal(false);
-    setTimeout(() => {
-      onClose();
-    }, 300);
+    onClose();
   }, [disabled, onClose]);
-
-  // Focus trap, Escape to close, scroll lock and focus restore.
-  const panelRef = useDialogA11y<HTMLDivElement>(Boolean(isOpen), {
-    onEscape: disabled ? undefined : handleClose,
-  });
-  const titleId = useId();
 
   const handleSubmit = useCallback(() => {
     if (disabled) return;
@@ -62,79 +58,36 @@ export default function Modal({
     secondaryAction();
   }, [disabled, secondaryAction]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          handleClose();
-        }
-      }}
-      className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-[60] outline-none focus:outline-none bg-neutral-900/60 backdrop-blur-xs transition-opacity cursor-pointer p-0 sm:p-4"
+    <Dialog
+      isOpen={Boolean(isOpen)}
+      onClose={handleClose}
+      busy={disabled}
+      ariaLabel={title}
+      className="relative flex w-full flex-col overflow-hidden bg-white rounded-t-3xl sm:rounded-3xl shadow-e4 max-h-[92dvh] sm:max-h-[90vh] sm:max-w-xl lg:max-w-2xl"
     >
-      <div
-        onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            handleClose();
-          }
-        }}
-        className="relative w-full sm:w-11/12 md:w-4/5 lg:w-3/5 xl:max-w-2xl my-0 sm:my-6 mx-auto h-full sm:h-auto flex flex-col justify-end sm:justify-center cursor-default"
-      >
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className={`transition-all duration-300 h-full sm:h-auto flex flex-col justify-end sm:justify-center ${
-            showModal
-              ? "translate-y-0 opacity-100 scale-100"
-              : "translate-y-full sm:translate-y-4 opacity-0 scale-95"
-          }`}
-        >
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={title ? titleId : undefined}
-            className="h-full sm:h-auto border border-tertiary/40 sm:rounded-3xl shadow-darna-modal relative flex flex-col w-full bg-white outline-none focus:outline-none overflow-hidden max-h-[100dvh] sm:max-h-[90vh]">
-            {/* Header */}
-            <div className="flex items-center px-6 py-4 rounded-t justify-center relative border-b border-tertiary/40 flex-shrink-0 bg-white">
-              <button
-                type="button"
-                aria-label={t("close")}
-                className="w-9 h-9 flex items-center justify-center border-0 hover:bg-neutral-100 rounded-full transition absolute start-4 text-neutral-600 hover:text-primary cursor-pointer touch-manipulation btn-press z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-                onClick={handleClose}
-              >
-                <BrandCloseIcon size={18} strokeWidth={2.2} />
-              </button>
-              <h2 id={titleId} className="text-base sm:text-lg font-bold text-primary px-10 text-center truncate max-w-full">{title}</h2>
-            </div>
-
-            {/* Body */}
-            <div className="relative p-5 sm:p-6 flex-1 overflow-y-auto max-h-[calc(100dvh-130px)] sm:max-h-[65vh]">
-              {body}
-            </div>
-
-            {/* Footer */}
-            <div className="flex flex-col gap-2 p-5 sm:p-6 border-t border-tertiary/40 flex-shrink-0 bg-white">
-              <div className="flex flex-row items-center gap-3 w-full">
-                {secondaryAction && secondaryActionLabel && (
-                  <Button
-                    outline
-                    disabled={disabled}
-                    label={secondaryActionLabel}
-                    onClick={handleSecondAction}
-                  />
-                )}
-                <Button
-                  disabled={disabled}
-                  label={actionLabel}
-                  onClick={handleSubmit}
-                />
-              </div>
-              {footer}
-            </div>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="grid shrink-0 grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2 border-b border-primary/[0.08] px-4 pb-3 pt-1 sm:pt-4">
+        <IconButton label={t("close")} icon={<BrandCloseIcon size={18} strokeWidth={2} />} onClick={handleClose} size="sm" />
+        <h2 id={titleId} className="min-w-0 truncate text-center font-serif text-heading text-primary-900">
+          {title}
+        </h2>
+        <span aria-hidden="true" />
       </div>
-    </div>
+
+      {/* Body */}
+      <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6">{body}</div>
+
+      {/* Footer */}
+      <div className="flex shrink-0 flex-col gap-3 border-t border-primary/[0.08] bg-white px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6">
+        <div className="flex w-full flex-row items-center gap-3">
+          {secondaryAction && secondaryActionLabel && (
+            <Button outline disabled={disabled} label={secondaryActionLabel} onClick={handleSecondAction} />
+          )}
+          <Button disabled={disabled} label={actionLabel} onClick={handleSubmit} />
+        </div>
+        {footer}
+      </div>
+    </Dialog>
   );
 }

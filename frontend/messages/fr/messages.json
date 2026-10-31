@@ -14,7 +14,7 @@
   "openerStay": "Bonjour ! J'ai hâte de séjourner chez vous !",
   "openerCheckIn": "Bonjour, l'heure d'arrivée est-elle flexible ?",
   "openerDirections": "Quel est le meilleur moyen de rejoindre le logement ?",
-  "typeMessage": "Écrivez un message (Entrée pour envoyer)...",
+  "typeMessage": "Écrire un message",
   "send": "Envoyer",
   "attach": "Joindre un fichier",
   "viewListing": "Voir l'annonce",
@@ -47,5 +47,10 @@
   "attachSimulated": "Les pièces jointes ne sont pas encore disponibles dans cette démo.",
   "messageLabel": "Message à {name}",
   "loadFailed": "Impossible de charger cette conversation.",
-  "sendFailed": "Votre message n'a pas pu être envoyé. Veuillez réessayer."
+  "sendFailed": "Votre message n'a pas pu être envoyé. Veuillez réessayer.",
+  "today": "Aujourd'hui",
+  "yesterday": "Hier",
+  "allRead": "Tout est lu",
+  "sendingStatus": "Envoi en cours",
+  "composerHint": "Appuyez sur Entrée pour envoyer, Maj + Entrée pour aller à la ligne."
 }

@@ -86,5 +86,11 @@
     "email": "Assistance par e-mail",
     "emailResponse": "Délai de réponse moyen : moins de 2 heures",
     "urgentNote": "Pour une urgence à l'arrivée, hôtes et voyageurs peuvent aussi échanger instantanément dans l'onglet <strong>Messages</strong>."
-  }
+  },
+  "browseEyebrow": "Parcourir",
+  "browseTitle": "Trouvez des réponses par thème",
+  "faqEyebrow": "Réponses",
+  "contactEyebrow": "Assistance",
+  "noResultsTitle": "Aucun article correspondant",
+  "clearSearch": "Effacer la recherche"
 }

@@ -1,5 +1,5 @@
 {
-  "title": "Host Prepaid Wallet & Balance",
+  "title": "Prepaid wallet",
   "currentBalance": "Current Deposit Balance",
   "applicableCommission": "Applicable Commission",
   "rechargeProcess": "Recharge Process",
@@ -44,5 +44,6 @@
   "deposit": "Deposit",
   "commission": "Commission",
   "bookingRef": "Booking: {id}",
-  "noTransactions": "No transactions to show."
+  "noTransactions": "No transactions to show.",
+  "howItWorksShort": "How the balance works"
 }

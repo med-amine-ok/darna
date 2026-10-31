@@ -1,6 +1,14 @@
 "use client";
 
+/**
+ * Notifications inbox: grouped by day (Today / Earlier) on white e1 cards, a type icon on a
+ * palette tint, a terracotta unread dot, and "Mark all as read" that clears the dots and
+ * tints one after another. The header (eyebrow, serif title, status line) comes from the
+ * account shell on the page.
+ */
+
 import React, { useState } from "react";
+import { AnimatePresence, m } from "framer-motion";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/navigation";
 import { Notification } from "@/types";
@@ -12,10 +20,12 @@ import {
   BrandMessageIcon,
   BrandTagIcon,
   BrandShieldIcon,
+  BrandCheckDoubleIcon,
+  BrandChevronRightIcon,
 } from "@/components/icons";
-
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+import { AccountHeader } from "@/components/profile/AccountShell";
+import { Button, KitEmptyState, cn, focusRingInset } from "@/components/ui";
+import { STAGGER, spring } from "@/lib/motion";
 
 interface NotificationsClientProps {
   initialNotifications: Notification[];
@@ -25,11 +35,21 @@ function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+const typeStyles: Record<string, { tile: string; Icon: typeof BrandBellIcon }> = {
+  booking: { tile: "bg-secondary-100 text-secondary-800", Icon: BrandCalendarIcon },
+  message: { tile: "bg-tertiary-200 text-tertiary-900", Icon: BrandMessageIcon },
+  price: { tile: "bg-accent-100 text-accent-800", Icon: BrandTagIcon },
+  system: { tile: "bg-primary/[0.08] text-primary-800", Icon: BrandShieldIcon },
+};
+const fallbackStyle = { tile: "bg-primary/[0.06] text-primary-700", Icon: BrandBellIcon };
+
 export default function NotificationsClient({ initialNotifications }: NotificationsClientProps) {
   const t = useTranslations("notifications");
   const format = useFormatter();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [markingAll, setMarkingAll] = useState(false);
+  const [justCleared, setJustCleared] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -46,11 +66,14 @@ export default function NotificationsClient({ initialNotifications }: Notificati
   };
 
   const handleMarkAllRead = async () => {
+    setMarkingAll(true);
     const result = await markAllNotificationsReadAction();
+    setMarkingAll(false);
     if (!result.ok) {
       toast.error(t("updateFailed"));
       return;
     }
+    setJustCleared(true);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     toast.success(t("allMarkedRead"));
   };
@@ -72,98 +95,130 @@ export default function NotificationsClient({ initialNotifications }: Notificati
     return format.dateTime(date, { month: "short", day: "numeric" });
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "booking":
-        return <BrandCalendarIcon size={20} className="text-emerald-700" aria-hidden="true" />;
-      case "message":
-        return <BrandMessageIcon size={20} className="text-secondary" aria-hidden="true" />;
-      case "price":
-        return <BrandTagIcon size={20} className="text-accent-700" aria-hidden="true" />;
-      case "system":
-        return <BrandShieldIcon size={20} className="text-primary" aria-hidden="true" />;
-      default:
-        return <BrandBellIcon size={20} className="text-neutral-500" aria-hidden="true" />;
-    }
-  };
-
-  const renderGroup = (headingId: string, heading: string, items: Notification[]) => (
-    <section className="space-y-3" aria-labelledby={headingId}>
-      <h2 id={headingId} className="text-xs font-bold text-neutral-500 uppercase tracking-wider px-2">
+  const renderGroup = (headingId: string, heading: string, items: Notification[], offset: number) => (
+    <section aria-labelledby={headingId}>
+      <h2
+        id={headingId}
+        className="mb-3 flex items-center gap-2 px-1 text-eyebrow uppercase font-semibold text-secondary-700"
+      >
+        <span aria-hidden="true" className="h-px w-5 bg-secondary-600/60" />
         {heading}
+        <span className="font-medium normal-case tracking-normal text-primary-500 tabular-nums">· {items.length}</span>
       </h2>
-      <ul className="bg-white rounded-3xl border border-tertiary divide-y divide-tertiary/30 overflow-hidden shadow-xs">
-        {items.map((notif) => (
-          <li key={notif.id}>
-            <button
-              type="button"
-              onClick={() => handleMarkAsRead(notif.id, notif.link)}
-              className={`w-full text-start p-4 sm:p-5 flex items-start gap-4 transition ${focusRing} focus-visible:ring-inset focus-visible:ring-offset-0 ${
-                !notif.read ? "bg-tertiary/20 hover:bg-tertiary/30" : "hover:bg-neutral-50"
-              }`}
-            >
-              <span className="p-2.5 rounded-2xl bg-white border border-tertiary/60 shrink-0 shadow-xs">
-                {getIcon(notif.type)}
-              </span>
-              <span className="flex-1 min-w-0">
-                <span className="flex items-center justify-between gap-2">
-                  <span
-                    className={`text-sm ${!notif.read ? "font-bold text-primary" : "font-semibold text-neutral-800"}`}
-                  >
-                    {notif.title}
+      <ul className="overflow-hidden rounded-2xl bg-white shadow-e1 divide-y divide-primary/[0.06]">
+        {items.map((notif, i) => {
+          const { tile, Icon } = typeStyles[notif.type] ?? fallbackStyle;
+          const delay = justCleared ? (offset + i) * STAGGER : 0;
+          return (
+            <li key={notif.id} className="relative">
+              {/* Unread tint fades out (opacity only) when the item is read. */}
+              <AnimatePresence initial={false}>
+                {!notif.read && (
+                  <m.span
+                    key="tint"
+                    aria-hidden="true"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { delay, duration: 0.35 } }}
+                    className="pointer-events-none absolute inset-0 bg-accent-50"
+                  />
+                )}
+              </AnimatePresence>
+              <button
+                type="button"
+                onClick={() => handleMarkAsRead(notif.id, notif.link)}
+                className={cn(
+                  "group relative flex w-full items-start gap-4 p-4 text-start transition-colors duration-fast ease-standard hover:bg-primary/[0.03] sm:p-5",
+                  focusRingInset
+                )}
+              >
+                <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", tile)}>
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span
+                      className={cn(
+                        "text-body",
+                        !notif.read ? "font-semibold text-primary-900" : "font-medium text-primary-800"
+                      )}
+                    >
+                      {notif.title}
+                    </span>
+                    <time dateTime={notif.createdAt} className="shrink-0 text-meta text-primary-500 tabular-nums">
+                      {formatTime(notif.createdAt)}
+                    </time>
                   </span>
-                  <time dateTime={notif.createdAt} className="text-[11px] text-neutral-500 shrink-0">
-                    {formatTime(notif.createdAt)}
-                  </time>
+                  <span className="mt-1 block text-meta leading-relaxed text-primary-600 [text-wrap:pretty]">
+                    {notif.message}
+                  </span>
                 </span>
-                <span className="block text-xs text-neutral-600 mt-0.5 leading-relaxed">{notif.message}</span>
-              </span>
-              {!notif.read && (
-                <span className="w-2.5 h-2.5 rounded-full bg-accent shrink-0 mt-2">
-                  <span className="sr-only">{t("unread")}</span>
+                <span className="relative mt-1.5 flex h-4 w-4 shrink-0 items-center justify-center">
+                  <AnimatePresence initial={false}>
+                    {!notif.read ? (
+                      <m.span
+                        key="dot"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0, opacity: 0, transition: { ...spring.press, delay } }}
+                        className="absolute h-2.5 w-2.5 rounded-full bg-accent-600 shadow-[0_0_0_4px_rgba(201,111,79,0.16)]"
+                      >
+                        <span className="sr-only">{t("unread")}</span>
+                      </m.span>
+                    ) : notif.link ? (
+                      <BrandChevronRightIcon
+                        key="go"
+                        size={16}
+                        aria-hidden="true"
+                        className="absolute text-primary-400 transition-transform duration-fast ease-out group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+                      />
+                    ) : null}
+                  </AnimatePresence>
                 </span>
-              )}
-            </button>
-          </li>
-        ))}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-tertiary/50 pb-5">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary font-serif">{t("title")}</h1>
-          <p className="text-sm text-neutral-500 mt-1" aria-live="polite">
-            {unreadCount > 0 ? t("unreadCount", { count: unreadCount }) : t("allCaughtUp")}
-          </p>
-        </div>
+    <>
+      <AccountHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        subtitle={
+          <span aria-live="polite">{unreadCount > 0 ? t("unreadCount", { count: unreadCount }) : t("allCaughtUp")}</span>
+        }
+        actions={
+          unreadCount > 0 || justCleared ? (
+            <Button
+              variant="tertiary"
+              size="sm"
+              onClick={unreadCount > 0 ? handleMarkAllRead : undefined}
+              loading={markingAll}
+              success={justCleared && unreadCount === 0}
+              leadingIcon={<BrandCheckDoubleIcon size={17} />}
+            >
+              {t("markAllRead")}
+            </Button>
+          ) : undefined
+        }
+      />
 
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            onClick={handleMarkAllRead}
-            className={`text-xs sm:text-sm font-semibold text-secondary hover:text-primary transition rounded-md ${focusRing}`}
-          >
-            {t("markAllRead")}
-          </button>
+      <div className="mt-8 sm:mt-10">
+        {notifications.length === 0 ? (
+          <div className="rounded-3xl bg-white shadow-e1">
+            <KitEmptyState variant="generic" title={t("emptyTitle")} description={t("emptyBody")} />
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {today.length > 0 && renderGroup("notifications-today", t("today"), today, 0)}
+            {earlier.length > 0 && renderGroup("notifications-earlier", t("earlier"), earlier, today.length)}
+          </div>
         )}
       </div>
-
-      {notifications.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 border border-tertiary text-center shadow-xs">
-          <BrandBellIcon size={36} className="text-tertiary mx-auto mb-3" aria-hidden="true" />
-          <h2 className="text-base font-bold text-primary">{t("emptyTitle")}</h2>
-          <p className="text-xs text-neutral-500 mt-1">{t("emptyBody")}</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {today.length > 0 && renderGroup("notifications-today", t("today"), today)}
-          {earlier.length > 0 && renderGroup("notifications-earlier", t("earlier"), earlier)}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

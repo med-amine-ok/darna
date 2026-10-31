@@ -37,7 +37,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
         <div className="flex items-center gap-2">
           <span>{drawerTitle}</span>
           {activeFilterCount > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary-700 text-white font-bold tabular-nums">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary-700 text-white font-semibold tabular-nums">
               {tUi("activeFilterCount", { count: activeFilterCount })}
             </span>
           )}
@@ -52,7 +52,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({
             size="sm"
             leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
             onClick={onReset}
-            className="text-neutral-600 hover:text-accent-700"
+            className="text-primary-600 hover:text-accent-700"
           >
             {t("reset")}
           </Button>

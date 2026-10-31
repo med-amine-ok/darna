@@ -2,8 +2,10 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Link } from "@/navigation";
+import { Button } from "@/components/ui/Button";
+import { ArchRosette } from "@/components/ui/EmptyState";
 
 /** Error boundary for every back-office page (keeps the sidebar/header shell). */
 export default function PanelError({
@@ -21,32 +23,27 @@ export default function PanelError({
   }, [error]);
 
   return (
-    <div role="alert" className="max-w-xl mx-auto my-12 p-6 sm:p-8 rounded-3xl bg-white border border-tertiary/70 shadow-darna-card text-start">
-      <div className="w-12 h-12 rounded-2xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent-700 mb-4" aria-hidden="true">
-        <AlertTriangle className="w-6 h-6" />
+    <div role="alert" className="max-w-lg mx-auto my-12 p-8 sm:p-10 rounded-2xl bg-white shadow-e1 text-center flex flex-col items-center">
+      <div className="w-20 h-20 rounded-full bg-accent-50 grid place-items-center mb-5" aria-hidden="true">
+        <ArchRosette className="w-14 h-14" />
       </div>
-      <h1 className="text-xl font-serif font-black text-primary">{t("title")}</h1>
-      <p className="text-sm text-neutral-600 mt-2 leading-relaxed">{t("description")}</p>
+      <h1 className="font-serif text-heading text-primary-900">{t("title")}</h1>
+      <p className="text-meta text-primary-600 mt-2 leading-relaxed max-w-sm">{t("description")}</p>
       {error.digest && (
-        <p className="text-xs text-neutral-600 mt-3">
+        <p className="text-xs text-primary-600 mt-3">
           {t("reference")}{" "}
-          <code dir="ltr" className="font-mono bg-darnaBg/60 px-1.5 py-0.5 rounded">
+          <code dir="ltr" className="font-mono bg-darnaBg-300/70 px-1.5 py-0.5 rounded-md text-primary-800">
             {error.digest}
           </code>
         </p>
       )}
-      <div className="mt-6 flex flex-wrap items-center gap-2.5">
-        <button
-          type="button"
-          onClick={reset}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-primary hover:bg-primary-700 text-white text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-        >
-          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+        <Button type="button" onClick={reset} leftIcon={<RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />}>
           {t("retry")}
-        </button>
+        </Button>
         <Link
           href="/"
-          className="inline-flex items-center px-4 py-2.5 min-h-[44px] rounded-xl border border-tertiary/70 text-xs font-bold text-primary hover:bg-darnaBg/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+          className="inline-flex items-center px-4 min-h-[44px] sm:min-h-[40px] rounded-xl bg-white shadow-e1 hover:shadow-e2 text-meta font-semibold text-primary-800 transition duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
         >
           {t("backToDashboard")}
         </Link>

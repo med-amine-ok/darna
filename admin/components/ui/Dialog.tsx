@@ -2,7 +2,8 @@
 
 import React, { useId } from "react";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { dur, ease, fadeScale } from "@/lib/motion";
 import { useTranslations } from "next-intl";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 
@@ -66,41 +67,41 @@ export const Dialog: React.FC<DialogProps> = ({
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 text-start">
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: dur.fast, ease: ease.standard }}
             onClick={onClose}
             aria-hidden="true"
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            className="fixed inset-0 backdrop-ink"
           />
 
           {/* Modal Container */}
-          <motion.div
+          <m.div
             ref={containerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? titleId : labelledBy}
             aria-label={!title && !labelledBy ? ariaLabel : undefined}
             aria-describedby={describedBy ?? (subtitle || description ? descId : undefined)}
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className={`relative w-full max-h-[calc(100dvh-2rem)] flex flex-col ${widthClasses[(size as keyof typeof widthClasses) || maxWidth || "md"] || "max-w-md"} bg-white rounded-2xl sm:rounded-3xl shadow-darna-modal border border-tertiary/70 overflow-hidden z-10 focus:outline-none ${className}`}
+            variants={fadeScale}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            className={`relative w-full max-h-[calc(100dvh-2rem)] flex flex-col ${widthClasses[(size as keyof typeof widthClasses) || maxWidth || "md"] || "max-w-md"} bg-white rounded-2xl sm:rounded-3xl shadow-e4 overflow-hidden z-10 focus:outline-none ${className}`}
           >
             {/* Header */}
             {hasHeader && (
               <div className="p-4 sm:p-6 pb-3 sm:pb-4 flex items-start justify-between gap-3 shrink-0">
                 <div className="min-w-0 flex-1">
                   {title && (
-                    <h2 id={titleId} className="text-base sm:text-lg font-serif font-black text-primary leading-tight">
+                    <h2 id={titleId} className="text-title font-semibold text-primary-900 leading-tight">
                       {title}
                     </h2>
                   )}
                   {(subtitle || description) && (
-                    <p id={descId} className="text-xs text-neutral-600 mt-1">
+                    <p id={descId} className="text-meta text-primary-600 mt-1">
                       {subtitle || description}
                     </p>
                   )}
@@ -108,7 +109,7 @@ export const Dialog: React.FC<DialogProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-10 h-10 -me-1 -mt-1 rounded-xl flex items-center justify-center text-neutral-500 hover:text-primary hover:bg-neutral-100 transition cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                  className="w-10 h-10 -me-1 -mt-1 rounded-xl flex items-center justify-center text-primary-500 hover:text-primary-900 hover:bg-primary/[0.06] transition duration-fast cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                   aria-label={t("closeDialog")}
                 >
                   <X className="w-5 h-5" aria-hidden="true" />
@@ -121,11 +122,11 @@ export const Dialog: React.FC<DialogProps> = ({
 
             {/* Footer */}
             {footer && (
-              <div className="p-3 sm:p-4 px-4 sm:px-6 bg-darnaBg/40 border-t border-tertiary/50 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5 shrink-0">
+              <div className="p-3 sm:p-4 px-4 sm:px-6 bg-darnaBg-100 border-t border-primary/[0.06] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-2.5 shrink-0">
                 {footer}
               </div>
             )}
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>

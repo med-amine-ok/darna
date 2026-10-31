@@ -3,6 +3,7 @@
 import React, { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
+import { AnimatePresence, m } from "framer-motion";
 import {
   BrandSearchIcon,
   BrandCalendarIcon,
@@ -10,17 +11,18 @@ import {
   BrandCreditCardIcon,
   BrandShieldIcon,
   BrandHomeIcon,
-  BrandChevronDownIcon,
   BrandThumbUpIcon,
   BrandThumbDownIcon,
   BrandMailIcon,
   BrandPhoneIcon,
+  BrandMessageIcon,
+  BrandSendIcon,
+  BrandGridIcon,
 } from "@/components/icons";
-
-const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-const inputClass =
-  "w-full px-3.5 py-2.5 bg-neutral-50 border border-tertiary/70 rounded-xl text-primary placeholder-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 aria-[invalid=true]:border-status-error";
+import { Accordion, Banner, Button, Input, KitEmptyState, Select, Textarea, cn, focusRing } from "@/components/ui";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { Link } from "@/navigation";
+import { dur, ease } from "@/lib/motion";
 
 const ARTICLE_IDS = [
   { id: "art_01", category: "booking" },
@@ -33,26 +35,45 @@ const ARTICLE_IDS = [
 
 const TOPICS = ["booking", "payments", "host", "safety", "other"] as const;
 
+/** Support contacts (the same published numbers as before; no WhatsApp line exists yet). */
+const SUPPORT_PHONE_HREF = "tel:+21321000000";
+const SUPPORT_PHONE_LABEL = "+213 21 00 00 00";
+const SUPPORT_EMAIL = "support@darna.dz";
+
 type SupportField = "name" | "email" | "message";
+
+function Eyebrow({ children, tone = "olive" }: { children: React.ReactNode; tone?: "olive" | "light" }) {
+  return (
+    <p
+      className={cn(
+        "flex items-center gap-2 text-eyebrow uppercase font-semibold",
+        tone === "light" ? "text-tertiary-200" : "text-secondary-700"
+      )}
+    >
+      <span aria-hidden="true" className={cn("h-px w-6", tone === "light" ? "bg-tertiary-300/60" : "bg-secondary-600/60")} />
+      {children}
+    </p>
+  );
+}
 
 export default function HelpClient() {
   const t = useTranslations("help");
   const formId = useId();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [expandedArticleId, setExpandedArticleId] = useState<string | null>("art_01");
   const [feedback, setFeedback] = useState<Record<string, "yes" | "no">>({});
 
-  // Support Form state
+  // Support form state
   const [supportName, setSupportName] = useState("");
   const [supportEmail, setSupportEmail] = useState("");
   const [supportTopic, setSupportTopic] = useState("booking");
   const [supportMessage, setSupportMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<SupportField, string>>>({});
 
   const categories = [
-    { id: "all", label: t("categories.all"), icon: BrandSearchIcon },
+    { id: "all", label: t("categories.all"), icon: BrandGridIcon },
     { id: "booking", label: t("categories.booking"), icon: BrandCalendarIcon },
     { id: "account", label: t("categories.account"), icon: BrandUserIcon },
     { id: "payments", label: t("categories.payments"), icon: BrandCreditCardIcon },
@@ -67,6 +88,8 @@ export default function HelpClient() {
     snippet: t(`articles.${id}.snippet`),
     content: t(`articles.${id}.content`),
   }));
+
+  const countFor = (cat: string) => (cat === "all" ? articles.length : articles.filter((a) => a.category === cat).length);
 
   const filteredArticles = articles.filter((a) => {
     if (activeCategory !== "all" && a.category !== activeCategory) return false;
@@ -95,336 +118,333 @@ export default function HelpClient() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
+      setSent(true);
       toast.success(t("form.sent"));
       setSupportMessage("");
+      setTimeout(() => setSent(false), 2200);
     }, 500);
   };
 
   const fieldId = (f: string) => `${formId}-${f}`;
-  const errorProps = (f: SupportField) =>
-    errors[f] ? { "aria-invalid": true as const, "aria-describedby": fieldId(`${f}-error`) } : {};
-  const renderError = (f: SupportField) =>
-    errors[f] ? (
-      <p id={fieldId(`${f}-error`)} className="mt-1 text-status-error">
-        {errors[f]}
-      </p>
-    ) : null;
+
+  const accordionItems = filteredArticles.map((art) => {
+    const vote = feedback[art.id];
+    return {
+      id: art.id,
+      title: art.title,
+      subtitle: art.snippet,
+      content: (
+        <div className="space-y-4">
+          <p className="text-body text-primary-700 [text-wrap:pretty]">{art.content}</p>
+          <div
+            role="group"
+            aria-labelledby={fieldId(`${art.id}-helpful`)}
+            className="flex flex-wrap items-center justify-between gap-3 border-t border-primary/[0.08] pt-4"
+          >
+            <span id={fieldId(`${art.id}-helpful`)} className="text-meta text-primary-600">
+              {t("helpful")}
+            </span>
+            <div className="flex items-center gap-2">
+              {(["yes", "no"] as const).map((val) => {
+                const Icon = val === "yes" ? BrandThumbUpIcon : BrandThumbDownIcon;
+                const active = vote === val;
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => handleFeedback(art.id, val)}
+                    className={cn(
+                      "inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-meta font-semibold",
+                      "transition-[background-color,color,box-shadow] duration-fast ease-standard",
+                      focusRing,
+                      active
+                        ? val === "yes"
+                          ? "bg-secondary-100 text-secondary-800 ring-1 ring-secondary-300"
+                          : "bg-accent-100 text-accent-800 ring-1 ring-accent-200"
+                        : "bg-white text-primary-700 shadow-e1 hover:shadow-e2"
+                    )}
+                  >
+                    <Icon size={15} aria-hidden="true" />
+                    <span>{val === "yes" ? t("helpfulYes") : t("helpfulNo")}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ),
+    };
+  });
 
   return (
-    <div className="space-y-12">
-      {/* Hero Search Section */}
-      <div className="bg-primary text-white rounded-3xl p-8 sm:p-14 text-center relative overflow-hidden shadow-lg">
-        <div className="max-w-2xl mx-auto space-y-4 relative z-10">
-          <p className="text-xs uppercase tracking-widest text-tertiary font-bold">{t("eyebrow")}</p>
-          <h1 className="text-2xl sm:text-4xl font-bold font-serif">{t("heroTitle")}</h1>
-          <p className="text-xs sm:text-sm text-neutral-300">{t("heroSubtitle")}</p>
+    <div className="space-y-16 sm:space-y-20">
+      {/* Hero search band */}
+      <section
+        aria-labelledby={fieldId("title")}
+        className="relative isolate overflow-hidden rounded-3xl bg-primary-800 px-5 py-12 text-white shadow-e3 sm:px-10 sm:py-16 lg:py-20"
+      >
+        <div aria-hidden="true" className="absolute inset-0 -z-10 texture-zellige opacity-60 invert" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(201,111,79,0.28),transparent_60%)]"
+        />
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="enter-up flex justify-center">
+            <Eyebrow tone="light">{t("eyebrow")}</Eyebrow>
+          </div>
+          <h1
+            id={fieldId("title")}
+            className="enter-up mt-4 font-serif text-display-lg text-white [text-wrap:balance]"
+            style={{ animationDelay: "60ms" }}
+          >
+            {t("heroTitle")}
+          </h1>
+          <p className="enter-up mx-auto mt-4 max-w-[52ch] text-body-lg text-white/80" style={{ animationDelay: "120ms" }}>
+            {t("heroSubtitle")}
+          </p>
 
-          {/* Search Box */}
-          <div className="relative pt-4 max-w-lg mx-auto" role="search">
-            <label htmlFor={fieldId("search")} className="sr-only">
-              {t("searchLabel")}
-            </label>
-            <BrandSearchIcon
-              size={20}
-              className="absolute start-4.5 top-[27px] text-neutral-500"
-              aria-hidden="true"
-            />
-            <input
+          <div role="search" className="enter-up mx-auto mt-8 max-w-xl text-start" style={{ animationDelay: "180ms" }}>
+            <Input
               id={fieldId("search")}
               type="search"
+              label={t("searchLabel")}
+              hideLabel
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full ps-12 pe-4 py-3.5 bg-white text-primary rounded-2xl text-xs sm:text-sm placeholder-neutral-500 focus:outline-none focus:ring-4 focus:ring-accent/40 shadow-md"
+              prefix={<BrandSearchIcon size={20} aria-hidden="true" />}
+              containerClassName="[&_.field-control]:shadow-e3"
             />
           </div>
         </div>
-
-        {/* Decorative Background Elements */}
-        <div aria-hidden="true" className="absolute -top-12 -start-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-        <div aria-hidden="true" className="absolute -bottom-12 -end-12 w-64 h-64 bg-accent/15 rounded-full blur-2xl pointer-events-none" />
-      </div>
-
-      {/* Category Tabs */}
-      <div
-        role="group"
-        aria-label={t("categoriesLabel")}
-        className="flex items-center gap-2 overflow-x-auto p-1 pb-2 scrollbar-none"
-      >
-        {categories.map((cat) => {
-          const Icon = cat.icon;
-          const isActive = activeCategory === cat.id;
-
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition border ${focusRing} ${
-                isActive
-                  ? "bg-primary text-white border-primary shadow-xs"
-                  : "bg-white text-neutral-700 border-tertiary/70 hover:bg-neutral-50"
-              }`}
-            >
-              <Icon size={16} className={isActive ? "text-white" : "text-secondary"} aria-hidden="true" />
-              <span>{cat.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Articles Accordion */}
-      <section className="space-y-4" aria-labelledby={fieldId("faq")}>
-        <div className="flex items-center justify-between">
-          <h2 id={fieldId("faq")} className="text-xl font-bold text-primary font-serif">
-            {t("faqTitle")}
-          </h2>
-          <span className="text-xs text-neutral-500" aria-live="polite">
-            {t("articleCount", { count: filteredArticles.length })}
-          </span>
-        </div>
-
-        {filteredArticles.length === 0 ? (
-          <div className="bg-white rounded-3xl p-10 border border-tertiary text-center text-xs text-neutral-500 shadow-xs">
-            {t("noResults", { query: searchQuery })}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredArticles.map((art) => {
-              const isExpanded = expandedArticleId === art.id;
-              const panelId = fieldId(`${art.id}-panel`);
-
-              return (
-                <div
-                  key={art.id}
-                  className="bg-white rounded-2xl border border-tertiary overflow-hidden shadow-xs transition"
-                >
-                  <h3>
-                    <button
-                      type="button"
-                      aria-expanded={isExpanded}
-                      aria-controls={panelId}
-                      onClick={() => setExpandedArticleId(isExpanded ? null : art.id)}
-                      className={`w-full p-5 text-start flex items-center justify-between gap-4 hover:bg-neutral-50 transition ${focusRing} focus-visible:ring-inset focus-visible:ring-offset-0 rounded-2xl`}
-                    >
-                      <span>
-                        <span className="block font-bold text-primary text-sm sm:text-base">{art.title}</span>
-                        {!isExpanded && (
-                          <span className="block text-xs text-neutral-500 mt-0.5 line-clamp-1">{art.snippet}</span>
-                        )}
-                      </span>
-                      <BrandChevronDownIcon
-                        size={20}
-                        aria-hidden="true"
-                        className={`text-neutral-400 transition-transform shrink-0 ${
-                          isExpanded ? "rotate-180 text-primary" : ""
-                        }`}
-                      />
-                    </button>
-                  </h3>
-
-                  {isExpanded && (
-                    <div id={panelId} className="px-5 pb-5 pt-1 border-t border-tertiary/30 space-y-4">
-                      <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">{art.content}</p>
-
-                      {/* "Was this helpful?" Widget */}
-                      <div
-                        role="group"
-                        aria-labelledby={fieldId(`${art.id}-helpful`)}
-                        className="flex items-center justify-between pt-3 border-t border-tertiary/30 text-xs text-neutral-500"
-                      >
-                        <span id={fieldId(`${art.id}-helpful`)}>{t("helpful")}</span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            aria-pressed={feedback[art.id] === "yes"}
-                            onClick={() => handleFeedback(art.id, "yes")}
-                            className={`p-1.5 rounded-lg border flex items-center gap-1 transition ${focusRing} ${
-                              feedback[art.id] === "yes"
-                                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                                : "border-tertiary hover:bg-neutral-50 text-neutral-600"
-                            }`}
-                          >
-                            <BrandThumbUpIcon size={15} aria-hidden="true" />
-                            <span>{t("helpfulYes")}</span>
-                          </button>
-                          <button
-                            type="button"
-                            aria-pressed={feedback[art.id] === "no"}
-                            onClick={() => handleFeedback(art.id, "no")}
-                            className={`p-1.5 rounded-lg border flex items-center gap-1 transition ${focusRing} ${
-                              feedback[art.id] === "no"
-                                ? "bg-rose-50 border-rose-300 text-rose-800"
-                                : "border-tertiary hover:bg-neutral-50 text-neutral-600"
-                            }`}
-                          >
-                            <BrandThumbDownIcon size={15} aria-hidden="true" />
-                            <span>{t("helpfulNo")}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </section>
 
-      {/* Contact Support Form & Emergency Channels */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
-        {/* Contact Form */}
-        <section
-          aria-labelledby={fieldId("contact")}
-          className="lg:col-span-8 bg-white rounded-3xl p-6 sm:p-8 border border-tertiary shadow-sm space-y-4"
-        >
+      {/* Category cards */}
+      <section aria-labelledby={fieldId("topics")} className="space-y-6">
+        <Reveal as="header">
+          <Eyebrow>{t("browseEyebrow")}</Eyebrow>
+          <h2 id={fieldId("topics")} className="mt-3 font-serif text-display-md text-primary-900">
+            {t("browseTitle")}
+          </h2>
+        </Reveal>
+        <RevealGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeCategory === cat.id;
+            return (
+              <RevealItem key={cat.id}>
+                <button
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={cn(
+                    "group relative flex h-full min-h-[8.5rem] w-full flex-col justify-between gap-4 rounded-2xl p-4 text-start sm:p-5",
+                    "transition-[transform,box-shadow,background-color] duration-base ease-out hover:-translate-y-0.5 motion-reduce:hover:translate-y-0",
+                    focusRing,
+                    "focus-visible:ring-offset-darnaBg",
+                    isActive ? "bg-primary-800 text-white shadow-e3" : "bg-white text-primary-900 shadow-e1 hover:shadow-e2"
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-fast ease-standard",
+                      isActive ? "bg-white/15 text-tertiary-100" : "bg-secondary-50 text-secondary-700"
+                    )}
+                  >
+                    <Icon size={20} />
+                  </span>
+                  <span>
+                    <span className="block text-meta font-semibold leading-snug sm:text-body">{cat.label}</span>
+                    <span className={cn("mt-1 block text-meta", isActive ? "text-white/70" : "text-primary-500")}>
+                      {t("articleCount", { count: countFor(cat.id) })}
+                    </span>
+                  </span>
+                </button>
+              </RevealItem>
+            );
+          })}
+        </RevealGroup>
+      </section>
+
+      {/* FAQ accordion */}
+      <section className="space-y-6" aria-labelledby={fieldId("faq")}>
+        <Reveal as="header" className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id={fieldId("contact")} className="text-xl font-bold text-primary font-serif">
-              {t("form.title")}
+            <Eyebrow>{t("faqEyebrow")}</Eyebrow>
+            <h2 id={fieldId("faq")} className="mt-3 font-serif text-display-md text-primary-900">
+              {t("faqTitle")}
             </h2>
-            <p className="text-xs text-neutral-500 mt-1">{t("form.subtitle")}</p>
           </div>
+          <span className="text-meta text-primary-600" aria-live="polite">
+            {t("articleCount", { count: filteredArticles.length })}
+          </span>
+        </Reveal>
 
-          <form onSubmit={handleSupportSubmit} noValidate className="space-y-4 text-xs">
-            {Object.keys(errors).length > 0 && (
-              <p role="alert" className="rounded-xl border border-status-error/40 bg-rose-50 p-3 text-status-error">
-                {t("form.fixErrors")}
-              </p>
+        <AnimatePresence mode="wait" initial={false}>
+          <m.div
+            key={`${activeCategory}|${searchQuery.trim() ? "q" : ""}${filteredArticles.length}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: dur.fast, ease: ease.out }}
+          >
+            {filteredArticles.length === 0 ? (
+              <div className="rounded-2xl bg-white shadow-e1">
+                <KitEmptyState
+                  compact
+                  variant="search"
+                  title={t("noResultsTitle")}
+                  description={t("noResults", { query: searchQuery })}
+                  action={
+                    <Button
+                      variant="tertiary"
+                      size="sm"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setActiveCategory("all");
+                      }}
+                    >
+                      {t("clearSearch")}
+                    </Button>
+                  }
+                />
+              </div>
+            ) : (
+              <Accordion items={accordionItems} defaultOpen={["art_01"]} headingLevel={3} />
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor={fieldId("name")} className="block font-semibold text-neutral-700 mb-1">
-                  {t("form.name")}
-                </label>
-                <input
-                  id={fieldId("name")}
-                  type="text"
-                  autoComplete="name"
-                  value={supportName}
-                  onChange={(e) => setSupportName(e.target.value)}
-                  placeholder={t("form.namePlaceholder")}
-                  required
-                  className={inputClass}
-                  {...errorProps("name")}
-                />
-                {renderError("name")}
-              </div>
-              <div>
-                <label htmlFor={fieldId("email")} className="block font-semibold text-neutral-700 mb-1">
-                  {t("form.email")}
-                </label>
-                <input
-                  id={fieldId("email")}
-                  type="email"
-                  autoComplete="email"
-                  dir="ltr"
-                  value={supportEmail}
-                  onChange={(e) => setSupportEmail(e.target.value)}
-                  placeholder={t("form.emailPlaceholder")}
-                  required
-                  className={`${inputClass} text-start`}
-                  {...errorProps("email")}
-                />
-                {renderError("email")}
-              </div>
-            </div>
+          </m.div>
+        </AnimatePresence>
+      </section>
 
-            <div>
-              <label htmlFor={fieldId("topic")} className="block font-semibold text-neutral-700 mb-1">
-                {t("form.topic")}
-              </label>
-              <select
-                id={fieldId("topic")}
-                value={supportTopic}
-                onChange={(e) => setSupportTopic(e.target.value)}
-                className={inputClass}
-              >
-                {TOPICS.map((topic) => (
-                  <option key={topic} value={topic}>
-                    {t(`form.topics.${topic}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Contact */}
+      <section aria-labelledby={fieldId("contact")} className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+        <Reveal className="rounded-3xl bg-white p-6 shadow-e1 sm:p-8 lg:col-span-8">
+          <Eyebrow>{t("contactEyebrow")}</Eyebrow>
+          <h2 id={fieldId("contact")} className="mt-3 font-serif text-heading text-primary-900">
+            {t("form.title")}
+          </h2>
+          <p className="mt-2 max-w-[60ch] text-body text-primary-600">{t("form.subtitle")}</p>
 
-            <div>
-              <label htmlFor={fieldId("message")} className="block font-semibold text-neutral-700 mb-1">
-                {t("form.message")}
-              </label>
-              <textarea
-                id={fieldId("message")}
-                rows={4}
-                value={supportMessage}
-                onChange={(e) => setSupportMessage(e.target.value)}
-                placeholder={t("form.messagePlaceholder")}
+          <form onSubmit={handleSupportSubmit} noValidate className="mt-6 space-y-4">
+            {Object.keys(errors).length > 0 && <Banner tone="danger">{t("form.fixErrors")}</Banner>}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input
+                id={fieldId("name")}
+                label={t("form.name")}
+                autoComplete="name"
+                value={supportName}
+                onChange={(e) => setSupportName(e.target.value)}
+                placeholder={t("form.namePlaceholder")}
                 required
-                className={inputClass}
-                {...errorProps("message")}
+                error={errors.name}
               />
-              {renderError("message")}
+              <Input
+                id={fieldId("email")}
+                type="email"
+                label={t("form.email")}
+                autoComplete="email"
+                dir="ltr"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+                placeholder={t("form.emailPlaceholder")}
+                required
+                error={errors.email}
+                className="text-start"
+              />
             </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`px-6 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary/95 transition shadow-xs disabled:opacity-50 ${focusRing}`}
-            >
-              {isSubmitting ? t("form.sending") : t("form.submit")}
-            </button>
+            <Select
+              id={fieldId("topic")}
+              label={t("form.topic")}
+              value={supportTopic}
+              onChange={(e) => setSupportTopic(e.target.value)}
+              options={TOPICS.map((topic) => ({ value: topic, label: t(`form.topics.${topic}`) }))}
+            />
+            <Textarea
+              id={fieldId("message")}
+              label={t("form.message")}
+              rows={5}
+              value={supportMessage}
+              onChange={(e) => setSupportMessage(e.target.value)}
+              placeholder={t("form.messagePlaceholder")}
+              required
+              error={errors.message}
+            />
+            <div className="flex justify-end pt-1">
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                success={sent}
+                trailingIcon={<BrandSendIcon size={16} className="rtl:-scale-x-100" aria-hidden="true" />}
+              >
+                {isSubmitting ? t("form.sending") : t("form.submit")}
+              </Button>
+            </div>
           </form>
-        </section>
+        </Reveal>
 
-        {/* Direct Channels Card */}
-        <section
-          aria-labelledby={fieldId("channels")}
-          className="lg:col-span-4 bg-tertiary/20 rounded-3xl p-6 sm:p-8 border border-tertiary/60 space-y-5 flex flex-col justify-between"
-        >
-          <div className="space-y-4">
-            <h2 id={fieldId("channels")} className="font-bold text-primary font-serif text-base">
-              {t("channels.title")}
-            </h2>
-            <div className="space-y-3 text-xs text-neutral-700">
-              <div className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-tertiary/60">
-                <BrandPhoneIcon size={20} className="text-secondary shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <div className="font-bold text-primary">{t("channels.hotline")}</div>
-                  <a
-                    href="tel:+21321000000"
-                    dir="ltr"
-                    className={`inline-block text-neutral-600 mt-0.5 hover:underline rounded ${focusRing}`}
-                  >
-                    +213 21 00 00 00
-                  </a>
-                  <div className="text-[11px] text-neutral-500">{t("channels.hotlineHours")}</div>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3 bg-white rounded-2xl border border-tertiary/60">
-                <BrandMailIcon size={20} className="text-secondary shrink-0 mt-0.5" aria-hidden="true" />
-                <div>
-                  <div className="font-bold text-primary">{t("channels.email")}</div>
-                  <a
-                    href="mailto:support@darna.dz"
-                    dir="ltr"
-                    className={`inline-block text-neutral-600 mt-0.5 hover:underline rounded ${focusRing}`}
-                  >
-                    support@darna.dz
-                  </a>
-                  <div className="text-[11px] text-neutral-500">{t("channels.emailResponse")}</div>
-                </div>
-              </div>
+        <Reveal as="aside" delay={0.08} className="lg:col-span-4">
+          <div className="relative h-full overflow-hidden rounded-3xl bg-darnaBg-300/70 p-6 sm:p-8">
+            <div aria-hidden="true" className="absolute -top-10 -end-10 h-36 w-36 rounded-full texture-zellige opacity-80" />
+            <h2 className="relative font-serif text-heading text-primary-900">{t("channels.title")}</h2>
+            <ul className="relative mt-5 space-y-3">
+              <li>
+                <a
+                  href={SUPPORT_PHONE_HREF}
+                  className={cn(
+                    "group flex items-start gap-3 rounded-2xl bg-white p-4 shadow-e1 transition-[box-shadow,transform] duration-base ease-out hover:-translate-y-0.5 hover:shadow-e2 motion-reduce:hover:translate-y-0",
+                    focusRing
+                  )}
+                >
+                  <span aria-hidden="true" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-50 text-secondary-700">
+                    <BrandPhoneIcon size={18} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-meta font-semibold text-primary-600">{t("channels.hotline")}</span>
+                    <span dir="ltr" className="mt-0.5 block text-body font-semibold text-primary-900 tabular-nums">
+                      {SUPPORT_PHONE_LABEL}
+                    </span>
+                    <span className="mt-0.5 block text-meta text-primary-500">{t("channels.hotlineHours")}</span>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  className={cn(
+                    "group flex items-start gap-3 rounded-2xl bg-white p-4 shadow-e1 transition-[box-shadow,transform] duration-base ease-out hover:-translate-y-0.5 hover:shadow-e2 motion-reduce:hover:translate-y-0",
+                    focusRing
+                  )}
+                >
+                  <span aria-hidden="true" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-50 text-secondary-700">
+                    <BrandMailIcon size={18} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-meta font-semibold text-primary-600">{t("channels.email")}</span>
+                    <span dir="ltr" className="mt-0.5 block truncate text-body font-semibold text-primary-900">
+                      {SUPPORT_EMAIL}
+                    </span>
+                    <span className="mt-0.5 block text-meta text-primary-500">{t("channels.emailResponse")}</span>
+                  </span>
+                </a>
+              </li>
+            </ul>
+            <div className="relative mt-5 flex items-start gap-3 rounded-2xl bg-white/70 p-4 text-meta text-primary-700">
+              <BrandMessageIcon size={18} className="mt-0.5 shrink-0 text-accent-600" aria-hidden="true" />
+              <p>
+                {t.rich("channels.urgentNote", {
+                  strong: (chunks) => (
+                    <Link href="/messages" className={cn("font-semibold text-primary-900 link-underline rounded", focusRing)}>
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </p>
             </div>
           </div>
-
-          <p className="p-3 bg-white/70 rounded-2xl border border-tertiary/50 text-[11px] text-neutral-600">
-            {t.rich("channels.urgentNote", {
-              strong: (chunks) => <span className="font-bold text-primary">{chunks}</span>,
-            })}
-          </p>
-        </section>
-      </div>
+        </Reveal>
+      </section>
     </div>
   );
 }

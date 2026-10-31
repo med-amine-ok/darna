@@ -5,7 +5,8 @@ import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatNumber } from "@/lib/utils/format";
 import { Button } from "@/components/ui/Button";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
+import { dur, ease, spring } from "@/lib/motion";
 
 export interface BulkAction {
   id: string;
@@ -39,29 +40,28 @@ export const BulkBar: React.FC<BulkBarProps> = ({
   return (
     <AnimatePresence>
       {selectedCount > 0 && (
-        <motion.div
-          initial={{ opacity: 0, x: "-50%", y: 24, scale: 0.95 }}
-          animate={{ opacity: 1, x: "-50%", y: 0, scale: 1 }}
-          exit={{ opacity: 0, x: "-50%", y: 24, scale: 0.95 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
+        <m.div
+          initial={{ opacity: 0, x: "-50%", y: 32 }}
+          animate={{ opacity: 1, x: "-50%", y: 0, transition: spring.sheet }}
+          exit={{ opacity: 0, x: "-50%", y: 24, transition: { duration: dur.fast, ease: ease.standard } }}
           role="toolbar"
           aria-label={t("toolbar")}
-          className={`fixed bottom-6 left-1/2 z-40 bg-[#1E261F] text-white rounded-2xl shadow-darna-modal border border-[#3A493B] px-4 py-2.5 flex items-center gap-4 select-none ${className}`}
+          className={`fixed bottom-20 lg:bottom-6 left-1/2 z-40 max-w-[calc(100vw-1.5rem)] bg-primary-900 text-white rounded-2xl shadow-e5 ring-1 ring-white/10 ps-3 pe-2 py-2 flex items-center gap-3 sm:gap-4 select-none overflow-x-auto scrollbar-none ${className}`}
         >
           {/* Selected count info */}
           <div className="flex items-center gap-2 text-xs">
             <span aria-live="polite" className="flex items-center gap-2">
-              <span className="min-w-6 h-6 px-1 rounded-lg bg-secondary-700 text-white font-bold flex items-center justify-center tabular-nums">
+              <span className="min-w-7 h-7 px-1.5 rounded-lg bg-white/10 text-white font-semibold flex items-center justify-center tabular-nums">
                 {formatNumber(selectedCount, locale)}
               </span>
-              <span className="font-semibold">{t("selected", { count: selectedCount })}</span>
+              <span className="font-medium whitespace-nowrap">{t("selected", { count: selectedCount })}</span>
             </span>
 
             {totalFilteredCount && totalFilteredCount > selectedCount && !isAllFilteredSelected && onSelectAllFiltered && (
               <button
                 type="button"
                 onClick={onSelectAllFiltered}
-                className="text-xs font-bold text-tertiary hover:text-white underline ps-2 border-s border-neutral-700 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="text-xs font-semibold text-tertiary-200 hover:text-white underline underline-offset-2 ps-2 whitespace-nowrap border-s border-white/15 transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 {t("selectAllMatching", { count: formatNumber(totalFilteredCount, locale) })}
               </button>
@@ -69,7 +69,7 @@ export const BulkBar: React.FC<BulkBarProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 ps-3 border-s border-neutral-700">
+          <div className="flex items-center gap-2 ps-3 border-s border-white/15">
             {actions.map((act) => (
               <Button
                 key={act.id}
@@ -87,14 +87,14 @@ export const BulkBar: React.FC<BulkBarProps> = ({
             <button
               type="button"
               onClick={onClearSelection}
-              className="p-1.5 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="p-1.5 rounded-lg text-tertiary-200 hover:text-white hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title={t("clearSelection")}
               aria-label={t("clearSelection")}
             >
               <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -44,7 +44,8 @@
     "makeOwner": "Nommer propriétaire",
     "makeOwnerFor": "Nommer {name} propriétaire",
     "revoke": "Retirer l'accès",
-    "revokeFor": "Retirer l'accès de {name}"
+    "revokeFor": "Retirer l'accès de {name}",
+    "menuFor": "Autres actions pour {name}"
   },
   "matrix": {
     "title": "Les 3 niveaux d'autorisation expliqués",
@@ -73,7 +74,8 @@
     "managerHint": "Réservations et messagerie voyageurs",
     "adminHint": "Annonces, flotte et gestion de l'équipe",
     "sending": "Envoi…",
-    "send": "Envoyer l'invitation"
+    "send": "Envoyer l'invitation",
+    "description": "Cette personne reçoit une invitation par e-mail et rejoint votre espace avec le rôle choisi."
   },
   "removeDialog": {
     "title": "Retirer l'accès à l'équipe",
@@ -96,5 +98,6 @@
     "removeFailed": "Impossible de retirer le membre.",
     "resendComingSoon": "L'envoi d'invitations par e-mail arrive bientôt. En attendant, transmettez l'invitation directement à {email}.",
     "ownershipTransferred": "Propriété transférée."
-  }
+  },
+  "eyebrow": "Équipe"
 }

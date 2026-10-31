@@ -70,7 +70,7 @@
     "property": "Property",
     "type": "Type",
     "status": "Status",
-    "rate": "Nightly Rate",
+    "rate": "Base rate",
     "bookings": "Bookings",
     "rating": "Rating",
     "actions": "Actions",
@@ -81,14 +81,15 @@
     "close": "Close quick edit",
     "titleLabel": "Listing Title",
     "titleError": "Please enter a title.",
-    "priceLabel": "Base Nightly Rate (DZD)",
+    "priceLabel": "Base rate (DZD)",
     "priceError": "Enter a whole-number price between {min} and {max}.",
     "currency": "DZD",
     "instantBook": "Instant Book",
     "instantBookHint": "Allow guests to book without manual host confirmation",
     "cancel": "Cancel",
     "saving": "Saving...",
-    "save": "Save Changes"
+    "save": "Save Changes",
+    "priceLabelUnit": "Base rate {unit} (DZD)"
   },
   "roomTypesModal": {
     "title": "Manage Room Types & Inventory",
@@ -122,5 +123,11 @@
     "roomTypesFailed": "Failed to update room types.",
     "deleted": "Listing deleted from your fleet.",
     "deleteFailed": "Failed to delete listing."
+  },
+  "unit": {
+    "night": "/ night",
+    "day": "/ day",
+    "person": "/ person",
+    "bed": "/ bed"
   }
 }

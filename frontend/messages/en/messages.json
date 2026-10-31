@@ -14,7 +14,7 @@
   "openerStay": "Hi! Looking forward to my stay!",
   "openerCheckIn": "Hi, is check-in flexible?",
   "openerDirections": "What's the best way to get to the apartment?",
-  "typeMessage": "Type a message (press Enter to send)...",
+  "typeMessage": "Write a message",
   "send": "Send",
   "attach": "Attach file",
   "viewListing": "View listing",
@@ -47,5 +47,10 @@
   "attachSimulated": "File attachments are not available in this demo yet.",
   "messageLabel": "Message to {name}",
   "loadFailed": "We couldn't load this conversation.",
-  "sendFailed": "Your message couldn't be sent. Please try again."
+  "sendFailed": "Your message couldn't be sent. Please try again.",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "allRead": "All caught up",
+  "sendingStatus": "Sending",
+  "composerHint": "Press Enter to send, Shift + Enter for a new line."
 }

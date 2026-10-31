@@ -1,14 +1,13 @@
 "use client";
 
 import { isValidPriceDzd, PRICE_MAX_DZD, PRICE_MIN_DZD } from "@/lib/booking/config";
-import React, { useState, useMemo, useEffect, useId } from "react";
+import React, { useState, useMemo, useId } from "react";
 import Image from "next/image";
 import { Link, useRouter } from "@/navigation";
 import { Listing, User } from "@/types";
 import { updateMyListingAction, deleteMyListingAction } from "@/app/actions/listings";
 import {
   BrandSearchIcon,
-  BrandFilterIcon,
   BrandPlusIcon,
   BrandCalendarIcon,
   BrandEditIcon,
@@ -19,8 +18,8 @@ import {
   BrandStarIcon,
   BrandMoreIcon,
   BrandBedIcon,
-  BrandCloseIcon,
-  CategoryHouseIcon,
+  BrandEyeOffIcon,
+  BrandCheckCircleIcon,
   InstantBookingIcon,
 } from "@/components/icons";
 import { toast } from "react-toastify";
@@ -29,24 +28,58 @@ import ConfirmDialog from "@/components/models/ConfirmDialog";
 import HostWalletWidget from "@/components/host/HostWalletWidget";
 import { formatDzd } from "@/lib/currency";
 import { formatNumber, formatRating as formatRatingValue } from "@/lib/i18n/date-locale";
-import { useDialogA11y } from "@/hook/useDialogA11y";
 import { useActionError } from "@/hook/useActionError";
+import {
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogFooter,
+  DropdownMenu,
+  IconButton,
+  Input,
+  KitEmptyState,
+  Select,
+  SegmentedControl,
+  Switch,
+  cn,
+  focusRing,
+} from "@/components/ui";
+import type { DropdownItem } from "@/components/ui";
 
 interface HostListingsClientProps {
   initialListings: Listing[];
   currentUser?: User | null;
 }
 
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
-const INPUT_FOCUS = "focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-accent-600";
 const LISTING_CATEGORIES = ["home", "hotel", "experience", "vehicle", "trip"];
 const FALLBACK_LISTING_IMAGE = "https://images.unsplash.com/photo-1580587771525-78b9dba3b914";
 
-export default function HostListingsClient({
-  initialListings,
-  currentUser,
-}: HostListingsClientProps) {
+type PriceUnit = "night" | "day" | "person" | "bed";
+
+/** What the base price is charged per: homes and hotel rooms per night, hostels per bed, vehicles per day, experiences and trips per person. */
+function priceUnit(listing: Listing): PriceUnit {
+  if (listing.businessCategory === "hostel" || listing.roomTypes?.some((r) => r.bookingUnit === "bed")) return "bed";
+  if (listing.category === "vehicle") return "day";
+  if (listing.category === "experience" || listing.category === "trip") return "person";
+  return "night";
+}
+
+function ListingPhoto({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+      className={cn(
+        "object-cover transition-transform [transition-duration:700ms] ease-out group-hover:scale-[1.04]"
+      )}
+    />
+  );
+}
+
+export default function HostListingsClient({ initialListings, currentUser }: HostListingsClientProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("hostListings");
@@ -54,7 +87,6 @@ export default function HostListingsClient({
   const errorText = useActionError();
   const [listings, setListings] = useState<Listing[]>(initialListings);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-  const [openCardMenuId, setOpenCardMenuId] = useState<string | null>(null);
   const [selectedVertical, setSelectedVertical] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,59 +109,13 @@ export default function HostListingsClient({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const baseId = useId();
-  const ids = {
-    search: `${baseId}-search`,
-    category: `${baseId}-category`,
-    status: `${baseId}-status`,
-    results: `${baseId}-results`,
-    editTitle: `${baseId}-edit-title`,
-    editTitleInput: `${baseId}-edit-title-input`,
-    editTitleError: `${baseId}-edit-title-error`,
-    editPrice: `${baseId}-edit-price`,
-    editPriceError: `${baseId}-edit-price-error`,
-    editPriceSuffix: `${baseId}-edit-price-suffix`,
-    editInstant: `${baseId}-edit-instant`,
-    editInstantHint: `${baseId}-edit-instant-hint`,
-    roomTypesTitle: `${baseId}-room-types-title`,
-  };
-  const menuId = (key: string) => `${baseId}-menu-${key}`;
-  const menuTriggerId = (key: string) => `${baseId}-menu-trigger-${key}`;
+  const resultsId = `${baseId}-results`;
 
   const closeEdit = () => {
     setEditingListing(null);
     setEditErrors({});
   };
   const closeRoomTypes = () => setManagingRoomTypesListing(null);
-  const editDialogRef = useDialogA11y<HTMLDivElement>(!!editingListing, {
-    onEscape: isSaving ? undefined : closeEdit,
-  });
-  const roomTypesDialogRef = useDialogA11y<HTMLDivElement>(!!managingRoomTypesListing, {
-    onEscape: isSavingRoomTypes ? undefined : closeRoomTypes,
-  });
-
-  // Close the open actions menu on Escape (returning focus to its trigger) or on outside click.
-  useEffect(() => {
-    if (!openCardMenuId) return;
-    const key = openCardMenuId;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setOpenCardMenuId(null);
-      document.getElementById(`${baseId}-menu-trigger-${key}`)?.focus();
-    };
-    const onPointerDown = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const menu = document.getElementById(`${baseId}-menu-${key}`);
-      const trigger = document.getElementById(`${baseId}-menu-trigger-${key}`);
-      if (menu?.contains(target) || trigger?.contains(target)) return;
-      setOpenCardMenuId(null);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("mousedown", onPointerDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("mousedown", onPointerDown);
-    };
-  }, [openCardMenuId, baseId]);
 
   const money = (amount: number) => formatDzd(amount, locale);
   const ratedListings = listings.filter((l) => l.rating && l.rating > 0);
@@ -140,6 +126,7 @@ export default function HostListingsClient({
   const categoryLabel = (category: string) =>
     LISTING_CATEGORIES.includes(category) ? t(`category.${category}`) : category;
   const kindOf = (listing: Listing) => (listing.businessCategory === "hostel" ? "hostel" : "other");
+  const unitLabel = (listing: Listing) => t(`unit.${priceUnit(listing)}`);
 
   // Filter listings
   const filteredListings = useMemo(() => {
@@ -231,9 +218,7 @@ export default function HostListingsClient({
         toast.error(errorText(result));
         return;
       }
-      setListings((prev) =>
-        prev.map((l) => (l.id === managingRoomTypesListing.id ? result.data : l))
-      );
+      setListings((prev) => prev.map((l) => (l.id === managingRoomTypesListing.id ? result.data : l)));
       toast.success(t("toast.roomTypesSaved"));
       setManagingRoomTypesListing(null);
     } catch {
@@ -268,412 +253,279 @@ export default function HostListingsClient({
   const activeCount = listings.filter((l) => l.status === "active").length;
   const draftCount = listings.filter((l) => l.status !== "active").length;
 
-  const menuItemClass = `w-full text-start px-3.5 py-2 hover:bg-neutral-50 focus-visible:bg-neutral-100 focus-visible:outline-none flex items-center gap-2 font-semibold`;
+  const openPublicPage = (listing: Listing) => {
+    window.open(`/${locale}/listings/${listing.id}`, "_blank", "noopener,noreferrer");
+  };
 
-  const toggleMenu = (key: string) => setOpenCardMenuId(openCardMenuId === key ? null : key);
+  const menuItems = (listing: Listing): DropdownItem[] => {
+    const isActive = listing.status === "active";
+    return [
+      {
+        label: t("edit"),
+        icon: <BrandEditIcon size={16} aria-hidden="true" />,
+        onSelect: () => handleOpenEdit(listing),
+      },
+      {
+        label: isActive ? t("menu.pause") : t("menu.activate"),
+        icon: isActive ? (
+          <BrandEyeOffIcon size={16} aria-hidden="true" />
+        ) : (
+          <BrandCheckCircleIcon size={16} aria-hidden="true" />
+        ),
+        onSelect: () => handleToggleStatus(listing),
+      },
+      ...((listing.roomTypes?.length ?? 0) > 0
+        ? [
+            {
+              label: t("menu.manageRoomTypes"),
+              icon: <BrandBedIcon size={16} aria-hidden="true" />,
+              onSelect: () => handleOpenManageRoomTypes(listing),
+            } as DropdownItem,
+          ]
+        : []),
+      {
+        label: t("menu.viewPublic"),
+        icon: <BrandEyeIcon size={16} aria-hidden="true" />,
+        onSelect: () => openPublicPage(listing),
+      },
+      { type: "separator" },
+      {
+        label: t("menu.delete"),
+        icon: <BrandTrashIcon size={16} aria-hidden="true" />,
+        destructive: true,
+        onSelect: () => setDeletingId(listing.id),
+      },
+    ];
+  };
+
+  const statusBadge = (listing: Listing, onPhoto = false) =>
+    listing.status === "active" ? (
+      <Badge tone="success" dot className={onPhoto ? "bg-white/90 shadow-e1 backdrop-blur-sm" : undefined}>
+        {t("status.active")}
+      </Badge>
+    ) : (
+      <Badge tone="warning" dot className={onPhoto ? "bg-white/90 text-primary-800 shadow-e1 backdrop-blur-sm" : undefined}>
+        {t("status.pausedDraft")}
+      </Badge>
+    );
+
+  const ratingNode = (listing: Listing) => {
+    const rating = formatRatingValue(listing.rating, locale);
+    return rating ? (
+      <span className="flex shrink-0 items-center gap-1 pt-0.5 text-meta font-semibold text-primary-800 tabular-nums">
+        <BrandStarIcon size={13} aria-hidden="true" className="text-accent-600" />
+        {t("ratingWithCount", { rating, count: formatNumber(listing.reviewCount || 0, locale) })}
+      </span>
+    ) : (
+      <span className="shrink-0 pt-0.5 text-meta font-semibold text-secondary-700">{tListing("ratingNew")}</span>
+    );
+  };
+
+  const stats = [
+    { label: isIndividual ? t("stats.totalListings") : t("stats.totalFleet"), value: formatNumber(listings.length, locale) },
+    { label: t("stats.active"), value: formatNumber(activeCount, locale), dot: "bg-secondary-600" },
+    { label: t("stats.draft"), value: formatNumber(draftCount, locale), dot: "bg-amber-600" },
+    { label: t("stats.avgRating"), value: averageRating ?? tListing("ratingNew"), star: !!averageRating },
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-black text-primary">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      {/* Header */}
+      <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h1 className="enter-lift text-balance font-serif text-display-md text-primary-900">
             {isIndividual ? t("titleIndividual") : t("titleAgency")}
           </h1>
-          <p className="text-sm text-neutral-600 mt-1">
+          <p className="enter-up mt-2 max-w-2xl text-pretty text-body text-primary-600" style={{ animationDelay: "60ms" }}>
             {isIndividual ? t("subtitleIndividual") : t("subtitleAgency")}
           </p>
         </div>
-
-        {/* Action CTAs */}
-        <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
+        <div className="enter-up flex flex-wrap items-center gap-2" style={{ animationDelay: "120ms" }}>
           {currentUser?.hostType === "agency" && (
-            <Link
+            <Button
               href="/host/agency/trips/new"
-              className={`px-4 py-2.5 bg-secondary/15 hover:bg-secondary/25 text-secondary rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer btn-press ${FOCUS_RING}`}
+              variant="tertiary"
+              leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}
             >
-              <BrandPlusIcon size={16} />
-              <span>{t("addTrip")}</span>
-            </Link>
+              {t("addTrip")}
+            </Button>
           )}
+          <Button href="/become-a-host/1" leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}>
+            {isIndividual ? t("addListing") : t("createListing")}
+          </Button>
+        </div>
+      </header>
 
-          {/* Create Listing CTA */}
-          <Link
-            href="/become-a-host/1"
-            className={`px-5 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-2 shadow-sm cursor-pointer btn-press ${FOCUS_RING}`}
-          >
-            <BrandPlusIcon size={18} className="text-tertiary" />
-            <span>{isIndividual ? t("addListing") : t("createListing")}</span>
-          </Link>
-        </div>
-      </div>
+      {/* Summary strip */}
+      <Card padding="none" className="mb-4 overflow-hidden">
+        <dl className="grid grid-cols-2 gap-px bg-primary/[0.06] sm:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-white px-5 py-4">
+              <dt className="flex items-center gap-1.5 text-meta font-medium text-primary-600">
+                {s.dot && <span aria-hidden="true" className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />}
+                {s.label}
+              </dt>
+              <dd className="mt-1 flex items-center gap-1.5 font-serif text-heading leading-tight text-primary-900 tabular-nums">
+                {s.value}
+                {s.star && <BrandStarIcon size={16} aria-hidden="true" className="text-accent-600" />}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
 
-      {/* Host Balance & Solvency Widget */}
-      <HostWalletWidget className="mb-6" />
+      {/* Wallet: one slim row, details on demand */}
+      <HostWalletWidget variant="compact" className="mb-8" />
 
-      {/* KPI Stats Strip */}
-      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <dt className="block text-xs font-bold text-neutral-600 uppercase tracking-wider">
-            {isIndividual ? t("stats.totalListings") : t("stats.totalFleet")}
-          </dt>
-          <dd className="text-2xl font-black text-primary">{formatNumber(listings.length, locale)}</dd>
-        </div>
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <dt className="block text-xs font-bold text-emerald-700 uppercase tracking-wider">{t("stats.active")}</dt>
-          <dd className="text-2xl font-black text-emerald-700">{formatNumber(activeCount, locale)}</dd>
-        </div>
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <dt className="block text-xs font-bold text-amber-700 uppercase tracking-wider">{t("stats.draft")}</dt>
-          <dd className="text-2xl font-black text-amber-700">{formatNumber(draftCount, locale)}</dd>
-        </div>
-        <div className="bg-white rounded-2xl border border-tertiary/70 p-4 shadow-2xs">
-          <dt className="block text-xs font-bold text-secondary uppercase tracking-wider">{t("stats.avgRating")}</dt>
-          <dd className="text-2xl font-black text-secondary flex items-center gap-1">
-            {averageRating ? (
-              <>
-                {averageRating} <BrandStarIcon size={18} className="text-amber-500 fill-amber-500" />
-              </>
-            ) : (
-              tListing("ratingNew")
-            )}
-          </dd>
-        </div>
-      </dl>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl border border-tertiary/70 p-4 mb-6 shadow-2xs flex flex-col lg:flex-row items-center justify-between gap-4">
-        {/* Search */}
-        <div className="relative w-full lg:w-80">
-          <label htmlFor={ids.search} className="sr-only">
-            {t("searchLabel")}
-          </label>
-          <BrandSearchIcon
-            size={18}
-            className="absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500"
-          />
-          <input
-            id={ids.search}
+      {/* Toolbar */}
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="w-full lg:max-w-sm">
+          <Input
             type="search"
+            label={t("searchLabel")}
+            hideLabel
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            aria-controls={ids.results}
-            className={`w-full ps-10 pe-4 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs sm:text-sm text-primary placeholder:text-neutral-500 ${INPUT_FOCUS}`}
+            aria-controls={resultsId}
+            prefix={<BrandSearchIcon size={18} aria-hidden="true" />}
           />
         </div>
-
-        {/* Filter selectors & View Toggle */}
-        <div className="flex items-center gap-3 w-full lg:w-auto flex-wrap justify-between lg:justify-end">
-          {/* Vertical filter */}
-          <div className="flex items-center gap-1">
-            <label htmlFor={ids.category} className="sr-only">
-              {t("filters.categoryLabel")}
-            </label>
-            <select
-              id={ids.category}
-              value={selectedVertical}
-              onChange={(e) => setSelectedVertical(e.target.value)}
-              aria-controls={ids.results}
-              className={`px-3 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary ${INPUT_FOCUS}`}
-            >
-              <option value="all">{t("filters.allCategories")}</option>
-              <option value="home">{t("filters.home")}</option>
-              <option value="experience">{t("filters.experience")}</option>
-              <option value="vehicle">{t("filters.vehicle")}</option>
-            </select>
-          </div>
-
-          {/* Status filter */}
-          <div className="flex items-center gap-1">
-            <label htmlFor={ids.status} className="sr-only">
-              {t("filters.statusLabel")}
-            </label>
-            <select
-              id={ids.status}
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              aria-controls={ids.results}
-              className={`px-3 py-2 bg-neutral-50 border border-tertiary/80 rounded-xl text-xs font-semibold text-primary ${INPUT_FOCUS}`}
-            >
-              <option value="all">{t("filters.allStatuses")}</option>
-              <option value="active">{t("filters.activeOnly")}</option>
-              <option value="draft">{t("filters.draft")}</option>
-            </select>
-          </div>
-
-          {/* Grid/Table Switcher */}
-          <div
-            role="group"
-            aria-label={t("viewModeLabel")}
-            className="flex items-center border border-tertiary/80 rounded-xl p-0.5 bg-neutral-50"
-          >
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              aria-pressed={viewMode === "grid"}
-              aria-label={t("gridView")}
-              title={t("gridView")}
-              className={`p-1.5 rounded-lg transition ${FOCUS_RING} ${
-                viewMode === "grid" ? "bg-white text-primary shadow-2xs" : "text-neutral-500"
-              }`}
-            >
-              <BrandGridIcon size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("table")}
-              aria-pressed={viewMode === "table"}
-              aria-label={t("tableView")}
-              title={t("tableView")}
-              className={`p-1.5 rounded-lg transition ${FOCUS_RING} ${
-                viewMode === "table" ? "bg-white text-primary shadow-2xs" : "text-neutral-500"
-              }`}
-            >
-              <BrandListIcon size={18} />
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Select
+            label={t("filters.categoryLabel")}
+            hideLabel
+            value={selectedVertical}
+            onChange={(e) => setSelectedVertical(e.target.value)}
+            aria-controls={resultsId}
+            containerClassName="!w-[calc(50%-0.25rem)] sm:!w-48"
+            options={[
+              { value: "all", label: t("filters.allCategories") },
+              { value: "home", label: t("filters.home") },
+              { value: "experience", label: t("filters.experience") },
+              { value: "vehicle", label: t("filters.vehicle") },
+            ]}
+          />
+          <Select
+            label={t("filters.statusLabel")}
+            hideLabel
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            aria-controls={resultsId}
+            containerClassName="!w-[calc(50%-0.25rem)] sm:!w-48"
+            options={[
+              { value: "all", label: t("filters.allStatuses") },
+              { value: "active", label: t("filters.activeOnly") },
+              { value: "draft", label: t("filters.draft") },
+            ]}
+          />
+          <SegmentedControl
+            ariaLabel={t("viewModeLabel")}
+            value={viewMode}
+            onChange={setViewMode}
+            options={[
+              { value: "grid", label: <span className="sr-only">{t("gridView")}</span>, icon: <BrandGridIcon size={18} aria-hidden="true" /> },
+              { value: "table", label: <span className="sr-only">{t("tableView")}</span>, icon: <BrandListIcon size={18} aria-hidden="true" /> },
+            ]}
+          />
         </div>
       </div>
 
-      {/* Listings Content */}
-      <div id={ids.results}>
+      {/* Listings */}
+      <div id={resultsId} aria-live="polite">
         {filteredListings.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-tertiary/70 p-12 text-center shadow-2xs">
-            <CategoryHouseIcon size={44} className="mx-auto text-tertiary mb-3 opacity-60" />
-            <h2 className="font-serif text-lg font-bold text-primary mb-1">{t("emptyTitle")}</h2>
-            <p className="text-xs sm:text-sm text-neutral-600 max-w-sm mx-auto mb-4">{t("emptyText")}</p>
-            <Link
-              href="/become-a-host/1"
-              className={`inline-block px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition shadow-2xs ${FOCUS_RING}`}
-            >
-              {t("createListing")}
-            </Link>
-          </div>
+          <Card padding="lg">
+            <KitEmptyState
+              variant="search"
+              title={t("emptyTitle")}
+              description={t("emptyText")}
+              action={<Button href="/become-a-host/1">{t("createListing")}</Button>}
+            />
+          </Card>
         ) : viewMode === "grid" ? (
-          /* GRID VIEW */
-          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ul className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredListings.map((listing) => {
-              const menuKey = listing.id;
-              const isMenuOpen = openCardMenuId === menuKey;
               const roomTypeCount = listing.roomTypes?.length ?? 0;
               return (
                 <li
                   key={listing.id}
-                  className="bg-white rounded-3xl border border-tertiary/70 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col group"
+                  className="group relative flex flex-col"
                 >
-                  {/* Image & Status Badge */}
-                  <div className="relative h-48 w-full bg-neutral-100">
-                    <Link
-                      href={`/listings/${listing.id}`}
-                      tabIndex={-1}
-                      aria-hidden="true"
-                      className="absolute inset-0 overflow-hidden"
-                    >
-                      <Image
-                        src={listing.imageSrc?.[0] || FALLBACK_LISTING_IMAGE}
-                        alt={t("imageAlt", { title: listing.title })}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="object-cover group-hover:scale-105 transition duration-300"
-                      />
+                  <div className="relative aspect-[20/19] w-full overflow-hidden rounded-2xl bg-tertiary-100 shadow-e1 transition-[box-shadow,transform] duration-base ease-out group-hover:-translate-y-1 group-hover:shadow-e3">
+                    <Link href={`/listings/${listing.id}`} tabIndex={-1} aria-hidden="true" className="absolute inset-0">
+                      <ListingPhoto src={listing.imageSrc?.[0] || FALLBACK_LISTING_IMAGE} alt={t("imageAlt", { title: listing.title })} />
                     </Link>
-
-                    {/* Status chip */}
-                    <div className="absolute top-3 start-3 pointer-events-none">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold shadow-xs flex items-center gap-1.5 ${
-                          listing.status === "active"
-                            ? "bg-emerald-700 text-white"
-                            : "bg-neutral-800/90 text-white backdrop-blur-xs"
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`w-2 h-2 rounded-full ${
-                            listing.status === "active" ? "bg-white animate-pulse" : "bg-neutral-400"
-                          }`}
-                        />
-                        {listing.status === "active" ? t("status.active") : t("status.pausedDraft")}
-                      </span>
-                    </div>
-
-                    {/* Category chip */}
-                    <div className="absolute top-3 end-3 pointer-events-none">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/90 backdrop-blur-xs text-primary shadow-xs">
-                        {categoryLabel(listing.category)}
-                      </span>
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-primary-900/25 to-transparent" />
+                    <div className="pointer-events-none absolute start-3 top-3">{statusBadge(listing, true)}</div>
+                    <div className="absolute end-2 top-2">
+                      <DropdownMenu
+                        align="end"
+                        ariaLabel={t("moreActionsAria", { title: listing.title })}
+                        trigger={
+                          <IconButton
+                            variant="glass"
+                            size="sm"
+                            label={t("moreActionsAria", { title: listing.title })}
+                            icon={<BrandMoreIcon size={18} aria-hidden="true" />}
+                          />
+                        }
+                        items={menuItems(listing)}
+                      />
                     </div>
                   </div>
 
-                  {/* Body */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between text-xs text-neutral-600 mb-1">
-                        <span>{t("location", { city: listing.city, country: listing.country })}</span>
-                        <span className="flex items-center gap-1 font-bold text-neutral-700">
-                          {formatRatingValue(listing.rating, locale) ? (
-                            <>
-                              <BrandStarIcon size={12} className="text-accent fill-accent" />
-                              <span>
-                                {t("ratingWithCount", {
-                                  rating: formatRatingValue(listing.rating, locale) ?? "",
-                                  count: formatNumber(listing.reviewCount || 0, locale),
-                                })}
-                              </span>
-                            </>
-                          ) : (
-                            tListing("ratingNew")
-                          )}
-                        </span>
-                      </div>
-
-                      <h2 className="font-serif font-bold text-primary text-base line-clamp-1 mb-2">
-                        <Link
-                          href={`/listings/${listing.id}`}
-                          className={`hover:underline rounded ${FOCUS_RING}`}
-                        >
+                  <div className="flex flex-1 flex-col pt-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="line-clamp-1 min-w-0 text-[0.9375rem] font-semibold leading-snug text-primary-900">
+                        <Link href={`/listings/${listing.id}`} className={cn("rounded hover:underline", focusRing)}>
                           {listing.title}
                         </Link>
                       </h2>
-
-                      {roomTypeCount > 0 && (
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/30 flex items-center gap-1">
-                            <BrandBedIcon size={12} />
-                            <span>{t("roomTypesCount", { kind: kindOf(listing), count: roomTypeCount })}</span>
-                          </span>
-                          <span className="text-[11px] text-neutral-600">
-                            {t("inventoryTotal", {
-                              kind: kindOf(listing),
-                              count: (listing.roomTypes ?? []).reduce(
-                                (acc, r) => acc + (r.inventoryCount ?? r.totalInventory ?? 0),
-                                0
-                              ),
-                            })}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-baseline gap-1 mb-4">
-                        <span className="text-lg font-black font-mono text-primary">{money(listing.price)}</span>
-                        <span className="text-xs text-neutral-600">
-                          {listing.roomTypes && listing.roomTypes.some((r) => r.bookingUnit === "bed")
-                            ? t("perBed")
-                            : t("perNight")}
-                        </span>
-                        {listing.instantBook && (
-                          <span className="ms-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 inline-flex items-center gap-1">
-                            <InstantBookingIcon size={12} className="text-emerald-700" />
-                            <span>{t("instantBook")}</span>
-                          </span>
-                        )}
-                      </div>
+                      {ratingNode(listing)}
                     </div>
-
-                    {/* Actions: Primary Edit & Calendar + Kebab Overflow (Section 4 UX Audit) */}
-                    <div className="border-t border-tertiary/50 pt-4 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(listing)}
-                          aria-haspopup="dialog"
-                          className={`px-3 py-1.5 rounded-xl border border-tertiary/80 hover:bg-neutral-50 text-neutral-700 transition flex items-center gap-1.5 text-xs font-bold ${FOCUS_RING}`}
-                          title={t("editTitle")}
-                        >
-                          <BrandEditIcon size={15} />
-                          <span>{t("edit")}</span>
-                        </button>
-
-                        <Link
-                          href="/host/calendar"
-                          className={`px-3 py-1.5 rounded-xl border border-tertiary/80 text-xs font-bold text-neutral-700 hover:bg-neutral-50 transition flex items-center gap-1.5 ${FOCUS_RING}`}
-                          title={t("calendarTitle")}
-                        >
-                          <BrandCalendarIcon size={15} className="text-secondary" />
-                          <span>{t("calendar")}</span>
-                        </Link>
-                      </div>
-
-                      {/* Kebab Dropdown Menu */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          id={menuTriggerId(menuKey)}
-                          onClick={() => toggleMenu(menuKey)}
-                          aria-haspopup="menu"
-                          aria-expanded={isMenuOpen}
-                          aria-controls={isMenuOpen ? menuId(menuKey) : undefined}
-                          aria-label={t("moreActionsAria", { title: listing.title })}
-                          title={t("moreActions")}
-                          className={`p-1.5 rounded-xl border border-tertiary/70 hover:bg-neutral-100 text-neutral-600 transition ${FOCUS_RING}`}
-                        >
-                          <BrandMoreIcon size={16} />
-                        </button>
-
-                        {isMenuOpen && (
-                          <div
-                            id={menuId(menuKey)}
-                            role="menu"
-                            aria-labelledby={menuTriggerId(menuKey)}
-                            className="absolute end-0 bottom-full mb-2 w-52 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in"
-                          >
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => {
-                                setOpenCardMenuId(null);
-                                handleToggleStatus(listing);
-                              }}
-                              className={menuItemClass}
-                            >
-                              <BrandFilterIcon size={15} className="text-secondary" />
-                              <span>{listing.status === "active" ? t("menu.pause") : t("menu.activate")}</span>
-                            </button>
-
-                            {roomTypeCount > 0 && (
-                              <button
-                                type="button"
-                                role="menuitem"
-                                onClick={() => {
-                                  setOpenCardMenuId(null);
-                                  handleOpenManageRoomTypes(listing);
-                                }}
-                                className={menuItemClass}
-                              >
-                                <BrandBedIcon size={15} className="text-secondary" />
-                                <span>{t("menu.manageRoomTypes")}</span>
-                              </button>
-                            )}
-
-                            <Link
-                              href={`/listings/${listing.id}`}
-                              target="_blank"
-                              role="menuitem"
-                              onClick={() => setOpenCardMenuId(null)}
-                              className={menuItemClass}
-                            >
-                              <BrandEyeIcon size={15} className="text-secondary" />
-                              <span>{t("menu.viewPublic")}</span>
-                            </Link>
-
-                            <hr className="my-1 border-tertiary/30" role="separator" />
-
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => {
-                                setOpenCardMenuId(null);
-                                setDeletingId(listing.id);
-                              }}
-                              className={`${menuItemClass} hover:bg-rose-50 text-rose-700`}
-                            >
-                              <BrandTrashIcon size={15} />
-                              <span>{t("menu.delete")}</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                    <p className="mt-0.5 truncate text-meta text-primary-500">
+                      {categoryLabel(listing.category)} · {t("location", { city: listing.city, country: listing.country })}
+                    </p>
+                    {roomTypeCount > 0 && (
+                      <p className="mt-1 flex items-center gap-1.5 text-meta text-primary-600">
+                        <BrandBedIcon size={14} aria-hidden="true" className="text-secondary-700" />
+                        {t("roomTypesCount", { kind: kindOf(listing), count: roomTypeCount })}
+                        <span aria-hidden="true">·</span>
+                        {t("inventoryTotal", {
+                          kind: kindOf(listing),
+                          count: (listing.roomTypes ?? []).reduce((acc, r) => acc + (r.inventoryCount ?? r.totalInventory ?? 0), 0),
+                        })}
+                      </p>
+                    )}
+                    <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+                      <span className="text-[0.9375rem] font-semibold text-primary-900 tabular-nums">{money(listing.price)}</span>
+                      <span className="text-meta text-primary-500">{unitLabel(listing)}</span>
+                      {listing.instantBook && (
+                        <Badge tone="olive" icon={<InstantBookingIcon size={12} aria-hidden="true" />} className="ms-auto self-center">
+                          {t("instantBook")}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="tertiary"
+                        onClick={() => handleOpenEdit(listing)}
+                        aria-haspopup="dialog"
+                        title={t("editTitle")}
+                        leadingIcon={<BrandEditIcon size={15} aria-hidden="true" />}
+                      >
+                        {t("edit")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        href="/host/calendar"
+                        title={t("calendarTitle")}
+                        leadingIcon={<BrandCalendarIcon size={15} aria-hidden="true" />}
+                      >
+                        {t("calendar")}
+                      </Button>
                     </div>
                   </div>
                 </li>
@@ -681,160 +533,94 @@ export default function HostListingsClient({
             })}
           </ul>
         ) : (
-          /* TABLE VIEW */
-          <div className="bg-white rounded-3xl border border-tertiary/70 overflow-hidden shadow-2xs">
+          <Card padding="none" className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-start text-xs">
-                <thead className="bg-neutral-50 border-b border-tertiary/60 text-neutral-600 font-bold uppercase tracking-wider">
+              <table className="w-full min-w-[46rem] text-meta">
+                <thead className="border-b border-primary/[0.08] text-primary-600">
                   <tr>
-                    <th scope="col" className="py-3 px-4 text-start">{t("table.property")}</th>
-                    <th scope="col" className="py-3 px-4 text-start">{t("table.type")}</th>
-                    <th scope="col" className="py-3 px-4 text-start">{t("table.status")}</th>
-                    <th scope="col" className="py-3 px-4 text-start">{t("table.rate")}</th>
-                    <th scope="col" className="py-3 px-4 text-start">{t("table.bookings")}</th>
-                    <th scope="col" className="py-3 px-4 text-start">{t("table.rating")}</th>
-                    <th scope="col" className="py-3 px-4 text-end">{t("table.actions")}</th>
+                    <th scope="col" className="px-4 py-3 text-start font-semibold">{t("table.property")}</th>
+                    <th scope="col" className="px-4 py-3 text-start font-semibold">{t("table.type")}</th>
+                    <th scope="col" className="px-4 py-3 text-start font-semibold">{t("table.status")}</th>
+                    <th scope="col" className="px-4 py-3 text-end font-semibold">{t("table.rate")}</th>
+                    <th scope="col" className="px-4 py-3 text-end font-semibold">{t("table.bookings")}</th>
+                    <th scope="col" className="px-4 py-3 text-start font-semibold">{t("table.rating")}</th>
+                    <th scope="col" className="px-4 py-3 text-end font-semibold">{t("table.actions")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-tertiary/40">
+                <tbody className="divide-y divide-primary/[0.06]">
                   {filteredListings.map((listing) => {
-                    const menuKey = `tbl-${listing.id}`;
-                    const isMenuOpen = openCardMenuId === menuKey;
                     const isActive = listing.status === "active";
                     return (
-                      <tr key={listing.id} className="hover:bg-neutral-50/50 transition">
-                        <td className="py-3 px-4">
+                      <tr key={listing.id} className="transition-colors duration-fast hover:bg-darnaBg/60">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-neutral-100">
-                              <Image
-                                src={listing.imageSrc?.[0] || "/assets/hero.jpg"}
-                                alt=""
-                                fill
-                                sizes="48px"
-                                className="object-cover"
-                              />
+                            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-tertiary-100">
+                              <Image src={listing.imageSrc?.[0] || FALLBACK_LISTING_IMAGE} alt="" fill sizes="48px" className="object-cover" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                               <Link
                                 href={`/listings/${listing.id}`}
-                                className={`block font-bold text-primary truncate max-w-[200px] hover:underline rounded ${FOCUS_RING}`}
+                                className={cn("block max-w-[16rem] truncate rounded font-semibold text-primary-900 hover:underline", focusRing)}
                               >
                                 {listing.title}
                               </Link>
-                              <div className="text-[11px] text-neutral-600">
-                                {t("location", { city: listing.city, country: listing.country })}
-                              </div>
+                              <div className="text-primary-500">{t("location", { city: listing.city, country: listing.country })}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-semibold text-neutral-600">{categoryLabel(listing.category)}</td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3 text-primary-700">{categoryLabel(listing.category)}</td>
+                        <td className="px-4 py-3">
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(listing)}
                             title={isActive ? t("menu.pause") : t("menu.activate")}
-                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${FOCUS_RING} ${
-                              isActive ? "bg-emerald-100 text-emerald-800" : "bg-neutral-200 text-neutral-700"
-                            }`}
+                            className={cn("rounded-md", focusRing)}
                           >
-                            {isActive ? t("status.active") : t("status.paused")}
+                            <Badge tone={isActive ? "success" : "warning"} dot>
+                              {isActive ? t("status.active") : t("status.paused")}
+                            </Badge>
                           </button>
                         </td>
-                        <td className="py-3 px-4 font-mono font-bold text-primary">{money(listing.price)}</td>
-                        <td className="py-3 px-4 text-neutral-600 font-semibold">
+                        <td className="whitespace-nowrap px-4 py-3 text-end tabular-nums">
+                          <span className="font-semibold text-primary-900">{money(listing.price)}</span>{" "}
+                          <span className="text-primary-500">{unitLabel(listing)}</span>
+                        </td>
+                        <td className="px-4 py-3 text-end text-primary-700 tabular-nums">
                           {t("table.stays", { count: listing.bookingsCount ?? 0 })}
                         </td>
-                        <td className="py-3 px-4 font-bold text-neutral-700">
-                          <span className="inline-flex items-center gap-1">
-                            {formatRatingValue(listing.rating, locale) ? (
-                              <>
-                                <BrandStarIcon size={12} className="text-accent fill-accent" />
-                                <span>{formatRatingValue(listing.rating, locale)}</span>
-                              </>
-                            ) : (
-                              tListing("ratingNew")
-                            )}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-end">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              type="button"
+                        <td className="px-4 py-3">{ratingNode(listing)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <IconButton
+                              size="sm"
+                              label={t("editListingAria", { title: listing.title })}
+                              icon={<BrandEditIcon size={16} aria-hidden="true" />}
                               onClick={() => handleOpenEdit(listing)}
                               aria-haspopup="dialog"
-                              aria-label={t("editListingAria", { title: listing.title })}
-                              title={t("edit")}
-                              className={`p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-700 ${FOCUS_RING}`}
-                            >
-                              <BrandEditIcon size={16} />
-                            </button>
+                            />
                             <Link
                               href="/host/calendar"
                               aria-label={t("calendarListingAria", { title: listing.title })}
                               title={t("calendar")}
-                              className={`p-1.5 hover:bg-neutral-100 rounded-lg text-secondary ${FOCUS_RING}`}
-                            >
-                              <BrandCalendarIcon size={16} />
-                            </Link>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                id={menuTriggerId(menuKey)}
-                                onClick={() => toggleMenu(menuKey)}
-                                aria-haspopup="menu"
-                                aria-expanded={isMenuOpen}
-                                aria-controls={isMenuOpen ? menuId(menuKey) : undefined}
-                                aria-label={t("moreActionsAria", { title: listing.title })}
-                                title={t("moreActions")}
-                                className={`p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-600 ${FOCUS_RING}`}
-                              >
-                                <BrandMoreIcon size={16} />
-                              </button>
-                              {isMenuOpen && (
-                                <div
-                                  id={menuId(menuKey)}
-                                  role="menu"
-                                  aria-labelledby={menuTriggerId(menuKey)}
-                                  className="absolute end-0 top-8 w-44 bg-white rounded-2xl shadow-darna-dropdown border border-tertiary/70 py-1.5 z-40 text-xs text-neutral-700 animate-in fade-in"
-                                >
-                                  <Link
-                                    href={`/listings/${listing.id}`}
-                                    target="_blank"
-                                    role="menuitem"
-                                    onClick={() => setOpenCardMenuId(null)}
-                                    className={menuItemClass}
-                                  >
-                                    <BrandEyeIcon size={14} className="text-secondary" />
-                                    <span>{t("menu.viewPublic")}</span>
-                                  </Link>
-                                  <button
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={() => {
-                                      setOpenCardMenuId(null);
-                                      handleToggleStatus(listing);
-                                    }}
-                                    className={menuItemClass}
-                                  >
-                                    <BrandFilterIcon size={14} className="text-secondary" />
-                                    <span>{isActive ? t("menu.pause") : t("menu.activate")}</span>
-                                  </button>
-                                  <hr className="my-1 border-tertiary/30" role="separator" />
-                                  <button
-                                    type="button"
-                                    role="menuitem"
-                                    onClick={() => {
-                                      setOpenCardMenuId(null);
-                                      setDeletingId(listing.id);
-                                    }}
-                                    className={`${menuItemClass} hover:bg-rose-50 text-rose-700`}
-                                  >
-                                    <BrandTrashIcon size={14} />
-                                    <span>{t("menu.delete")}</span>
-                                  </button>
-                                </div>
+                              className={cn(
+                                "inline-flex h-11 w-11 items-center justify-center rounded-full text-primary-800 hover:bg-primary/[0.07]",
+                                focusRing
                               )}
-                            </div>
+                            >
+                              <BrandCalendarIcon size={16} aria-hidden="true" />
+                            </Link>
+                            <DropdownMenu
+                              align="end"
+                              ariaLabel={t("moreActionsAria", { title: listing.title })}
+                              trigger={
+                                <IconButton
+                                  size="sm"
+                                  label={t("moreActionsAria", { title: listing.title })}
+                                  icon={<BrandMoreIcon size={16} aria-hidden="true" />}
+                                />
+                              }
+                              items={menuItems(listing)}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -843,279 +629,135 @@ export default function HostListingsClient({
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
         )}
       </div>
 
-      {/* Quick Edit Modal */}
-      {editingListing && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isSaving) closeEdit();
-          }}
-        >
-          <div
-            ref={editDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={ids.editTitle}
-            className="bg-white rounded-3xl max-w-md w-full border border-tertiary shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-tertiary/60 mb-4">
-              <h2 id={ids.editTitle} className="font-serif text-lg font-black text-primary">
-                {t("editModal.title")}
-              </h2>
-              <button
-                type="button"
-                onClick={closeEdit}
-                disabled={isSaving}
-                aria-label={t("editModal.close")}
-                className={`w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-600 flex items-center justify-center font-bold text-sm ${FOCUS_RING}`}
-              >
-                <BrandCloseIcon size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <div>
-                <label htmlFor={ids.editTitleInput} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("editModal.titleLabel")}
-                </label>
-                <input
-                  id={ids.editTitleInput}
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  aria-invalid={editErrors.title || undefined}
-                  aria-describedby={editErrors.title ? ids.editTitleError : undefined}
-                  className={`w-full px-3 py-2 bg-neutral-50 border rounded-xl text-xs sm:text-sm text-primary ${INPUT_FOCUS} ${
-                    editErrors.title ? "border-rose-600" : "border-tertiary/80"
-                  }`}
-                />
-                {editErrors.title && (
-                  <p id={ids.editTitleError} className="mt-1 text-[11px] font-semibold text-rose-700">
-                    {t("editModal.titleError")}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor={ids.editPrice} className="text-xs font-bold text-neutral-600 block mb-1">
-                  {t("editModal.priceLabel")}
-                </label>
-                <div className="relative">
-                  <input
-                    id={ids.editPrice}
-                    type="number"
-                    inputMode="numeric"
-                    min={PRICE_MIN_DZD}
-                    max={PRICE_MAX_DZD}
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(parseInt(e.target.value, 10) || 0)}
-                    aria-invalid={editErrors.price || undefined}
-                    aria-describedby={
-                      editErrors.price ? `${ids.editPriceSuffix} ${ids.editPriceError}` : ids.editPriceSuffix
-                    }
-                    className={`w-full ps-3 pe-14 py-2 bg-neutral-50 border rounded-xl text-xs sm:text-sm font-mono font-bold text-primary ${INPUT_FOCUS} ${
-                      editErrors.price ? "border-rose-600" : "border-tertiary/80"
-                    }`}
-                  />
-                  <span
-                    id={ids.editPriceSuffix}
-                    className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-600"
-                  >
-                    {t("editModal.currency")}
-                  </span>
-                </div>
-                {editErrors.price && (
-                  <p id={ids.editPriceError} className="mt-1 text-[11px] font-semibold text-rose-700">
-                    {t("editModal.priceError", priceRange)}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between gap-3 p-3 bg-neutral-50 rounded-xl border border-tertiary/60">
-                <div>
-                  <label htmlFor={ids.editInstant} className="block text-xs font-bold text-primary">
-                    {t("editModal.instantBook")}
-                  </label>
-                  <span id={ids.editInstantHint} className="text-[11px] text-neutral-600">
-                    {t("editModal.instantBookHint")}
-                  </span>
-                </div>
-                <input
-                  id={ids.editInstant}
-                  type="checkbox"
-                  checked={editInstantBook}
-                  onChange={(e) => setEditInstantBook(e.target.checked)}
-                  aria-describedby={ids.editInstantHint}
-                  className="w-5 h-5 text-primary rounded focus:ring-primary"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={closeEdit}
-                disabled={isSaving}
-                className={`px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition ${FOCUS_RING}`}
-              >
-                {t("editModal.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveEdit}
-                disabled={isSaving}
-                aria-busy={isSaving}
-                className={`px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition shadow-2xs disabled:opacity-50 ${FOCUS_RING}`}
-              >
-                {isSaving ? t("editModal.saving") : t("editModal.save")}
-              </button>
-            </div>
+      {/* Quick edit */}
+      <Dialog
+        isOpen={!!editingListing}
+        onClose={closeEdit}
+        busy={isSaving}
+        title={t("editModal.title")}
+        description={editingListing?.title}
+        showClose
+      >
+        <div className="space-y-4">
+          <Input
+            label={t("editModal.titleLabel")}
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            error={editErrors.title ? t("editModal.titleError") : undefined}
+          />
+          <Input
+            label={
+              editingListing
+                ? t("editModal.priceLabelUnit", { unit: unitLabel(editingListing) })
+                : t("editModal.priceLabel")
+            }
+            type="number"
+            inputMode="numeric"
+            min={PRICE_MIN_DZD}
+            max={PRICE_MAX_DZD}
+            value={editPrice}
+            onChange={(e) => setEditPrice(parseInt(e.target.value, 10) || 0)}
+            suffix={t("editModal.currency")}
+            className="tabular-nums"
+            error={editErrors.price ? t("editModal.priceError", priceRange) : undefined}
+          />
+          <div className="rounded-2xl bg-darnaBg p-4">
+            <Switch
+              label={t("editModal.instantBook")}
+              description={t("editModal.instantBookHint")}
+              checked={editInstantBook}
+              onCheckedChange={setEditInstantBook}
+            />
           </div>
         </div>
-      )}
+        <DialogFooter>
+          <Button variant="tertiary" onClick={closeEdit} disabled={isSaving}>
+            {t("editModal.cancel")}
+          </Button>
+          <Button onClick={handleSaveEdit} loading={isSaving}>
+            {t("editModal.save")}
+          </Button>
+        </DialogFooter>
+      </Dialog>
 
-      {/* Manage Room Types Modal (Section 2: Hotel & Hostel) */}
-      {managingRoomTypesListing && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isSavingRoomTypes) closeRoomTypes();
-          }}
-        >
-          <div
-            ref={roomTypesDialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={ids.roomTypesTitle}
-            className="bg-white rounded-3xl max-w-xl w-full p-6 border border-tertiary shadow-xl space-y-5 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-tertiary/60 pb-3">
-              <div>
-                <h2
-                  id={ids.roomTypesTitle}
-                  className="font-serif font-bold text-lg text-primary flex items-center gap-2"
-                >
-                  <BrandBedIcon size={22} className="text-secondary" />
-                  <span>{t("roomTypesModal.title")}</span>
-                </h2>
-                <p className="text-xs text-neutral-600 mt-0.5">
-                  {t("roomTypesModal.subtitle", {
-                    title: managingRoomTypesListing.title,
-                    kind:
-                      managingRoomTypesListing.businessCategory === "hostel"
-                        ? t("roomTypesModal.kindHostel")
-                        : t("roomTypesModal.kindHotel"),
-                  })}
-                </p>
+      {/* Room types (hotels and hostels) */}
+      <Dialog
+        isOpen={!!managingRoomTypesListing}
+        onClose={closeRoomTypes}
+        busy={isSavingRoomTypes}
+        size="lg"
+        showClose
+        title={t("roomTypesModal.title")}
+        description={
+          managingRoomTypesListing
+            ? t("roomTypesModal.subtitle", {
+                title: managingRoomTypesListing.title,
+                kind:
+                  managingRoomTypesListing.businessCategory === "hostel"
+                    ? t("roomTypesModal.kindHostel")
+                    : t("roomTypesModal.kindHotel"),
+              })
+            : undefined
+        }
+      >
+        <div className="space-y-3">
+          {tempRoomTypes.map((rt, index) => (
+            <fieldset key={rt.id || index} className="space-y-3 rounded-2xl bg-darnaBg p-4">
+              <legend className="sr-only">{rt.name}</legend>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-body font-semibold text-primary-900">{rt.name}</span>
+                <Badge tone="olive">{rt.bookingUnit === "bed" ? t("roomTypesModal.perBed") : t("roomTypesModal.perRoom")}</Badge>
               </div>
-              <button
-                type="button"
-                onClick={closeRoomTypes}
-                disabled={isSavingRoomTypes}
-                aria-label={t("roomTypesModal.close")}
-                className={`p-1.5 rounded-full hover:bg-neutral-100 text-neutral-500 hover:text-neutral-700 transition ${FOCUS_RING}`}
-              >
-                <BrandCloseIcon size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {tempRoomTypes.map((rt, index) => {
-                const priceId = `${baseId}-rt-price-${index}`;
-                const inventoryId = `${baseId}-rt-inventory-${index}`;
-                return (
-                  <fieldset
-                    key={rt.id || index}
-                    className="p-4 rounded-2xl bg-neutral-50/70 border border-tertiary/80 space-y-3"
-                  >
-                    <legend className="sr-only">{rt.name}</legend>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-xs sm:text-sm text-primary flex items-center gap-2">
-                          <span>{rt.name}</span>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-secondary/15 text-secondary">
-                            {rt.bookingUnit === "bed" ? t("roomTypesModal.perBed") : t("roomTypesModal.perRoom")}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-neutral-600 mt-0.5">
-                          {rt.bedsDescription || t("roomTypesModal.capacity", { count: rt.capacity })}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      <div>
-                        <label htmlFor={priceId} className="block text-[11px] font-bold text-neutral-600 mb-1">
-                          {t("roomTypesModal.priceLabel")}
-                        </label>
-                        <input
-                          id={priceId}
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          value={rt.basePrice ?? rt.price}
-                          onChange={(e) => {
-                            const val = Math.max(0, parseInt(e.target.value, 10) || 0);
-                            setTempRoomTypes((prev) =>
-                              prev.map((item, idx) => (idx === index ? { ...item, basePrice: val, price: val } : item))
-                            );
-                          }}
-                          className={`w-full px-3 py-1.5 bg-white border border-tertiary/80 rounded-xl text-xs font-mono font-bold text-primary ${INPUT_FOCUS}`}
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor={inventoryId} className="block text-[11px] font-bold text-neutral-600 mb-1">
-                          {rt.bookingUnit === "bed" ? t("roomTypesModal.inventoryBeds") : t("roomTypesModal.inventoryRooms")}
-                        </label>
-                        <input
-                          id={inventoryId}
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          value={rt.inventoryCount ?? rt.totalInventory}
-                          onChange={(e) => {
-                            const val = Math.max(0, parseInt(e.target.value, 10) || 0);
-                            setTempRoomTypes((prev) =>
-                              prev.map((item, idx) =>
-                                idx === index ? { ...item, inventoryCount: val, totalInventory: val } : item
-                              )
-                            );
-                          }}
-                          className={`w-full px-3 py-1.5 bg-white border border-tertiary/80 rounded-xl text-xs font-mono font-bold text-primary ${INPUT_FOCUS}`}
-                        />
-                      </div>
-                    </div>
-                  </fieldset>
-                );
-              })}
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-tertiary/50">
-              <button
-                type="button"
-                onClick={closeRoomTypes}
-                disabled={isSavingRoomTypes}
-                className={`px-4 py-2 text-xs font-bold text-neutral-600 hover:bg-neutral-100 rounded-xl transition ${FOCUS_RING}`}
-              >
-                {t("roomTypesModal.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveRoomTypes}
-                disabled={isSavingRoomTypes}
-                aria-busy={isSavingRoomTypes}
-                className={`px-5 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/90 transition shadow-2xs disabled:opacity-50 ${FOCUS_RING}`}
-              >
-                {isSavingRoomTypes ? t("roomTypesModal.saving") : t("roomTypesModal.save")}
-              </button>
-            </div>
-          </div>
+              <p className="text-meta text-primary-600">
+                {rt.bedsDescription || t("roomTypesModal.capacity", { count: rt.capacity })}
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Input
+                  label={t("roomTypesModal.priceLabel")}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={rt.basePrice ?? rt.price}
+                  suffix={t("editModal.currency")}
+                  className="tabular-nums"
+                  onChange={(e) => {
+                    const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                    setTempRoomTypes((prev) =>
+                      prev.map((item, idx) => (idx === index ? { ...item, basePrice: val, price: val } : item))
+                    );
+                  }}
+                />
+                <Input
+                  label={rt.bookingUnit === "bed" ? t("roomTypesModal.inventoryBeds") : t("roomTypesModal.inventoryRooms")}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={rt.inventoryCount ?? rt.totalInventory}
+                  className="tabular-nums"
+                  onChange={(e) => {
+                    const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                    setTempRoomTypes((prev) =>
+                      prev.map((item, idx) => (idx === index ? { ...item, inventoryCount: val, totalInventory: val } : item))
+                    );
+                  }}
+                />
+              </div>
+            </fieldset>
+          ))}
         </div>
-      )}
+        <DialogFooter>
+          <Button variant="tertiary" onClick={closeRoomTypes} disabled={isSavingRoomTypes}>
+            {t("roomTypesModal.cancel")}
+          </Button>
+          <Button onClick={handleSaveRoomTypes} loading={isSavingRoomTypes}>
+            {t("roomTypesModal.save")}
+          </Button>
+        </DialogFooter>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

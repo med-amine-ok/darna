@@ -29,7 +29,7 @@ function errorMessage(err: unknown): string {
 }
 
 const FIELD_CLASS =
-  "w-full p-2.5 rounded-xl border border-tertiary text-xs bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+  "w-full p-2.5 rounded-xl border border-primary/[0.12] text-xs bg-white text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
 
 export default function TeamClient({ locale }: Props) {
   const t = useTranslations("team");
@@ -135,8 +135,8 @@ export default function TeamClient({ locale }: Props) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary tracking-tight">{t("title")}</h1>
-          <p className="text-xs text-neutral-500 mt-1">
+          <h1 className="font-serif text-heading text-primary-900">{t("title")}</h1>
+          <p className="text-meta text-primary-600 mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -146,7 +146,7 @@ export default function TeamClient({ locale }: Props) {
             variant="outline"
             size="sm"
             onClick={() => setPermissionModalOpen(true)}
-            className="text-xs font-bold"
+            className="text-xs font-semibold"
           >
             <Shield className="w-3.5 h-3.5 me-1.5 text-secondary" aria-hidden="true" />
             {t("roleMatrix")}
@@ -157,19 +157,17 @@ export default function TeamClient({ locale }: Props) {
             size="sm"
             onClick={() => setInviteModalOpen(true)}
             disabled={!canManageTeam}
-            className="text-xs font-bold"
-          >
-            <UserPlus className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+            className="text-xs font-semibold" leftIcon={<UserPlus className="w-3.5 h-3.5" aria-hidden="true" />}>
             {t("inviteMember")}
           </Button>
         </div>
       </div>
 
       {/* Staff Table */}
-      <div className="bg-white rounded-2xl border border-tertiary/70 overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-e1">
+        <div className="relative overflow-x-auto">
           <table className="w-full text-xs text-start">
-            <thead className="bg-darnaBg/60 border-b border-tertiary/60 text-neutral-600 text-xs font-semibold">
+            <thead className="bg-darnaBg-100 border-b border-primary/[0.08] text-primary-600 [&_th]:whitespace-nowrap text-xs font-semibold">
               <tr>
                 <th scope="col" className="py-3 px-4 text-start">{t("name")}</th>
                 <th scope="col" className="py-3 px-4 text-start">{t("email")}</th>
@@ -179,27 +177,32 @@ export default function TeamClient({ locale }: Props) {
                 <th scope="col" className="py-3 px-4 text-end">{tCommon("actions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-tertiary/40">
+            <tbody className="divide-y divide-primary/[0.06]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-neutral-500">
-                    {tCommon("loading")}
+                  <td colSpan={6} className="py-4 px-4">
+                    <span className="sr-only">{tCommon("loading")}</span>
+                    <div aria-hidden="true" className="space-y-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="skeleton h-4 rounded-md" style={{ width: `${90 - i * 12}%` }} />
+                      ))}
+                    </div>
                   </td>
                 </tr>
               ) : (
                 members.map((u) => (
-                  <tr key={u.id} className="hover:bg-darnaBg/20 transition-colors">
-                    <td className="py-3 px-4 font-bold text-primary">
+                  <tr key={u.id} className="hover:bg-darnaBg-100 transition-colors">
+                    <td className="py-3 px-4 font-semibold text-primary">
                       <div className="flex items-center gap-2">
                         <div
                           aria-hidden="true"
-                          className="w-7 h-7 rounded-full bg-secondary/15 text-secondary-700 flex items-center justify-center font-bold text-xs uppercase"
+                          className="w-7 h-7 rounded-full bg-secondary/15 text-secondary-700 flex items-center justify-center font-semibold text-xs uppercase"
                         >
                           {u.name.slice(0, 2)}
                         </div>
                         <div>
                           <div>{u.name}</div>
-                          <div className="text-[10px] text-neutral-500 font-mono font-normal">
+                          <div className="text-[11px] text-neutral-500 font-mono font-normal">
                             {u.id}
                           </div>
                         </div>
@@ -212,7 +215,7 @@ export default function TeamClient({ locale }: Props) {
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value as AdminRole)}
                         disabled={!canManageTeam || u.id === currentAdminId}
-                        className="py-1 px-2.5 rounded-lg border border-tertiary/80 text-xs font-semibold bg-white text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 disabled:opacity-60"
+                        className="py-1 px-2.5 rounded-lg border border-primary/[0.12] text-xs font-semibold bg-white text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] disabled:opacity-60 shadow-2xs hover:border-primary/25"
                       >
                         {roles.map((r) => (
                           <option key={r.key} value={r.key}>
@@ -226,7 +229,7 @@ export default function TeamClient({ locale }: Props) {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
                           u.isActive
                             ? "bg-secondary/15 text-secondary-700"
                             : "bg-neutral-100 text-neutral-600"
@@ -264,7 +267,7 @@ export default function TeamClient({ locale }: Props) {
       >
         <div className="space-y-4 text-start">
           <div
-            className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-tertiary/40"
+            className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-primary/[0.08]"
             role="group"
             aria-label={t("matrix.pickRole")}
           >
@@ -274,7 +277,7 @@ export default function TeamClient({ locale }: Props) {
                 type="button"
                 aria-pressed={selectedRoleForMatrix === r.key}
                 onClick={() => setSelectedRoleForMatrix(r.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
                   selectedRoleForMatrix === r.key
                     ? "bg-primary text-white"
                     : "text-neutral-600 hover:text-primary hover:bg-neutral-100"
@@ -289,14 +292,14 @@ export default function TeamClient({ locale }: Props) {
             {roles.find((r) => r.key === selectedRoleForMatrix)?.desc}
           </p>
 
-          <div className="border border-tertiary/70 rounded-xl overflow-hidden bg-darnaBg/30 p-3 max-h-72 overflow-y-auto">
-            <h3 className="text-xs font-bold text-primary mb-2">{t("matrix.granted")}</h3>
+          <div className="  rounded-xl overflow-hidden bg-darnaBg-100 p-3 max-h-72 overflow-y-auto">
+            <h3 className="text-xs font-semibold text-primary mb-2">{t("matrix.granted")}</h3>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ROLE_PERMISSIONS[selectedRoleForMatrix].map((perm) => (
                 <li
                   key={perm}
                   dir="ltr"
-                  className="p-2 rounded-lg bg-white border border-tertiary/60 text-[11px] font-mono text-secondary-700 flex items-center gap-1.5"
+                  className="p-2 rounded-lg bg-darnaBg-100 text-[11px] font-mono text-secondary-700 flex items-center gap-1.5"
                 >
                   <CheckCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   <span>{perm}</span>
@@ -337,13 +340,13 @@ export default function TeamClient({ locale }: Props) {
             <p
               id={inviteErrorId}
               role="alert"
-              className="p-2.5 rounded-xl bg-accent/10 border border-accent/30 text-xs font-medium text-accent-700"
+              className="p-2.5 rounded-xl bg-accent/10 ring-1 ring-inset ring-accent/30 text-xs font-medium text-accent-700"
             >
               {inviteError}
             </p>
           )}
           <div>
-            <label htmlFor={inviteNameId} className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor={inviteNameId} className="block text-xs font-semibold text-primary mb-1">
               {t("name")}
             </label>
             <input
@@ -361,7 +364,7 @@ export default function TeamClient({ locale }: Props) {
           </div>
 
           <div>
-            <label htmlFor={inviteEmailId} className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor={inviteEmailId} className="block text-xs font-semibold text-primary mb-1">
               {t("email")}
             </label>
             <input
@@ -379,7 +382,7 @@ export default function TeamClient({ locale }: Props) {
           </div>
 
           <div>
-            <label htmlFor={inviteRoleId} className="block text-xs font-bold text-primary mb-1">
+            <label htmlFor={inviteRoleId} className="block text-xs font-semibold text-primary mb-1">
               {t("role")}
             </label>
             <select
@@ -409,7 +412,7 @@ export default function TeamClient({ locale }: Props) {
               type="submit"
               variant="primary"
               size="sm"
-              className="font-bold text-xs"
+              className="font-semibold text-xs"
             >
               {t("inviteMember")}
             </Button>

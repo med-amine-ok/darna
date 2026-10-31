@@ -8,6 +8,8 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useCurrentAdmin } from "@/components/auth/AdminSessionProvider";
 import { canAccessPath } from "@/lib/route-permissions";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { AnimatePresence, m } from "framer-motion";
+import { dur, ease, spring } from "@/lib/motion";
 import {
   LayoutDashboard,
   Users,
@@ -366,34 +368,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
   return (
     <>
-      {/* Mobile Backdrop */}
-      {isMobileOpen && (
-        <div
-          onClick={onMobileClose}
-          aria-hidden="true"
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
-        />
-      )}
+      {/* Mobile backdrop (blurred ink) */}
+      <div
+        onClick={onMobileClose}
+        aria-hidden="true"
+        className={`fixed inset-0 z-40 backdrop-ink lg:hidden transition-opacity duration-base ease-out ${
+          isMobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
-      {/* Sidebar Container: Off-canvas drawer (modal dialog) under 1024px (lg), fixed on desktop */}
+      {/* Sidebar: off-canvas drawer (modal dialog) under 1024px (lg), fixed ink rail on desktop */}
       <aside
         ref={asideRef}
         role={isMobileOpen ? "dialog" : undefined}
         aria-modal={isMobileOpen ? true : undefined}
         aria-label={isMobileOpen ? t("menuLabel") : undefined}
         data-collapsed={collapsed ? "true" : "false"}
-        className={`fixed inset-y-0 start-0 z-50 bg-primary text-white flex flex-col h-[100dvh] transition-all duration-300 border-e border-[#3A493B] shadow-xl focus:outline-none ${
+        className={`fixed inset-y-0 start-0 z-50 bg-primary-800 text-white flex flex-col h-[100dvh] transition-[transform,width,visibility] duration-base ease-out focus:outline-none max-lg:shadow-e5 max-lg:rounded-e-3xl overflow-hidden ${
           collapsed ? "lg:w-20 w-[280px] max-w-[85vw]" : "w-[280px] sm:w-[260px] lg:w-[218px] max-w-[85vw]"
         } ${
           isMobileOpen
-            ? "translate-x-0 opacity-100 visible"
+            ? "translate-x-0 visible"
             : "-translate-x-full lg:translate-x-0 rtl:translate-x-full lg:rtl:translate-x-0 max-lg:invisible max-lg:pointer-events-none"
         }`}
       >
-        {/* Brand Header */}
+        {/* Brand header (aligned with the 64px top bar) */}
         <div
-          className={`border-b border-[#3A493B]/80 transition-all ${
-            isCollapsed ? "p-3 flex flex-col items-center gap-2" : "px-4 py-3.5 flex items-center justify-between"
+          className={`h-16 shrink-0 border-b border-white/[0.07] ${
+            isCollapsed ? "px-2 flex items-center justify-center gap-1" : "px-4 flex items-center justify-between"
           }`}
         >
           <Link
@@ -401,37 +403,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
             className="flex items-center gap-2.5 overflow-hidden shrink-0 group select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300"
             title={t("consoleTitle")}
           >
-            <div className="w-8 h-8 rounded-lg bg-primary-900 border border-[#3A493B] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-[10px] bg-white/[0.06] ring-1 ring-inset ring-white/10 flex items-center justify-center shrink-0">
               <Image
                 src="/assets/logo.png"
                 alt="DARNA"
                 width={20}
                 height={20}
-                className="h-5 w-5 object-contain brightness-0 invert group-hover:scale-105 transition"
+                className="h-5 w-5 object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-fast ease-out"
               />
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="font-bold text-sm tracking-wide leading-tight text-white">DARNA</span>
-                <span className="text-[10px] text-tertiary-300 leading-tight">{t("tagline")}</span>
+                <span className="font-serif text-[1.0625rem] leading-none text-white">DARNA</span>
+                <span className="text-[11px] text-tertiary-300/90 leading-tight mt-1">{t("tagline")}</span>
               </div>
             )}
           </Link>
 
-          {/* Desktop Collapse / Expand Toggle Button */}
+          {/* Desktop collapse / expand */}
           <button
             type="button"
             onClick={toggleCollapsed}
-            className={`hidden lg:flex items-center justify-center rounded-lg bg-primary-900 hover:bg-[#3A493B] text-tertiary-300 hover:text-white transition cursor-pointer shadow-2xs border border-[#3A493B]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
-              isCollapsed ? "w-7 h-6 mt-1" : "p-1"
+            className={`hidden lg:flex items-center justify-center rounded-lg text-tertiary-300 hover:text-white hover:bg-white/[0.08] transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
+              isCollapsed ? "w-6 h-8" : "w-7 h-7"
             }`}
             title={isCollapsed ? t("expandSidebar") : t("collapseSidebar")}
             aria-label={isCollapsed ? t("expandSidebar") : t("collapseSidebar")}
           >
             {isCollapsed ? (
-              <ChevronRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+              <ChevronRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
             ) : (
-              <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
+              <ChevronLeft className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
             )}
           </button>
 
@@ -440,7 +442,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
             <button
               type="button"
               onClick={onMobileClose}
-              className="lg:hidden p-1.5 rounded-lg text-tertiary-300 hover:text-white hover:bg-[#3A493B] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300"
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl text-tertiary-300 hover:text-white hover:bg-white/[0.08] transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300"
               aria-label={t("closeMenu")}
             >
               <X className="w-5 h-5" aria-hidden="true" />
@@ -448,10 +450,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           )}
         </div>
 
-        {/* Scrollable Navigation Area (Accordion) */}
+        {/* Scrollable navigation (accordion: one section open at a time) */}
         <nav
           aria-label={t("mainNavigation")}
-          className={`flex-1 overflow-y-auto space-y-1 py-2.5 text-[13px] darna-admin-scrollbar ${
+          className={`flex-1 overflow-y-auto overflow-x-hidden space-y-0.5 py-3 text-[13px] darna-admin-scrollbar ${
             isCollapsed ? "px-2" : "px-2.5"
           }`}
         >
@@ -467,9 +469,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                 (hasSub && item.subItems!.some((s) => pathname.startsWith(s.href.split("?")[0])));
 
             return (
-              <div key={item.id} className="space-y-0.5">
-                {/* Parent Row */}
+              <div key={item.id}>
+                {/* Parent row */}
                 <div className="relative flex items-center">
+                  {/* Sliding active pill (shared layout across sections) */}
+                  {isParentActive && (
+                    <m.span
+                      layoutId="sidebar-active-pill"
+                      transition={spring.layout}
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-[10px] bg-white/[0.09] ring-1 ring-inset ring-white/[0.06]"
+                    >
+                      <span className="absolute start-0 top-2 bottom-2 w-[3px] rounded-e-full bg-accent-400" />
+                    </m.span>
+                  )}
                   <Link
                     href={item.href}
                     onClick={() => {
@@ -477,28 +490,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                       if (!hasSub && onMobileClose) onMobileClose();
                     }}
                     aria-current={(!hasSub || isCollapsed) && isParentActive ? "page" : undefined}
-                    className={`flex-1 group relative flex items-center rounded-lg font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
-                      isParentActive
-                        ? "bg-primary-900/90 text-white font-semibold shadow-2xs"
-                        : "text-neutral-300 hover:bg-primary-700/60 hover:text-white"
-                    } ${isCollapsed ? "w-10 h-10 mx-auto justify-center px-0" : "gap-2.5 px-2.5 py-2"}`}
+                    className={`relative flex-1 min-w-0 group flex items-center rounded-[10px] font-medium transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
+                      isParentActive ? "text-white" : "text-tertiary-200/85 hover:bg-white/[0.05] hover:text-white"
+                    } ${isCollapsed ? "w-11 h-11 mx-auto justify-center px-0" : "gap-2.5 ps-3 pe-2 py-2 min-h-[38px]"}`}
                     title={isCollapsed ? label : undefined}
                   >
-                    <Icon className="w-4 h-4 shrink-0 text-neutral-300 group-hover:text-white" aria-hidden="true" />
+                    <Icon
+                      className={`w-[18px] h-[18px] shrink-0 transition-colors duration-fast ${
+                        isParentActive ? "text-accent-300" : "text-tertiary-300/80 group-hover:text-white"
+                      }`}
+                      aria-hidden="true"
+                    />
                     {isCollapsed ? (
                       <span className="sr-only">{label}</span>
                     ) : (
-                      <span className="truncate flex-1 text-start">{label}</span>
+                      <span className="flex-1 min-w-0 text-start leading-tight line-clamp-2 break-words" title={label}>
+                        {label}
+                      </span>
                     )}
 
-                    {/* Count Badge on Parent (e.g. Validation, Messages) */}
+                    {/* Count badge on parent (Validation, Messages) */}
                     {item.badge !== undefined && (
                       <>
                         <span
                           aria-hidden="true"
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full tabular-nums text-white ${
-                            isCollapsed ? "absolute -top-1 -end-1" : "ms-auto"
-                          } ${item.id === "moderation" ? "bg-accent-700" : "bg-secondary-700"}`}
+                          className={`shrink-0 min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-semibold leading-none tabular-nums text-white ${
+                            isCollapsed ? "absolute -top-0.5 -end-0.5 ring-2 ring-primary-800" : ""
+                          } ${item.id === "moderation" ? "bg-accent-600" : "bg-secondary-700"}`}
                         >
                           {format.number(item.badge)}
                         </span>
@@ -507,7 +525,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                     )}
                   </Link>
 
-                  {/* Accordion Chevron Trigger */}
+                  {/* Accordion chevron */}
                   {hasSub && !isCollapsed && (
                     <button
                       type="button"
@@ -515,90 +533,99 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                         e.stopPropagation();
                         setOpenSection((prev) => (prev === item.id ? null : item.id));
                       }}
-                      className="p-1.5 text-neutral-300 hover:text-white rounded-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300"
+                      className="relative shrink-0 w-7 h-7 flex items-center justify-center text-tertiary-300/80 hover:text-white rounded-md transition-colors duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300"
                       aria-label={t("toggleSection", { section: label })}
                       aria-expanded={isOpen}
                       aria-controls={isOpen ? subListId : undefined}
                     >
                       <ChevronDown
                         aria-hidden="true"
-                        className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                        className={`w-3.5 h-3.5 transition-transform duration-base ease-out ${isOpen ? "rotate-180" : ""}`}
                       />
                     </button>
                   )}
                 </div>
 
-                {/* Sub-items (Accordion smooth expand) */}
-                {hasSub && isOpen && !isCollapsed && (
-                  <ul
-                    id={subListId}
-                    className="space-y-0.5 ps-3 pt-0.5 animate-in fade-in slide-in-from-top-1 duration-200 border-s border-[#3A493B]/70 ms-4"
-                  >
-                    {item.subItems!.map((sub) => {
-                      const active = isCurrentSubActive(sub.href);
-                      return (
-                        <li key={sub.href}>
-                          <Link
-                            href={sub.href}
-                            onClick={onMobileClose}
-                            aria-current={active ? "page" : undefined}
-                            className={`group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
-                              active
-                                ? "bg-secondary/30 text-white font-semibold"
-                                : "text-neutral-300 hover:bg-primary-700/50 hover:text-white"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2 truncate">
-                              <span
-                                aria-hidden="true"
-                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                  active ? "bg-secondary" : "bg-neutral-500 group-hover:bg-neutral-300"
+                {/* Sub-items: smooth reveal */}
+                <AnimatePresence initial={false}>
+                  {hasSub && isOpen && !isCollapsed && (
+                    <m.div
+                      key="sub"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1, transition: { duration: dur.base, ease: ease.out } }}
+                      exit={{ height: 0, opacity: 0, transition: { duration: dur.fast, ease: ease.standard } }}
+                      className="overflow-hidden"
+                    >
+                      <ul id={subListId} className="ms-[21px] ps-2.5 py-1 space-y-px border-s border-white/[0.08]">
+                        {item.subItems!.map((sub) => {
+                          const active = isCurrentSubActive(sub.href);
+                          const subLabel = tNav(sub.labelKey);
+                          return (
+                            <li key={sub.href}>
+                              <Link
+                                href={sub.href}
+                                onClick={onMobileClose}
+                                aria-current={active ? "page" : undefined}
+                                title={subLabel}
+                                className={`group relative flex items-center justify-between gap-2 px-2.5 py-1.5 min-h-[32px] rounded-lg text-[12.5px] transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
+                                  active
+                                    ? "bg-white/[0.07] text-white font-semibold"
+                                    : "text-tertiary-200/75 hover:bg-white/[0.04] hover:text-white"
                                 }`}
-                              />
-                              <span className="truncate">{tNav(sub.labelKey)}</span>
-                            </span>
-                            {sub.badge !== undefined && (
-                              <>
-                                <span
-                                  aria-hidden="true"
-                                  className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-tertiary-700/80 text-white tabular-nums"
-                                >
-                                  {format.number(sub.badge)}
+                              >
+                                <span className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    aria-hidden="true"
+                                    className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors duration-fast ${
+                                      active ? "bg-accent-400" : "bg-white/20 group-hover:bg-white/50"
+                                    }`}
+                                  />
+                                  <span className="truncate">{subLabel}</span>
                                 </span>
-                                <span className="sr-only">{t("pendingBadge", { count: sub.badge })}</span>
-                              </>
-                            )}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                                {sub.badge !== undefined && (
+                                  <>
+                                    <span
+                                      aria-hidden="true"
+                                      className="shrink-0 min-w-[20px] h-[18px] px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-semibold leading-none bg-white/[0.1] text-tertiary-100 tabular-nums"
+                                    >
+                                      {format.number(sub.badge)}
+                                    </span>
+                                    <span className="sr-only">{t("pendingBadge", { count: sub.badge })}</span>
+                                  </>
+                                )}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </m.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
         </nav>
 
-        {/* Pinned Help Card at Bottom */}
-        <div className="p-2.5 border-t border-[#3A493B]/80">
+        {/* Pinned help card */}
+        <div className="p-2.5 border-t border-white/[0.07]">
           <Link
             href="/help"
             onClick={onMobileClose}
-            className={`block rounded-xl bg-primary-900/90 hover:bg-primary-900 border border-[#3A493B] transition p-2.5 group select-none shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
+            className={`block rounded-xl bg-white/[0.05] hover:bg-white/[0.09] ring-1 ring-inset ring-white/[0.06] transition-colors duration-fast p-2.5 group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
               isCollapsed ? "text-center" : ""
             }`}
             title={tNav("helpCenter")}
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-secondary/20 border border-secondary/30 flex items-center justify-center shrink-0 text-secondary-300 group-hover:scale-105 transition">
+            <div className={`flex items-center gap-2.5 ${isCollapsed ? "justify-center" : ""}`}>
+              <div className="w-7 h-7 rounded-lg bg-secondary-400/15 flex items-center justify-center shrink-0 text-secondary-300 group-hover:scale-105 transition-transform duration-fast ease-out">
                 <HelpCircle className="w-4 h-4" aria-hidden="true" />
               </div>
               {isCollapsed ? (
                 <span className="sr-only">{tNav("needHelp")}</span>
               ) : (
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xs font-bold text-white leading-tight">{tNav("needHelp")}</span>
-                  <span className="text-[10px] text-tertiary-300 leading-tight truncate">{tNav("helpCenter")}</span>
+                  <span className="text-xs font-semibold text-white leading-tight">{tNav("needHelp")}</span>
+                  <span className="text-[11px] text-tertiary-300/90 leading-tight truncate">{tNav("helpCenter")}</span>
                 </div>
               )}
             </div>

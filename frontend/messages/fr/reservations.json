@@ -50,5 +50,8 @@
   "declineDialogTitle": "Refuser la demande de réservation",
   "declineDialogMessage": "Voulez-vous vraiment refuser cette demande ? Le voyageur sera informé immédiatement et sa réservation provisoire sera libérée.",
   "declineConfirm": "Refuser la demande",
-  "declineKeep": "Conserver la demande"
+  "declineKeep": "Conserver la demande",
+  "eyebrow": "Espace hôte",
+  "kpiLabel": "Aperçu des réservations",
+  "kpiNotAvailable": "n.d."
 }

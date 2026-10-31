@@ -180,5 +180,6 @@
     "requestSent": "Demande de réservation envoyée à {agency} ! L'agence dispose de 24 heures pour répondre.",
     "reserved": "Expédition réservée ! Préparez vos bagages pour l'Algérie.",
     "bookFailed": "Échec de la réservation. Veuillez vérifier les informations."
-  }
+  },
+  "eyebrow": "Vos voyages"
 }

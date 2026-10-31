@@ -1,25 +1,83 @@
 "use client";
 
-// Last-resort boundary for errors thrown in the root/locale layouts, where the
-// next-intl provider may not exist — so the copy is static and trilingual.
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+/**
+ * Last-resort boundary for errors thrown in the root/locale layouts, where the
+ * next-intl provider and the stylesheet may not exist: static trilingual copy and
+ * inline styles in the DARNA palette (paper, ink, terracotta) with the logo arch.
+ */
+const ink = "#2E3A2F";
+const paper = "#F8F6EE";
+const terracotta = "#B65634";
+
+export default function GlobalError({
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return (
     <html lang="en">
       <body
-        style={{ fontFamily: "system-ui, sans-serif", background: "#F8F6EE", color: "#2E3A2F" }}
-        className="min-h-[100dvh] flex flex-col items-center justify-center p-6 text-center"
+        style={{
+          margin: 0,
+          minHeight: "100dvh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+          background: paper,
+          color: ink,
+        }}
       >
-        <div role="alert" style={{ maxWidth: 480, margin: "15vh auto", padding: 24, textAlign: "center" }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Something went wrong</h1>
-          <p lang="fr" style={{ marginBottom: 4 }}>Un problème est survenu.</p>
-          <p lang="ar" dir="rtl" style={{ marginBottom: 24 }}>حدث خطأ ما.</p>
+        <div
+          role="alert"
+          style={{
+            width: "100%",
+            maxWidth: 480,
+            padding: "40px 28px",
+            textAlign: "center",
+            background: "#fff",
+            borderRadius: 28,
+            boxShadow: "0 0 0 1px rgba(30,38,31,0.04), 0 4px 8px rgba(30,38,31,0.05), 0 16px 36px -8px rgba(30,38,31,0.16)",
+          }}
+        >
+          <svg width="72" height="88" viewBox="0 0 72 88" fill="none" aria-hidden="true" style={{ display: "block", margin: "0 auto 20px" }}>
+            <path d="M6 86V40C6 21 19 6 36 6s30 15 30 34v46" stroke={ink} strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M18 86V44c0-11 8-20 18-20s18 9 18 20v42" stroke={terracotta} strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+          <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 400, fontSize: 30, lineHeight: 1.15, margin: "0 0 12px" }}>
+            Something went wrong
+          </h1>
+          <p lang="fr" style={{ margin: "0 0 4px", color: "#455243" }}>
+            Un problème est survenu.
+          </p>
+          <p lang="ar" dir="rtl" style={{ margin: "0 0 28px", color: "#455243" }}>
+            حدث خطأ ما.
+          </p>
           <button
             type="button"
             onClick={() => reset()}
-            style={{ padding: "10px 24px", borderRadius: 999, background: "#B65634", color: "#fff", border: 0, cursor: "pointer" }}
+            style={{
+              minHeight: 48,
+              padding: "0 28px",
+              borderRadius: 999,
+              background: `linear-gradient(135deg, #C96F4F 0%, ${terracotta} 55%, #974426 100%)`,
+              color: "#fff",
+              border: 0,
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: "pointer",
+              boxShadow: "0 8px 24px -6px rgba(182,86,52,0.45)",
+            }}
           >
             Try again · Réessayer · حاول مرة أخرى
           </button>
+          <p style={{ margin: "20px 0 0", fontSize: 14 }}>
+            <a href="/en" style={{ color: ink, textUnderlineOffset: 4 }}>
+              DARNA
+            </a>
+          </p>
         </div>
       </body>
     </html>

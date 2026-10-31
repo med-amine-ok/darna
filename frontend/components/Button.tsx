@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * Legacy full-width button (Modal footers, EmptyState, ListingCard, hotel page…).
+ * Props are unchanged; it now renders the kit Button (components/ui/Button.tsx) so every
+ * caller gets the new pill, glow, spring press and focus ring:
+ *   primary → primary (terracotta glow) · outline → tertiary (white e1) · secondary → secondary (ink)
+ *   danger → destructive · ghost → ghost · small → size "sm".
+ * Prefer `import Button from "@/components/ui/Button"` in new code.
+ */
+
+import KitButton, { type ButtonVariant } from "@/components/ui/Button";
+
 interface ButtonProps {
   label: string;
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -12,6 +23,13 @@ interface ButtonProps {
   variant?: "primary" | "secondary" | "danger" | "ghost";
 }
 
+const variantMap: Record<NonNullable<ButtonProps["variant"]>, ButtonVariant> = {
+  primary: "primary",
+  secondary: "secondary",
+  danger: "destructive",
+  ghost: "ghost",
+};
+
 export default function Button({
   label,
   onClick,
@@ -23,59 +41,18 @@ export default function Button({
   className = "",
   variant = "primary",
 }: ButtonProps) {
-  let styleClasses = "";
-
-  if (outline) {
-    styleClasses =
-      "bg-white border-2 border-primary text-primary hover:bg-neutral-50";
-  } else if (variant === "secondary") {
-    styleClasses =
-      "bg-secondary text-white hover:bg-secondary/90 border-transparent shadow-sm";
-  } else if (variant === "danger") {
-    styleClasses =
-      "bg-status-red text-white hover:bg-status-red/90 border-transparent shadow-sm";
-  } else if (variant === "ghost") {
-    styleClasses =
-      "bg-transparent text-primary hover:bg-neutral-100 border-transparent";
-  } else {
-    // primary default = accent terracotta
-    styleClasses =
-      "bg-accent-600 text-white hover:bg-accent-700 border-transparent shadow-sm";
-  }
-
   return (
-    <button
+    <KitButton
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`
-        relative
-        disabled:opacity-50
-        disabled:cursor-not-allowed
-        rounded-xl
-        hover:opacity-95
-        transition
-        w-full
-        font-medium
-        flex
-        items-center
-        justify-center
-        gap-2
-        active:scale-[0.98]
-        active:-translate-y-[1px]
-        min-h-[44px]
-        cursor-pointer
-        focus-visible:outline-none
-        focus-visible:ring-2
-        focus-visible:ring-accent-600
-        focus-visible:ring-offset-2
-        ${styleClasses}
-        ${small ? "py-1.5 text-sm font-normal border" : "py-3 text-base font-semibold"}
-        ${className}
-      `}
+      variant={outline ? "tertiary" : variantMap[variant]}
+      size={small ? "sm" : "lg"}
+      fullWidth
+      leadingIcon={Icon ? <Icon size={small ? 16 : 18} className="shrink-0" /> : undefined}
+      className={className}
     >
-      {Icon && <Icon size={small ? 18 : 22} className="shrink-0" />}
-      <span>{label}</span>
-    </button>
+      {label}
+    </KitButton>
   );
 }

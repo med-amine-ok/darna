@@ -130,6 +130,15 @@
     "reviewsHeading": "{count, plural, =0 {Avis de la communauté} other {Avis de la communauté (#)}}",
     "noReviews": "Aucun avis reçu pour l'instant.",
     "anonymousTraveler": "Voyageur",
-    "ratingOutOf": "Noté {rating} sur 5"
+    "ratingOutOf": "Noté {rating} sur 5",
+    "roleHost": "Hôte sur DARNA",
+    "roleTraveler": "Voyageur sur DARNA",
+    "memberSince": "Membre depuis {year}",
+    "memberSinceLabel": "Membre depuis",
+    "listingsStat": "Annonces",
+    "reviewsStat": "Avis",
+    "listingsTabLabel": "Annonces",
+    "reviewsTabLabel": "Avis",
+    "statsLabel": "Profil en bref"
   }
 }

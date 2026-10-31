@@ -4,6 +4,7 @@ import React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { OnboardingFieldConfig } from "@/types";
 import { BrandCheckIcon, BrandPlusIcon } from "@/components/icons";
+import { Chip, Switch } from "@/components/ui";
 
 interface DynamicStepFieldsProps {
   fields: OnboardingFieldConfig[];
@@ -13,11 +14,9 @@ interface DynamicStepFieldsProps {
   locale?: string;
 }
 
+/** Same look as the kit fields (`.field-control` in globals.css). */
 const FIELD_CLASS =
-  "w-full px-4 py-2.5 text-sm bg-white border border-tertiary rounded-xl text-primary placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/20 focus-visible:ring-accent-600 focus:border-primary";
-
-const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+  "field-control block w-full min-h-12 rounded-xl bg-white px-4 py-3 text-base sm:text-body text-primary-900 placeholder:text-primary-400";
 
 /**
  * Renders admin-configured onboarding fields. Labels, placeholders, help texts
@@ -38,8 +37,8 @@ export default function DynamicStepFields({
   const currentLang = (["en", "fr", "ar"].includes(locale) ? locale : "en") as "en" | "fr" | "ar";
 
   return (
-    <div className="space-y-4 pt-4 border-t border-tertiary/50">
-      <p className="text-xs font-bold uppercase tracking-wider text-secondary-700">
+    <div className="space-y-4 border-t border-primary/[0.08] pt-6">
+      <p className="text-eyebrow uppercase text-secondary-700">
         {t("customStep.additionalInfo")}
       </p>
 
@@ -58,18 +57,18 @@ export default function DynamicStepFields({
 
           return (
             <div key={field.id} className="space-y-1.5">
-              {isGroup || isToggle ? (
-                <p id={labelId} className="block text-xs sm:text-sm font-bold text-neutral-800">
-                  {label} {field.required && <span aria-hidden="true" className="text-rose-600">*</span>}
+              {isToggle ? null : isGroup ? (
+                <p id={labelId} className="block text-meta font-semibold text-primary-800">
+                  {label} {field.required && <span aria-hidden="true" className="text-accent-700">*</span>}
                 </p>
               ) : (
-                <label id={labelId} htmlFor={inputId} className="block text-xs sm:text-sm font-bold text-neutral-800">
-                  {label} {field.required && <span aria-hidden="true" className="text-rose-600">*</span>}
+                <label id={labelId} htmlFor={inputId} className="block text-meta font-semibold text-primary-800">
+                  {label} {field.required && <span aria-hidden="true" className="text-accent-700">*</span>}
                 </label>
               )}
 
-              {helpText && (
-                <p id={helpId} className="text-xs text-neutral-600 leading-relaxed">
+              {helpText && !isToggle && (
+                <p id={helpId} className="text-meta text-primary-600">
                   {helpText}
                 </p>
               )}
@@ -163,20 +162,14 @@ export default function DynamicStepFields({
                     };
 
                     return (
-                      <button
+                      <Chip
                         key={opt.value}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={toggleOption}
-                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${FOCUS_RING} ${
-                          isSelected
-                            ? "bg-primary text-white border-primary shadow-2xs"
-                            : "bg-white text-neutral-700 border-tertiary hover:border-primary/50"
-                        }`}
+                        selected={isSelected}
+                        onSelectedChange={toggleOption}
+                        icon={isSelected ? <BrandCheckIcon size={14} aria-hidden="true" /> : <BrandPlusIcon size={14} aria-hidden="true" />}
                       >
-                        {isSelected ? <BrandCheckIcon size={12} /> : <BrandPlusIcon size={12} />}
-                        <span>{opt.label[currentLang] || opt.label.en}</span>
-                      </button>
+                        {opt.label[currentLang] || opt.label.en}
+                      </Chip>
                     );
                   })}
                 </div>
@@ -184,19 +177,13 @@ export default function DynamicStepFields({
 
               {/* Toggle Switch */}
               {isToggle && (
-                <div className="flex items-center gap-3 pt-1">
-                  <input
-                    type="checkbox"
-                    id={inputId}
-                    checked={Boolean(val)}
-                    onChange={(e) => onChange(field.id, e.target.checked)}
-                    aria-describedby={helpId}
-                    className={`w-4 h-4 text-primary rounded border-tertiary focus:ring-primary ${FOCUS_RING}`}
-                  />
-                  <label htmlFor={inputId} className="text-xs sm:text-sm font-semibold text-neutral-800">
-                    {label}
-                  </label>
-                </div>
+                <Switch
+                  id={inputId}
+                  label={<span className="text-body font-semibold text-primary-900">{label}</span>}
+                  description={helpText || undefined}
+                  checked={Boolean(val)}
+                  onCheckedChange={(checked) => onChange(field.id, checked)}
+                />
               )}
             </div>
           );

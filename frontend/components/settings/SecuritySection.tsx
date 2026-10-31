@@ -7,7 +7,13 @@ import { changePasswordAction } from "@/app/actions/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-rules";
 import type { ActionError } from "@/lib/action-result";
 import { useActionError } from "@/hook/useActionError";
-import { FOCUS_RING, INPUT_CLASS, PRIMARY_BUTTON_CLASS, SectionHeader } from "./settingsUi";
+import { AnimatePresence, m } from "framer-motion";
+import { Input } from "@/components/ui/Field";
+import Button from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Banner } from "@/components/ui/Feedback";
+import { dur, ease } from "@/lib/motion";
+import { SectionHeader, SettingsCard, SettingsList } from "./settingsUi";
 
 export default function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
   const t = useTranslations("settings");
@@ -59,7 +65,6 @@ export default function SecuritySection({ onDeactivate }: { onDeactivate: () => 
     }
   };
 
-  const describedBy = error ? "settings-password-error" : undefined;
   const fields = [
     { id: "settings-current-password", label: t("security.currentPassword"), value: currPass, set: setCurrPass, auto: "current-password" },
     { id: "settings-new-password", label: t("security.newPassword"), value: newPass, set: setNewPass, auto: "new-password" },
@@ -74,83 +79,81 @@ export default function SecuritySection({ onDeactivate }: { onDeactivate: () => 
         description={t("security.description")}
       />
 
-      <form
-        onSubmit={handleChangePassword}
-        noValidate
-        aria-labelledby="settings-change-password-title"
-        className="p-5 bg-neutral-50 rounded-2xl border border-tertiary/60 space-y-3"
-      >
-        <h3 id="settings-change-password-title" className="font-bold text-primary text-sm">
-          {t("security.changePassword")}
-        </h3>
-        {error && (
-          <p
-            id="settings-password-error"
-            role="alert"
-            className="rounded-xl border border-status-error/30 bg-status-error/5 px-3 py-2 text-xs text-status-error"
-          >
-            {error}
-          </p>
-        )}
-        <div className="space-y-2">
-          {fields.map((f) => (
-            <div key={f.id}>
-              <label htmlFor={f.id} className="block text-xs font-semibold text-neutral-700 mb-1">
-                {f.label}
-              </label>
-              <input
+      <SettingsCard title={t("security.changePassword")} titleId="settings-change-password-title">
+        <form
+          onSubmit={handleChangePassword}
+          noValidate
+          aria-labelledby="settings-change-password-title"
+          className="flex flex-col gap-4"
+        >
+          <AnimatePresence initial={false}>
+            {error && (
+              <m.div
+                key="error"
+                id="settings-password-error"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: dur.base, ease: ease.out } }}
+                exit={{ opacity: 0, transition: { duration: dur.fast } }}
+              >
+                <Banner tone="danger">{error}</Banner>
+              </m.div>
+            )}
+          </AnimatePresence>
+          <div className="grid gap-4 md:grid-cols-3">
+            {fields.map((f) => (
+              <Input
+                key={f.id}
                 id={f.id}
                 type="password"
+                label={f.label}
                 autoComplete={f.auto}
                 value={f.value}
                 onChange={(e) => f.set(e.target.value)}
                 aria-invalid={error ? true : undefined}
-                aria-describedby={describedBy}
-                className={INPUT_CLASS}
+                aria-describedby={error ? "settings-password-error" : undefined}
               />
-            </div>
-          ))}
-        </div>
-        <button type="submit" disabled={isChangingPassword} aria-busy={isChangingPassword} className={PRIMARY_BUTTON_CLASS}>
-          {isChangingPassword ? t("security.updating") : t("security.updatePassword")}
-        </button>
-      </form>
+            ))}
+          </div>
+          <div>
+            <Button type="submit" variant="secondary" loading={isChangingPassword}>
+              {isChangingPassword ? t("security.updating") : t("security.updatePassword")}
+            </Button>
+          </div>
+        </form>
+      </SettingsCard>
 
-      <div className="space-y-3">
-        <h3 className="font-bold text-primary text-sm">{t("security.sessionsTitle")}</h3>
-        <ul className="space-y-2">
-          <li className="p-3.5 bg-white rounded-2xl border border-tertiary/60 flex items-center justify-between text-xs">
-            <div>
-              <div className="font-semibold text-primary">{t("security.thisBrowser")}</div>
-              <div className="text-neutral-600 mt-0.5">{t("security.activeNow")}</div>
+      <SettingsCard title={t("security.sessionsTitle")}>
+        <SettingsList>
+          <div className="flex items-center justify-between gap-4 pb-4">
+            <div className="min-w-0">
+              <div className="text-body font-medium text-primary-900">{t("security.thisBrowser")}</div>
+              <div className="mt-0.5 flex items-center gap-1.5 text-meta text-primary-600">
+                <span aria-hidden="true" className="h-2 w-2 rounded-full bg-secondary-600" />
+                {t("security.activeNow")}
+              </div>
             </div>
-            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold">
-              {t("security.thisDevice")}
-            </span>
-          </li>
-          <li className="p-3.5 bg-neutral-50 rounded-2xl border border-dashed border-tertiary/60 flex items-center justify-between text-xs">
-            <div className="text-neutral-600">{t("security.otherDevicesSoon")}</div>
-            <span className="px-2 py-0.5 bg-neutral-200 text-neutral-700 rounded-full font-bold shrink-0 ms-3">
+            <Badge tone="success">{t("security.thisDevice")}</Badge>
+          </div>
+          <div className="flex items-center justify-between gap-4 pt-4">
+            <div className="text-meta text-primary-600">{t("security.otherDevicesSoon")}</div>
+            <Badge tone="sand" className="shrink-0">
               {t("comingSoon")}
-            </span>
-          </li>
-        </ul>
-      </div>
+            </Badge>
+          </div>
+        </SettingsList>
+      </SettingsCard>
 
-      <div className="pt-4 border-t border-tertiary/50 flex items-center justify-between gap-4">
-        <div>
-          <div className="font-bold text-primary text-sm">{t("security.deactivateTitle")}</div>
-          <div className="text-xs text-neutral-600">{t("security.deactivateDescription")}</div>
+      <SettingsCard>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-title font-semibold text-primary-900">{t("security.deactivateTitle")}</h3>
+            <p className="mt-1 text-meta text-primary-600">{t("security.deactivateDescription")}</p>
+          </div>
+          <Button type="button" variant="tertiary" onClick={onDeactivate} aria-haspopup="dialog" className="shrink-0 text-accent-800">
+            {t("security.deactivate")}
+          </Button>
         </div>
-        <button
-          type="button"
-          onClick={onDeactivate}
-          aria-haspopup="dialog"
-          className={`px-4 py-2 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold hover:bg-rose-50 transition ${FOCUS_RING}`}
-        >
-          {t("security.deactivate")}
-        </button>
-      </div>
+      </SettingsCard>
     </section>
   );
 }

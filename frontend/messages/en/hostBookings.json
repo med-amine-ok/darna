@@ -138,5 +138,8 @@
     "declineFailed": "Failed to decline reservation.",
     "cancelled": "Reservation cancelled according to the host cancellation policy.",
     "cancelFailed": "Failed to cancel reservation."
-  }
+  },
+  "eyebrow": "Reservations",
+  "reference": "Ref. {code}",
+  "requestHeading": "Booking request, reply before it expires"
 }

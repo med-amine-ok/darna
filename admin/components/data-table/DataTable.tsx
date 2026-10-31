@@ -4,6 +4,7 @@ import React from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useTranslations } from "next-intl";
 
 export interface Column<T> {
@@ -91,7 +92,7 @@ export function DataTable<T>({
   const renderSortIcon = (colKey: string) => {
     if (sortBy !== colKey) {
       return (
-        <ArrowUpDown className="w-3 h-3 text-neutral-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" aria-hidden="true" />
+        <ArrowUpDown className="w-3 h-3 text-neutral-500 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" aria-hidden="true" />
       );
     }
     return sortOrder === "asc" ? (
@@ -101,7 +102,8 @@ export function DataTable<T>({
     );
   };
 
-  const paddingClass = density === "compact" ? "py-2 px-3" : "py-3 px-4";
+  const paddingClass = density === "compact" ? "py-2 px-3" : "py-3 px-3.5";
+  const skeletonWidths = ["w-3/4", "w-1/2", "w-2/3", "w-2/5", "w-3/5"];
 
   // Identify special columns for mobile card layout
   const primaryCol = columns[0];
@@ -122,7 +124,7 @@ export function DataTable<T>({
             Array.from({ length: 4 }).map((_, idx) => (
               <div
                 key={idx}
-                className="p-3.5 rounded-2xl bg-white border border-tertiary/60 shadow-xs space-y-3 animate-pulse"
+                className="p-3.5 rounded-2xl bg-white shadow-e1 space-y-3"
               >
                 <div className="flex items-center justify-between gap-3">
                   <Skeleton className="h-5 w-3/5 rounded-lg" />
@@ -135,17 +137,14 @@ export function DataTable<T>({
               </div>
             ))
           ) : data.length === 0 ? (
-            <div className="p-8 text-center bg-white rounded-2xl border border-tertiary/60 shadow-xs">
-              {emptyState || (
-                <p className="text-neutral-500 text-xs">
-                  {emptyMessage || t("empty")}
-                </p>
-              )}
+            <div className="text-center bg-white rounded-2xl shadow-e1">
+              {emptyState || <EmptyState size="compact" title={emptyMessage || t("empty")} />}
             </div>
           ) : (
             data.map((row) => {
               const id = keyExtractor(row);
-              const isSelected = effectiveSelectedIds.includes(id) || selectedRowId === id;
+              const isChecked = effectiveSelectedIds.includes(id);
+              const isSelected = isChecked || selectedRowId === id;
 
               return (
                 <div
@@ -154,14 +153,14 @@ export function DataTable<T>({
                   onKeyDown={rowKeyHandler(row, onRowClick)}
                   tabIndex={onRowClick ? 0 : undefined}
                   aria-label={onRowClick && rowLabel ? rowLabel(row) : undefined}
-                  className={`p-3.5 rounded-2xl bg-white border transition-all shadow-xs relative text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
+                  className={`p-3.5 rounded-2xl bg-white transition-[box-shadow,transform] duration-fast ease-standard relative text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 ${
                     isSelected
-                      ? "border-secondary ring-2 ring-secondary/20 bg-secondary/5"
-                      : "border-tertiary/60 hover:border-tertiary-400 active:scale-[0.99]"
+                      ? "shadow-e2 ring-2 ring-secondary-600/60 bg-secondary-50"
+                      : "shadow-e1 hover:shadow-e2 active:scale-[0.99]"
                   } ${onRowClick ? "cursor-pointer" : ""}`}
                 >
                   {/* Card Header: Primary Content + Status + Selection */}
-                  <div className="flex items-start justify-between gap-2.5 pb-2 border-b border-neutral-100">
+                  <div className="flex items-start justify-between gap-2.5 pb-2.5 border-b border-primary/[0.06]">
                     <div className="flex items-start gap-2.5 min-w-0 flex-1">
                       {isSelectable && (
                         <div
@@ -169,10 +168,10 @@ export function DataTable<T>({
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Checkbox
-                            checked={isSelected}
+                            checked={isChecked}
                             onChange={() => {
                               if (selection) {
-                                if (isSelected) {
+                                if (isChecked) {
                                   selection.onSelectionChange(
                                     effectiveSelectedIds.filter((item) => item !== id)
                                   );
@@ -205,10 +204,10 @@ export function DataTable<T>({
                     <div className="grid grid-cols-2 gap-2.5 pt-2 text-xs">
                       {metricCols.slice(0, 4).map((col) => (
                         <div key={col.key} className="min-w-0">
-                          <span className="block text-[10px] font-semibold text-neutral-500 truncate">
+                          <span className="block text-[11px] font-medium text-primary-500 truncate">
                             {col.header}
                           </span>
-                          <div className="text-xs font-medium text-neutral-700 truncate mt-0.5">
+                          <div className="text-xs font-medium text-primary-800 truncate mt-0.5 tabular-nums">
                             {col.render ? col.render(row) : cellValue(row, col.key)}
                           </div>
                         </div>
@@ -219,7 +218,7 @@ export function DataTable<T>({
                   {/* Card Footer Actions */}
                   {actionsCol && (
                     <div
-                      className="pt-2 mt-2 border-t border-neutral-100 flex items-center justify-end"
+                      className="pt-2 mt-2 border-t border-primary/[0.06] flex items-center justify-end"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {actionsCol.render ? actionsCol.render(row) : cellValue(row, actionsCol.key)}
@@ -236,15 +235,19 @@ export function DataTable<T>({
       {/* 2. Desktop Full Table Mode (hidden on mobile if card)   */}
       {/* ======================================================== */}
       <div
-        className={`w-full overflow-hidden rounded-2xl bg-white border border-tertiary/60 shadow-darna-card ${
+        className={`w-full overflow-hidden rounded-2xl bg-white shadow-e1 ${
           tableOnly ? "block" : "hidden md:block"
         }`}
       >
-        <div className="w-full overflow-x-auto darna-admin-scrollbar">
-          <table className="w-full text-start border-collapse text-xs">
+        <div
+          className={`w-full overflow-x-auto ${
+            !isLoading && data.length > 12 ? "md:max-h-[calc(100dvh-196px)] md:overflow-y-auto" : ""
+          }`}
+        >
+          <table className="w-full text-start border-separate border-spacing-0 text-xs">
             {caption && <caption className="sr-only">{caption}</caption>}
             {/* Sticky Header */}
-            <thead className="bg-darnaBg/70 border-b border-tertiary/60 select-none sticky top-0 z-10 backdrop-blur-xs">
+            <thead className="select-none sticky top-0 z-10 [&_th]:bg-darnaBg-100/95 [&_th]:backdrop-blur-sm [&_th]:border-b [&_th]:border-primary/[0.08]">
               <tr>
                 {isSelectable && (
                   <th scope="col" className="py-3 px-4 w-10 text-center">
@@ -267,13 +270,13 @@ export function DataTable<T>({
                   // Sticky first column for dense/tableOnly tables
                   const stickyFirstCol =
                     tableOnly && cIdx === 0
-                      ? "sticky start-0 bg-darnaBg z-10 shadow-xs"
+                      ? "sticky start-0 z-20"
                       : "";
 
                   return (
                     <th
                       key={col.key}
-                      className={`${paddingClass} font-semibold text-neutral-600 text-xs ${alignClass} ${stickyFirstCol} ${
+                      className={`${paddingClass} font-semibold text-primary-600 text-xs whitespace-nowrap ${alignClass} ${stickyFirstCol} ${
                         col.className || ""
                       }`}
                       scope="col"
@@ -291,7 +294,7 @@ export function DataTable<T>({
                         <button
                           type="button"
                           onClick={() => onSort(col.key)}
-                          className="group inline-flex items-center gap-1.5 font-bold hover:text-primary transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                          className="group inline-flex items-center gap-1.5 font-semibold hover:text-primary-900 transition-colors duration-fast rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
                         >
                           <span>{col.header}</span>
                           {renderSortIcon(col.key)}
@@ -306,18 +309,18 @@ export function DataTable<T>({
             </thead>
 
             {/* Table Body */}
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="[&>tr:not(:last-child)>td]:border-b [&>tr:not(:last-child)>td]:border-primary/[0.06]">
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, rIdx) => (
-                  <tr key={rIdx} className="animate-pulse">
+                  <tr key={rIdx} aria-hidden="true">
                     {isSelectable && (
                       <td className="py-3 px-4 text-center">
-                        <Skeleton className="w-4 h-4 mx-auto" />
+                        <Skeleton className="w-[18px] h-[18px] rounded-[6px] mx-auto" />
                       </td>
                     )}
-                    {columns.map((col) => (
+                    {columns.map((col, cIdx) => (
                       <td key={col.key} className={paddingClass}>
-                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className={`h-3.5 rounded-md ${skeletonWidths[(rIdx + cIdx) % skeletonWidths.length]}`} />
                       </td>
                     ))}
                   </tr>
@@ -326,20 +329,16 @@ export function DataTable<T>({
                 <tr>
                   <td
                     colSpan={columns.length + (isSelectable ? 1 : 0)}
-                    className="p-8 text-center"
+                    className="text-center"
                   >
-                    {emptyState || (
-                      <p className="text-neutral-500 text-xs">
-                        {emptyMessage || t("empty")}
-                      </p>
-                    )}
+                    {emptyState || <EmptyState size="compact" title={emptyMessage || t("empty")} />}
                   </td>
                 </tr>
               ) : (
                 data.map((row) => {
                   const id = keyExtractor(row);
-                  const isSelected =
-                    effectiveSelectedIds.includes(id) || selectedRowId === id;
+                  const isChecked = effectiveSelectedIds.includes(id);
+                  const isSelected = isChecked || selectedRowId === id;
 
                   return (
                     <tr
@@ -347,12 +346,12 @@ export function DataTable<T>({
                       onClick={() => onRowClick && onRowClick(row)}
                       onKeyDown={rowKeyHandler(row, onRowClick)}
                       tabIndex={onRowClick ? 0 : undefined}
-                      className={`transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600 ${
+                      className={`group/row transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-600 ${
                         onRowClick ? "cursor-pointer" : ""
                       } ${
                         isSelected
-                          ? "bg-secondary/10 hover:bg-secondary/15"
-                          : "hover:bg-darnaBg/40 active:bg-darnaBg/70"
+                          ? "bg-secondary-50 hover:bg-secondary-100/70 [&>td:first-child]:shadow-[inset_3px_0_0_#6B7F5B] rtl:[&>td:first-child]:shadow-[inset_-3px_0_0_#6B7F5B]"
+                          : "hover:bg-darnaBg-100 active:bg-darnaBg-200"
                       }`}
                     >
                       {isSelectable && (
@@ -361,10 +360,10 @@ export function DataTable<T>({
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Checkbox
-                            checked={isSelected}
+                            checked={isChecked}
                             onChange={() => {
                               if (selection) {
-                                if (isSelected) {
+                                if (isChecked) {
                                   selection.onSelectionChange(
                                     effectiveSelectedIds.filter((item) => item !== id)
                                   );
@@ -393,13 +392,13 @@ export function DataTable<T>({
 
                         const stickyFirstCol =
                           tableOnly && cIdx === 0
-                            ? "sticky start-0 bg-white z-1 shadow-xs"
+                            ? "sticky start-0 bg-white group-hover/row:bg-darnaBg-100 z-[1]"
                             : "";
 
                         return (
                           <td
                             key={col.key}
-                            className={`${paddingClass} ${alignClass} text-neutral-700 ${stickyFirstCol} ${
+                            className={`${paddingClass} ${alignClass} text-primary-800 ${stickyFirstCol} ${
                               col.className || ""
                             }`}
                           >

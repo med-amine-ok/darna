@@ -30,22 +30,22 @@ export const WhatChangedBanner: React.FC = () => {
   return (
     <aside
       aria-label={t("ariaLabel")}
-      className="p-3.5 sm:p-4 rounded-2xl bg-secondary/10 border border-secondary/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-start animate-in fade-in"
+      className="p-3.5 sm:p-4 rounded-2xl bg-secondary-50 ring-1 ring-inset ring-secondary-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-start animate-in fade-in"
     >
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-secondary/20 flex items-center justify-center shrink-0 text-secondary">
+        <div className="w-9 h-9 rounded-xl bg-secondary-100 flex items-center justify-center shrink-0 text-secondary-700">
           <Info className="w-4 h-4" aria-hidden="true" />
         </div>
         <div>
-          <span className="text-xs font-bold text-primary block">{t("title")}</span>
-          <p className="text-[11px] text-neutral-600 mt-0.5">{t("description")}</p>
+          <span className="text-xs font-semibold text-primary-900 block">{t("title")}</span>
+          <p className="text-xs text-primary-600 mt-0.5">{t("description")}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
         <Link
           href="/where-did-it-go"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-neutral-900 transition underline"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-secondary-800 hover:text-secondary-900 transition-colors duration-fast underline underline-offset-2"
         >
           <span>{t("guideLink")}</span>
           <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" aria-hidden="true" />
@@ -54,7 +54,7 @@ export const WhatChangedBanner: React.FC = () => {
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-neutral-500 hover:text-neutral-700 transition p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+          className="w-8 h-8 inline-flex items-center justify-center text-primary-600 hover:text-primary-900 hover:bg-primary/[0.06] transition-colors duration-fast rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           aria-label={t("dismiss")}
         >
           <X className="w-4 h-4" aria-hidden="true" />

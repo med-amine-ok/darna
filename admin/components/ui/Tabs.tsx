@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
-import { motion } from "framer-motion";
+import React, { useId, useRef } from "react";
+import { m } from "framer-motion";
+import { spring } from "@/lib/motion";
 import { useLocale } from "next-intl";
 import { formatNumber } from "@/lib/utils/format";
 
@@ -42,6 +43,8 @@ export const Tabs: React.FC<TabsProps> = ({
   const locale = useLocale();
   const isRtl = locale === "ar";
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  // Per-instance layout id so several tab bars on one page never share an indicator.
+  const indicatorId = `tabs-indicator-${useId()}`;
   const tabList = items || tabs || [];
   const selectedTab = activeId !== undefined ? activeId : (activeTab || "");
   const selectedIndex = tabList.findIndex((tab) => tab.id === selectedTab);
@@ -101,15 +104,16 @@ export const Tabs: React.FC<TabsProps> = ({
             <button
               key={tab.id}
               {...common}
-              className={`relative flex items-center gap-2 px-3.5 py-1.5 min-h-[44px] sm:min-h-[34px] rounded-xl text-xs font-semibold select-none transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 ${focusRing} ${
-                isActive ? "text-primary" : "text-neutral-600 hover:text-primary hover:bg-white/40"
+              className={`relative isolate flex items-center gap-2 px-3.5 py-1.5 min-h-[44px] sm:min-h-[34px] rounded-xl text-xs font-semibold select-none transition-colors duration-fast ease-standard cursor-pointer whitespace-nowrap shrink-0 ${focusRing} ${
+                isActive ? "text-primary-900" : "text-primary-600 hover:text-primary-900"
               }`}
             >
               {isActive && (
-                <motion.div
-                  layoutId="active-tab-pill"
-                  transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                  className="absolute inset-0 bg-white rounded-xl shadow-xs border border-tertiary/60 -z-10"
+                <m.span
+                  layoutId={indicatorId}
+                  transition={spring.layout}
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-white rounded-xl shadow-e1 -z-10"
                 />
               )}
               {tab.icon && (
@@ -120,10 +124,10 @@ export const Tabs: React.FC<TabsProps> = ({
               <span>{tab.label}</span>
               {tab.count !== undefined && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold tabular-nums transition-colors ${
+                  className={`text-[11px] leading-4 px-1.5 rounded-full font-semibold tabular-nums transition-colors duration-fast ${
                     isActive
-                      ? "bg-primary text-white"
-                      : "bg-neutral-200/80 text-neutral-700"
+                      ? "bg-primary-800 text-white"
+                      : "bg-primary/[0.07] text-primary-700"
                   }`}
                 >
                   {formatNumber(tab.count, locale)}
@@ -138,8 +142,8 @@ export const Tabs: React.FC<TabsProps> = ({
           <button
             key={tab.id}
             {...common}
-            className={`relative flex items-center gap-2 px-2 pb-2.5 min-h-[44px] sm:min-h-[36px] text-xs font-semibold select-none transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 ${focusRing} ${
-              isActive ? "text-primary border-b-2 border-primary -mb-[1px]" : "text-neutral-500 hover:text-primary"
+            className={`relative flex items-center gap-2 px-0.5 pb-2.5 pt-1 min-h-[44px] sm:min-h-[38px] text-xs font-semibold select-none transition-colors duration-fast ease-standard cursor-pointer whitespace-nowrap shrink-0 ${focusRing} ${
+              isActive ? "text-primary-900" : "text-primary-600 hover:text-primary-900"
             }`}
           >
             {tab.icon && (
@@ -149,9 +153,21 @@ export const Tabs: React.FC<TabsProps> = ({
             )}
             <span>{tab.label}</span>
             {tab.count !== undefined && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-bold tabular-nums">
+              <span
+                className={`text-[11px] leading-4 px-1.5 rounded-full font-semibold tabular-nums transition-colors duration-fast ${
+                  isActive ? "bg-primary-800 text-white" : "bg-primary/[0.07] text-primary-700"
+                }`}
+              >
                 {formatNumber(tab.count, locale)}
               </span>
+            )}
+            {isActive && (
+              <m.span
+                layoutId={indicatorId}
+                transition={spring.layout}
+                aria-hidden="true"
+                className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-accent-600"
+              />
             )}
           </button>
         );

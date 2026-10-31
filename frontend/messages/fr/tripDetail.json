@@ -1,0 +1,14 @@
+{
+  "dateRange": "{start} – {end}",
+  "seatsLeft": "{count, plural, one {# place restante} other {# places restantes}}",
+  "full": "Complet",
+  "departure": "Départ",
+  "travelersCount": "{count, plural, one {# voyageur} other {# voyageurs}}",
+  "organizedBy": "Organisé par",
+  "verificationPending": "Vérification en cours",
+  "gallery": "Galerie",
+  "bookTitle": "Réserver ce circuit",
+  "editBooking": "Modifier le départ et les voyageurs",
+  "requestShort": "Demander",
+  "loading": "Chargement du circuit"
+}

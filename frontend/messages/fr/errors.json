@@ -4,8 +4,8 @@
   "tryAgain": "Réessayer",
   "returnHome": "Retour à l'accueil",
   "notFoundMetaTitle": "Page introuvable",
-  "notFoundTitle": "Page introuvable",
-  "notFoundBody": "Nous n'avons pas trouvé la page que vous cherchez. Elle a peut-être été déplacée ou n'existe pas.",
+  "notFoundTitle": "Cette page s'est égarée hors de la carte",
+  "notFoundBody": "Le lien est peut-être ancien ou la page a été déplacée. Cherchez un hébergement ou partez de l'une de nos wilayas préférées.",
   "explore": "Explorer DARNA",
   "generic": "Une erreur s'est produite. Veuillez réessayer.",
   "codes": {
@@ -75,5 +75,13 @@
     "AGENCY_ONLY": "Seules les agences peuvent publier des circuits.",
     "GROUP_SIZE_RANGE": "La taille minimale du groupe ne peut pas dépasser la taille maximale.",
     "TRIP_TITLE_REQUIRED": "Veuillez saisir le titre du circuit."
-  }
+  },
+  "errorEyebrow": "Erreur inattendue",
+  "errorReference": "Référence :",
+  "notFoundEyebrow": "Erreur 404",
+  "notFoundSearchLabel": "Où aller ? Une ville ou une wilaya",
+  "notFoundSearchSubmit": "Rechercher",
+  "notFoundPopular": "Wilayas populaires",
+  "notFoundHelp": "Consulter le centre d'aide",
+  "notFoundImageAlt": "Une arche rocheuse naturelle dans le Tassili n'Ajjer"
 }

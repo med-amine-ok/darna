@@ -27,7 +27,10 @@ import { DetailPanel } from "@/components/ui/DetailPanel";
 import { DataTable, Column } from "@/components/data-table/DataTable";
 import { FilterBar } from "@/components/data-table/FilterBar";
 import { FilterDrawer } from "@/components/data-table/FilterDrawer";
-import { ActiveFilterChips, ActiveFilterItem } from "@/components/data-table/ActiveFilterChips";
+import {
+  ActiveFilterChips,
+  ActiveFilterItem,
+} from "@/components/data-table/ActiveFilterChips";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Avatar } from "@/components/ui/Avatar";
@@ -37,7 +40,12 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { GuestUser, PaginatedResult } from "@/lib/types";
 import { getWilayaName, getWilayaLabel, WILAYAS } from "@/lib/utils/wilayas";
-import { formatDzd, formatDate, formatNumber, intlLocale } from "@/lib/utils/format";
+import {
+  formatDzd,
+  formatDate,
+  formatNumber,
+  intlLocale,
+} from "@/lib/utils/format";
 import {
   listUsers,
   suspendUser,
@@ -55,9 +63,9 @@ export interface UsersClientProps {
 }
 
 const SELECT_CLASS =
-  "w-full text-xs rounded-xl bg-white border border-tertiary/70 p-2 text-primary focus:outline-none focus:border-secondary focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 cursor-pointer";
+  "w-full text-xs rounded-xl bg-white shadow-e1 p-2 text-primary focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 cursor-pointer";
 
-// Demo activity timestamp (mock panel content) — rendered in the viewer's locale.
+// Demo activity timestamp (mock panel content), rendered in the viewer's locale.
 const DEMO_LOGIN_AT = "2024-03-20T08:34:00";
 
 export default function UsersClient({
@@ -74,10 +82,15 @@ export default function UsersClient({
   const [isPending, startTransition] = useTransition();
   const uid = useId();
 
-  const statusLabel = (value: string) => (tStatus.has(value) ? tStatus(value) : value);
-  const roleLabel = (value: string) => (t.has(`roles.${value}`) ? t(`roles.${value}`) : value);
+  const statusLabel = (value: string) =>
+    tStatus.has(value) ? tStatus(value) : value;
+  const roleLabel = (value: string) =>
+    t.has(`roles.${value}`) ? t(`roles.${value}`) : value;
   const formatTime = (iso: string) =>
-    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+    new Intl.DateTimeFormat(intlLocale(locale), {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(iso));
 
   const [data, setData] = useState<PaginatedResult<GuestUser>>(initialData);
   const [status, setStatus] = useState<string>(initialStatus);
@@ -110,15 +123,20 @@ export default function UsersClient({
 
   const fetchData = async (overrideParams: Record<string, any> = {}) => {
     startTransition(async () => {
-      const res = unwrap(await listUsers({
-        status: overrideParams.status ?? status,
-        role: overrideParams.role ?? role,
-        search: overrideParams.search ?? search,
-        wilayaCode: overrideParams.selectedWilaya ?? (selectedWilaya !== "all" ? selectedWilaya : undefined),
-        isFlagged: overrideParams.isFlaggedOnly ?? (isFlaggedOnly ? true : undefined),
-        page: overrideParams.page ?? currentPage,
-        pageSize: overrideParams.pageSize ?? pageSize,
-      }));
+      const res = unwrap(
+        await listUsers({
+          status: overrideParams.status ?? status,
+          role: overrideParams.role ?? role,
+          search: overrideParams.search ?? search,
+          wilayaCode:
+            overrideParams.selectedWilaya ??
+            (selectedWilaya !== "all" ? selectedWilaya : undefined),
+          isFlagged:
+            overrideParams.isFlaggedOnly ?? (isFlaggedOnly ? true : undefined),
+          page: overrideParams.page ?? currentPage,
+          pageSize: overrideParams.pageSize ?? pageSize,
+        }),
+      );
       setData(res);
     });
   };
@@ -135,18 +153,49 @@ export default function UsersClient({
   };
 
   const activeChips: ActiveFilterItem[] = [];
-  if (status !== "all") activeChips.push({ key: "status", label: t("status"), valueDisplay: statusLabel(status) });
-  if (role !== "all") activeChips.push({ key: "role", label: t("role"), valueDisplay: roleLabel(role) });
+  if (status !== "all")
+    activeChips.push({
+      key: "status",
+      label: t("status"),
+      valueDisplay: statusLabel(status),
+    });
+  if (role !== "all")
+    activeChips.push({
+      key: "role",
+      label: t("role"),
+      valueDisplay: roleLabel(role),
+    });
   if (selectedWilaya !== "all") {
-    activeChips.push({ key: "wilaya", label: t("wilaya"), valueDisplay: getWilayaName(selectedWilaya, locale) });
+    activeChips.push({
+      key: "wilaya",
+      label: t("wilaya"),
+      valueDisplay: getWilayaName(selectedWilaya, locale),
+    });
   }
-  if (isFlaggedOnly) activeChips.push({ key: "flagged", label: tStatus("flagged"), valueDisplay: t("flaggedOnly") });
+  if (isFlaggedOnly)
+    activeChips.push({
+      key: "flagged",
+      label: tStatus("flagged"),
+      valueDisplay: t("flaggedOnly"),
+    });
 
   const handleRemoveChip = (key: string) => {
-    if (key === "status") { setStatus("all"); fetchData({ status: "all" }); }
-    if (key === "role") { setRole("all"); fetchData({ role: "all" }); }
-    if (key === "wilaya") { setSelectedWilaya("all"); fetchData({ selectedWilaya: "all" }); }
-    if (key === "flagged") { setIsFlaggedOnly(false); fetchData({ isFlaggedOnly: false }); }
+    if (key === "status") {
+      setStatus("all");
+      fetchData({ status: "all" });
+    }
+    if (key === "role") {
+      setRole("all");
+      fetchData({ role: "all" });
+    }
+    if (key === "wilaya") {
+      setSelectedWilaya("all");
+      fetchData({ selectedWilaya: "all" });
+    }
+    if (key === "flagged") {
+      setIsFlaggedOnly(false);
+      fetchData({ isFlaggedOnly: false });
+    }
   };
 
   const handleClearAll = () => {
@@ -155,7 +204,14 @@ export default function UsersClient({
     setSelectedWilaya("all");
     setIsFlaggedOnly(false);
     setSearch("");
-    fetchData({ status: "all", role: "all", selectedWilaya: "all", isFlaggedOnly: false, search: "", page: 1 });
+    fetchData({
+      status: "all",
+      role: "all",
+      selectedWilaya: "all",
+      isFlaggedOnly: false,
+      search: "",
+      page: 1,
+    });
   };
 
   const handleSuspend = (user: GuestUser) => {
@@ -167,8 +223,13 @@ export default function UsersClient({
       confirmLabel: t("confirm.suspendConfirm"),
       action: async () => {
         try {
-          // Reason is stored in the audit trail — intentionally not localized.
-          const updated = unwrap(await suspendUser(user.id, "Violation des conditions d'utilisation"));
+          // Reason is stored in the audit trail, intentionally not localized.
+          const updated = unwrap(
+            await suspendUser(
+              user.id,
+              "Violation des conditions d'utilisation",
+            ),
+          );
           info(t("toasts.suspended", { name: user.name }));
           setDetailUser(updated);
           fetchData();
@@ -188,8 +249,10 @@ export default function UsersClient({
       confirmLabel: t("confirm.banConfirm"),
       action: async () => {
         try {
-          // Reason is stored in the audit trail — intentionally not localized.
-          const updated = unwrap(await banUser(user.id, "Manquement grave à la sécurité"));
+          // Reason is stored in the audit trail, intentionally not localized.
+          const updated = unwrap(
+            await banUser(user.id, "Manquement grave à la sécurité"),
+          );
           info(t("toasts.banned", { name: user.name }));
           setDetailUser(updated);
           fetchData();
@@ -295,10 +358,10 @@ export default function UsersClient({
         <div className="flex items-center gap-3">
           <Avatar name={u.name} size={36} />
           <div className="min-w-0">
-            <span className="block font-bold text-primary truncate leading-tight">
+            <span className="block font-semibold text-primary truncate leading-tight">
               {u.name}
             </span>
-            <span className="block text-[11px] text-neutral-500 truncate leading-snug">
+            <span className="block text-[11px] text-primary-600 truncate leading-snug">
               {u.email}
             </span>
           </div>
@@ -309,9 +372,9 @@ export default function UsersClient({
       key: "wilayaCode",
       header: t("location"),
       render: (u) => (
-        <span className="text-xs text-neutral-600 flex items-center gap-1">
-          <MapPin className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
-          {u.wilayaCode ? getWilayaName(u.wilayaCode, locale) : "—"}
+        <span className="text-xs text-primary-700 flex items-center gap-1 whitespace-nowrap">
+          <MapPin className="w-3.5 h-3.5 text-primary-600" aria-hidden="true" />
+          {u.wilayaCode ? getWilayaName(u.wilayaCode, locale) : ","}
         </span>
       ),
     },
@@ -319,7 +382,7 @@ export default function UsersClient({
       key: "role",
       header: t("role"),
       render: (u) => (
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-primary">
+        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-darnaBg-300 text-primary-800 whitespace-nowrap">
           {u.role === "both" ? roleLabel("both") : roleLabel("guest")}
         </span>
       ),
@@ -329,7 +392,7 @@ export default function UsersClient({
       header: t("bookings"),
       sortable: true,
       render: (u) => (
-        <span className="text-xs font-mono font-medium text-primary">
+        <span className="text-xs font-medium text-primary-800 tabular-nums">
           {formatNumber(u.bookingsCount, locale)}
         </span>
       ),
@@ -339,7 +402,7 @@ export default function UsersClient({
       header: t("totalSpend"),
       sortable: true,
       render: (u) => (
-        <span className="text-xs font-mono font-bold text-primary">
+        <span className="text-xs font-semibold text-primary-900 tabular-nums whitespace-nowrap">
           {formatDzd(u.totalSpentDzd, locale)}
         </span>
       ),
@@ -354,11 +417,14 @@ export default function UsersClient({
       header: tCommon("actions"),
       render: (u) => (
         // Stops row-click propagation only; the buttons inside are the interactive elements.
-        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center justify-end gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button
             variant="ghost"
             size="sm"
-            className="p-1 text-neutral-500 hover:text-primary"
+            className="p-1 text-primary-600 hover:text-primary"
             onClick={() => setDetailUser(u)}
             title={t("quickView", { name: u.name })}
             aria-label={t("quickView", { name: u.name })}
@@ -370,7 +436,7 @@ export default function UsersClient({
               <Button
                 variant="ghost"
                 size="sm"
-                className="p-1 text-neutral-500"
+                className="p-1 text-primary-600"
                 aria-label={t("moreActions", { name: u.name })}
                 aria-haspopup="menu"
               >
@@ -387,7 +453,12 @@ export default function UsersClient({
                 ? [
                     {
                       label: t("menu.markActive"),
-                      icon: <CheckCircle2 className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />,
+                      icon: (
+                        <CheckCircle2
+                          className="w-3.5 h-3.5 text-secondary"
+                          aria-hidden="true"
+                        />
+                      ),
                       disabled: u.status === "active",
                       onClick: async () => {
                         try {
@@ -401,7 +472,12 @@ export default function UsersClient({
                     },
                     {
                       label: t("menu.markPending"),
-                      icon: <Clock className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />,
+                      icon: (
+                        <Clock
+                          className="w-3.5 h-3.5 text-amber-700"
+                          aria-hidden="true"
+                        />
+                      ),
                       disabled: u.status === "pending",
                       onClick: async () => {
                         try {
@@ -415,7 +491,12 @@ export default function UsersClient({
                     },
                     {
                       label: t("menu.suspendAccount"),
-                      icon: <ShieldAlert className="w-3.5 h-3.5 text-amber-700" aria-hidden="true" />,
+                      icon: (
+                        <ShieldAlert
+                          className="w-3.5 h-3.5 text-amber-700"
+                          aria-hidden="true"
+                        />
+                      ),
                       onClick: () => handleSuspend(u),
                       variant: "danger" as const,
                       disabled: u.status === "suspended",
@@ -426,7 +507,12 @@ export default function UsersClient({
                 ? [
                     {
                       label: t("menu.banAccount"),
-                      icon: <Ban className="w-3.5 h-3.5 text-accent" aria-hidden="true" />,
+                      icon: (
+                        <Ban
+                          className="w-3.5 h-3.5 text-accent"
+                          aria-hidden="true"
+                        />
+                      ),
                       onClick: () => handleBan(u),
                       variant: "danger" as const,
                       disabled: u.status === "banned",
@@ -442,7 +528,12 @@ export default function UsersClient({
                 ? [
                     {
                       label: t("delete"),
-                      icon: <Trash2 className="w-3.5 h-3.5 text-accent" aria-hidden="true" />,
+                      icon: (
+                        <Trash2
+                          className="w-3.5 h-3.5 text-accent"
+                          aria-hidden="true"
+                        />
+                      ),
                       onClick: () => handleDelete(u),
                       variant: "danger" as const,
                     },
@@ -503,21 +594,40 @@ export default function UsersClient({
         mainContent={
           <div className="space-y-4">
             <DataTable
-              columns={columns}
+              columns={
+                detailUser
+                  ? columns.filter(
+                      (c) =>
+                        ![
+                          "wilayaCode",
+                          "role",
+                          "bookingsCount",
+                          "actions",
+                        ].includes(c.key),
+                    )
+                  : columns
+              }
               data={data.rows}
               keyExtractor={(u) => u.id}
               selectedIds={selectedIds}
               onSelectRow={(id) =>
                 setSelectedIds((prev) =>
-                  prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+                  prev.includes(id)
+                    ? prev.filter((i) => i !== id)
+                    : [...prev, id],
                 )
               }
               onSelectAll={() =>
                 setSelectedIds((prev) =>
-                  prev.length === data.rows.length ? [] : data.rows.map((u) => u.id)
+                  prev.length === data.rows.length
+                    ? []
+                    : data.rows.map((u) => u.id),
                 )
               }
-              isAllSelected={selectedIds.length > 0 && selectedIds.length === data.rows.length}
+              isAllSelected={
+                selectedIds.length > 0 &&
+                selectedIds.length === data.rows.length
+              }
               isLoading={isPending}
               onRowClick={(u) => setDetailUser(u)}
             />
@@ -544,7 +654,10 @@ export default function UsersClient({
             <DetailPanel
               onClose={() => setDetailUser(null)}
               title={detailUser.name}
-              subtitle={t("detail.subtitle", { id: detailUser.id, email: detailUser.email })}
+              subtitle={t("detail.subtitle", {
+                id: detailUser.id,
+                email: detailUser.email,
+              })}
               status={detailUser.status}
               tabs={[
                 { id: "profile", label: t("detail.tabs.profile") },
@@ -562,8 +675,10 @@ export default function UsersClient({
                       variant="outline"
                       size="sm"
                       onClick={() => handleResetPassword(detailUser)}
+                      leftIcon={
+                        <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />
+                      }
                     >
-                      <KeyRound className="w-3.5 h-3.5 me-1" aria-hidden="true" />
                       {t("detail.resetPassword")}
                     </Button>
                     {can("users.suspend") && (
@@ -591,79 +706,135 @@ export default function UsersClient({
             >
               {panelTab === "profile" && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 rounded-xl bg-darnaBg border border-tertiary/40">
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-darnaBg-100">
                     <Avatar name={detailUser.name} size={54} />
                     <div>
-                      <h4 className="font-bold text-primary text-base">{detailUser.name}</h4>
-                      <p className="text-xs text-neutral-500">{detailUser.email}</p>
+                      <h4 className="font-semibold text-primary text-base">
+                        {detailUser.name}
+                      </h4>
+                      <p className="text-xs text-primary-600">
+                        {detailUser.email}
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         <StatusPill status={detailUser.status} />
-                        <span className="text-[11px] text-neutral-500">
-                          {t("detail.joinedOn", { date: formatDate(detailUser.joinedAt, locale) })}
+                        <span className="text-[11px] text-primary-600">
+                          {t("detail.joinedOn", {
+                            date: formatDate(detailUser.joinedAt, locale),
+                          })}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Financial & Price Grid (Price) */}
-                  <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                    <h5 className="text-xs font-bold text-primary block">
+                  <div className="p-3.5 rounded-xl bg-white shadow-e1 space-y-2">
+                    <h5 className="text-xs font-semibold text-primary block">
                       {t("detail.financialTitle")}
                     </h5>
                     <dl className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100">
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.totalSpent")}</dt>
-                        <dd className="font-mono font-bold text-xs text-primary block mt-0.5">{formatDzd(detailUser.totalSpentDzd, locale)}</dd>
+                      <div className="p-2.5 rounded-lg bg-darnaBg-100">
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.totalSpent")}
+                        </dt>
+                        <dd className="font-mono font-semibold text-xs text-primary block mt-0.5">
+                          {formatDzd(detailUser.totalSpentDzd, locale)}
+                        </dd>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100">
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.walletBalance")}</dt>
-                        <dd className="font-mono font-bold text-xs text-secondary-700 block mt-0.5">{formatDzd(detailUser.walletBalanceDzd || 0, locale)}</dd>
+                      <div className="p-2.5 rounded-lg bg-darnaBg-100">
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.walletBalance")}
+                        </dt>
+                        <dd className="font-mono font-semibold text-xs text-secondary-700 block mt-0.5">
+                          {formatDzd(detailUser.walletBalanceDzd || 0, locale)}
+                        </dd>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100">
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.avgBooking")}</dt>
-                        <dd className="font-mono font-bold text-xs text-primary block mt-0.5">{formatDzd(Math.round(detailUser.totalSpentDzd / Math.max(1, detailUser.bookingsCount)), locale)}</dd>
+                      <div className="p-2.5 rounded-lg bg-darnaBg-100">
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.avgBooking")}
+                        </dt>
+                        <dd className="font-mono font-semibold text-xs text-primary block mt-0.5">
+                          {formatDzd(
+                            Math.round(
+                              detailUser.totalSpentDzd /
+                                Math.max(1, detailUser.bookingsCount),
+                            ),
+                            locale,
+                          )}
+                        </dd>
                       </div>
                     </dl>
                   </div>
 
                   {/* Activity Timestamps (Time) */}
-                  <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                    <h5 className="text-xs font-bold text-primary flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
+                  <div className="p-3.5 rounded-xl bg-white shadow-e1 space-y-2">
+                    <h5 className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                      <Clock
+                        className="w-3.5 h-3.5 text-secondary"
+                        aria-hidden="true"
+                      />
                       <span>{t("detail.activityTitle")}</span>
                     </h5>
                     <dl className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.registeredOn")}</dt>
-                        <dd className="font-medium text-neutral-700">{formatDate(detailUser.joinedAt, locale)}</dd>
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.registeredOn")}
+                        </dt>
+                        <dd className="font-medium text-primary-700">
+                          {formatDate(detailUser.joinedAt, locale)}
+                        </dd>
                       </div>
                       <div>
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.lastActive")}</dt>
-                        <dd className="font-medium text-neutral-700">{formatDate(detailUser.lastActiveAt || detailUser.joinedAt, locale)}</dd>
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.lastActive")}
+                        </dt>
+                        <dd className="font-medium text-primary-700">
+                          {formatDate(
+                            detailUser.lastActiveAt || detailUser.joinedAt,
+                            locale,
+                          )}
+                        </dd>
                       </div>
                     </dl>
                   </div>
 
                   {/* About User Section (About) */}
-                  <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-2">
-                    <h5 className="text-xs font-bold text-primary block">
+                  <div className="p-3.5 rounded-xl bg-white shadow-e1 space-y-2">
+                    <h5 className="text-xs font-semibold text-primary block">
                       {t("detail.aboutTitle")}
                     </h5>
                     <dl className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.userRole")}</dt>
-                        <dd className="font-semibold text-primary">{detailUser.role === "both" ? roleLabel("both") : roleLabel("guest")}</dd>
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.userRole")}
+                        </dt>
+                        <dd className="font-semibold text-primary">
+                          {detailUser.role === "both"
+                            ? roleLabel("both")
+                            : roleLabel("guest")}
+                        </dd>
                       </div>
                       <div>
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.language")}</dt>
-                        <dd className="font-semibold text-primary uppercase">{detailUser.preferredLanguage || "FR"}</dd>
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.language")}
+                        </dt>
+                        <dd className="font-semibold text-primary uppercase">
+                          {detailUser.preferredLanguage || "FR"}
+                        </dd>
                       </div>
                       <div>
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.bookings")}</dt>
-                        <dd className="font-semibold text-primary">{t("detail.bookingsValue", { count: detailUser.bookingsCount })}</dd>
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.bookings")}
+                        </dt>
+                        <dd className="font-semibold text-primary">
+                          {t("detail.bookingsValue", {
+                            count: detailUser.bookingsCount,
+                          })}
+                        </dd>
                       </div>
                       <div>
-                        <dt className="text-[10px] text-neutral-500 block">{t("detail.reviewsFavs")}</dt>
+                        <dt className="text-[11px] text-primary-600 block">
+                          {t("detail.reviewsFavs")}
+                        </dt>
                         <dd className="font-semibold text-primary">
                           {t("detail.reviewsFavsValue", {
                             reviews: detailUser.reviewsWrittenCount || 0,
@@ -672,22 +843,28 @@ export default function UsersClient({
                         </dd>
                       </div>
                     </dl>
-                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-1.5 text-neutral-600">
-                        <ShieldCheck className="w-3.5 h-3.5 text-secondary" aria-hidden="true" /> {t("detail.identityStatus")}
+                    <div className="pt-2 border-t border-primary/[0.08] flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-primary-600">
+                        <ShieldCheck
+                          className="w-3.5 h-3.5 text-secondary"
+                          aria-hidden="true"
+                        />{" "}
+                        {t("detail.identityStatus")}
                       </span>
-                      <span className="text-secondary-700 font-bold text-xs">
-                        {detailUser.idVerified ? t("detail.idVerified") : t("detail.idPending")}
+                      <span className="text-secondary-700 font-semibold text-xs">
+                        {detailUser.idVerified
+                          ? t("detail.idVerified")
+                          : t("detail.idPending")}
                       </span>
                     </div>
                   </div>
 
                   {/* Description / Bio Section (Disc) */}
-                  <div className="p-3.5 rounded-xl bg-white border border-tertiary/40 space-y-1.5">
-                    <h5 className="text-xs font-bold text-primary block">
+                  <div className="p-3.5 rounded-xl bg-white shadow-e1 space-y-1.5">
+                    <h5 className="text-xs font-semibold text-primary block">
                       {t("detail.bioTitle")}
                     </h5>
-                    <p className="text-xs text-neutral-600 leading-relaxed bg-[#FAF9F5] p-3 rounded-lg border border-[#D9C9B2]/40">
+                    <p className="text-xs text-primary-600 leading-relaxed bg-darnaBg-100 p-3 rounded-lg">
                       {t("detail.bioText")}
                     </p>
                   </div>
@@ -696,67 +873,95 @@ export default function UsersClient({
 
               {panelTab === "bookings" && (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-white border border-tertiary/40">
+                  <div className="p-3 rounded-xl bg-white shadow-e1">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">#R1248 · Villa Hydra</span>
+                      <span className="font-semibold text-xs text-primary">
+                        #R1248 · Villa Hydra
+                      </span>
                       <StatusPill status="confirmed" />
                     </div>
-                    <p className="text-[11px] text-neutral-500 mt-1">
+                    <p className="text-[11px] text-primary-600 mt-1">
                       {t("detail.dateRange", {
                         start: formatDate("2024-03-12", locale),
                         end: formatDate("2024-03-15", locale),
                         duration: t("detail.nights", { count: 3 }),
                       })}
                     </p>
-                    <p className="font-mono font-bold text-xs text-primary mt-1">{formatDzd(75000, locale)}</p>
+                    <p className="font-mono font-semibold text-xs text-primary mt-1">
+                      {formatDzd(75000, locale)}
+                    </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white border border-tertiary/40">
+                  <div className="p-3 rounded-xl bg-white shadow-e1">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">#R1092 · Excursion Tassili</span>
+                      <span className="font-semibold text-xs text-primary">
+                        #R1092 · Excursion Tassili
+                      </span>
                       <StatusPill status="completed" />
                     </div>
-                    <p className="text-[11px] text-neutral-500 mt-1">
+                    <p className="text-[11px] text-primary-600 mt-1">
                       {t("detail.dateRange", {
                         start: formatDate("2024-02-10", locale),
                         end: formatDate("2024-02-14", locale),
                         duration: t("detail.days", { count: 4 }),
                       })}
                     </p>
-                    <p className="font-mono font-bold text-xs text-primary mt-1">{formatDzd(120000, locale)}</p>
+                    <p className="font-mono font-semibold text-xs text-primary mt-1">
+                      {formatDzd(120000, locale)}
+                    </p>
                   </div>
                 </div>
               )}
 
               {panelTab === "reviews" && (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-white border border-tertiary/40">
+                  <div className="p-3 rounded-xl bg-white shadow-e1">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">Villa Hydra</span>
+                      <span className="font-semibold text-xs text-primary">
+                        Villa Hydra
+                      </span>
                       <div
                         className="flex items-center text-secondary-700 text-xs"
                         role="img"
-                        aria-label={t("detail.rating", { rating: formatNumber(5, locale) })}
+                        aria-label={t("detail.rating", {
+                          rating: formatNumber(5, locale),
+                        })}
                       >
-                        <Star className="w-3.5 h-3.5 fill-current me-1" aria-hidden="true" /> 5.0
+                        <Star
+                          className="w-3.5 h-3.5 fill-current me-1"
+                          aria-hidden="true"
+                        />{" "}
+                        5.0
                       </div>
                     </div>
                     {/* Review body is user-generated content (mock record), shown as written. */}
-                    <p className="text-xs text-neutral-600 mt-1 italic" lang="fr">
-                      &ldquo;Superbe accueil, maison propre et spacieuse. Hôte très arrangeant !&rdquo;
+                    <p
+                      className="text-xs text-primary-600 mt-1 italic"
+                      lang="fr"
+                    >
+                      &ldquo;Superbe accueil, maison propre et spacieuse. Hôte
+                      très arrangeant !&rdquo;
                     </p>
-                    <span className="text-[10px] text-neutral-500 block mt-1">{formatDate("2024-03-16", locale)}</span>
+                    <span className="text-[11px] text-primary-600 block mt-1">
+                      {formatDate("2024-03-16", locale)}
+                    </span>
                   </div>
                 </div>
               )}
 
               {panelTab === "payments" && (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-white border border-tertiary/40 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-white shadow-e1 flex items-center justify-between">
                     <div>
-                      <span className="font-semibold text-xs text-primary block">{t("detail.cardPayment")}</span>
-                      <span className="text-[11px] text-neutral-500">{t("detail.transaction", { ref: "#TX-9012" })}</span>
+                      <span className="font-semibold text-xs text-primary block">
+                        {t("detail.cardPayment")}
+                      </span>
+                      <span className="text-[11px] text-primary-600">
+                        {t("detail.transaction", { ref: "#TX-9012" })}
+                      </span>
                     </div>
-                    <span className="font-mono font-bold text-xs text-secondary-700">{formatDzd(75000, locale)}</span>
+                    <span className="font-mono font-semibold text-xs text-secondary-700">
+                      {formatDzd(75000, locale)}
+                    </span>
                   </div>
                 </div>
               )}
@@ -764,19 +969,34 @@ export default function UsersClient({
               {panelTab === "activity" && (
                 <ul className="space-y-2 text-xs">
                   <li className="flex items-start gap-2 p-2">
-                    <Activity className="w-4 h-4 text-secondary mt-0.5" aria-hidden="true" />
+                    <Activity
+                      className="w-4 h-4 text-secondary mt-0.5"
+                      aria-hidden="true"
+                    />
                     <div>
-                      <p className="font-semibold text-primary">{t("detail.login")}</p>
-                      <span className="text-[11px] text-neutral-500">
-                        {t("detail.loginMeta", { time: formatTime(DEMO_LOGIN_AT), ip: "105.102.x.x" })}
+                      <p className="font-semibold text-primary">
+                        {t("detail.login")}
+                      </p>
+                      <span className="text-[11px] text-primary-600">
+                        {t("detail.loginMeta", {
+                          time: formatTime(DEMO_LOGIN_AT),
+                          ip: "105.102.x.x",
+                        })}
                       </span>
                     </div>
                   </li>
                   <li className="flex items-start gap-2 p-2">
-                    <Calendar className="w-4 h-4 text-primary mt-0.5" aria-hidden="true" />
+                    <Calendar
+                      className="w-4 h-4 text-primary mt-0.5"
+                      aria-hidden="true"
+                    />
                     <div>
-                      <p className="font-semibold text-primary">{t("detail.bookingMade", { ref: "#R1248" })}</p>
-                      <span className="text-[11px] text-neutral-500">{formatDate("2024-03-12", locale)}</span>
+                      <p className="font-semibold text-primary">
+                        {t("detail.bookingMade", { ref: "#R1248" })}
+                      </p>
+                      <span className="text-[11px] text-primary-600">
+                        {formatDate("2024-03-12", locale)}
+                      </span>
                     </div>
                   </li>
                 </ul>
@@ -794,7 +1014,12 @@ export default function UsersClient({
         onApply={() => fetchData({ page: 1 })}
       >
         <div className="space-y-1.5">
-          <label htmlFor={ids.status} className="block text-xs font-bold text-primary">{t("status")}</label>
+          <label
+            htmlFor={ids.status}
+            className="block text-xs font-semibold text-primary"
+          >
+            {t("status")}
+          </label>
           <select
             id={ids.status}
             value={status}
@@ -809,7 +1034,12 @@ export default function UsersClient({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor={ids.role} className="block text-xs font-bold text-primary">{t("role")}</label>
+          <label
+            htmlFor={ids.role}
+            className="block text-xs font-semibold text-primary"
+          >
+            {t("role")}
+          </label>
           <select
             id={ids.role}
             value={role}
@@ -823,7 +1053,12 @@ export default function UsersClient({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor={ids.wilaya} className="block text-xs font-bold text-primary">{t("wilaya")}</label>
+          <label
+            htmlFor={ids.wilaya}
+            className="block text-xs font-semibold text-primary"
+          >
+            {t("wilaya")}
+          </label>
           <select
             id={ids.wilaya}
             value={selectedWilaya}
