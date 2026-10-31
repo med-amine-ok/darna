@@ -1,9 +1,20 @@
 {
   "propertiesManaged": "Properties Managed",
-  "contactAgency": "Contact Agency",
-  "team": "Hospitality & Management Team",
-  "metaTitleFallback": "Agency profile",
-  "metaDescription": "Discover stays, vehicles and experiences offered by {name} on DARNA.",
+  "team": {
+    "agency": "Agency team",
+    "hotel": "Hotel team",
+    "hostel": "Hostel team"
+  },
+  "metaTitleFallback": {
+    "agency": "Agency profile",
+    "hotel": "Hotel profile",
+    "hostel": "Hostel profile"
+  },
+  "metaDescription": {
+    "agency": "Discover the trips, stays, vehicles and experiences offered by {name} on DARNA.",
+    "hotel": "Discover the rooms and suites of {name} on DARNA.",
+    "hostel": "Discover the beds and rooms of {name} on DARNA."
+  },
   "logoAlt": "{name} logo",
   "pendingVerification": "Pending verification",
   "verified": {
@@ -28,15 +39,80 @@
     "hotel": "You can message this hotel through DARNA once you have a booking.",
     "hostel": "You can message this hostel through DARNA once you have a booking."
   },
-  "listingsBy": "Stays, vehicles & experiences by {name}",
+  "listingsBy": {
+    "agency": "Stays, vehicles & experiences by {name}",
+    "hotel": "Stay at {name}",
+    "hostel": "Beds and rooms at {name}"
+  },
   "listingCount": "{count, plural, =0 {No listings} one {# listing} other {# listings}}",
-  "noListings": "This agency has no published listings yet.",
+  "noListings": {
+    "agency": "This agency has no published listings yet.",
+    "hotel": "This hotel has no rooms published yet.",
+    "hostel": "This hostel has no beds or rooms published yet."
+  },
   "category": {
     "agency": "Travel agency",
     "hotel": "Hotel",
     "hostel": "Hostel"
   },
   "onDarnaSince": "On DARNA since {year}",
-  "statsLabel": "Agency highlights",
-  "listingsEyebrow": "Offers"
+  "statsLabel": {
+    "agency": "Agency highlights",
+    "hotel": "Hotel highlights",
+    "hostel": "Hostel highlights"
+  },
+  "listingsEyebrow": {
+    "agency": "Offers",
+    "hotel": "Rooms & suites",
+    "hostel": "Dorms & rooms"
+  },
+  "contactTitle": {
+    "agency": "Contact the agency",
+    "hotel": "Contact the hotel",
+    "hostel": "Contact the hostel"
+  },
+  "factsTitle": {
+    "agency": "Agency details",
+    "hotel": "Hotel at a glance",
+    "hostel": "House rules"
+  },
+  "facilitiesTitle": {
+    "agency": "Services",
+    "hotel": "Hotel amenities",
+    "hostel": "Hostel facilities"
+  },
+  "tripsStat": "Trips",
+  "hotelClass": "Hotel class",
+  "stars": "{count, plural, one {# star} other {# stars}}",
+  "notRated": "Not rated",
+  "roomsStat": "Rooms",
+  "roomsAndDorms": "Rooms & dorms",
+  "checkIn": "Check-in",
+  "checkOut": "Check-out",
+  "confirmation": "Confirmation",
+  "onRequest": "On request",
+  "instant": "Instant",
+  "curfew": "Curfew",
+  "ages": "Ages",
+  "licence": "Licence",
+  "tripsEyebrow": "Trips & circuits",
+  "tripsBy": "Circuits by {name}",
+  "tripCount": "{count, plural, =0 {No trips} one {# trip} other {# trips}}",
+  "noTrips": "This agency has no trips published yet.",
+  "facilities": {
+    "pool": "Pool",
+    "spa": "Spa",
+    "gym": "Gym",
+    "fine_dining": "Fine dining",
+    "restaurant": "Restaurant",
+    "valet_parking": "Valet parking",
+    "wifi": "Wifi",
+    "breakfast_included": "Breakfast included",
+    "rooftop_terrace": "Rooftop terrace",
+    "dorm_beds": "Dorm beds",
+    "lockers": "Lockers",
+    "shared_kitchen": "Shared kitchen",
+    "laundry": "Laundry",
+    "desert_tours": "Desert tours"
+  }
 }

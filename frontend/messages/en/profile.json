@@ -139,6 +139,13 @@
     "reviewsStat": "Reviews",
     "listingsTabLabel": "Listings",
     "reviewsTabLabel": "Reviews",
-    "statsLabel": "Profile highlights"
+    "statsLabel": "Profile highlights",
+    "hostCategories": {
+      "home": "Homes",
+      "hotel": "Rooms",
+      "experience": "Experiences",
+      "vehicle": "Vehicles"
+    },
+    "businesses": "Businesses run by this host"
   }
 }

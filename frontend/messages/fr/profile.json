@@ -139,6 +139,13 @@
     "reviewsStat": "Avis",
     "listingsTabLabel": "Annonces",
     "reviewsTabLabel": "Avis",
-    "statsLabel": "Profil en bref"
+    "statsLabel": "Profil en bref",
+    "hostCategories": {
+      "home": "Logements",
+      "hotel": "Chambres",
+      "experience": "Expériences",
+      "vehicle": "Véhicules"
+    },
+    "businesses": "Établissements gérés par cet hôte"
   }
 }

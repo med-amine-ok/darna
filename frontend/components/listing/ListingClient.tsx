@@ -10,10 +10,13 @@ import ListingSectionNav from "./ListingSectionNav";
 import HotelHostelDetailClient from "./HotelHostelDetailClient";
 import type { ListingAvailability } from "@/lib/booking/availability";
 import type { PriceOverrides } from "@/lib/booking/pricing";
+import type { HostProfileLink } from "@/lib/host-profile";
 
 interface ListingClientProps {
   listing: Listing;
   host?: PublicUser | null;
+  /** Host (person or organization) with the link to its category profile page. */
+  hostProfile?: HostProfileLink | null;
   reviews?: Review[];
   similarListings?: Listing[];
   currentUser?: User | null;
@@ -26,6 +29,7 @@ interface ListingClientProps {
 export default function ListingClient({
   listing,
   host,
+  hostProfile,
   reviews = [],
   similarListings = [],
   currentUser,
@@ -40,6 +44,7 @@ export default function ListingClient({
       <HotelHostelDetailClient
         listing={listing}
         host={host}
+        hostProfile={hostProfile}
         reviews={reviews}
         similarListings={similarListings}
         currentUser={currentUser}
@@ -70,6 +75,7 @@ export default function ListingClient({
             <ListingInfo
               listing={listing}
               host={host}
+              hostProfile={hostProfile}
               reviews={reviews}
               similarListings={similarListings}
               currentUser={currentUser}

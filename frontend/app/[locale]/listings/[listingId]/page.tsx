@@ -4,6 +4,8 @@ import { getTranslations } from "next-intl/server";
 import { localeAlternates, OG_LOCALE } from "@/lib/site";
 import { getListings, getPublicListingById } from "@/lib/data/listings";
 import { getUserById } from "@/lib/data/auth";
+import { getOrganizationById } from "@/lib/data/organizations";
+import { orgProfileHref, userProfileHref, type HostProfileLink } from "@/lib/host-profile";
 import { getSessionUser } from "@/lib/server/session";
 import { getHostContext } from "@/lib/server/host-context";
 import { hostOwnsListing } from "@/lib/server/authz";
@@ -74,6 +76,13 @@ export default async function ListingPage({ params }: ListingPageProps) {
   const hostRecord = listing.hostUserId ? await getUserById(listing.hostUserId) : null;
   // Public projection only: no email / phone / address in client props.
   const host = hostRecord ? toPublicUser(hostRecord) : null;
+  // Who offers the listing, linked to the profile page of its host category.
+  const organization = listing.organizationId ? await getOrganizationById(listing.organizationId) : null;
+  const hostProfile: HostProfileLink | null = organization
+    ? { kind: organization.businessCategory, name: organization.name, image: null, href: orgProfileHref(organization) }
+    : host
+      ? { kind: "individual", name: host.name || "", image: host.image, href: userProfileHref(host.id) }
+      : null;
   const reviews = await getReviewsByListingId(listing.id);
 
   // Booked + host-blocked nights and per-date prices, built server-side.
@@ -92,6 +101,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
       <ListingClient
         listing={listing}
         host={host}
+        hostProfile={hostProfile}
         reviews={reviews}
         similarListings={similarListings}
         currentUser={currentUser}

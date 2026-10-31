@@ -1,9 +1,20 @@
 {
   "propertiesManaged": "Biens gérés",
-  "contactAgency": "Contacter l'agence",
-  "team": "Équipe d'accueil & gestion",
-  "metaTitleFallback": "Profil de l'agence",
-  "metaDescription": "Découvrez les hébergements, véhicules et expériences proposés par {name} sur DARNA.",
+  "team": {
+    "agency": "L'équipe de l'agence",
+    "hotel": "L'équipe de l'hôtel",
+    "hostel": "L'équipe de l'auberge"
+  },
+  "metaTitleFallback": {
+    "agency": "Profil de l'agence",
+    "hotel": "Profil de l'hôtel",
+    "hostel": "Profil de l'auberge"
+  },
+  "metaDescription": {
+    "agency": "Découvrez les circuits, hébergements, véhicules et expériences proposés par {name} sur DARNA.",
+    "hotel": "Découvrez les chambres et suites de {name} sur DARNA.",
+    "hostel": "Découvrez les lits et chambres de {name} sur DARNA."
+  },
   "logoAlt": "Logo de {name}",
   "pendingVerification": "Vérification en cours",
   "verified": {
@@ -28,15 +39,80 @@
     "hotel": "Vous pourrez écrire à cet hôtel via DARNA dès que vous aurez une réservation.",
     "hostel": "Vous pourrez écrire à cette auberge via DARNA dès que vous aurez une réservation."
   },
-  "listingsBy": "Hébergements, véhicules et expériences de {name}",
+  "listingsBy": {
+    "agency": "Hébergements, véhicules et expériences de {name}",
+    "hotel": "Séjourner à {name}",
+    "hostel": "Lits et chambres à {name}"
+  },
   "listingCount": "{count, plural, =0 {Aucune annonce} one {# annonce} other {# annonces}}",
-  "noListings": "Cette agence n'a encore publié aucune annonce.",
+  "noListings": {
+    "agency": "Cette agence n'a encore publié aucune annonce.",
+    "hotel": "Cet hôtel n'a encore publié aucune chambre.",
+    "hostel": "Cette auberge n'a encore publié ni lit ni chambre."
+  },
   "category": {
     "agency": "Agence de voyages",
     "hotel": "Hôtel",
     "hostel": "Auberge"
   },
   "onDarnaSince": "Sur DARNA depuis {year}",
-  "statsLabel": "L'agence en bref",
-  "listingsEyebrow": "Offres"
+  "statsLabel": {
+    "agency": "L'agence en bref",
+    "hotel": "L'hôtel en bref",
+    "hostel": "L'auberge en bref"
+  },
+  "listingsEyebrow": {
+    "agency": "Offres",
+    "hotel": "Chambres et suites",
+    "hostel": "Dortoirs et chambres"
+  },
+  "contactTitle": {
+    "agency": "Contacter l'agence",
+    "hotel": "Contacter l'hôtel",
+    "hostel": "Contacter l'auberge"
+  },
+  "factsTitle": {
+    "agency": "L'agence en détail",
+    "hotel": "L'hôtel en un coup d'œil",
+    "hostel": "Règlement de la maison"
+  },
+  "facilitiesTitle": {
+    "agency": "Services",
+    "hotel": "Équipements de l'hôtel",
+    "hostel": "Équipements de l'auberge"
+  },
+  "tripsStat": "Circuits",
+  "hotelClass": "Catégorie",
+  "stars": "{count, plural, one {# étoile} other {# étoiles}}",
+  "notRated": "Non classé",
+  "roomsStat": "Chambres",
+  "roomsAndDorms": "Chambres et dortoirs",
+  "checkIn": "Arrivée",
+  "checkOut": "Départ",
+  "confirmation": "Confirmation",
+  "onRequest": "Sur demande",
+  "instant": "Immédiate",
+  "curfew": "Couvre-feu",
+  "ages": "Âges",
+  "licence": "Licence",
+  "tripsEyebrow": "Circuits",
+  "tripsBy": "Circuits de {name}",
+  "tripCount": "{count, plural, =0 {Aucun circuit} one {# circuit} other {# circuits}}",
+  "noTrips": "Cette agence n'a encore publié aucun circuit.",
+  "facilities": {
+    "pool": "Piscine",
+    "spa": "Spa",
+    "gym": "Salle de sport",
+    "fine_dining": "Gastronomie",
+    "restaurant": "Restaurant",
+    "valet_parking": "Voiturier",
+    "wifi": "Wifi",
+    "breakfast_included": "Petit-déjeuner inclus",
+    "rooftop_terrace": "Terrasse sur le toit",
+    "dorm_beds": "Lits en dortoir",
+    "lockers": "Casiers",
+    "shared_kitchen": "Cuisine partagée",
+    "laundry": "Laverie",
+    "desert_tours": "Sorties dans le désert"
+  }
 }

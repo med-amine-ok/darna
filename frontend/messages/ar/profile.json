@@ -139,6 +139,13 @@
     "reviewsStat": "التقييمات",
     "listingsTabLabel": "الإعلانات",
     "reviewsTabLabel": "التقييمات",
-    "statsLabel": "لمحة عن الملف"
+    "statsLabel": "لمحة عن الملف",
+    "hostCategories": {
+      "home": "المنازل",
+      "hotel": "الغرف",
+      "experience": "التجارب",
+      "vehicle": "المركبات"
+    },
+    "businesses": "مؤسسات يديرها هذا المضيف"
   }
 }

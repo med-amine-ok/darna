@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getUserById } from "@/lib/data/auth";
 import { getListings } from "@/lib/data/listings";
+import { getMembershipsForUser, getOrganizationById } from "@/lib/data/organizations";
 import { getReviewsByUserId } from "@/lib/data/reviews";
 import { getSessionUser } from "@/lib/server/session";
 import { toPublicUser } from "@/lib/server/dto";
@@ -86,8 +87,15 @@ export default async function UserPublicProfilePage({ params }: UserPageProps) {
   }
 
   const isOwner = currentUser?.id === user.id;
-  const [allListings, reviews] = await Promise.all([getListings(), getReviewsByUserId(user.id)]);
+  const [allListings, reviews, memberships] = await Promise.all([getListings(), getReviewsByUserId(user.id), getMembershipsForUser(user.id)]);
   const userListings = allListings.filter((l) => l.hostUserId === user.id && !l.organizationId);
+  // Verified businesses this person owns (hotel, hostel or agency), each with its own profile page.
+  const owned = await Promise.all(
+    memberships.filter((m) => m.role === "owner" && m.status === "active").map((m) => getOrganizationById(m.organizationId))
+  );
+  const businesses = owned
+    .filter((o): o is NonNullable<typeof o> => Boolean(o && o.verificationStatus === "verified"))
+    .map((o) => ({ id: o.id, name: o.name, businessCategory: o.businessCategory }));
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">
@@ -96,6 +104,7 @@ export default async function UserPublicProfilePage({ params }: UserPageProps) {
           // Owners get their full record; everyone else only the public projection.
           user={isOwner ? user : toPublicUser(user)}
           listings={userListings}
+          businesses={businesses}
           reviews={reviews}
           isOwner={isOwner}
         />

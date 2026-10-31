@@ -361,7 +361,7 @@
     "showDetails": "Détails de la chambre",
     "hideDetails": "Masquer les détails",
     "forNights": "{count, plural, one {pour # nuit} other {pour # nuits}}",
-    "pricesFor": "Prix pour {dates}, {count, plural, one {# nuit} other {# nuits}}. Les taxes et frais DARNA figurent dans le récapitulatif.",
+    "pricesFor": "Prix pour {dates}, {count, plural, one {# nuit} other {# nuits}}. Ce sont les tarifs de l'hôte, sans frais DARNA en plus.",
     "changeRoom": "Changer de chambre"
   },
   "facts": {
@@ -391,5 +391,15 @@
   "startsAt": "Départ à {time}",
   "pickupFrom": "Prise en charge dès {time}",
   "returnBefore": "Retour avant {time}",
-  "loading": "Chargement de l'annonce"
+  "loading": "Chargement de l'annonce",
+  "noGuestFees": "Aucun frais DARNA pour les voyageurs.",
+  "noGuestFeesHint": "Vous payez le prix de l'hôte ; la commission DARNA est payée par l'hôte.",
+  "noFeesShort": "Sans frais DARNA",
+  "viewProfile": "Voir le profil",
+  "hostKind": {
+    "individual": "Hôte particulier",
+    "agency": "Agence de voyages",
+    "hotel": "Hôtel",
+    "hostel": "Auberge"
+  }
 }

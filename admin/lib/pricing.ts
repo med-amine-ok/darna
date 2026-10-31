@@ -8,8 +8,12 @@
  */
 import type { HostType } from "@/lib/types";
 
-/** Guest service fee, as a percentage of the booking base price. */
-export const GUEST_SERVICE_FEE_PERCENT = 7;
+/**
+ * Guest service fee, as a percentage of the booking base price. DARNA does not charge
+ * travellers (0%): it earns only the host commission below. Kept so stored bookings
+ * keep their `serviceFeeDzd` field (always 0).
+ */
+export const GUEST_SERVICE_FEE_PERCENT = 0;
 
 /** Default platform commission (percent of base price) per host type. */
 export const DEFAULT_COMMISSION_RATES: Readonly<Record<HostType, number>> =

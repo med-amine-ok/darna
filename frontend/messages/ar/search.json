@@ -186,7 +186,7 @@
   },
   "filterBarLabel": "عوامل التصفية",
   "activeFilters": "{count, plural, one {عامل تصفية نشط واحد} two {عاملا تصفية نشطان} few {# عوامل تصفية نشطة} many {# عامل تصفية نشط} other {# عامل تصفية نشط}}",
-  "pricesIncludeFees": "الأسعار تشمل جميع الرسوم",
+  "pricesIncludeFees": "المجموع لتواريخك، دون رسوم DARNA",
   "updating": "جارٍ تحديث النتائج…",
   "loadingResults": "جارٍ تحميل النتائج…",
   "flex": {

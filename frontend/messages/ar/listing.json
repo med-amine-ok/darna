@@ -361,7 +361,7 @@
     "showDetails": "تفاصيل الغرفة",
     "hideDetails": "إخفاء التفاصيل",
     "forNights": "{count, plural, =1 {لليلة واحدة} =2 {لليلتين} few {لـ # ليالٍ} many {لـ # ليلة} other {لـ # ليلة}}",
-    "pricesFor": "الأسعار لـ {dates}، {count, plural, =1 {ليلة واحدة} =2 {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}. تظهر الضرائب ورسوم دارنا في ملخص الحجز.",
+    "pricesFor": "الأسعار لـ {dates}، {count, plural, =1 {ليلة واحدة} =2 {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}. هذه أسعار المضيف، دون أي رسوم من DARNA.",
     "changeRoom": "تغيير الغرفة"
   },
   "facts": {
@@ -391,5 +391,15 @@
   "startsAt": "يبدأ الساعة {time}",
   "pickupFrom": "الاستلام من الساعة {time}",
   "returnBefore": "الإرجاع قبل الساعة {time}",
-  "loading": "جارٍ تحميل الإعلان"
+  "loading": "جارٍ تحميل الإعلان",
+  "noGuestFees": "لا رسوم من DARNA على المسافرين.",
+  "noGuestFeesHint": "تدفع سعر المضيف فقط؛ عمولة DARNA يدفعها المضيف.",
+  "noFeesShort": "بدون رسوم DARNA",
+  "viewProfile": "عرض الملف",
+  "hostKind": {
+    "individual": "مضيف فرد",
+    "agency": "وكالة سفر",
+    "hotel": "فندق",
+    "hostel": "نُزُل"
+  }
 }

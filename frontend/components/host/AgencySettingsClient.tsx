@@ -1,5 +1,6 @@
 "use client";
 
+import { orgProfileHref } from "@/lib/host-profile";
 import React, { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/navigation";
@@ -145,7 +146,7 @@ export default function AgencySettingsClient({
           <p className="mt-2 max-w-2xl text-body text-primary-600 [text-wrap:pretty]">{t("subtitle")}</p>
         </div>
         <Link
-          href={`/agencies/${org.id}`}
+          href={orgProfileHref(org)}
           target="_blank"
           rel="noopener noreferrer"
           className={cn(

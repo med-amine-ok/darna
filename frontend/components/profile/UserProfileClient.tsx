@@ -3,7 +3,9 @@
 import React, { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
-import { User, PublicUser, Listing, Review } from "@/types";
+import { User, PublicUser, Listing, Review, PublicOrganization, ListingVertical } from "@/types";
+import { Link } from "@/navigation";
+import { orgProfileHref } from "@/lib/host-profile";
 import { updateProfileAction } from "@/app/actions/account";
 import { useActionError } from "@/hook/useActionError";
 import { formatDate, formatNumber, formatRating } from "@/lib/i18n/date-locale";
@@ -35,6 +37,9 @@ import {
 } from "@/components/icons";
 import ProfileHero, { realImage, type ProfileStat } from "./ProfileHero";
 
+/** Listing groups on a host profile, in display order. */
+const HOST_CATEGORIES: ListingVertical[] = ["home", "hotel", "experience", "vehicle"];
+
 /** Owners get their full record; visitors only the public projection (no contact details). */
 type ProfileUser = PublicUser & Partial<Pick<User, "email" | "phone" | "address" | "emailVerified">>;
 
@@ -43,6 +48,8 @@ type ProfileTab = "overview" | "edit" | "listings" | "reviews";
 interface UserProfileClientProps {
   user: ProfileUser;
   listings: Listing[];
+  /** Hotels, hostels and agencies this person runs (linked to their own profile pages). */
+  businesses?: Pick<PublicOrganization, "id" | "name" | "businessCategory">[];
   reviews: Review[];
   isOwner?: boolean;
 }
@@ -50,6 +57,7 @@ interface UserProfileClientProps {
 export default function UserProfileClient({
   user: initialUser,
   listings,
+  businesses = [],
   reviews,
   isOwner = false,
 }: UserProfileClientProps) {
@@ -295,18 +303,51 @@ export default function UserProfileClient({
               <h2 id={fieldId("listings")} className="font-serif text-heading text-primary-900">
                 {t("page.listingsBy", { name: user.name })}
               </h2>
-              {listings.length === 0 ? (
+              {listings.length === 0 && businesses.length === 0 ? (
                 <Card padding="none">
                   <KitEmptyState compact variant="search" title={t("page.noListings")} />
                 </Card>
               ) : (
-                <RevealGroup className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-                  {listings.map((listing) => (
-                    <RevealItem key={listing.id}>
-                      <ListingCard data={listing} />
-                    </RevealItem>
-                  ))}
-                </RevealGroup>
+                // One group per category the person hosts in (homes, experiences, vehicles).
+                HOST_CATEGORIES.filter((c) => listings.some((l) => l.category === c)).map((c) => {
+                  const items = listings.filter((l) => l.category === c);
+                  return (
+                    <div key={c} className="space-y-5">
+                      <h3 className="flex items-baseline gap-2 text-title font-semibold text-primary-900">
+                        {t(`page.hostCategories.${c}`)}
+                        <span className="text-meta font-medium text-primary-500 tabular-nums">{num(items.length)}</span>
+                      </h3>
+                      <RevealGroup className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+                        {items.map((listing) => (
+                          <RevealItem key={listing.id}>
+                            <ListingCard data={listing} />
+                          </RevealItem>
+                        ))}
+                      </RevealGroup>
+                    </div>
+                  );
+                })
+              )}
+              {businesses.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-title font-semibold text-primary-900">{t("page.businesses")}</h3>
+                  <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {businesses.map((b) => (
+                      <li key={b.id}>
+                        <Link
+                          href={orgProfileHref(b)}
+                          className="group flex items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-e1 transition-shadow duration-fast ease-standard hover:shadow-e2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-eyebrow uppercase font-semibold text-secondary-700">{tListing(`hostKind.${b.businessCategory}`)}</span>
+                            <span className="mt-1 block truncate font-serif text-title text-primary-900">{b.name}</span>
+                          </span>
+                          <span className="shrink-0 text-sm font-semibold text-accent-700 group-hover:underline underline-offset-4">{tListing("viewProfile")}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </section>
           </TabPanel>

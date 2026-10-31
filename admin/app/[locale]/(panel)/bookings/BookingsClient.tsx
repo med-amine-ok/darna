@@ -578,10 +578,12 @@ export default function BookingsClient({
                         <span>{t("basePrice", { count: selectedBooking.nightsCount })}</span>
                         <span>{formatDzd(selectedBooking.basePriceDzd, locale)}</span>
                       </div>
-                      <div className="flex justify-between text-primary-600">
-                        <span>{t("serviceFee")}</span>
-                        <span>{formatDzd(selectedBooking.serviceFeeDzd, locale)}</span>
-                      </div>
+                      {selectedBooking.serviceFeeDzd > 0 && (
+                        <div className="flex justify-between text-primary-600">
+                          <span>{t("serviceFee")}</span>
+                          <span>{formatDzd(selectedBooking.serviceFeeDzd, locale)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between font-semibold text-sm text-primary-900 pt-1.5 border-t border-primary/[0.06]">
                         <span>{t("totalPaid")}</span>
                         <span className="text-secondary-700">{formatDzd(selectedBooking.totalAmountDzd, locale)}</span>

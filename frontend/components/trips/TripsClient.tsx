@@ -466,10 +466,12 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                   <dd>{money(selectedReceipt.cleaningFee ?? 0)}</dd>
                 </div>
               )}
-              <div className="flex justify-between gap-4 text-primary-700">
-                <dt>{t("receiptDialog.serviceFee")}</dt>
-                <dd>{money(selectedReceipt.serviceFee ?? 0)}</dd>
-              </div>
+              {(selectedReceipt.serviceFee ?? 0) > 0 && (
+                <div className="flex justify-between gap-4 text-primary-700">
+                  <dt>{t("receiptDialog.serviceFee")}</dt>
+                  <dd>{money(selectedReceipt.serviceFee ?? 0)}</dd>
+                </div>
+              )}
               {(selectedReceipt.taxes ?? 0) > 0 && (
                 <div className="flex justify-between gap-4 text-primary-700">
                   <dt>{t("receiptDialog.taxes")}</dt>

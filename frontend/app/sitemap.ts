@@ -4,6 +4,7 @@ import { SITE_URL } from "@/lib/site";
 import { getListings } from "@/lib/data/listings";
 import { getTrips } from "@/lib/data/trips";
 import { getOrganizations } from "@/lib/data/organizations";
+import { orgProfileHref } from "@/lib/host-profile";
 
 export const revalidate = 3600;
 
@@ -30,6 +31,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...trips.map((t) => entry(`/trips/${t.slug || t.id}`, 0.6, t.createdAt)),
     ...organizations
       .filter((o) => o.verificationStatus === "verified")
-      .map((o) => entry(`/agencies/${o.id}`, 0.5)),
+      .map((o) => entry(orgProfileHref(o), 0.5)),
   ];
 }

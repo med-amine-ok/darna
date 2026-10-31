@@ -94,7 +94,7 @@
     "payoutBreakdown": "Détail du versement",
     "baseRate": "Revenu de base par nuitée",
     "cleaningFee": "Frais de ménage",
-    "serviceFee": "Frais de service DARNA hôte (3%)",
+    "serviceFee": "Commission DARNA",
     "totalEarnings": "Versement net hôte"
   },
   "calendar": {

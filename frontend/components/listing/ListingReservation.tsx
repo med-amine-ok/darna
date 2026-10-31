@@ -11,6 +11,7 @@ import PriceDisplay from "@/components/common/PriceDisplay";
 import { AnimatedNumber, Banner, Button, Sheet, Textarea } from "@/components/ui";
 import BookingSuccessDialog, { type BookingSummaryRow } from "./detail/BookingSuccessDialog";
 import MobileBookingBar from "./detail/MobileBookingBar";
+import NoGuestFees from "./detail/NoGuestFees";
 import { useLoginModal } from "@/hook/useLoginModal";
 import { createBookingAction } from "@/app/actions/bookings";
 import {
@@ -288,10 +289,7 @@ export default function ListingReservation({
         </div>
       )}
 
-      <div className="flex justify-between gap-4">
-        <span>{t("serviceFee")}</span>
-        <AnimatedNumber value={quote.serviceFee} format={money} className="tabular-nums" />
-      </div>
+      <NoGuestFees />
 
       {quote.taxes > 0 && (
         <div className="flex justify-between gap-4">
@@ -311,12 +309,13 @@ export default function ListingReservation({
         {/* Price & rating */}
         <div className="flex items-start justify-between gap-3 pb-1">
           <div>
+            {/* The host's own price: travellers pay no DARNA fee on top. */}
             <p className="flex items-baseline gap-1.5 flex-wrap">
-              <AnimatedNumber value={quote.total} format={money} className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums" />
-              <span className="text-body text-primary-500">{tCommon("total")}</span>
+              <span className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums">{money(listing.price)}</span>
+              <span className="text-body text-primary-500">{periodLabel}</span>
             </p>
             <p className="mt-1.5 text-meta text-primary-500 tabular-nums">
-              {money(listing.price)} {periodLabel} · {durationLabel}
+              {t("noFeesShort")} · {durationLabel}
             </p>
           </div>
           <div className="text-meta font-semibold text-primary-800 flex items-center gap-1 tabular-nums pt-1">
@@ -448,9 +447,9 @@ export default function ListingReservation({
 
       {/* 2. Phones and tablets: sticky bottom bar + booking sheet */}
       <MobileBookingBar
-        price={<AnimatedNumber value={quote.total} format={money} />}
-        priceSuffix={tCommon("total")}
-        detail={datesLabel}
+        price={money(listing.price)}
+        priceSuffix={periodLabel}
+        detail={`${t("noFeesShort")} · ${datesLabel}`}
         detailLabel={t("editDates", { dates: datesLabel })}
         ctaLabel={isRequestToBook ? t("request") : t("reserve")}
         onCta={() => setIsMobileSheetOpen(true)}

@@ -1526,7 +1526,7 @@
     "subtitle": "Configurer les frais globaux du marché, préférences régionales et règles de sécurité.",
     "general": "Configuration Générale de la Plateforme",
     "platformName": "Nom de la plateforme",
-    "serviceFee": "Frais de Service Voyageur (%)",
+    "serviceFee": "Frais de service voyageur",
     "maintenance": "Mode Maintenance",
     "security": "Sécurité d'Authentification & Sessions",
     "twoFactor": "Exiger l'authentification à deux facteurs (2FA) pour le personnel",
@@ -1541,7 +1541,7 @@
     },
     "identity": {
       "title": "Identité de la plateforme",
-      "serviceFeeHint": "Appliqué au sous-total des réservations avant prélèvement de la commission prestataire.",
+      "serviceFeeHint": "Les voyageurs ne paient aucun frais DARNA. DARNA perçoit uniquement la commission hôte définie par type d'hôte ci-dessous.",
       "maintenanceHint": "Verrouille l'accès public à la marketplace tout en permettant aux administrateurs de naviguer."
     },
     "languages": {

@@ -19,13 +19,18 @@ export const DEFAULT_COMMISSION_RATES: HostTypeCommissionRates = {
   hostel: 10.0,
 };
 
-/** DARNA guest service fee, as a fraction of the accommodation subtotal. */
+/**
+ * DARNA never charges travellers: there is no guest service fee on any category.
+ * DARNA earns only its commission, deducted from the host payout (see
+ * DEFAULT_COMMISSION_RATES and lib/booking/payout.ts). Kept as a table so quotes and
+ * stored reservations keep their `serviceFee` field (always 0).
+ */
 export const SERVICE_FEE_RATES: Record<ListingVertical, number> = {
-  home: 0.1,
-  hotel: 0.1,
-  vehicle: 0.08,
-  experience: 0.08,
-  trip: 0, // 0% guest fee promotion on agency trips
+  home: 0,
+  hotel: 0,
+  vehicle: 0,
+  experience: 0,
+  trip: 0,
 };
 
 /**

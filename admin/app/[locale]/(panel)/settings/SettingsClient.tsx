@@ -122,7 +122,7 @@ export default function SettingsClient({
 
   // Form states
   const [platformName, setPlatformName] = useState("DARNA");
-  const [serviceFeePercent, setServiceFeePercent] = useState(5);
+  const [serviceFeePercent, setServiceFeePercent] = useState(0);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(120);
@@ -141,7 +141,7 @@ export default function SettingsClient({
       const data = unwrap(await getPlatformSettings());
       setPlatformName(data.platformName);
       setServiceFeePercent(
-        data.serviceFeePercent ?? data.guestServiceFeePercent ?? 5,
+        0,
       );
       setMaintenanceMode(data.maintenanceMode);
       setTwoFactorEnabled(data.security?.twoFactorRequired || false);
@@ -248,22 +248,16 @@ export default function SettingsClient({
             </div>
 
             <div>
-              <label
-                htmlFor={serviceFeeId}
-                className="block text-xs font-semibold text-primary mb-1"
-              >
+              <p className="block text-xs font-semibold text-primary mb-1">
                 {t("serviceFee")}
-              </label>
-              <input
+              </p>
+              {/* Fixed policy: travellers never pay DARNA; revenue comes from host commissions. */}
+              <p
                 id={serviceFeeId}
-                type="number"
-                min="0"
-                max="25"
-                value={serviceFeePercent}
-                onChange={(e) => setServiceFeePercent(Number(e.target.value))}
-                aria-describedby={`${serviceFeeId}-hint`}
-                className={`w-32 font-mono ${INPUT_CLASS}`}
-              />
+                className="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 font-mono text-sm font-semibold text-secondary-700"
+              >
+                0 %
+              </p>
               <p
                 id={`${serviceFeeId}-hint`}
                 className="text-[11px] text-neutral-500 mt-1"

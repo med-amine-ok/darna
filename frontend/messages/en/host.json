@@ -94,7 +94,7 @@
     "payoutBreakdown": "Payout Breakdown",
     "baseRate": "Base nightly earnings",
     "cleaningFee": "Cleaning fee",
-    "serviceFee": "DARNA host fee (3%)",
+    "serviceFee": "DARNA commission",
     "totalEarnings": "Net Host Payout"
   },
   "calendar": {

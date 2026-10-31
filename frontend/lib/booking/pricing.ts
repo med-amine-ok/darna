@@ -11,9 +11,9 @@
  *  - vehicles             price per day × days (per-date overrides apply)
  *  - trips                price per traveller × travellers (per departure)
  *
- * Fees: cleaning fee once per booking (listing.cleaningFee ?? default, 0 is
- * valid); DARNA service fee = rate × subtotal; taxes = rate × (subtotal +
- * cleaning) and only shown when the rate is > 0. All amounts are integer DZD,
+ * Fees: cleaning fee once per booking, set by the host (listing.cleaningFee ??
+ * default, 0 is valid); NO DARNA fee for travellers (DARNA takes its commission
+ * from the host payout); taxes = rate × (subtotal + cleaning), shown only when > 0. All amounts are integer DZD,
  * rounded in exactly one place (roundDzd).
  */
 import type { Listing, RoomType, Trip } from "@/types";
@@ -122,12 +122,11 @@ export function unitLabel(model: PricingModel): string {
   }
 }
 
+/** Always 0 today: travellers never pay DARNA (a per-listing override is ignored on purpose). */
 function serviceFeeRateFor(
   listing: Pick<Listing, "category" | "serviceFeeRate">,
 ): number {
-  const rate =
-    listing.serviceFeeRate ?? SERVICE_FEE_RATES[listing.category] ?? 0;
-  return Math.min(1, Math.max(0, rate));
+  return Math.min(1, Math.max(0, SERVICE_FEE_RATES[listing.category] ?? 0));
 }
 
 function finishQuote(

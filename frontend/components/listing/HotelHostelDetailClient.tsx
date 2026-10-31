@@ -41,7 +41,9 @@ import ListingSectionNav from "./ListingSectionNav";
 import PhotoLightbox, { type PhotoGroup } from "./PhotoLightbox";
 import RoomCard from "./hotel/RoomCard";
 import ReviewsSummary from "./detail/ReviewsSummary";
+import type { HostProfileLink } from "@/lib/host-profile";
 import MobileBookingBar from "./detail/MobileBookingBar";
+import NoGuestFees from "./detail/NoGuestFees";
 import BookingSuccessDialog, { type BookingSummaryRow } from "./detail/BookingSuccessDialog";
 import { amenityIcon } from "./detail/amenityIcons";
 
@@ -59,6 +61,8 @@ const Map = dynamic(() => import("@/components/Map"), { ssr: false, loading: () 
 interface HotelHostelDetailClientProps {
   listing: Listing;
   host?: PublicUser | null;
+  /** Hotel or hostel (or individual host) with the link to its profile page. */
+  hostProfile?: HostProfileLink | null;
   reviews?: Review[];
   similarListings?: Listing[];
   currentUser?: User | null;
@@ -86,6 +90,7 @@ function hasBlockedNight(start: DateKey, end: DateKey, blocked: Set<string>): bo
 export default function HotelHostelDetailClient({
   listing,
   host,
+  hostProfile,
   reviews = [],
   similarListings = [],
   currentUser,
@@ -302,7 +307,7 @@ export default function HotelHostelDetailClient({
   const reviewSummary = summarizeReviews(reviews);
   const rating = formatRating(listing.rating || reviewSummary?.overall, locale);
   const reviewCount = listing.reviewCount ?? reviewSummary?.count ?? 0;
-  const hostName = host?.name || listing.title;
+  const hostName = hostProfile?.name || host?.name || listing.title;
   const place = listing.city ? t("cityCountry", { city: listing.city }) : listing.locationValue || t("algeria");
 
   const badges = (
@@ -473,10 +478,7 @@ export default function HotelHostelDetailClient({
           <AnimatedNumber value={quote.cleaningFee} format={money} className="tabular-nums" />
         </div>
       )}
-      <div className="flex justify-between gap-4">
-        <span>{t("serviceFee")}</span>
-        <AnimatedNumber value={quote.serviceFee} format={money} className="tabular-nums" />
-      </div>
+      <NoGuestFees />
       {quote.taxes > 0 && (
         <div className="flex justify-between gap-4">
           <span>{t("taxes")}</span>
@@ -696,6 +698,9 @@ export default function HotelHostelDetailClient({
                 <div aria-hidden="true" className="absolute -top-12 -end-12 w-40 h-40 texture-zellige opacity-90" />
                 <Avatar name={hostName} src={host?.image} size="xl" decorative verified />
                 <div className="relative space-y-2 text-center sm:text-start flex-1 min-w-0">
+                  {hostProfile && (
+                    <p className="text-eyebrow uppercase font-semibold text-secondary-700">{t(`hostKind.${hostProfile.kind}`)}</p>
+                  )}
                   <p className="font-serif text-[1.5rem] text-primary-900">{hostName}</p>
                   <p className="text-meta text-primary-500">{tp("hostMeta")}</p>
                   <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-1">
@@ -707,6 +712,11 @@ export default function HotelHostelDetailClient({
                     </Badge>
                   </div>
                 </div>
+                {hostProfile && (
+                  <Button variant="secondary" href={hostProfile.href} className="relative shrink-0">
+                    {t("viewProfile")}
+                  </Button>
+                )}
               </div>
             </section>
           </div>
@@ -732,12 +742,13 @@ export default function HotelHostelDetailClient({
                     {selectedRoom?.name || tp("selectARoom")}
                   </m.h2>
                 </AnimatePresence>
+                {/* The hotel's own rate: travellers pay no DARNA fee on top. */}
                 <p className="mt-3 flex items-baseline gap-1.5 flex-wrap">
-                  <AnimatedNumber value={quote.total} format={money} className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums" />
-                  <span className="text-body text-primary-500">{tCommon("total")}</span>
+                  <span className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums">{money(quote.unitPrice)}</span>
+                  <span className="text-body text-primary-500">{isBedUnit ? tp("perBedPerNight") : tp("perRoomPerNight")}</span>
                 </p>
                 <p className="mt-1.5 text-meta text-primary-500 tabular-nums">
-                  {money(quote.unitPrice)} {isBedUnit ? tp("perBedPerNight") : tp("perRoomPerNight")} · {t("nightsCount", { count: quote.nights })}
+                  {t("noFeesShort")} · {t("nightsCount", { count: quote.nights })}
                 </p>
               </div>
 
@@ -783,8 +794,8 @@ export default function HotelHostelDetailClient({
 
       {/* Phones and tablets */}
       <MobileBookingBar
-        price={<AnimatedNumber value={quote.total} format={money} />}
-        priceSuffix={tCommon("total")}
+        price={money(quote.unitPrice)}
+        priceSuffix={isBedUnit ? tp("perBedPerNight") : tp("perRoomPerNight")}
         detail={`${selectedRoom?.name ?? ""} · ${datesLabel}`}
         detailLabel={t("editDates", { dates: datesLabel })}
         ctaLabel={isRequestToBook ? tp("requestRoom") : t("reserve")}

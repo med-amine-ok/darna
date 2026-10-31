@@ -186,7 +186,7 @@
   },
   "filterBarLabel": "Filters",
   "activeFilters": "{count, plural, one {# active filter} other {# active filters}}",
-  "pricesIncludeFees": "Prices include all fees",
+  "pricesIncludeFees": "Totals for your dates, with no DARNA fees",
   "updating": "Updating results…",
   "loadingResults": "Loading results…",
   "flex": {

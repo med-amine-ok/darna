@@ -1,9 +1,20 @@
 {
   "propertiesManaged": "عقارات مدارة",
-  "contactAgency": "التواصل مع الوكالة",
-  "team": "فريق الضيافة والإدارة",
-  "metaTitleFallback": "ملف الوكالة",
-  "metaDescription": "اكتشف أماكن الإقامة والمركبات والتجارب التي تقدمها {name} على دارنا.",
+  "team": {
+    "agency": "فريق الوكالة",
+    "hotel": "فريق الفندق",
+    "hostel": "فريق النُزُل"
+  },
+  "metaTitleFallback": {
+    "agency": "ملف الوكالة",
+    "hotel": "ملف الفندق",
+    "hostel": "ملف النُزُل"
+  },
+  "metaDescription": {
+    "agency": "اكتشف الرحلات والإقامات والمركبات والتجارب التي تقدّمها {name} على DARNA.",
+    "hotel": "اكتشف غرف وأجنحة {name} على DARNA.",
+    "hostel": "اكتشف أسرّة وغرف {name} على DARNA."
+  },
   "logoAlt": "شعار {name}",
   "pendingVerification": "قيد التحقق",
   "verified": {
@@ -28,15 +39,80 @@
     "hotel": "يمكنك مراسلة هذا الفندق عبر دارنا بعد إتمام حجز.",
     "hostel": "يمكنك مراسلة هذا النُّزُل عبر دارنا بعد إتمام حجز."
   },
-  "listingsBy": "أماكن إقامة ومركبات وتجارب من {name}",
+  "listingsBy": {
+    "agency": "إقامات ومركبات وتجارب {name}",
+    "hotel": "الإقامة في {name}",
+    "hostel": "الأسرّة والغرف في {name}"
+  },
   "listingCount": "{count, plural, =0 {لا توجد إعلانات} one {إعلان واحد} two {إعلانان} few {# إعلانات} many {# إعلانًا} other {# إعلان}}",
-  "noListings": "لم تنشر هذه الوكالة أي إعلانات بعد.",
+  "noListings": {
+    "agency": "لم تنشر هذه الوكالة أي إعلان بعد.",
+    "hotel": "لم ينشر هذا الفندق أي غرفة بعد.",
+    "hostel": "لم ينشر هذا النُزُل أي سرير أو غرفة بعد."
+  },
   "category": {
     "agency": "وكالة سياحية",
     "hotel": "فندق",
     "hostel": "نُزُل"
   },
   "onDarnaSince": "على دارنا منذ {year}",
-  "statsLabel": "لمحة عن الوكالة",
-  "listingsEyebrow": "العروض"
+  "statsLabel": {
+    "agency": "الوكالة باختصار",
+    "hotel": "الفندق باختصار",
+    "hostel": "النُزُل باختصار"
+  },
+  "listingsEyebrow": {
+    "agency": "العروض",
+    "hotel": "الغرف والأجنحة",
+    "hostel": "المهاجع والغرف"
+  },
+  "contactTitle": {
+    "agency": "تواصل مع الوكالة",
+    "hotel": "تواصل مع الفندق",
+    "hostel": "تواصل مع النُزُل"
+  },
+  "factsTitle": {
+    "agency": "تفاصيل الوكالة",
+    "hotel": "الفندق في لمحة",
+    "hostel": "قواعد النُزُل"
+  },
+  "facilitiesTitle": {
+    "agency": "الخدمات",
+    "hotel": "مرافق الفندق",
+    "hostel": "مرافق النُزُل"
+  },
+  "tripsStat": "الرحلات",
+  "hotelClass": "التصنيف",
+  "stars": "{count, plural, zero {بدون نجوم} one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
+  "notRated": "غير مصنّف",
+  "roomsStat": "الغرف",
+  "roomsAndDorms": "الغرف والمهاجع",
+  "checkIn": "تسجيل الوصول",
+  "checkOut": "تسجيل المغادرة",
+  "confirmation": "التأكيد",
+  "onRequest": "عند الطلب",
+  "instant": "فوري",
+  "curfew": "حظر التجوّل",
+  "ages": "الأعمار",
+  "licence": "الترخيص",
+  "tripsEyebrow": "الرحلات والجولات",
+  "tripsBy": "جولات {name}",
+  "tripCount": "{count, plural, =0 {لا رحلات} one {رحلة واحدة} two {رحلتان} few {# رحلات} many {# رحلة} other {# رحلة}}",
+  "noTrips": "لم تنشر هذه الوكالة أي رحلة بعد.",
+  "facilities": {
+    "pool": "مسبح",
+    "spa": "سبا",
+    "gym": "قاعة رياضة",
+    "fine_dining": "مطعم راقٍ",
+    "restaurant": "مطعم",
+    "valet_parking": "خدمة صفّ السيارات",
+    "wifi": "واي فاي",
+    "breakfast_included": "الفطور مشمول",
+    "rooftop_terrace": "سطح مفتوح",
+    "dorm_beds": "أسرّة في مهجع",
+    "lockers": "خزائن",
+    "shared_kitchen": "مطبخ مشترك",
+    "laundry": "غسيل الملابس",
+    "desert_tours": "جولات صحراوية"
+  }
 }

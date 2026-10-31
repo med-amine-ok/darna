@@ -361,7 +361,7 @@
     "showDetails": "Room details",
     "hideDetails": "Hide details",
     "forNights": "{count, plural, one {for # night} other {for # nights}}",
-    "pricesFor": "Prices for {dates}, {count, plural, one {# night} other {# nights}}. Taxes and DARNA fees are shown in the booking summary.",
+    "pricesFor": "Prices for {dates}, {count, plural, one {# night} other {# nights}}. These are the host's rates, with no DARNA fees on top.",
     "changeRoom": "Change room"
   },
   "facts": {
@@ -391,5 +391,15 @@
   "startsAt": "Starts at {time}",
   "pickupFrom": "Pickup from {time}",
   "returnBefore": "Return before {time}",
-  "loading": "Loading this listing"
+  "loading": "Loading this listing",
+  "noGuestFees": "No DARNA fees for travellers.",
+  "noGuestFeesHint": "You pay the host's price; DARNA's commission is paid by the host.",
+  "noFeesShort": "No DARNA fees",
+  "viewProfile": "View profile",
+  "hostKind": {
+    "individual": "Individual host",
+    "agency": "Travel agency",
+    "hotel": "Hotel",
+    "hostel": "Hostel"
+  }
 }

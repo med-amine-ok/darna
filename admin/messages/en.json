@@ -1526,7 +1526,7 @@
     "subtitle": "Configure global marketplace fees, regional preferences, and security policies.",
     "general": "General Platform Configuration",
     "platformName": "Platform Brand Name",
-    "serviceFee": "Guest Service Fee (%)",
+    "serviceFee": "Guest service fee",
     "maintenance": "Maintenance Mode",
     "security": "Authentication & Session Security",
     "twoFactor": "Require Two-Factor Authentication (2FA) for Staff",
@@ -1541,7 +1541,7 @@
     },
     "identity": {
       "title": "Platform identity",
-      "serviceFeeHint": "Applied to the booking subtotal before the provider commission is deducted.",
+      "serviceFeeHint": "Travellers pay no DARNA fee. DARNA earns only the host commission set per host type below.",
       "maintenanceHint": "Locks public access to the marketplace while staff can still browse."
     },
     "languages": {

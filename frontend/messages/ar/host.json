@@ -94,7 +94,7 @@
     "payoutBreakdown": "تفاصيل الدفعات",
     "baseRate": "عائد السعر الأساسي لليالي",
     "cleaningFee": "رسوم التنظيف",
-    "serviceFee": "رسوم خدمة المضيف (3%)",
+    "serviceFee": "عمولة DARNA",
     "totalEarnings": "صافي أرباح المضيف"
   },
   "calendar": {

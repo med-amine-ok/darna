@@ -13,6 +13,7 @@ import { amenityIcon } from "./detail/amenityIcons";
 import { ExperienceDetails, VehicleDetails } from "./detail/CategoryDetails";
 import ReviewsSummary from "./detail/ReviewsSummary";
 import { Link, useRouter } from "@/navigation";
+import type { HostProfileLink } from "@/lib/host-profile";
 import { toast } from "react-toastify";
 import { startConversationAction } from "@/app/actions/messages";
 import { useLoginModal } from "@/hook/useLoginModal";
@@ -41,6 +42,7 @@ const Map = dynamic(() => import("@/components/Map"), {
 interface ListingInfoProps {
   listing: Listing;
   host?: PublicUser | null;
+  hostProfile?: HostProfileLink | null;
   reviews?: Review[];
   similarListings?: Listing[];
   currentUser?: User | null;
@@ -60,6 +62,7 @@ const RATING_CATEGORIES: ReviewCategory[] = [
 export default function ListingInfo({
   listing,
   host,
+  hostProfile,
   reviews = [],
   similarListings = [],
   currentUser,
@@ -107,7 +110,7 @@ export default function ListingInfo({
 
   const isVehicle = listing.category === "vehicle";
   const isExperience = listing.category === "experience";
-  const hostName = host?.name || t("hostFallback");
+  const hostName = hostProfile?.name || host?.name || t("hostFallback");
 
   const allAmenities = listing.amenities || [
     "wifi",
@@ -203,13 +206,13 @@ export default function ListingInfo({
           )}
         </div>
 
-        {host?.id ? (
+        {hostProfile ? (
           <Link
-            href={`/users/${host.id}`}
+            href={hostProfile.href}
             aria-label={t("viewHostProfile", { name: hostName })}
             className={`flex-shrink-0 rounded-full ${focusRing}`}
           >
-            <Avatar src={host.image || "/assets/avatar.png"} size={56} />
+            <Avatar src={hostProfile.image || host?.image || "/assets/avatar.png"} size={56} />
           </Link>
         ) : (
           <div className="flex-shrink-0">
@@ -440,6 +443,9 @@ export default function ListingInfo({
           />
           <Avatar src={host?.image || "/assets/avatar.png"} size={72} />
           <div className="space-y-1 text-center sm:text-start flex-1">
+            {hostProfile && (
+              <p className="text-eyebrow uppercase font-semibold text-secondary-700">{t(`hostKind.${hostProfile.kind}`)}</p>
+            )}
             <h4 className="font-serif text-[1.5rem] text-primary-900">
               {hostName}
             </h4>
@@ -461,6 +467,14 @@ export default function ListingInfo({
           >
             {t("messageHost")}
           </button>
+          {hostProfile && (
+            <Link
+              href={hostProfile.href}
+              className={`relative h-11 px-6 rounded-full bg-white text-primary-900 font-semibold text-sm shadow-e1 ring-1 ring-primary/10 hover:shadow-e2 transition duration-fast ease-standard flex items-center flex-shrink-0 ${focusRing}`}
+            >
+              {t("viewProfile")}
+            </Link>
+          )}
         </div>
       </div>
 
