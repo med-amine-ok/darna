@@ -489,7 +489,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                   (isCollapsed ? (
                     index > 0 && <div aria-hidden="true" className="mx-3 my-2 h-px bg-white/[0.08]" />
                   ) : (
-                    <p className={`px-3 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-tertiary-300/55 rtl:tracking-normal ${index > 0 ? "pt-4" : "pt-1"}`}>
+                    <p className={`px-3 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-tertiary-300/80 rtl:tracking-normal ${index > 0 ? "pt-4" : "pt-1"}`}>
                       {t(`sections.${section}`)}
                     </p>
                   ))}

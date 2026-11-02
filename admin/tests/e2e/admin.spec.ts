@@ -8,7 +8,7 @@ async function loginAsSuperAdmin(page: Page) {
   await page.fill('input[type="password"]', process.env.ADMIN_SEED_PASSWORD || "DarnaAdmin2026!");
   await page.click('button[type="submit"]');
   await page.waitForURL((url) => url.pathname === "/en");
-  await expect(page.locator("h1").first()).toContainText(/Good (morning|afternoon|evening), BLADUS/);
+  await expect(page.locator("h1").first()).toContainText(/Good (morning|afternoon|evening), Nadia/);
 }
 
 test.describe("BLADUS Admin Panel E2E Tests", () => {
@@ -38,7 +38,7 @@ test.describe("BLADUS Admin Panel E2E Tests", () => {
 
     // Successfully redirects to Dashboard
     await page.waitForURL((url) => url.pathname === "/en");
-    await expect(page.locator("h1").first()).toContainText(/Good (morning|afternoon|evening), BLADUS/);
+    await expect(page.locator("h1").first()).toContainText(/Good (morning|afternoon|evening), Nadia/);
   });
 
   test("3. Hosts page: filter by category tab, search and wilaya", async ({ page }) => {
