@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { BrandShieldIcon } from "@/components/icons";
 
 /**
- * Price breakdown line: DARNA charges travellers nothing; its commission is paid by the
+ * Price breakdown line: BLADUS charges travellers nothing; its commission is paid by the
  * host out of their payout (lib/booking/config.ts).
  */
 export default function NoGuestFees() {

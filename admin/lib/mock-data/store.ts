@@ -90,8 +90,8 @@ function createMockDb() {
   ];
 
   const platformSettingsStore: PlatformSettings = {
-    platformName: "DARNA Admin Control Center",
-    supportEmail: "support@darna.dz",
+    platformName: "BLADUS Admin Control Center",
+    supportEmail: "support@bladus.dz",
     supportPhone: "+213 21 00 00 00",
     defaultLocale: "fr",
     enabledLocales: ["en", "fr", "ar"],
@@ -108,7 +108,7 @@ function createMockDb() {
   const onboardingConfigStore: OnboardingConfig = {
     version: 1,
     updatedAt: "2026-10-20T08:00:00Z",
-    publishedBy: "DARNA Administrator",
+    publishedBy: "BLADUS Administrator",
     flows: {
       individual: {
         maxPagesAllowed: 2, // Strict solo flow capped at 2 pages

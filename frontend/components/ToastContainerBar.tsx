@@ -17,7 +17,7 @@ import { useParams } from "next/navigation";
 export { toast };
 
 /**
- * DARNA toasts (react-toastify). Styling lives in styles/globals.css ("DARNA kit, toasts"):
+ * BLADUS toasts (react-toastify). Styling lives in styles/globals.css ("BLADUS kit, toasts"):
  * glass-light card, e3, rounded-2xl, accent bar on the reading-start edge, thin progress bar.
  * Enter slides from the start edge (up from the bottom on phones); exit fades + collapses.
  */

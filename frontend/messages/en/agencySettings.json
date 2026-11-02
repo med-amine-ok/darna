@@ -10,7 +10,7 @@
   "verification": {
     "label": "Compliance & verification status",
     "verified": "Verified tourism agency",
-    "description": "Verified agencies receive the DARNA Partner seal and better visibility with diaspora travelers."
+    "description": "Verified agencies receive the BLADUS Partner seal and better visibility with diaspora travelers."
   },
   "form": {
     "title": "Organization information",
@@ -36,7 +36,7 @@
   "danger": {
     "description": "Deactivating this agency workspace revokes access for all team members and unpublishes every listing under {name}. Individual host listings are kept.",
     "confirmTitle": "Confirm agency deactivation",
-    "confirmMessage": "Deactivating your agency will unpublish all its properties and vehicles, revoke your team's access and close your DARNA business workspace.",
+    "confirmMessage": "Deactivating your agency will unpublish all its properties and vehicles, revoke your team's access and close your BLADUS business workspace.",
     "confirmPrompt": "To confirm, type the exact organization name: <strong>{name}</strong>",
     "confirmButton": "Deactivate agency",
     "cancelButton": "Keep workspace"

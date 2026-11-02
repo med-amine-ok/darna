@@ -14,8 +14,8 @@ import type { AdminUser } from "@/lib/types";
 export const SEED_ADMINS: AdminUser[] = [
   {
     id: "adm_01",
-    name: "DARNA Administrator",
-    email: process.env.ADMIN_SEED_EMAIL || "admin@darna.dz",
+    name: "BLADUS Administrator",
+    email: process.env.ADMIN_SEED_EMAIL || "admin@bladus.dz",
     role: "super_admin",
     avatar: "/assets/avatar.png",
     isActive: true,
@@ -25,7 +25,7 @@ export const SEED_ADMINS: AdminUser[] = [
   {
     id: "adm_02",
     name: "Yassine Mansour",
-    email: "moderator@darna.dz",
+    email: "moderator@bladus.dz",
     role: "moderator",
     avatar: "/assets/avatar.png",
     isActive: true,
@@ -35,7 +35,7 @@ export const SEED_ADMINS: AdminUser[] = [
   {
     id: "adm_03",
     name: "Sara Benali",
-    email: "support@darna.dz",
+    email: "support@bladus.dz",
     role: "support",
     avatar: "/assets/avatar.png",
     isActive: true,
@@ -45,7 +45,7 @@ export const SEED_ADMINS: AdminUser[] = [
   {
     id: "adm_04",
     name: "Karim Hadj",
-    email: "finance@darna.dz",
+    email: "finance@bladus.dz",
     role: "finance",
     avatar: "/assets/avatar.png",
     isActive: true,
@@ -55,7 +55,7 @@ export const SEED_ADMINS: AdminUser[] = [
   {
     id: "adm_05",
     name: "Lina Cherif",
-    email: "analyst@darna.dz",
+    email: "analyst@bladus.dz",
     role: "analyst",
     avatar: "/assets/avatar.png",
     isActive: true,

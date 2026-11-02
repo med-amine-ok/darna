@@ -374,7 +374,7 @@ export default function TeamClient({ locale }: Props) {
               autoComplete="off"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="yacine@darna.dz"
+              placeholder="yacine@bladus.dz"
               aria-invalid={inviteError && !inviteEmail.trim() ? true : undefined}
               aria-describedby={inviteError && !inviteEmail.trim() ? inviteErrorId : undefined}
               className={FIELD_CLASS}

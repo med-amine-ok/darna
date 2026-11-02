@@ -10,7 +10,7 @@
   "verification": {
     "label": "Conformité et statut de vérification",
     "verified": "Agence de tourisme vérifiée",
-    "description": "Les agences vérifiées obtiennent le label Partenaire DARNA et une meilleure visibilité auprès des voyageurs de la diaspora."
+    "description": "Les agences vérifiées obtiennent le label Partenaire BLADUS et une meilleure visibilité auprès des voyageurs de la diaspora."
   },
   "form": {
     "title": "Informations de l'organisation",
@@ -36,7 +36,7 @@
   "danger": {
     "description": "La désactivation de cet espace agence retire l'accès à tous les membres de l'équipe et dépublie toutes les annonces de {name}. Les annonces d'hôtes particuliers sont conservées.",
     "confirmTitle": "Confirmer la désactivation de l'agence",
-    "confirmMessage": "La désactivation de votre agence dépubliera tous ses logements et véhicules, retirera l'accès de votre équipe et fermera votre espace professionnel DARNA.",
+    "confirmMessage": "La désactivation de votre agence dépubliera tous ses logements et véhicules, retirera l'accès de votre équipe et fermera votre espace professionnel BLADUS.",
     "confirmPrompt": "Pour confirmer, saisissez le nom exact de l'organisation : <strong>{name}</strong>",
     "confirmButton": "Désactiver l'agence",
     "cancelButton": "Conserver l'espace"

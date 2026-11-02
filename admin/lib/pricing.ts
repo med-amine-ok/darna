@@ -9,7 +9,7 @@
 import type { HostType } from "@/lib/types";
 
 /**
- * Guest service fee, as a percentage of the booking base price. DARNA does not charge
+ * Guest service fee, as a percentage of the booking base price. BLADUS does not charge
  * travellers (0%): it earns only the host commission below. Kept so stored bookings
  * keep their `serviceFeeDzd` field (always 0).
  */

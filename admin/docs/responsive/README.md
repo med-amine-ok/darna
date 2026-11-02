@@ -1,4 +1,4 @@
-# DARNA Admin, Mobile & Responsive Architecture Guide
+# BLADUS Admin, Mobile & Responsive Architecture Guide
 
 ## 1. Design System & Principles
 

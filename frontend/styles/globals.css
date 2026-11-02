@@ -130,7 +130,7 @@ html[data-reduce-motion] *::after {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
   }
 
-  /* Moorish arch mask (the shape inside the DARNA logo) for editorial imagery. */
+  /* Moorish arch mask (the shape inside the BLADUS logo) for editorial imagery. */
   /* Tall arch window: the arch head keeps its proportions at any height (head = 52% of the
      width, measured with container units on the parent, which must set container-type). */
   .mask-arch-tall {
@@ -312,7 +312,7 @@ html:not(.reveal-ready) .reveal-bar {
   background: #B09875;
 }
 
-/* DARNA Admin Sidebar Custom Scrollbar (Slider) */
+/* BLADUS Admin Sidebar Custom Scrollbar (Slider) */
 .darna-admin-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #3A493B transparent;
@@ -440,7 +440,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ==========================================================================
-   DARNA kit, toasts (components/ToastContainerBar.tsx)
+   BLADUS kit, toasts (components/ToastContainerBar.tsx)
    Glass-light card, e3, rounded-2xl, coloured accent on the reading-start edge,
    thin progress bar, slide in from the start edge + collapse stack. RTL-aware.
    ========================================================================== */
@@ -590,7 +590,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ==========================================================================
-   DARNA kit, date range picker (react-date-range, components/inputs/Calendar.tsx)
+   BLADUS kit, date range picker (react-date-range, components/inputs/Calendar.tsx)
    Range = terracotta edges on a soft tint band; today = terracotta dot; past /
    disabled days = muted, struck-through numbers on no fill (never look selected).
    ========================================================================== */
@@ -744,7 +744,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ==========================================================================
-   DARNA kit, fields, line drawings, loaders
+   BLADUS kit, fields, line drawings, loaders
    ========================================================================== */
 
 /* Field control (components/ui/Field.tsx): hairline ring at rest, terracotta focus ring. */

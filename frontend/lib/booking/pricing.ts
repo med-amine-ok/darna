@@ -12,7 +12,7 @@
  *  - trips                price per traveller × travellers (per departure)
  *
  * Fees: cleaning fee once per booking, set by the host (listing.cleaningFee ??
- * default, 0 is valid); NO DARNA fee for travellers (DARNA takes its commission
+ * default, 0 is valid); NO BLADUS fee for travellers (BLADUS takes its commission
  * from the host payout); taxes = rate × (subtotal + cleaning), shown only when > 0. All amounts are integer DZD,
  * rounded in exactly one place (roundDzd).
  */
@@ -122,7 +122,7 @@ export function unitLabel(model: PricingModel): string {
   }
 }
 
-/** Always 0 today: travellers never pay DARNA (a per-listing override is ignored on purpose). */
+/** Always 0 today: travellers never pay BLADUS (a per-listing override is ignored on purpose). */
 function serviceFeeRateFor(
   listing: Pick<Listing, "category" | "serviceFeeRate">,
 ): number {

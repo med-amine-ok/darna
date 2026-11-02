@@ -121,7 +121,7 @@ export default function SettingsClient({
   const sessionTimeoutId = useId();
 
   // Form states
-  const [platformName, setPlatformName] = useState("DARNA");
+  const [platformName, setPlatformName] = useState("BLADUS");
   const [serviceFeePercent, setServiceFeePercent] = useState(0);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -251,7 +251,7 @@ export default function SettingsClient({
               <p className="block text-xs font-semibold text-primary mb-1">
                 {t("serviceFee")}
               </p>
-              {/* Fixed policy: travellers never pay DARNA; revenue comes from host commissions. */}
+              {/* Fixed policy: travellers never pay BLADUS; revenue comes from host commissions. */}
               <p
                 id={serviceFeeId}
                 className="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 font-mono text-sm font-semibold text-secondary-700"

@@ -37,8 +37,8 @@ export function getTestAuthSecret(): Uint8Array {
 export async function createSessionToken(
   claims: { userId: string; email: string; name: string; role: string } = {
     userId: "adm_01",
-    email: "admin@darna.dz",
-    name: "DARNA Administrator",
+    email: "admin@bladus.dz",
+    name: "BLADUS Administrator",
     role: "super_admin",
   },
 ): Promise<string> {

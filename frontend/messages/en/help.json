@@ -1,7 +1,7 @@
 {
   "metaTitle": "Help Center",
-  "metaDescription": "Answers about bookings, CIB and Edahabia payments, Sahara trips and hosting on DARNA, plus ways to contact our support team.",
-  "eyebrow": "DARNA Help Center & Support",
+  "metaDescription": "Answers about bookings, CIB and Edahabia payments, Sahara trips and hosting on BLADUS, plus ways to contact our support team.",
+  "eyebrow": "BLADUS Help Center & Support",
   "heroTitle": "How can we help your journey in Algeria?",
   "heroSubtitle": "Find answers on bookings, CIB/Edahabia payments, Sahara tour permits and hosting",
   "searchLabel": "Search help articles",
@@ -13,7 +13,7 @@
     "account": "Account & verification",
     "payments": "Payments & refunds",
     "safety": "Trust & safety in Algeria",
-    "hosting": "Hosting on DARNA"
+    "hosting": "Hosting on BLADUS"
   },
   "faqTitle": "Frequently asked questions",
   "articleCount": "{count, plural, =0 {No articles} one {# article} other {# articles}}",
@@ -29,9 +29,9 @@
       "content": "You can cancel your reservation directly from your Trips page. Stays with the Flexible policy allow a full refund (excluding minor processing fees) if cancelled up to 48 hours before check-in. Refunds to Algerian CIB and Edahabia cards are processed within 3 to 5 business days back to your issuing bank."
     },
     "art_02": {
-      "title": "Which Algerian payment methods does DARNA support?",
-      "snippet": "DARNA supports SATIM interbank CIB cards, Algérie Poste Edahabia and international cards.",
-      "content": "DARNA supports national Algerian payment cards through the SATIM interbank gateway: CIB debit cards from all Algerian public and private banks (BNA, BEA, CPA, BDL, BADR, Gulf Bank, Natixis, Société Générale) and Algérie Poste Edahabia cards. Diaspora and international travelers can also pay with Visa and Mastercard in euros or US dollars."
+      "title": "Which Algerian payment methods does BLADUS support?",
+      "snippet": "BLADUS supports SATIM interbank CIB cards, Algérie Poste Edahabia and international cards.",
+      "content": "BLADUS supports national Algerian payment cards through the SATIM interbank gateway: CIB debit cards from all Algerian public and private banks (BNA, BEA, CPA, BDL, BADR, Gulf Bank, Natixis, Société Générale) and Algérie Poste Edahabia cards. Diaspora and international travelers can also pay with Visa and Mastercard in euros or US dollars."
     },
     "art_03": {
       "title": "How does identity verification work for Algerian travelers?",
@@ -44,18 +44,18 @@
       "content": "Yes. In destinations like Djanet (Tassili n'Ajjer), Tamanrasset (Hoggar) and Taghit (Grand Erg Occidental), all licensed experiences and 4x4 rentals with drivers operate under Algerian tourism safety guidelines and national park regulations."
     },
     "art_05": {
-      "title": "How do I list my villa, apartment or rental car on DARNA?",
+      "title": "How do I list my villa, apartment or rental car on BLADUS?",
       "snippet": "Become a host in 10 minutes with instant wilaya location mapping.",
       "content": "Select “Become a host” at the top of any page to open the listing creator. Choose your listing type (home, vehicle or experience), set your wilaya and city, upload high-resolution photos, set your nightly price in Algerian dinars (DZD) and publish. Your listing becomes discoverable across Algeria and worldwide right away."
     },
     "art_06": {
-      "title": "Can I book vehicle rentals and airport pickups with DARNA?",
-      "snippet": "DARNA offers SUVs, sedans and desert-ready 4x4s from verified hosts.",
-      "content": "Yes! DARNA offers vehicle rentals from verified agencies and individual hosts at Algiers Houari Boumediene Airport, Oran Ahmed Ben Bella Airport, Constantine and the southern gateway hubs. You can choose unlimited mileage, airport delivery or a driver at checkout."
+      "title": "Can I book vehicle rentals and airport pickups with BLADUS?",
+      "snippet": "BLADUS offers SUVs, sedans and desert-ready 4x4s from verified hosts.",
+      "content": "Yes! BLADUS offers vehicle rentals from verified agencies and individual hosts at Algiers Houari Boumediene Airport, Oran Ahmed Ben Bella Airport, Constantine and the southern gateway hubs. You can choose unlimited mileage, airport delivery or a driver at checkout."
     }
   },
   "form": {
-    "title": "Still need help? Contact DARNA Support",
+    "title": "Still need help? Contact BLADUS Support",
     "subtitle": "Our multilingual Algerian team is available 7 days a week to support your bookings and hosting.",
     "fixErrors": "Please fill in all required fields.",
     "name": "Full name",
@@ -77,7 +77,7 @@
     "messageRequired": "Enter a message.",
     "submit": "Send message to support",
     "sending": "Sending...",
-    "sent": "Message sent! A DARNA support agent will reply within 2 hours."
+    "sent": "Message sent! A BLADUS support agent will reply within 2 hours."
   },
   "channels": {
     "title": "Direct contact channels",

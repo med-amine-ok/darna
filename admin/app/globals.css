@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DARNA admin foundation, ported from frontend/styles/globals.css (docs/design/DESIGN-DIRECTION.md §9). */
+/* BLADUS admin foundation, ported from frontend/styles/globals.css (docs/design/DESIGN-DIRECTION.md §9). */
 
 :root {
   --color-primary: #2E3A2F;

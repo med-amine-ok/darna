@@ -5,7 +5,7 @@ export const mockUsers: User[] = [
   {
     id: "usr_amina",
     name: "Amina Benali",
-    email: "amina.benali@darna.dz",
+    email: "amina.benali@bladus.dz",
     image: "/assets/avatar.png",
     role: "host",
     hostType: "individual",
@@ -23,7 +23,7 @@ export const mockUsers: User[] = [
   {
     id: "usr_karim",
     name: "Karim Mansouri",
-    email: "karim.mansouri@darna.dz",
+    email: "karim.mansouri@bladus.dz",
     image: "/assets/avatar.png",
     role: "host",
     hostType: "agency",
@@ -42,7 +42,7 @@ export const mockUsers: User[] = [
   {
     id: "usr_yacine",
     name: "Yacine Cherif",
-    email: "yacine.traveler@darna.dz",
+    email: "yacine.traveler@bladus.dz",
     image: "/assets/avatar.png",
     role: "guest",
     hostType: null,
@@ -55,8 +55,8 @@ export const mockUsers: User[] = [
   },
   {
     id: "usr_admin",
-    name: "DARNA Administrator",
-    email: "admin@darna.dz",
+    name: "BLADUS Administrator",
+    email: "admin@bladus.dz",
     image: "/assets/avatar.png",
     role: "admin",
     createdAt: "2022-01-01T00:00:00.000Z",

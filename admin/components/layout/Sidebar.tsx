@@ -406,7 +406,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
             <div className="w-8 h-8 rounded-[10px] bg-white/[0.06] ring-1 ring-inset ring-white/10 flex items-center justify-center shrink-0">
               <Image
                 src="/assets/logo.png"
-                alt="DARNA"
+                alt="BLADUS"
                 width={20}
                 height={20}
                 className="h-5 w-5 object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-fast ease-out"
@@ -414,7 +414,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
-                <span className="font-serif text-[1.0625rem] leading-none text-white">DARNA</span>
+                <span className="font-serif text-[1.0625rem] leading-none text-white">BLADUS</span>
                 <span className="text-[11px] text-tertiary-300/90 leading-tight mt-1">{t("tagline")}</span>
               </div>
             )}

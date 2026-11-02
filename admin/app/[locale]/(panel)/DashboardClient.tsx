@@ -373,7 +373,7 @@ export default function DashboardClient({
       </section>
 
       {/* =========================================================================
-          SECTION C: "How is DARNA doing?", Exactly 4 numbers (Miller 7±2)
+          SECTION C: "How is BLADUS doing?", Exactly 4 numbers (Miller 7±2)
           Period switch: Today · Last 7 days · Last 30 days (default 30)
       ========================================================================= */}
       <section className="space-y-3">
@@ -465,7 +465,7 @@ export default function DashboardClient({
             sparklineData={[140, 180, 210, 260, 310, 390, 480, 520]}
           />
 
-          {/* 3. DARNA earnings */}
+          {/* 3. BLADUS earnings */}
           <KpiCard
             title={t("kpiEarnings")}
             value={formatDzd(darnaEarningsDzd, locale)}

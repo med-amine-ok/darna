@@ -3,7 +3,7 @@
   "subtitle": "List of places you have favorited!",
   "emptyTitle": "No favorites found",
   "savedPlaces": "{count, plural, =0 {No places saved} one {# place saved across Algeria} other {# places saved across Algeria}}",
-  "noFavoritesDesc": "As you explore DARNA, tap the heart on any villa, 4x4 or Sahara trek to save it here.",
+  "noFavoritesDesc": "As you explore BLADUS, tap the heart on any villa, 4x4 or Sahara trek to save it here.",
   "noSavedInTab": "Nothing saved under “{tab}” yet",
   "filterLabel": "Filter saved places by type",
   "metaTitle": "My favorites",

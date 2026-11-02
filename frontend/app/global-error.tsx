@@ -3,7 +3,7 @@
 /**
  * Last-resort boundary for errors thrown in the root/locale layouts, where the
  * next-intl provider and the stylesheet may not exist: static trilingual copy and
- * inline styles in the DARNA palette (paper, ink, terracotta) with the logo arch.
+ * inline styles in the BLADUS palette (paper, ink, terracotta) with the logo arch.
  */
 const ink = "#2E3A2F";
 const paper = "#F8F6EE";
@@ -75,7 +75,7 @@ export default function GlobalError({
           </button>
           <p style={{ margin: "20px 0 0", fontSize: 14 }}>
             <a href="/en" style={{ color: ink, textUnderlineOffset: 4 }}>
-              DARNA
+              BLADUS
             </a>
           </p>
         </div>

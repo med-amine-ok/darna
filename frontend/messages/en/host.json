@@ -94,7 +94,7 @@
     "payoutBreakdown": "Payout Breakdown",
     "baseRate": "Base nightly earnings",
     "cleaningFee": "Cleaning fee",
-    "serviceFee": "DARNA commission",
+    "serviceFee": "BLADUS commission",
     "totalEarnings": "Net Host Payout"
   },
   "calendar": {
@@ -211,6 +211,6 @@
     "agencyTrips": "Agency trips",
     "newTrip": "Create a trip",
     "becomeHost": "Become a host",
-    "becomeHostDescription": "List your home, experience or vehicle on DARNA and start hosting travelers across Algeria."
+    "becomeHostDescription": "List your home, experience or vehicle on BLADUS and start hosting travelers across Algeria."
   }
 }

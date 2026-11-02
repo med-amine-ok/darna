@@ -6,7 +6,7 @@ import { MapContainer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import OpenFreeMapLayer from "@/components/map/OpenFreeMapLayer";
 import "leaflet/dist/leaflet.css";
 
-// Custom DARNA Location Pin from /assets/location.png (70x104 source, shown at half size).
+// Custom BLADUS Location Pin from /assets/location.png (70x104 source, shown at half size).
 const darnaLocationIcon = L.icon({
   iconUrl: "/assets/location.png",
   iconSize: [36, 52],

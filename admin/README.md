@@ -1,12 +1,12 @@
-# DARNA Admin Console
+# BLADUS Admin Console
 
-A standalone, data-dense, accessible administration and marketplace moderation platform for the **DARNA** hospitality network in Algeria.
+A standalone, data-dense, accessible administration and marketplace moderation platform for the **BLADUS** hospitality network in Algeria.
 
 ---
 
 ## 1. System Overview & Architecture
 
-The DARNA repository is organized as a decoupled multi-app architecture:
+The BLADUS repository is organized as a decoupled multi-app architecture:
 
 ```
 darna/
@@ -18,14 +18,14 @@ darna/
 
 - **Framework:** Next.js 14.2.35 (App Router)
 - **Runtime:** React 18.3.1 (SSR + Client Components with strict boundary segregation)
-- **Styling:** Tailwind CSS 3.3.1 using DARNA's Earthy Minimal palette:
+- **Styling:** Tailwind CSS 3.3.1 using BLADUS's Earthy Minimal palette:
   - Primary: `#2E3A2F` (Deep Forest)
   - Secondary: `#6B7F5B` (Sage Green)
   - Tertiary: `#D9C9B2` (Warm Sand)
   - Accent: `#C96F4F` (Terracotta)
   - Background: `#F8F6EE` (Warm Cream)
 - **Typography:** DM Sans (Latin) + IBM Plex Sans Arabic (Arabic)
-- **Icons:** Lucide React (Chrome UI) + Custom DARNA Brand SVGs (no emojis)
+- **Icons:** Lucide React (Chrome UI) + Custom BLADUS Brand SVGs (no emojis)
 - **Internationalization:** `next-intl` (English `en`, French `fr`, Arabic `ar` with full RTL layout)
 - **Maps:** Leaflet & React-Leaflet with custom marker clustering
 
@@ -64,11 +64,11 @@ Configured in `lib/permissions.ts`. Every mutation function in `lib/data/*` exec
 
 | Role          | Permissions & Responsibilities                                                             | Seed Account                             |
 | ------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| `super_admin` | Unrestricted full access across all modules, configuration, staff, and financial overrides | `admin@darna.dz` / `DarnaAdmin2026!`     |
-| `moderator`   | Host & listing approvals, review moderation, document inspection, dispute resolution       | `moderator@darna.dz` / `DarnaMod2026!`   |
-| `finance`     | Escrow wallets, CCP/bank top-ups, transaction ledgers, commission tiers, payout approvals  | `finance@darna.dz` / `DarnaFinance2026!` |
-| `support`     | Read/write access to guests, bookings, dispute arbitration, and messaging logs             | `support@darna.dz` / `DarnaSupport2026!` |
-| `analyst`     | Read-only analytics dashboards, reports generator, and CSV exports                         | `analyst@darna.dz` / `DarnaAnalyst2026!` |
+| `super_admin` | Unrestricted full access across all modules, configuration, staff, and financial overrides | `admin@bladus.dz` / `DarnaAdmin2026!`     |
+| `moderator`   | Host & listing approvals, review moderation, document inspection, dispute resolution       | `moderator@bladus.dz` / `DarnaMod2026!`   |
+| `finance`     | Escrow wallets, CCP/bank top-ups, transaction ledgers, commission tiers, payout approvals  | `finance@bladus.dz` / `DarnaFinance2026!` |
+| `support`     | Read/write access to guests, bookings, dispute arbitration, and messaging logs             | `support@bladus.dz` / `DarnaSupport2026!` |
+| `analyst`     | Read-only analytics dashboards, reports generator, and CSV exports                         | `analyst@bladus.dz` / `DarnaAnalyst2026!` |
 
 ---
 

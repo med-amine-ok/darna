@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Living gallery of the DARNA kit (dev only; see page.tsx). Shows every component of
+ * Living gallery of the BLADUS kit (dev only; see page.tsx). Shows every component of
  * components/ui in its states, plus the foundations (type, colour, elevation, radii, motion).
  * Strings come from the `ui.gallery` namespace so fr/ar (RTL) can be checked with the
  * locale links in the header.

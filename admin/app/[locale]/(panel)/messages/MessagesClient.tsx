@@ -130,7 +130,7 @@ export default function MessagesClient({
         {
           id: "m4",
           sender: "user",
-          text: "Bonjour le support DARNA, nous souhaitons passer le groupe max à 16 personnes.",
+          text: "Bonjour le support BLADUS, nous souhaitons passer le groupe max à 16 personnes.",
           time: "2024-10-20T14:00:00",
         },
       ],

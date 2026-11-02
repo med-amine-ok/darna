@@ -12,7 +12,7 @@
  *              0% within 6 days.
  * "Days before" = calendar days in Algeria between today and the check-in date.
  * The cleaning fee and the matching share of taxes are always refunded (the
- * stay hasn't started); DARNA's service fee is refunded only on a 100% refund.
+ * stay hasn't started); BLADUS's service fee is refunded only on a 100% refund.
  *
  * Host cancellations and declines always refund the guest in full. Pending
  * requests were never charged, so cancelling one voids the payment.

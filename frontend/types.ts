@@ -160,7 +160,7 @@ export interface Listing {
 
   // Pricing (DZD integers). `cleaningFee: 0` is valid ("no cleaning fee").
   cleaningFee?: number;
-  /** Admin-only override of DARNA's guest service fee rate (0–1). */
+  /** Admin-only override of BLADUS's guest service fee rate (0–1). */
   serviceFeeRate?: number;
   /** Admin-only override of the tax rate (0–1). */
   taxRate?: number;
@@ -234,7 +234,7 @@ export interface Reservation {
   refundAmount?: number;
   cancelledAt?: string;
   cancelledBy?: "guest" | "host" | "system";
-  /** DARNA commission charged to the host (on the subtotal). */
+  /** BLADUS commission charged to the host (on the subtotal). */
   commissionAmount?: number;
   commissionRate?: number;
   approvalMode?: "instant" | "request";

@@ -138,7 +138,7 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
           >
             <BrandMenuIcon size={17} className="text-primary-800" />
             {currentUser ? (
-              <Avatar name={currentUser.name || currentUser.email || "DARNA"} src={currentUser.image ?? undefined} size="sm" decorative />
+              <Avatar name={currentUser.name || currentUser.email || "BLADUS"} src={currentUser.image ?? undefined} size="sm" decorative />
             ) : (
               <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-800 text-white">
                 <BrandUserIcon size={16} />

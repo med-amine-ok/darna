@@ -51,7 +51,7 @@
     "manageTeam": "Manage agency team",
     "upgrade": "Upgrade to an agency workspace",
     "complianceTitle": "Legal compliance in Algeria",
-    "complianceBody": "Hosting activities on DARNA follow Algerian tourism and tax regulations. Individual hosts are registered as auto-entrepreneurs or individuals. Agencies must provide their Trade Register number (RC) and tax identification number (NIF)."
+    "complianceBody": "Hosting activities on BLADUS follow Algerian tourism and tax regulations. Individual hosts are registered as auto-entrepreneurs or individuals. Agencies must provide their Trade Register number (RC) and tax identification number (NIF)."
   },
   "defaults": {
     "title": "Global booking parameters",

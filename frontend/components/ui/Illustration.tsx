@@ -1,5 +1,5 @@
 /**
- * Brand line illustrations built from the DARNA arch + zellige rosette (DESIGN-DIRECTION §6).
+ * Brand line illustrations built from the BLADUS arch + zellige rosette (DESIGN-DIRECTION §6).
  *
  *   <Illustration variant="search" />      // search · favorites · messages · calendar · generic · error · success
  *   <Illustration variant="favorites" size={120} animate={false} />

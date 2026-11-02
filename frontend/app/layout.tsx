@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/site";
 // Icons come from the file conventions (app/icon.png, app/apple-icon.png, app/favicon.ico).
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  applicationName: "DARNA",
+  applicationName: "BLADUS",
   manifest: "/manifest.json",
 };
 

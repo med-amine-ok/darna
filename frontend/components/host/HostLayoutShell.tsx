@@ -37,7 +37,7 @@ export default function HostLayoutShell({
     );
   }
 
-  // New organizations can use the workspace while DARNA reviews their documents.
+  // New organizations can use the workspace while BLADUS reviews their documents.
   const rejected = organization?.verificationStatus === "rejected";
   const verificationBanner =
     organization && organization.verificationStatus !== "verified" ? (

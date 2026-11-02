@@ -309,7 +309,7 @@ export default function ListingReservation({
         {/* Price & rating */}
         <div className="flex items-start justify-between gap-3 pb-1">
           <div>
-            {/* The host's own price: travellers pay no DARNA fee on top. */}
+            {/* The host's own price: travellers pay no BLADUS fee on top. */}
             <p className="flex items-baseline gap-1.5 flex-wrap">
               <span className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums">{money(listing.price)}</span>
               <span className="text-body text-primary-500">{periodLabel}</span>

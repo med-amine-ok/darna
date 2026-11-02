@@ -38,7 +38,7 @@ const TOPICS = ["booking", "payments", "host", "safety", "other"] as const;
 /** Support contacts (the same published numbers as before; no WhatsApp line exists yet). */
 const SUPPORT_PHONE_HREF = "tel:+21321000000";
 const SUPPORT_PHONE_LABEL = "+213 21 00 00 00";
-const SUPPORT_EMAIL = "support@darna.dz";
+const SUPPORT_EMAIL = "support@bladus.dz";
 
 type SupportField = "name" | "email" | "message";
 

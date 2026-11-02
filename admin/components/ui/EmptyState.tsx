@@ -1,7 +1,7 @@
 import React from "react";
 
 /**
- * In-palette line illustration built from the DARNA arch + eight-point rosette
+ * In-palette line illustration built from the BLADUS arch + eight-point rosette
  * (docs/design/DESIGN-DIRECTION.md §6). Decorative only.
  */
 export function ArchRosette({ className = "" }: { className?: string }) {

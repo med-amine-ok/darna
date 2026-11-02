@@ -572,7 +572,7 @@ export function PhotoGalleryEditor({
         </ul>
       </div>
 
-      {/* DARNA photo library */}
+      {/* BLADUS photo library */}
       <div className="space-y-2" role="group" aria-labelledby={`${idPrefix}-presets`}>
         <p id={`${idPrefix}-presets`} className="text-meta font-semibold text-primary-800">
           {t("photos.presetsLabel")}

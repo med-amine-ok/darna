@@ -1,8 +1,8 @@
 /**
  * Host payout for a reservation (pure, client-safe display helper).
- * The host earns the accommodation subtotal + cleaning fee, minus DARNA's
+ * The host earns the accommodation subtotal + cleaning fee, minus BLADUS's
  * commission (charged on the subtotal only) and minus any guest refund.
- * DARNA's guest service fee never goes to the host.
+ * BLADUS's guest service fee never goes to the host.
  */
 import type { Reservation } from "@/types";
 

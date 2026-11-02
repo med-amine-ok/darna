@@ -1,4 +1,4 @@
-# DARNA admin, canonical data model
+# BLADUS admin, canonical data model
 
 This page is the reference for the admin back-office enums, state machines, money rules and pricing constants. It also shows how each one maps to the guest/host app (`../frontend/types.ts`, `../frontend/lib/booking/config.ts`).
 

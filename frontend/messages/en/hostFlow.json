@@ -27,13 +27,13 @@
   "exitModalTitle": "Leave listing setup?",
   "exitModalDesc": "You have unsaved changes. Save your progress as a draft to resume later, or discard what you entered.",
   "reviewTitle": "Review your listing before publishing",
-  "reviewSubtitle": "Here is what guests will see when browsing DARNA.",
-  "publishListing": "Publish your listing to DARNA",
+  "reviewSubtitle": "Here is what guests will see when browsing BLADUS.",
+  "publishListing": "Publish your listing to BLADUS",
   "pricePerNight": "Price per night (DZD)",
   "draftSaved": "Progress saved as a draft in your browser.",
   "addPhotoUrlPlaceholder": "Paste image URL (https://...)",
   "step": "Step {current} of {total}",
-  "hostTypeTitle": "How do you plan to host on DARNA?",
+  "hostTypeTitle": "How do you plan to host on BLADUS?",
   "hostTypeSubtitle": "Choose the hosting model that best reflects your Algerian properties, fleet, or hospitality establishment.",
   "individualTitle": "Individual Host",
   "individualDesc": "You are an individual hosting your private villa, Casbah apartment, Sahara tent, or personal 4x4. Dedicated lightweight workspace.",
@@ -46,7 +46,7 @@
   "contactEmail": "Business Contact Email",
   "contactPhone": "Business Contact Phone",
   "header": {
-    "logoAlt": "DARNA home",
+    "logoAlt": "BLADUS home",
     "becomeHost": "Become a Host",
     "agency": "Agency Registration",
     "hotel": "Hotel Registration",
@@ -58,7 +58,7 @@
     "selectHostMode": "Select host mode"
   },
   "hostType": {
-    "eyebrow": "Become a host on DARNA",
+    "eyebrow": "Become a host on BLADUS",
     "individual": {
       "badge": "Solo Host",
       "cta": "Continue as Individual"
@@ -92,7 +92,7 @@
   },
   "intro": {
     "eyebrow": "Overview",
-    "title": "It's easy to get started on DARNA",
+    "title": "It's easy to get started on BLADUS",
     "subtitle": "Join thousands of welcoming hosts sharing Algerian culture, coastlines, and desert expeditions.",
     "step1Title": "Tell us about your place",
     "step1Desc": "Share your location, property type, and guest capacity.",
@@ -186,7 +186,7 @@
     "photoAlt": "Property photo {number}",
     "removeLabel": "Remove photo {number}",
     "urlLabel": "Add a photo by URL",
-    "presetsLabel": "From the DARNA photo library",
+    "presetsLabel": "From the BLADUS photo library",
     "addPreset": "Add preset photo: {name}",
     "added": "Photo added to the gallery!",
     "minOne": "Your gallery must have at least one photo.",
@@ -238,7 +238,7 @@
     "eurEquivalent": "Equivalent to {amount} per night",
     "breakdown": "Earnings estimate",
     "base": "Base price",
-    "commission": "DARNA commission ({rate}%)",
+    "commission": "BLADUS commission ({rate}%)",
     "payout": "Your net payout",
     "priceLabel": {
       "home": "Price per night",
@@ -276,7 +276,7 @@
     "editPhotos": "Edit photos ({count})",
     "editPrice": "Edit price",
     "publishing": "Publishing listing...",
-    "published": "Congratulations! Your listing is now live on DARNA.",
+    "published": "Congratulations! Your listing is now live on BLADUS.",
     "empty": "Not provided",
     "perUnit": "{unit} ({eur})"
   },

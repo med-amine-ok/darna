@@ -9,7 +9,7 @@ import AxeBuilder from "@axe-core/playwright";
 async function loginAsSuperAdmin(page: Page) {
   await page.addInitScript(() => localStorage.setItem("darna_admin_tour_completed", "true"));
   await page.goto("/en/login");
-  await page.fill('input[type="email"]', "admin@darna.dz");
+  await page.fill('input[type="email"]', "admin@bladus.dz");
   await page.fill('input[type="password"]', process.env.ADMIN_SEED_PASSWORD || "DarnaAdmin2026!");
   await page.click('button[type="submit"]');
   await page.waitForURL((url) => url.pathname === "/en");

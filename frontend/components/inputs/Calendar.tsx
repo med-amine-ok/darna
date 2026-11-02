@@ -27,7 +27,7 @@ export default function Calendar({
   const t = useTranslations("common");
 
   return (
-    // Styled by the "DARNA kit, date range picker" block in styles/globals.css (range tint,
+    // Styled by the "BLADUS kit, date range picker" block in styles/globals.css (range tint,
     // today dot, muted past days, chevron arrows mirrored in RTL).
     <div className="darna-calendar-wrapper w-full flex justify-center">
       <DateRange

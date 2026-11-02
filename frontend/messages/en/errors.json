@@ -6,7 +6,7 @@
   "notFoundMetaTitle": "Page not found",
   "notFoundTitle": "This page wandered off the map",
   "notFoundBody": "The link may be old or the page may have moved. Search for a place to stay, or start from one of our favourite wilayas.",
-  "explore": "Explore DARNA",
+  "explore": "Explore BLADUS",
   "generic": "Something went wrong. Please try again.",
   "codes": {
     "UNAUTHENTICATED": "Please log in to continue.",
@@ -54,7 +54,7 @@
     "REQUEST_EXPIRED": "This request has expired.",
     "REQUEST_NOT_PENDING": "Only pending requests can be answered.",
     "RESERVATION_NOT_CANCELLABLE": "This reservation can no longer be cancelled.",
-    "CHECK_IN_PASSED": "Check-in has already passed. Please contact the host or DARNA support.",
+    "CHECK_IN_PASSED": "Check-in has already passed. Please contact the host or BLADUS support.",
     "PAST_DATES_LOCKED": "Past dates can't be changed.",
     "PRICE_RANGE": "The price must be a whole number between {min} and {max}.",
     "ROOM_TYPE_DATE_PRICES_UNSUPPORTED": "Per-date prices aren't available for hotel and hostel room types yet.",

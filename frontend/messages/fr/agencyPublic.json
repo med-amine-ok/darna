@@ -11,9 +11,9 @@
     "hostel": "Profil de l'auberge"
   },
   "metaDescription": {
-    "agency": "Découvrez les circuits, hébergements, véhicules et expériences proposés par {name} sur DARNA.",
-    "hotel": "Découvrez les chambres et suites de {name} sur DARNA.",
-    "hostel": "Découvrez les lits et chambres de {name} sur DARNA."
+    "agency": "Découvrez les circuits, hébergements, véhicules et expériences proposés par {name} sur BLADUS.",
+    "hotel": "Découvrez les chambres et suites de {name} sur BLADUS.",
+    "hostel": "Découvrez les lits et chambres de {name} sur BLADUS."
   },
   "logoAlt": "Logo de {name}",
   "pendingVerification": "Vérification en cours",
@@ -23,7 +23,7 @@
     "hostel": "Auberge vérifiée"
   },
   "reviewTitle": "Contrôle de conformité en cours",
-  "reviewBody": "DARNA vérifie encore le registre du commerce de cette organisation.",
+  "reviewBody": "BLADUS vérifie encore le registre du commerce de cette organisation.",
   "teamMembers": "Membres de l'équipe",
   "rating": "Note",
   "noRating": "Nouveau",
@@ -35,9 +35,9 @@
     "manager": "Gestionnaire"
   },
   "contactNote": {
-    "agency": "Vous pourrez écrire à cette agence via DARNA dès que vous aurez une réservation.",
-    "hotel": "Vous pourrez écrire à cet hôtel via DARNA dès que vous aurez une réservation.",
-    "hostel": "Vous pourrez écrire à cette auberge via DARNA dès que vous aurez une réservation."
+    "agency": "Vous pourrez écrire à cette agence via BLADUS dès que vous aurez une réservation.",
+    "hotel": "Vous pourrez écrire à cet hôtel via BLADUS dès que vous aurez une réservation.",
+    "hostel": "Vous pourrez écrire à cette auberge via BLADUS dès que vous aurez une réservation."
   },
   "listingsBy": {
     "agency": "Hébergements, véhicules et expériences de {name}",
@@ -55,7 +55,7 @@
     "hotel": "Hôtel",
     "hostel": "Auberge"
   },
-  "onDarnaSince": "Sur DARNA depuis {year}",
+  "onDarnaSince": "Sur BLADUS depuis {year}",
   "statsLabel": {
     "agency": "L'agence en bref",
     "hotel": "L'hôtel en bref",

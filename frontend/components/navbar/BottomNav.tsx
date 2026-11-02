@@ -84,7 +84,7 @@ export default function BottomNav({ currentUser }: BottomNavProps) {
               {content(
                 isProfile,
                 currentUser.image ? (
-                  <Avatar name={currentUser.name || "DARNA"} src={currentUser.image} size="xs" decorative />
+                  <Avatar name={currentUser.name || "BLADUS"} src={currentUser.image} size="xs" decorative />
                 ) : (
                   <BrandUserIcon size={22} strokeWidth={isProfile ? 2.1 : 1.75} />
                 ),

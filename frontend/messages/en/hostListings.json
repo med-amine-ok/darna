@@ -109,7 +109,7 @@
   },
   "deleteDialog": {
     "title": "Delete Listing",
-    "message": "Are you sure you want to delete this listing from DARNA? This action is permanent and will remove the property and its booking history from the platform.",
+    "message": "Are you sure you want to delete this listing from BLADUS? This action is permanent and will remove the property and its booking history from the platform.",
     "confirm": "Delete listing",
     "keep": "Keep listing"
   },

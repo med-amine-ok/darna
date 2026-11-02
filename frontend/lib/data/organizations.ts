@@ -10,7 +10,7 @@ import {
   tripsTable,
 } from "./_tables";
 
-/** Fields whose change requires a new verification by DARNA staff. */
+/** Fields whose change requires a new verification by BLADUS staff. */
 export const ORGANIZATION_LEGAL_FIELDS = [
   "name",
   "businessRegistrationNumber",
@@ -120,7 +120,7 @@ export async function createOrganization(data: {
     businessPhone: data.businessPhone,
     address: data.address || "",
     country: data.country || "Algeria",
-    // New organizations always start unverified; DARNA staff verify them from the admin app.
+    // New organizations always start unverified; BLADUS staff verify them from the admin app.
     verificationStatus: "pending",
     createdAt: now,
     ownerUserId: data.owner.userId,

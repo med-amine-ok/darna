@@ -42,7 +42,7 @@ const additions = {
     oldestWaiting: { en: "Oldest waiting: {time}", fr: "Plus ancien en attente : {time}", ar: "الأقدم في الانتظار: {time}" },
     allCaughtUp: { en: "All caught up", fr: "Tout est traité", ar: "الكل منجز" },
     kpiMoneyPaid: { en: "Money paid by guests", fr: "Argent payé par les voyageurs", ar: "المبالغ المدفوعة من الضيوف" },
-    kpiEarnings: { en: "DARNA earnings", fr: "Revenus de DARNA", ar: "أرباح دارنا" },
+    kpiEarnings: { en: "BLADUS earnings", fr: "Revenus de BLADUS", ar: "أرباح بلادوس" },
     kpiNewHosts: { en: "New hosts", fr: "Nouveaux hôtes", ar: "المضيفون الجدد" },
     comparisonMore: { en: "{percent}% more than previous {period}", fr: "{percent}% de plus que la période précédente", ar: "أكثر بـ {percent}% من الفترة السابقة" },
     comparisonFewer: { en: "{percent}% fewer than previous {period}", fr: "{percent}% de moins que la période précédente", ar: "أقل بـ {percent}% من الفترة السابقة" },

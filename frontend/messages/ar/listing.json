@@ -39,7 +39,7 @@
   "hostCardTitle": "تعرّف على مضيفك",
   "messageHost": "مراسلة المضيف",
   "cleaningFee": "رسوم التنظيف",
-  "serviceFee": "رسوم خدمة DARNA",
+  "serviceFee": "رسوم خدمة BLADUS",
   "taxes": "الضرائب",
   "youWontBeCharged": "لن يتم تحصيل أي مبالغ منك الآن",
   "reportListing": "الإبلاغ عن هذا الإعلان",
@@ -145,7 +145,7 @@
   "bedCount": "{count, plural, =1 {سرير واحد} =2 {سريران} few {# أسرّة} many {# سريراً} other {# سرير}}",
   "bathCount": "{count, plural, =1 {حمام واحد} =2 {حمامان} few {# حمامات} many {# حماماً} other {# حمام}}",
   "viewHostProfile": "عرض ملف {name}",
-  "guestFavoriteDesc": "من أكثر الإعلانات المحبوبة على DARNA وفقاً لتقييمات ومراجعات الضيوف الحقيقية.",
+  "guestFavoriteDesc": "من أكثر الإعلانات المحبوبة على BLADUS وفقاً لتقييمات ومراجعات الضيوف الحقيقية.",
   "policyCancellation": "سياسة إلغاء {policy}",
   "about": {
     "home": "عن هذا المكان",
@@ -245,7 +245,7 @@
     "bunkShared": "سرير بطابقين (مشترك)",
     "kingPlusSofa": "سرير كينغ + أريكة سرير",
     "kingBed": "سرير كينغ كبير",
-    "instantOnDarna": "حجز فوري مؤكد على DARNA",
+    "instantOnDarna": "حجز فوري مؤكد على BLADUS",
     "selectedRoom": "الغرفة المختارة",
     "selectRoom": "اختيار الغرفة",
     "selectedRoomNamed": "{name}، مختارة",
@@ -277,7 +277,7 @@
     "agePolicyTitle": "سياسة الضيوف والسن",
     "agePolicyDesc": "جميع الأعمار مرحب بها في الغرف الخاصة؛ الحد الأدنى للسن 18 عاماً في المهاجع المشتركة.",
     "managedBy": "يديره {name}",
-    "hostMeta": "مضيف ضيافة على DARNA · يرد خلال ساعة",
+    "hostMeta": "مضيف ضيافة على BLADUS · يرد خلال ساعة",
     "identityVerified": "هوية موثّقة",
     "licensedPartner": "شريك ضيافة مرخّص",
     "metrics": {
@@ -312,10 +312,10 @@
   "meta": {
     "notFoundTitle": "الإعلان غير موجود",
     "titleWithCity": "{title} · {city}",
-    "fallbackDescription": "احجز {title} على DARNA، إقامات وتجارب في كل أنحاء الجزائر."
+    "fallbackDescription": "احجز {title} على BLADUS، إقامات وتجارب في كل أنحاء الجزائر."
   },
   "ratingNew": "جديد",
-  "hostFallback": "مضيف على DARNA",
+  "hostFallback": "مضيف على BLADUS",
   "sectionNav": {
     "photos": "الصور",
     "amenities": "المرافق",
@@ -361,7 +361,7 @@
     "showDetails": "تفاصيل الغرفة",
     "hideDetails": "إخفاء التفاصيل",
     "forNights": "{count, plural, =1 {لليلة واحدة} =2 {لليلتين} few {لـ # ليالٍ} many {لـ # ليلة} other {لـ # ليلة}}",
-    "pricesFor": "الأسعار لـ {dates}، {count, plural, =1 {ليلة واحدة} =2 {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}. هذه أسعار المضيف، دون أي رسوم من DARNA.",
+    "pricesFor": "الأسعار لـ {dates}، {count, plural, =1 {ليلة واحدة} =2 {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}. هذه أسعار المضيف، دون أي رسوم من BLADUS.",
     "changeRoom": "تغيير الغرفة"
   },
   "facts": {
@@ -392,9 +392,9 @@
   "pickupFrom": "الاستلام من الساعة {time}",
   "returnBefore": "الإرجاع قبل الساعة {time}",
   "loading": "جارٍ تحميل الإعلان",
-  "noGuestFees": "لا رسوم من DARNA على المسافرين.",
-  "noGuestFeesHint": "تدفع سعر المضيف فقط؛ عمولة DARNA يدفعها المضيف.",
-  "noFeesShort": "بدون رسوم DARNA",
+  "noGuestFees": "لا رسوم من BLADUS على المسافرين.",
+  "noGuestFeesHint": "تدفع سعر المضيف فقط؛ عمولة BLADUS يدفعها المضيف.",
+  "noFeesShort": "بدون رسوم BLADUS",
   "viewProfile": "عرض الملف",
   "hostKind": {
     "individual": "مضيف فرد",

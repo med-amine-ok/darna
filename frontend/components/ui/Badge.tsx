@@ -5,7 +5,7 @@
  *   <Badge tone="warning" icon={<BrandClockIcon size={12} />}>Pending</Badge>
  *   <Pill tone="white">Guest favourite</Pill>      // rounded-full, for labels on cards/photos
  *
- * Tones map onto the five DARNA hues: neutral (ink tint), olive/success, terracotta/danger,
+ * Tones map onto the five BLADUS hues: neutral (ink tint), olive/success, terracotta/danger,
  * ochre/warning, sand, ink (solid). Badges are static text, use Chip for interactive filters.
  * Server-component safe (no hooks).
  */

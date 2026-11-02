@@ -36,7 +36,7 @@
     "publishAria": "Publish “{title}”",
     "viewPublic": "View the public page of “{title}” (opens in a new tab)",
     "deleteAria": "Delete “{title}”",
-    "toastPublished": "Circuit published and live on DARNA.",
+    "toastPublished": "Circuit published and live on BLADUS.",
     "toastPaused": "Circuit paused and hidden from public search.",
     "toastStatusError": "Could not update the circuit status.",
     "toastDeleted": "Circuit permanently deleted from your agency portfolio.",
@@ -136,7 +136,7 @@
       "agencyFallback": "Your agency",
       "saveAsDraft": "Save as draft",
       "publishing": "Publishing…",
-      "publishToDarna": "Publish to DARNA",
+      "publishToDarna": "Publish to BLADUS",
       "publishCircuit": "Publish circuit"
     },
     "nav": {
@@ -150,7 +150,7 @@
       "price": "The price per person must be a whole number between {min} and {max}."
     },
     "toast": {
-      "published": "Expedition published on DARNA!",
+      "published": "Expedition published on BLADUS!",
       "drafted": "Expedition saved to your agency drafts.",
       "failed": "Could not save the circuit. Please check your inputs."
     },

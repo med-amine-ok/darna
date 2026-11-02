@@ -62,7 +62,7 @@
     }
   },
   "modal": {
-    "title": "Search DARNA",
+    "title": "Search BLADUS",
     "whereTitle": "Where do you want to go?",
     "whereSubtitle": "Explore top Algerian wilayas, coastal villas or desert getaways",
     "destinationPlaceholder": "Search destinations (e.g. Tipaza, Algiers, Djanet)…",
@@ -186,7 +186,7 @@
   },
   "filterBarLabel": "Filters",
   "activeFilters": "{count, plural, one {# active filter} other {# active filters}}",
-  "pricesIncludeFees": "Totals for your dates, with no DARNA fees",
+  "pricesIncludeFees": "Totals for your dates, with no BLADUS fees",
   "updating": "Updating results…",
   "loadingResults": "Loading results…",
   "flex": {

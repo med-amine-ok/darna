@@ -742,7 +742,7 @@ export default function HotelHostelDetailClient({
                     {selectedRoom?.name || tp("selectARoom")}
                   </m.h2>
                 </AnimatePresence>
-                {/* The hotel's own rate: travellers pay no DARNA fee on top. */}
+                {/* The hotel's own rate: travellers pay no BLADUS fee on top. */}
                 <p className="mt-3 flex items-baseline gap-1.5 flex-wrap">
                   <span className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums">{money(quote.unitPrice)}</span>
                   <span className="text-body text-primary-500">{isBedUnit ? tp("perBedPerNight") : tp("perRoomPerNight")}</span>

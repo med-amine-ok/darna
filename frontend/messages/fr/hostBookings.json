@@ -49,7 +49,7 @@
     "declined": "Refusée par l'hôte",
     "declinedWithReason": "Refusée par l'hôte · {reason}",
     "cancelledByHost": "Annulée par l'hôte ({refund})",
-    "cancelledBySystem": "Annulée par DARNA ({refund})",
+    "cancelledBySystem": "Annulée par BLADUS ({refund})",
     "cancelledByGuest": "Annulée par le voyageur ({refund})",
     "expired": "Demande expirée"
   },
@@ -98,8 +98,8 @@
     "subtotal": "Sous-total hébergement",
     "cleaningFee": "Frais de ménage",
     "refunded": "Remboursé au voyageur",
-    "commission": "Commission DARNA",
-    "commissionWithRate": "Commission DARNA ({rate} % du sous-total)",
+    "commission": "Commission BLADUS",
+    "commissionWithRate": "Commission BLADUS ({rate} % du sous-total)",
     "negative": "− {amount}",
     "net": "Votre versement net",
     "download": "Imprimer la facture",
@@ -124,8 +124,8 @@
   },
   "cancelDialog": {
     "title": "Confirmer l'annulation par l'hôte",
-    "message": "L'annulation d'une réservation confirmée avertit immédiatement le voyageur et déclenche un remboursement automatique SATIM Edahabia/CIB. Des annulations fréquentes peuvent affecter votre statut de Superhôte sur DARNA.",
-    "callout": "La politique hôte de DARNA garantit un remboursement intégral au voyageur en cas d'annulation par l'hôte.",
+    "message": "L'annulation d'une réservation confirmée avertit immédiatement le voyageur et déclenche un remboursement automatique SATIM Edahabia/CIB. Des annulations fréquentes peuvent affecter votre statut de Superhôte sur BLADUS.",
+    "callout": "La politique hôte de BLADUS garantit un remboursement intégral au voyageur en cas d'annulation par l'hôte.",
     "confirm": "Annuler la réservation",
     "keep": "Conserver la réservation"
   },

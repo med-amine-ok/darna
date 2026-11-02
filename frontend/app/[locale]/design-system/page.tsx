@@ -4,7 +4,7 @@ import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import DesignSystemGallery from "./DesignSystemGallery";
 
 /**
- * Internal component gallery for the DARNA kit (components/ui). Development only:
+ * Internal component gallery for the BLADUS kit (components/ui). Development only:
  * 404s in production builds and is never indexed.
  */
 

@@ -49,7 +49,7 @@
     "declined": "Declined by Host",
     "declinedWithReason": "Declined by Host · {reason}",
     "cancelledByHost": "Cancelled by host ({refund})",
-    "cancelledBySystem": "Cancelled by DARNA ({refund})",
+    "cancelledBySystem": "Cancelled by BLADUS ({refund})",
     "cancelledByGuest": "Cancelled by guest ({refund})",
     "expired": "Request expired"
   },
@@ -98,8 +98,8 @@
     "subtotal": "Accommodation subtotal",
     "cleaningFee": "Cleaning fee",
     "refunded": "Refunded to guest",
-    "commission": "DARNA commission",
-    "commissionWithRate": "DARNA commission ({rate}% of subtotal)",
+    "commission": "BLADUS commission",
+    "commissionWithRate": "BLADUS commission ({rate}% of subtotal)",
     "negative": "− {amount}",
     "net": "Your Net Payout",
     "download": "Print invoice",
@@ -124,8 +124,8 @@
   },
   "cancelDialog": {
     "title": "Confirm Host Cancellation",
-    "message": "Cancelling a confirmed reservation will notify the guest immediately and issue an automatic SATIM Edahabia/CIB refund. Frequent cancellations can affect your Superhost standing on DARNA.",
-    "callout": "DARNA host policy guarantees a full refund to the guest if the host cancels.",
+    "message": "Cancelling a confirmed reservation will notify the guest immediately and issue an automatic SATIM Edahabia/CIB refund. Frequent cancellations can affect your Superhost standing on BLADUS.",
+    "callout": "BLADUS host policy guarantees a full refund to the guest if the host cancels.",
     "confirm": "Cancel booking",
     "keep": "Keep reservation"
   },

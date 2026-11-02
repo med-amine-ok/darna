@@ -1,7 +1,7 @@
 import type { Transition, Variants } from "framer-motion";
 
 /**
- * DARNA motion vocabulary (docs/design/DESIGN-DIRECTION.md §7).
+ * BLADUS motion vocabulary (docs/design/DESIGN-DIRECTION.md §7).
  * Framer Motion for stateful animation; CSS transitions only for hover colour/shadow
  * (Tailwind `duration-fast` + `ease-standard`). Only transform/opacity animate.
  */

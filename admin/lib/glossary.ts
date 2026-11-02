@@ -1,5 +1,5 @@
 /**
- * DARNA Admin, Plain-Language Glossary & "Where did it go?" structure
+ * BLADUS Admin, Plain-Language Glossary & "Where did it go?" structure
  * Implements IHM course rules (§3.2, T3: Hick's Law, Langage employé)
  *
  * Strict rule: Never display raw system jargon, database codes, or cryptic abbreviations.

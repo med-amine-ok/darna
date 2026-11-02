@@ -6,7 +6,7 @@
   "notFoundMetaTitle": "Page introuvable",
   "notFoundTitle": "Cette page s'est égarée hors de la carte",
   "notFoundBody": "Le lien est peut-être ancien ou la page a été déplacée. Cherchez un hébergement ou partez de l'une de nos wilayas préférées.",
-  "explore": "Explorer DARNA",
+  "explore": "Explorer BLADUS",
   "generic": "Une erreur s'est produite. Veuillez réessayer.",
   "codes": {
     "UNAUTHENTICATED": "Veuillez vous connecter pour continuer.",
@@ -54,7 +54,7 @@
     "REQUEST_EXPIRED": "Cette demande a expiré.",
     "REQUEST_NOT_PENDING": "Seules les demandes en attente peuvent recevoir une réponse.",
     "RESERVATION_NOT_CANCELLABLE": "Cette réservation ne peut plus être annulée.",
-    "CHECK_IN_PASSED": "L'heure d'arrivée est déjà passée. Veuillez contacter l'hôte ou le support DARNA.",
+    "CHECK_IN_PASSED": "L'heure d'arrivée est déjà passée. Veuillez contacter l'hôte ou le support BLADUS.",
     "PAST_DATES_LOCKED": "Les dates passées ne peuvent pas être modifiées.",
     "PRICE_RANGE": "Le prix doit être un nombre entier compris entre {min} et {max}.",
     "ROOM_TYPE_DATE_PRICES_UNSUPPORTED": "Les prix par date ne sont pas encore disponibles pour les types de chambres d'hôtel et d'auberge.",

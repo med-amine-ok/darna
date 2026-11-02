@@ -6,9 +6,9 @@ import { test, expect, Page, Browser } from "@playwright/test";
  * export ADMIN_SEED_PASSWORD_* for the accounts below.
  */
 const ACCOUNTS = {
-  super_admin: { email: "admin@darna.dz", password: process.env.ADMIN_SEED_PASSWORD || "DarnaAdmin2026!" },
-  analyst: { email: "analyst@darna.dz", password: process.env.ADMIN_SEED_PASSWORD_ANALYST || "DarnaAnalyst2026!" },
-  moderator: { email: "moderator@darna.dz", password: process.env.ADMIN_SEED_PASSWORD_MODERATOR || "DarnaMod2026!" },
+  super_admin: { email: "admin@bladus.dz", password: process.env.ADMIN_SEED_PASSWORD || "DarnaAdmin2026!" },
+  analyst: { email: "analyst@bladus.dz", password: process.env.ADMIN_SEED_PASSWORD_ANALYST || "DarnaAnalyst2026!" },
+  moderator: { email: "moderator@bladus.dz", password: process.env.ADMIN_SEED_PASSWORD_MODERATOR || "DarnaMod2026!" },
 };
 
 async function login(page: Page, who: keyof typeof ACCOUNTS, returnTo?: string) {

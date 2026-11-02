@@ -62,7 +62,7 @@
     }
   },
   "modal": {
-    "title": "Rechercher sur DARNA",
+    "title": "Rechercher sur BLADUS",
     "whereTitle": "Où souhaitez-vous aller ?",
     "whereSubtitle": "Explorez les plus belles wilayas, villas côtières ou escapades dans le désert",
     "destinationPlaceholder": "Rechercher une destination (ex. Tipaza, Alger, Djanet)…",
@@ -186,7 +186,7 @@
   },
   "filterBarLabel": "Filtres",
   "activeFilters": "{count, plural, one {# filtre actif} other {# filtres actifs}}",
-  "pricesIncludeFees": "Totaux pour vos dates, sans frais DARNA",
+  "pricesIncludeFees": "Totaux pour vos dates, sans frais BLADUS",
   "updating": "Mise à jour des résultats…",
   "loadingResults": "Chargement des résultats…",
   "flex": {

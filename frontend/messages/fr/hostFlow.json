@@ -27,13 +27,13 @@
   "exitModalTitle": "Quitter la création de l’annonce ?",
   "exitModalDesc": "Vos modifications ne sont pas enregistrées. Enregistrez un brouillon pour reprendre plus tard, ou abandonnez votre saisie.",
   "reviewTitle": "Vérifiez votre annonce avant de la publier",
-  "reviewSubtitle": "Voici ce que verront les voyageurs sur DARNA.",
-  "publishListing": "Publier votre annonce sur DARNA",
+  "reviewSubtitle": "Voici ce que verront les voyageurs sur BLADUS.",
+  "publishListing": "Publier votre annonce sur BLADUS",
   "pricePerNight": "Prix par nuit (DZD)",
   "draftSaved": "Progression enregistrée en brouillon dans votre navigateur.",
   "addPhotoUrlPlaceholder": "Collez l'URL de l'image (https://...)",
   "step": "Étape {current} sur {total}",
-  "hostTypeTitle": "Comment souhaitez-vous héberger sur DARNA ?",
+  "hostTypeTitle": "Comment souhaitez-vous héberger sur BLADUS ?",
   "hostTypeSubtitle": "Choisissez le modèle d’accueil qui correspond le mieux à vos biens, votre flotte ou votre établissement en Algérie.",
   "individualTitle": "Hôte particulier",
   "individualDesc": "Vous êtes un particulier qui loue sa villa, son appartement dans la Casbah, sa tente saharienne ou son 4x4. Espace de gestion simple et dédié.",
@@ -46,7 +46,7 @@
   "contactEmail": "E-mail professionnel de contact",
   "contactPhone": "Téléphone professionnel de contact",
   "header": {
-    "logoAlt": "Accueil DARNA",
+    "logoAlt": "Accueil BLADUS",
     "becomeHost": "Devenir hôte",
     "agency": "Inscription agence",
     "hotel": "Inscription hôtel",
@@ -58,7 +58,7 @@
     "selectHostMode": "Choisissez votre mode d’accueil"
   },
   "hostType": {
-    "eyebrow": "Devenir hôte sur DARNA",
+    "eyebrow": "Devenir hôte sur BLADUS",
     "individual": {
       "badge": "Hôte solo",
       "cta": "Continuer en tant que particulier"
@@ -92,7 +92,7 @@
   },
   "intro": {
     "eyebrow": "Aperçu",
-    "title": "Commencer sur DARNA, c’est simple",
+    "title": "Commencer sur BLADUS, c’est simple",
     "subtitle": "Rejoignez des milliers d’hôtes chaleureux qui partagent la culture, les côtes et les expéditions sahariennes de l’Algérie.",
     "step1Title": "Parlez-nous de votre logement",
     "step1Desc": "Indiquez l’emplacement, le type de bien et la capacité d’accueil.",
@@ -186,7 +186,7 @@
     "photoAlt": "Photo du logement {number}",
     "removeLabel": "Supprimer la photo {number}",
     "urlLabel": "Ajouter une photo par URL",
-    "presetsLabel": "Depuis la photothèque DARNA",
+    "presetsLabel": "Depuis la photothèque BLADUS",
     "addPreset": "Ajouter la photo suggérée : {name}",
     "added": "Photo ajoutée à la galerie !",
     "minOne": "Votre galerie doit contenir au moins une photo.",
@@ -238,7 +238,7 @@
     "eurEquivalent": "Soit environ {amount} par nuit",
     "breakdown": "Estimation des revenus",
     "base": "Prix de base",
-    "commission": "Commission DARNA ({rate} %)",
+    "commission": "Commission BLADUS ({rate} %)",
     "payout": "Votre revenu net",
     "priceLabel": {
       "home": "Prix par nuit",
@@ -276,7 +276,7 @@
     "editPhotos": "Modifier les photos ({count})",
     "editPrice": "Modifier le prix",
     "publishing": "Publication de l’annonce...",
-    "published": "Félicitations ! Votre annonce est maintenant en ligne sur DARNA.",
+    "published": "Félicitations ! Votre annonce est maintenant en ligne sur BLADUS.",
     "empty": "Non renseigné",
     "perUnit": "{unit} ({eur})"
   },

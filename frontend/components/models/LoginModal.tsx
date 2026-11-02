@@ -46,9 +46,9 @@ export type AuthMode = "login" | "signup";
 /** Seeded demo accounts (password documented in README.md). */
 const DEMO_PASSWORD = "darna-demo-2026";
 const DEMO_ACCOUNTS = [
-  { email: "yacine.traveler@darna.dz", key: "demoTraveler", name: "Yacine" },
-  { email: "amina.benali@darna.dz", key: "demoHost", name: "Amina" },
-  { email: "karim.mansouri@darna.dz", key: "demoAgency", name: "Karim" },
+  { email: "yacine.traveler@bladus.dz", key: "demoTraveler", name: "Yacine" },
+  { email: "amina.benali@bladus.dz", key: "demoHost", name: "Amina" },
+  { email: "karim.mansouri@bladus.dz", key: "demoAgency", name: "Karim" },
 ] as const;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

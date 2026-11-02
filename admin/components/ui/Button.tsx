@@ -29,7 +29,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles =
       "inline-flex items-center justify-center font-semibold rounded-xl transition-[background-color,box-shadow,color,transform] duration-fast ease-standard active:scale-[0.98] active:duration-micro focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-50 disabled:pointer-events-none select-none cursor-pointer";
 
-    // DARNA kit (docs/design/ROLLOUT-GUIDE.md §2): ink solid primary, olive positive,
+    // BLADUS kit (docs/design/ROLLOUT-GUIDE.md §2): ink solid primary, olive positive,
     // white e1 tertiary, terracotta only for destructive/alert.
     const variantStyles = {
       primary:

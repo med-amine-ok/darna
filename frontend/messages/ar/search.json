@@ -62,7 +62,7 @@
     }
   },
   "modal": {
-    "title": "البحث في DARNA",
+    "title": "البحث في BLADUS",
     "whereTitle": "إلى أين تريد الذهاب؟",
     "whereSubtitle": "استكشف أجمل الولايات والفيلات الساحلية ورحلات الصحراء",
     "destinationPlaceholder": "ابحث عن وجهة (مثل تيبازة، الجزائر، جانت)…",
@@ -186,7 +186,7 @@
   },
   "filterBarLabel": "عوامل التصفية",
   "activeFilters": "{count, plural, one {عامل تصفية نشط واحد} two {عاملا تصفية نشطان} few {# عوامل تصفية نشطة} many {# عامل تصفية نشط} other {# عامل تصفية نشط}}",
-  "pricesIncludeFees": "المجموع لتواريخك، دون رسوم DARNA",
+  "pricesIncludeFees": "المجموع لتواريخك، دون رسوم BLADUS",
   "updating": "جارٍ تحديث النتائج…",
   "loadingResults": "جارٍ تحميل النتائج…",
   "flex": {

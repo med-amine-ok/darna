@@ -39,7 +39,7 @@
   "hostCardTitle": "Faites connaissance avec votre hôte",
   "messageHost": "Contacter l'hôte",
   "cleaningFee": "Frais de ménage",
-  "serviceFee": "Frais de service DARNA",
+  "serviceFee": "Frais de service BLADUS",
   "taxes": "Taxes",
   "youWontBeCharged": "Aucun montant ne vous sera débité pour l'instant",
   "reportListing": "Signaler ce logement",
@@ -145,7 +145,7 @@
   "bedCount": "{count, plural, one {# lit} other {# lits}}",
   "bathCount": "{count, plural, one {# salle de bain} other {# salles de bain}}",
   "viewHostProfile": "Voir le profil de {name}",
-  "guestFavoriteDesc": "L'une des annonces les plus appréciées sur DARNA, d'après les notes et avis authentiques des voyageurs.",
+  "guestFavoriteDesc": "L'une des annonces les plus appréciées sur BLADUS, d'après les notes et avis authentiques des voyageurs.",
   "policyCancellation": "Annulation {policy}",
   "about": {
     "home": "À propos de ce logement",
@@ -245,7 +245,7 @@
     "bunkShared": "1 lit superposé (partagé)",
     "kingPlusSofa": "1 lit king size + 1 canapé-lit",
     "kingBed": "1 grand lit king size",
-    "instantOnDarna": "Réservation instantanée confirmée sur DARNA",
+    "instantOnDarna": "Réservation instantanée confirmée sur BLADUS",
     "selectedRoom": "Chambre sélectionnée",
     "selectRoom": "Choisir cette chambre",
     "selectedRoomNamed": "{name}, sélectionnée",
@@ -277,7 +277,7 @@
     "agePolicyTitle": "Clients et âge",
     "agePolicyDesc": "Tous âges acceptés en chambre privée ; 18 ans minimum en dortoir partagé.",
     "managedBy": "Géré par {name}",
-    "hostMeta": "Hôte professionnel sur DARNA · Répond en moins d'une heure",
+    "hostMeta": "Hôte professionnel sur BLADUS · Répond en moins d'une heure",
     "identityVerified": "Identité vérifiée",
     "licensedPartner": "Partenaire hôtelier agréé",
     "metrics": {
@@ -312,10 +312,10 @@
   "meta": {
     "notFoundTitle": "Annonce introuvable",
     "titleWithCity": "{title} · {city}",
-    "fallbackDescription": "Réservez {title} sur DARNA, séjours et expériences partout en Algérie."
+    "fallbackDescription": "Réservez {title} sur BLADUS, séjours et expériences partout en Algérie."
   },
   "ratingNew": "Nouveau",
-  "hostFallback": "un hôte DARNA",
+  "hostFallback": "un hôte BLADUS",
   "sectionNav": {
     "photos": "Photos",
     "amenities": "Équipements",
@@ -361,7 +361,7 @@
     "showDetails": "Détails de la chambre",
     "hideDetails": "Masquer les détails",
     "forNights": "{count, plural, one {pour # nuit} other {pour # nuits}}",
-    "pricesFor": "Prix pour {dates}, {count, plural, one {# nuit} other {# nuits}}. Ce sont les tarifs de l'hôte, sans frais DARNA en plus.",
+    "pricesFor": "Prix pour {dates}, {count, plural, one {# nuit} other {# nuits}}. Ce sont les tarifs de l'hôte, sans frais BLADUS en plus.",
     "changeRoom": "Changer de chambre"
   },
   "facts": {
@@ -392,9 +392,9 @@
   "pickupFrom": "Prise en charge dès {time}",
   "returnBefore": "Retour avant {time}",
   "loading": "Chargement de l'annonce",
-  "noGuestFees": "Aucun frais DARNA pour les voyageurs.",
-  "noGuestFeesHint": "Vous payez le prix de l'hôte ; la commission DARNA est payée par l'hôte.",
-  "noFeesShort": "Sans frais DARNA",
+  "noGuestFees": "Aucun frais BLADUS pour les voyageurs.",
+  "noGuestFeesHint": "Vous payez le prix de l'hôte ; la commission BLADUS est payée par l'hôte.",
+  "noFeesShort": "Sans frais BLADUS",
   "viewProfile": "Voir le profil",
   "hostKind": {
     "individual": "Hôte particulier",

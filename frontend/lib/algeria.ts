@@ -1,6 +1,6 @@
 /**
  * Algerian administrative geography used by search filters: the 58 wilayas (official
- * codes, 2019 reform included) and the communes that appear in DARNA listings.
+ * codes, 2019 reform included) and the communes that appear in BLADUS listings.
  * Names: French/Latin spelling (used for en and fr, except where English differs) and Arabic.
  */
 
@@ -78,7 +78,7 @@ export interface Commune {
   wilaya: number;
 }
 
-/** Communes that DARNA listings and trips are in (extend as hosts add places). */
+/** Communes that BLADUS listings and trips are in (extend as hosts add places). */
 export const COMMUNES: Commune[] = [
   { name: "Casbah", nameAr: "القصبة", wilaya: 16 },
   { name: "Alger Centre", nameAr: "الجزائر الوسطى", wilaya: 16 },

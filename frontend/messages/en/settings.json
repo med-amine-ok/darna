@@ -75,7 +75,7 @@
   },
   "notifications": {
     "title": "Notification preferences",
-    "description": "Choose how you receive messages, trip reminders and DARNA updates",
+    "description": "Choose how you receive messages, trip reminders and BLADUS updates",
     "updated": "Notification preferences updated.",
     "type": "Notification type",
     "channelEmail": "Email",
@@ -143,7 +143,7 @@
   },
   "privacy": {
     "title": "Privacy & data sharing",
-    "description": "Control your public visibility and export your DARNA account history",
+    "description": "Control your public visibility and export your BLADUS account history",
     "searchIndexing": "Search engine listing",
     "searchIndexingDescription": "Allow search engines to index your public host profile",
     "downloadData": "Download your personal data",
@@ -175,12 +175,12 @@
   },
   "dialogs": {
     "deactivateTitle": "Deactivate account",
-    "deactivateMessage": "Are you sure you want to deactivate your DARNA account? Your profile, reviews and active listings will be hidden until you sign in again.",
+    "deactivateMessage": "Are you sure you want to deactivate your BLADUS account? Your profile, reviews and active listings will be hidden until you sign in again.",
     "deactivateConfirm": "Deactivate account",
     "deactivateCancel": "Keep account active",
     "deactivateSoon": "Account deactivation is coming soon. Please contact support for now.",
     "removeCardTitle": "Remove payment card",
-    "removeCardMessage": "Are you sure you want to remove {card} from your DARNA account? You will need to enter your card details again for future bookings.",
+    "removeCardMessage": "Are you sure you want to remove {card} from your BLADUS account? You will need to enter your card details again for future bookings.",
     "removeCardConfirm": "Remove card",
     "removeCardCancel": "Keep card",
     "cardRemoved": "Payment card removed from your account."
@@ -188,9 +188,9 @@
   "eyebrow": "Your account",
   "accessibility": {
     "title": "Accessibility",
-    "description": "Make DARNA comfortable to use on this device.",
+    "description": "Make BLADUS comfortable to use on this device.",
     "reduceMotion": "Reduce motion",
-    "reduceMotionDescription": "Turn off entrance animations, parallax and moving effects. By default DARNA follows your device setting.",
+    "reduceMotionDescription": "Turn off entrance animations, parallax and moving effects. By default BLADUS follows your device setting.",
     "previewFull": "Animations are on, unless your device asks for less motion.",
     "previewReduced": "Motion is reduced on this device."
   }

@@ -49,7 +49,7 @@
     "declined": "رفضها المضيف",
     "declinedWithReason": "رفضها المضيف · {reason}",
     "cancelledByHost": "ألغاها المضيف ({refund})",
-    "cancelledBySystem": "ألغتها DARNA ({refund})",
+    "cancelledBySystem": "ألغتها BLADUS ({refund})",
     "cancelledByGuest": "ألغاها الضيف ({refund})",
     "expired": "انتهت صلاحية الطلب"
   },
@@ -98,8 +98,8 @@
     "subtotal": "المجموع الفرعي للإقامة",
     "cleaningFee": "رسوم التنظيف",
     "refunded": "مبلغ مسترد للضيف",
-    "commission": "عمولة DARNA",
-    "commissionWithRate": "عمولة DARNA ({rate}٪ من المجموع الفرعي)",
+    "commission": "عمولة BLADUS",
+    "commissionWithRate": "عمولة BLADUS ({rate}٪ من المجموع الفرعي)",
     "negative": "− {amount}",
     "net": "صافي مستحقاتك",
     "download": "طباعة الفاتورة",
@@ -124,8 +124,8 @@
   },
   "cancelDialog": {
     "title": "تأكيد الإلغاء من طرف المضيف",
-    "message": "سيؤدي إلغاء حجز مؤكد إلى إشعار الضيف فورًا وإصدار استرداد تلقائي عبر SATIM لبطاقة الذهبية أو CIB. قد تؤثر الإلغاءات المتكررة على مكانتك كمضيف متميز على DARNA.",
-    "callout": "تضمن سياسة المضيفين في DARNA استردادًا كاملًا للضيف إذا ألغى المضيف الحجز.",
+    "message": "سيؤدي إلغاء حجز مؤكد إلى إشعار الضيف فورًا وإصدار استرداد تلقائي عبر SATIM لبطاقة الذهبية أو CIB. قد تؤثر الإلغاءات المتكررة على مكانتك كمضيف متميز على BLADUS.",
+    "callout": "تضمن سياسة المضيفين في BLADUS استردادًا كاملًا للضيف إذا ألغى المضيف الحجز.",
     "confirm": "إلغاء الحجز",
     "keep": "الإبقاء على الحجز"
   },

@@ -1,6 +1,6 @@
-# DARNA, frontend
+# BLADUS, frontend
 
-DARNA is an Airbnb-style marketplace for Algeria: homes, hotels, hostels,
+BLADUS is an Airbnb-style marketplace for Algeria: homes, hotels, hostels,
 experiences, vehicles and agency-run multi-day trips, in English, French and
 Arabic (RTL). This package is the public web app (guests and hosts). The
 staff back-office lives in `../admin`.
@@ -32,9 +32,9 @@ uses the password **`darna-demo-2026`**.
 
 | Email                                              | Role                                         |
 | -------------------------------------------------- | -------------------------------------------- |
-| `yacine.traveler@darna.dz`                         | Guest / traveler                             |
-| `amina.benali@darna.dz`                            | Individual host                              |
-| `karim.mansouri@darna.dz`                          | Agency owner (Atlas Escapes) and hotel owner |
+| `yacine.traveler@bladus.dz`                         | Guest / traveler                             |
+| `amina.benali@bladus.dz`                            | Individual host                              |
+| `karim.mansouri@bladus.dz`                          | Agency owner (Atlas Escapes) and hotel owner |
 | `sofiane.mebarki@gmail.com`, `leila.hadj@yahoo.fr` | Guests                                       |
 
 The login page also has one-click demo buttons. New accounts can be created

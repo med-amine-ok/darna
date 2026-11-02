@@ -94,7 +94,7 @@ export default function LoginForm({
         <div className="relative flex items-center gap-2.5 enter-up">
           <Image
             src="/assets/logo-horizontal.png"
-            alt="DARNA"
+            alt="BLADUS"
             width={110}
             height={34}
             className="h-7 w-auto object-contain brightness-0 invert"
@@ -142,7 +142,7 @@ export default function LoginForm({
           <div className="flex items-center gap-2 lg:invisible">
             <Image
               src="/assets/logo-horizontal.png"
-              alt="DARNA"
+              alt="BLADUS"
               width={110}
               height={34}
               className="h-7 w-auto object-contain brightness-0"
@@ -184,7 +184,7 @@ export default function LoginForm({
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@darna.dz"
+                placeholder="admin@bladus.dz"
                 required
                 {...errorProps}
                 leftIcon={<Mail className="w-4 h-4" aria-hidden="true" />}

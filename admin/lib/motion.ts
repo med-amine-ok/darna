@@ -1,7 +1,7 @@
 import type { Transition, Variants } from "framer-motion";
 
 /**
- * DARNA motion vocabulary (docs/design/DESIGN-DIRECTION.md §7), admin translation (§9):
+ * BLADUS motion vocabulary (docs/design/DESIGN-DIRECTION.md §7), admin translation (§9):
  * same tokens as the guest site, but the back-office only uses micro / fast / base on
  * interactive paths. Framer Motion (`m.*` under LazyMotion strict, see
  * components/motion/MotionProvider.tsx) for stateful animation; CSS transitions

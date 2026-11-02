@@ -94,7 +94,7 @@
     "payoutBreakdown": "Détail du versement",
     "baseRate": "Revenu de base par nuitée",
     "cleaningFee": "Frais de ménage",
-    "serviceFee": "Commission DARNA",
+    "serviceFee": "Commission BLADUS",
     "totalEarnings": "Versement net hôte"
   },
   "calendar": {
@@ -163,7 +163,7 @@
     "tabDefaults": "Règles par défaut",
     "tabTeam": "Gestion d'équipe",
     "hostTypeTitle": "Type de compte hôte",
-    "hostTypeDesc": "Choisissez comment vous opérez sur la plateforme DARNA.",
+    "hostTypeDesc": "Choisissez comment vous opérez sur la plateforme BLADUS.",
     "individual": "Hôte Particulier",
     "individualDesc": "Vous louez vos propres résidences ou appartements personnels.",
     "agency": "Agence / Entreprise",
@@ -211,6 +211,6 @@
     "agencyTrips": "Voyages de l’agence",
     "newTrip": "Créer un voyage",
     "becomeHost": "Devenir hôte",
-    "becomeHostDescription": "Publiez votre logement, votre expérience ou votre véhicule sur DARNA et accueillez des voyageurs partout en Algérie."
+    "becomeHostDescription": "Publiez votre logement, votre expérience ou votre véhicule sur BLADUS et accueillez des voyageurs partout en Algérie."
   }
 }

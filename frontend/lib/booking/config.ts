@@ -9,7 +9,7 @@ import type {
 } from "@/types";
 
 /**
- * Default DARNA commission (% of the accommodation subtotal) by host type.
+ * Default BLADUS commission (% of the accommodation subtotal) by host type.
  * Admins can change the live rates (server-side store in lib/data/wallet.ts).
  */
 export const DEFAULT_COMMISSION_RATES: HostTypeCommissionRates = {
@@ -20,8 +20,8 @@ export const DEFAULT_COMMISSION_RATES: HostTypeCommissionRates = {
 };
 
 /**
- * DARNA never charges travellers: there is no guest service fee on any category.
- * DARNA earns only its commission, deducted from the host payout (see
+ * BLADUS never charges travellers: there is no guest service fee on any category.
+ * BLADUS earns only its commission, deducted from the host payout (see
  * DEFAULT_COMMISSION_RATES and lib/booking/payout.ts). Kept as a table so quotes and
  * stored reservations keep their `serviceFee` field (always 0).
  */

@@ -396,9 +396,9 @@ function netCommissionFor(
 }
 
 /**
- * Charges DARNA's commission for a confirmed booking, idempotent: a booking
+ * Charges BLADUS's commission for a confirmed booking, idempotent: a booking
  * is charged at most once (no-op when a non-reversed charge exists).
- * The commission base is the accommodation subtotal: DARNA's guest service
+ * The commission base is the accommodation subtotal: BLADUS's guest service
  * fee and the cleaning fee are excluded. The rate comes from the owner's
  * host type (individual / agency / hotel / hostel).
  */

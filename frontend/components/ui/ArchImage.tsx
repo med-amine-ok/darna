@@ -15,7 +15,7 @@ interface ArchImageProps {
 }
 
 /**
- * Photograph clipped to the Moorish arch from the DARNA logo (public/brand/arch-mask.svg).
+ * Photograph clipped to the Moorish arch from the BLADUS logo (public/brand/arch-mask.svg).
  * The wrapper keeps the aspect ratio (4:5 by default via className) so nothing shifts while
  * the image loads; a sand placeholder cross-fades into the photo.
  */

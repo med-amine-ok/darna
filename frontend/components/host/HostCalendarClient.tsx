@@ -103,7 +103,7 @@ function keysBetween(a: string, b: string): string[] {
   return out;
 }
 
-// Listing colours for multi-listing indicators (five DARNA hues).
+// Listing colours for multi-listing indicators (five BLADUS hues).
 const LISTING_COLORS = [
   { dot: "bg-secondary-600", pill: "bg-secondary-100 text-secondary-800" },
   { dot: "bg-accent-600", pill: "bg-accent-100 text-accent-800" },

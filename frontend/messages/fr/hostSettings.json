@@ -51,7 +51,7 @@
     "manageTeam": "Gérer l'équipe de l'agence",
     "upgrade": "Passer à un espace agence",
     "complianceTitle": "Conformité légale en Algérie",
-    "complianceBody": "Les activités d'hébergement sur DARNA respectent la réglementation algérienne en matière de tourisme et de fiscalité. Les hôtes particuliers sont enregistrés comme auto-entrepreneurs ou particuliers. Les agences doivent fournir leur numéro de Registre du commerce (RC) et leur numéro d'identification fiscale (NIF)."
+    "complianceBody": "Les activités d'hébergement sur BLADUS respectent la réglementation algérienne en matière de tourisme et de fiscalité. Les hôtes particuliers sont enregistrés comme auto-entrepreneurs ou particuliers. Les agences doivent fournir leur numéro de Registre du commerce (RC) et leur numéro d'identification fiscale (NIF)."
   },
   "defaults": {
     "title": "Paramètres de réservation globaux",

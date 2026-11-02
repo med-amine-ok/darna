@@ -1,5 +1,5 @@
 /**
- * DARNA admin design tokens, ported from frontend/tailwind.config.js (copied, not imported):
+ * BLADUS admin design tokens, ported from frontend/tailwind.config.js (copied, not imported):
  * docs/design/DESIGN-DIRECTION.md §2–§4, §7 and §9 (admin translation).
  * Five hues only; every other Tailwind colour family is remapped onto their tints/shades.
  */
@@ -128,7 +128,7 @@ module.exports = {
           900: "#5F5A47",
           950: "#3C392C",
         },
-        // Off-palette families remapped onto tints/shades of the five DARNA hues
+        // Off-palette families remapped onto tints/shades of the five BLADUS hues
         // (no new hues): neutral = warm ink/sand greys; emerald (success) = olive;
         // rose/red (danger) = terracotta; amber (warning) = ochre between sand and
         // terracotta; blue/purple = olive/ink. neutral-500+ keeps >= 4.5:1 on #F8F6EE.

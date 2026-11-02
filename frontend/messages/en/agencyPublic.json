@@ -11,9 +11,9 @@
     "hostel": "Hostel profile"
   },
   "metaDescription": {
-    "agency": "Discover the trips, stays, vehicles and experiences offered by {name} on DARNA.",
-    "hotel": "Discover the rooms and suites of {name} on DARNA.",
-    "hostel": "Discover the beds and rooms of {name} on DARNA."
+    "agency": "Discover the trips, stays, vehicles and experiences offered by {name} on BLADUS.",
+    "hotel": "Discover the rooms and suites of {name} on BLADUS.",
+    "hostel": "Discover the beds and rooms of {name} on BLADUS."
   },
   "logoAlt": "{name} logo",
   "pendingVerification": "Pending verification",
@@ -23,7 +23,7 @@
     "hostel": "Verified hostel"
   },
   "reviewTitle": "Compliance review in progress",
-  "reviewBody": "DARNA is still verifying this organization's commercial registration.",
+  "reviewBody": "BLADUS is still verifying this organization's commercial registration.",
   "teamMembers": "Team members",
   "rating": "Rating",
   "noRating": "New",
@@ -35,9 +35,9 @@
     "manager": "Manager"
   },
   "contactNote": {
-    "agency": "You can message this agency through DARNA once you have a booking.",
-    "hotel": "You can message this hotel through DARNA once you have a booking.",
-    "hostel": "You can message this hostel through DARNA once you have a booking."
+    "agency": "You can message this agency through BLADUS once you have a booking.",
+    "hotel": "You can message this hotel through BLADUS once you have a booking.",
+    "hostel": "You can message this hostel through BLADUS once you have a booking."
   },
   "listingsBy": {
     "agency": "Stays, vehicles & experiences by {name}",
@@ -55,7 +55,7 @@
     "hotel": "Hotel",
     "hostel": "Hostel"
   },
-  "onDarnaSince": "On DARNA since {year}",
+  "onDarnaSince": "On BLADUS since {year}",
   "statsLabel": {
     "agency": "Agency highlights",
     "hotel": "Hotel highlights",

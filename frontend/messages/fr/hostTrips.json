@@ -36,7 +36,7 @@
     "publishAria": "Publier « {title} »",
     "viewPublic": "Voir la page publique de « {title} » (nouvel onglet)",
     "deleteAria": "Supprimer « {title} »",
-    "toastPublished": "Circuit publié et visible sur DARNA.",
+    "toastPublished": "Circuit publié et visible sur BLADUS.",
     "toastPaused": "Circuit suspendu et masqué de la recherche publique.",
     "toastStatusError": "Impossible de mettre à jour le statut du circuit.",
     "toastDeleted": "Circuit définitivement supprimé du catalogue de l'agence.",
@@ -136,7 +136,7 @@
       "agencyFallback": "Votre agence",
       "saveAsDraft": "Enregistrer comme brouillon",
       "publishing": "Publication…",
-      "publishToDarna": "Publier sur DARNA",
+      "publishToDarna": "Publier sur BLADUS",
       "publishCircuit": "Publier le circuit"
     },
     "nav": {
@@ -150,7 +150,7 @@
       "price": "Le prix par personne doit être un nombre entier compris entre {min} et {max}."
     },
     "toast": {
-      "published": "Expédition publiée sur DARNA !",
+      "published": "Expédition publiée sur BLADUS !",
       "drafted": "Expédition enregistrée dans les brouillons de l'agence.",
       "failed": "Impossible d'enregistrer le circuit. Veuillez vérifier vos informations."
     },

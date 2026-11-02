@@ -197,7 +197,7 @@ export function generateSeedData() {
       id: `hst_${i.toString().padStart(3, "0")}`,
       ownerName,
       businessName,
-      email: `${fn.toLowerCase()}.${ln.toLowerCase()}${i}@${hostType === "individual" ? "gmail.com" : "darna-partner.dz"}`,
+      email: `${fn.toLowerCase()}.${ln.toLowerCase()}${i}@${hostType === "individual" ? "gmail.com" : "bladus-partner.dz"}`,
       phone: `+213 ${randomItem(["5", "6", "7"])}${randomInt(10, 99)} ${randomInt(10, 99)} ${randomInt(10, 99)}`,
       hostType,
       status,
@@ -241,7 +241,7 @@ export function generateSeedData() {
   // 3. Generate ≥ 420 Listings
   const listings: Listing[] = [];
   const propertySubtypes = [
-    "Mediterranean Seaside Villa", "Darna Heritage House", "Saharan Oasis Ecolodge",
+    "Mediterranean Seaside Villa", "Dar El Bahdja Heritage House", "Saharan Oasis Ecolodge",
     "Modern Heights Apartment", "Traditional M'zab House", "Tassili Bivouac Expedition",
     "Sahara 4x4 Land Cruiser", "Roman Ruins Heritage Stay", "Corniche Luxury Penthouse",
     "Cedar Forest Mountain Chalet", "Palm Grove Desert Camp", "Gorge View Heritage Suite"
@@ -562,7 +562,7 @@ export function generateSeedData() {
       id: `aud_${i.toString().padStart(3, "0")}`,
       timestamp: new Date(Date.now() - randomInt(0, 90) * 86400000).toISOString(),
       actorId: "adm_01",
-      actorName: "DARNA Administrator",
+      actorName: "BLADUS Administrator",
       actorRole: "super_admin",
       action: template.action,
       entityType: template.entityType,
@@ -607,7 +607,7 @@ export function generateSeedData() {
       ...(status !== "pending"
         ? {
             processedAt: new Date(new Date(requestedAt).getTime() + 86400000).toISOString(),
-            processedBy: "DARNA Administrator",
+            processedBy: "BLADUS Administrator",
             rejectionReason: status === "rejected" ? "Account holder name does not match host identity" : undefined,
           }
         : {}),

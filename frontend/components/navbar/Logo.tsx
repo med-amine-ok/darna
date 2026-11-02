@@ -16,7 +16,7 @@ interface LogoProps {
 }
 
 const VARIANTS = {
-  horizontal: { src: "/assets/logo-horizontal.png", width: 140, height: 44 },
+  horizontal: { src: "/assets/logo-horizontal.png", width: 146, height: 44 },
   icon: { src: "/assets/logo.png", width: 38, height: 38 },
   vertical: { src: "/assets/logo-vertical.png", width: 160, height: 90 },
 } as const;

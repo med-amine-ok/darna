@@ -39,7 +39,7 @@
   "hostCardTitle": "Meet your host",
   "messageHost": "Message host",
   "cleaningFee": "Cleaning fee",
-  "serviceFee": "DARNA service fee",
+  "serviceFee": "BLADUS service fee",
   "taxes": "Taxes",
   "youWontBeCharged": "You won't be charged yet",
   "reportListing": "Report this listing",
@@ -145,7 +145,7 @@
   "bedCount": "{count, plural, one {# bed} other {# beds}}",
   "bathCount": "{count, plural, one {# bath} other {# baths}}",
   "viewHostProfile": "View {name}'s profile",
-  "guestFavoriteDesc": "One of the most loved listings on DARNA, based on authentic guest ratings and reviews.",
+  "guestFavoriteDesc": "One of the most loved listings on BLADUS, based on authentic guest ratings and reviews.",
   "policyCancellation": "{policy} cancellation",
   "about": {
     "home": "About this place",
@@ -245,7 +245,7 @@
     "bunkShared": "1 bunk bed (shared)",
     "kingPlusSofa": "1 king bed + 1 sofa bed",
     "kingBed": "1 large king bed",
-    "instantOnDarna": "Instant booking confirmed on DARNA",
+    "instantOnDarna": "Instant booking confirmed on BLADUS",
     "selectedRoom": "Selected room",
     "selectRoom": "Select room",
     "selectedRoomNamed": "{name}, selected",
@@ -277,7 +277,7 @@
     "agePolicyTitle": "Guest & age policy",
     "agePolicyDesc": "All ages welcome in private rooms; minimum age 18 in shared dormitories.",
     "managedBy": "Managed by {name}",
-    "hostMeta": "Hospitality host on DARNA · Responds within an hour",
+    "hostMeta": "Hospitality host on BLADUS · Responds within an hour",
     "identityVerified": "Identity verified",
     "licensedPartner": "Licensed hospitality partner",
     "metrics": {
@@ -312,10 +312,10 @@
   "meta": {
     "notFoundTitle": "Listing not found",
     "titleWithCity": "{title} · {city}",
-    "fallbackDescription": "Book {title} on DARNA, stays and experiences across Algeria."
+    "fallbackDescription": "Book {title} on BLADUS, stays and experiences across Algeria."
   },
   "ratingNew": "New",
-  "hostFallback": "a DARNA host",
+  "hostFallback": "a BLADUS host",
   "sectionNav": {
     "photos": "Photos",
     "amenities": "Amenities",
@@ -361,7 +361,7 @@
     "showDetails": "Room details",
     "hideDetails": "Hide details",
     "forNights": "{count, plural, one {for # night} other {for # nights}}",
-    "pricesFor": "Prices for {dates}, {count, plural, one {# night} other {# nights}}. These are the host's rates, with no DARNA fees on top.",
+    "pricesFor": "Prices for {dates}, {count, plural, one {# night} other {# nights}}. These are the host's rates, with no BLADUS fees on top.",
     "changeRoom": "Change room"
   },
   "facts": {
@@ -392,9 +392,9 @@
   "pickupFrom": "Pickup from {time}",
   "returnBefore": "Return before {time}",
   "loading": "Loading this listing",
-  "noGuestFees": "No DARNA fees for travellers.",
-  "noGuestFeesHint": "You pay the host's price; DARNA's commission is paid by the host.",
-  "noFeesShort": "No DARNA fees",
+  "noGuestFees": "No BLADUS fees for travellers.",
+  "noGuestFeesHint": "You pay the host's price; BLADUS's commission is paid by the host.",
+  "noFeesShort": "No BLADUS fees",
   "viewProfile": "View profile",
   "hostKind": {
     "individual": "Individual host",

@@ -1,5 +1,5 @@
 /**
- * DARNA component kit, import everything from "@/components/ui".
+ * BLADUS component kit, import everything from "@/components/ui".
  * Docs: docs/design/COMPONENTS.md · live gallery: /<locale>/design-system (dev only).
  */
 

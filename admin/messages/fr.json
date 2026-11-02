@@ -150,8 +150,8 @@
     "configuration": "Configuration",
     "system": "Système & Gouvernance",
     "adminBadge": "Centre de Contrôle",
-    "version": "Plateforme DARNA v2.4",
-    "consoleTitle": "Console d’administration DARNA",
+    "version": "Plateforme BLADUS v2.4",
+    "consoleTitle": "Console d’administration BLADUS",
     "tagline": "Voyagez en Algérie",
     "expandSidebar": "Déplier la barre latérale",
     "collapseSidebar": "Replier la barre latérale",
@@ -306,11 +306,11 @@
     "manageAllPartners": "Gérer Tous les Partenaires",
     "hostNetTakeHome": "Revenu Net Hôte",
     "netPayoutsBadge": "Versements Nets",
-    "darnaNetTake": "Part Nette DARNA :",
+    "darnaNetTake": "Part Nette BLADUS :",
     "grossVolumeGbv": "Volume Brut (GBV) :",
     "avgNetHost": "Net Moyen / Hôte :",
     "netSplitChartTitle": "Versements Nets vs. Commission Plateforme par Catégorie",
-    "netSplitChartSubtitle": "Visualisation de la répartition des réservations brutes entre gains partenaires et revenus DARNA (DZD)",
+    "netSplitChartSubtitle": "Visualisation de la répartition des réservations brutes entre gains partenaires et revenus BLADUS (DZD)",
     "topWilayas": "Top Wilayas de Destination",
     "topWilayasSubtitle": "Réservations complétées classées par wilaya",
     "recentAudit": "Journal d'Audit Récent",
@@ -332,7 +332,7 @@
     "oldestWaiting": "Plus ancien en attente : {time}",
     "allCaughtUp": "Tout est traité",
     "kpiMoneyPaid": "Argent payé par les voyageurs",
-    "kpiEarnings": "Revenus de DARNA",
+    "kpiEarnings": "Revenus de BLADUS",
     "kpiNewHosts": "Nouveaux hôtes",
     "comparisonMore": "{percent} % de plus que {period}",
     "comparisonFewer": "{percent} % de moins que {period}",
@@ -362,7 +362,7 @@
       "bookings": "Demandes de plus de 24 h et litiges"
     },
     "waitingDays": "{count, plural, one {{value} jour} other {{value} jours}}",
-    "howDoingTitle": "Comment se porte DARNA ?",
+    "howDoingTitle": "Comment se porte BLADUS ?",
     "howDoingSubtitle": "Indicateurs clés expliqués en langage clair, sans abréviations.",
     "periodSwitchLabel": "Période",
     "comparisonPeriods": {
@@ -381,7 +381,7 @@
     "tiersTitle": "Performance financière par type de partenaire",
     "tier": {
       "total": "Total : <b>{value}</b>",
-      "darna": "DARNA : <b>{value}</b>",
+      "darna": "BLADUS : <b>{value}</b>",
       "bookings": "Réservations : <b>{value}</b>",
       "commissionValue": "{amount} ({rate} %)"
     },
@@ -390,7 +390,7 @@
     "avgResponseHint": "Délai moyen de confirmation des demandes de réservation par les hôtes",
     "checklist": {
       "title": "Guide de démarrage",
-      "subtitle": "{count, plural, one {{count} étape simple pour maîtriser les fonctions clés de DARNA Admin.} other {{count} étapes simples pour maîtriser les fonctions clés de DARNA Admin.}}",
+      "subtitle": "{count, plural, one {{count} étape simple pour maîtriser les fonctions clés de BLADUS Admin.} other {{count} étapes simples pour maîtriser les fonctions clés de BLADUS Admin.}}",
       "progress": "{done} / {total}",
       "dismiss": "Masquer ce guide",
       "markDone": "Marquer comme fait : {task}",
@@ -683,7 +683,7 @@
       "medianBenchmark": "Médiane de la wilaya",
       "medianValue": "≈ {amount}",
       "pricingTitle": "Tarification & remises",
-      "commission": "Commission DARNA",
+      "commission": "Commission BLADUS",
       "commissionValue": "{rate} %",
       "weeklyDiscount": "Remise hebdomadaire",
       "weeklyDiscountValue": "-{rate} % ({amount} / semaine)",
@@ -960,7 +960,7 @@
       "suspendDescription": "{name} sera temporairement suspendu et ne pourra plus réserver ni publier d'avis.",
       "suspendConfirm": "Suspendre l'utilisateur",
       "banTitle": "Bannir définitivement cet utilisateur ?",
-      "banDescription": "{name} sera définitivement banni de la plateforme DARNA.",
+      "banDescription": "{name} sera définitivement banni de la plateforme BLADUS.",
       "banConfirm": "Bannir l'utilisateur",
       "deleteTitle": "Supprimer cet utilisateur ?",
       "deleteDescription": "Le compte de {name} sera supprimé (suppression réversible). Saisissez le nom de l'utilisateur pour confirmer.",
@@ -1009,7 +1009,7 @@
       "idVerified": "Vérifié (CNI conforme)",
       "idPending": "En attente de vérification",
       "bioTitle": "Bio et description du profil",
-      "bioText": "Voyageur vérifié sur la plateforme DARNA, passionné par les hébergements authentiques et les circuits sahariens. Excellent historique sans aucun litige.",
+      "bioText": "Voyageur vérifié sur la plateforme BLADUS, passionné par les hébergements authentiques et les circuits sahariens. Excellent historique sans aucun litige.",
       "nights": "{count, plural, one {# nuit} other {# nuits}}",
       "days": "{count, plural, one {# jour} other {# jours}}",
       "dateRange": "{start} – {end} · {duration}",
@@ -1101,7 +1101,7 @@
     "travelers": "Voyageurs",
     "priceBreakdown": "Montant et détails tarifaires",
     "basePrice": "Tarif de base ({count, plural, one {{count} nuit} other {{count} nuits}})",
-    "serviceFee": "Frais de service DARNA",
+    "serviceFee": "Frais de service BLADUS",
     "totalPaid": "Total payé",
     "verifiedAccount": "Compte vérifié",
     "paymentReceived": "Paiement reçu",
@@ -1220,7 +1220,7 @@
     "hostTypePicker": "Catégorie d'hôte",
     "categoryCapped": "Limite stricte de {max} pages",
     "categoryMultiPage": "Parcours structuré sur plusieurs pages",
-    "soloCapTitle": "Règle DARNA : parcours des particuliers plafonné",
+    "soloCapTitle": "Règle BLADUS : parcours des particuliers plafonné",
     "stepsHeading": "{hostType} ({count, plural, one {# étape} other {# étapes}})",
     "noSteps": "Aucune étape n'est encore configurée pour cette catégorie d'hôte.",
     "stepNumber": "Étape {number} :",
@@ -1249,7 +1249,7 @@
   },
   "categories": {
     "title": "Taxonomies & Catégories d'Équipements",
-    "subtitle": "Gérer les catégories du catalogue, verticales de recherche et icônes sur DARNA.",
+    "subtitle": "Gérer les catégories du catalogue, verticales de recherche et icônes sur BLADUS.",
     "addNew": "Créer une Nouvelle Catégorie",
     "allVerticals": "Toutes les verticales",
     "order": "Ordre",
@@ -1348,7 +1348,7 @@
       "title": "Créer un nouveau code promo",
       "description": "Configurez le code, le taux de réduction et les limites d'utilisation.",
       "code": "Code promo (en majuscules)",
-      "codePlaceholder": "ex : DARNA2024",
+      "codePlaceholder": "ex : BLADUS2024",
       "type": "Type de réduction",
       "percentage": "Pourcentage (%)",
       "fixed": "Montant fixe (DZD)",
@@ -1541,12 +1541,12 @@
     },
     "identity": {
       "title": "Identité de la plateforme",
-      "serviceFeeHint": "Les voyageurs ne paient aucun frais DARNA. DARNA perçoit uniquement la commission hôte définie par type d'hôte ci-dessous.",
+      "serviceFeeHint": "Les voyageurs ne paient aucun frais BLADUS. BLADUS perçoit uniquement la commission hôte définie par type d'hôte ci-dessous.",
       "maintenanceHint": "Verrouille l'accès public à la marketplace tout en permettant aux administrateurs de naviguer."
     },
     "languages": {
       "title": "Langues prises en charge",
-      "description": "La plateforme DARNA fonctionne en {count, plural, one {# langue officielle} other {# langues officielles}}, avec une prise en charge complète de l'écriture de droite à gauche pour l'arabe.",
+      "description": "La plateforme BLADUS fonctionne en {count, plural, one {# langue officielle} other {# langues officielles}}, avec une prise en charge complète de l'écriture de droite à gauche pour l'arabe.",
       "sourceOfTruth": "Source de vérité",
       "fullRtl": "RTL complet",
       "international": "International",
@@ -1574,12 +1574,12 @@
   },
   "login": {
     "title": "Connexion Centre de Contrôle",
-    "subtitle": "Connectez-vous avec vos identifiants autorisés du personnel DARNA",
+    "subtitle": "Connectez-vous avec vos identifiants autorisés du personnel BLADUS",
     "emailLabel": "Adresse Email Professionnelle",
     "passwordLabel": "Mot de Passe",
     "submitButton": "S'authentifier & Accéder",
     "demoSeeds": "Comptes Démo Préconfigurés :",
-    "footerText": "© 2026 DARNA Technologies DZ. Accès restreint au personnel habilité.",
+    "footerText": "© 2026 BLADUS Technologies DZ. Accès restreint au personnel habilité.",
     "errors": {
       "invalidCredentials": "E-mail ou mot de passe incorrect.",
       "rateLimited": "Trop de tentatives de connexion. Veuillez patienter {seconds} secondes puis réessayer.",
@@ -1810,7 +1810,7 @@
     "viewFileLabel": "Voir le fichier {title} (nouvel onglet)"
   },
   "search": {
-    "title": "Recherche globale & réseau DARNA",
+    "title": "Recherche globale & réseau BLADUS",
     "subtitle": "Recherchez à travers toutes les entités de la plateforme.",
     "subtitleQuery": "Résultats pour « {query} »",
     "showMap": "Afficher la carte",
@@ -1987,7 +1987,7 @@
       "error": "Erreur",
       "loadFailed": "Échec du chargement des prestataires",
       "approved": "Prestataire validé et publié",
-      "approvedDesc": "{name} est maintenant actif sur DARNA.",
+      "approvedDesc": "{name} est maintenant actif sur BLADUS.",
       "unsuspended": "Suspension annulée / prestataire réactivé",
       "unsuspendedDesc": "{name} a été réactivé avec succès.",
       "rejected": "Dossier refusé",
@@ -2015,7 +2015,7 @@
       "viewOnMap": "Voir sur la carte",
       "newTab": "(s'ouvre dans un nouvel onglet)",
       "description": "Description",
-      "descriptionText": "Prestataire enregistré sur DARNA proposant des prestations touristiques vérifiées dans la région de {city}. Dossier de conformité soumis pour approbation administrative.",
+      "descriptionText": "Prestataire enregistré sur BLADUS proposant des prestations touristiques vérifiées dans la région de {city}. Dossier de conformité soumis pour approbation administrative.",
       "documentsProvided": "Documents fournis ({count}/{total})",
       "allDocumentsProvided": "Tous les documents sont fournis",
       "publicProfile": "Voir le profil public",
@@ -2185,7 +2185,7 @@
     "pricing": {
       "title": "Tarification & remises",
       "cleaningFee": "Frais de ménage",
-      "commission": "Commission DARNA",
+      "commission": "Commission BLADUS",
       "commissionValue": "{rate} %",
       "weeklyDiscount": "Remise hebdomadaire (-{rate} %)",
       "weeklyPrice": "{amount} / semaine",
@@ -2209,7 +2209,7 @@
     },
     "list": {
       "title": "Gestion des hébergements",
-      "subtitle": "Consultez, modifiez et validez tous les hébergements répertoriés sur DARNA.",
+      "subtitle": "Consultez, modifiez et validez tous les hébergements répertoriés sur BLADUS.",
       "export": "Exporter",
       "add": "Ajouter un hébergement",
       "searchPlaceholder": "Rechercher par titre, ville, propriétaire…",
@@ -2353,7 +2353,7 @@
       "downloadDocument": "Télécharger {name}",
       "download": "Télécharger",
       "approveDialogTitle": "Approuver et publier cet hébergement ?",
-      "approveDialogText": "L'annonce sera immédiatement visible sur DARNA et ouverte aux réservations.",
+      "approveDialogText": "L'annonce sera immédiatement visible sur BLADUS et ouverte aux réservations.",
       "toasts": {
         "approved": "Hébergement approuvé et publié",
         "rejected": "Hébergement refusé",
@@ -2409,7 +2409,7 @@
       "inspect": "Examiner",
       "inspectItem": "Examiner : {item}",
       "notesTitle": "Notes internes",
-      "notesHint": "Visible uniquement par les administrateurs et modérateurs de DARNA.",
+      "notesHint": "Visible uniquement par les administrateurs et modérateurs de BLADUS.",
       "notesReasonHint": "Obligatoire pour cette décision (au moins {min} caractères) : transmis à l'hôte et consigné dans le journal d'audit.",
       "notesPlaceholder": "Ajouter une remarque pour les modérateurs ou consigner une vérification…",
       "decisionTitle": "Décision",
@@ -2572,7 +2572,7 @@
     },
     "summary": {
       "title": "Récapitulatif avant publication",
-      "subtitle": "Vérifiez que toutes les données ci-dessous sont complètes et conformes aux règles de modération DARNA.",
+      "subtitle": "Vérifiez que toutes les données ci-dessous sont complètes et conformes aux règles de modération BLADUS.",
       "titleLabel": "Titre",
       "location": "Localisation",
       "capacity": "Capacité",
@@ -2603,7 +2603,7 @@
         "title": "Conseils pour une bonne annonce",
         "tip1": "Choisissez un titre accrocheur qui mentionne le type de logement et son atout clé.",
         "tip2": "Renseignez la surface réelle et le nombre exact de chambres et lits disponibles.",
-        "tip3": "Assurez-vous de sélectionner le propriétaire vérifié dans le répertoire DARNA."
+        "tip3": "Assurez-vous de sélectionner le propriétaire vérifié dans le répertoire BLADUS."
       },
       "step2": {
         "title": "Conseils de localisation",
@@ -2629,7 +2629,7 @@
       "step6": {
         "title": "Validation finale",
         "tip1": "Vérifiez l'ensemble des règles de la maison.",
-        "tip2": "Une fois soumis, l'hébergement sera immédiatement indexé sur DARNA."
+        "tip2": "Une fois soumis, l'hébergement sera immédiatement indexé sur BLADUS."
       }
     }
   },
@@ -2724,7 +2724,7 @@
       "perPerson": "/ personne",
       "groupDiscount": "Remise groupe (>4 pers.)",
       "discountValue": "-{percent} % ({price})",
-      "commission": "Commission DARNA",
+      "commission": "Commission BLADUS",
       "commissionIncluded": "{rate} % (incluse)",
       "cancellation": "Politique d’annulation",
       "cancellationFlexible": "Flexible ({hours} h avant)",
@@ -2906,7 +2906,7 @@
       "draftSaved": "Brouillon sauvegardé",
       "draftSavedAt": "Enregistré à {time}.",
       "created": "Expérience créée avec succès",
-      "createdDescription": "L’activité a été soumise à la modération DARNA."
+      "createdDescription": "L’activité a été soumise à la modération BLADUS."
     }
   },
   "cars": {
@@ -3145,7 +3145,7 @@
       "perPerson": "/ personne",
       "earlyBird": "Remise réservation anticipée",
       "discountValue": "-{percent} % ({price})",
-      "commission": "Commission DARNA",
+      "commission": "Commission BLADUS",
       "commissionIncluded": "{rate} % (incluse)",
       "deposit": "Acompte à la réservation",
       "depositValue": "{percent} % à la commande",
@@ -3198,10 +3198,10 @@
     "subtitle": "Analyses de tendance, performances par vertical, répartition territoriale et exports comptables.",
     "periodLast30": "Période : 30 derniers jours",
     "exportCsv": "Exporter CSV",
-    "generalReport": "Rapport général DARNA",
+    "generalReport": "Rapport général BLADUS",
     "kpi": {
       "grossVolume": "Volume d'affaires brut",
-      "netCommissions": "Commissions nettes DARNA",
+      "netCommissions": "Commissions nettes BLADUS",
       "confirmedBookings": "Réservations confirmées",
       "activeWilayas": "Wilayas actives"
     },
@@ -3270,7 +3270,7 @@
       }
     },
     "revenue": {
-      "title": "Ventilation des revenus DARNA",
+      "title": "Ventilation des revenus BLADUS",
       "subtitle": "Revenus nets issus des commissions de la plateforme, hors fonds séquestres reversés aux prestataires.",
       "items": {
         "individual": "Commissions, hôtes particuliers",
@@ -3284,7 +3284,7 @@
       "items": {
         "Comptabilite_Mensuelle": {
           "title": "Grand livre financier mensuel",
-          "desc": "Réservations brutes, commissions DARNA, règlements CCP et décomptes de TVA."
+          "desc": "Réservations brutes, commissions BLADUS, règlements CCP et décomptes de TVA."
         },
         "Declaration_Tourisme": {
           "title": "Déclaration fiscale touristique (Algérie)",
@@ -3302,13 +3302,13 @@
     }
   },
   "help": {
-    "title": "Centre d'aide & formation DARNA",
+    "title": "Centre d'aide & formation BLADUS",
     "subtitle": "Guides opérationnels pas à pas, définitions métiers et guide de navigation.",
     "open": "Ouvrir",
     "kpi": {
       "guides": "Guides opérationnels",
       "guidesValue": "{count, plural, one {# fiche} other {# fiches}}",
-      "glossary": "Glossaire DARNA",
+      "glossary": "Glossaire BLADUS",
       "glossaryValue": "{count, plural, one {# définition} other {# définitions}}",
       "migration": "Où est passée ma page ?",
       "migrationValue": "{count, plural, one {# correspondance} other {# correspondances}}"
@@ -3340,7 +3340,7 @@
         "cta": "Voir le catalogue des hébergements"
       }
     },
-    "glossaryTitle": "Terminologie officielle DARNA",
+    "glossaryTitle": "Terminologie officielle BLADUS",
     "terms": {
       "dzd": {
         "term": "DZD (dinar algérien)",
@@ -3399,7 +3399,7 @@
         "oldName": "Trésorerie & finance",
         "newName": "Finances",
         "location": "Menu principal (n° 7)",
-        "description": "Portefeuilles des hôtes, recharges manuelles CCP / virement, commissions DARNA et validation des versements."
+        "description": "Portefeuilles des hôtes, recharges manuelles CCP / virement, commissions BLADUS et validation des versements."
       },
       "team": {
         "oldName": "Équipe & rôles",
@@ -3424,8 +3424,8 @@
     },
     "commission": {
       "term": "Revenus de commission",
-      "plainTerm": "Revenus de DARNA",
-      "definition": "La commission conservée par DARNA pour faire fonctionner le service, le support et la promotion.",
+      "plainTerm": "Revenus de BLADUS",
+      "definition": "La commission conservée par BLADUS pour faire fonctionner le service, le support et la promotion.",
       "howItIsCounted": "Pourcentage de commission (ex. 10 % à 15 %) appliqué à chaque réservation."
     },
     "bookingsCount": {
@@ -3454,7 +3454,7 @@
     "payout": {
       "term": "Versement",
       "plainTerm": "Versement à l'hôte",
-      "definition": "Fonds nets versés sur le compte bancaire ou CCP du partenaire après déduction de la commission DARNA."
+      "definition": "Fonds nets versés sur le compte bancaire ou CCP du partenaire après déduction de la commission BLADUS."
     },
     "auditLog": {
       "term": "Journal d'audit",
@@ -3474,7 +3474,7 @@
     "users": {
       "term": "Utilisateurs",
       "plainTerm": "Voyageurs",
-      "definition": "Voyageurs algériens et internationaux qui réservent des séjours et circuits sur DARNA."
+      "definition": "Voyageurs algériens et internationaux qui réservent des séjours et circuits sur BLADUS."
     }
   },
   "layout": {
@@ -3523,7 +3523,7 @@
     "pages": {
       "home": {
         "title": "Aide, Tableau de bord",
-        "whatFor": "Vous offre une vue claire en 10 secondes sur les validations en attente et la santé de DARNA.",
+        "whatFor": "Vous offre une vue claire en 10 secondes sur les validations en attente et la santé de BLADUS.",
         "tasks": {
           "reviewHosts": {
             "title": "Examiner les candidatures d’hôtes",
@@ -3537,7 +3537,7 @@
             "title": "Vérifier les revenus et réservations du mois",
             "steps": {
               "s1": "Vérifiez que le filtre de période est sur « 30 derniers jours »",
-              "s2": "Consultez les 4 cartes : Réservations, Argent payé par les voyageurs, Revenus de DARNA, Nouveaux hôtes",
+              "s2": "Consultez les 4 cartes : Réservations, Argent payé par les voyageurs, Revenus de BLADUS, Nouveaux hôtes",
               "s3": "Survolez l’icône (?) d’une carte pour voir le mode de calcul"
             }
           }
@@ -3568,7 +3568,7 @@
         }
       },
       "default": {
-        "title": "Aide DARNA Admin",
+        "title": "Aide BLADUS Admin",
         "whatFor": "Cette interface est conçue pour une administration simple et sûre. Vous pouvez toujours annuler les modifications réversibles.",
         "tasks": {
           "findRecord": {
@@ -3591,8 +3591,8 @@
     "getStarted": "C’est parti !",
     "steps": {
       "welcome": {
-        "title": "Bienvenue sur la console d’administration DARNA",
-        "description": "Conçue pour une modération simple et sereine. Comprenez l’état de DARNA en moins de 10 secondes et accédez à chaque tâche en 3 clics ou moins."
+        "title": "Bienvenue sur la console d’administration BLADUS",
+        "description": "Conçue pour une modération simple et sereine. Comprenez l’état de BLADUS en moins de 10 secondes et accédez à chaque tâche en 3 clics ou moins."
       },
       "home": {
         "title": "1. Accueil & ce qui nécessite votre attention",
@@ -3821,9 +3821,9 @@
     "selectAll": "Sélectionner toutes les lignes affichées"
   },
   "meta": {
-    "titleTemplate": "%s · DARNA Admin",
-    "defaultTitle": "DARNA Admin",
-    "description": "Console d’administration et de modération de la plateforme DARNA",
+    "titleTemplate": "%s · BLADUS Admin",
+    "defaultTitle": "BLADUS Admin",
+    "description": "Console d’administration et de modération de la plateforme BLADUS",
     "titles": {
       "dashboard": "Tableau de bord",
       "login": "Connexion",

@@ -42,7 +42,7 @@ function getSessionSecret(): string {
   if (!warnedAboutFallback) {
     warnedAboutFallback = true;
     console.warn(
-      "[darna] DARNA_SESSION_SECRET is not set, using an insecure development fallback secret.",
+      "[bladus] DARNA_SESSION_SECRET is not set, using an insecure development fallback secret.",
     );
   }
   return DEV_FALLBACK_SECRET;

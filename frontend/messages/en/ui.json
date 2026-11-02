@@ -20,7 +20,7 @@
   "retry": "Try again",
   "gallery": {
     "eyebrow": "Internal · development only",
-    "title": "DARNA design system",
+    "title": "BLADUS design system",
     "intro": "Every shared component of the kit, in all its states. Switch language to check French and Arabic (right to left).",
     "language": "Language",
     "contents": "Sections",
@@ -217,7 +217,7 @@
     "emptyCalendar": "No upcoming stays",
     "emptyCalendarDesc": "Plan your next trip across Algeria.",
     "emptyGeneric": "Nothing here yet",
-    "emptyGenericDesc": "This space fills up as you use DARNA.",
+    "emptyGenericDesc": "This space fills up as you use BLADUS.",
     "explore": "Explore homes",
     "retrying": "Retrying…",
     "celebration": "Success celebration",

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Button / IconButton, the DARNA action primitives.
+ * Button / IconButton, the BLADUS action primitives.
  *
  *   <Button>Reserve</Button>                                   // primary terracotta glow pill
  *   <Button variant="secondary" size="lg" fullWidth>Continue</Button>

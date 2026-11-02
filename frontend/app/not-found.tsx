@@ -51,13 +51,13 @@ export default function RootNotFound() {
         </p>
         <nav style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
           <Link href="/en" style={linkStyle}>
-            DARNA (EN)
+            BLADUS (EN)
           </Link>
           <Link href="/fr" style={linkStyle}>
-            DARNA (FR)
+            BLADUS (FR)
           </Link>
           <Link href="/ar" style={linkStyle}>
-            دارنا (AR)
+            بلادوس (AR)
           </Link>
         </nav>
       </body>

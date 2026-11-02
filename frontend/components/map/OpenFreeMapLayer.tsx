@@ -30,7 +30,7 @@ function localizeLabels(gl: GlMap, locale: string) {
 }
 
 /**
- * Base map for every Leaflet map in DARNA: OpenFreeMap tiles and the attribution line
+ * Base map for every Leaflet map in BLADUS: OpenFreeMap tiles and the attribution line
  * "Leaflet | © OpenStreetMap · OpenFreeMap". Render inside a react-leaflet <MapContainer>
  * that keeps its attribution control on.
  */

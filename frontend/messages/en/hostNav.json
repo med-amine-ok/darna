@@ -13,8 +13,8 @@
   },
   "orgProfileSettings": "{type, select, hotel {Hotel profile & settings} hostel {Hostel profile & settings} other {Agency profile & settings}}",
   "orgSettings": "{type, select, hotel {Hotel settings} hostel {Hostel settings} other {Agency settings}}",
-  "homeTitle": "DARNA host mode",
-  "logoAlt": "DARNA",
+  "homeTitle": "BLADUS host mode",
+  "logoAlt": "BLADUS",
   "primaryNav": "Host workspace",
   "mobileNav": "Host workspace navigation",
   "tabs": {
@@ -49,6 +49,6 @@
   "messagesInquiries": "Messages & guest inquiries",
   "moreOptions": "More workspace options",
   "closeMenu": "Close menu",
-  "verificationPending": "{name} is pending verification. You can set up listings and your team now; a verified badge appears once DARNA approves your documents.",
-  "verificationRejected": "{name}: verification was rejected. Please update your legal details in settings or contact DARNA support."
+  "verificationPending": "{name} is pending verification. You can set up listings and your team now; a verified badge appears once BLADUS approves your documents.",
+  "verificationRejected": "{name}: verification was rejected. Please update your legal details in settings or contact BLADUS support."
 }

@@ -75,7 +75,7 @@
   },
   "notifications": {
     "title": "Préférences de notification",
-    "description": "Choisissez comment recevoir les messages, les rappels de voyage et les actualités DARNA",
+    "description": "Choisissez comment recevoir les messages, les rappels de voyage et les actualités BLADUS",
     "updated": "Préférences de notification mises à jour.",
     "type": "Type de notification",
     "channelEmail": "E-mail",
@@ -143,7 +143,7 @@
   },
   "privacy": {
     "title": "Confidentialité et partage des données",
-    "description": "Contrôlez votre visibilité publique et exportez l'historique de votre compte DARNA",
+    "description": "Contrôlez votre visibilité publique et exportez l'historique de votre compte BLADUS",
     "searchIndexing": "Référencement dans les moteurs de recherche",
     "searchIndexingDescription": "Autoriser les moteurs de recherche à indexer votre profil d'hôte public",
     "downloadData": "Télécharger vos données personnelles",
@@ -175,12 +175,12 @@
   },
   "dialogs": {
     "deactivateTitle": "Désactiver le compte",
-    "deactivateMessage": "Voulez-vous vraiment désactiver votre compte DARNA ? Votre profil, vos avis et vos annonces actives seront masqués jusqu'à votre prochaine connexion.",
+    "deactivateMessage": "Voulez-vous vraiment désactiver votre compte BLADUS ? Votre profil, vos avis et vos annonces actives seront masqués jusqu'à votre prochaine connexion.",
     "deactivateConfirm": "Désactiver le compte",
     "deactivateCancel": "Garder le compte actif",
     "deactivateSoon": "La désactivation du compte arrive bientôt. Veuillez contacter le support pour le moment.",
     "removeCardTitle": "Supprimer la carte de paiement",
-    "removeCardMessage": "Voulez-vous vraiment supprimer {card} de votre compte DARNA ? Vous devrez saisir à nouveau les informations de votre carte pour vos prochaines réservations.",
+    "removeCardMessage": "Voulez-vous vraiment supprimer {card} de votre compte BLADUS ? Vous devrez saisir à nouveau les informations de votre carte pour vos prochaines réservations.",
     "removeCardConfirm": "Supprimer la carte",
     "removeCardCancel": "Garder la carte",
     "cardRemoved": "Carte de paiement supprimée de votre compte."
@@ -188,9 +188,9 @@
   "eyebrow": "Votre compte",
   "accessibility": {
     "title": "Accessibilité",
-    "description": "Rendez DARNA confortable à utiliser sur cet appareil.",
+    "description": "Rendez BLADUS confortable à utiliser sur cet appareil.",
     "reduceMotion": "Réduire les animations",
-    "reduceMotionDescription": "Désactive les animations d'apparition, la parallaxe et les effets de mouvement. Par défaut, DARNA suit le réglage de votre appareil.",
+    "reduceMotionDescription": "Désactive les animations d'apparition, la parallaxe et les effets de mouvement. Par défaut, BLADUS suit le réglage de votre appareil.",
     "previewFull": "Les animations sont actives, sauf si votre appareil demande moins de mouvement.",
     "previewReduced": "Les animations sont réduites sur cet appareil."
   }

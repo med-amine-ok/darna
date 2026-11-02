@@ -109,7 +109,7 @@
   },
   "deleteDialog": {
     "title": "Supprimer l'annonce",
-    "message": "Voulez-vous vraiment supprimer cette annonce de DARNA ? Cette action est définitive et retirera le logement et son historique de réservations de la plateforme.",
+    "message": "Voulez-vous vraiment supprimer cette annonce de BLADUS ? Cette action est définitive et retirera le logement et son historique de réservations de la plateforme.",
     "confirm": "Supprimer l'annonce",
     "keep": "Conserver l'annonce"
   },

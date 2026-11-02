@@ -36,7 +36,7 @@
     "publishAria": "نشر «{title}»",
     "viewPublic": "عرض الصفحة العامة لـ«{title}» (تُفتح في علامة تبويب جديدة)",
     "deleteAria": "حذف «{title}»",
-    "toastPublished": "تم نشر الجولة وهي الآن متاحة على DARNA.",
+    "toastPublished": "تم نشر الجولة وهي الآن متاحة على BLADUS.",
     "toastPaused": "تم إيقاف الجولة مؤقتًا وإخفاؤها من البحث العام.",
     "toastStatusError": "تعذّر تحديث حالة الجولة.",
     "toastDeleted": "تم حذف الجولة نهائيًا من كتالوج الوكالة.",
@@ -136,7 +136,7 @@
       "agencyFallback": "وكالتك",
       "saveAsDraft": "حفظ كمسودة",
       "publishing": "جارٍ النشر…",
-      "publishToDarna": "النشر على DARNA",
+      "publishToDarna": "النشر على BLADUS",
       "publishCircuit": "نشر الجولة"
     },
     "nav": {
@@ -150,7 +150,7 @@
       "price": "يجب أن يكون السعر للفرد عددًا صحيحًا بين {min} و{max}."
     },
     "toast": {
-      "published": "تم نشر الرحلة على DARNA!",
+      "published": "تم نشر الرحلة على BLADUS!",
       "drafted": "تم حفظ الرحلة في مسودات الوكالة.",
       "failed": "تعذّر حفظ الجولة. يرجى التحقق من المعلومات المدخلة."
     },

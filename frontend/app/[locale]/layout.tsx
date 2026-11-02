@@ -26,10 +26,10 @@ export async function generateMetadata({ params: { locale } }: { params: { local
     openGraph: {
       title: t("ogTitle"),
       description: t("description"),
-      siteName: "DARNA",
+      siteName: "BLADUS",
       locale: OG_LOCALE[locale] ?? "en_US",
       type: "website",
-      images: [{ url: "/assets/logo-vertical.png", width: 512, height: 512, alt: "DARNA" }],
+      images: [{ url: "/assets/logo-vertical.png", width: 512, height: 512, alt: "BLADUS" }],
     },
   };
 }

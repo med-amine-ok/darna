@@ -31,7 +31,7 @@ function guestForHost(userId: string, createdAt: string): User {
   }
   return {
     id: userId,
-    name: "DARNA guest",
+    name: "BLADUS guest",
     email: "",
     image: "/assets/avatar.png",
     role: "guest",
@@ -373,7 +373,7 @@ function commissionOwner(res: Reservation): {
   };
 }
 
-/** Commission base: accommodation subtotal (no DARNA service fee, no cleaning fee, no taxes). */
+/** Commission base: accommodation subtotal (no BLADUS service fee, no cleaning fee, no taxes). */
 function commissionBase(res: Reservation): number {
   return res.subtotal ?? Math.max(0, res.totalPrice - (res.cleaningFee ?? 0) - (res.serviceFee ?? 0) - (res.taxes ?? 0));
 }

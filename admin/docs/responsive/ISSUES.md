@@ -1,4 +1,4 @@
-# DARNA Admin, Responsive & Mobile Issues Log
+# BLADUS Admin, Responsive & Mobile Issues Log
 
 This log catalogs root-cause issues identified during the mobile audit and how they were permanently fixed in shared primitives and components.
 
