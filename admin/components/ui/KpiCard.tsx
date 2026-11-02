@@ -59,16 +59,16 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   // Colour semantics (IHM T10): olive = good, terracotta only for alert/bad, ink tint = neutral.
   const badgeClasses =
     effectiveVariant === "good"
-      ? "bg-secondary-100 text-secondary-900"
+      ? "text-secondary-800 [&_svg]:text-secondary-700"
       : effectiveVariant === "bad"
-      ? "bg-accent-100 text-accent-800"
-      : "bg-neutral-100 text-neutral-700";
+      ? "text-accent-800 [&_svg]:text-accent-700"
+      : "text-primary-600 [&_svg]:text-primary-500";
 
   const sparklineTone = effectiveVariant === "good" ? "olive" : effectiveVariant === "bad" ? "terracotta" : "ink";
 
   return (
     <div
-      className={`relative p-5 rounded-2xl bg-white shadow-e1 hover:shadow-e2 flex flex-col justify-between text-start transition-shadow duration-fast ease-standard ${className}`}
+      className={`relative p-5 rounded-2xl bg-white shadow-e1 hover:shadow-e2 flex flex-col justify-between gap-3 text-start transition-shadow duration-fast ease-standard ${className}`}
     >
       <div>
         <div className="flex items-center justify-between gap-2">
@@ -117,23 +117,23 @@ export const KpiCard: React.FC<KpiCardProps> = ({
           </div>
 
           {icon && (
-            <div aria-hidden="true" className="w-9 h-9 rounded-xl bg-darnaBg-300/70 flex items-center justify-center text-primary-700 shrink-0 [&_svg]:w-[18px] [&_svg]:h-[18px]">
+            <div aria-hidden="true" className="w-8 h-8 rounded-lg bg-darnaBg-300/60 flex items-center justify-center text-primary-600 shrink-0 [&_svg]:w-4 [&_svg]:h-4">
               {icon}
             </div>
           )}
         </div>
 
         {/* Big number: Fraunces numerals, counts up on arrival */}
-        <div className="text-[1.75rem] sm:text-[2rem] leading-tight font-serif text-primary-900 mt-2">
+        <div className="text-[1.625rem] sm:text-[1.875rem] leading-tight font-serif text-primary-900 mt-1.5 tabular-nums">
           <AnimatedNumber value={value} />
         </div>
       </div>
 
       {/* Comparison Sentence with Icon AND Text (Never Color Alone) */}
-      <div className="mt-4 pt-3 border-t border-primary/[0.06] flex items-end justify-between gap-3">
+      <div className="flex items-end justify-between gap-3">
         {effectiveSentence && (
           <span
-            className={`inline-flex items-start gap-1.5 px-2 py-1 rounded-lg text-xs leading-snug font-medium min-w-0 ${badgeClasses}`}
+            className={`inline-flex items-start gap-1 text-xs leading-snug font-medium min-w-0 ${badgeClasses}`}
           >
             {effectiveDirection === "up" ? (
               <TrendingUp className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />

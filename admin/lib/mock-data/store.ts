@@ -108,7 +108,7 @@ function createMockDb() {
   const onboardingConfigStore: OnboardingConfig = {
     version: 1,
     updatedAt: "2026-10-20T08:00:00Z",
-    publishedBy: "BLADUS Administrator",
+    publishedBy: "Nadia Benkhaled",
     flows: {
       individual: {
         maxPagesAllowed: 2, // Strict solo flow capped at 2 pages

@@ -234,14 +234,14 @@ export default function StaysListClient() {
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={listingImageSrc(row.imageSrc?.[0] || row.images?.[0], "stay")}
+              src={listingImageSrc(row.imageSrc?.[0] || row.images?.[0], "stay", row.id)}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0 max-w-[220px]">
+          <div className="min-w-0 max-w-[200px]">
             <button
               type="button"
               onClick={(e) => {
@@ -287,11 +287,6 @@ export default function StaysListClient() {
       ),
     },
     {
-      key: "type",
-      header: t("list.columns.type"),
-      render: (row) => <TypePill type={row.hostType} />,
-    },
-    {
       key: "price",
       header: t("list.columns.price"),
       render: (row) => (
@@ -309,18 +304,17 @@ export default function StaysListClient() {
       key: "rating",
       header: t("list.columns.rating"),
       render: (row) => (
-        <div className="flex items-center gap-1 text-xs text-primary-800 whitespace-nowrap">
-          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
-          <span className="font-medium">{row.rating.toFixed(1)}</span>
-          <span className="text-primary-600">{t("values.reviewsShort", { count: row.reviewsCount })}</span>
+        <div className="text-xs whitespace-nowrap">
+          <div className="flex items-center gap-1 text-primary-800">
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" aria-hidden="true" />
+            <span className="font-medium">{row.rating.toFixed(1)}</span>
+            <span className="text-primary-600">{t("values.reviewsShort", { count: row.reviewsCount })}</span>
+          </div>
+          {/* Bookings folded in under the rating (saves a column). */}
+          <div className="mt-0.5 text-[11px] text-primary-600">
+            {t("list.columns.bookings")}: <span className="font-medium tabular-nums text-primary-800">{row.bookingsCount}</span>
+          </div>
         </div>
-      ),
-    },
-    {
-      key: "bookings",
-      header: t("list.columns.bookings"),
-      render: (row) => (
-        <span className="text-xs font-medium text-primary">{row.bookingsCount}</span>
       ),
     },
     {
@@ -652,7 +646,7 @@ export default function StaysListClient() {
               <div className="space-y-5">
                 {/* Carousel */}
                 <ImageCarousel
-                  images={listingImages(selectedStay.imageSrc, "stay")}
+                  images={listingImages(selectedStay.imageSrc, "stay", selectedStay.id)}
                   alt={selectedStay.title}
                 />
 
@@ -810,7 +804,7 @@ export default function StaysListClient() {
 
                 {panelTab === "photos" && (
                   <ul className="grid grid-cols-2 gap-2">
-                    {listingImages(selectedStay.imageSrc, "stay").map((img, i) => (
+                    {listingImages(selectedStay.imageSrc, "stay", selectedStay.id).map((img, i) => (
                       <li key={i} className="relative aspect-video rounded-lg overflow-hidden border border-primary/[0.08]">
                         <Image
                           src={img}

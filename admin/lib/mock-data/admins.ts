@@ -14,7 +14,7 @@ import type { AdminUser } from "@/lib/types";
 export const SEED_ADMINS: AdminUser[] = [
   {
     id: "adm_01",
-    name: "BLADUS Administrator",
+    name: "Nadia Benkhaled",
     email: process.env.ADMIN_SEED_EMAIL || "admin@bladus.dz",
     role: "super_admin",
     avatar: "/assets/avatar.png",

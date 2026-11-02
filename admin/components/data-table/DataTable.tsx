@@ -102,7 +102,7 @@ export function DataTable<T>({
     );
   };
 
-  const paddingClass = density === "compact" ? "py-2 px-3" : "py-3 px-3.5";
+  const paddingClass = density === "compact" ? "py-2 px-2.5" : "py-3 px-3";
   const skeletonWidths = ["w-3/4", "w-1/2", "w-2/3", "w-2/5", "w-3/5"];
 
   // Identify special columns for mobile card layout

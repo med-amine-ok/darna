@@ -178,7 +178,7 @@ export default function SettingsClient({
   };
 
   return (
-    <div className="max-w-4xl space-y-6 text-start">
+    <div className="max-w-6xl space-y-6 text-start">
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
@@ -225,7 +225,7 @@ export default function SettingsClient({
 
       {/* General Settings */}
       {activeTab === "general" && (
-        <div className="space-y-4">
+        <div className="grid items-start gap-4 lg:grid-cols-2">
           <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
             <h2 className="font-semibold text-primary text-base">
               {t("identity.title")}

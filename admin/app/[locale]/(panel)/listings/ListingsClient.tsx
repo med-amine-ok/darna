@@ -342,7 +342,7 @@ export default function ListingsClient({
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-10 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={listingImageSrc(l.imageSrc[0], placeholderKind(l.category))}
+              src={listingImageSrc(l.imageSrc[0], placeholderKind(l.category), l.id)}
               alt=""
               fill
               sizes="48px"
@@ -648,7 +648,7 @@ export default function ListingsClient({
                 <span className="block w-full">
                   <span className="relative block w-full h-44 bg-neutral-100 overflow-hidden">
                     <Image
-                      src={listingImageSrc(listing.imageSrc[0], placeholderKind(listing.category))}
+                      src={listingImageSrc(listing.imageSrc[0], placeholderKind(listing.category), listing.id)}
                       alt=""
                       fill
                       sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -839,7 +839,7 @@ export default function ListingsClient({
             {/* Gallery Lightbox Preview */}
             <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-neutral-100 border border-primary/[0.08]">
               <Image
-                src={listingImageSrc(detailListing.imageSrc[0], placeholderKind(detailListing.category))}
+                src={listingImageSrc(detailListing.imageSrc[0], placeholderKind(detailListing.category), detailListing.id)}
                 alt={detailListing.title}
                 fill
                 sizes="(min-width: 768px) 640px, 100vw"

@@ -48,7 +48,7 @@
     "experiences": "Experiences",
     "trips": "Organised Trips",
     "cars": "Car Rental",
-    "moderation": "Validation & Moderation",
+    "moderation": "Moderation",
     "bookings": "Bookings",
     "payments": "Payments",
     "reviews": "Reviews & Reports",
@@ -159,7 +159,14 @@
     "mainNavigation": "Main navigation",
     "menuLabel": "Navigation menu",
     "closeMenu": "Close navigation menu",
-    "pendingBadge": "{count, plural, one {# item waiting} other {# items waiting}}"
+    "pendingBadge": "{count, plural, one {# item waiting} other {# items waiting}}",
+    "sections": {
+      "overview": "Overview",
+      "catalogue": "Catalogue",
+      "operations": "Operations",
+      "business": "Business",
+      "system": "System"
+    }
   },
   "header": {
     "searchPlaceholder": "Search platform or type a command...",

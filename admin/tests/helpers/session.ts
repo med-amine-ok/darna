@@ -38,7 +38,7 @@ export async function createSessionToken(
   claims: { userId: string; email: string; name: string; role: string } = {
     userId: "adm_01",
     email: "admin@bladus.dz",
-    name: "BLADUS Administrator",
+    name: "Nadia Benkhaled",
     role: "super_admin",
   },
 ): Promise<string> {

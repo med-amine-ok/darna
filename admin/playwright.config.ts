@@ -39,7 +39,8 @@ export default defineConfig({
     port: PORT,
     reuseExistingServer: true,
     timeout: 240_000,
-    env: { ...SEED_PASSWORDS },
+    // Pin the seed email too, so a local .env.local override cannot break the suite.
+    env: { ...SEED_PASSWORDS, ADMIN_SEED_EMAIL: "admin@bladus.dz" },
   },
   projects: [
     {

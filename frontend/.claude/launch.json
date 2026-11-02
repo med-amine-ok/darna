@@ -20,6 +20,15 @@
         "3011"
       ],
       "port": 3011
+    },
+    {
+      "name": "bladus-admin-3012",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd /d ../admin && npx next dev -p 3012"
+      ],
+      "port": 3012
     }
   ]
 }

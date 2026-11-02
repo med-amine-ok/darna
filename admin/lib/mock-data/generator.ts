@@ -240,12 +240,37 @@ export function generateSeedData() {
 
   // 3. Generate ≥ 420 Listings
   const listings: Listing[] = [];
-  const propertySubtypes = [
-    "Mediterranean Seaside Villa", "Dar El Bahdja Heritage House", "Saharan Oasis Ecolodge",
-    "Modern Heights Apartment", "Traditional M'zab House", "Tassili Bivouac Expedition",
-    "Sahara 4x4 Land Cruiser", "Roman Ruins Heritage Stay", "Corniche Luxury Penthouse",
-    "Cedar Forest Mountain Chalet", "Palm Grove Desert Camp", "Gorge View Heritage Suite"
-  ];
+  // Names and types per vertical, so a car is never called "Seaside Villa".
+  const NAMES: Record<string, string[]> = {
+    home: [
+      "Mediterranean Seaside Villa", "Dar El Bahdja Heritage House", "Modern Heights Apartment",
+      "Traditional M'zab House", "Roman Ruins Heritage Stay", "Corniche Luxury Penthouse",
+      "Cedar Forest Mountain Chalet", "Gorge View Heritage Suite", "Casbah Rooftop Riad", "Olive Grove Family Home",
+    ],
+    hotel: [
+      "Heritage Boutique Hotel", "Seafront Hotel & Spa", "Casbah Riad Hotel", "Saharan Oasis Ecolodge",
+      "Youth Hostel & Rooftop", "City Centre Business Hotel", "Palm Grove Desert Lodge", "Backpackers Medina Hostel",
+    ],
+    experience: [
+      "Tassili Rock Art Trek", "Casbah Street Food Walk", "Sunset Dune Camel Ride", "M'zab Valley Guided Tour",
+      "Hammam & Henna Workshop", "Djurdjura Hiking Day", "Couscous Cooking Class", "Tipaza Roman Ruins Tour",
+    ],
+    trip: [
+      "Grand Sahara Circuit", "Hoggar & Assekrem Expedition", "Kabylie Villages Tour", "Coast to Casbah Week",
+      "Taghit Oasis Escape", "Roman Algeria Heritage Route",
+    ],
+    vehicle: [
+      "Toyota Land Cruiser Prado", "Nissan Patrol 4x4", "Dacia Duster 4WD", "Renault Clio 5",
+      "Hyundai Tucson", "Volkswagen Golf 8", "Toyota Hilux Double Cab", "Peugeot 208",
+    ],
+  };
+  const TYPES: Record<string, string[]> = {
+    home: ["villa", "appartement", "maison traditionnelle", "chalet", "studio", "bungalow"],
+    hotel: ["hôtel", "hostel"],
+    experience: ["Desert adventure", "Culture & heritage", "Food & cooking", "Hiking & nature", "Workshop"],
+    trip: ["Desert circuit", "Heritage route", "Mountains & villages", "Coastal escape"],
+    vehicle: ["SUV / 4x4", "City car", "Crossover", "Pickup"],
+  };
 
   for (let i = 1; i <= 430; i++) {
     const host = randomItem(hosts);
@@ -303,10 +328,10 @@ export function generateSeedData() {
 
     listings.push({
       id: `lst_${i.toString().padStart(3, "0")}`,
-      title: `${randomItem(propertySubtypes)} - ${wilaya.nameEn} #${i}`,
+      title: `${randomItem(NAMES[category] ?? NAMES.home)} - ${wilaya.nameEn} #${i}`,
       description: `Authentic Algerian accommodation in the heart of ${wilaya.nameEn}. Fully equipped with local craftsmanship, modern amenities, and warm Mediterranean hospitality.`,
       category,
-      propertyType: randomItem(propertySubtypes),
+      propertyType: randomItem(TYPES[category] ?? TYPES.home),
       hostId: host.id,
       hostName: host.businessName || host.ownerName,
       hostType: host.hostType,
@@ -376,7 +401,7 @@ export function generateSeedData() {
 
     bookings.push({
       id: `bkg_${i.toString().padStart(4, "0")}`,
-      reference: `DAR-2026-${(8000 + i).toString()}`,
+      reference: `BLD-2026-${(8000 + i).toString()}`,
       listingId: listing.id,
       listingTitle: listing.title,
       listingImage: listing.imageSrc[0] || "/assets/house.png",
@@ -468,7 +493,7 @@ export function generateSeedData() {
       // Booking payout credit
       type = "booking_payment";
       amount = randomInt(15000, 85000);
-      desc = `Settlement payout for completed reservation DAR-2026-${randomInt(1000, 9999)}`;
+      desc = `Settlement payout for completed reservation BLD-2026-${randomInt(1000, 9999)}`;
     } else if (txTypeRoll < 0.75) {
       // Commission deduction
       type = "commission_deduction";
@@ -494,7 +519,7 @@ export function generateSeedData() {
       type,
       amount,
       description: desc,
-      bookingRef: type === "booking_payment" ? `DAR-2026-${randomInt(1000, 9999)}` : undefined,
+      bookingRef: type === "booking_payment" ? `BLD-2026-${randomInt(1000, 9999)}` : undefined,
       createdAt: new Date(Date.now() - randomInt(0, 180) * 86400000 - randomInt(0, 86399) * 1000).toISOString(),
     });
   }
@@ -562,7 +587,7 @@ export function generateSeedData() {
       id: `aud_${i.toString().padStart(3, "0")}`,
       timestamp: new Date(Date.now() - randomInt(0, 90) * 86400000).toISOString(),
       actorId: "adm_01",
-      actorName: "BLADUS Administrator",
+      actorName: "Nadia Benkhaled",
       actorRole: "super_admin",
       action: template.action,
       entityType: template.entityType,
@@ -607,7 +632,7 @@ export function generateSeedData() {
       ...(status !== "pending"
         ? {
             processedAt: new Date(new Date(requestedAt).getTime() + 86400000).toISOString(),
-            processedBy: "BLADUS Administrator",
+            processedBy: "Nadia Benkhaled",
             rejectionReason: status === "rejected" ? "Account holder name does not match host identity" : undefined,
           }
         : {}),

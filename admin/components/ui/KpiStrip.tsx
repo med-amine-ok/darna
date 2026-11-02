@@ -81,14 +81,14 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
               if (card.onClick) card.onClick();
               if (onCardClick) onCardClick(card.id);
             }}
-            className={`group relative flex items-center gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-2xl text-start bg-white cursor-pointer min-h-[44px] transition-[box-shadow,transform] duration-fast ease-standard active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
-              isSelected ? "shadow-e2 ring-2 ring-primary-800" : "shadow-e1 hover:shadow-e2"
+            className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-start bg-white cursor-pointer min-h-[44px] transition-[box-shadow,transform] duration-fast ease-standard active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 ${
+              isSelected ? "shadow-e2 ring-[1.5px] ring-primary-800" : "shadow-e1 hover:shadow-e2"
             }`}
           >
             {/* Icon Tile */}
             <div
               aria-hidden="true"
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${getIconBg(
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${getIconBg(
                 card.iconBg,
                 card.colorVariant
               )}`}
@@ -98,7 +98,7 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
 
             {/* Value (Fraunces numerals) & label */}
             <div className="min-w-0 flex-1">
-              <span className="block font-serif text-[1.375rem] sm:text-2xl text-primary-900 leading-none truncate">
+              <span className="block font-serif text-[1.375rem] text-primary-900 leading-none truncate tabular-nums">
                 <AnimatedNumber value={typeof card.value === "number" ? formatNumber(card.value, locale) : card.value} />
               </span>
               <span className="block text-xs font-medium text-primary-600 truncate leading-snug mt-1">

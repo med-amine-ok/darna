@@ -353,10 +353,10 @@ export default function DashboardClient({
                   <div className="mt-4">
                     <Link
                       href={card.href}
-                      className={`group w-full inline-flex items-center justify-center gap-2 px-3 min-h-[40px] rounded-xl text-xs font-semibold transition-[background-color,box-shadow,transform] duration-fast ease-standard active:scale-[0.98] ${
+                      className={`group w-full inline-flex items-center justify-between gap-2 ps-3.5 pe-3 min-h-[40px] rounded-xl text-xs font-semibold transition-[background-color,box-shadow,transform] duration-fast ease-standard active:scale-[0.98] ${
                         isZero
                           ? "bg-white/70 text-secondary-800 hover:bg-white"
-                          : "bg-primary-800 text-white hover:bg-primary-900 shadow-e1 shadow-highlight"
+                          : "bg-darnaBg-200/70 text-primary-900 ring-1 ring-inset ring-primary/[0.06] hover:bg-primary-800 hover:text-white hover:ring-transparent"
                       } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2`}
                     >
                       <span>{card.buttonText}</span>

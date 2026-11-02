@@ -420,7 +420,7 @@ export type BookingStatus =
 
 export interface Booking {
   id: string;
-  reference: string; // e.g. "DAR-2026-8941"
+  reference: string; // e.g. "BLD-2026-8941"
   listingId: string;
   listingTitle: string;
   listingImage: string;

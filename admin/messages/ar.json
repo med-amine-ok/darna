@@ -48,7 +48,7 @@
     "experiences": "التجارب",
     "trips": "الرحلات المنظمة",
     "cars": "تأجير السيارات",
-    "moderation": "التحقق والاعتدال",
+    "moderation": "الإشراف",
     "bookings": "الحجوزات",
     "payments": "المدفوعات",
     "reviews": "التقييمات والبلاغات",
@@ -159,7 +159,14 @@
     "mainNavigation": "التنقل الرئيسي",
     "menuLabel": "قائمة التنقل",
     "closeMenu": "إغلاق قائمة التنقل",
-    "pendingBadge": "{count, plural, zero {لا توجد عناصر في الانتظار} one {عنصر واحد في الانتظار} two {عنصران في الانتظار} few {# عناصر في الانتظار} many {# عنصرًا في الانتظار} other {# عنصر في الانتظار}}"
+    "pendingBadge": "{count, plural, zero {لا توجد عناصر في الانتظار} one {عنصر واحد في الانتظار} two {عنصران في الانتظار} few {# عناصر في الانتظار} many {# عنصرًا في الانتظار} other {# عنصر في الانتظار}}",
+    "sections": {
+      "overview": "نظرة عامة",
+      "catalogue": "الكتالوج",
+      "operations": "العمليات",
+      "business": "النشاط",
+      "system": "النظام"
+    }
   },
   "header": {
     "searchPlaceholder": "ابحث في المنصة أو اكتب أمراً...",

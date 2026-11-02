@@ -245,14 +245,14 @@ export default function TripsListClient() {
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={listingImageSrc(row.imageSrc?.[0], "trip")}
+              src={listingImageSrc(row.imageSrc?.[0], "trip", row.id)}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0 max-w-[240px]">
+          <div className="min-w-0 max-w-[200px]">
             <button
               type="button"
               className={`block max-w-full font-semibold text-primary-900 truncate text-sm text-start hover:underline rounded ${FOCUS_RING}`}
@@ -630,7 +630,7 @@ export default function TripsListClient() {
             >
               <div className="space-y-5">
                 <ImageCarousel
-                  images={listingImages(selectedTrip.imageSrc, "trip")}
+                  images={listingImages(selectedTrip.imageSrc, "trip", selectedTrip.id)}
                   alt={selectedTrip.title}
                 />
 

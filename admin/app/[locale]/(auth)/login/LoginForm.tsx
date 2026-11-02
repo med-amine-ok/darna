@@ -43,9 +43,12 @@ export default function LoginForm({
     setError(null);
     setIsLoading(true);
 
+    // Read the fields from the form itself: browser/password-manager autofill fills the
+    // inputs without always firing onChange, so React state can be empty or stale.
+    const form = new FormData(e.currentTarget as HTMLFormElement);
     const formData = new FormData();
-    formData.set("email", email);
-    formData.set("password", password);
+    formData.set("email", String(form.get("email") ?? email).trim());
+    formData.set("password", String(form.get("password") ?? password));
     formData.set("locale", locale);
     formData.set("returnTo", returnTo);
 

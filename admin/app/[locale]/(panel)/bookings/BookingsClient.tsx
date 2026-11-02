@@ -203,7 +203,7 @@ export default function BookingsClient({
         <div className="flex items-center gap-2.5">
           <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-tertiary-100 shrink-0 ring-1 ring-inset ring-primary/[0.06]">
             <Image
-              src={listingImageSrc(row.listingImage, "booking")}
+              src={listingImageSrc(row.listingImage, "booking", row.listingId ?? row.id)}
               alt=""
               fill
               sizes="36px"
@@ -532,7 +532,7 @@ export default function BookingsClient({
               <div className="space-y-5">
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-tertiary-100">
                   <Image
-                    src={listingImageSrc(selectedBooking.listingImage, "booking")}
+                    src={listingImageSrc(selectedBooking.listingImage, "booking", selectedBooking.listingId ?? selectedBooking.id)}
                     alt={selectedBooking.listingTitle}
                     fill
                     sizes="(min-width: 1024px) 420px, 100vw"

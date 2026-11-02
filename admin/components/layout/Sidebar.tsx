@@ -58,6 +58,17 @@ interface NavItem {
   exact?: boolean;
 }
 
+/** Sidebar sections, in display order; each nav item id belongs to one. */
+const SECTIONS: { key: string; ids: string[] }[] = [
+  { key: "overview", ids: ["dashboard"] },
+  { key: "catalogue", ids: ["stays", "experiences", "trips", "cars"] },
+  { key: "operations", ids: ["moderation", "bookings", "users", "reviews", "messages"] },
+  { key: "business", ids: ["payments", "promotions", "stats"] },
+  { key: "system", ids: ["settings"] },
+];
+const SECTION_ORDER = SECTIONS.flatMap((sec) => sec.ids);
+const sectionOf = (id: string) => SECTIONS.find((sec) => sec.ids.includes(id))?.key;
+
 const ALL_NAV_ITEMS: readonly NavItem[] = [
   {
     id: "dashboard",
@@ -322,7 +333,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
       .filter((item) => canAccessPath(item.href, perms) || (item.subItems?.length ?? 0) > 0)
       .map((item) =>
         canAccessPath(item.href, perms) ? item : { ...item, href: item.subItems![0].href.split("?")[0] }
-      );
+      )
+      .sort((a, b) => SECTION_ORDER.indexOf(a.id) - SECTION_ORDER.indexOf(b.id));
   }, [permissions]);
 
   // Auto-expand section containing current route
@@ -385,7 +397,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
         aria-label={isMobileOpen ? t("menuLabel") : undefined}
         data-collapsed={collapsed ? "true" : "false"}
         className={`fixed inset-y-0 start-0 z-50 bg-primary-800 text-white flex flex-col h-[100dvh] transition-[transform,width,visibility] duration-base ease-out focus:outline-none max-lg:shadow-e5 max-lg:rounded-e-3xl overflow-hidden ${
-          collapsed ? "lg:w-20 w-[280px] max-w-[85vw]" : "w-[280px] sm:w-[260px] lg:w-[218px] max-w-[85vw]"
+          collapsed ? "lg:w-20 w-[280px] max-w-[85vw]" : "w-[280px] sm:w-[264px] lg:w-[248px] max-w-[85vw]"
         } ${
           isMobileOpen
             ? "translate-x-0 visible"
@@ -457,8 +469,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
             isCollapsed ? "px-2" : "px-2.5"
           }`}
         >
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
             const Icon = item.icon;
+            const section = sectionOf(item.id);
+            const startsSection = section && (index === 0 || sectionOf(navItems[index - 1].id) !== section);
             const label = tNav(item.labelKey);
             const hasSub = Boolean(item.subItems && item.subItems.length > 0);
             const isOpen = openSection === item.id;
@@ -470,6 +484,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
 
             return (
               <div key={item.id}>
+                {/* Section label (hidden when collapsed: a hairline keeps the grouping) */}
+                {startsSection &&
+                  (isCollapsed ? (
+                    index > 0 && <div aria-hidden="true" className="mx-3 my-2 h-px bg-white/[0.08]" />
+                  ) : (
+                    <p className={`px-3 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-tertiary-300/55 rtl:tracking-normal ${index > 0 ? "pt-4" : "pt-1"}`}>
+                      {t(`sections.${section}`)}
+                    </p>
+                  ))}
                 {/* Parent row */}
                 <div className="relative flex items-center">
                   {/* Sliding active pill (shared layout across sections) */}
@@ -504,7 +527,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
                     {isCollapsed ? (
                       <span className="sr-only">{label}</span>
                     ) : (
-                      <span className="flex-1 min-w-0 text-start leading-tight line-clamp-2 break-words" title={label}>
+                      <span className="flex-1 min-w-0 text-start leading-tight truncate" title={label}>
                         {label}
                       </span>
                     )}
@@ -611,7 +634,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           <Link
             href="/help"
             onClick={onMobileClose}
-            className={`block rounded-xl bg-white/[0.05] hover:bg-white/[0.09] ring-1 ring-inset ring-white/[0.06] transition-colors duration-fast p-2.5 group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
+            className={`block rounded-xl hover:bg-white/[0.06] transition-colors duration-fast px-2.5 py-2 group select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-300 ${
               isCollapsed ? "text-center" : ""
             }`}
             title={tNav("helpCenter")}

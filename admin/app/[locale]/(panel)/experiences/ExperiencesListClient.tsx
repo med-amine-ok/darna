@@ -219,14 +219,14 @@ export default function ExperiencesListClient() {
         <div className="flex items-center gap-3">
           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-tertiary-100 shrink-0">
             <Image
-              src={listingImageSrc(row.imageSrc?.[0], "experience")}
+              src={listingImageSrc(row.imageSrc?.[0], "experience", row.id)}
               alt=""
               fill
               sizes="48px"
               className="object-cover"
             />
           </div>
-          <div className="min-w-0 max-w-[220px]">
+          <div className="min-w-0 max-w-[200px]">
             <button
               type="button"
               className="block max-w-full font-semibold text-primary-900 truncate text-sm text-start hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
@@ -269,16 +269,6 @@ export default function ExperiencesListClient() {
           <MapPin className="w-3.5 h-3.5 text-secondary shrink-0" aria-hidden="true" />
           <span className="truncate">{t("locationValue", { city: row.city, code: row.wilayaCode })}</span>
         </div>
-      ),
-    },
-    {
-      key: "category",
-      header: t("columns.category"),
-      render: (row) => (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-darnaBg-300/70 text-primary-800 whitespace-nowrap">
-          <Tag className="w-3 h-3 text-secondary" aria-hidden="true" />
-          <span>{row.propertyType || t("categoryOptions.adventure")}</span>
-        </span>
       ),
     },
     {
@@ -635,7 +625,7 @@ export default function ExperiencesListClient() {
             >
               <div className="space-y-5">
                 <ImageCarousel
-                  images={listingImages(selectedExp.imageSrc, "experience")}
+                  images={listingImages(selectedExp.imageSrc, "experience", selectedExp.id)}
                   alt={selectedExp.title}
                 />
 

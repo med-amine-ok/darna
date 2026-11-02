@@ -118,8 +118,8 @@ function AdminLayoutInner({ children, currentAdmin, approvalsCount = 0 }: AdminL
           onToggleTrainingMode={handleToggleTrainingMode}
         />
 
-        {/* Main Content Area: offset by the sidebar on desktop (218px, or 80px when the sidebar is collapsed), full-width on mobile & tablet */}
-        <div className="flex-1 flex flex-col min-w-0 transition-[margin] duration-base ease-out lg:ms-[218px] lg:[aside[data-collapsed=true]+&]:ms-20">
+        {/* Main Content Area: offset by the sidebar on desktop (248px, or 80px when the sidebar is collapsed), full-width on mobile & tablet */}
+        <div className="flex-1 flex flex-col min-w-0 transition-[margin] duration-base ease-out lg:ms-[248px] lg:[aside[data-collapsed=true]+&]:ms-20">
           <Header
             currentUser={currentAdmin}
             onMobileMenuToggle={toggleMobileSidebar}
