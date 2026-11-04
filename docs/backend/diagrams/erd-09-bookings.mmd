@@ -1,0 +1,127 @@
+---
+title: "BLADUS ERD - Bookings"
+---
+erDiagram
+    booking {
+        uuid id PK
+        varchar_20 reference UK
+        uuid guest_id FK
+        uuid host_account_id FK
+        inventory_kind inventory_kind
+        uuid listing_id FK
+        uuid room_type_id FK
+        uuid experience_slot_id FK
+        uuid trip_departure_id FK
+        daterange stay
+        timestamptz check_in_at
+        timestamptz check_out_at
+        smallint guests_adults
+        smallint guests_children
+        smallint units
+        booking_status status
+        payment_status payment_status
+        approval_mode approval_mode_applied
+        timestamptz request_expires_at
+        timestamptz confirmed_at
+        timestamptz completed_at
+        timestamptz cancelled_at
+        actor_role cancelled_by_role
+        uuid cancelled_by_id FK
+        uuid cancel_reason_id FK
+        uuid decline_reason_id FK
+        char_3 currency
+        bigint subtotal_minor
+        bigint discount_minor
+        bigint cleaning_fee_minor
+        bigint taxes_minor
+        bigint total_minor
+        bigint commission_base_minor
+        int commission_rate_bp
+        bigint commission_minor
+        bigint refund_due_minor
+        jsonb price_lines
+        jsonb cancellation_windows
+        jsonb listing_snapshot
+        uuid quote_id FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    booking_event {
+        bigint id PK
+        uuid booking_id FK
+        booking_status from_status
+        booking_status to_status
+        actor_role actor_role
+        uuid actor_id FK
+        uuid reason_id FK
+        text note
+        timestamptz created_at
+    }
+    refund {
+        uuid id PK
+        uuid booking_id FK
+        bigint amount_minor
+        varchar_20 kind
+        varchar_20 settlement
+        text reason
+        uuid created_by_id FK
+        timestamptz created_at
+    }
+    dispute {
+        uuid id PK
+        uuid booking_id FK,UK
+        uuid opened_by_id FK
+        actor_role opened_by_role
+        uuid reason_id FK
+        text guest_statement
+        text host_statement
+        varchar_16 outcome
+        bigint refund_minor
+        text resolution_note
+        uuid resolved_by_id FK
+        timestamptz resolved_at
+        timestamptz created_at
+    }
+    experience_slot {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    quote {
+        uuid id PK
+    }
+    reason_code {
+        uuid id PK
+    }
+    room_type {
+        uuid id PK
+    }
+    trip_departure {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    user ||--o{ booking : "guest_id"
+    host_account ||--o{ booking : "host_account_id"
+    listing ||--o{ booking : "listing_id"
+    room_type ||--o{ booking : "room_type_id"
+    experience_slot ||--o{ booking : "experience_slot_id"
+    trip_departure ||--o{ booking : "trip_departure_id"
+    user ||--o{ booking : "cancelled_by_id"
+    reason_code ||--o{ booking : "cancel_reason_id"
+    reason_code ||--o{ booking : "decline_reason_id"
+    quote ||--o{ booking : "quote_id"
+    booking ||--o{ booking_event : "booking_id"
+    user ||--o{ booking_event : "actor_id"
+    reason_code ||--o{ booking_event : "reason_id"
+    booking ||--o{ refund : "booking_id"
+    user ||--o{ refund : "created_by_id"
+    booking ||--o{ dispute : "booking_id"
+    user ||--o{ dispute : "opened_by_id"
+    reason_code ||--o{ dispute : "reason_id"
+    user ||--o{ dispute : "resolved_by_id"

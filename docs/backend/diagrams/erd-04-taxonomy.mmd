@@ -1,0 +1,46 @@
+---
+title: "BLADUS ERD - Taxonomy"
+---
+erDiagram
+    category {
+        uuid id PK
+        vertical vertical
+        varchar_60 slug
+        varchar_80 name_en
+        varchar_80 name_fr
+        varchar_80 name_ar
+        varchar_40 icon
+        int sort_order
+        boolean is_active
+    }
+    property_type {
+        uuid id PK
+        vertical vertical
+        varchar_60 slug
+        varchar_80 name_en
+        varchar_80 name_fr
+        varchar_80 name_ar
+        boolean is_active
+    }
+    amenity {
+        uuid id PK
+        varchar_60 slug UK
+        varchar_20 group_code
+        varchar_80 name_en
+        varchar_80 name_fr
+        varchar_80 name_ar
+        varchar_40 icon
+        vertical applies_to
+        boolean is_active
+    }
+    cancellation_policy {
+        uuid id PK
+        varchar_20 code
+        int version
+        varchar_60 name_en
+        varchar_60 name_fr
+        varchar_60 name_ar
+        jsonb windows
+        boolean is_current
+        timestamptz created_at
+    }

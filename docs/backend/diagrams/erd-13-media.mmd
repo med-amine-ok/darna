@@ -1,0 +1,30 @@
+---
+title: "BLADUS ERD - Media"
+---
+erDiagram
+    media_asset {
+        uuid id PK
+        uuid owner_user_id FK
+        uuid host_account_id FK
+        varchar_20 purpose
+        media_bucket bucket
+        varchar_255 storage_key UK
+        varchar_64 mime_type
+        bigint size_bytes
+        int width
+        int height
+        char_64 sha256
+        bigint phash
+        media_status status
+        varchar_32 scan_result
+        timestamptz created_at
+        timestamptz deleted_at
+    }
+    host_account {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    user ||--o{ media_asset : "owner_user_id"
+    host_account ||--o{ media_asset : "host_account_id"

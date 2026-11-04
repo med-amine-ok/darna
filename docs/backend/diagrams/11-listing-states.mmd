@@ -1,0 +1,23 @@
+---
+title: Listing and trip state machine (BR-LST-03)
+---
+stateDiagram-v2
+    [*] --> draft
+    draft --> pending_review: host submits
+    pending_review --> published: staff approves
+    pending_review --> changes_requested: staff
+    pending_review --> rejected: staff with reason
+    pending_review --> draft: host withdraws
+    changes_requested --> pending_review: host resubmits
+    rejected --> draft: host edits
+    published --> paused: host
+    paused --> published: host
+    published --> archived: host
+    archived --> draft: host
+    published --> suspended: staff with reason
+    published --> changes_requested: staff
+    suspended --> published: staff
+    suspended --> rejected: staff
+    draft --> deleted: soft delete
+    published --> deleted: soft delete
+    deleted --> [*]

@@ -1,0 +1,134 @@
+---
+title: "BLADUS ERD - Host Accounts And Organisations"
+---
+erDiagram
+    host_account {
+        uuid id PK
+        host_account_kind kind
+        uuid user_id FK,UK
+        uuid organization_id FK,UK
+        verification_status verification_status
+        verification_status status_before_delete
+        approval_mode default_approval_mode
+        int commission_rate_override_bp
+        bigint credit_limit_override_minor
+        int host_cancellations_12m
+        numeric_3_2 rating_avg
+        int review_count
+        timestamptz submitted_at
+        timestamptz approved_at
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+    organization {
+        uuid id PK
+        business_category business_category
+        varchar_120 display_name
+        varchar_160 legal_name
+        varchar_140 slug UK
+        text description
+        varchar_2 source_language
+        uuid logo_media_id FK
+        uuid cover_media_id FK
+        varchar_254 business_email
+        varchar_16 business_phone_e164
+        int commune_id FK
+        varchar_255 address_line
+        varchar_32 rc_number
+        varchar_20 nif
+        varchar_20 nis
+        varchar_20 article_imposition
+        varchar_40 tourism_licence_number
+        smallint star_rating
+        time check_in_time
+        time check_out_time
+        jsonb policies
+        varchar_16 team_size_range
+        uuid created_by_id FK
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+    membership {
+        uuid id PK
+        uuid organization_id FK
+        uuid user_id FK
+        membership_role role
+        boolean is_active
+        timestamptz joined_at
+        timestamptz removed_at
+    }
+    invitation {
+        uuid id PK
+        uuid organization_id FK
+        varchar_254 email
+        varchar_16 phone_e164
+        membership_role role
+        char_64 token_hash UK
+        invitation_status status
+        uuid invited_by_id FK
+        timestamptz expires_at
+        uuid accepted_by_id FK
+        timestamptz accepted_at
+        timestamptz created_at
+    }
+    host_document {
+        uuid id PK
+        uuid host_account_id FK
+        uuid listing_id FK
+        document_type doc_type
+        uuid media_id FK
+        document_status status
+        char_64 number_hash
+        date expires_on
+        uuid reviewed_by_id FK
+        timestamptz reviewed_at
+        uuid rejection_reason_id FK
+        timestamptz created_at
+        timestamptz deleted_at
+    }
+    payout_account {
+        uuid id PK
+        uuid host_account_id FK
+        varchar_16 kind
+        varchar_160 holder_name
+        bytea number_encrypted
+        char_4 number_last4
+        boolean is_default
+        timestamptz hold_until
+        timestamptz created_at
+        timestamptz deleted_at
+    }
+    commune {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    media_asset {
+        uuid id PK
+    }
+    reason_code {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    user ||--o| host_account : "user_id"
+    organization ||--o| host_account : "organization_id"
+    media_asset ||--o{ organization : "logo_media_id"
+    media_asset ||--o{ organization : "cover_media_id"
+    commune ||--o{ organization : "commune_id"
+    user ||--o{ organization : "created_by_id"
+    organization ||--o{ membership : "organization_id"
+    user ||--o{ membership : "user_id"
+    organization ||--o{ invitation : "organization_id"
+    user ||--o{ invitation : "invited_by_id"
+    user ||--o{ invitation : "accepted_by_id"
+    host_account ||--o{ host_document : "host_account_id"
+    listing ||--o{ host_document : "listing_id"
+    media_asset ||--o{ host_document : "media_id"
+    user ||--o{ host_document : "reviewed_by_id"
+    reason_code ||--o{ host_document : "rejection_reason_id"
+    host_account ||--o{ payout_account : "host_account_id"

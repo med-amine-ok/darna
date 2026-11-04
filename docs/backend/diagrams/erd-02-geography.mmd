@@ -1,0 +1,37 @@
+---
+title: "BLADUS ERD - Geography"
+---
+erDiagram
+    wilaya {
+        smallint code PK
+        varchar_80 name_fr
+        varchar_80 name_ar
+        varchar_80 name_en
+        smallint legacy_code_58
+        varchar_16 region
+        geometry_MultiPolygon_4326 boundary
+        geography_Point_4326 centroid
+        varchar_64 source
+        date valid_from
+    }
+    daira {
+        int id PK
+        smallint wilaya_code FK
+        varchar_80 name_fr
+        varchar_80 name_ar
+    }
+    commune {
+        int id PK
+        smallint wilaya_code FK
+        int daira_id FK
+        varchar_100 name_fr
+        varchar_100 name_ar
+        varchar_100 name_en
+        varchar_5 postal_code
+        geography_Point_4326 centroid
+        varchar_64 source
+        date valid_from
+    }
+    wilaya ||--o{ daira : "wilaya_code"
+    wilaya ||--o{ commune : "wilaya_code"
+    daira ||--o{ commune : "daira_id"

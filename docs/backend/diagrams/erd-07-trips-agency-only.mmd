@@ -1,0 +1,73 @@
+---
+title: "BLADUS ERD - Trips (Agency Only)"
+---
+erDiagram
+    trip {
+        uuid id PK
+        varchar_16 reference UK
+        uuid host_account_id FK
+        listing_status status
+        listing_status status_before_delete
+        varchar_140 title
+        text description
+        varchar_2 source_language
+        smallint duration_days
+        smallint group_min
+        smallint group_max
+        char_3 currency
+        bigint price_per_person_minor
+        jsonb inclusions
+        jsonb exclusions
+        int start_commune_id FK
+        geography_Point_4326 meeting_point
+        varchar_255 meeting_point_text
+        uuid cancellation_policy_id FK
+        approval_mode approval_mode
+        numeric_3_2 rating_avg
+        int review_count
+        timestamptz submitted_at
+        timestamptz published_at
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+    trip_itinerary_day {
+        uuid id PK
+        uuid trip_id FK
+        smallint day_number
+        varchar_120 title
+        text description
+        int overnight_commune_id FK
+    }
+    trip_departure {
+        uuid id PK
+        uuid trip_id FK
+        date starts_on
+        date ends_on
+        smallint seats_total
+        smallint seats_held
+        smallint seats_booked
+        bigint price_per_person_minor
+        departure_status status
+        uuid guide_membership_id FK
+        timestamptz created_at
+    }
+    cancellation_policy {
+        uuid id PK
+    }
+    commune {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    membership {
+        uuid id PK
+    }
+    host_account ||--o{ trip : "host_account_id"
+    commune ||--o{ trip : "start_commune_id"
+    cancellation_policy ||--o{ trip : "cancellation_policy_id"
+    trip ||--o{ trip_itinerary_day : "trip_id"
+    commune ||--o{ trip_itinerary_day : "overnight_commune_id"
+    trip ||--o{ trip_departure : "trip_id"
+    membership ||--o{ trip_departure : "guide_membership_id"

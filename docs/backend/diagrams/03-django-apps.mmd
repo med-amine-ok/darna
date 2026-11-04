@@ -1,0 +1,43 @@
+---
+title: Django apps (bounded contexts) and allowed calls
+---
+flowchart LR
+    accounts["accounts"]
+    hosts["hosts<br/>(host_account, orgs)"]
+    geo["geo"]
+    catalog["catalog"]
+    inventory["inventory"]
+    trips["trips"]
+    pricing["pricing"]
+    bookings["bookings"]
+    ledger["ledger"]
+    reviews["reviews"]
+    messaging["messaging"]
+    notifications["notifications<br/>+ outbox"]
+    media["media"]
+    trust["trust<br/>(moderation)"]
+    config["config"]
+    audit["audit"]
+    hosts --> accounts
+    catalog --> hosts
+    catalog --> geo
+    catalog --> media
+    inventory --> catalog
+    trips --> hosts
+    pricing --> catalog
+    pricing --> inventory
+    bookings --> pricing
+    bookings --> inventory
+    bookings --> trips
+    bookings --> ledger
+    ledger --> hosts
+    reviews --> bookings
+    messaging --> bookings
+    trust --> catalog
+    trust --> hosts
+    trust --> reviews
+    hosts --> config
+    bookings -. "events" .-> notifications
+    trust -. "events" .-> notifications
+    bookings -. "events" .-> audit
+    ledger -. "events" .-> audit

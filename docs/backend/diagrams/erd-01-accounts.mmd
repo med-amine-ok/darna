@@ -1,0 +1,75 @@
+---
+title: "BLADUS ERD - Accounts"
+---
+erDiagram
+    user {
+        uuid id PK
+        varchar_254 email
+        timestamptz email_verified_at
+        varchar_16 phone_e164
+        timestamptz phone_verified_at
+        varchar_255 password
+        varchar_80 first_name_latin
+        varchar_80 last_name_latin
+        varchar_160 full_name_ar
+        uuid avatar_media_id FK
+        varchar_2 preferred_locale
+        char_2 nationality_iso2
+        user_status status
+        boolean is_staff
+        timestamptz date_joined
+        timestamptz last_login_at
+        timestamptz deleted_at
+        timestamptz anonymised_at
+    }
+    staff_profile {
+        uuid user_id PK,FK
+        staff_role_code role
+        staff_status status
+        uuid invited_by_id FK
+        timestamptz invited_at
+        timestamptz activated_at
+        timestamptz deactivated_at
+    }
+    staff_permission {
+        varchar_64 code PK
+        text description
+    }
+    staff_role_permission {
+        staff_role_code role PK
+        varchar_64 permission_code PK,FK
+    }
+    consent_record {
+        uuid id PK
+        uuid user_id FK
+        varchar_32 document
+        varchar_32 version
+        boolean accepted
+        inet ip
+        text user_agent
+        timestamptz created_at
+    }
+    favorite {
+        uuid id PK
+        uuid user_id FK
+        uuid listing_id FK
+        uuid trip_id FK
+        timestamptz created_at
+    }
+    listing {
+        uuid id PK
+    }
+    media_asset {
+        uuid id PK
+    }
+    trip {
+        uuid id PK
+    }
+    media_asset ||--o{ user : "avatar_media_id"
+    user ||--o| staff_profile : "user_id"
+    user ||--o{ staff_profile : "invited_by_id"
+    staff_permission ||--o{ staff_role_permission : "permission_code"
+    user ||--o{ consent_record : "user_id"
+    user ||--o{ favorite : "user_id"
+    listing ||--o{ favorite : "listing_id"
+    trip ||--o{ favorite : "trip_id"

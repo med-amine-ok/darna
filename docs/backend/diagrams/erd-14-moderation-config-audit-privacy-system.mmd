@@ -1,0 +1,215 @@
+---
+title: "BLADUS ERD - Moderation, Config, Audit, Privacy, System"
+---
+erDiagram
+    reason_code {
+        uuid id PK
+        varchar_32 action
+        varchar_48 code
+        varchar_120 label_en
+        varchar_120 label_fr
+        varchar_120 label_ar
+        text host_text_en
+        text host_text_fr
+        text host_text_ar
+        boolean is_active
+    }
+    moderation_case {
+        uuid id PK
+        case_kind kind
+        varchar_24 subject_type
+        uuid subject_id
+        case_status status
+        case_priority priority
+        timestamptz submitted_at
+        uuid assigned_to_id FK
+        uuid resolved_by_id FK
+        timestamptz resolved_at
+        varchar_24 outcome
+        timestamptz created_at
+    }
+    moderation_decision {
+        uuid id PK
+        uuid case_id FK
+        varchar_24 decision
+        uuid reason_id FK
+        text note
+        uuid actor_id FK
+        timestamptz created_at
+    }
+    change_request_item {
+        uuid id PK
+        uuid case_id FK
+        varchar_48 checklist_code
+        text message
+        timestamptz resolved_at
+    }
+    platform_settings {
+        uuid id PK
+        int version UK
+        jsonb data
+        boolean is_current
+        uuid created_by_id FK
+        timestamptz created_at
+    }
+    onboarding_flow_version {
+        uuid id PK
+        varchar_12 host_type
+        int version
+        flow_status status
+        jsonb schema
+        uuid published_by_id FK
+        timestamptz published_at
+        timestamptz created_at
+    }
+    onboarding_draft {
+        uuid id PK
+        uuid user_id FK
+        varchar_12 host_type
+        uuid flow_version_id FK
+        varchar_48 current_step
+        jsonb answers
+        varchar_12 status
+        uuid host_account_id FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    coupon {
+        uuid id PK
+        varchar_32 code
+        varchar_12 discount_type
+        bigint discount_value
+        bigint min_spend_minor
+        varchar_8 funded_by
+        uuid host_account_id FK
+        vertical scope_verticals
+        int usage_limit
+        int per_user_limit
+        timestamptz valid_from
+        timestamptz valid_to
+        boolean is_active
+        uuid created_by_id FK
+        timestamptz created_at
+    }
+    coupon_redemption {
+        uuid id PK
+        uuid coupon_id FK
+        uuid booking_id FK,UK
+        uuid user_id FK
+        bigint amount_minor
+        timestamptz released_at
+        timestamptz created_at
+    }
+    audit_event {
+        bigint id PK
+        timestamptz occurred_at
+        uuid actor_id FK
+        varchar_8 actor_kind
+        varchar_16 actor_role
+        varchar_48 action
+        varchar_24 object_type
+        varchar_64 object_id
+        uuid host_account_id FK
+        jsonb before
+        jsonb after
+        inet ip
+        varchar_255 user_agent
+        varchar_36 request_id
+        char_64 prev_hash
+        char_64 hash
+    }
+    export_job {
+        uuid id PK
+        uuid requested_by_id FK
+        varchar_32 dataset
+        jsonb filters
+        int row_count
+        varchar_12 status
+        uuid media_id FK
+        timestamptz created_at
+        timestamptz completed_at
+    }
+    data_subject_request {
+        uuid id PK
+        uuid user_id FK
+        dsr_kind kind
+        varchar_12 status
+        timestamptz due_at
+        uuid handled_by_id FK
+        timestamptz completed_at
+        text notes
+        timestamptz created_at
+    }
+    idempotency_record {
+        uuid id PK
+        uuid user_id FK
+        varchar_80 endpoint
+        varchar_80 key
+        char_64 request_hash
+        varchar_12 status
+        smallint response_code
+        jsonb response_body
+        timestamptz locked_until
+        timestamptz created_at
+        timestamptz expires_at
+    }
+    listing_search_doc {
+        uuid listing_id PK,FK
+        vertical vertical
+        smallint wilaya_code
+        int commune_id
+        geography_Point_4326 location_public
+        bigint price_from_minor
+        smallint capacity_guests
+        numeric_3_2 rating_avg
+        int review_count
+        boolean instant_bookable
+        varchar_12 host_type
+        uuid property_type_id
+        uuid amenity_ids
+        tsvector tsv_fr
+        tsvector tsv_en
+        tsvector tsv_ar
+        text search_text
+        timestamptz published_at
+        timestamptz updated_at
+    }
+    booking {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    media_asset {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    user ||--o{ moderation_case : "assigned_to_id"
+    user ||--o{ moderation_case : "resolved_by_id"
+    moderation_case ||--o{ moderation_decision : "case_id"
+    reason_code ||--o{ moderation_decision : "reason_id"
+    user ||--o{ moderation_decision : "actor_id"
+    moderation_case ||--o{ change_request_item : "case_id"
+    user ||--o{ platform_settings : "created_by_id"
+    user ||--o{ onboarding_flow_version : "published_by_id"
+    user ||--o{ onboarding_draft : "user_id"
+    onboarding_flow_version ||--o{ onboarding_draft : "flow_version_id"
+    host_account ||--o{ onboarding_draft : "host_account_id"
+    host_account ||--o{ coupon : "host_account_id"
+    user ||--o{ coupon : "created_by_id"
+    coupon ||--o{ coupon_redemption : "coupon_id"
+    booking ||--o{ coupon_redemption : "booking_id"
+    user ||--o{ coupon_redemption : "user_id"
+    user ||--o{ audit_event : "actor_id"
+    host_account ||--o{ audit_event : "host_account_id"
+    user ||--o{ export_job : "requested_by_id"
+    media_asset ||--o{ export_job : "media_id"
+    user ||--o{ data_subject_request : "user_id"
+    user ||--o{ data_subject_request : "handled_by_id"
+    user ||--o{ idempotency_record : "user_id"
+    listing ||--o| listing_search_doc : "listing_id"

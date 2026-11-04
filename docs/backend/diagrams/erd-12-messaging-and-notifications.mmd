@@ -1,0 +1,100 @@
+---
+title: "BLADUS ERD - Messaging And Notifications"
+---
+erDiagram
+    conversation {
+        uuid id PK
+        conversation_kind kind
+        uuid guest_id FK
+        uuid host_account_id FK
+        uuid listing_id FK
+        uuid trip_id FK
+        uuid booking_id FK
+        timestamptz last_message_at
+        timestamptz created_at
+    }
+    conversation_participant {
+        uuid conversation_id PK,FK
+        uuid user_id PK,FK
+        varchar_12 role
+        bigint last_read_message_id
+        boolean muted
+        timestamptz joined_at
+    }
+    message {
+        bigint id PK
+        uuid conversation_id FK
+        uuid sender_id FK
+        varchar_12 kind
+        text body
+        text body_masked
+        boolean contains_contact_info
+        timestamptz created_at
+        timestamptz deleted_at
+    }
+    notification {
+        bigint id PK
+        uuid user_id FK
+        varchar_48 kind
+        jsonb params
+        varchar_255 link
+        timestamptz read_at
+        timestamptz created_at
+    }
+    notification_preference {
+        uuid user_id PK,FK
+        varchar_48 kind PK
+        varchar_8 channel PK
+        boolean enabled
+    }
+    outbox_event {
+        bigint id PK
+        varchar_64 topic
+        varchar_32 aggregate_type
+        uuid aggregate_id
+        jsonb payload
+        outbox_status status
+        smallint attempts
+        timestamptz next_attempt_at
+        timestamptz created_at
+        timestamptz sent_at
+    }
+    delivery_log {
+        bigint id PK
+        bigint outbox_event_id FK
+        varchar_8 channel
+        varchar_20 provider
+        char_64 recipient_hash
+        varchar_12 status
+        varchar_100 provider_message_id
+        bigint cost_minor
+        text error
+        timestamptz created_at
+    }
+    booking {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    trip {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    user ||--o{ conversation : "guest_id"
+    host_account ||--o{ conversation : "host_account_id"
+    listing ||--o{ conversation : "listing_id"
+    trip ||--o{ conversation : "trip_id"
+    booking ||--o{ conversation : "booking_id"
+    conversation ||--o{ conversation_participant : "conversation_id"
+    user ||--o{ conversation_participant : "user_id"
+    conversation ||--o{ message : "conversation_id"
+    user ||--o{ message : "sender_id"
+    user ||--o{ notification : "user_id"
+    user ||--o{ notification_preference : "user_id"
+    outbox_event ||--o{ delivery_log : "outbox_event_id"

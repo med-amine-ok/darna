@@ -1,0 +1,174 @@
+---
+title: "BLADUS ERD - Catalogue: Listings And Room Types"
+---
+erDiagram
+    listing {
+        uuid id PK
+        varchar_16 reference UK
+        uuid host_account_id FK
+        vertical vertical
+        listing_status status
+        listing_status status_before_delete
+        inventory_kind inventory_kind
+        varchar_120 title
+        text description
+        varchar_2 source_language
+        uuid category_id FK
+        uuid property_type_id FK
+        int commune_id FK
+        varchar_255 address_line
+        geography_Point_4326 location_exact
+        geography_Point_4326 location_public
+        smallint capacity_guests
+        smallint bedrooms
+        smallint beds
+        numeric_3_1 bathrooms
+        int surface_m2
+        char_3 currency
+        bigint base_price_minor
+        bigint cleaning_fee_minor
+        int weekly_discount_bp
+        int monthly_discount_bp
+        smallint min_nights
+        smallint max_nights
+        smallint advance_notice_days
+        date available_from
+        date available_until
+        time check_in_time
+        time check_out_time
+        approval_mode approval_mode
+        uuid cancellation_policy_id FK
+        jsonb house_rules
+        numeric_3_2 rating_avg
+        int review_count
+        timestamptz submitted_at
+        timestamptz published_at
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+    listing_revision {
+        uuid id PK
+        uuid listing_id FK
+        jsonb payload
+        varchar_16 status
+        uuid submitted_by_id FK
+        timestamptz submitted_at
+        uuid decided_by_id FK
+        timestamptz decided_at
+    }
+    vehicle_detail {
+        uuid listing_id PK,FK
+        varchar_40 make
+        varchar_60 model
+        smallint year
+        smallint seats
+        varchar_12 transmission
+        varchar_12 fuel
+        int daily_km_limit
+        smallint driver_min_age
+        smallint licence_min_years
+        bigint security_deposit_minor
+    }
+    experience_detail {
+        uuid listing_id PK,FK
+        int duration_minutes
+        varchar_2 languages
+        geography_Point_4326 meeting_point
+        varchar_255 meeting_point_text
+        smallint max_group
+        jsonb includes
+    }
+    room_type {
+        uuid id PK
+        uuid listing_id FK
+        varchar_80 name
+        text description
+        booking_unit booking_unit
+        smallint unit_count
+        smallint capacity_per_unit
+        bigint base_price_minor
+        varchar_120 beds_description
+        int sort_order
+        boolean is_active
+        timestamptz created_at
+        timestamptz deleted_at
+    }
+    listing_amenity {
+        uuid listing_id PK,FK
+        uuid amenity_id PK,FK
+    }
+    room_type_amenity {
+        uuid room_type_id PK,FK
+        uuid amenity_id PK,FK
+    }
+    listing_photo {
+        uuid id PK
+        uuid listing_id FK
+        uuid room_type_id FK
+        uuid trip_id FK
+        uuid media_id FK
+        int sort_order
+        varchar_160 caption
+        boolean is_cover
+    }
+    featured_placement {
+        uuid id PK
+        uuid listing_id FK
+        uuid trip_id FK
+        varchar_24 placement
+        smallint position
+        timestamptz starts_at
+        timestamptz ends_at
+        uuid created_by_id FK
+        timestamptz created_at
+    }
+    amenity {
+        uuid id PK
+    }
+    cancellation_policy {
+        uuid id PK
+    }
+    category {
+        uuid id PK
+    }
+    commune {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    media_asset {
+        uuid id PK
+    }
+    property_type {
+        uuid id PK
+    }
+    trip {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    host_account ||--o{ listing : "host_account_id"
+    category ||--o{ listing : "category_id"
+    property_type ||--o{ listing : "property_type_id"
+    commune ||--o{ listing : "commune_id"
+    cancellation_policy ||--o{ listing : "cancellation_policy_id"
+    listing ||--o{ listing_revision : "listing_id"
+    user ||--o{ listing_revision : "submitted_by_id"
+    user ||--o{ listing_revision : "decided_by_id"
+    listing ||--o| vehicle_detail : "listing_id"
+    listing ||--o| experience_detail : "listing_id"
+    listing ||--o{ room_type : "listing_id"
+    listing ||--o{ listing_amenity : "listing_id"
+    amenity ||--o{ listing_amenity : "amenity_id"
+    room_type ||--o{ room_type_amenity : "room_type_id"
+    amenity ||--o{ room_type_amenity : "amenity_id"
+    listing ||--o{ listing_photo : "listing_id"
+    room_type ||--o{ listing_photo : "room_type_id"
+    trip ||--o{ listing_photo : "trip_id"
+    media_asset ||--o{ listing_photo : "media_id"
+    listing ||--o{ featured_placement : "listing_id"
+    trip ||--o{ featured_placement : "trip_id"
+    user ||--o{ featured_placement : "created_by_id"

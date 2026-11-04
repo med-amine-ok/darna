@@ -1,0 +1,131 @@
+---
+title: "BLADUS ERD - Money: Ledger, Wallet, Dormant Payments"
+---
+erDiagram
+    ledger_account {
+        uuid id PK
+        varchar_80 code UK
+        ledger_account_kind kind
+        uuid host_account_id FK
+        char_3 currency
+        boolean is_active
+        timestamptz created_at
+    }
+    ledger_transaction {
+        uuid id PK
+        ledger_tx_kind kind
+        uuid booking_id FK
+        uuid topup_id FK
+        uuid reverses_id FK
+        varchar_255 description
+        uuid created_by_id FK
+        timestamptz occurred_at
+        timestamptz created_at
+    }
+    ledger_entry {
+        bigint id PK
+        uuid transaction_id FK
+        uuid account_id FK
+        bigint amount_minor
+        char_3 currency
+    }
+    account_balance {
+        uuid account_id PK,FK
+        bigint balance_minor
+        bigint last_entry_id
+        timestamptz updated_at
+    }
+    wallet_topup {
+        uuid id PK
+        uuid host_account_id FK
+        topup_method method
+        bigint amount_minor
+        varchar_200 receipt_reference
+        topup_status status
+        uuid requested_by_id FK
+        uuid approved_by_id FK
+        timestamptz approved_at
+        text rejection_reason
+        uuid gateway_event_id FK
+        timestamptz created_at
+    }
+    gateway_event {
+        uuid id PK
+        varchar_20 provider
+        varchar_100 event_id
+        boolean signature_valid
+        jsonb payload
+        timestamptz received_at
+        timestamptz processed_at
+        text error
+    }
+    payment {
+        uuid id PK
+        uuid booking_id FK
+        varchar_20 provider
+        varchar_100 provider_checkout_id
+        bigint amount_minor
+        char_3 currency
+        varchar_16 status
+        timestamptz created_at
+    }
+    payout {
+        uuid id PK
+        uuid host_account_id FK
+        uuid payout_account_id FK
+        bigint amount_minor
+        varchar_16 status
+        uuid approved_by_id FK
+        uuid ledger_transaction_id FK
+        timestamptz created_at
+    }
+    invoice {
+        uuid id PK
+        uuid host_account_id FK
+        smallint year
+        int number
+        date period_start
+        date period_end
+        bigint amount_ht_minor
+        bigint vat_minor
+        bigint amount_ttc_minor
+        varchar_12 status
+        uuid pdf_media_id FK
+        uuid credit_note_of_id FK
+        timestamptz issued_at
+    }
+    booking {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    media_asset {
+        uuid id PK
+    }
+    payout_account {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    host_account ||--o{ ledger_account : "host_account_id"
+    booking ||--o{ ledger_transaction : "booking_id"
+    wallet_topup ||--o{ ledger_transaction : "topup_id"
+    ledger_transaction ||--o{ ledger_transaction : "reverses_id"
+    user ||--o{ ledger_transaction : "created_by_id"
+    ledger_transaction ||--o{ ledger_entry : "transaction_id"
+    ledger_account ||--o{ ledger_entry : "account_id"
+    ledger_account ||--o| account_balance : "account_id"
+    host_account ||--o{ wallet_topup : "host_account_id"
+    user ||--o{ wallet_topup : "requested_by_id"
+    user ||--o{ wallet_topup : "approved_by_id"
+    gateway_event ||--o{ wallet_topup : "gateway_event_id"
+    booking ||--o{ payment : "booking_id"
+    host_account ||--o{ payout : "host_account_id"
+    payout_account ||--o{ payout : "payout_account_id"
+    user ||--o{ payout : "approved_by_id"
+    ledger_transaction ||--o{ payout : "ledger_transaction_id"
+    host_account ||--o{ invoice : "host_account_id"
+    media_asset ||--o{ invoice : "pdf_media_id"
+    invoice ||--o{ invoice : "credit_note_of_id"

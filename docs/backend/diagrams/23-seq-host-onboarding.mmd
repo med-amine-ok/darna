@@ -1,0 +1,24 @@
+---
+title: Becoming a host and verification
+---
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant W as Website
+    participant A as Django API
+    participant S as Object storage
+    actor M as Moderator
+    W->>A: GET /onboarding/flows/{host_type}
+    U->>W: Fills the steps (draft saved on the server)
+    W->>A: PUT /me/onboarding-drafts/{host_type}
+    U->>W: Adds ID and business documents
+    W->>A: POST /media/uploads (presign)
+    A-->>W: presigned PUT URL (private bucket, quarantine)
+    W->>S: upload file
+    W->>A: POST /me/onboarding-drafts/{host_type}/submit
+    A->>A: validate answers against the flow version
+    A->>A: create host account, organisation, owner membership, documents, case
+    A-)M: case appears in the queue, waiting time starts
+    M->>A: approve each document, then the host
+    A-)U: verified (email and SMS)
+    U->>W: Creates a first listing and submits it for review

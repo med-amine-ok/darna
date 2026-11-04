@@ -1,0 +1,257 @@
+"""Generate 05b-data-dictionary.md and diagrams/erd-*.mmd from schema.dbml.
+
+Documentation tooling only. Run from docs/backend:  python _tools/build_schema_docs.py
+Parses the DBML subset used in schema.dbml (tables, columns, inline refs, notes, enums).
+"""
+import pathlib
+import re
+from collections import OrderedDict
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SRC = (ROOT / "schema.dbml").read_text(encoding="utf-8")
+
+COMMON = {
+    "id": "Primary key (UUIDv7 made by the app, ordered by time).",
+    "created_at": "When the row was created (UTC).",
+    "updated_at": "When the row was last changed (UTC).",
+    "deleted_at": "Soft delete time; null = not deleted.",
+    "currency": "ISO 4217 code, DZD today.",
+}
+
+# ---------------------------------------------------------------- parse
+sections = OrderedDict()  # section -> [table names]
+tables = OrderedDict()    # name -> {cols, note, section}
+enums = OrderedDict()
+current = "Other"
+lines = SRC.splitlines()
+i = 0
+while i < len(lines):
+    line = lines[i]
+    if line.startswith("// ====") and i + 1 < len(lines) and lines[i + 1].startswith("// ") and not lines[i + 1].startswith("// ===="):
+        current = lines[i + 1][3:].strip().title()
+        sections.setdefault(current, [])
+        i += 2
+        continue
+    m = re.match(r"Enum (\w+) \{", line)
+    if m:
+        vals = []
+        i += 1
+        while lines[i].strip() != "}":
+            vals.append(lines[i].strip())
+            i += 1
+        enums[m.group(1)] = vals
+        i += 1
+        continue
+    m = re.match(r"Table (\w+) \{", line)
+    if m:
+        name = m.group(1)
+        t = {"cols": [], "note": "", "section": current, "indexes": []}
+        i += 1
+        while lines[i] != "}":
+            raw = lines[i]
+            s = raw.strip()
+            if s.startswith("Note:"):
+                if "'''" in s:
+                    buf = [s.split("'''", 1)[1]]
+                    while "'''" not in buf[-1]:
+                        i += 1
+                        buf.append(lines[i])
+                    t["note"] = " ".join(x.strip() for x in "\n".join(buf).split("'''")[0].splitlines())
+                else:
+                    t["note"] = s[len("Note:"):].strip().strip("'")
+            elif s.startswith("indexes {"):
+                i += 1
+                while lines[i].strip() != "}":
+                    t["indexes"].append(lines[i].strip())
+                    i += 1
+            elif s and not s.startswith("//"):
+                cm = re.match(r'(\w+)\s+("[^"]+"|\S+)\s*(\[(.*)\])?$', s)
+                if cm:
+                    settings = cm.group(4) or ""
+                    note = ""
+                    nm = re.search(r"note: '((?:[^'\\]|\\.)*)'", settings)
+                    if nm:
+                        note = nm.group(1).replace("\\\\", "\\")
+                        settings = settings.replace(nm.group(0), "")
+                    ref = re.search(r"ref: ([<>-]) (\w+)\.(\w+)", settings)
+                    default = re.search(r"default: ('[^']*'|[\w.]+)", settings)
+                    t["cols"].append({
+                        "name": cm.group(1),
+                        "type": cm.group(2).strip('"'),
+                        "pk": "pk" in re.split(r"[ ,]+", settings),
+                        "unique": "unique" in settings,
+                        "not_null": "not null" in settings or "pk" in re.split(r"[ ,]+", settings),
+                        "default": default.group(1).strip("'") if default else "",
+                        "ref": (ref.group(1), ref.group(2), ref.group(3)) if ref else None,
+                        "note": note,
+                    })
+            i += 1
+        tables[name] = t
+        sections.setdefault(current, []).append(name)
+        i += 1
+        continue
+    i += 1
+
+edges = []  # (child, child_col, parent, parent_col, kind)
+for name, t in tables.items():
+    for c in t["cols"]:
+        if c["ref"]:
+            kind, ptable, pcol = c["ref"]
+            edges.append((name, c["name"], ptable, pcol, kind))
+missing = {e[2] for e in edges} - set(tables)
+assert not missing, f"refs to unknown tables: {missing}"
+
+# ---------------------------------------------------------------- data dictionary
+anchor = lambda n: n.replace("_", "-")
+out = []
+out.append("# 05b. Data dictionary")
+out.append("")
+out.append("> **In plain words**")
+out.append("> Every table and every column of the planned database, with what it means.")
+out.append("> It is generated from [schema.dbml](schema.dbml), so it is always identical to the schema.")
+out.append("> \"Key\" says if a column is the row's identity (PK), a link to another table (FK) or must be unique (UQ).")
+out.append("> Money columns end in `_minor` (centimes). Rates end in `_bp` (basis points: 1,200 = 12%).")
+out.append("> Read [05-database-schema.md](05-database-schema.md) first for the design and the reasons behind it.")
+out.append("")
+out.append(f"Generated by `python _tools/build_schema_docs.py`. {len(tables)} tables, {sum(len(t['cols']) for t in tables.values())} columns, {len(enums)} enumerations, {len(edges)} foreign keys.")
+out.append("")
+out.append("## Contents")
+out.append("")
+for sec, names in sections.items():
+    if names:
+        out.append(f"- **{sec}**: " + ", ".join(f"[{n}](#{anchor(n)})" for n in names))
+out.append("- [Enumerations](#enumerations)")
+out.append("")
+for sec, names in sections.items():
+    if not names:
+        continue
+    out.append(f"## {sec}")
+    out.append("")
+    for n in names:
+        t = tables[n]
+        out.append(f"### {n}")
+        out.append("")
+        if t["note"]:
+            out.append(t["note"])
+            out.append("")
+        out.append("| Column | Type | Required | Key | Default | Meaning |")
+        out.append("|---|---|---|---|---|---|")
+        for c in t["cols"]:
+            key = []
+            if c["pk"]:
+                key.append("PK")
+            if c["ref"]:
+                key.append(f"FK [{c['ref'][1]}](#{anchor(c['ref'][1])})")
+            if c["unique"]:
+                key.append("UQ")
+            meaning = c["note"] or COMMON.get(c["name"], "")
+            if not meaning and c["ref"]:
+                meaning = f"Link to the {c['ref'][1]} row ({'one to one' if c['ref'][0] == '-' else 'many to one'})."
+            elif not meaning and c["type"] in enums:
+                meaning = f"One of the {c['type']} values."
+            elif not meaning and c["name"].endswith("_minor"):
+                meaning = "Amount in centimes."
+            elif not meaning and c["name"].endswith("_at"):
+                meaning = "Time of the event (UTC)."
+            elif not meaning and re.search(r"_(en|fr|ar)$", c["name"]):
+                meaning = {"en": "English", "fr": "French", "ar": "Arabic"}[c["name"][-2:]] + " text."
+            elif not meaning and (c["name"].startswith("is_") or c["type"] == "boolean"):
+                meaning = "Yes/no flag: " + c["name"].replace("_", " ") + "."
+            elif not meaning and c["name"].startswith("rating_"):
+                meaning = "Rating 1 to 5 (" + c["name"][7:] + ")."
+            elif not meaning and c["name"] in ("sort_order", "position"):
+                meaning = "Display order, smallest first."
+            elif not meaning and c["name"].startswith("seats_"):
+                meaning = "Seat counter (" + c["name"][6:] + ")."
+            typ = c["type"]
+            if typ in enums:
+                typ = f"[{typ}](#enum-{anchor(typ)})"
+            out.append(f"| `{c['name']}` | {typ} | {'yes' if c['not_null'] else 'no'} | {' '.join(key)} | {c['default']} | {meaning.replace('|', '/')} |")
+        if t["indexes"]:
+            out.append("")
+            out.append("Indexes: " + "; ".join(f"`{x}`" for x in t["indexes"]))
+        out.append("")
+out.append("## Enumerations")
+out.append("")
+for e, vals in enums.items():
+    out.append(f"<a id=\"enum-{anchor(e)}\"></a>**{e}**: " + ", ".join(f"`{v}`" for v in vals))
+    out.append("")
+out.append("---")
+out.append("")
+out.append("## Check yourself")
+out.append("")
+out.append("- [ ] Which table links a host to either a user or an organisation?")
+out.append("- [ ] In which column is the commission rate frozen on a booking, and in which unit?")
+out.append("- [ ] Which tables are marked DORMANT, and why?")
+out.append("- [ ] Where is the cursor used by message sync?")
+(ROOT / "05b-data-dictionary.md").write_text("\n".join(out) + "\n", encoding="utf-8")
+
+# ---------------------------------------------------------------- ERDs (Mermaid)
+diag = ROOT / "diagrams"
+diag.mkdir(exist_ok=True)
+
+def mtype(t):
+    return re.sub(r"[^A-Za-z0-9_]", "_", t).strip("_") or "x"
+
+def entity(n, with_cols=True):
+    if not with_cols:
+        return [f"    {n} {{", "        uuid id PK", "    }"]
+    rows = [f"    {n} {{"]
+    for c in tables[n]["cols"]:
+        k = []
+        if c["pk"]:
+            k.append("PK")
+        if c["ref"]:
+            k.append("FK")
+        if c["unique"] and not c["pk"]:
+            k.append("UK")
+        rows.append(f"        {mtype(c['type'])} {c['name']}{(' ' + ','.join(k)) if k else ''}")
+    rows.append("    }")
+    return rows
+
+def rel(child, col, parent, kind):
+    card = "||--o|" if kind == "-" else "||--o{"
+    return f"    {parent} {card} {child} : \"{col}\""
+
+written = []
+idx = 0
+for sec, names in sections.items():
+    if not names:
+        continue
+    idx += 1
+    slug = re.sub(r"[^a-z0-9]+", "-", sec.lower()).strip("-")
+    own = set(names)
+    ext = sorted({e[2] for e in edges if e[0] in own and e[2] not in own})
+    body = ["---", f"title: \"BLADUS ERD - {sec}\"", "---", "erDiagram"]
+    for n in names:
+        body += entity(n)
+    for n in ext:
+        body += entity(n, with_cols=False)
+    for (c, col, p, _pc, kind) in edges:
+        if c in own:
+            body.append(rel(c, col, p, kind))
+    fn = f"erd-{idx:02d}-{slug}.mmd"
+    (diag / fn).write_text("\n".join(body) + "\n", encoding="utf-8")
+    written.append((fn, sec, names, ext))
+
+# overview: core tables only, no columns
+core = ["user", "host_account", "organization", "membership", "listing", "room_type", "room_type_night",
+        "listing_day", "experience_slot", "trip", "trip_departure", "booking", "booking_event", "refund",
+        "ledger_account", "ledger_transaction", "ledger_entry", "wallet_topup", "review", "conversation",
+        "message", "commune", "wilaya", "moderation_case", "media_asset", "cancellation_policy"]
+body = ["---", "title: BLADUS ERD - core overview", "---", "erDiagram"]
+for n in core:
+    body.append(f"    {n} {{")
+    body.append("        uuid id PK")
+    body.append("    }")
+seen = set()
+for (c, col, p, _pc, kind) in edges:
+    noisy = col.endswith('_by_id') or col in ('actor_id','assigned_to_id','author_id','sender_id','owner_user_id','avatar_media_id','logo_media_id','cover_media_id','guide_membership_id')
+    if c in core and p in core and not noisy and (c, p, col) not in seen:
+        seen.add((c, p, col))
+        body.append(rel(c, col, p, kind))
+(diag / "erd-00-overview.mmd").write_text("\n".join(body) + "\n", encoding="utf-8")
+
+(ROOT / "_tools" / "erd-index.txt").write_text(
+    "\n".join(f"{fn}\t{sec}\t{', '.join(n)}\t{', '.join(e)}" for fn, sec, n, e in written) + "\n", encoding="utf-8")
+print(f"{len(tables)} tables, {len(edges)} FKs, {len(enums)} enums; {len(written) + 1} ERD files")

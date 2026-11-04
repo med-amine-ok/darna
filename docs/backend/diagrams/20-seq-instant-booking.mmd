@@ -1,0 +1,26 @@
+---
+title: Instant booking (model M1, prepaid commission)
+---
+sequenceDiagram
+    autonumber
+    actor G as Guest
+    participant W as Website (BFF)
+    participant A as Django API
+    participant DB as PostgreSQL
+    participant Q as Outbox worker
+    G->>W: Choose dates, click Reserve
+    W->>A: POST /quotes
+    A->>DB: read listing, calendar, policy
+    A-->>W: quote (id, lines, total, expires in 30 min)
+    W->>A: POST /bookings with quote_id and Idempotency-Key
+    A->>DB: BEGIN, lock idempotency key
+    A->>DB: INSERT booking (confirmed, snapshot)
+    Note over DB: exclusion constraint refuses any overlap
+    A->>DB: INSERT ledger transaction (wallet debit 6,660, revenue credit 6,660)
+    A->>DB: INSERT booking_event and outbox events
+    A->>DB: COMMIT
+    A-->>W: 201 booking BLD-2026-..., confirmed
+    W-->>G: Confirmation page, exact address now visible
+    Q->>DB: pick outbox events (SKIP LOCKED)
+    Q-->>G: SMS and email to guest
+    Q-->>G: notification to host members

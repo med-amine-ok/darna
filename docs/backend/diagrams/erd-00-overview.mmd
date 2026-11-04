@@ -1,0 +1,125 @@
+---
+title: BLADUS ERD - core overview
+---
+erDiagram
+    user {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    organization {
+        uuid id PK
+    }
+    membership {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    room_type {
+        uuid id PK
+    }
+    room_type_night {
+        uuid id PK
+    }
+    listing_day {
+        uuid id PK
+    }
+    experience_slot {
+        uuid id PK
+    }
+    trip {
+        uuid id PK
+    }
+    trip_departure {
+        uuid id PK
+    }
+    booking {
+        uuid id PK
+    }
+    booking_event {
+        uuid id PK
+    }
+    refund {
+        uuid id PK
+    }
+    ledger_account {
+        uuid id PK
+    }
+    ledger_transaction {
+        uuid id PK
+    }
+    ledger_entry {
+        uuid id PK
+    }
+    wallet_topup {
+        uuid id PK
+    }
+    review {
+        uuid id PK
+    }
+    conversation {
+        uuid id PK
+    }
+    message {
+        uuid id PK
+    }
+    commune {
+        uuid id PK
+    }
+    wilaya {
+        uuid id PK
+    }
+    moderation_case {
+        uuid id PK
+    }
+    media_asset {
+        uuid id PK
+    }
+    cancellation_policy {
+        uuid id PK
+    }
+    wilaya ||--o{ commune : "wilaya_code"
+    user ||--o| host_account : "user_id"
+    organization ||--o| host_account : "organization_id"
+    commune ||--o{ organization : "commune_id"
+    organization ||--o{ membership : "organization_id"
+    user ||--o{ membership : "user_id"
+    host_account ||--o{ listing : "host_account_id"
+    commune ||--o{ listing : "commune_id"
+    cancellation_policy ||--o{ listing : "cancellation_policy_id"
+    listing ||--o{ room_type : "listing_id"
+    listing ||--o{ listing_day : "listing_id"
+    room_type ||--o{ room_type_night : "room_type_id"
+    listing ||--o{ experience_slot : "listing_id"
+    host_account ||--o{ trip : "host_account_id"
+    commune ||--o{ trip : "start_commune_id"
+    cancellation_policy ||--o{ trip : "cancellation_policy_id"
+    trip ||--o{ trip_departure : "trip_id"
+    user ||--o{ booking : "guest_id"
+    host_account ||--o{ booking : "host_account_id"
+    listing ||--o{ booking : "listing_id"
+    room_type ||--o{ booking : "room_type_id"
+    experience_slot ||--o{ booking : "experience_slot_id"
+    trip_departure ||--o{ booking : "trip_departure_id"
+    booking ||--o{ booking_event : "booking_id"
+    booking ||--o{ refund : "booking_id"
+    host_account ||--o{ ledger_account : "host_account_id"
+    booking ||--o{ ledger_transaction : "booking_id"
+    wallet_topup ||--o{ ledger_transaction : "topup_id"
+    ledger_transaction ||--o{ ledger_transaction : "reverses_id"
+    ledger_transaction ||--o{ ledger_entry : "transaction_id"
+    ledger_account ||--o{ ledger_entry : "account_id"
+    host_account ||--o{ wallet_topup : "host_account_id"
+    booking ||--o{ review : "booking_id"
+    listing ||--o{ review : "listing_id"
+    trip ||--o{ review : "trip_id"
+    host_account ||--o{ review : "host_account_id"
+    user ||--o{ conversation : "guest_id"
+    host_account ||--o{ conversation : "host_account_id"
+    listing ||--o{ conversation : "listing_id"
+    trip ||--o{ conversation : "trip_id"
+    booking ||--o{ conversation : "booking_id"
+    conversation ||--o{ message : "conversation_id"
+    host_account ||--o{ media_asset : "host_account_id"

@@ -40,6 +40,7 @@ import ArchImage from "@/components/ui/ArchImage";
 import Logo from "@/components/navbar/Logo";
 import { imagery } from "@/lib/imagery";
 import { dur, ease } from "@/lib/motion";
+import { TEST_MODE } from "@/lib/test-mode";
 
 export type AuthMode = "login" | "signup";
 
@@ -468,7 +469,7 @@ export default function LoginModal() {
           mode={mode}
           onModeChange={changeMode}
           titleId={titleId}
-          showDemo={process.env.NODE_ENV !== "production"}
+          showDemo={process.env.NODE_ENV !== "production" || TEST_MODE}
           onAuthenticated={() => {
             close();
             window.location.reload();

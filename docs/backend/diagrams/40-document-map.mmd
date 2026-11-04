@@ -1,0 +1,13 @@
+---
+title: How the blueprint documents connect
+---
+flowchart LR
+    inv["01 Inventory<br/>what exists"] --> req["03 Requirements<br/>144 IDs"]
+    res["02 Research<br/>options and law"] --> req
+    dec["Decisions<br/>DEC-001 to 013"] --> req
+    req --> br["04 Business rules<br/>BR-xxx"]
+    br --> sch["05 Schema<br/>74 tables"]
+    req --> api["06 API<br/>(Phase 6)"]
+    sch --> api
+    br --> tst["10 Tests<br/>(Phase 7)"]
+    api --> tst

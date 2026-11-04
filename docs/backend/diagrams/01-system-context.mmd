@@ -1,0 +1,29 @@
+---
+title: BLADUS system context
+---
+flowchart LR
+    guest(["Guest / visitor"])
+    host(["Host: individual or organisation member"])
+    staff(["BLADUS staff"])
+    subgraph BLADUS["BLADUS platform"]
+        web["Website (Next.js)<br/>guest + host mode"]
+        admin["Admin app (Next.js)"]
+        api["Django API"]
+    end
+    sms["SMS provider<br/>(local aggregator, fallback Twilio)"]
+    mail["Email provider"]
+    gw["Payment gateway<br/>(Chargily, release R2)"]
+    maps["OpenFreeMap tiles<br/>Nominatim (server side, cached)"]
+    store["Object storage<br/>(photos, private documents)"]
+    guest --> web
+    host --> web
+    staff --> admin
+    web --> api
+    admin --> api
+    api --> sms
+    api --> mail
+    api -. "R2: wallet top-up" .-> gw
+    gw -. "signed webhooks" .-> api
+    web --> maps
+    api --> store
+    web --> store

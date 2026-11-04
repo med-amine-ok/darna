@@ -1,0 +1,23 @@
+---
+title: Booking state machine (BR-BKG-06)
+---
+stateDiagram-v2
+    [*] --> pending: request mode
+    [*] --> confirmed: instant mode, checks pass
+    [*] --> awaiting_payment: M2 and later only (dormant)
+    awaiting_payment --> confirmed: payment webhook
+    awaiting_payment --> expired: hold of 15 min elapsed
+    pending --> confirmed: host accepts
+    pending --> declined: host declines with reason
+    pending --> expired: job after 24 h
+    pending --> cancelled: guest withdraws
+    confirmed --> cancelled: guest, host or staff
+    confirmed --> completed: job at check-out + 2 h
+    confirmed --> disputed: R2
+    completed --> disputed: within 14 days (R2)
+    disputed --> completed: support resolves
+    disputed --> cancelled: support resolves with refund
+    declined --> [*]
+    expired --> [*]
+    cancelled --> [*]
+    completed --> [*]

@@ -1,5 +1,6 @@
 import "server-only";
 import type { NextRequest } from "next/server";
+import { TEST_MODE } from "@/lib/test-mode";
 
 /**
  * Basic CSRF guard for JSON route handlers: the request must be JSON and, when
@@ -11,7 +12,7 @@ export function isTrustedJsonRequest(request: NextRequest): boolean {
   if (!contentType.toLowerCase().startsWith("application/json")) return false;
 
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  if (!origin || TEST_MODE) return true;
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   try {
     return Boolean(host) && new URL(origin).host === host;

@@ -1,0 +1,30 @@
+---
+title: Request to book, then accept, decline or expiry
+---
+sequenceDiagram
+    autonumber
+    actor G as Guest
+    participant A as Django API
+    participant DB as PostgreSQL
+    participant J as Celery beat + worker
+    actor H as Host manager
+    G->>A: POST /bookings (listing in request mode)
+    A->>DB: INSERT booking pending, expires in 24 h
+    Note over DB: dates stay blocked while pending
+    A-->>G: 201 pending
+    A-)H: notification and SMS (via outbox)
+    alt host accepts in time
+        H->>A: POST /host/bookings/{id}/accept
+        A->>DB: check permission and wallet above floor
+        A->>DB: status confirmed, post commission
+        A-)G: confirmed notification
+    else host declines
+        H->>A: POST /host/bookings/{id}/decline with reason
+        A->>DB: status declined, dates released
+        A-)G: declined notification
+    else nobody answers
+        J->>DB: every 5 min, find pending past deadline
+        J->>DB: status expired, dates released
+        J-)G: expired notification
+        J-)H: missed request notification
+    end

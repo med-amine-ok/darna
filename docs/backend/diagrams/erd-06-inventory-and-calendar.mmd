@@ -1,0 +1,39 @@
+---
+title: "BLADUS ERD - Inventory And Calendar"
+---
+erDiagram
+    listing_day {
+        uuid listing_id PK,FK
+        date day PK
+        boolean is_blocked
+        bigint price_override_minor
+        varchar_120 note
+    }
+    room_type_night {
+        uuid room_type_id PK,FK
+        date night PK
+        smallint total
+        smallint held
+        smallint booked
+        bigint price_override_minor
+    }
+    experience_slot {
+        uuid id PK
+        uuid listing_id FK
+        timestamptz starts_at
+        timestamptz ends_at
+        smallint seats_total
+        smallint seats_held
+        smallint seats_booked
+        bigint price_override_minor
+        boolean is_cancelled
+    }
+    listing {
+        uuid id PK
+    }
+    room_type {
+        uuid id PK
+    }
+    listing ||--o{ listing_day : "listing_id"
+    room_type ||--o{ room_type_night : "room_type_id"
+    listing ||--o{ experience_slot : "listing_id"

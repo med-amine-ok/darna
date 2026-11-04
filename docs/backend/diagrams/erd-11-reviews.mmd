@@ -1,0 +1,68 @@
+---
+title: "BLADUS ERD - Reviews"
+---
+erDiagram
+    review {
+        uuid id PK
+        uuid booking_id FK
+        uuid author_id FK
+        actor_role author_role
+        uuid listing_id FK
+        uuid trip_id FK
+        uuid host_account_id FK
+        smallint rating_overall
+        smallint rating_cleanliness
+        smallint rating_accuracy
+        smallint rating_communication
+        smallint rating_location
+        smallint rating_value
+        text comment
+        varchar_2 language
+        review_status status
+        timestamptz submitted_at
+        timestamptz published_at
+    }
+    review_reply {
+        uuid review_id PK,FK
+        uuid author_id FK
+        text body
+        timestamptz created_at
+        timestamptz editable_until
+    }
+    review_report {
+        uuid id PK
+        uuid review_id FK
+        uuid reporter_id FK
+        uuid reason_id FK
+        text note
+        varchar_12 status
+        timestamptz created_at
+    }
+    booking {
+        uuid id PK
+    }
+    host_account {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    reason_code {
+        uuid id PK
+    }
+    trip {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    booking ||--o{ review : "booking_id"
+    user ||--o{ review : "author_id"
+    listing ||--o{ review : "listing_id"
+    trip ||--o{ review : "trip_id"
+    host_account ||--o{ review : "host_account_id"
+    review ||--o| review_reply : "review_id"
+    user ||--o{ review_reply : "author_id"
+    review ||--o{ review_report : "review_id"
+    user ||--o{ review_report : "reporter_id"
+    reason_code ||--o{ review_report : "reason_id"

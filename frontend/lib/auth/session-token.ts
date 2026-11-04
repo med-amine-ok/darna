@@ -11,6 +11,7 @@
  * Nothing in here is secret except the key, which is read from the environment.
  */
 import type { HostType } from "@/types";
+import { TEST_MODE } from "@/lib/test-mode";
 
 export const SESSION_COOKIE = "darna_session";
 /** 30 days */
@@ -34,7 +35,7 @@ function getSessionSecret(): string {
   const secret = process.env.DARNA_SESSION_SECRET;
   if (secret && secret.length >= 32) return secret;
 
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && !TEST_MODE) {
     throw new Error(
       "DARNA_SESSION_SECRET is missing or shorter than 32 characters. Set it in the environment.",
     );
@@ -162,7 +163,7 @@ export function sessionCookieOptions(
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production" && !TEST_MODE,
     path: "/",
     maxAge: maxAgeSeconds,
   };

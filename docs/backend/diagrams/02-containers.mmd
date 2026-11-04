@@ -1,0 +1,35 @@
+---
+title: BLADUS containers (what runs where)
+---
+flowchart TB
+    browser(["Browser"])
+    subgraph edge["Edge"]
+        cdn["CDN + TLS<br/>(static assets, public photos)"]
+        rp["Reverse proxy<br/>(Caddy, rate limits)"]
+    end
+    subgraph apps["Application servers (Algeria)"]
+        web["Website Next.js<br/>BFF: holds httpOnly session cookie"]
+        adm["Admin Next.js<br/>staff BFF, MFA required"]
+        api["Django + DRF API<br/>modular monolith"]
+        worker["Celery workers<br/>notifications, expiry, images"]
+        beat["Celery beat<br/>schedules"]
+    end
+    subgraph data["Data (Algeria)"]
+        pg[("PostgreSQL + PostGIS<br/>primary")]
+        pgr[("Replica / PITR archive<br/>second data centre")]
+        redis[("Redis<br/>broker, cache, rate limits")]
+        obj[("S3-compatible storage<br/>public + private buckets")]
+    end
+    browser --> cdn --> rp
+    rp --> web
+    rp --> adm
+    web -- "server-side fetch, session token" --> api
+    adm --> api
+    api --> pg
+    api --> redis
+    worker --> pg
+    worker --> redis
+    beat --> redis
+    api -- "presigned URLs" --> obj
+    worker --> obj
+    pg -. "WAL streaming + nightly dump" .-> pgr

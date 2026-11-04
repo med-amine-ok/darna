@@ -1,0 +1,12 @@
+---
+title: Review state machine (BR-REV-03)
+---
+stateDiagram-v2
+    [*] --> submitted: guest writes after a completed stay
+    submitted --> published: both sides wrote or 14 days passed
+    published --> flagged: report received
+    flagged --> published: moderator dismisses
+    flagged --> hidden: moderator with reason
+    hidden --> published: moderator restores
+    hidden --> removed: super admin
+    removed --> [*]

@@ -1,0 +1,23 @@
+---
+title: Messaging with cursor polling
+---
+sequenceDiagram
+    autonumber
+    actor G as Guest
+    participant W as Website
+    participant A as Django API
+    participant DB as PostgreSQL
+    G->>W: Opens a conversation
+    W->>A: GET /conversations/{id}/messages?after=0
+    A->>DB: messages of the conversation with id greater than 0
+    A-->>W: messages and next cursor 1042
+    loop every 5 to 15 s while open
+        W->>A: GET /conversations/{id}/messages?after=1042
+        A-->>W: only new messages (often none)
+    end
+    G->>W: Types a message containing a phone number
+    W->>A: POST /conversations/{id}/messages
+    A->>A: detects contact info, booking not confirmed yet
+    A->>DB: stores body and masked body, flags it
+    A-->>W: 201
+    Note over W,A: the host sees the masked text until the booking is confirmed

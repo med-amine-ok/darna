@@ -1,0 +1,53 @@
+---
+title: "BLADUS ERD - Pricing"
+---
+erDiagram
+    quote {
+        uuid id PK
+        uuid guest_id FK
+        uuid listing_id FK
+        uuid room_type_id FK
+        uuid experience_slot_id FK
+        uuid trip_departure_id FK
+        daterange stay
+        smallint guests
+        smallint units
+        char_3 currency
+        jsonb lines
+        bigint subtotal_minor
+        bigint discount_minor
+        bigint cleaning_fee_minor
+        bigint taxes_minor
+        bigint total_minor
+        timestamptz expires_at
+        timestamptz created_at
+    }
+    tax_rate {
+        uuid id PK
+        varchar_16 kind
+        smallint star_rating
+        int rate_bp
+        bigint amount_per_person_night_minor
+        date valid_from
+        date valid_to
+    }
+    experience_slot {
+        uuid id PK
+    }
+    listing {
+        uuid id PK
+    }
+    room_type {
+        uuid id PK
+    }
+    trip_departure {
+        uuid id PK
+    }
+    user {
+        uuid id PK
+    }
+    user ||--o{ quote : "guest_id"
+    listing ||--o{ quote : "listing_id"
+    room_type ||--o{ quote : "room_type_id"
+    experience_slot ||--o{ quote : "experience_slot_id"
+    trip_departure ||--o{ quote : "trip_departure_id"
