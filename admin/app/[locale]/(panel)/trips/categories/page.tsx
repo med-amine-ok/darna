@@ -1,22 +1,12 @@
-import { getTranslations } from "next-intl/server";
 import { guardPage } from "@/lib/auth/page-guard";
-import CategoriesManagerClient from "@/components/management/CategoriesManagerClient";
+import CatalogTypesList from "@/components/management/CatalogTypesList";
 import { pageMetadata } from "@/lib/metadata";
 
 export const generateMetadata = pageMetadata("trips_categories");
 
+/** Canonical trip types (shared with the website), read-only with listing counts. */
 export default async function TripCategoriesPage() {
   const denied = await guardPage("categories.manage");
   if (denied) return denied;
-  const t = await getTranslations("trips");
-
-  return (
-    <CategoriesManagerClient
-      title={t("categoriesPage.title")}
-      subtitle={t("categoriesPage.subtitle")}
-      backRoute="/trips"
-      defaultVertical="trip"
-      itemTypeLabel={t("categoriesPage.itemType")}
-    />
-  );
+  return <CatalogTypesList kind="trip" />;
 }

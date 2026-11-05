@@ -169,7 +169,7 @@
     }
   },
   "header": {
-    "searchPlaceholder": "Rechercher ou taper une commande...",
+    "searchPlaceholder": "Rechercher ou commande",
     "approvalsTooltip": "Boîte de Réception Centrale des Validations",
     "signedInAs": "Connecté en tant que",
     "accountSettings": "Paramètres du Compte",
@@ -183,13 +183,13 @@
     "openCommandPalette": "Ouvrir la palette de commandes (⌘K)",
     "searchLabel": "Rechercher sur la plateforme",
     "searchPlaceholders": {
-      "trips": "Rechercher un voyage, une destination, un organisateur...",
-      "stays": "Rechercher un hébergement, un hôte, une ville...",
-      "experiences": "Rechercher une expérience, un guide, une ville...",
-      "cars": "Rechercher une voiture, une ville, une catégorie...",
-      "bookings": "Rechercher une réservation, un client, un hébergement...",
-      "moderation": "Rechercher un prestataire, une agence, un hôtel...",
-      "default": "Rechercher un hébergement, un voyage, une expérience, une agence, un hôtel, une voiture..."
+      "trips": "Rechercher un voyage",
+      "stays": "Rechercher un logement",
+      "experiences": "Rechercher une expérience",
+      "cars": "Rechercher un véhicule",
+      "bookings": "Rechercher une réservation",
+      "moderation": "Rechercher un prestataire",
+      "default": "Rechercher partout"
     },
     "markAllRead": "Tout marquer comme lu",
     "unread": "Non lue",
@@ -213,7 +213,8 @@
         "description": "Commentaire signalé sur Hôtel El Aurassi"
       }
     },
-    "notificationsUnread": "{count, plural, one {# notification non lue} other {# notifications non lues}}"
+    "notificationsUnread": "{count, plural, one {# notification non lue} other {# notifications non lues}}",
+    "searchShort": "Rechercher"
   },
   "commandPalette": {
     "placeholder": "Rechercher une entité, hôte, wilaya ou commande...",
@@ -436,7 +437,7 @@
   "hosts": {
     "title": "Partenaires & Hôtes",
     "subtitle": "Consulter et modérer les 4 catégories à travers l'Algérie avec des filtres financiers détaillés.",
-    "searchPlaceholder": "Rechercher par nom, entreprise, email, téléphone, ville...",
+    "searchPlaceholder": "Nom, email ou ville",
     "allPartners": "Tous les Partenaires",
     "individualTab": "Particuliers (Solo)",
     "agencyTab": "Agences Touristiques",
@@ -603,7 +604,7 @@
   "listings": {
     "title": "Parc d'Annonces & Séjours",
     "subtitle": "Modérer, vérifier et inspecter les propriétés, hôtels et circuits en Algérie.",
-    "searchPlaceholder": "Rechercher par titre, hôte, ville, wilaya...",
+    "searchPlaceholder": "Titre, hôte ou ville",
     "allTab": "Toutes les Annonces",
     "pendingTab": "En Attente d'Examen",
     "approvedTab": "Approuvé",
@@ -762,9 +763,9 @@
     },
     "search": {
       "label": "Rechercher dans la file",
-      "hosts": "Rechercher par hôte, entreprise, ID, ville...",
-      "listings": "Rechercher par titre d'annonce, hôte, ville, ID...",
-      "default": "Rechercher des éléments en attente...",
+      "hosts": "Hôte, ID ou ville",
+      "listings": "Titre, hôte ou ID",
+      "default": "Éléments en attente",
       "clear": "Effacer la recherche"
     },
     "filterChip": "{label} : {value}",
@@ -878,7 +879,7 @@
   "network": {
     "title": "Explorateur Réseau du Marché",
     "subtitle": "Découvrez et explorez les hébergements, circuits sahariens et 4x4 exactement comme les voyageurs les voient.",
-    "searchPlaceholder": "Où souhaitez-vous explorer ? (ex. Alger, Oran, Djanet, Taghit...)",
+    "searchPlaceholder": "Où ? ex. Oran",
     "destination": "Destination",
     "dates": "Dates",
     "guests": "Voyageurs",
@@ -919,7 +920,7 @@
   "users": {
     "title": "Voyageurs & Utilisateurs",
     "subtitle": "Surveillez les comptes voyageurs, vérifications d'identité, réservations et modération.",
-    "searchPlaceholder": "Rechercher par nom, e-mail ou téléphone...",
+    "searchPlaceholder": "Nom, email ou téléphone",
     "guestUser": "Voyageur",
     "role": "Rôle",
     "status": "Statut",
@@ -1038,7 +1039,7 @@
   "bookings": {
     "title": "Réservations & Séjours",
     "subtitle": "Suivez les transactions, respect des délais et arbitrage des litiges voyageurs-hôtes.",
-    "searchPlaceholder": "Rechercher par code de réservation, voyageur, hôte ou hébergement...",
+    "searchPlaceholder": "Code, voyageur, hôte",
     "allTab": "Toutes les réservations",
     "pendingTab": "En attente de confirmation",
     "confirmedTab": "Séjours confirmés",
@@ -1125,7 +1126,7 @@
   "reviews": {
     "title": "Modération des Avis",
     "subtitle": "Modérez les avis voyageurs, signalez les contenus inappropriés et maintenez la confiance.",
-    "searchPlaceholder": "Rechercher par voyageur, annonce ou mot-clé...",
+    "searchPlaceholder": "Voyageur, annonce ou mot",
     "allTab": "Tous les avis",
     "flaggedTab": "Avis signalés",
     "publishedTab": "Publiés",
@@ -1447,7 +1448,7 @@
     "appendOnlyBadge": "Journal inaltérable",
     "anonymous": "Anonyme",
     "loadFailed": "Impossible de charger l'historique",
-    "searchPlaceholder": "Rechercher une action, un membre, un identifiant ou un détail…",
+    "searchPlaceholder": "Action, membre ou ID",
     "allEntities": "Tous les types d'éléments",
     "allRoles": "Tous les rôles",
     "entities": {
@@ -1866,7 +1867,7 @@
       "traveler": "Voyageur"
     },
     "searchLabel": "Rechercher des conversations",
-    "searchPlaceholder": "Rechercher une conversation...",
+    "searchPlaceholder": "Rechercher une conversation",
     "threadsLabel": "Conversations",
     "unread": "{count, plural, one {# message non lu} other {# messages non lus}}",
     "viewProfile": "Voir le profil",
@@ -2165,7 +2166,10 @@
       "description": "Description",
       "approvalMode": "Mode d'approbation",
       "constructionYear": "Année de construction",
-      "pricePerNight": "Prix par nuit"
+      "pricePerNight": "Prix par nuit",
+      "experienceType": "Type d'expérience",
+      "tripType": "Type de voyage",
+      "typeMissing": "Non renseigné"
     },
     "values": {
       "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
@@ -2219,7 +2223,7 @@
       "subtitle": "Consultez, modifiez et validez tous les hébergements répertoriés sur BLADUS.",
       "export": "Exporter",
       "add": "Ajouter un hébergement",
-      "searchPlaceholder": "Rechercher par titre, ville, propriétaire…",
+      "searchPlaceholder": "Titre, ville ou propriétaire",
       "empty": "Aucun hébergement trouvé avec ces filtres.",
       "itemLabel": "hébergements",
       "kpis": {
@@ -2646,7 +2650,7 @@
     "export": "Exporter",
     "categories": "Catégories",
     "add": "Ajouter une expérience",
-    "searchPlaceholder": "Rechercher par titre, guide, lieu...",
+    "searchPlaceholder": "Titre, guide ou lieu",
     "empty": "Aucune expérience trouvée avec ces filtres.",
     "itemLabel": "expériences",
     "fullScreen": "Plein écran",
@@ -2684,7 +2688,10 @@
       "allWilayas": "Toutes les wilayas",
       "category": "Catégorie",
       "allCategories": "Toutes les catégories",
-      "allStatuses": "Tous les statuts"
+      "allStatuses": "Tous les statuts",
+      "experienceType": "Type d'expérience",
+      "allExperienceTypes": "Tous les types d'expérience",
+      "typeWithCount": "{label} ({count})"
     },
     "statusOptions": {
       "pending": "En attente de validation",
@@ -2830,7 +2837,10 @@
       "fullDescription": "Description détaillée",
       "fullDescriptionPlaceholder": "Décrivez l’expérience en détail...",
       "highlights": "Points forts de l’expérience",
-      "removeHighlight": "Supprimer le point fort : {item}"
+      "removeHighlight": "Supprimer le point fort : {item}",
+      "experienceType": "Type d'expérience",
+      "tripType": "Type de voyage",
+      "typeSharedHint": "Même liste que sur le site : les voyageurs filtrent par ce type dans la recherche."
     },
     "type": {
       "heading": "Type d’expérience & mots-clés",
@@ -2843,7 +2853,8 @@
         "workshop": "Atelier / cours",
         "tasting": "Dégustation / gastronomie",
         "other": "Autre expérience"
-      }
+      },
+      "headingTrip": "Type de voyage & mots-clés"
     },
     "location": {
       "heading": "Adresse et localisation",
@@ -2901,7 +2912,8 @@
       "category": "Catégorie",
       "categoryValue": "{category} ({difficulty})",
       "location": "Lieu",
-      "pricePerPerson": "Prix par personne"
+      "pricePerPerson": "Prix par personne",
+      "type": "Type"
     },
     "tips": {
       "title": "Conseils pour votre expérience",
@@ -2913,8 +2925,11 @@
       "draftSaved": "Brouillon sauvegardé",
       "draftSavedAt": "Enregistré à {time}.",
       "created": "Expérience créée avec succès",
-      "createdDescription": "L’activité a été soumise à la modération BLADUS."
-    }
+      "createdDescription": "L’activité a été soumise à la modération BLADUS.",
+      "createdTrip": "Voyage créé"
+    },
+    "titleTrip": "Ajouter un voyage",
+    "subtitleTrip": "Décrivez le circuit, son itinéraire et ses tarifs pour accueillir les voyageurs."
   },
   "cars": {
     "title": "Location de voitures",
@@ -2922,7 +2937,7 @@
     "export": "Exporter",
     "categories": "Catégories",
     "add": "Ajouter une voiture",
-    "searchPlaceholder": "Rechercher par marque, modèle, agence...",
+    "searchPlaceholder": "Marque, modèle ou agence",
     "empty": "Aucun véhicule trouvé.",
     "itemLabel": "véhicules",
     "fullScreen": "Plein écran",
@@ -3066,7 +3081,7 @@
     "export": "Exporter",
     "categories": "Catégories",
     "add": "Ajouter un voyage",
-    "searchPlaceholder": "Rechercher un voyage, une destination...",
+    "searchPlaceholder": "Voyage ou destination",
     "empty": "Aucun voyage trouvé.",
     "itemLabel": "voyages",
     "fullScreen": "Plein écran",
@@ -3105,7 +3120,10 @@
       "allDestinations": "Toutes les destinations",
       "category": "Catégorie",
       "allCategories": "Toutes les catégories",
-      "allStatuses": "Tous les statuts"
+      "allStatuses": "Tous les statuts",
+      "tripType": "Type de voyage",
+      "allTripTypes": "Tous les types de voyage",
+      "typeWithCount": "{label} ({count})"
     },
     "statusOptions": {
       "published": "Publié",
@@ -3371,7 +3389,7 @@
     "title": "Où est passée mon ancienne page ?",
     "subtitle": "Pour vous faire gagner du temps, la navigation est simplifiée à {count} rubriques principales. Retrouvez ici tous les anciens accès et leur nouvel emplacement.",
     "searchLabel": "Rechercher une ancienne page",
-    "searchPlaceholder": "Tapez l'ancien nom de la page ou un mot-clé…",
+    "searchPlaceholder": "Ancien nom ou mot-clé",
     "tableCaption": "Anciennes pages et leur nouvel emplacement",
     "columns": {
       "oldName": "Ancien nom",
@@ -3896,5 +3914,20 @@
       "users_guests": "Voyageurs",
       "wherediditgo": "Où est passée ma page ?"
     }
+  },
+  "catalogTypes": {
+    "experienceTitle": "Types d'expérience",
+    "experienceSubtitle": "Les types sous lesquels chaque expérience est classée, avec le nombre d'annonces par type.",
+    "tripTitle": "Types de voyage",
+    "tripSubtitle": "Les types sous lesquels chaque voyage organisé est classé, avec le nombre d'annonces par type.",
+    "backToExperiences": "Retour aux expériences",
+    "backToTrips": "Retour aux voyages",
+    "sharedNote": "Cette liste est partagée avec le site BLADUS (filtres de recherche, cartes et parcours de création des hôtes). Elle est en lecture seule ici : la modifier est un changement produit fait dans le code, dans les deux applications à la fois.",
+    "columns": {
+      "label": "Type",
+      "id": "Identifiant",
+      "listings": "Annonces"
+    },
+    "total": "Total"
   }
 }

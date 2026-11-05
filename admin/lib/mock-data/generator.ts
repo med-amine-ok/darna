@@ -21,6 +21,7 @@ import {
 } from "@/lib/types";
 import { WILAYAS } from "@/lib/utils/wilayas";
 import { DEFAULT_COMMISSION_RATES, computeBookingAmounts } from "@/lib/pricing";
+import { EXPERIENCE_TYPE_LABELS, TRIP_TYPE_LABELS, type ExperienceTypeId, type TripTypeId } from "@/lib/catalog-types";
 
 // Simple LCG pseudo-random number generator for deterministic seed
 function createRng(seed: number) {
@@ -36,6 +37,34 @@ const rng = createRng(20261020);
 function randomItem<T>(arr: T[]): T {
   return arr[Math.floor(rng() * arr.length)];
 }
+
+/** Seeded experience names with the canonical type each one belongs to (covers every type). */
+const EXPERIENCE_TYPE_BY_NAME: Record<string, ExperienceTypeId> = {
+  "Tassili Rock Art Trek": "desert",
+  "Casbah Street Food Walk": "gastronomy",
+  "Sunset Dune Camel Ride": "desert",
+  "M'zab Valley Guided Tour": "guided_tour",
+  "Hammam & Henna Workshop": "wellness",
+  "Djurdjura Hiking Day": "nature_adventure",
+  "Couscous Cooking Class": "gastronomy",
+  "Tipaza Roman Ruins Tour": "guided_tour",
+  "Chiffa Gorges Day Excursion": "excursion",
+  "Bejaia Sea Kayak Session": "sport",
+  "Pottery & Carpet Weaving Workshop": "culture_workshop",
+};
+
+/** Seeded trip names with the canonical trip type each one belongs to (covers every type). */
+const TRIP_TYPE_BY_NAME: Record<string, TripTypeId> = {
+  "Grand Sahara Circuit": "group_tour",
+  "Hoggar & Assekrem Expedition": "desert_expedition",
+  "Kabylie Villages Trek": "hiking",
+  "Coast to Casbah Week": "group_tour",
+  "Taghit Oasis Escape": "relaxation",
+  "Roman Algeria Heritage Route": "cultural",
+  "Private Family Sahara Getaway": "private_trip",
+  "Djurdjura Adventure Week": "adventure",
+  "Zaouias Spiritual Route": "religious",
+};
 
 function randomInt(min: number, max: number): number {
   return Math.floor(rng() * (max - min + 1)) + min;
@@ -149,10 +178,10 @@ export function generateSeedData() {
       : defaultCommissions[hostType];
 
     const verticals: ListingVertical[] =
-      hostType === "agency" ? ["trip", "experience", "vehicle"] :
-      hostType === "hotel" ? ["hotel", "home"] :
+      hostType === "agency" ? ["trip", "experience"] :
+      hostType === "hotel" ? ["hotel"] :
       hostType === "hostel" ? ["hotel"] :
-      ["home", "experience"];
+      ["home", "vehicle"];
 
     const documents = [
       {
@@ -251,14 +280,8 @@ export function generateSeedData() {
       "Heritage Boutique Hotel", "Seafront Hotel & Spa", "Casbah Riad Hotel", "Saharan Oasis Ecolodge",
       "Youth Hostel & Rooftop", "City Centre Business Hotel", "Palm Grove Desert Lodge", "Backpackers Medina Hostel",
     ],
-    experience: [
-      "Tassili Rock Art Trek", "Casbah Street Food Walk", "Sunset Dune Camel Ride", "M'zab Valley Guided Tour",
-      "Hammam & Henna Workshop", "Djurdjura Hiking Day", "Couscous Cooking Class", "Tipaza Roman Ruins Tour",
-    ],
-    trip: [
-      "Grand Sahara Circuit", "Hoggar & Assekrem Expedition", "Kabylie Villages Tour", "Coast to Casbah Week",
-      "Taghit Oasis Escape", "Roman Algeria Heritage Route",
-    ],
+    experience: Object.keys(EXPERIENCE_TYPE_BY_NAME),
+    trip: Object.keys(TRIP_TYPE_BY_NAME),
     vehicle: [
       "Toyota Land Cruiser Prado", "Nissan Patrol 4x4", "Dacia Duster 4WD", "Renault Clio 5",
       "Hyundai Tucson", "Volkswagen Golf 8", "Toyota Hilux Double Cab", "Peugeot 208",
@@ -267,8 +290,6 @@ export function generateSeedData() {
   const TYPES: Record<string, string[]> = {
     home: ["villa", "appartement", "maison traditionnelle", "chalet", "studio", "bungalow"],
     hotel: ["hôtel", "hostel"],
-    experience: ["Desert adventure", "Culture & heritage", "Food & cooking", "Hiking & nature", "Workshop"],
-    trip: ["Desert circuit", "Heritage route", "Mountains & villages", "Coastal escape"],
     vehicle: ["SUV / 4x4", "City car", "Crossover", "Pickup"],
   };
 
@@ -276,10 +297,10 @@ export function generateSeedData() {
     const host = randomItem(hosts);
     const wilaya = WILAYAS.find((w) => w.code === host.wilayaCode) || randomItem(WILAYAS);
     const category: ListingVertical =
-      host.hostType === "agency" ? randomItem(["trip", "experience", "vehicle"]) :
+      host.hostType === "agency" ? randomItem(["trip", "experience"]) :
       host.hostType === "hotel" ? "hotel" :
       host.hostType === "hostel" ? "hotel" :
-      randomItem(["home", "experience"]);
+      randomItem(["home", "vehicle"]);
 
     const statusRoll = rng();
     const status =
@@ -326,12 +347,23 @@ export function generateSeedData() {
       }
     ] : undefined;
 
+    // Experiences and trips get the canonical type that fits their name (one logic with the website).
+    const baseName = randomItem(NAMES[category] ?? NAMES.home);
+    const experienceType = category === "experience" ? EXPERIENCE_TYPE_BY_NAME[baseName] : undefined;
+    const tripType = category === "trip" ? TRIP_TYPE_BY_NAME[baseName] : undefined;
+
     listings.push({
       id: `lst_${i.toString().padStart(3, "0")}`,
-      title: `${randomItem(NAMES[category] ?? NAMES.home)} - ${wilaya.nameEn} #${i}`,
+      title: `${baseName} - ${wilaya.nameEn} #${i}`,
       description: `Authentic Algerian accommodation in the heart of ${wilaya.nameEn}. Fully equipped with local craftsmanship, modern amenities, and warm Mediterranean hospitality.`,
       category,
-      propertyType: randomItem(TYPES[category] ?? TYPES.home),
+      propertyType: experienceType
+        ? EXPERIENCE_TYPE_LABELS[experienceType].en
+        : tripType
+          ? TRIP_TYPE_LABELS[tripType].en
+          : randomItem(TYPES[category] ?? TYPES.home),
+      experienceType,
+      tripType,
       hostId: host.id,
       hostName: host.businessName || host.ownerName,
       hostType: host.hostType,

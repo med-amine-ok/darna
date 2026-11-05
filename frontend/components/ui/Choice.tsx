@@ -108,7 +108,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
                 "peer-checked:bg-primary-800 peer-checked:shadow-none",
                 "peer-checked:[&_.check]:[stroke-dashoffset:0]",
                 indeterminate && "bg-primary-800 shadow-none",
-                error && "shadow-[0_0_0_1.5px_#974426]",
+                error && "shadow-[0_0_0_1.5px_#0846AB]",
                 peerFocus,
               )}
             >
@@ -189,7 +189,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
           className={cn(
             "flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-[0_0_0_1.5px_rgba(30,38,31,0.28)]",
             "transition-[box-shadow,transform] duration-fast ease-standard group-hover:shadow-[0_0_0_1.5px_rgba(30,38,31,0.5)] group-active:scale-90",
-            "peer-checked:shadow-[0_0_0_1.5px_#2E3A2F] peer-checked:[&>span]:scale-100",
+            "peer-checked:shadow-[0_0_0_1.5px_#152C52] peer-checked:[&>span]:scale-100",
             peerFocus,
           )}
         >
@@ -285,7 +285,7 @@ export function RadioGroup({
             onChange={(e) => e.target.checked && onChange?.(o.value)}
             containerClassName={
               appearance === "card"
-                ? "rounded-2xl bg-white p-4 shadow-e1 transition-shadow duration-fast hover:shadow-e2 has-[:checked]:shadow-[0_0_0_1.5px_#2E3A2F]"
+                ? "rounded-2xl bg-white p-4 shadow-e1 transition-shadow duration-fast hover:shadow-e2 has-[:checked]:shadow-[0_0_0_1.5px_#152C52]"
                 : undefined
             }
           />

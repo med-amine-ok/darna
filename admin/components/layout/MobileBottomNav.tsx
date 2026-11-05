@@ -101,7 +101,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   )}
                 </div>
                 <span
-                  className={`text-[11px] leading-tight truncate max-w-[64px] ${
+                  className={`text-[11px] leading-tight truncate max-w-[78px] ${
                     item.isActive ? "font-semibold" : "font-medium"
                   }`}
                 >

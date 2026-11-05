@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ActionResult, actionFail, actionOk } from "@/lib/action-result";
 import { isOrgHostType, OrgHostType } from "@/lib/host-types";
 import { getSessionUser, refreshSession } from "@/lib/server/session";
-import { getHostContext } from "@/lib/server/host-context";
+import { getHostContext, hostMayPublishListing } from "@/lib/server/host-context";
 import { updateUserHostStatus } from "@/lib/data/auth";
 import { createListing } from "@/lib/data/listings";
 import { ListingInputError, sanitizeListingInput } from "@/lib/data/_sanitize";
@@ -74,8 +74,10 @@ export async function completeHostOnboardingAction(
     if (input.hostType === "individual") {
       const ctx = await getHostContext();
 
-      // An existing org host adding a listing publishes it under their organization.
+      // An existing org host adding a listing publishes it under their organization
+      // (host mode uses createMyListingAction; this keeps older links working).
       if (ctx?.isOrgHost && ctx.organization) {
+        if (!hostMayPublishListing(ctx.hostType, input.listing)) return actionFail("HOST_OFFER_NOT_ALLOWED");
         const listing = await createListing(
           {
             hostUserId: user.id,
@@ -88,6 +90,8 @@ export async function completeHostOnboardingAction(
         return actionOk({ hostType: ctx.hostType as OrgHostType, organizationId: ctx.organization.id, listingId: listing.id });
       }
 
+      // Individuals publish homes and vehicles only (lib/catalog-types.ts).
+      if (!hostMayPublishListing("individual", input.listing)) return actionFail("HOST_OFFER_NOT_ALLOWED");
       const listing = await createListing({ hostUserId: user.id }, input.listing);
       const updated = await updateUserHostStatus(user.id, {
         hostType: "individual",
@@ -124,8 +128,13 @@ export async function completeHostOnboardingAction(
           .slice(0, 20)
       : [];
 
-    // Validate the property (prices) before creating anything.
-    if (input.property) sanitizeListingInput(input.property, "validation");
+    // Validate the property (vertical, prices) before creating anything.
+    if (input.property) {
+      if ((hostType === "hotel" || hostType === "hostel") && !hostMayPublishListing(hostType, input.property)) {
+        return actionFail("HOST_OFFER_NOT_ALLOWED");
+      }
+      sanitizeListingInput(input.property, "validation");
+    }
 
     const teamSize = o.teamSizeEstimate;
     const org = await createOrganization({

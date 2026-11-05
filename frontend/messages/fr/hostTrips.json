@@ -77,7 +77,9 @@
       "coverBadge": "Photo de couverture",
       "coverLibrary": "Bibliothèque de photos",
       "coverChoice": "Utiliser la photo {number} en couverture",
-      "coverUrl": "Lien de l’image (URL)"
+      "coverUrl": "Lien de l’image (URL)",
+      "tripType": "Type de voyage",
+      "tripTypeHint": "Les voyageurs filtrent les voyages par ce type dans la recherche."
     },
     "itinerary": {
       "heading": "Itinéraire jour par jour",
@@ -137,7 +139,8 @@
       "saveAsDraft": "Enregistrer comme brouillon",
       "publishing": "Publication…",
       "publishToDarna": "Publier sur BLADUS",
-      "publishCircuit": "Publier le circuit"
+      "publishCircuit": "Publier le circuit",
+      "tripType": "Type de voyage"
     },
     "nav": {
       "previous": "Précédent",
@@ -147,7 +150,8 @@
       "summary": "Veuillez corriger les points suivants avant d'enregistrer :",
       "titleRequired": "Veuillez saisir un titre pour le circuit.",
       "groupSize": "La taille minimale du groupe doit être comprise entre 1 et la taille maximale.",
-      "price": "Le prix par personne doit être un nombre entier compris entre {min} et {max}."
+      "price": "Le prix par personne doit être un nombre entier compris entre {min} et {max}.",
+      "tripTypeRequired": "Choisissez un type de voyage."
     },
     "toast": {
       "published": "Expédition publiée sur BLADUS !",

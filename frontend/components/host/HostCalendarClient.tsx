@@ -479,7 +479,7 @@ export default function HostCalendarClient({ hostListings, reservations, overrid
             variant="calendar"
             title={t("empty.title")}
             description={t("empty.body")}
-            action={<Button href="/become-a-host">{t("empty.cta")}</Button>}
+            action={<Button href="/host/listings/new">{t("empty.cta")}</Button>}
           />
         </Card>
       </div>
@@ -650,7 +650,9 @@ export default function HostCalendarClient({ hostListings, reservations, overrid
                       className={cn(
                         "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-meta tabular-nums sm:h-7 sm:w-7",
                         isToday ? "bg-accent-600 font-semibold text-white shadow-e1" : "font-medium",
-                        !isToday && inMonth && !past && "text-primary-900"
+                        !isToday && inMonth && !past && "text-primary-900",
+                        // Other-month and past days stay readable (neutral-500 = 4.8:1 on white)
+                        !isToday && (!inMonth || past) && "text-neutral-500"
                       )}
                     >
                       {fmt(day, "d")}

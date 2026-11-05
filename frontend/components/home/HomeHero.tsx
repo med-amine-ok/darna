@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { AnimatePresence, m, useReducedMotion } from "framer-motion";
-import { Link } from "@/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import React from "react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useVertical } from "@/hook/useVertical";
 import { useSearchModal } from "@/hook/useSearchModal";
-import { findDestination } from "@/components/search/destinations";
-import { dur, ease, spring } from "@/lib/motion";
-import AlgeriaMap from "./AlgeriaMap";
+import { imagery, withParams } from "@/lib/imagery";
+import Search from "@/components/navbar/Search";
 import { ListingVertical } from "@/types";
 import {
   BrandCompassIcon,
@@ -19,91 +17,84 @@ import {
   CategoryVehicleIcon,
 } from "@/components/icons";
 
+/** Kept for callers that still pass promo data (the compact hero no longer rotates cities). */
 export interface PromoData {
-  /** Destination values (as used in `?destination=`), shown with their localized names. */
   cities: string[];
 }
-
 export const DEFAULT_PROMO_DATA: PromoData = {
   cities: ["Tipaza", "Algiers", "Oran", "Constantine", "Taghit", "Djanet", "Ghardaïa", "Tlemcen", "Annaba"],
 };
 
-const VERTICAL_TABS: {
-  id: ListingVertical;
-  labelKey: "tabHomes" | "tabHotels" | "tabExperiences" | "tabVehicles" | "tabTrips";
-  Icon: typeof CategoryHouseIcon;
-}[] = [
-  { id: "home", labelKey: "tabHomes", Icon: CategoryHouseIcon },
-  { id: "hotel", labelKey: "tabHotels", Icon: CategoryHotelIcon },
-  { id: "experience", labelKey: "tabExperiences", Icon: BrandPinIcon },
-  { id: "vehicle", labelKey: "tabVehicles", Icon: CategoryVehicleIcon },
-  { id: "trip", labelKey: "tabTrips", Icon: BrandCompassIcon },
-];
+/**
+ * Category order used everywhere on the home page: the tabs below AND the order of
+ * the sections after the hero (app/[locale]/page.tsx follows HOME_VERTICAL_ORDER).
+ */
+export const HOME_VERTICAL_ORDER: ListingVertical[] = ["home", "hotel", "experience", "trip", "vehicle"];
+
+const TAB_META: Record<
+  ListingVertical,
+  { labelKey: "tabHomes" | "tabHotels" | "tabExperiences" | "tabVehicles" | "tabTrips"; Icon: typeof CategoryHouseIcon }
+> = {
+  home: { labelKey: "tabHomes", Icon: CategoryHouseIcon },
+  hotel: { labelKey: "tabHotels", Icon: CategoryHotelIcon },
+  experience: { labelKey: "tabExperiences", Icon: BrandPinIcon },
+  trip: { labelKey: "tabTrips", Icon: BrandCompassIcon },
+  vehicle: { labelKey: "tabVehicles", Icon: CategoryVehicleIcon },
+};
 
 const focusRing =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-darnaBg";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white";
 
 /**
- * Home hero on the plain paper background: the category switcher sits right under the
- * header search, then the headline beside a picture of all Algeria (AlgeriaMap: the
- * country's shape filled with coast and Sahara photography, with destination pins).
+ * Compact home hero: a short photo band with the headline, then a white card that holds
+ * the category tabs and the full search bar (about 8% of the viewport height). The
+ * header hides its own search while this card is on screen (Navbar isHero).
  */
-export default function HomeHero({ promoData = DEFAULT_PROMO_DATA }: { promoData?: PromoData }) {
-  const locale = useLocale();
-  const isRtl = locale === "ar";
+export default function HomeHero(_props: { promoData?: PromoData }) {
   const t = useTranslations("homeHero");
-  const tDest = useTranslations("search.destinations");
   const openSearchModal = useSearchModal((s) => s.onOpen);
-  const activeVertical = useVertical((s) => s.activeVertical);
+  const activeVertical = useVertical((s) => s.activeVertical) || "home";
   const setActiveVertical = useVertical((s) => s.setActiveVertical);
-  const reduceMotion = useReducedMotion();
-
-  // Rotating destination in the promo line; pauses on hover/focus (WCAG 2.2.2) and for reduced motion.
-  const [cityIndex, setCityIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  useEffect(() => {
-    if (isPaused || reduceMotion) return;
-    const timer = setInterval(() => setCityIndex((i) => (i + 1) % promoData.cities.length), 3200);
-    return () => clearInterval(timer);
-  }, [promoData.cities.length, isPaused, reduceMotion]);
-
-  const currentCity = promoData.cities[cityIndex];
-  const known = findDestination(currentCity);
-  const currentCityLabel = known ? tDest(`${known.key}.name`) : currentCity;
 
   return (
-    <section
-      className="relative w-full overflow-hidden pt-[5.25rem] pb-10 md:pt-[10.75rem] md:pb-14"
-      aria-labelledby="home-hero-title"
-    >
-      <div className="relative z-10 mx-auto flex w-full max-w-[1360px] flex-col items-center px-4 text-center sm:px-6 lg:px-10">
-        {/* Mobile search pill (desktop uses the header search, which docks on scroll). */}
-        <div className="md:hidden mb-4 w-full -mt-2 enter-up">
-          <button
-            type="button"
-            onClick={openSearchModal}
-            className={`w-full flex items-center gap-3 p-2 ps-4 rounded-full bg-white shadow-e3 text-start active:scale-[0.98] transition-transform duration-micro ${focusRing}`}
-          >
-            <BrandPinIcon size={18} className="text-accent-600 shrink-0" />
-            <span className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-semibold text-primary-900 truncate">{t("whereTo")}</span>
-              <span className="text-meta text-primary-500 truncate">{t("anywhereAnyWeek")}</span>
-            </span>
-            <span className="w-11 h-11 rounded-full bg-cta text-white flex items-center justify-center shadow-glow shrink-0">
-              <BrandSearchIcon size={18} strokeWidth={2.2} />
-              <span className="sr-only">{t("search")}</span>
-            </span>
-          </button>
-        </div>
-
-        {/* Category switcher, right under the search bar, with a sliding indicator. */}
+    <section aria-labelledby="home-hero-title" className="relative w-full">
+      {/* Photo band with the headline */}
+      <div className="relative isolate overflow-hidden bg-primary-900">
+        <Image
+          src={withParams(imagery.algiersBay, "auto=format&fit=crop&q=75&w=2000")}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover object-center"
+        />
+        {/* Navy scrim: keeps white text above 7:1 on any part of the photo */}
         <div
-          role="group"
-          aria-label={t("verticalSwitcher")}
-          className="enter-up relative max-w-full -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none"
-        >
-          <div className="inline-flex items-center gap-1 p-1.5 rounded-full bg-white shadow-e2 ring-1 ring-primary/[0.06]">
-            {VERTICAL_TABS.map(({ id, labelKey, Icon }) => {
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-primary-950/90 via-primary-900/70 to-primary-900/25 rtl:bg-gradient-to-l"
+        />
+        <div className="mx-auto w-full max-w-[1240px] px-4 pt-8 pb-24 sm:px-6 md:pt-12 md:pb-28 lg:px-10">
+          <p className="text-eyebrow font-semibold uppercase tracking-[0.18em] text-white/85">BLADUS</p>
+          <h1
+            id="home-hero-title"
+            className="mt-2 max-w-[22ch] font-serif text-display-md font-semibold text-white text-balance"
+          >
+            {t("headlineLead")} <span className="text-accent-200">{t("headlineAccent")}</span>
+          </h1>
+          <p className="mt-3 max-w-[60ch] text-body-lg text-white/90 text-pretty">{t("lede")}</p>
+        </div>
+      </div>
+
+      {/* White card: category tabs + search, overlapping the photo */}
+      <div className="relative z-20 mx-auto -mt-16 w-full max-w-[1240px] px-4 sm:px-6 md:-mt-20 lg:px-10">
+        <div className="rounded-2xl bg-white p-2 shadow-e3 ring-1 ring-tertiary-200 sm:p-3">
+          <div
+            role="group"
+            aria-label={t("verticalSwitcher")}
+            className="flex gap-1 overflow-x-auto border-b border-tertiary-200 scrollbar-none"
+          >
+            {HOME_VERTICAL_ORDER.map((id) => {
+              const { labelKey, Icon } = TAB_META[id];
               const isActive = activeVertical === id;
               return (
                 <button
@@ -111,95 +102,41 @@ export default function HomeHero({ promoData = DEFAULT_PROMO_DATA }: { promoData
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => setActiveVertical(id)}
-                  className={`relative shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-colors duration-fast ease-standard ${focusRing} ${
-                    isActive ? "text-white" : "text-primary-700 hover:text-primary-900"
+                  className={`relative -mb-px flex shrink-0 cursor-pointer items-center gap-2 rounded-t-lg border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors duration-fast sm:px-4 ${focusRing} ${
+                    isActive
+                      ? "border-accent-600 bg-accent-50 text-accent-700"
+                      : "border-transparent text-primary-700 hover:bg-primary-50 hover:text-primary-900"
                   }`}
                 >
-                  {isActive && (
-                    <m.span
-                      layoutId="hero-vertical-indicator"
-                      transition={spring.layout}
-                      className="absolute inset-0 rounded-full bg-primary-800 shadow-e2"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <Icon size={18} className={`relative ${isActive ? "text-tertiary-200" : "text-secondary-600"}`} />
-                  <span className="relative whitespace-nowrap">{t(labelKey)}</span>
+                  <Icon size={18} aria-hidden="true" className={isActive ? "text-accent-600" : "text-primary-500"} />
+                  <span className="whitespace-nowrap">{t(labelKey)}</span>
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* Copy beside a picture of all Algeria (map shape filled with photography). */}
-        <div className="mt-8 grid w-full max-w-6xl items-center gap-8 md:mt-10 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
-          <div className="flex flex-col items-center lg:items-start lg:text-start">
-            <p className="inline-flex items-center gap-3 text-eyebrow uppercase font-semibold text-secondary-700 enter-up" style={{ animationDelay: "80ms" }}>
-              <span aria-hidden="true" className="h-px w-8 bg-secondary-600/60" />
-              {t("eyebrow")}
-              <span aria-hidden="true" className="h-px w-8 bg-secondary-600/60" />
-            </p>
-
-            {/* Brand line in Algerian Arabic, decorative signature, always RTL. */}
-            {!isRtl && (
-              <p
-                style={{ animationDelay: "110ms" }}
-                lang="ar"
-                dir="rtl"
-                className="mt-3 font-[family-name:var(--font-messiri)] text-xl text-accent-700/90 leading-none enter-up"
-              >
-                {t("brandLine")}
-              </p>
-            )}
-
-            <h1
-              id="home-hero-title"
-              style={{ animationDelay: "140ms" }}
-              className="mt-4 font-serif text-display-lg text-primary-900 max-w-[18ch] text-balance enter-lift"
+          <div className="pt-2 sm:pt-3">
+            {/* Desktop: the full Where / When / Who bar */}
+            <div className="hidden md:block">
+              <Search inline />
+            </div>
+            {/* Mobile: same bar shape, opens the search sheet */}
+            <button
+              type="button"
+              onClick={openSearchModal}
+              className={`flex h-[clamp(56px,8vh,76px)] w-full cursor-pointer items-center gap-3 rounded-xl ps-4 pe-1.5 text-start ring-1 ring-tertiary-300 md:hidden ${focusRing}`}
             >
-              {t("headlineLead")}{" "}
-              <em className="not-italic text-secondary-700 [font-variation-settings:'SOFT'_100,'opsz'_144]">{t("headlineAccent")}</em>
-            </h1>
-
-            <p className="mt-4 text-body-lg text-primary-600 max-w-[50ch] text-pretty enter-lift" style={{ animationDelay: "220ms" }}>
-              {t("lede")}
-            </p>
-
-            {/* Promo line with rotating destination */}
-            <p
-              style={{ animationDelay: "300ms" }}
-              className="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-x-2 text-title text-primary-800 enter-up"
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-              onFocus={() => setIsPaused(true)}
-              onBlur={() => setIsPaused(false)}
-            >
-              {t.rich("promoLine", {
-                city: () => (
-                  <span className="relative inline-flex justify-center overflow-hidden align-bottom h-[1.4em] min-w-[6ch]">
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      <m.span
-                        key={currentCity}
-                        initial={{ y: "100%", opacity: 0 }}
-                        animate={{ y: "0%", opacity: 1 }}
-                        exit={{ y: "-100%", opacity: 0 }}
-                        transition={{ duration: dur.base, ease: ease.out }}
-                        className="inline-block"
-                      >
-                        <Link
-                          href={{ pathname: "/search", query: { destination: currentCity } }}
-                          className={`font-serif text-accent-700 underline decoration-accent-300 decoration-1 underline-offset-[6px] hover:decoration-accent-600 transition-colors rounded ${focusRing}`}
-                        >
-                          {currentCityLabel}
-                        </Link>
-                      </m.span>
-                    </AnimatePresence>
-                  </span>
-                ),
-              })}
-            </p>
+              <BrandPinIcon size={20} className="shrink-0 text-accent-600" aria-hidden="true" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-semibold text-primary-900">{t("whereTo")}</span>
+                <span className="truncate text-meta text-neutral-600">{t("anywhereAnyWeek")}</span>
+              </span>
+              <span className="flex h-[calc(100%-12px)] items-center gap-2 rounded-lg bg-cta px-4 text-sm font-semibold text-white">
+                <BrandSearchIcon size={18} strokeWidth={2.2} aria-hidden="true" />
+                <span className="sr-only">{t("search")}</span>
+              </span>
+            </button>
           </div>
-          <AlgeriaMap className="enter-rise mx-auto w-[82%] max-w-[420px] lg:w-full lg:max-w-[460px]" />
         </div>
       </div>
     </section>

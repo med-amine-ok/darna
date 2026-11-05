@@ -54,10 +54,10 @@ export function BrandLoader({
         fill="none"
         aria-hidden="true"
       >
-        <path d={`${ARCH}Z`} fill="#F4EFE7" />
+        <path d={`${ARCH}Z`} fill="#F1F5F9" />
         <path
           d={ARCH}
-          stroke="#E9DFD0"
+          stroke="#E4EAF2"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -66,21 +66,21 @@ export function BrandLoader({
           d={ARCH}
           pathLength={1}
           className="loader-arch"
-          stroke="#C96F4F"
+          stroke="#0B57D0"
           strokeWidth="2.25"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M2 60h53"
-          stroke="#2E3A2F"
+          stroke="#152C52"
           strokeOpacity="0.25"
           strokeWidth="1.5"
           strokeLinecap="round"
         />
         <path
           d="M28.5 26l1.8 4.2 4.2 1.8-4.2 1.8-1.8 4.2-1.8-4.2-4.2-1.8 4.2-1.8z"
-          fill="#6B7F5B"
+          fill="#0E6FAD"
           className="loader-rosette"
         />
       </svg>

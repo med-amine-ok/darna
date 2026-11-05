@@ -18,14 +18,20 @@
     "occupancyRate": "Taux d’occupation",
     "occupancyNote": "{booked} nuits réservées sur {available} disponibles",
     "activeBookings": "Réservations actives",
-    "activeBookingsNote": "Séjours et locations de véhicules confirmés",
     "overallRating": "Note globale",
     "ratingNote": "{count, plural, =0 {Aucun avis pour le moment} one {Sur # avis de voyageur} other {Sur # avis de voyageurs}}",
     "earningsEur": "≈ {eur}",
     "vsPrevious": "vs. période précédente (≈ {eur})",
     "noEarnings": "Aucun revenu confirmé sur cette période",
-    "noOccupancy": "Ajoutez un logement ou un véhicule réservable pour suivre l’occupation.",
-    "ratingNew": "Nouveau"
+    "ratingNew": "Nouveau",
+    "pendingRequests": "Demandes à traiter",
+    "pendingRequestsNote": "{count, plural, =0 {Aucune demande en attente} one {# demande de réservation en attente de réponse} other {# demandes de réservation en attente de réponse}}",
+    "noOccupancy_individual": "Ajoutez un logement ou un véhicule réservable pour suivre l’occupation.",
+    "noOccupancy_property": "Ajoutez des types de chambres à votre établissement pour suivre l’occupation.",
+    "noOccupancy_agency": "L’occupation ne s’applique pas aux expériences et aux circuits.",
+    "activeBookingsNote_individual": "Séjours et locations de véhicules confirmés",
+    "activeBookingsNote_property": "Réservations de chambres et de lits confirmées",
+    "activeBookingsNote_agency": "Expériences et places de circuits confirmées"
   },
   "pendingTitle": "Action requise : demandes de réservation en attente ({count})",
   "requestFor": "Demande de réservation pour {title}",
@@ -48,20 +54,37 @@
   "quickActions": "Actions rapides",
   "quick": {
     "calendar": "Bloquer des dates ou ajuster les prix",
-    "listings": "Gérer vos annonces ({count})",
     "messages": "Consulter les messages des voyageurs",
-    "payout": "Compte de versement et RIB"
+    "payout": "Compte de versement et RIB",
+    "listings_individual": "Gérer vos annonces ({count})",
+    "listings_property": "Gérer votre établissement et vos chambres ({count})",
+    "listings_agency": "Gérer vos expériences ({count})"
   },
   "tip": {
     "eyebrow": "Conseil aux hôtes algériens",
-    "title": "L’hiver, c’est la haute saison au Sahara",
-    "body": "La demande d’expéditions et de locations de 4x4 autour de Djanet et Taghit culmine entre novembre et mars. Ajustez les prix de votre calendrier en conséquence.",
-    "cta": "Ouvrir le calendrier des prix"
+    "cta": "Ouvrir le calendrier des prix",
+    "individual": {
+      "title": "L’hiver, c’est la haute saison au Sahara",
+      "body": "La demande de logements et de locations de 4x4 autour de Djanet et Taghit culmine entre novembre et mars. Ajustez les prix de votre calendrier en conséquence."
+    },
+    "property": {
+      "title": "L’été remplit la côte, l’hiver remplit le Sud",
+      "body": "Les hôtels du littoral sont pleins de juin à septembre et les maisons d’hôtes sahariennes de novembre à mars. Fixez vos prix de chambres par saison dans le calendrier."
+    },
+    "agency": {
+      "title": "Ouvrez tôt vos départs sahariens",
+      "body": "Les expéditions vers Djanet, Tamanrasset et Taghit affichent complet de novembre à mars. Publiez vos dates de départ et tailles de groupe au moins six semaines à l’avance."
+    }
   },
   "upcomingTitle": "Prochaines arrivées",
   "allBookings": "Toutes les réservations",
   "noUpcoming": "Aucune arrivée à venir",
   "noUpcomingHint": "Les réservations confirmées s’affichent ici avec leur date d’arrivée et l’heure d’enregistrement.",
   "todayBadge": "Aujourd’hui",
-  "guestsNights": "{count, plural, one {# voyageur} other {# voyageurs}} · {nights, plural, one {# nuit} other {# nuits}}"
+  "guestsNights": "{count, plural, one {# voyageur} other {# voyageurs}} · {nights, plural, one {# nuit} other {# nuits}}",
+  "createExperience": "Créer une expérience",
+  "createTrip": "Créer un circuit",
+  "addProperty": "Ajouter un établissement",
+  "noRecentReviews": "Les avis écrits de vos voyageurs s’afficheront ici.",
+  "eyebrowProperty": "Centre de pilotage de l’établissement"
 }

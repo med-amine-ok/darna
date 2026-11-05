@@ -77,7 +77,9 @@
       "coverBadge": "صورة الغلاف",
       "coverLibrary": "مكتبة الصور",
       "coverChoice": "استخدم الصورة {number} كغلاف",
-      "coverUrl": "رابط الصورة (URL)"
+      "coverUrl": "رابط الصورة (URL)",
+      "tripType": "نوع الرحلة",
+      "tripTypeHint": "يصفّي المسافرون الرحلات حسب هذا النوع في البحث."
     },
     "itinerary": {
       "heading": "البرنامج يومًا بيوم",
@@ -137,7 +139,8 @@
       "saveAsDraft": "حفظ كمسودة",
       "publishing": "جارٍ النشر…",
       "publishToDarna": "النشر على BLADUS",
-      "publishCircuit": "نشر الجولة"
+      "publishCircuit": "نشر الجولة",
+      "tripType": "نوع الرحلة"
     },
     "nav": {
       "previous": "السابق",
@@ -147,7 +150,8 @@
       "summary": "يرجى تصحيح ما يلي قبل الحفظ:",
       "titleRequired": "يرجى إدخال عنوان للجولة.",
       "groupSize": "يجب أن يكون الحد الأدنى للمجموعة بين 1 والحد الأقصى للمجموعة.",
-      "price": "يجب أن يكون السعر للفرد عددًا صحيحًا بين {min} و{max}."
+      "price": "يجب أن يكون السعر للفرد عددًا صحيحًا بين {min} و{max}.",
+      "tripTypeRequired": "اختر نوع الرحلة."
     },
     "toast": {
       "published": "تم نشر الرحلة على BLADUS!",

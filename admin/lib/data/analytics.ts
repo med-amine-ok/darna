@@ -67,10 +67,10 @@ export async function getDashboardCharts(period: string = "30d") {
 
   // Host Categories Financial & Net Performance computed from store
   const hostTypes = [
-    { key: "individual", name: "Individual (Solo)", fill: "#6B7F5B", defaultRate: 12 },
-    { key: "agency", name: "Tourism Agencies", fill: "#C96F4F", defaultRate: 15 },
-    { key: "hotel", name: "Hotels & Palaces", fill: "#2E3A2F", defaultRate: 18 },
-    { key: "hostel", name: "Youth Hostels", fill: "#D9C9B2", defaultRate: 10 },
+    { key: "individual", name: "Individual (Solo)", fill: "#0E6FAD", defaultRate: 12 },
+    { key: "agency", name: "Tourism Agencies", fill: "#0B57D0", defaultRate: 15 },
+    { key: "hotel", name: "Hotels & Palaces", fill: "#152C52", defaultRate: 18 },
+    { key: "hostel", name: "Youth Hostels", fill: "#D3DCE8", defaultRate: 10 },
   ];
 
   const hostCategoryPerformance = hostTypes.map((ht) => {
@@ -124,11 +124,11 @@ export async function getDashboardCharts(period: string = "30d") {
 
   // Revenue by Vertical
   const revenueByVertical = [
-    { name: "Homes & Stays", count: store.listings.filter((l) => l.category === "home").length, fill: "#2E3A2F" },
-    { name: "Hotels & Hostels", count: store.listings.filter((l) => l.category === "hotel").length, fill: "#6B7F5B" },
-    { name: "Sahara Expeditions", count: store.listings.filter((l) => l.category === "trip").length, fill: "#C96F4F" },
-    { name: "4x4 Overlanders", count: store.listings.filter((l) => l.category === "vehicle").length, fill: "#D9C9B2" },
-    { name: "Cultural Tours", count: store.listings.filter((l) => l.category === "experience").length, fill: "#5C6C5A" },
+    { name: "Homes & Stays", count: store.listings.filter((l) => l.category === "home").length, fill: "#152C52" },
+    { name: "Hotels & Hostels", count: store.listings.filter((l) => l.category === "hotel").length, fill: "#0E6FAD" },
+    { name: "Sahara Expeditions", count: store.listings.filter((l) => l.category === "trip").length, fill: "#0B57D0" },
+    { name: "4x4 Overlanders", count: store.listings.filter((l) => l.category === "vehicle").length, fill: "#D3DCE8" },
+    { name: "Cultural Tours", count: store.listings.filter((l) => l.category === "experience").length, fill: "#3A63A3" },
   ];
 
   // Bookings by Wilaya (Top 10)

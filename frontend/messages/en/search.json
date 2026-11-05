@@ -143,7 +143,13 @@
     "hotelsIn": "Hotels & hostels in {place}, Algeria",
     "hotels": "Hotels & hostels in Algeria",
     "staysIn": "Stays & rentals in {place}, Algeria",
-    "all": "All stays, vehicles & experiences in Algeria"
+    "all": "All stays, vehicles & experiences in Algeria",
+    "home": "Homes to rent in Algeria",
+    "homeIn": "Homes in {place}, Algeria",
+    "experience": "Experiences and activities in Algeria",
+    "experienceIn": "Experiences in {place}, Algeria",
+    "vehicle": "Cars and 4x4s to rent in Algeria",
+    "vehicleIn": "Vehicles to rent in {place}, Algeria"
   },
   "count": {
     "tripsInMap": "{count, plural, one {# agency circuit} other {# agency circuits}} visible in the map area ({total} total)",

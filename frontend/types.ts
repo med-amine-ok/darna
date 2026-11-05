@@ -113,6 +113,8 @@ export interface Listing {
   description: string;
   category: ListingVertical;
   type: string; // Specific property, experience, or vehicle subtype
+  /** Canonical experience type (lib/catalog-types.ts); set for category "experience". */
+  experienceType?: import("@/lib/catalog-types").ExperienceTypeId;
   ownerType: ListingOwnerType;
   hostUserId?: string | null;
   organizationId?: string | null;
@@ -280,6 +282,8 @@ export interface Trip {
   latlng?: [number, number];
   cancellationPolicy: CancellationPolicy;
   organizationId: string; // Must belong to an Agency
+  /** Canonical trip type (lib/catalog-types.ts). */
+  tripType?: import("@/lib/catalog-types").TripTypeId;
   status: "active" | "draft";
   rating?: number;
   reviewsCount?: number;

@@ -23,29 +23,18 @@ import { useToast } from "@/components/ui/Toast";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDzd, intlLocale } from "@/lib/utils/format";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
-
-// Form values stay stable (French identifiers used by the mock data); labels are translated.
-const CATEGORY_OPTIONS = [
-  { value: "Aventure", labelKey: "adventure" },
-  { value: "Culture", labelKey: "culture" },
-  { value: "Nature", labelKey: "nature" },
-  { value: "Gastronomie", labelKey: "gastronomy" },
-  { value: "Mer", labelKey: "sea" },
-] as const;
+import {
+  EXPERIENCE_TYPES,
+  TRIP_TYPES,
+  experienceTypeLabel,
+  tripTypeLabel,
+} from "@/lib/catalog-types";
 
 const DIFFICULTY_OPTIONS = [
   { value: "Facile", labelKey: "easy" },
   { value: "Modéré", labelKey: "moderate" },
   { value: "Difficile", labelKey: "hard" },
   { value: "Expert", labelKey: "expert" },
-] as const;
-
-const EXPERIENCE_TYPES = [
-  "excursion",
-  "sport",
-  "workshop",
-  "tasting",
-  "other",
 ] as const;
 
 const STEP_KEYS = [
@@ -88,9 +77,18 @@ const STEP_FIELDS: Record<number, FieldName[]> = {
 const INPUT_CLASS =
   "w-full px-3 py-2 text-xs bg-white border rounded-xl shadow-2xs text-primary-900 placeholder:text-primary-500 hover:border-primary/25 focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] transition duration-fast ease-standard";
 
-export default function ExperienceWizardClient() {
+/**
+ * Admin creation wizard for experiences, also used for trips (`kind="trip"`). The type
+ * choice is the canonical list shared with the website (lib/catalog-types.ts):
+ * EXPERIENCE_TYPES for experiences, TRIP_TYPES for trips.
+ */
+export default function ExperienceWizardClient({ kind = "experience" }: { kind?: "experience" | "trip" } = {}) {
   const locale = useLocale() as "en" | "fr" | "ar";
   const t = useTranslations("experienceWizard");
+  const isTrip = kind === "trip";
+  const listRoute = isTrip ? "/trips" : "/experiences";
+  const typeIds: readonly string[] = isTrip ? TRIP_TYPES : EXPERIENCE_TYPES;
+  const typeLabel = (id: string) => (isTrip ? tripTypeLabel(id, locale) : experienceTypeLabel(id, locale));
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -103,7 +101,6 @@ export default function ExperienceWizardClient() {
   // Form state (Mockups 03 & 10), pre-filled demo content
   const [formData, setFormData] = useState({
     title: "Randonnée dans les gorges de Chiffa & Cascade",
-    category: "Aventure",
     subCategory: "Randonnée pédestre",
     duration: "4 heures",
     difficulty: "Modéré",
@@ -118,7 +115,8 @@ export default function ExperienceWizardClient() {
       "Observation respectueuse des macaques de Barbarie",
       "Thé à la menthe traditionnel offert en fin de parcours",
     ],
-    experienceType: "excursion",
+    /** Canonical type id: EXPERIENCE_TYPES (experience) or TRIP_TYPES (trip). */
+    catalogType: kind === "trip" ? "hiking" : "nature_adventure",
     tags: ["Nature", "Cascade", "Faune", "Atlas"],
     country: "DZ",
     wilayaCode: "09",
@@ -156,10 +154,6 @@ export default function ExperienceWizardClient() {
       minute: "2-digit",
     }).format(d);
 
-  const categoryLabel = (value: string) => {
-    const opt = CATEGORY_OPTIONS.find((o) => o.value === value);
-    return opt ? t(`categories.${opt.labelKey}`) : value;
-  };
   const difficultyLabel = (value: string) => {
     const opt = DIFFICULTY_OPTIONS.find((o) => o.value === value);
     return opt ? t(`difficultyOptions.${opt.labelKey}`) : value;
@@ -277,11 +271,11 @@ export default function ExperienceWizardClient() {
       setCurrentStep((prev) => prev + 1);
     } else {
       addToast({
-        title: t("toast.created"),
+        title: isTrip ? t("toast.createdTrip") : t("toast.created"),
         description: t("toast.createdDescription"),
         variant: "success",
       });
-      router.push("/experiences");
+      router.push(listRoute);
     }
   };
 
@@ -290,7 +284,7 @@ export default function ExperienceWizardClient() {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
     } else {
-      router.push("/experiences");
+      router.push(listRoute);
     }
   };
 
@@ -308,7 +302,7 @@ export default function ExperienceWizardClient() {
         <div>
           <button
             type="button"
-            onClick={() => router.push("/experiences")}
+            onClick={() => router.push(listRoute)}
             className="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-900 mb-2 font-medium rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             <ArrowLeft
@@ -318,9 +312,11 @@ export default function ExperienceWizardClient() {
             <span>{t("backToList")}</span>
           </button>
           <h1 className="font-serif text-heading text-primary-900">
-            {t("title")}
+            {isTrip ? t("titleTrip") : t("title")}
           </h1>
-          <p className="text-xs text-primary-600 mt-0.5">{t("subtitle")}</p>
+          <p className="text-xs text-primary-600 mt-0.5">
+            {isTrip ? t("subtitleTrip") : t("subtitle")}
+          </p>
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -404,28 +400,6 @@ export default function ExperienceWizardClient() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor={fieldId("category")}
-                      className="block text-xs font-semibold text-primary-900 mb-1.5"
-                    >
-                      {t("general.category")}
-                      <Required />
-                    </label>
-                    <select
-                      id={fieldId("category")}
-                      required
-                      value={formData.category}
-                      onChange={(e) => updateField("category", e.target.value)}
-                      className={`${INPUT_CLASS} px-3.5 border-primary/[0.12]`}
-                    >
-                      {CATEGORY_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {t(`categories.${opt.labelKey}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                   <div>
                     <label
                       htmlFor={fieldId("subCategory")}
@@ -635,30 +609,34 @@ export default function ExperienceWizardClient() {
               {/* Card 2: Type & keywords (Mockup 10) */}
               <div className="bg-white rounded-2xl p-5 shadow-e1 space-y-4">
                 <h2 className="text-sm font-semibold text-primary-900 pb-3 border-b border-primary/[0.06]">
-                  {t("type.heading")}
+                  {isTrip ? t("type.headingTrip") : t("type.heading")}
                 </h2>
 
                 <fieldset>
-                  <legend className="sr-only">{t("type.legend")}</legend>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                    {EXPERIENCE_TYPES.map((type) => (
+                  <legend className="block text-xs font-semibold text-primary-900 mb-1.5">
+                    {isTrip ? t("general.tripType") : t("general.experienceType")}
+                    <Required />
+                  </legend>
+                  <p className="text-[11px] text-primary-600 mb-2">{t("general.typeSharedHint")}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    {typeIds.map((type) => (
                       <label
                         key={type}
-                        className={`p-3 rounded-xl border transition-colors duration-fast ease-standard cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
-                          formData.experienceType === type
+                        className={`flex items-center p-3 rounded-xl border transition-colors duration-fast ease-standard cursor-pointer focus-within:ring-2 focus-within:ring-accent-600 ${
+                          formData.catalogType === type
                             ? "bg-secondary-50 border-secondary-600 font-semibold text-primary-900"
                             : "bg-white border-primary/[0.12] text-primary-800 hover:border-primary/25"
                         }`}
                       >
                         <input
                           type="radio"
-                          name="expType"
+                          name="catalogType"
                           value={type}
-                          checked={formData.experienceType === type}
-                          onChange={() => updateField("experienceType", type)}
-                          className="accent-secondary me-2"
+                          checked={formData.catalogType === type}
+                          onChange={() => updateField("catalogType", type)}
+                          className="accent-secondary me-2 shrink-0"
                         />
-                        <span>{t(`type.options.${type}`)}</span>
+                        <span>{typeLabel(type)}</span>
                       </label>
                     ))}
                   </div>
@@ -992,10 +970,10 @@ export default function ExperienceWizardClient() {
                   </dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-primary-600">{t("review.category")}</dt>
+                  <dt className="text-primary-600">{t("review.type")}</dt>
                   <dd className="font-semibold text-primary-900 text-end">
                     {t("review.categoryValue", {
-                      category: categoryLabel(formData.category),
+                      category: typeLabel(formData.catalogType),
                       difficulty: difficultyLabel(formData.difficulty),
                     })}
                   </dd>
@@ -1055,7 +1033,7 @@ export default function ExperienceWizardClient() {
           <LivePreviewCard
             placeholderKind="experience"
             title={formData.title}
-            propertyType={categoryLabel(formData.category)}
+            propertyType={typeLabel(formData.catalogType)}
             location={t("locationValue", {
               city: formData.city,
               code: formData.wilayaCode,

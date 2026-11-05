@@ -141,5 +141,8 @@
   },
   "eyebrow": "Réservations",
   "reference": "Réf. {code}",
-  "requestHeading": "Demande de réservation, répondez avant l’expiration"
+  "requestHeading": "Demande de réservation, répondez avant l’expiration",
+  "noListingsTitle": "Pas encore de réservations",
+  "noListingsText": "Les réservations apparaîtront ici dès que vous publierez une annonce. Créez votre première annonce pour commencer.",
+  "createFirstListing": "Créer votre première annonce"
 }

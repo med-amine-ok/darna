@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #2E3A2F;
-  --color-secondary: #6B7F5B;
-  --color-tertiary: #D9C9B2;
-  --color-accent: #C96F4F;
-  --color-bg: #F8F6EE;
+  --color-primary: #152C52;
+  --color-secondary: #0E6FAD;
+  --color-tertiary: #D3DCE8;
+  --color-accent: #0B57D0;
+  --color-bg: #FFFFFF;
   --color-surface: #FFFFFF;
-  --ink-rgb: 30, 38, 31;
+  --ink-rgb: 14, 31, 59;
 
   /* Active type faces (docs/design/DESIGN-DIRECTION.md §3); swapped for Arabic below. */
   --font-ui: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -103,11 +103,11 @@ html[data-reduce-motion] *::after {
 @layer utilities {
   /* Frosted surface for sticky headers, floating bars and sheets (solid fallback). */
   .glass {
-    background-color: rgba(248, 246, 238, 0.96);
+    background-color: rgba(255, 255, 255, 0.96);
   }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .glass {
-      background-color: rgba(248, 246, 238, 0.78);
+      background-color: rgba(255, 255, 255, 0.78);
       -webkit-backdrop-filter: blur(18px) saturate(1.4);
       backdrop-filter: blur(18px) saturate(1.4);
     }
@@ -168,16 +168,16 @@ html[data-reduce-motion] *::after {
     background-image: linear-gradient(to top, rgba(var(--ink-rgb), 0.72) 0%, rgba(var(--ink-rgb), 0.28) 38%, rgba(var(--ink-rgb), 0) 64%);
   }
 
-  /* Terracotta CTA gradient (accent family only). */
+  /* Action blue CTA gradient (accent family only). */
   .bg-cta {
-    background-image: linear-gradient(135deg, #C96F4F 0%, #B65634 55%, #974426 100%);
+    background-image: linear-gradient(135deg, #1B66E0 0%, #0B57D0 55%, #0846AB 100%);
   }
 
   /* Skeleton with travelling shimmer. */
   .skeleton {
     position: relative;
     overflow: hidden;
-    background-color: #EFE7DA;
+    background-color: #EBF0F7;
   }
   .skeleton::after {
     content: "";
@@ -304,18 +304,18 @@ html:not(.reveal-ready) .reveal-bar {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D9C9B2;
+  background: #D3DCE8;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B09875;
+  background: #94A3B8;
 }
 
 /* BLADUS Admin Sidebar Custom Scrollbar (Slider) */
 .darna-admin-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #3A493B transparent;
+  scrollbar-color: #1F3B6B transparent;
 }
 
 .darna-admin-scrollbar::-webkit-scrollbar {
@@ -328,17 +328,17 @@ html:not(.reveal-ready) .reveal-bar {
 }
 
 .darna-admin-scrollbar::-webkit-scrollbar-thumb {
-  background: #3A493B;
+  background: #1F3B6B;
   border-radius: 9999px;
   transition: background 0.2s ease;
 }
 
 .darna-admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #6B7F5B;
+  background: #0E6FAD;
 }
 
 .darna-admin-scrollbar::-webkit-scrollbar-thumb:active {
-  background: #C96F4F;
+  background: #0B57D0;
 }
 
 /* Hide scrollbar / slider utility */
@@ -362,26 +362,26 @@ html:not(.reveal-ready) .reveal-bar {
 
 /* Focus styles */
 *:focus-visible {
-  outline: 2px solid #C96F4F;
+  outline: 2px solid #0B57D0;
   outline-offset: 2px;
 }
 
 /* Elevated Surface Layering */
 .elevated-card {
   background-color: #FFFFFF;
-  border: 1px solid rgba(217, 201, 178, 0.5);
-  box-shadow: 0 2px 8px -2px rgba(46, 58, 47, 0.06), 0 6px 18px -4px rgba(46, 58, 47, 0.05);
+  border: 1px solid rgba(211, 220, 232, 0.5);
+  box-shadow: 0 2px 8px -2px rgba(21, 44, 82, 0.06), 0 6px 18px -4px rgba(21, 44, 82, 0.05);
 }
 
 .elevated-panel {
   background-color: #FFFFFF;
-  border: 1px solid rgba(217, 201, 178, 0.6);
-  box-shadow: 0 4px 20px -2px rgba(46, 58, 47, 0.08), 0 2px 6px -1px rgba(46, 58, 47, 0.04);
+  border: 1px solid rgba(211, 220, 232, 0.6);
+  box-shadow: 0 4px 20px -2px rgba(21, 44, 82, 0.08), 0 2px 6px -1px rgba(21, 44, 82, 0.04);
 }
 
 .elevated-modal {
   background-color: #FFFFFF;
-  box-shadow: 0 20px 48px -8px rgba(46, 58, 47, 0.18), 0 8px 20px -4px rgba(46, 58, 47, 0.08);
+  box-shadow: 0 20px 48px -8px rgba(21, 44, 82, 0.18), 0 8px 20px -4px rgba(21, 44, 82, 0.08);
 }
 
 /* Card hover lift & scale micro-interaction - Clean & shadowless */
@@ -407,8 +407,8 @@ input, textarea, select {
 }
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: #C96F4F;
-  box-shadow: 0 0 0 3px rgba(201, 111, 79, 0.18);
+  border-color: #0B57D0;
+  box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.18);
 }
 
 /* Minimum accessible touch target helper */
@@ -483,8 +483,8 @@ input:focus, textarea:focus, select:focus {
   padding-inline: 1.125rem 0.625rem;
   border-radius: 1.25rem;
   background-color: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.04), 0 4px 8px rgba(30, 38, 31, 0.05), 0 16px 36px -8px rgba(30, 38, 31, 0.16);
-  color: #2E3A2F;
+  box-shadow: 0 0 0 1px rgba(14, 31, 59, 0.04), 0 4px 8px rgba(14, 31, 59, 0.05), 0 16px 36px -8px rgba(14, 31, 59, 0.16);
+  color: #152C52;
   font-family: inherit;
   overflow: hidden;
   cursor: default;
@@ -499,7 +499,7 @@ input:focus, textarea:focus, select:focus {
   }
 }
 .darna-toast:hover {
-  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.05), 0 12px 24px rgba(30, 38, 31, 0.08), 0 32px 64px -12px rgba(30, 38, 31, 0.24);
+  box-shadow: 0 0 0 1px rgba(14, 31, 59, 0.05), 0 12px 24px rgba(14, 31, 59, 0.08), 0 32px 64px -12px rgba(14, 31, 59, 0.24);
 }
 /* Accent bar on the reading-start edge. */
 .darna-toast::before {
@@ -510,13 +510,13 @@ input:focus, textarea:focus, select:focus {
   width: 3px;
   border-start-end-radius: 9999px;
   border-end-end-radius: 9999px;
-  background-color: var(--toast-accent, #C96F4F);
+  background-color: var(--toast-accent, #0B57D0);
 }
-.darna-toast--success { --toast-accent: #6B7F5B; }
-.darna-toast--error { --toast-accent: #974426; }
-.darna-toast--warning { --toast-accent: #A56C3C; }
-.darna-toast--info { --toast-accent: #967F5E; }
-.darna-toast--default { --toast-accent: #C96F4F; }
+.darna-toast--success { --toast-accent: #0E6FAD; }
+.darna-toast--error { --toast-accent: #0A3B8A; }
+.darna-toast--warning { --toast-accent: #D97706; }
+.darna-toast--info { --toast-accent: #64748B; }
+.darna-toast--default { --toast-accent: #0B57D0; }
 
 .darna-toast-body {
   display: flex;
@@ -529,7 +529,7 @@ input:focus, textarea:focus, select:focus {
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.45;
-  color: #1E261F;
+  color: #0E1F3B;
 }
 .darna-toast-body > div:last-child {
   flex: 1 1 auto;
@@ -548,7 +548,7 @@ input:focus, textarea:focus, select:focus {
   height: 2px;
   bottom: 0;
   opacity: 0.85 !important;
-  background: var(--toast-accent, #C96F4F) !important;
+  background: var(--toast-accent, #0B57D0) !important;
 }
 .darna-toast .Toastify__progress-bar--rtl {
   right: 0;
@@ -599,7 +599,7 @@ input:focus, textarea:focus, select:focus {
   width: 100%;
   max-width: 24rem;
   background: transparent;
-  color: #2E3A2F;
+  color: #152C52;
   font-family: inherit;
   font-size: 13px;
 }
@@ -615,13 +615,13 @@ input:focus, textarea:focus, select:focus {
   font-family: inherit;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1E261F;
+  color: #0E1F3B;
   padding: 0.375rem 1.75rem 0.375rem 0.625rem;
   border-radius: 0.625rem;
   transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 .darna-calendar-wrapper .rdrMonthAndYearPickers select:hover {
-  background-color: rgba(30, 38, 31, 0.05);
+  background-color: rgba(14, 31, 59, 0.05);
 }
 [dir="rtl"] .darna-calendar-wrapper .rdrMonthAndYearPickers select {
   padding: 0.375rem 0.625rem 0.375rem 1.75rem;
@@ -629,7 +629,7 @@ input:focus, textarea:focus, select:focus {
 }
 .darna-calendar-wrapper .rdrMonthName {
   font-weight: 600;
-  color: #1E261F;
+  color: #0E1F3B;
   padding: 0.75rem 0.5rem;
 }
 .darna-calendar-wrapper .rdrNextPrevButton {
@@ -646,13 +646,13 @@ input:focus, textarea:focus, select:focus {
 }
 .darna-calendar-wrapper .rdrNextPrevButton:hover {
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.05), 0 1px 2px rgba(30, 38, 31, 0.05), 0 2px 6px rgba(30, 38, 31, 0.05);
+  box-shadow: 0 0 0 1px rgba(14, 31, 59, 0.05), 0 1px 2px rgba(14, 31, 59, 0.05), 0 2px 6px rgba(14, 31, 59, 0.05);
 }
 .darna-calendar-wrapper .rdrNextPrevButton i {
   width: 0.5rem;
   height: 0.5rem;
   margin: 0;
-  border: 0 solid #2E3A2F;
+  border: 0 solid #152C52;
   border-width: 0 0 1.75px 1.75px;
   border-radius: 1px;
 }
@@ -665,13 +665,13 @@ input:focus, textarea:focus, select:focus {
 .darna-calendar-wrapper .rdrWeekDay {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #5C6C5A;
+  color: #3A63A3;
 }
 .darna-calendar-wrapper .rdrDay {
   height: 2.9em;
 }
 .darna-calendar-wrapper .rdrDayNumber span {
-  color: #1E261F;
+  color: #0E1F3B;
   font-weight: 500;
 }
 /* Today: small terracotta dot instead of a bar. */
@@ -680,19 +680,19 @@ input:focus, textarea:focus, select:focus {
   height: 4px;
   bottom: 2px;
   border-radius: 9999px;
-  background: #C96F4F;
+  background: #0B57D0;
 }
 /* Range: tint band + solid edges (inline rangeColors are overridden). */
 .darna-calendar-wrapper .rdrInRange {
-  background: #F9EAE5 !important;
+  background: #DBE8FF !important;
 }
 .darna-calendar-wrapper .rdrStartEdge,
 .darna-calendar-wrapper .rdrEndEdge,
 .darna-calendar-wrapper .rdrSelected {
-  background: #B65634 !important;
+  background: #0846AB !important;
 }
 .darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span {
-  color: #1E261F;
+  color: #0E1F3B;
 }
 .darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
 .darna-calendar-wrapper .rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
@@ -717,10 +717,10 @@ input:focus, textarea:focus, select:focus {
   cursor: not-allowed;
 }
 .darna-calendar-wrapper .rdrDayDisabled .rdrDayNumber span {
-  color: #A4AEA3;
+  color: #97B1D8;
   font-weight: 400;
   text-decoration: line-through;
-  text-decoration-color: rgba(30, 38, 31, 0.25);
+  text-decoration-color: rgba(14, 31, 59, 0.25);
 }
 .darna-calendar-wrapper .rdrDayDisabled .rdrInRange,
 .darna-calendar-wrapper .rdrDayDisabled .rdrStartEdge,
@@ -738,7 +738,7 @@ input:focus, textarea:focus, select:focus {
   text-decoration: none;
 }
 .darna-calendar-wrapper .rdrDay:focus-visible {
-  outline: 2px solid #B65634;
+  outline: 2px solid #0846AB;
   outline-offset: -2px;
   border-radius: 9999px;
 }
@@ -751,30 +751,30 @@ input:focus, textarea:focus, select:focus {
 .field-control {
   border: 0;
   outline: none;
-  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.16), 0 1px 2px rgba(30, 38, 31, 0.04);
+  box-shadow: 0 0 0 1px rgba(14, 31, 59, 0.16), 0 1px 2px rgba(14, 31, 59, 0.04);
   transition: box-shadow 200ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 .field-control:hover {
-  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.32), 0 1px 2px rgba(30, 38, 31, 0.04);
+  box-shadow: 0 0 0 1px rgba(14, 31, 59, 0.32), 0 1px 2px rgba(14, 31, 59, 0.04);
 }
 .field-control:focus,
 .field-control:focus-visible {
   outline: none;
   border: 0;
-  box-shadow: 0 0 0 1.5px #B65634, 0 0 0 5px rgba(201, 111, 79, 0.16);
+  box-shadow: 0 0 0 1.5px #0846AB, 0 0 0 5px rgba(11, 87, 208, 0.16);
 }
 .field-control[aria-invalid="true"] {
-  box-shadow: 0 0 0 1.5px #974426, 0 1px 2px rgba(30, 38, 31, 0.04);
-  background-color: #FCF6F4;
+  box-shadow: 0 0 0 1.5px #0A3B8A, 0 1px 2px rgba(14, 31, 59, 0.04);
+  background-color: #EFF5FF;
 }
 .field-control[aria-invalid="true"]:focus {
-  box-shadow: 0 0 0 1.5px #974426, 0 0 0 5px rgba(151, 68, 38, 0.14);
+  box-shadow: 0 0 0 1.5px #0A3B8A, 0 0 0 5px rgba(151, 68, 38, 0.14);
 }
 .field-control:disabled {
   cursor: not-allowed;
-  background-color: #EFECE0;
-  color: #7E8D7C;
-  box-shadow: 0 0 0 1px rgba(30, 38, 31, 0.08);
+  background-color: #F5F8FC;
+  color: #5F86C0;
+  box-shadow: 0 0 0 1px rgba(14, 31, 59, 0.08);
 }
 
 /* Line drawings that draw themselves once (use pathLength={1}). Runs from server HTML. */
@@ -841,11 +841,11 @@ html[data-reduce-motion] .loader-rosette {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(46, 58, 47, 0.18);
+  background: rgba(21, 44, 82, 0.18);
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(46, 58, 47, 0.35);
+  background: rgba(21, 44, 82, 0.35);
 }
 
 

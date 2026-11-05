@@ -11,7 +11,13 @@ import {
   BrandSnowIcon,
   BrandKitchenIcon,
   BrandFlameIcon,
+  BrandFlagIcon,
+  BrandLightningIcon,
+  BrandBathIcon,
+  CategoryMountainIcon,
+  CategoryDesertIcon,
 } from "@/components/icons";
+import type { ExperienceTypeId } from "@/lib/catalog-types";
 
 type IconComponent = React.FC<{ size?: number | string; className?: string }>;
 
@@ -37,11 +43,15 @@ export const WILAYAS: { id: string; value: string; latlng: LatLng }[] = [
   { id: "annaba", value: "Annaba", latlng: [36.9, 7.7667] },
 ];
 
-/** Listing categories: `value` is stored as the listing type; label = `hostFlow.categories.<id>`. */
+/**
+ * Home and vehicle categories: `value` is stored as the listing type; label =
+ * `hostFlow.categories.<id>`. Experiences use the canonical EXPERIENCE_TYPES
+ * (lib/catalog-types.ts) instead, and only agencies publish them.
+ */
 export const CATEGORIES: {
   id: string;
   value: string;
-  vertical: "home" | "vehicle" | "experience";
+  vertical: "home" | "vehicle";
   icon: IconComponent;
 }[] = [
   { id: "villa", value: "Villa", vertical: "home", icon: CategoryHouseIcon },
@@ -50,9 +60,19 @@ export const CATEGORIES: {
   { id: "saharanKsar", value: "Saharan Ksar", vertical: "home", icon: BrandSunIcon },
   { id: "desertCamp", value: "Desert Camp", vertical: "home", icon: BrandCompassIcon },
   { id: "landCruiser", value: "4x4 Land Cruiser SUV", vertical: "vehicle", icon: CategoryVehicleIcon },
-  { id: "saharaExpedition", value: "Sahara 4x4 Expedition", vertical: "experience", icon: BrandCompassIcon },
-  { id: "casbahTour", value: "Casbah Architecture Tour", vertical: "experience", icon: BrandSparklesIcon },
 ];
+
+/** Card icon per canonical experience type (ids/labels: lib/catalog-types.ts). */
+export const EXPERIENCE_TYPE_ICONS: Record<ExperienceTypeId, IconComponent> = {
+  excursion: BrandCompassIcon,
+  guided_tour: BrandFlagIcon,
+  nature_adventure: CategoryMountainIcon,
+  desert: CategoryDesertIcon,
+  sport: BrandLightningIcon,
+  culture_workshop: BrandSparklesIcon,
+  gastronomy: BrandKitchenIcon,
+  wellness: BrandBathIcon,
+};
 
 /** Individual listing amenities; label = `hostFlow.amenities.<id>`. */
 export const AMENITIES: { id: string; icon: IconComponent }[] = [

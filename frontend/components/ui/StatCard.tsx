@@ -61,15 +61,15 @@ function Sparkline({ values }: { values: number[] }) {
     >
       <defs>
         <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#6B7F5B" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#6B7F5B" stopOpacity="0" />
+          <stop offset="0%" stopColor="#0E6FAD" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#0E6FAD" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={area} fill={`url(#${id})`} />
       <path
         d={line}
         fill="none"
-        stroke="#6B7F5B"
+        stroke="#0E6FAD"
         strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -80,7 +80,7 @@ function Sparkline({ values }: { values: number[] }) {
         cx={lx}
         cy={ly}
         r="2.75"
-        fill="#C96F4F"
+        fill="#0B57D0"
         stroke="#fff"
         strokeWidth="1.5"
       />

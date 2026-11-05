@@ -47,18 +47,11 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+import { TRIP_TYPES, tripTypeLabel } from "@/lib/catalog-types";
 
 /** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
 const SPLIT_HIDDEN_COLUMNS = ["id", "destination", "departure", "duration"];
 
-// value = filter value (unchanged), labelKey = translation key under trips.categoryOptions
-const TRIP_CATEGORIES = [
-  { value: "sahara & sud", labelKey: "sahara" },
-  { value: "circuit culturel", labelKey: "cultural" },
-  { value: "randonnée & bivouac", labelKey: "trekking" },
-  { value: "séjour balnéaire", labelKey: "seaside" },
-  { value: "circuit grand sud", labelKey: "deepSouth" },
-] as const;
 
 // Mock schedule shown until trips carry real departure data.
 const MOCK_DEPARTURE = "2024-11-15";
@@ -100,6 +93,7 @@ export default function TripsListClient() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedWilaya, setSelectedWilaya] = useState("all");
+  /** Canonical trip type (lib/catalog-types.ts, same list as the website). */
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(initialPage);
   const [pageSize] = useState(10);
@@ -132,6 +126,7 @@ export default function TripsListClient() {
         status: currentStatus,
         vertical: "trip",
         wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+        tripType: selectedCategory !== "all" ? selectedCategory : undefined,
         search: searchQuery || undefined,
         page,
         pageSize,
@@ -145,12 +140,11 @@ export default function TripsListClient() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentStatus, selectedWilaya, searchQuery, page, pageSize, addToast, tCommon]);
+  }, [currentStatus, selectedWilaya, selectedCategory, searchQuery, page, pageSize, addToast, tCommon]);
 
-  // selectedCategory is not sent to the server yet; changing it still refreshes the list.
   useEffect(() => {
     fetchData();
-  }, [fetchData, selectedCategory]);
+  }, [fetchData]);
 
   const statusActions = useListingStatusActions(() => fetchData());
 
@@ -263,8 +257,8 @@ export default function TripsListClient() {
             >
               {row.title}
             </button>
-            <div className="text-xs text-primary-600 capitalize mt-0.5">
-              {row.propertyType || t("categoryFallback")}
+            <div className="text-xs text-primary-600 mt-0.5">
+              {tripTypeLabel(row.tripType, locale) || row.propertyType || t("categoryFallback")}
             </div>
           </div>
         </div>
@@ -390,6 +384,7 @@ export default function TripsListClient() {
                   status: currentStatus,
                   vertical: "trip",
                   wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+                  tripType: selectedCategory !== "all" ? selectedCategory : undefined,
                   search: searchQuery || undefined,
                 })
               }
@@ -452,12 +447,15 @@ export default function TripsListClient() {
             },
           },
           {
-            id: "category",
-            label: t("filters.category"),
+            id: "tripType",
+            label: t("filters.tripType"),
             value: selectedCategory,
             options: [
-              { value: "all", label: t("filters.allCategories") },
-              ...TRIP_CATEGORIES.map((c) => ({ value: c.value, label: t(`categoryOptions.${c.labelKey}`) })),
+              { value: "all", label: t("filters.allTripTypes") },
+              ...TRIP_TYPES.map((id) => ({
+                value: id,
+                label: t("filters.typeWithCount", { label: tripTypeLabel(id, locale), count: facets.tripType?.[id] ?? 0 }),
+              })),
             ],
             onChange: (val) => {
               setSelectedCategory(val);

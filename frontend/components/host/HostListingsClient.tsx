@@ -1,6 +1,7 @@
 "use client";
 
 import { isValidPriceDzd, PRICE_MAX_DZD, PRICE_MIN_DZD } from "@/lib/booking/config";
+import { EXPERIENCE_TYPES, experienceTypeLabel } from "@/lib/catalog-types";
 import React, { useState, useMemo, useId } from "react";
 import Image from "next/image";
 import { Link, useRouter } from "@/navigation";
@@ -29,6 +30,7 @@ import HostWalletWidget from "@/components/host/HostWalletWidget";
 import { formatDzd } from "@/lib/currency";
 import { formatNumber, formatRating as formatRatingValue } from "@/lib/i18n/date-locale";
 import { useActionError } from "@/hook/useActionError";
+import { canHostOffer } from "@/lib/catalog-types";
 import {
   Badge,
   Button,
@@ -88,6 +90,12 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
   const [listings, setListings] = useState<Listing[]>(initialListings);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [selectedVertical, setSelectedVertical] = useState<string>("all");
+  // The filter follows what this workspace publishes: agencies filter by experience type,
+  // solo hosts by home or vehicle, hotels and hostels have a single property (no filter).
+  const workspaceType = currentUser?.hostType ?? "individual";
+  const isAgencyWorkspace = workspaceType === "agency";
+  const isPropertyWorkspace = workspaceType === "hotel" || workspaceType === "hostel";
+  const listingLocale = useLocale();
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -125,13 +133,21 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
     : null;
   const categoryLabel = (category: string) =>
     LISTING_CATEGORIES.includes(category) ? t(`category.${category}`) : category;
+  /** Experiences show their canonical type ("Désert & bivouac"), everything else its category. */
+  const kindLabel = (listing: Listing) =>
+    (listing.category === "experience" && experienceTypeLabel(listing.experienceType, listingLocale)) ||
+    (listing.businessCategory === "hostel" && t("category.hostel")) ||
+    (listing.businessCategory === "hotel" && t("category.hotel")) ||
+    categoryLabel(listing.category);
   const kindOf = (listing: Listing) => (listing.businessCategory === "hostel" ? "hostel" : "other");
   const unitLabel = (listing: Listing) => t(`unit.${priceUnit(listing)}`);
 
   // Filter listings
   const filteredListings = useMemo(() => {
     return listings.filter((l) => {
-      if (selectedVertical !== "all" && l.category !== selectedVertical) return false;
+      if (selectedVertical !== "all") {
+        if (isAgencyWorkspace ? l.experienceType !== selectedVertical : l.category !== selectedVertical) return false;
+      }
       if (selectedStatus !== "all" && l.status !== selectedStatus) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -145,7 +161,7 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
       }
       return true;
     });
-  }, [listings, selectedVertical, selectedStatus, searchQuery]);
+  }, [listings, selectedVertical, selectedStatus, searchQuery, isAgencyWorkspace]);
 
   // Toggle active status
   const handleToggleStatus = async (listing: Listing) => {
@@ -250,6 +266,11 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
 
   // Stats
   const isIndividual = currentUser?.hostType === "individual";
+  // What this workspace may create (lib/catalog-types.ts HOST_ALLOWED_OFFERS).
+  const isAgency = canHostOffer(currentUser?.hostType, "trip");
+  const createHref = isAgency ? "/host/listings/new?offer=experience" : "/host/listings/new";
+  const createLabel = isAgency ? t("createExperience") : isIndividual ? t("addListing") : t("addProperty");
+  const hasNoListings = listings.length === 0;
   const activeCount = listings.filter((l) => l.status === "active").length;
   const draftCount = listings.filter((l) => l.status !== "active").length;
 
@@ -334,14 +355,14 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
       <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <h1 className="enter-lift text-balance font-serif text-display-md text-primary-900">
-            {isIndividual ? t("titleIndividual") : t("titleAgency")}
+            {isIndividual ? t("titleIndividual") : isAgency ? t("titleAgency") : t("titleProperty")}
           </h1>
           <p className="enter-up mt-2 max-w-2xl text-pretty text-body text-primary-600" style={{ animationDelay: "60ms" }}>
-            {isIndividual ? t("subtitleIndividual") : t("subtitleAgency")}
+            {isIndividual ? t("subtitleIndividual") : isAgency ? t("subtitleAgency") : t("subtitleProperty")}
           </p>
         </div>
         <div className="enter-up flex flex-wrap items-center gap-2" style={{ animationDelay: "120ms" }}>
-          {currentUser?.hostType === "agency" && (
+          {isAgency && (
             <Button
               href="/host/agency/trips/new"
               variant="tertiary"
@@ -350,8 +371,8 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
               {t("addTrip")}
             </Button>
           )}
-          <Button href="/become-a-host/1" leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}>
-            {isIndividual ? t("addListing") : t("createListing")}
+          <Button href={createHref} leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}>
+            {createLabel}
           </Button>
         </div>
       </header>
@@ -392,27 +413,35 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
           />
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <Select
-            label={t("filters.categoryLabel")}
-            hideLabel
-            value={selectedVertical}
-            onChange={(e) => setSelectedVertical(e.target.value)}
-            aria-controls={resultsId}
-            containerClassName="!w-[calc(50%-0.25rem)] sm:!w-48"
-            options={[
-              { value: "all", label: t("filters.allCategories") },
-              { value: "home", label: t("filters.home") },
-              { value: "experience", label: t("filters.experience") },
-              { value: "vehicle", label: t("filters.vehicle") },
-            ]}
-          />
+          {!isPropertyWorkspace && (
+            <Select
+              label={isAgencyWorkspace ? t("filters.typeLabel") : t("filters.categoryLabel")}
+              hideLabel
+              value={selectedVertical}
+              onChange={(e) => setSelectedVertical(e.target.value)}
+              aria-controls={resultsId}
+              containerClassName="!w-full sm:!w-60"
+              options={
+                isAgencyWorkspace
+                  ? [
+                      { value: "all", label: t("filters.allTypes") },
+                      ...EXPERIENCE_TYPES.map((id) => ({ value: id, label: experienceTypeLabel(id, listingLocale) })),
+                    ]
+                  : [
+                      { value: "all", label: t("filters.allCategories") },
+                      { value: "home", label: t("filters.home") },
+                      { value: "vehicle", label: t("filters.vehicle") },
+                    ]
+              }
+            />
+          )}
           <Select
             label={t("filters.statusLabel")}
             hideLabel
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             aria-controls={resultsId}
-            containerClassName="!w-[calc(50%-0.25rem)] sm:!w-48"
+            containerClassName="!w-full sm:!w-52"
             options={[
               { value: "all", label: t("filters.allStatuses") },
               { value: "active", label: t("filters.activeOnly") },
@@ -435,12 +464,31 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
       <div id={resultsId} aria-live="polite">
         {filteredListings.length === 0 ? (
           <Card padding="lg">
-            <KitEmptyState
-              variant="search"
-              title={t("emptyTitle")}
-              description={t("emptyText")}
-              action={<Button href="/become-a-host/1">{t("createListing")}</Button>}
-            />
+            {hasNoListings ? (
+              <KitEmptyState
+                title={t("firstListingTitle")}
+                description={isAgency ? t("firstListingTextAgency") : isIndividual ? t("firstListingText") : t("firstListingTextProperty")}
+                action={
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button href={createHref} leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}>
+                      {isAgency ? t("createFirstExperience") : isIndividual ? t("createFirstListing") : t("addProperty")}
+                    </Button>
+                    {isAgency && (
+                      <Button href="/host/agency/trips/new" variant="tertiary">
+                        {t("addTrip")}
+                      </Button>
+                    )}
+                  </div>
+                }
+              />
+            ) : (
+              <KitEmptyState
+                variant="search"
+                title={t("emptyTitle")}
+                description={t("emptyText")}
+                action={<Button href={createHref}>{createLabel}</Button>}
+              />
+            )}
           </Card>
         ) : viewMode === "grid" ? (
           <ul className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -484,7 +532,7 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
                       {ratingNode(listing)}
                     </div>
                     <p className="mt-0.5 truncate text-meta text-primary-500">
-                      {categoryLabel(listing.category)} · {t("location", { city: listing.city, country: listing.country })}
+                      {kindLabel(listing)} · {t("location", { city: listing.city, country: listing.country })}
                     </p>
                     {roomTypeCount > 0 && (
                       <p className="mt-1 flex items-center gap-1.5 text-meta text-primary-600">
@@ -568,7 +616,7 @@ export default function HostListingsClient({ initialListings, currentUser }: Hos
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-primary-700">{categoryLabel(listing.category)}</td>
+                        <td className="px-4 py-3 text-primary-700">{kindLabel(listing)}</td>
                         <td className="px-4 py-3">
                           <button
                             type="button"

@@ -34,7 +34,7 @@
     "bedrooms": "غرف النوم",
     "any": "الكل",
     "atLeast": "{count}+",
-    "tripType": "مدة الرحلة",
+    "tripType": "نوع الرحلة",
     "duration": {
       "1-3": "من 1 إلى 3 أيام",
       "4-7": "من 4 إلى 7 أيام",
@@ -45,7 +45,7 @@
     "optionCount": "{count, plural, zero {لا نتائج} one {نتيجة واحدة} two {نتيجتان} few {# نتائج} many {# نتيجة} other {# نتيجة}}",
     "category": "الفئة",
     "wilaya": "الولاية",
-    "searchWilaya": "ابحث عن ولاية أو رقمها",
+    "searchWilaya": "اسم الولاية أو رقمها",
     "noWilaya": "لا توجد ولاية مطابقة",
     "seeAllWilayas": "عرض الولايات الـ{count}",
     "commune": "البلدية",
@@ -92,6 +92,12 @@
       "organization": "فنادق ووكالات ومحترفون"
     },
     "activeFilters": "عوامل التصفية النشطة",
-    "remove": "إزالة عامل التصفية: {label}"
-  }
+    "remove": "إزالة عامل التصفية: {label}",
+    "tripLength": "مدة الرحلة",
+    "allExperiences": "كل التجارب",
+    "allTrips": "كل الرحلات",
+    "resetSection": "إعادة ضبط {section}"
+  },
+  "showResults": "{count, plural, =0 {لا توجد نتائج} one {عرض نتيجة واحدة} two {عرض نتيجتين} few {عرض # نتائج} many {عرض # نتيجة} other {عرض # نتيجة}}",
+  "priceRangePerPersonSubtitle": "السعر للشخص الواحد للتجارب والرحلات"
 }

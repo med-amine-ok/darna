@@ -141,5 +141,8 @@
   },
   "eyebrow": "Reservations",
   "reference": "Ref. {code}",
-  "requestHeading": "Booking request, reply before it expires"
+  "requestHeading": "Booking request, reply before it expires",
+  "noListingsTitle": "No bookings yet",
+  "noListingsText": "Bookings appear here once you publish a listing. Create your first listing to get started.",
+  "createFirstListing": "Create your first listing"
 }

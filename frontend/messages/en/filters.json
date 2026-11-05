@@ -34,7 +34,7 @@
     "bedrooms": "Bedrooms",
     "any": "Any",
     "atLeast": "{count}+",
-    "tripType": "Trip length",
+    "tripType": "Trip type",
     "duration": {
       "1-3": "1 to 3 days",
       "4-7": "4 to 7 days",
@@ -45,7 +45,7 @@
     "optionCount": "{count, plural, one {# result} other {# results}}",
     "category": "Category",
     "wilaya": "Wilaya",
-    "searchWilaya": "Search a wilaya or its number",
+    "searchWilaya": "Wilaya name or number",
     "noWilaya": "No wilaya matches",
     "seeAllWilayas": "See all {count} wilayas",
     "commune": "Commune",
@@ -92,6 +92,12 @@
       "organization": "Hotels, agencies and pros"
     },
     "activeFilters": "Active filters",
-    "remove": "Remove filter: {label}"
-  }
+    "remove": "Remove filter: {label}",
+    "tripLength": "Trip length",
+    "allExperiences": "All experiences",
+    "allTrips": "All trips",
+    "resetSection": "Reset {section}"
+  },
+  "showResults": "{count, plural, =0 {No results} one {Show # result} other {Show # results}}",
+  "priceRangePerPersonSubtitle": "Price per person for experiences and trips"
 }

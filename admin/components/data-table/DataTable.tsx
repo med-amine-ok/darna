@@ -160,8 +160,9 @@ export function DataTable<T>({
                   } ${onRowClick ? "cursor-pointer" : ""}`}
                 >
                   {/* Card Header: Primary Content + Status + Selection */}
-                  <div className="flex items-start justify-between gap-2.5 pb-2.5 border-b border-primary/[0.06]">
-                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2.5 pb-2.5 border-b border-primary/[0.06]">
+                    {/* basis keeps the title readable: a long status pill wraps below instead of squeezing it */}
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1 basis-[13rem]">
                       {isSelectable && (
                         <div
                           className="pt-0.5 shrink-0"
@@ -350,7 +351,7 @@ export function DataTable<T>({
                         onRowClick ? "cursor-pointer" : ""
                       } ${
                         isSelected
-                          ? "bg-secondary-50 hover:bg-secondary-100/70 [&>td:first-child]:shadow-[inset_3px_0_0_#6B7F5B] rtl:[&>td:first-child]:shadow-[inset_-3px_0_0_#6B7F5B]"
+                          ? "bg-secondary-50 hover:bg-secondary-100/70 [&>td:first-child]:shadow-[inset_3px_0_0_#0E6FAD] rtl:[&>td:first-child]:shadow-[inset_-3px_0_0_#0E6FAD]"
                           : "hover:bg-darnaBg-100 active:bg-darnaBg-200"
                       }`}
                     >

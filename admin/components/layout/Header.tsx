@@ -138,6 +138,16 @@ export const Header: React.FC<HeaderProps> = ({
   const menuItemClass =
     "w-full flex items-center gap-2.5 px-3 py-2 min-h-[40px] rounded-xl text-xs font-medium text-primary-800 hover:bg-primary/[0.05] transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600";
 
+  // Phones: the search box is narrow, so its placeholder is a single word.
+  const [isNarrow, setIsNarrow] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   return (
     <header className="sticky top-0 z-30 glass border-b border-primary/[0.07] px-3.5 sm:px-6 h-16 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0">
       {/* Start: Mobile Toggle & Search Field */}
@@ -163,9 +173,9 @@ export const Header: React.FC<HeaderProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={tHeader(`searchPlaceholders.${placeholderKey}`)}
+              placeholder={isNarrow ? tHeader("searchShort") : tHeader(`searchPlaceholders.${placeholderKey}`)}
               aria-label={tHeader("searchLabel")}
-              className="w-full h-10 ps-10 pe-10 sm:pe-16 rounded-xl bg-white/80 hover:bg-white shadow-e1 border-0 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/[0.08] text-base sm:text-sm text-primary-900 placeholder:text-primary-500 transition duration-fast ease-standard truncate"
+              className="w-full h-10 ps-10 pe-3 sm:pe-16 rounded-xl bg-white/80 hover:bg-white shadow-e1 border-0 focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/[0.08] text-base sm:text-sm text-primary-900 placeholder:text-primary-500 transition duration-fast ease-standard truncate"
             />
             <button
               type="button"

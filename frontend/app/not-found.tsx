@@ -2,8 +2,8 @@ import Link from "next/link";
 
 // Only reached for paths outside a locale prefix; localized 404s live in app/[locale]/not-found.tsx.
 // No providers or stylesheet here, so the copy is static and trilingual with inline palette styles.
-const ink = "#2E3A2F";
-const muted = "#455243";
+const ink = "#152C52";
+const muted = "#2A4C85";
 
 const linkStyle = {
   display: "inline-flex",
@@ -32,13 +32,13 @@ export default function RootNotFound() {
           padding: 24,
           textAlign: "center",
           fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
-          background: "#F8F6EE",
+          background: "#FFFFFF",
           color: ink,
         }}
       >
         <svg width="72" height="88" viewBox="0 0 72 88" fill="none" aria-hidden="true" style={{ marginBottom: 20 }}>
           <path d="M6 86V40C6 21 19 6 36 6s30 15 30 34v46" stroke={ink} strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M18 86V44c0-11 8-20 18-20s18 9 18 20v42" stroke="#B65634" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M18 86V44c0-11 8-20 18-20s18 9 18 20v42" stroke="#0B57D0" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
         <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 400, fontSize: 32, margin: "0 0 10px" }}>
           404: Page not found

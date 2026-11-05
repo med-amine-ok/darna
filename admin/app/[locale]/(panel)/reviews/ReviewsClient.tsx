@@ -233,7 +233,7 @@ export default function ReviewsClient({
 
       {/* Filters Bar */}
       <div className="bg-white p-3.5 rounded-2xl shadow-e1 space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[minmax(16rem,2fr)_repeat(3,minmax(11rem,1fr))] gap-3">
           <div className="relative">
             <label htmlFor="reviews-search" className="sr-only">{t("filters.search")}</label>
             <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-neutral-500" aria-hidden="true" />

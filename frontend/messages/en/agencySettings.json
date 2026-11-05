@@ -48,5 +48,6 @@
     "nameMismatch": "Type the exact organization name to confirm.",
     "deactivated": "Agency workspace deactivated.",
     "deleteFailed": "Couldn't deactivate the agency."
-  }
+  },
+  "titleByType": "{type, select, hotel {Hotel settings} hostel {Hostel settings} other {Agency settings}}"
 }

@@ -32,6 +32,7 @@ import {
   Button,
   Card,
   Chip,
+  FieldMessages,
   IconButton,
   Input,
   ProgressBar,
@@ -44,6 +45,7 @@ import {
 import { dur, ease } from "@/lib/motion";
 import { imagery } from "@/lib/imagery";
 import { useActionError } from "@/hook/useActionError";
+import { TRIP_TYPES, isTripType, tripTypeLabel, type TripTypeId } from "@/lib/catalog-types";
 
 interface TripCreationClientProps {
   currentUser?: User | null;
@@ -51,7 +53,7 @@ interface TripCreationClientProps {
 }
 
 type CancellationPolicy = "flexible" | "moderate" | "strict";
-type FieldError = "title" | "groupSize" | "price";
+type FieldError = "title" | "tripType" | "groupSize" | "price";
 
 const TOTAL_STEPS = 5;
 const POLICIES: CancellationPolicy[] = ["flexible", "moderate", "strict"];
@@ -89,6 +91,8 @@ export default function TripCreationClient({ organization }: TripCreationClientP
 
   // Step 1: Basics
   const [title, setTitle] = useState("");
+  // Required, one of the canonical TRIP_TYPES (lib/catalog-types.ts); validated again on the server.
+  const [tripType, setTripType] = useState<TripTypeId | "">("");
   const [city, setCity] = useState("Djanet");
   const [locationValue, setLocationValue] = useState("Djanet, Illizi");
   const [description, setDescription] = useState("");
@@ -225,6 +229,7 @@ export default function TripCreationClient({ organization }: TripCreationClientP
   const validate = (): boolean => {
     const next: Partial<Record<FieldError, string>> = {};
     if (!title.trim()) next.title = t("create.errors.titleRequired");
+    if (!isTripType(tripType)) next.tripType = t("create.errors.tripTypeRequired");
     if (!(minGroupSize >= 1) || minGroupSize > maxGroupSize) {
       next.groupSize = t("create.errors.groupSize");
     }
@@ -235,7 +240,7 @@ export default function TripCreationClient({ organization }: TripCreationClientP
       });
     }
     setErrors(next);
-    if (next.title) {
+    if (next.title || next.tripType) {
       setCurrentStep(1);
       return false;
     }
@@ -255,6 +260,7 @@ export default function TripCreationClient({ organization }: TripCreationClientP
       // The organization is taken from the session on the server.
       const result = await createTripAction({
         title,
+        tripType,
         description,
         coverPhoto,
         gallery,
@@ -291,6 +297,7 @@ export default function TripCreationClient({ organization }: TripCreationClientP
   const errorEntries = (Object.keys(errors) as FieldError[]).filter((k) => errors[k]);
   const errorTarget: Record<FieldError, { id: string; step: number }> = {
     title: { id: fid("title"), step: 1 },
+    tripType: { id: fid("trip-type-0"), step: 1 },
     groupSize: { id: fid("min-group"), step: 3 },
     price: { id: fid("price"), step: 3 },
   };
@@ -548,6 +555,60 @@ export default function TripCreationClient({ organization }: TripCreationClientP
                           clearError("title");
                         }}
                       />
+                      <fieldset
+                        aria-invalid={errors.tripType ? true : undefined}
+                        aria-describedby={errors.tripType ? fid("trip-type-error") : fid("trip-type-helper")}
+                      >
+                        <legend className="mb-1 text-sm font-semibold text-primary-900">{t("create.basics.tripType")}</legend>
+                        <div role="radiogroup" aria-required="true" aria-label={t("create.basics.tripType")} className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                          {TRIP_TYPES.map((id, i) => {
+                            const selected = tripType === id;
+                            return (
+                              <label
+                                key={id}
+                                className={cn(
+                                  "flex min-h-[3.25rem] cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold ring-1 transition-[background-color,box-shadow,color] duration-fast ease-standard",
+                                  "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent-600",
+                                  selected
+                                    ? "bg-primary-800 text-white ring-primary-800"
+                                    : errors.tripType
+                                      ? "bg-white text-primary-800 ring-accent-700 hover:bg-neutral-50"
+                                      : "bg-white text-primary-800 ring-neutral-300 hover:ring-primary-800"
+                                )}
+                              >
+                                <input
+                                  id={fid(`trip-type-${i}`)}
+                                  type="radio"
+                                  name={fid("trip-type")}
+                                  value={id}
+                                  checked={selected}
+                                  onChange={() => {
+                                    setTripType(id);
+                                    clearError("tripType");
+                                  }}
+                                  className="sr-only"
+                                />
+                                <span
+                                  aria-hidden="true"
+                                  className={cn(
+                                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.5px]",
+                                    selected ? "border-white bg-white" : "border-neutral-500 bg-white"
+                                  )}
+                                >
+                                  {selected && <span className="h-2 w-2 rounded-full bg-primary-800" />}
+                                </span>
+                                <span className="min-w-0 leading-snug">{tripTypeLabel(id, locale)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <FieldMessages
+                          helperId={fid("trip-type-helper")}
+                          errorId={fid("trip-type-error")}
+                          helper={t("create.basics.tripTypeHint")}
+                          error={errors.tripType}
+                        />
+                      </fieldset>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Input
                           id={fid("city")}
@@ -888,6 +949,7 @@ export default function TripCreationClient({ organization }: TripCreationClientP
                         </div>
                         <dl className="grid grid-cols-2 gap-4 border-y border-primary/[0.08] py-4">
                           {[
+                            [t("create.review.tripType"), tripTypeLabel(tripType, locale) || "-"],
                             [t("create.review.groupSize"), t("create.review.groupRange", { min: minGroupSize, max: maxGroupSize })],
                             [t("create.review.rate"), t("create.review.ratePerPerson", { price: formatDzd(pricePerPerson, locale) })],
                             [t("create.review.itinerary"), t("create.review.daysPlanned", { count: itinerary.length })],

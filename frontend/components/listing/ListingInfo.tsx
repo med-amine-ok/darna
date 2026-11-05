@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { formatRating } from "@/lib/i18n/date-locale";
 import { summarizeReviews, type ReviewCategory } from "@/lib/reviews";
 import { Listing, User, PublicUser, Review } from "@/types";
+import { experienceTypeLabel } from "@/lib/catalog-types";
 import Avatar from "@/components/Avatar";
 import { Button, Dialog } from "@/components/ui";
 import { GuestFavoriteIcon, BrandShieldIcon, BrandBedIcon, BrandPinIcon } from "@/components/icons";
@@ -149,6 +150,7 @@ export default function ListingInfo({
         ]
       : isExperience
         ? [
+            experienceTypeLabel(listing.experienceType, locale) || null,
             listing.durationHours
               ? t("hoursCount", { count: listing.durationHours })
               : null,

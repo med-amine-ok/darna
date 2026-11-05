@@ -4,28 +4,42 @@ import React, { useState, useCallback, useEffect, useId, useMemo } from "react";
 import { useRouter } from "@/navigation";
 import { useSearchParams } from "next/navigation";
 import qs from "query-string";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useFilterModal } from "@/hook/useFilterModal";
 import Counter from "@/components/inputs/Counter";
 import { Accordion, Button, Chip, Dialog, Input, Sheet, IconButton, cn, useIsPhone, useIsRtl } from "@/components/ui";
-import { useSearchFacets, matchesFilters, parseSideFilters } from "@/components/search/searchFacets";
+import { useSearchFacets, matchesFilters, matchesListing, matchesTrip, parseSideFilters } from "@/components/search/searchFacets";
+import { EXPERIENCE_TYPES, TRIP_TYPES, experienceTypeLabel, tripTypeLabel } from "@/lib/catalog-types";
 import { BrandCloseIcon, BrandWifiIcon, BrandKitchenIcon, BrandWaterIcon, BrandAcIcon, BrandSunIcon, BrandFlameIcon, CategoryRiadIcon } from "@/components/icons";
 
 import PriceRange, { priceStats } from "@/components/search/PriceRange";
 
 /**
- * Filters: kit Sheet on phones (bottom sheet), kit Dialog from `sm` up. Accordion sections,
- * dual-handle price slider with a histogram of the current search, chip pickers, and a
- * sticky footer with "Clear all" + "Show N stays" (N estimated client-side when the search
- * page has published its listings).
+ * Filters for phones and tablets (the desktop sidebar is SearchFilterSidebar): kit Sheet on
+ * phones, kit Dialog from `sm` up. The sections follow the category in the URL:
+ * stays (price, type, amenities, rooms), experiences (price + canonical experience types),
+ * trips (price + canonical trip types), vehicles (price). Types come from lib/catalog-types,
+ * counts and "Show N" use the same matchers as the sidebar.
  */
 export default function FilterModal() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isOpen = useFilterModal((s) => s.isOpen);
   const closeFilterModal = useFilterModal((s) => s.onClose);
-  const pool = useSearchFacets((s) => s.pool);
+  const allPool = useSearchFacets((s) => s.pool);
+  const tripPool = useSearchFacets((s) => s.tripPool);
   const isPhone = useIsPhone();
+  const locale = useLocale();
+  const vertical = searchParams?.get("vertical") || "";
+  const isTrips = vertical === "trip";
+  const isExperiences = vertical === "experience";
+  const isVehicles = vertical === "vehicle";
+  const isStays = !isTrips && !isExperiences && !isVehicles;
+  // Price stats and counts come from the results of the current category.
+  const pool = useMemo(
+    () => (vertical && !isTrips ? allPool.filter((f) => f.vertical === vertical) : allPool),
+    [allPool, vertical, isTrips]
+  );
   const tCommon = useTranslations("common");
   const t = useTranslations("filters");
   const tAmenities = useTranslations("amenities");
@@ -37,6 +51,8 @@ export default function FilterModal() {
   const [bathroomCount, setBathroomCount] = useState<number>(1);
   const [selectedPropertyType, setSelectedPropertyType] = useState<string>("any");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [expTypes, setExpTypes] = useState<string[]>([]);
+  const [tripTypes, setTripTypes] = useState<string[]>([]);
 
   // Re-sync with the URL each time the modal opens.
   useEffect(() => {
@@ -47,6 +63,8 @@ export default function FilterModal() {
     setBathroomCount(searchParams?.get("bathroomCount") ? parseInt(searchParams.get("bathroomCount")!, 10) : 1);
     setSelectedPropertyType(searchParams?.get("propertyType") || "any");
     setSelectedAmenities(searchParams?.get("amenities") ? searchParams.get("amenities")!.split(",") : []);
+    setExpTypes(searchParams?.get("expType") ? searchParams.get("expType")!.split(",") : []);
+    setTripTypes(searchParams?.get("tripType") ? searchParams.get("tripType")!.split(",") : []);
   }, [isOpen, searchParams]);
 
   // `id` is the value sent in the URL; the label is translated.
@@ -73,7 +91,10 @@ export default function FilterModal() {
   ];
 
   // Slider bounds + histogram from the published pool.
-  const { floor, ceil, histogram } = useMemo(() => priceStats(pool.map((f) => f.price)), [pool]);
+  const { floor, ceil, histogram } = useMemo(
+    () => priceStats((isTrips ? tripPool : pool).map((f) => f.price)),
+    [isTrips, tripPool, pool]
+  );
 
   const low = Math.min(Math.max(Number(minPrice) || floor, floor), ceil);
   const high = Math.max(Math.min(Number(maxPrice) || ceil, ceil), floor);
@@ -81,7 +102,25 @@ export default function FilterModal() {
   // Sidebar-only filters (destinations, rating) stay applied while the modal edits the rest.
   const base = useMemo(() => parseSideFilters((k) => searchParams?.get(k)), [searchParams]);
 
+  // Filters as they would be after "Show", for the experience and trip counts.
+  const pending = useMemo(
+    () => ({
+      ...base,
+      minPrice: Number(minPrice) || undefined,
+      maxPrice: Number(maxPrice) || undefined,
+      expTypes,
+      tripTypes,
+    }),
+    [base, minPrice, maxPrice, expTypes, tripTypes]
+  );
+  const expCount = (id: string) =>
+    pool.filter((f) => f.expType === id && matchesListing(f, pending, "expTypes")).length;
+  const tripCount = (id: string) =>
+    tripPool.filter((f) => f.tripType === id && matchesTrip(f, pending, "tripTypes")).length;
+
   const estimate = useMemo(() => {
+    if (isTrips) return tripPool.length ? tripPool.filter((f) => matchesTrip(f, pending)).length : null;
+    if (isExperiences || isVehicles) return pool.length ? pool.filter((f) => matchesListing(f, pending)).length : null;
     if (pool.length === 0) return null;
     return pool.filter((f) =>
       matchesFilters(f, {
@@ -93,7 +132,7 @@ export default function FilterModal() {
         minBathrooms: bathroomCount,
       }, base)
     ).length;
-  }, [pool, minPrice, maxPrice, selectedPropertyType, selectedAmenities, roomCount, bathroomCount, base]);
+  }, [isTrips, isExperiences, isVehicles, tripPool, pending, pool, minPrice, maxPrice, selectedPropertyType, selectedAmenities, roomCount, bathroomCount, base]);
 
   const toggleAmenity = (item: string) =>
     setSelectedAmenities((prev) => (prev.includes(item) ? prev.filter((a) => a !== item) : [...prev, item]));
@@ -105,7 +144,11 @@ export default function FilterModal() {
     setBathroomCount(1);
     setSelectedPropertyType("any");
     setSelectedAmenities([]);
+    setExpTypes([]);
+    setTripTypes([]);
   };
+  const toggleIn = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (id: string) =>
+    setter((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
 
   const onSubmit = useCallback(() => {
     const updatedQuery: qs.StringifiableRecord = { ...(searchParams ? qs.parse(searchParams.toString()) : {}) };
@@ -120,18 +163,57 @@ export default function FilterModal() {
     else delete updatedQuery.bathroomCount;
     if (selectedPropertyType && selectedPropertyType !== "any") updatedQuery.propertyType = selectedPropertyType;
     else delete updatedQuery.propertyType;
-    if (selectedAmenities.length > 0) updatedQuery.amenities = selectedAmenities.join(",");
+    if (isStays && selectedAmenities.length > 0) updatedQuery.amenities = selectedAmenities.join(",");
     else delete updatedQuery.amenities;
+    if (!isStays) {
+      delete updatedQuery.propertyType;
+      delete updatedQuery.roomCount;
+      delete updatedQuery.bathroomCount;
+    }
+    if (isExperiences && expTypes.length) updatedQuery.expType = expTypes.join(",");
+    else delete updatedQuery.expType;
+    if (isTrips && tripTypes.length) updatedQuery.tripType = tripTypes.join(",");
+    else delete updatedQuery.tripType;
 
     closeFilterModal();
     router.push(qs.stringifyUrl({ url: "/search", query: updatedQuery }, { skipNull: true }), { scroll: false });
-  }, [searchParams, minPrice, maxPrice, roomCount, bathroomCount, selectedPropertyType, selectedAmenities, closeFilterModal, router]);
+  }, [searchParams, minPrice, maxPrice, roomCount, bathroomCount, selectedPropertyType, selectedAmenities, isStays, isExperiences, isTrips, expTypes, tripTypes, closeFilterModal, router]);
 
-  const sections = [
+  const typeChips = (
+    ids: readonly string[],
+    selected: string[],
+    onToggle: (id: string) => void,
+    labelOf: (id: string, locale: string) => string,
+    countOf: (id: string) => number
+  ) => (
+    <div className="flex flex-wrap gap-2 pb-5">
+      {ids.map((id) => (
+        <Chip key={id} selected={selected.includes(id)} onSelectedChange={() => onToggle(id)}>
+          {labelOf(id, locale)}
+          <span className="ms-1.5 tabular-nums opacity-80">{countOf(id)}</span>
+        </Chip>
+      ))}
+    </div>
+  );
+
+  const allSections = [
+    {
+      id: "expTypes",
+      title: t("sidebar.experienceType"),
+      show: isExperiences,
+      content: typeChips(EXPERIENCE_TYPES, expTypes, toggleIn(setExpTypes), experienceTypeLabel, expCount),
+    },
+    {
+      id: "tripTypes",
+      title: t("sidebar.tripType"),
+      show: isTrips,
+      content: typeChips(TRIP_TYPES, tripTypes, toggleIn(setTripTypes), tripTypeLabel, tripCount),
+    },
     {
       id: "price",
+      show: true,
       title: t("priceRange"),
-      subtitle: t("priceRangeSubtitle"),
+      subtitle: isExperiences || isTrips ? t("priceRangePerPersonSubtitle") : t("priceRangeSubtitle"),
       content: (
         <div className="space-y-5 pb-5">
           <PriceRange
@@ -174,6 +256,7 @@ export default function FilterModal() {
     },
     {
       id: "type",
+      show: isStays,
       title: t("propertyType"),
       content: (
         <div className="flex flex-wrap gap-2 pb-5">
@@ -187,6 +270,7 @@ export default function FilterModal() {
     },
     {
       id: "amenities",
+      show: isStays,
       title: t("amenities"),
       content: (
         <div className="flex flex-wrap gap-2 pb-5">
@@ -200,6 +284,7 @@ export default function FilterModal() {
     },
     {
       id: "rooms",
+      show: isStays,
       title: t("roomsAndBeds"),
       content: (
         <div className="space-y-5 pb-5">
@@ -210,7 +295,15 @@ export default function FilterModal() {
     },
   ];
 
-  const body = <Accordion type="multiple" appearance="plain" defaultOpen={["price", "type", "amenities"]} items={sections} />;
+  const sections = allSections.filter((s) => s.show).map(({ show: _show, ...s }) => s);
+  const body = (
+    <Accordion
+      type="multiple"
+      appearance="plain"
+      defaultOpen={["expTypes", "tripTypes", "price", "type", "amenities"]}
+      items={sections}
+    />
+  );
 
   const footer = (
     <div className="flex items-center justify-between gap-3">
@@ -218,7 +311,11 @@ export default function FilterModal() {
         {tCommon("clearAll")}
       </Button>
       <Button variant="secondary" size="lg" onClick={onSubmit} className="min-w-[10rem]">
-        {estimate === null ? tCommon("showListings") : t("showStays", { count: estimate })}
+        {estimate === null
+          ? tCommon("showListings")
+          : isStays
+            ? t("showStays", { count: estimate })
+            : t("showResults", { count: estimate })}
       </Button>
     </div>
   );

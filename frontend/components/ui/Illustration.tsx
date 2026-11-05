@@ -22,11 +22,11 @@ export type IllustrationVariant =
   | "error"
   | "success";
 
-const INK = "#2E3A2F";
-const OLIVE = "#6B7F5B";
-const TERRACOTTA = "#C96F4F";
-const SAND = "#F4EFE7";
-const SAND_DEEP = "#E9DFD0";
+const INK = "#152C52";
+const OLIVE = "#0E6FAD";
+const TERRACOTTA = "#0B57D0";
+const SAND = "#F1F5F9";
+const SAND_DEEP = "#E4EAF2";
 
 // The logo arch (public/brand/arch-mask.svg, 100×125) scaled into a 160×140 canvas.
 const ARCH =

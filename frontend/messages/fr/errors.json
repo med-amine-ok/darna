@@ -60,6 +60,7 @@
     "ROOM_TYPE_DATE_PRICES_UNSUPPORTED": "Les prix par date ne sont pas encore disponibles pour les types de chambres d'hôtel et d'auberge.",
     "MAX_NIGHTS_BELOW_MIN": "Le nombre maximum de nuits doit être supérieur ou égal au minimum.",
     "HOST_DETAILS_MISSING": "Veuillez indiquer la raison sociale, le numéro de registre du commerce (RC), le téléphone et l'adresse.",
+    "HOST_OFFER_NOT_ALLOWED": "Votre compte hôte ne peut pas publier ce type d'offre. Les particuliers publient des logements et des véhicules, les agences des expériences et des circuits, les hôtels et auberges leur établissement avec ses types de chambres.",
     "REGISTRATION_FAILED": "Impossible de finaliser votre inscription. Veuillez réessayer.",
     "MESSAGE_EMPTY": "Le message ne peut pas être vide.",
     "HOST_UNREACHABLE": "Impossible d'envoyer un message à cet hôte pour le moment.",
@@ -74,7 +75,9 @@
     "TRANSFER_TARGET_INACTIVE": "La propriété ne peut être transférée qu'à un membre actif.",
     "AGENCY_ONLY": "Seules les agences peuvent publier des circuits.",
     "GROUP_SIZE_RANGE": "La taille minimale du groupe ne peut pas dépasser la taille maximale.",
-    "TRIP_TITLE_REQUIRED": "Veuillez saisir le titre du circuit."
+    "TRIP_TITLE_REQUIRED": "Veuillez saisir le titre du circuit.",
+    "TRIP_TYPE_REQUIRED": "Veuillez choisir un type de voyage.",
+    "EXPERIENCE_TYPE_REQUIRED": "Veuillez choisir un type d'expérience."
   },
   "errorEyebrow": "Erreur inattendue",
   "errorReference": "Référence :",

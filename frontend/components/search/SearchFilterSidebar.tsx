@@ -4,7 +4,7 @@ import React, { useEffect, useId, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type qs from "query-string";
-import { Checkbox, Radio, cn } from "@/components/ui";
+import { Radio, cn } from "@/components/ui";
 import { formatNumber } from "@/lib/i18n/date-locale";
 import { COMMUNES, WILAYAS, communeLabel, findWilaya, wilayaLabel } from "@/lib/algeria";
 import {
@@ -19,6 +19,7 @@ import {
   PremiumStarIcon,
 } from "@/components/icons";
 import PriceRange, { STEP, priceStats } from "./PriceRange";
+import { EXPERIENCE_TYPES, TRIP_TYPES, experienceTypeLabel, tripTypeLabel } from "@/lib/catalog-types";
 import {
   AMENITY_GROUPS,
   DURATION_BUCKETS,
@@ -85,7 +86,9 @@ const CATEGORY_SCOPED: ParamGroup[] = [
   "fuels",
   "seats",
   "expLengths",
+  "expTypes",
   "languages",
+  "tripTypes",
   "durations",
   "months",
   "group",
@@ -95,39 +98,62 @@ const CATEGORY_SCOPED: ParamGroup[] = [
 
 /* ------------------------------------------------------------------ Building blocks */
 
-/** Collapsible section with a chevron header; shows how many of its options are active. */
+/**
+ * Collapsible section: a clear heading (toggles the section), the number of active
+ * options, and a per-section "Reset" link when something is selected.
+ */
 function Section({
   title,
   active = 0,
   defaultOpen = true,
+  onReset,
   children,
 }: {
   title: string;
   active?: number;
   defaultOpen?: boolean;
+  /** Clears this section only; the link shows when `active` > 0. */
+  onReset?: () => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("filters.sidebar");
   const [open, setOpen] = useState(defaultOpen || active > 0);
   const id = useId();
   return (
-    <section className="border-t border-primary/[0.08]">
-      <h3>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={id}
-          onClick={() => setOpen((v) => !v)}
-          className="flex w-full items-center gap-2 py-4 text-start text-body font-semibold text-primary-900 cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-        >
-          <span className="min-w-0 flex-1">{title}</span>
-          {active > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-800 px-1.5 text-[11px] font-bold tabular-nums text-white">
-              {active}
-            </span>
-          )}
-          <BrandChevronDownIcon size={16} className={cn("shrink-0 text-primary-500 transition-transform duration-fast ease-standard", open && "rotate-180")} />
-        </button>
-      </h3>
+    <section className="border-t border-neutral-200">
+      <div className="flex items-center gap-2">
+        <h3 className="min-w-0 flex-1">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={id}
+            onClick={() => setOpen((v) => !v)}
+            className="flex w-full items-center gap-2 py-4 text-start text-[15px] font-bold leading-snug text-primary-900 cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+          >
+            <span className="min-w-0 flex-1">{title}</span>
+            {active > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-800 px-1.5 text-[11px] font-bold tabular-nums text-white">
+                {active}
+              </span>
+            )}
+            <BrandChevronDownIcon
+              size={16}
+              aria-hidden="true"
+              className={cn("shrink-0 text-neutral-600 transition-transform duration-fast ease-standard", open && "rotate-180")}
+            />
+          </button>
+        </h3>
+        {onReset && active > 0 && (
+          <button
+            type="button"
+            onClick={onReset}
+            aria-label={t("resetSection", { section: title })}
+            className="shrink-0 rounded px-1 text-sm font-semibold text-accent-700 underline-offset-4 hover:underline cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+          >
+            {t("reset")}
+          </button>
+        )}
+      </div>
       <div id={id} className={cn("grid transition-[grid-template-rows] duration-base ease-standard", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
         <div className={cn("min-h-0 overflow-hidden", !open && "invisible")}>
           <div className="pb-5">{children}</div>
@@ -144,14 +170,51 @@ function OptionLabel({ label, sub, count }: { label: React.ReactNode; sub?: Reac
   return (
     <span className="flex w-full items-baseline justify-between gap-3">
       <span className="min-w-0">
-        <span className={cn("block truncate text-sm font-medium", count === 0 ? "text-primary-400" : "text-primary-800")}>{label}</span>
-        {sub && <span className="block truncate text-meta text-primary-500">{sub}</span>}
+        <span className={cn("block truncate text-sm font-medium", count === 0 ? "text-neutral-500" : "text-primary-800")}>{label}</span>
+        {sub && <span className="block truncate text-meta text-neutral-600">{sub}</span>}
       </span>
-      <span className="shrink-0 text-meta tabular-nums text-primary-500">
+      <span className="shrink-0 text-sm tabular-nums text-neutral-600">
         <span aria-hidden="true">{formatNumber(count, locale)}</span>
         <span className="sr-only">{t("optionCount", { count })}</span>
       </span>
     </span>
+  );
+}
+
+/**
+ * Square checkbox row: a real <input type="checkbox"> with an associated <label>, so the
+ * whole row is clickable and keyboard focus shows a ring on the box.
+ */
+function FilterCheck({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: React.ReactNode }) {
+  const id = useId();
+  return (
+    <div className="flex items-start gap-3 rounded-md px-1 py-1.5 transition-colors duration-fast hover:bg-neutral-50">
+      <span className="relative mt-px flex h-[18px] w-[18px] shrink-0">
+        <input
+          id={id}
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className={cn(
+            "peer absolute inset-0 m-0 h-[18px] w-[18px] cursor-pointer appearance-none rounded-[4px] border-[1.5px] border-neutral-500 bg-white",
+            "transition-[background-color,border-color] duration-fast ease-standard hover:border-primary-800",
+            "checked:border-primary-800 checked:bg-primary-800",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+          )}
+        />
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="pointer-events-none absolute inset-0 m-auto h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100"
+        >
+          <path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer">
+        {label}
+      </label>
+    </div>
   );
 }
 
@@ -162,9 +225,10 @@ function MoreToggle({ expanded, onToggle, moreLabel }: { expanded: boolean; onTo
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className="mt-2 text-sm font-semibold text-secondary-700 underline-offset-4 hover:underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+      className="mt-2 inline-flex items-center gap-1 px-1 text-sm font-semibold text-primary-800 underline-offset-4 hover:underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
     >
       {expanded ? t("seeLess") : moreLabel ?? t("seeMore")}
+      <BrandChevronDownIcon size={14} aria-hidden="true" className={cn("transition-transform duration-fast", expanded && "rotate-180")} />
     </button>
   );
 }
@@ -176,19 +240,25 @@ interface CheckItem {
   count: number;
 }
 
-/** Checkbox list; options without results are hidden unless selected (or `keepEmpty`). */
+/**
+ * Checkbox list; options without results are hidden unless selected (or `keepEmpty`).
+ * `allOption` adds a first "All ..." row that is ticked when nothing is selected and
+ * clears the group when clicked.
+ */
 function CheckList({
   items,
   selected,
   onToggle,
   limit = SHOWN,
   keepEmpty = false,
+  allOption,
 }: {
   items: CheckItem[];
   selected: string[];
   onToggle: (id: string) => void;
   limit?: number;
   keepEmpty?: boolean;
+  allOption?: { label: React.ReactNode; count: number; onSelect: () => void };
 }) {
   const [all, setAll] = useState(false);
   const visible = items.filter((i) => keepEmpty || i.count > 0 || selected.includes(i.id));
@@ -197,9 +267,24 @@ function CheckList({
   return (
     <>
       <ul className="space-y-0.5">
+        {allOption && (
+          <li>
+            <FilterCheck
+              checked={selected.length === 0}
+              onChange={() => {
+                if (selected.length > 0) allOption.onSelect();
+              }}
+              label={<OptionLabel label={<span className="font-semibold">{allOption.label}</span>} count={allOption.count} />}
+            />
+          </li>
+        )}
         {shown.map((i) => (
           <li key={i.id}>
-            <Checkbox checked={selected.includes(i.id)} onChange={() => onToggle(i.id)} label={<OptionLabel label={i.label} sub={i.sub} count={i.count} />} />
+            <FilterCheck
+              checked={selected.includes(i.id)}
+              onChange={() => onToggle(i.id)}
+              label={<OptionLabel label={i.label} sub={i.sub} count={i.count} />}
+            />
           </li>
         ))}
       </ul>
@@ -251,7 +336,7 @@ function MinPills({
 }
 
 function SubHeading({ children }: { children: React.ReactNode }) {
-  return <p className="mb-2 mt-4 text-eyebrow uppercase font-semibold text-primary-500 first:mt-0">{children}</p>;
+  return <p className="mb-2 mt-4 text-eyebrow uppercase font-semibold text-neutral-600 first:mt-0">{children}</p>;
 }
 
 /* ------------------------------------------------------------------ Sidebar */
@@ -264,6 +349,12 @@ interface SearchFilterSidebarProps {
   categoryCounts?: Record<string, number>;
   onUpdate: (params: qs.StringifiableRecord) => void;
   className?: string;
+  /**
+   * Facets of the current results, passed straight from the search page so counts are
+   * right on the first (server) render. Falls back to the shared facet store.
+   */
+  facets?: ListingFacet[];
+  tripFacets?: TripFacet[];
 }
 
 /**
@@ -271,18 +362,21 @@ interface SearchFilterSidebarProps {
  * while the next ones load); each option shows how many results it would give with the
  * other filters kept. Place filters use the official wilaya codes and communes. Sections
  * follow the category: stays (type, rooms, hotel class, amenities), vehicles (type, gearbox,
- * fuel, seats), experiences (type, length, languages), trips (length, month, group, agency).
+ * fuel, seats), experiences (canonical type, length, languages), trips (canonical type,
+ * length, month, group, agency). Experience and trip types come from lib/catalog-types.ts.
  * Phones and tablets keep the filter modal.
  */
-export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts, onUpdate, className }: SearchFilterSidebarProps) {
+export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts, onUpdate, className, facets, tripFacets }: SearchFilterSidebarProps) {
   const t = useTranslations("filters.sidebar");
   const tFilters = useTranslations("filters");
   const tAmenities = useTranslations("amenities");
   const tSearch = useTranslations("search");
   const locale = useLocale();
   const searchParams = useSearchParams();
-  const pool = useSearchFacets((s) => s.pool);
-  const tripPool = useSearchFacets((s) => s.tripPool);
+  const storePool = useSearchFacets((s) => s.pool);
+  const storeTripPool = useSearchFacets((s) => s.tripPool);
+  const pool = facets ?? storePool;
+  const tripPool = tripFacets ?? storeTripPool;
 
   const filters = useMemo(() => parseSideFilters((k) => searchParams?.get(k)), [searchParams]);
   const activeCount = countSideFilters(filters);
@@ -405,8 +499,10 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
   listChips("transmissions", filters.transmissions, (v) => t(`transmissionTypes.${v}`));
   listChips("fuels", filters.fuels, (v) => t(`fuelTypes.${v}`));
   if (filters.minSeats) chips.push({ key: "seats", label: t("seatsAtLeast", { count: filters.minSeats }), patch: { seats: undefined } });
+  listChips("expTypes", filters.expTypes, (v) => experienceTypeLabel(String(v), locale));
   listChips("expLengths", filters.expLengths, (v) => t(`expLength.${v}`));
   listChips("languages", filters.languages, (v) => languageName(String(v)));
+  listChips("tripTypes", filters.tripTypes, (v) => tripTypeLabel(String(v), locale));
   listChips("durations", filters.durations, (v) => t(`duration.${v}`));
   listChips("months", filters.months, (v) => monthName(Number(v)));
   if (filters.minGroup) chips.push({ key: "group", label: t("groupAtLeast", { count: filters.minGroup }), patch: { groupSize: undefined } });
@@ -422,6 +518,13 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
     onUpdate({ ...Object.fromEntries(Object.values(FILTER_PARAMS).map((k) => [k, undefined])), minPrice: undefined, maxPrice: undefined, selectedId: undefined });
   };
 
+  /** Per-section reset: clears the URL params of the given groups. */
+  const clear = (...groups: ParamGroup[]) => () => set(Object.fromEntries(groups.map((g) => [FILTER_PARAMS[g], undefined])));
+  const clearPrice = () => {
+    setDraft({ min: "", max: "" });
+    set({ minPrice: undefined, maxPrice: undefined });
+  };
+
   const changeCategory = (id: string) => {
     const scoped = Object.fromEntries(CATEGORY_SCOPED.map((g) => [FILTER_PARAMS[g], undefined]));
     setDraft({ min: "", max: "" });
@@ -433,9 +536,9 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
   const ratingBase: { rating: number }[] = isTrips ? T("rating") : L("rating");
 
   return (
-    <aside aria-label={t("label")} className={cn("rounded-3xl bg-white px-5 pb-3 shadow-e1 ring-1 ring-primary/[0.05]", className)}>
+    <aside aria-label={t("label")} className={cn("rounded-2xl bg-white px-5 pb-3 shadow-e1 ring-1 ring-neutral-200", className)}>
       {/* Header + active filters (sticky inside the scrolling sidebar) */}
-      <div className="sticky top-0 z-[1] -mx-5 rounded-t-3xl bg-white/95 px-5 pb-3 pt-5 backdrop-blur-sm">
+      <div className="sticky top-0 z-[1] -mx-5 rounded-t-2xl bg-white/95 px-5 pb-4 pt-5 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 font-serif text-title text-primary-900">
             {t("title")}
@@ -449,7 +552,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
             type="button"
             onClick={clearAll}
             disabled={activeCount === 0}
-            className="text-sm font-semibold text-accent-700 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-primary-400 disabled:no-underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
+            className="text-sm font-semibold text-accent-700 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-neutral-500 disabled:no-underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
           >
             {t("reset")}
           </button>
@@ -499,25 +602,25 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       </Section>
 
       {/* Wilaya */}
-      <Section title={t("wilaya")} active={filters.wilayas.length}>
+      <Section title={t("wilaya")} active={filters.wilayas.length} onReset={clear("wilayas", "communes")}>
         <label className="mb-3 flex h-10 items-center gap-2 rounded-xl bg-darnaBg px-3 ring-1 ring-primary/[0.08] focus-within:ring-2 focus-within:ring-accent-600">
-          <BrandSearchIcon size={15} className="shrink-0 text-primary-500" aria-hidden="true" />
+          <BrandSearchIcon size={15} className="shrink-0 text-neutral-600" aria-hidden="true" />
           <span className="sr-only">{t("searchWilaya")}</span>
           <input
             type="search"
             value={wilayaQuery}
             onChange={(e) => setWilayaQuery(e.target.value)}
             placeholder={t("searchWilaya")}
-            className="min-w-0 flex-1 bg-transparent text-sm text-primary-900 placeholder:text-primary-400 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm text-primary-900 placeholder:text-neutral-500 focus:outline-none"
           />
         </label>
         {wilayaShown.length === 0 ? (
-          <p className="text-meta text-primary-500">{t("noWilaya")}</p>
+          <p className="text-meta text-neutral-600">{t("noWilaya")}</p>
         ) : (
           <ul className={cn("space-y-0.5", (q || allWilayas) && "max-h-72 overflow-y-auto overscroll-contain pe-1")}>
             {wilayaShown.map(({ w, count, label }) => (
               <li key={w.code}>
-                <Checkbox
+                <FilterCheck
                   checked={filters.wilayas.includes(w.code)}
                   onChange={() => toggle("wilayas", filters.wilayas, w.code)}
                   label={
@@ -549,8 +652,8 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
 
       {/* Commune */}
       {communeItems.some((c) => c.count > 0 || filters.communes.includes(c.id)) && (
-        <Section title={t("commune")} active={filters.communes.length}>
-          {filters.wilayas.length === 0 && <p className="mb-2 text-meta text-primary-500">{t("communeHint")}</p>}
+        <Section title={t("commune")} active={filters.communes.length} onReset={clear("communes")}>
+          {filters.wilayas.length === 0 && <p className="mb-2 text-meta text-neutral-600">{t("communeHint")}</p>}
           <CheckList items={communeItems} selected={filters.communes} onToggle={(id) => toggle("communes", filters.communes, id)} />
         </Section>
       )}
@@ -558,7 +661,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       {/* Stays */}
       {isStays && (
         <>
-          <Section title={tFilters("propertyType")} active={filters.types.length}>
+          <Section title={tFilters("propertyType")} active={filters.types.length} onReset={clear("types")}>
             <CheckList
               items={PROPERTY_TYPES.map((pt) => ({ id: pt.id, label: tFilters(pt.key), count: by(L("types"), (f) => matchesType(f, pt.id)) }))}
               selected={filters.types}
@@ -570,6 +673,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
           <Section
             title={t("roomsAndBaths")}
             active={(filters.minBedrooms && filters.minBedrooms > 1 ? 1 : 0) + (filters.minBathrooms && filters.minBathrooms > 1 ? 1 : 0)}
+            onReset={clear("bedrooms", "bathrooms")}
           >
             <SubHeading>{t("bedrooms")}</SubHeading>
             <MinPills
@@ -592,7 +696,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
           </Section>
 
           {pool.some((f) => f.stars > 0) && (
-            <Section title={t("hotelStars")} active={filters.minStars ? 1 : 0}>
+            <Section title={t("hotelStars")} active={filters.minStars ? 1 : 0} onReset={clear("stars")}>
               <MinPills
                 label={t("hotelStars")}
                 values={[undefined, 3, 4, 5]}
@@ -609,10 +713,10 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       {/* Vehicles */}
       {isVehicles && (
         <>
-          <Section title={t("vehicleType")} active={filters.subtypes.length}>
+          <Section title={t("vehicleType")} active={filters.subtypes.length} onReset={clear("subtypes")}>
             <CheckList items={subtypeItems(L("subtypes"))} selected={filters.subtypes} onToggle={(id) => toggle("subtypes", filters.subtypes, id)} keepEmpty />
           </Section>
-          <Section title={t("transmission")} active={filters.transmissions.length}>
+          <Section title={t("transmission")} active={filters.transmissions.length} onReset={clear("transmissions")}>
             <CheckList
               items={["automatic", "manual"].map((id) => ({ id, label: t(`transmissionTypes.${id}`), count: by(L("transmissions"), (f) => f.transmission === id) }))}
               selected={filters.transmissions}
@@ -620,7 +724,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
               keepEmpty
             />
           </Section>
-          <Section title={t("fuel")} active={filters.fuels.length}>
+          <Section title={t("fuel")} active={filters.fuels.length} onReset={clear("fuels")}>
             <CheckList
               items={["petrol", "diesel", "hybrid", "electric"].map((id) => ({ id, label: t(`fuelTypes.${id}`), count: by(L("fuels"), (f) => f.fuel === id) }))}
               selected={filters.fuels}
@@ -628,7 +732,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
               keepEmpty
             />
           </Section>
-          <Section title={t("seats")} active={filters.minSeats ? 1 : 0}>
+          <Section title={t("seats")} active={filters.minSeats ? 1 : 0} onReset={clear("seats")}>
             <MinPills
               label={t("seats")}
               values={[undefined, 4, 5, 7]}
@@ -644,10 +748,16 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       {/* Experiences */}
       {isExperiences && (
         <>
-          <Section title={t("experienceType")} active={filters.subtypes.length}>
-            <CheckList items={subtypeItems(L("subtypes"))} selected={filters.subtypes} onToggle={(id) => toggle("subtypes", filters.subtypes, id)} keepEmpty />
+          <Section title={t("experienceType")} active={filters.expTypes.length} onReset={clear("expTypes")}>
+            <CheckList
+              items={EXPERIENCE_TYPES.map((id) => ({ id, label: experienceTypeLabel(id, locale), count: by(L("expTypes"), (f) => f.expType === id) }))}
+              selected={filters.expTypes}
+              onToggle={(id) => toggle("expTypes", filters.expTypes, id)}
+              allOption={{ label: t("allExperiences"), count: L("expTypes").length, onSelect: clear("expTypes") }}
+              keepEmpty
+            />
           </Section>
-          <Section title={t("experienceLength")} active={filters.expLengths.length}>
+          <Section title={t("experienceLength")} active={filters.expLengths.length} onReset={clear("expLengths")}>
             <CheckList
               items={EXPERIENCE_LENGTHS.map((b) => ({ id: b.id, label: t(`expLength.${b.id}`), count: by(L("expLengths"), (f) => f.hours >= b.min && f.hours <= b.max) }))}
               selected={filters.expLengths}
@@ -656,7 +766,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
             />
           </Section>
           {pool.some((f) => f.languages.length > 0) && (
-            <Section title={t("languages")} active={filters.languages.length}>
+            <Section title={t("languages")} active={filters.languages.length} onReset={clear("languages")}>
               <CheckList
                 items={Array.from(new Set([...pool.flatMap((f) => f.languages), ...filters.languages])).map((n) => ({
                   id: n,
@@ -675,7 +785,16 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       {/* Trips */}
       {isTrips && (
         <>
-          <Section title={t("tripType")} active={filters.durations.length}>
+          <Section title={t("tripType")} active={filters.tripTypes.length} onReset={clear("tripTypes")}>
+            <CheckList
+              items={TRIP_TYPES.map((id) => ({ id, label: tripTypeLabel(id, locale), count: by(T("tripTypes"), (f: TripFacet) => f.tripType === id) }))}
+              selected={filters.tripTypes}
+              onToggle={(id) => toggle("tripTypes", filters.tripTypes, id)}
+              allOption={{ label: t("allTrips"), count: T("tripTypes").length, onSelect: clear("tripTypes") }}
+              keepEmpty
+            />
+          </Section>
+          <Section title={t("tripLength")} active={filters.durations.length} onReset={clear("durations")}>
             <CheckList
               items={DURATION_BUCKETS.map((b) => ({ id: b.id, label: t(`duration.${b.id}`), count: by(T("durations"), (f: TripFacet) => f.days >= b.min && f.days <= b.max) }))}
               selected={filters.durations}
@@ -684,7 +803,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
             />
           </Section>
           {tripPool.some((f) => f.months.length > 0) && (
-            <Section title={t("departureMonth")} active={filters.months.length}>
+            <Section title={t("departureMonth")} active={filters.months.length} onReset={clear("months")}>
               <CheckList
                 items={Array.from(new Set([...tripPool.flatMap((f) => f.months), ...filters.months]))
                   .sort((a, b) => a - b)
@@ -696,7 +815,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
               />
             </Section>
           )}
-          <Section title={t("groupSize")} active={filters.minGroup ? 1 : 0}>
+          <Section title={t("groupSize")} active={filters.minGroup ? 1 : 0} onReset={clear("group")}>
             <MinPills
               label={t("groupSize")}
               values={[undefined, 6, 8, 10, 12]}
@@ -707,7 +826,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
             />
           </Section>
           {tripPool.some((f) => f.agency) && (
-            <Section title={t("agency")} active={filters.agencies.length}>
+            <Section title={t("agency")} active={filters.agencies.length} onReset={clear("agencies")}>
               <CheckList
                 items={Array.from(new Set([...tripPool.map((f) => f.agency).filter((a): a is string => Boolean(a)), ...filters.agencies])).map((n) => ({
                   id: n,
@@ -725,7 +844,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
 
       {/* Price */}
       {prices.length > 1 && (
-        <Section title={isTrips ? t("pricePerPerson") : t("price")} active={filters.minPrice || filters.maxPrice ? 1 : 0}>
+        <Section title={isTrips ? t("pricePerPerson") : t("price")} active={filters.minPrice || filters.maxPrice ? 1 : 0} onReset={clearPrice}>
           <div className="space-y-4">
             <PriceRange
               floor={floor}
@@ -741,7 +860,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
             <div className="grid grid-cols-2 gap-2">
               {(["min", "max"] as const).map((k) => (
                 <label key={k} className="min-w-0 rounded-xl bg-darnaBg px-3 py-2 ring-1 ring-primary/[0.08] focus-within:ring-2 focus-within:ring-accent-600">
-                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary-500">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
                     {k === "min" ? tFilters("minimum") : tFilters("maximum")}
                   </span>
                   <input
@@ -752,7 +871,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
                     value={draft[k]}
                     onChange={(e) => setDraft((d) => ({ ...d, [k]: e.target.value }))}
                     placeholder={formatNumber(k === "min" ? floor : ceil, locale)}
-                    className="w-full min-w-0 bg-transparent text-sm font-semibold tabular-nums text-primary-900 placeholder:font-medium placeholder:text-primary-400 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-full min-w-0 bg-transparent text-sm font-semibold tabular-nums text-primary-900 placeholder:font-medium placeholder:text-neutral-500 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                 </label>
               ))}
@@ -763,7 +882,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
 
       {/* Amenities (stays) */}
       {isStays && (
-        <Section title={tFilters("amenities")} active={filters.amenities.length}>
+        <Section title={tFilters("amenities")} active={filters.amenities.length} onReset={clear("amenities")}>
           <CheckList
             items={Object.keys(AMENITY_GROUPS)
               .map((key) => ({ id: key, label: tAmenities(key), count: by(L("amenities"), (f) => hasAmenity(f, key)) }))
@@ -777,7 +896,11 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       {/* Booking options + host type (listings) */}
       {!isTrips && (
         <>
-          <Section title={t("bookingOptions")} active={(filters.instant ? 1 : 0) + (filters.favorite ? 1 : 0) + (filters.freeCancel ? 1 : 0)}>
+          <Section
+            title={t("bookingOptions")}
+            active={(filters.instant ? 1 : 0) + (filters.favorite ? 1 : 0) + (filters.freeCancel ? 1 : 0)}
+            onReset={clear("instant", "favorite", "freeCancel")}
+          >
             <ul className="space-y-0.5">
               {[
                 { id: "instant", param: "instantBook", on: filters.instant, label: t("instantBook"), count: by(L("instant"), (f) => f.instant) },
@@ -785,12 +908,12 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
                 { id: "freeCancel", param: "freeCancellation", on: filters.freeCancel, label: t("freeCancellation"), count: by(L("freeCancel"), (f) => f.cancellation === "flexible") },
               ].map((o) => (
                 <li key={o.id}>
-                  <Checkbox checked={o.on} onChange={() => set({ [o.param]: o.on ? undefined : "true" })} label={<OptionLabel label={o.label} count={o.count} />} />
+                  <FilterCheck checked={o.on} onChange={() => set({ [o.param]: o.on ? undefined : "true" })} label={<OptionLabel label={o.label} count={o.count} />} />
                 </li>
               ))}
             </ul>
           </Section>
-          <Section title={t("hostType")} active={filters.hosts.length} defaultOpen={false}>
+          <Section title={t("hostType")} active={filters.hosts.length} defaultOpen={false} onReset={clear("hosts")}>
             <CheckList
               items={["individual", "organization"].map((id) => ({ id, label: t(`hostTypes.${id}`), count: by(L("hosts"), (f) => f.owner === id) }))}
               selected={filters.hosts}
@@ -802,7 +925,7 @@ export default function SearchFilterSidebar({ isTrips, vertical, categoryCounts,
       )}
 
       {/* Rating */}
-      <Section title={t("rating")} active={filters.minRating ? 1 : 0}>
+      <Section title={t("rating")} active={filters.minRating ? 1 : 0} onReset={clear("rating")}>
         <div role="radiogroup" aria-label={t("rating")} className="space-y-0.5">
           <Radio
             name={`${nameBase}-rating`}

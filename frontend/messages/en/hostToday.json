@@ -18,14 +18,20 @@
     "occupancyRate": "Occupancy rate",
     "occupancyNote": "{booked} of {available} available nights booked",
     "activeBookings": "Active bookings",
-    "activeBookingsNote": "Confirmed stays and vehicle rentals",
     "overallRating": "Overall rating",
     "ratingNote": "{count, plural, =0 {No guest reviews yet} one {Across # guest review} other {Across # guest reviews}}",
     "earningsEur": "≈ {eur}",
     "vsPrevious": "vs. previous period (≈ {eur})",
     "noEarnings": "No confirmed earnings in this period yet",
-    "noOccupancy": "Add a bookable home or vehicle to track occupancy.",
-    "ratingNew": "New"
+    "ratingNew": "New",
+    "pendingRequests": "Requests to answer",
+    "pendingRequestsNote": "{count, plural, =0 {No request waiting} one {# booking request waiting for a reply} other {# booking requests waiting for a reply}}",
+    "noOccupancy_individual": "Add a bookable home or vehicle to track occupancy.",
+    "noOccupancy_property": "Add room types to your property to track occupancy.",
+    "noOccupancy_agency": "Occupancy is not used for experiences and trips.",
+    "activeBookingsNote_individual": "Confirmed stays and vehicle rentals",
+    "activeBookingsNote_property": "Confirmed room and bed bookings",
+    "activeBookingsNote_agency": "Confirmed experiences and trip seats"
   },
   "pendingTitle": "Action needed: pending booking requests ({count})",
   "requestFor": "Booking request for {title}",
@@ -48,20 +54,37 @@
   "quickActions": "Quick actions",
   "quick": {
     "calendar": "Block dates or adjust prices",
-    "listings": "Manage your listings ({count})",
     "messages": "Check guest messages",
-    "payout": "Payout account & RIB"
+    "payout": "Payout account & RIB",
+    "listings_individual": "Manage your listings ({count})",
+    "listings_property": "Manage your property and rooms ({count})",
+    "listings_agency": "Manage your experiences ({count})"
   },
   "tip": {
     "eyebrow": "Algerian host tip",
-    "title": "Winter is high season in the Sahara",
-    "body": "Demand for expeditions and 4x4 rentals around Djanet and Taghit peaks between November and March. Adjust your calendar prices accordingly.",
-    "cta": "Open pricing calendar"
+    "cta": "Open pricing calendar",
+    "individual": {
+      "title": "Winter is high season in the Sahara",
+      "body": "Demand for desert homes and 4x4 rentals around Djanet and Taghit peaks from November to March. Adjust your calendar prices accordingly."
+    },
+    "property": {
+      "title": "Summer fills the coast, winter fills the south",
+      "body": "Coastal hotels peak from June to September and Saharan guesthouses from November to March. Set your room prices per season in the calendar."
+    },
+    "agency": {
+      "title": "Open your Saharan departures early",
+      "body": "Expeditions to Djanet, Tamanrasset and Taghit sell out from November to March. Publish departure dates and group sizes at least six weeks ahead."
+    }
   },
   "upcomingTitle": "Upcoming check-ins",
   "allBookings": "All bookings",
   "noUpcoming": "No upcoming check-ins",
   "noUpcomingHint": "Confirmed bookings appear here with their arrival date and check-in time.",
   "todayBadge": "Today",
-  "guestsNights": "{count, plural, one {# guest} other {# guests}} · {nights, plural, one {# night} other {# nights}}"
+  "guestsNights": "{count, plural, one {# guest} other {# guests}} · {nights, plural, one {# night} other {# nights}}",
+  "createExperience": "Create an experience",
+  "createTrip": "Create a trip",
+  "addProperty": "Add a property",
+  "noRecentReviews": "Written reviews from your guests will appear here.",
+  "eyebrowProperty": "Property command centre"
 }

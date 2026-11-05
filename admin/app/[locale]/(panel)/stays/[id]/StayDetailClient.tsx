@@ -31,6 +31,7 @@ import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { canTransitionListing } from "@/lib/domain/transitions";
 import { formatDateTime, formatDzd, formatNumber } from "@/lib/utils/format";
 import { useLocale, useTranslations } from "next-intl";
+import { experienceTypeLabel, tripTypeLabel } from "@/lib/catalog-types";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
@@ -282,6 +283,12 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <InfoTile label={t("fields.propertyType")} value={stay.propertyType} />
+              {stay.category === "experience" && (
+                <InfoTile label={t("fields.experienceType")} value={experienceTypeLabel(stay.experienceType, locale) || t("fields.typeMissing")} />
+              )}
+              {stay.category === "trip" && (
+                <InfoTile label={t("fields.tripType")} value={tripTypeLabel(stay.tripType, locale) || t("fields.typeMissing")} />
+              )}
               <InfoTile label={t("fields.category")} value={stay.category} />
               <InfoTile label={t("detail.guestCapacity")} value={t("detail.people", { count: stay.guestCapacity })} />
               <InfoTile label={t("fields.bedrooms")} value={`${stay.bedroomCount || 1}`} />

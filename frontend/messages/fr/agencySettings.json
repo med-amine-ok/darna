@@ -48,5 +48,6 @@
     "nameMismatch": "Saisissez le nom exact de l'organisation pour confirmer.",
     "deactivated": "Espace agence désactivé.",
     "deleteFailed": "Impossible de désactiver l'agence."
-  }
+  },
+  "titleByType": "{type, select, hotel {Paramètres de l’hôtel} hostel {Paramètres de l’auberge} other {Paramètres de l’agence}}"
 }

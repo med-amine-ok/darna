@@ -12,6 +12,7 @@ export type HostPageKey =
   | "agencyTeam"
   | "agencyTrips"
   | "newTrip"
+  | "newListing"
   | "becomeHost";
 
 /** Localized title for a private host page; never indexed. */

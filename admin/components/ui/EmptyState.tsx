@@ -9,19 +9,19 @@ export function ArchRosette({ className = "" }: { className?: string }) {
     <svg viewBox="0 0 96 96" fill="none" className={className} aria-hidden="true" focusable="false">
       <path
         d="M22 86V44c0-12 8-21 17-25 4.5-2 7-3.4 9-5 2 1.6 4.5 3 9 5 9 4 17 13 17 25v42"
-        stroke="#2E3A2F"
+        stroke="#152C52"
         strokeOpacity="0.55"
         strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M14 86h68" stroke="#2E3A2F" strokeOpacity="0.35" strokeWidth="1.75" strokeLinecap="round" />
-      <g transform="translate(48 52)" stroke="#C96F4F" strokeWidth="1.5" strokeLinejoin="round">
+      <path d="M14 86h68" stroke="#152C52" strokeOpacity="0.35" strokeWidth="1.75" strokeLinecap="round" />
+      <g transform="translate(48 52)" stroke="#0B57D0" strokeWidth="1.5" strokeLinejoin="round">
         <path d="M0-15l4.4 10.6L15 0 4.4 4.4 0 15-4.4 4.4-15 0-4.4-4.4z" />
         <rect x="-8.5" y="-8.5" width="17" height="17" transform="rotate(45)" strokeOpacity="0.55" />
-        <circle r="2.6" fill="#C96F4F" fillOpacity="0.18" />
+        <circle r="2.6" fill="#0B57D0" fillOpacity="0.18" />
       </g>
-      <path d="M30 86V70M66 86V70" stroke="#6B7F5B" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M30 86V70M66 86V70" stroke="#0E6FAD" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }

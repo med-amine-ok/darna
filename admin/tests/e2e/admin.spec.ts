@@ -53,7 +53,7 @@ test.describe("BLADUS Admin Panel E2E Tests", () => {
     await expect(page.locator("table")).toBeVisible();
 
     // Type in search box
-    await page.fill('input[placeholder*="Search by name"]', "Atlas");
+    await page.fill('input[placeholder*="email" i]', "Atlas");
     // Verify filtered table results
     await expect(page.locator("table tbody tr")).toHaveCount(1);
   });

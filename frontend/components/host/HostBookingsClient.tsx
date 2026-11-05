@@ -559,10 +559,20 @@ export default function HostBookingsClient({
               <KitEmptyState
                 compact
                 variant="calendar"
-                title={t("emptyTitle")}
-                description={hasActiveFilters ? t("emptyFiltered") : t("emptyNone")}
+                title={!hasActiveFilters && hostListings.length === 0 ? t("noListingsTitle") : t("emptyTitle")}
+                description={
+                  hasActiveFilters
+                    ? t("emptyFiltered")
+                    : hostListings.length === 0
+                      ? t("noListingsText")
+                      : t("emptyNone")
+                }
                 action={
-                  hasActiveFilters ? (
+                  !hasActiveFilters && hostListings.length === 0 ? (
+                    <Button href="/host/listings/new" size="md">
+                      {t("createFirstListing")}
+                    </Button>
+                  ) : hasActiveFilters ? (
                     <Button
                       variant="secondary"
                       size="md"

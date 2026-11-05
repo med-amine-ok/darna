@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect, useTransition } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useTransition, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, Link } from "@/navigation";
 import { useSearchParams } from "next/navigation";
@@ -214,6 +214,18 @@ export default function SearchResultsClient({
     { id: "trip", label: t("tabs.trip"), Icon: BrandCompassIcon },
   ];
 
+  // Phones: keep the selected category chip visible in the horizontally scrolling bar.
+  const chipRowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = chipRowRef.current;
+    const chip = row?.querySelector<HTMLElement>('[aria-pressed="true"], [aria-checked="true"], [data-selected="true"]');
+    if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
+    // Scroll the row only (never the page); viewport deltas also work right-to-left.
+    const r = row.getBoundingClientRect();
+    const c = chip.getBoundingClientRect();
+    row.scrollBy({ left: c.left + c.width / 2 - (r.left + r.width / 2) });
+  }, [currentVertical]);
+
   const heading = isTrips
     ? place
       ? t("heading.tripsIn", { place })
@@ -222,9 +234,13 @@ export default function SearchResultsClient({
       ? place
         ? t("heading.hotelsIn", { place })
         : t("heading.hotels")
-      : place
-        ? t("heading.staysIn", { place })
-        : t("heading.all");
+      : currentVertical === "home" || currentVertical === "experience" || currentVertical === "vehicle"
+        ? place
+          ? t(`heading.${currentVertical}In`, { place })
+          : t(`heading.${currentVertical}`)
+        : place
+          ? t("heading.staysIn", { place })
+          : t("heading.all");
 
   const total = isTrips ? trips.length : listings.length;
   const shown = isTrips ? displayTrips.length : displayListings.length;
@@ -373,7 +389,7 @@ export default function SearchResultsClient({
         {/* 1. Sticky glass filter bar: verticals · quick filters · all filters */}
         <div className="glass sticky top-[64px] z-30 border-b border-primary/[0.08] sm:top-[72px]">
           <div className="mx-auto flex max-w-[1920px] items-center gap-3 px-4 sm:px-6 lg:px-8">
-            <div role="group" aria-label={t("filterBarLabel")} className="no-scrollbar -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-3.5 ps-0.5 pe-4 [mask-image:linear-gradient(to_right,#000_92%,transparent)] rtl:[mask-image:linear-gradient(to_left,#000_92%,transparent)]">
+            <div ref={chipRowRef} role="group" aria-label={t("filterBarLabel")} className="no-scrollbar -my-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto py-3.5 ps-0.5 pe-4 [mask-image:linear-gradient(to_right,#000_92%,transparent)] rtl:[mask-image:linear-gradient(to_left,#000_92%,transparent)]">
               <div role="group" aria-label={t("tabsLabel")} className="flex shrink-0 items-center gap-2">
                 {verticalTabs.map(({ id, label, Icon }) => {
                   const active = (id === "all" && !currentVertical) || currentVertical === id;
@@ -447,7 +463,7 @@ export default function SearchResultsClient({
 
         {/* 2. Results · map */}
         <div className="mx-auto w-full max-w-[1920px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[15.5rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_minmax(0,38%)] 2xl:gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[20rem_minmax(0,1fr)_minmax(0,34%)] 2xl:grid-cols-[21rem_minmax(0,1fr)_minmax(0,38%)] 2xl:gap-8">
             {/* Filter sidebar (lg+): sticky, scrolls on its own when taller than the screen. */}
             <div className="hidden lg:block">
               <SearchFilterSidebar
@@ -455,6 +471,8 @@ export default function SearchResultsClient({
                 vertical={currentVertical}
                 categoryCounts={categoryCounts}
                 onUpdate={updateQuery}
+                facets={facets}
+                tripFacets={tripFacets}
                 className="no-scrollbar sticky top-[160px] max-h-[calc(100dvh-184px)] overflow-y-auto overscroll-contain"
               />
             </div>

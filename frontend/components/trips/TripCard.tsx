@@ -6,6 +6,7 @@ import { Link } from "@/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { formatNumber } from "@/lib/i18n/date-locale";
 import { Trip } from "@/types";
+import { tripTypeLabel } from "@/lib/catalog-types";
 import PriceDisplay from "@/components/common/PriceDisplay";
 import { BrandCalendarIcon, BrandStarIcon, BrandShieldIcon, BrandUsersIcon, BrandArrowRightIcon } from "@/components/icons";
 
@@ -26,6 +27,7 @@ export default function TripCard({ trip, onHover, isHovered = false, customHref 
   const locale = useLocale();
   const ratingText = trip.rating ? formatNumber(trip.rating, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "";
   const agencyName = trip.organization?.name || t("card.verifiedAgency");
+  const typeLabel = tripTypeLabel(trip.tripType, locale);
 
   return (
     <Link
@@ -69,6 +71,12 @@ export default function TripCard({ trip, onHover, isHovered = false, customHref 
         {/* Title block on the photo */}
         <div className="absolute inset-x-0 bottom-0 p-5 text-white">
           <p className="text-eyebrow uppercase font-semibold text-tertiary-200">
+            {typeLabel && (
+              <>
+                <span>{typeLabel}</span>
+                <span aria-hidden="true"> · </span>
+              </>
+            )}
             {t("locationLine", { city: trip.city, country: t("countryAlgeria") })}
           </p>
           <h3 className="mt-2 font-serif text-[1.375rem] leading-tight line-clamp-2">{trip.title}</h3>

@@ -23,6 +23,8 @@ type PopoverType = "where" | "when" | "who" | null;
 interface SearchProps {
   isHero?: boolean;
   scrollProgress?: number;
+  /** Always-open full-width bar for the home hero card (no scroll morph, no pill). */
+  inline?: boolean;
 }
 
 const segmentBase =
@@ -35,7 +37,7 @@ const segmentBase =
  * from the corner nearest their segment. On the home hero it morphs with scroll; elsewhere
  * it rests as a compact pill that expands into the full bar when clicked.
  */
-export default function Search({ isHero = false, scrollProgress = 0 }: SearchProps) {
+export default function Search({ isHero = false, scrollProgress = 0, inline = false }: SearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -62,7 +64,7 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
   // On non-hero pages progress is always 1 (docked).
   const progress = isHero ? scrollProgress : 1;
   const docked = progress >= 0.5;
-  const showBar = !docked || expanded;
+  const showBar = inline || !docked || expanded;
 
   const collapse = useCallback(() => {
     setActivePopover(null);
@@ -136,14 +138,15 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
       className={cn(
         segmentBase,
         withIcon && "ps-4",
+        inline && "rounded-xl",
         activePopover === type ? "bg-white shadow-e2" : anyOpen ? "hover:bg-white/70" : "hover:bg-primary/[0.04]"
       )}
     >
       <span className="flex items-center gap-2.5 min-w-0">
         {withIcon && <BrandPinIcon size={20} strokeWidth={1.75} className="shrink-0 text-accent-600" aria-hidden="true" />}
         <span className="flex min-w-0 flex-col">
-          <span className="text-eyebrow uppercase font-semibold text-primary-900">{title}</span>
-          <span className={cn("mt-0.5 truncate text-sm", value ? "font-medium text-primary-900" : "text-primary-500")}>{value || placeholder}</span>
+          <span className={cn("font-semibold text-primary-900", inline ? "text-sm" : "text-eyebrow uppercase")}>{title}</span>
+          <span className={cn("mt-0.5 truncate text-sm", value ? "font-medium text-primary-900" : "text-neutral-600")}>{value || placeholder}</span>
         </span>
       </span>
     </button>
@@ -157,11 +160,15 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
     <div
       ref={containerRef}
       className={cn("relative", anyOpen || expanded ? "z-[100]" : "z-30")}
-      style={{
-        transform: `translate3d(0, ${translateY}px, 0) scale(${scale})`,
-        transformOrigin: "center center",
-        transition: "transform 75ms cubic-bezier(0.16, 1, 0.3, 1)",
-      }}
+      style={
+        inline
+          ? undefined
+          : {
+              transform: `translate3d(0, ${translateY}px, 0) scale(${scale})`,
+              transformOrigin: "center center",
+              transition: "transform 75ms cubic-bezier(0.16, 1, 0.3, 1)",
+            }
+      }
     >
       <AnimatePresence initial={false} mode="popLayout">
         {showBar ? (
@@ -169,14 +176,17 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
             key="bar"
             role="search"
             aria-label={tNav("search")}
-            initial={{ opacity: 0, scaleX: 0.62, scaleY: 0.8 }}
+            initial={inline ? false : { opacity: 0, scaleX: 0.62, scaleY: 0.8 }}
             animate={{ opacity: Math.max(0, isHero && !expanded ? 1 - progress * 2.2 : 1), scaleX: 1, scaleY: 1, transition: spring.layout }}
             exit={{ opacity: 0, scaleX: 0.7, scaleY: 0.85, transition: { duration: dur.fast, ease: ease.standard } }}
             className={cn(
-              "mx-auto flex h-[66px] items-center rounded-full p-1.5 transition-[background-color,box-shadow] duration-base ease-standard",
-              anyOpen ? "bg-darnaBg-300 shadow-e3" : "bg-white shadow-e3 hover:shadow-e4"
+              "mx-auto flex items-center p-1.5 transition-[background-color,box-shadow] duration-base ease-standard",
+              inline
+                ? "h-[clamp(56px,8vh,76px)] w-full rounded-2xl ring-1 ring-tertiary-300"
+                : "h-[66px] rounded-full",
+              anyOpen ? "bg-darnaBg-300 shadow-e3" : inline ? "bg-white shadow-e1" : "bg-white shadow-e3 hover:shadow-e4"
             )}
-            style={{ width: isHero && !expanded ? "calc(100vw - 32px)" : "min(640px, calc(100vw - 32px))", maxWidth: 768 }}
+            style={inline ? undefined : { width: isHero && !expanded ? "calc(100vw - 32px)" : "min(640px, calc(100vw - 32px))", maxWidth: 768 }}
           >
             <Popover
               ariaLabel={labels.whereTitle}
@@ -238,10 +248,13 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
               aria-label={tNav("search")}
               whileTap={{ scale: 0.95 }}
               transition={spring.press}
-              className="ms-1 flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-full bg-cta px-5 text-sm font-semibold text-white shadow-glow cursor-pointer transition-[filter,padding] duration-fast ease-standard hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+              className={cn(
+                "ms-1 flex shrink-0 items-center justify-center gap-2 bg-cta text-sm font-semibold text-white shadow-glow cursor-pointer transition-[filter,padding] duration-fast ease-standard hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2",
+                inline ? "h-full rounded-xl px-6 md:px-8" : "h-[52px] rounded-full px-5"
+              )}
             >
               <BrandSearchIcon size={18} strokeWidth={2.2} />
-              <span className={cn("hidden lg:inline", !anyOpen && "lg:hidden xl:inline")} aria-hidden="true">
+              <span className={cn("hidden lg:inline", !anyOpen && !inline && "lg:hidden xl:inline")} aria-hidden="true">
                 {tNav("search")}
               </span>
             </m.button>
@@ -252,7 +265,7 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: Math.max(0, isHero ? (progress - 0.4) * 1.66 : 1), scale: 1, transition: { duration: dur.base, ease: ease.out } }}
             exit={{ opacity: 0, scale: 0.94, transition: { duration: dur.micro } }}
-            className="mx-auto flex h-12 max-w-[440px] items-center gap-2 rounded-full bg-white ps-1.5 pe-1.5 shadow-e2 transition-shadow duration-fast ease-standard hover:shadow-e3"
+            className="mx-auto flex h-12 max-w-[520px] items-center gap-2 rounded-full bg-white ps-1.5 pe-1.5 shadow-e2 transition-shadow duration-fast ease-standard hover:shadow-e3"
           >
             <button
               ref={summaryRef}
@@ -274,7 +287,7 @@ export default function Search({ isHero = false, scrollProgress = 0 }: SearchPro
                 {formattedDates || verticalTabLabel[vertical] || tCommon("anyWeek")}
               </span>
               <span aria-hidden="true" className="mx-3 h-5 w-px shrink-0 bg-primary/[0.12]" />
-              <span className="max-w-[100px] truncate text-primary-600">{guestSummary || tNav("addGuests")}</span>
+              <span className="max-w-[160px] truncate text-primary-700">{guestSummary || tNav("addGuests")}</span>
             </button>
             <button
               type="button"

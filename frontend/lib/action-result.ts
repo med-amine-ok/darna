@@ -62,6 +62,7 @@ export const ERROR_CODES = [
   "ROOM_TYPE_DATE_PRICES_UNSUPPORTED",
   "MAX_NIGHTS_BELOW_MIN",
   "HOST_DETAILS_MISSING",
+  "HOST_OFFER_NOT_ALLOWED",
   "REGISTRATION_FAILED",
   // Messages
   "MESSAGE_EMPTY",
@@ -80,6 +81,8 @@ export const ERROR_CODES = [
   "AGENCY_ONLY",
   "GROUP_SIZE_RANGE",
   "TRIP_TITLE_REQUIRED",
+  "TRIP_TYPE_REQUIRED",
+  "EXPERIENCE_TYPE_REQUIRED",
 ] as const;
 
 export type ActionErrorCode = (typeof ERROR_CODES)[number];

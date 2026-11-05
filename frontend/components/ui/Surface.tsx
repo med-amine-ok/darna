@@ -127,7 +127,7 @@ export function Divider({
             strokeWidth="1.25"
             strokeLinejoin="round"
           />
-          <circle cx="12" cy="12" r="1.6" fill="#C96F4F" />
+          <circle cx="12" cy="12" r="1.6" fill="#0B57D0" />
         </svg>
       )}
       <span className="h-px flex-1 bg-gradient-to-l from-transparent to-primary/[0.12] rtl:bg-gradient-to-r" />

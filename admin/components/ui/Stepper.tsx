@@ -198,7 +198,7 @@ export const Stepper: React.FC<StepperProps> = ({
                 {isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : formatNumber(step.id, locale)}
               </span>
               <span
-                className={`text-xs whitespace-nowrap transition-colors max-w-[70px] xl:max-w-none truncate ${
+                className={`text-xs leading-tight transition-colors max-w-[6.5rem] xl:max-w-[9rem] line-clamp-2 ${
                   isCurrent
                     ? "font-semibold text-primary-900"
                     : isDone
@@ -217,7 +217,7 @@ export const Stepper: React.FC<StepperProps> = ({
               {/* Step Circle & Label */}
               <li
                 aria-current={isCurrent ? "step" : undefined}
-                className="flex items-center select-none shrink-0"
+                className="flex items-center select-none min-w-0"
               >
                 {isClickable ? (
                   <button

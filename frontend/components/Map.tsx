@@ -73,8 +73,8 @@ export default function Map({
               center={center as L.LatLngExpression}
               radius={850}
               pathOptions={{
-                color: "#C96F4F",
-                fillColor: "#C96F4F",
+                color: "#0B57D0",
+                fillColor: "#0B57D0",
                 fillOpacity: 0.2,
                 weight: 2,
                 dashArray: "6, 6",

@@ -96,11 +96,11 @@ export default function LoginForm({
 
         <div className="relative flex items-center gap-2.5 enter-up">
           <Image
-            src="/assets/logo-horizontal.png"
+            src="/assets/logo-horizontal-white.png"
             alt="BLADUS"
             width={110}
             height={34}
-            className="h-7 w-auto object-contain brightness-0 invert"
+            className="h-7 w-auto object-contain"
           />
           <span className="px-2 py-0.5 rounded-md bg-white/10 ring-1 ring-inset ring-white/15 text-[11px] font-semibold tracking-wide">
             {t("adminBadge")}
@@ -148,7 +148,7 @@ export default function LoginForm({
               alt="BLADUS"
               width={110}
               height={34}
-              className="h-7 w-auto object-contain brightness-0"
+              className="h-7 w-auto object-contain"
             />
             <span className="px-2 py-0.5 bg-accent-600 text-white rounded-md text-[11px] font-semibold">
               {t("adminBadge")}

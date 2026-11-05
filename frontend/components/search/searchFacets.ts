@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Listing, ListingVertical, Trip } from "@/types";
 import { locatePlace } from "@/lib/algeria";
+import { isExperienceType, isTripType } from "@/lib/catalog-types";
 
 /**
  * Lightweight facts about the results of the current search *before* the side filters.
@@ -35,6 +36,8 @@ export interface ListingFacet {
   seats: number;
   hours: number;
   languages: string[];
+  /** Canonical experience type id (EXPERIENCE_TYPES), experiences only. */
+  expType?: string;
 }
 
 export interface TripFacet {
@@ -47,6 +50,8 @@ export interface TripFacet {
   rating: number;
   group: number;
   agency?: string;
+  /** Canonical trip type id (TRIP_TYPES). */
+  tripType?: string;
 }
 
 const normText = (v: string) => v.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
@@ -87,6 +92,7 @@ export function toFacet(l: Listing): ListingFacet {
     seats: l.seats ?? 0,
     hours: l.durationHours ?? 0,
     languages: l.experienceLanguages ?? [],
+    expType: l.category === "experience" && isExperienceType(l.experienceType) ? l.experienceType : undefined,
   };
 }
 
@@ -106,6 +112,7 @@ export function toTripFacet(t: Trip): TripFacet {
     rating: t.rating ?? 0,
     group: t.maxGroupSize,
     agency: t.organization?.name,
+    tripType: isTripType(t.tripType) ? t.tripType : undefined,
   };
 }
 
@@ -203,7 +210,11 @@ export interface SideFilters {
   fuels: string[];
   minSeats?: number;
   expLengths: string[];
+  /** Canonical experience types, any of them (`expType=desert,gastronomy`). */
+  expTypes: string[];
   languages: string[];
+  /** Canonical trip types, any of them (`tripType=cultural,hiking`). */
+  tripTypes: string[];
   durations: string[];
   months: number[];
   minGroup?: number;
@@ -229,7 +240,9 @@ export type FilterGroup =
   | "fuels"
   | "seats"
   | "expLengths"
+  | "expTypes"
   | "languages"
+  | "tripTypes"
   | "durations"
   | "months"
   | "group"
@@ -254,7 +267,9 @@ export const FILTER_PARAMS: Record<Exclude<FilterGroup, "price">, string> = {
   fuels: "fuel",
   seats: "seats",
   expLengths: "expLength",
+  expTypes: "expType",
   languages: "lang",
+  tripTypes: "tripType",
   durations: "duration",
   months: "months",
   group: "groupSize",
@@ -294,7 +309,9 @@ export function parseSideFilters(get: (key: string) => unknown): SideFilters {
     fuels: list(get("fuel")),
     minSeats: num(get("seats")),
     expLengths: list(get("expLength")),
+    expTypes: list(get("expType")).filter(isExperienceType),
     languages: list(get("lang")),
+    tripTypes: list(get("tripType")).filter(isTripType),
     durations: list(get("duration")),
     months: list(get("months")).map(Number).filter((m) => m >= 1 && m <= 12),
     minGroup: num(get("groupSize")),
@@ -323,7 +340,9 @@ export function countSideFilters(f: SideFilters): number {
     f.fuels.length +
     (f.minSeats ? 1 : 0) +
     f.expLengths.length +
+    f.expTypes.length +
     f.languages.length +
+    f.tripTypes.length +
     f.durations.length +
     f.months.length +
     (f.minGroup ? 1 : 0) +
@@ -387,6 +406,7 @@ export function matchesListing(f: ListingFacet, filters: SideFilters, skip?: Ski
     });
     if (!ok) return false;
   }
+  if (use("expTypes") && filters.expTypes.length && !(f.expType && filters.expTypes.includes(f.expType))) return false;
   if (use("languages") && filters.languages.length && !filters.languages.some((l) => f.languages.some((x) => sameText(x, l)))) return false;
   return true;
 }
@@ -398,6 +418,7 @@ export function matchesTrip(f: TripFacet, filters: SideFilters, skip?: Skip): bo
     if (filters.minPrice && f.price < filters.minPrice) return false;
     if (filters.maxPrice && f.price > filters.maxPrice) return false;
   }
+  if (use("tripTypes") && filters.tripTypes.length && !(f.tripType && filters.tripTypes.includes(f.tripType))) return false;
   if (use("durations") && filters.durations.length) {
     const ok = filters.durations.some((id) => {
       const b = DURATION_BUCKETS.find((x) => x.id === id);

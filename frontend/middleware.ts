@@ -2,7 +2,6 @@ import createMiddleware from "next-intl/middleware";
 import { locales, defaultLocale } from "./i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySession } from "./lib/auth/session-token";
-import { isOrgHostType } from "./lib/host-types";
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -70,19 +69,10 @@ export default async function middleware(request: NextRequest) {
     );
   }
 
-  if (isHostRoute && session) {
-    // Not a host yet -> host-type selection
-    if (!session.hostType) {
-      return redirectTo(request, `/${locale}/become-a-host`);
-    }
-    // Org host (agency/hotel/hostel) without an organization -> finish org onboarding
-    if (isOrgHostType(session.hostType) && !session.organizationId) {
-      return redirectTo(
-        request,
-        `/${locale}/become-a-host/${session.hostType}`,
-      );
-    }
-  }
+  // Host routes only need a signed-in session here. Whether the user is a
+  // host (and which organization they act for) is decided by the host layout
+  // against the server store (requireHostContext): a stale cookie claim must
+  // never bounce a real host out of their workspace.
 
   return intlMiddleware(request);
 }

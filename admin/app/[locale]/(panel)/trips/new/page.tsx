@@ -8,5 +8,5 @@ export default async function NewTripPage() {
   const denied = await guardPage("listings.approve");
   if (denied) return denied;
 
-  return <ExperienceWizardClient />;
+  return <ExperienceWizardClient kind="trip" />;
 }

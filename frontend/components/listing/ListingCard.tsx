@@ -13,6 +13,7 @@ import { useShowTotalPrice } from "@/hook/useShowTotalPrice";
 import { formatDate, formatRating } from "@/lib/i18n/date-locale";
 import { cn } from "@/components/ui/cn";
 import { listingHref, priceSuffixKey } from "./cardLabels";
+import { experienceTypeLabel } from "@/lib/catalog-types";
 import {
   BrandStarIcon,
   BrandChevronLeftIcon,
@@ -198,7 +199,7 @@ export default function ListingCard({
             transmission: t(`transmission.${data.transmission === "manual" ? "manual" : "automatic"}`),
           })
         : data.category === "experience"
-          ? t("experienceSummary", { hours: data.durationHours || 4, type: data.type })
+          ? t("experienceSummary", { hours: data.durationHours || 4, type: experienceTypeLabel(data.experienceType, locale) || data.type })
           : t("homeSummary", { type: data.type, count: data.bedroomCount || 2 }));
 
   // Sliding window of dots for long galleries.

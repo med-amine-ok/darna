@@ -1,8 +1,8 @@
 {
   "titleIndividual": "My Listings",
-  "titleAgency": "Host Properties & Fleet",
-  "subtitleIndividual": "Manage your homes, nightly pricing, and calendar booking availability.",
-  "subtitleAgency": "Manage your listings, adjust nightly rates in DZD, and control calendar booking availability.",
+  "titleAgency": "Your experiences",
+  "subtitleIndividual": "Manage your homes and vehicles, their prices and calendar availability.",
+  "subtitleAgency": "Manage your experiences, prices per person in DZD and availability. Trips have their own page.",
   "addTrip": "Add a Trip",
   "addListing": "Add New Listing",
   "createListing": "Create New Listing",
@@ -24,7 +24,9 @@
     "statusLabel": "Status",
     "allStatuses": "All Statuses",
     "activeOnly": "Active Only",
-    "draft": "Draft / Paused"
+    "draft": "Draft / Paused",
+    "typeLabel": "Experience type",
+    "allTypes": "All types"
   },
   "viewModeLabel": "Display mode",
   "gridView": "Grid view",
@@ -36,7 +38,8 @@
     "hotel": "Hotel",
     "experience": "Experience",
     "vehicle": "Vehicle",
-    "trip": "Trip"
+    "trip": "Trip",
+    "hostel": "Hostel"
   },
   "status": {
     "active": "Active",
@@ -129,5 +132,15 @@
     "day": "/ day",
     "person": "/ person",
     "bed": "/ bed"
-  }
+  },
+  "titleProperty": "Your property & rooms",
+  "subtitleProperty": "Manage your property, its room types, nightly rates in DZD and availability.",
+  "createExperience": "Create an experience",
+  "addProperty": "Add a property",
+  "firstListingTitle": "Nothing published yet",
+  "firstListingText": "Create your first listing: a home or a vehicle. It only takes a few minutes.",
+  "firstListingTextAgency": "Create your first experience or trip to start receiving bookings.",
+  "firstListingTextProperty": "Add your property with its room types to start receiving bookings.",
+  "createFirstListing": "Create your first listing",
+  "createFirstExperience": "Create your first experience"
 }

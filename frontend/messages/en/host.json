@@ -211,6 +211,7 @@
     "agencyTrips": "Agency trips",
     "newTrip": "Create a trip",
     "becomeHost": "Become a host",
-    "becomeHostDescription": "List your home, experience or vehicle on BLADUS and start hosting travelers across Algeria."
+    "becomeHostDescription": "List your home, experience or vehicle on BLADUS and start hosting travelers across Algeria.",
+    "newListing": "Create a listing"
   }
 }

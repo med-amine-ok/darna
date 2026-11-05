@@ -60,6 +60,7 @@
     "ROOM_TYPE_DATE_PRICES_UNSUPPORTED": "Per-date prices aren't available for hotel and hostel room types yet.",
     "MAX_NIGHTS_BELOW_MIN": "Maximum nights must be greater than or equal to minimum nights.",
     "HOST_DETAILS_MISSING": "Please provide the business name, registration number (RC), phone and address.",
+    "HOST_OFFER_NOT_ALLOWED": "Your host account can't publish this kind of offer. Individuals publish homes and vehicles, agencies publish experiences and trips, hotels and hostels publish their property with room types.",
     "REGISTRATION_FAILED": "We couldn't complete your registration. Please try again.",
     "MESSAGE_EMPTY": "Message cannot be empty.",
     "HOST_UNREACHABLE": "This host can't be messaged right now.",
@@ -74,7 +75,9 @@
     "TRANSFER_TARGET_INACTIVE": "Ownership can only be transferred to an active member.",
     "AGENCY_ONLY": "Only agencies can publish trips.",
     "GROUP_SIZE_RANGE": "Minimum group size can't be larger than the maximum group size.",
-    "TRIP_TITLE_REQUIRED": "Please enter a circuit title."
+    "TRIP_TITLE_REQUIRED": "Please enter a circuit title.",
+    "TRIP_TYPE_REQUIRED": "Please choose a trip type.",
+    "EXPERIENCE_TYPE_REQUIRED": "Please choose an experience type."
   },
   "errorEyebrow": "Unexpected error",
   "errorReference": "Reference:",

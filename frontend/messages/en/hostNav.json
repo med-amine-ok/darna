@@ -24,7 +24,10 @@
     "listings": "Listings",
     "myListings": "My listings",
     "messages": "Messages",
-    "more": "More"
+    "more": "More",
+    "experiences": "Experiences",
+    "trips": "Trips",
+    "property": "Property & rooms"
   },
   "orgDetails": "{name} organization details",
   "orgWorkspace": "Organization workspace",
@@ -44,11 +47,16 @@
   "notifications": "Notifications",
   "hostMenu": "Host menu",
   "hostFallback": "Host",
-  "createListing": "Create new listing",
+  "createListing": "Create a listing",
   "createCircuit": "Create new circuit",
   "messagesInquiries": "Messages & guest inquiries",
   "moreOptions": "More workspace options",
   "closeMenu": "Close menu",
   "verificationPending": "{name} is pending verification. You can set up listings and your team now; a verified badge appears once BLADUS approves your documents.",
-  "verificationRejected": "{name}: verification was rejected. Please update your legal details in settings or contact BLADUS support."
+  "verificationRejected": "{name}: verification was rejected. Please update your legal details in settings or contact BLADUS support.",
+  "createExperience": "Create an experience",
+  "createTrip": "Create a trip",
+  "addProperty": "Add a property",
+  "switchWorkspace": "Switch workspace",
+  "switchFailed": "Could not switch workspace. Try again."
 }

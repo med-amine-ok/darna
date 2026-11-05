@@ -5,13 +5,13 @@
 /* BLADUS admin foundation, ported from frontend/styles/globals.css (docs/design/DESIGN-DIRECTION.md §9). */
 
 :root {
-  --color-primary: #2E3A2F;
-  --color-secondary: #6B7F5B;
-  --color-tertiary: #D9C9B2;
-  --color-accent: #C96F4F;
-  --color-bg: #F8F6EE;
+  --color-primary: #152C52;
+  --color-secondary: #0E6FAD;
+  --color-tertiary: #D3DCE8;
+  --color-accent: #0B57D0;
+  --color-bg: #FFFFFF;
   --color-surface: #FFFFFF;
-  --ink-rgb: 30, 38, 31;
+  --ink-rgb: 14, 31, 59;
 
   /* Active type faces; swapped for the Arabic pair under dir="rtl". */
   --font-ui: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -95,7 +95,7 @@ input[type="checkbox"],
 input[type="radio"],
 input[type="range"],
 progress {
-  accent-color: #2E3A2F;
+  accent-color: #152C52;
 }
 
 /* Touch ergonomics & manipulation */
@@ -134,11 +134,11 @@ textarea,
 @layer utilities {
   /* Frosted surface for the sticky top bar and floating bars (solid fallback). */
   .glass {
-    background-color: rgba(248, 246, 238, 0.96);
+    background-color: rgba(255, 255, 255, 0.96);
   }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .glass {
-      background-color: rgba(248, 246, 238, 0.78);
+      background-color: rgba(255, 255, 255, 0.78);
       -webkit-backdrop-filter: blur(18px) saturate(1.4);
       backdrop-filter: blur(18px) saturate(1.4);
     }
@@ -186,7 +186,7 @@ textarea,
 
   /* Terracotta CTA gradient (accent family only). */
   .bg-cta {
-    background-image: linear-gradient(135deg, #C96F4F 0%, #B65634 55%, #974426 100%);
+    background-image: linear-gradient(135deg, #0B57D0 0%, #0B57D0 55%, #0846AB 100%);
   }
 
   /* Skeleton with travelling shimmer. */
@@ -254,11 +254,11 @@ textarea,
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D9C9B2;
+  background: #D3DCE8;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #B09875;
+  background: #94A3B8;
 }
 
 /* Sidebar / dark-surface scrollbar */
@@ -278,7 +278,7 @@ textarea,
   border-radius: 9999px;
 }
 .darna-admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #96AC85;
+  background: #3FA5E2;
 }
 
 /* Hide scrollbar utility */
@@ -294,7 +294,7 @@ textarea,
 
 /* Focus styles */
 *:focus-visible {
-  outline: 2px solid #B65634;
+  outline: 2px solid #0B57D0;
   outline-offset: 2px;
 }
 
@@ -330,7 +330,7 @@ textarea,
 
 .custom-price-pin .price-pin-btn {
   transform: translate3d(0, 0, 0) scale(1);
-  box-shadow: 0 2px 8px -1px rgba(46, 58, 47, 0.12), 0 1px 3px 0 rgba(46, 58, 47, 0.06);
+  box-shadow: 0 2px 8px -1px rgba(21, 44, 82, 0.12), 0 1px 3px 0 rgba(21, 44, 82, 0.06);
   transition: transform 240ms cubic-bezier(0.2, 0, 0, 1),
               box-shadow 240ms cubic-bezier(0.2, 0, 0, 1),
               background-color 160ms ease,
@@ -345,10 +345,10 @@ textarea,
 .custom-price-pin.is-active .price-pin-btn,
 .custom-price-pin.is-hovered .price-pin-btn {
   transform: translate3d(0, -3px, 0) scale(1.09);
-  box-shadow: 0 12px 24px -4px rgba(46, 58, 47, 0.28), 0 4px 8px -2px rgba(46, 58, 47, 0.14);
-  background-color: #2E3A2F !important;
+  box-shadow: 0 12px 24px -4px rgba(21, 44, 82, 0.28), 0 4px 8px -2px rgba(21, 44, 82, 0.14);
+  background-color: #152C52 !important;
   color: #ffffff !important;
-  border-color: #C96F4F !important;
+  border-color: #0B57D0 !important;
 }
 
 /* KPI sparkline / chart line draw-in (decorative; reduced motion shows the final state). */

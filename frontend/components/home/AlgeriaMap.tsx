@@ -53,7 +53,7 @@ export default function AlgeriaMap({ className = "" }: { className?: string }) {
         </defs>
 
         <g clipPath="url(#darna-algeria-shape)">
-          <rect width="740" height="730" fill="#E9DFD0" />
+          <rect width="740" height="730" fill="#E4EAF2" />
           <image
             href={`${imagery.dunesGolden}?auto=format&fit=crop&w=1100&q=75`}
             x="0"
@@ -72,7 +72,7 @@ export default function AlgeriaMap({ className = "" }: { className?: string }) {
             mask="url(#darna-coast-mask)"
           />
           {/* Warm light so both photos read as one picture. */}
-          <rect width="740" height="730" fill="#C96F4F" opacity="0.08" />
+          <rect width="740" height="730" fill="#0B57D0" opacity="0.08" />
         </g>
         <path d={OUTLINE} fill="none" stroke="#fff" strokeWidth="4" strokeLinejoin="round" />
       </svg>

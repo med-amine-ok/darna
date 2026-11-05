@@ -4,6 +4,7 @@ import { newId } from "@/lib/ids";
 import { normalizeDateKey } from "@/lib/booking/dates";
 import { isValidPriceDzd, PRICE_MAX_DZD, PRICE_MIN_DZD } from "@/lib/booking/config";
 import type { ActionErrorCode, ActionErrorParams } from "@/lib/action-result";
+import { isExperienceType } from "@/lib/catalog-types";
 
 /** Thrown for owner input that must be rejected rather than clamped (e.g. prices). */
 export class ListingInputError extends Error {
@@ -185,6 +186,14 @@ export function sanitizeListingInput(input: unknown, listingId: string): Partial
   set("pickupLocation", str(d.pickupLocation, 200));
   set("mileagePolicy", str(d.mileagePolicy, 300));
   set("insuranceNotes", str(d.insuranceNotes, 500));
+
+  // Experience type: one of the canonical EXPERIENCE_TYPES (lib/catalog-types.ts).
+  // Present but unknown is rejected; requiredness on create is checked in createListing.
+  if (d.experienceType !== undefined && d.experienceType !== null && d.experienceType !== "") {
+    if (!isExperienceType(d.experienceType)) throw new ListingInputError("EXPERIENCE_TYPE_REQUIRED");
+    out.experienceType = d.experienceType;
+  }
+  if (out.experienceType && out.category && out.category !== "experience") delete out.experienceType;
 
   set("activityName", str(d.activityName, 200));
   set("durationHours", num(d.durationHours, 0, 1000));

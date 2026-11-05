@@ -7,6 +7,7 @@ import { getOrganizationById } from "@/lib/data/organizations";
 import { toPublicOrganization } from "@/lib/server/dto";
 import { clone, removeWhere } from "./_store";
 import { tripsTable } from "./_tables";
+import { isTripType, type TripTypeId } from "@/lib/catalog-types";
 
 export interface TripSearchParams {
   organizationId?: string;
@@ -15,6 +16,8 @@ export interface TripSearchParams {
   status?: "active" | "draft" | "all";
   maxPrice?: number;
   duration?: number;
+  /** Canonical trip types (TRIP_TYPES); a trip matches when its type is in the list. */
+  tripTypes?: string[];
 }
 
 export async function getTrips(params?: TripSearchParams): Promise<Trip[]> {
@@ -50,6 +53,12 @@ export async function getTrips(params?: TripSearchParams): Promise<Trip[]> {
     filtered = filtered.filter((t) => t.pricePerPerson <= params.maxPrice!);
   }
 
+  // Same rule as matchesTrip in components/search/searchFacets.ts (search page).
+  const wantedTypes = (params?.tripTypes || []).filter(isTripType) as TripTypeId[];
+  if (wantedTypes.length) {
+    filtered = filtered.filter((t) => Boolean(t.tripType && wantedTypes.includes(t.tripType)));
+  }
+
   return Promise.all(
     filtered.map(async (t) => {
       const org = await getOrganizationById(t.organizationId);
@@ -80,6 +89,7 @@ export async function getPublicTripById(
 export type TripInput = Omit<Trip, "id" | "createdAt" | "slug" | "organization" | "rating" | "reviewsCount">;
 
 export async function createTrip(data: TripInput): Promise<Trip> {
+  if (!isTripType(data.tripType)) throw new Error("createTrip: tripType must be one of TRIP_TYPES");
   const newTrip: Trip = {
     ...data,
     latlng: data.latlng || getTripCoordinates(data),
@@ -95,6 +105,7 @@ export async function createTrip(data: TripInput): Promise<Trip> {
 export async function updateTrip(id: string, updates: Partial<TripInput>): Promise<Trip | null> {
   const trip = tripsTable.find((t) => t.id === id);
   if (!trip) return null;
+  if (updates.tripType !== undefined && !isTripType(updates.tripType)) return null;
   Object.assign(trip, updates);
   return clone(trip);
 }

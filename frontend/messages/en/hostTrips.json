@@ -77,7 +77,9 @@
       "coverBadge": "Cover photo",
       "coverLibrary": "Photo library",
       "coverChoice": "Use photo {number} as cover",
-      "coverUrl": "Image link (URL)"
+      "coverUrl": "Image link (URL)",
+      "tripType": "Trip type",
+      "tripTypeHint": "Travellers filter trips by this type in search."
     },
     "itinerary": {
       "heading": "Day-by-day itinerary",
@@ -137,7 +139,8 @@
       "saveAsDraft": "Save as draft",
       "publishing": "Publishing…",
       "publishToDarna": "Publish to BLADUS",
-      "publishCircuit": "Publish circuit"
+      "publishCircuit": "Publish circuit",
+      "tripType": "Trip type"
     },
     "nav": {
       "previous": "Previous",
@@ -147,7 +150,8 @@
       "summary": "Please fix the following before saving:",
       "titleRequired": "Please enter a circuit title.",
       "groupSize": "The minimum group size must be between 1 and the maximum group size.",
-      "price": "The price per person must be a whole number between {min} and {max}."
+      "price": "The price per person must be a whole number between {min} and {max}.",
+      "tripTypeRequired": "Choose a trip type."
     },
     "toast": {
       "published": "Expedition published on BLADUS!",

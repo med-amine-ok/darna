@@ -24,7 +24,10 @@
     "listings": "Annonces",
     "myListings": "Mes annonces",
     "messages": "Messages",
-    "more": "Plus"
+    "more": "Plus",
+    "experiences": "Expériences",
+    "trips": "Circuits",
+    "property": "Établissement"
   },
   "orgDetails": "Détails de l’organisation {name}",
   "orgWorkspace": "Espace de l’organisation",
@@ -50,5 +53,10 @@
   "moreOptions": "Plus d’options de l’espace",
   "closeMenu": "Fermer le menu",
   "verificationPending": "{name} est en attente de vérification. Vous pouvez déjà créer vos annonces et votre équipe ; un badge vérifié apparaîtra dès que BLADUS aura validé vos documents.",
-  "verificationRejected": "{name} : la vérification a été refusée. Veuillez mettre à jour vos informations légales dans les paramètres ou contacter le support BLADUS."
+  "verificationRejected": "{name} : la vérification a été refusée. Veuillez mettre à jour vos informations légales dans les paramètres ou contacter le support BLADUS.",
+  "createExperience": "Créer une expérience",
+  "createTrip": "Créer un circuit",
+  "addProperty": "Ajouter un établissement",
+  "switchWorkspace": "Changer d'espace",
+  "switchFailed": "Impossible de changer d'espace. Réessayez."
 }

@@ -4,10 +4,11 @@
   "description": "Book stays, authentic experiences, guided trips and vehicle rentals across Algeria.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F8F6EE",
-  "theme_color": "#C96F4F",
+  "background_color": "#FFFFFF",
+  "theme_color": "#152C52",
   "icons": [
-    { "src": "/assets/logo.png", "sizes": "256x256", "type": "image/png" },
-    { "src": "/assets/logo-vertical.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

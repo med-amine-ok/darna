@@ -9,7 +9,7 @@ export interface SparklineProps {
   className?: string;
 }
 
-const STROKE = { olive: "#6B7F5B", terracotta: "#C96F4F", ink: "#7E8D7C" } as const;
+const STROKE = { olive: "#0E6FAD", terracotta: "#0B57D0", ink: "#5F86C0" } as const;
 
 /**
  * Tiny trend line for KPI cards: one palette colour, soft area wash, end-point dot,

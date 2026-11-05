@@ -7,7 +7,7 @@ import { quoteListingBooking, roomTypePrice } from "@/lib/booking/pricing";
 import { isListingFreeForRange } from "./reservations";
 import { priceOverridesFor } from "./calendar";
 import { clone, delay, removeWhere } from "./_store";
-import { sanitizeListingInput } from "./_sanitize";
+import { ListingInputError, sanitizeListingInput } from "./_sanitize";
 import { listingsTable as listingsStore } from "./_tables";
 
 /** Only active listings are public and bookable. */
@@ -286,6 +286,11 @@ export async function createListing(
   await delay(60);
   const id = newId("lst");
   const data = sanitizeListingInput(input, id);
+  // Every new experience must carry one of the canonical experience types.
+  if (data.category === "experience" && !data.experienceType) {
+    throw new ListingInputError("EXPERIENCE_TYPE_REQUIRED");
+  }
+  if (data.category !== "experience") delete data.experienceType;
   const now = new Date().toISOString();
 
   const newListing: Listing = {

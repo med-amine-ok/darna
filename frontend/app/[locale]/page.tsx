@@ -68,10 +68,11 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
       getTrips({ destination: searchParams?.destination }),
     ]);
 
-  const homeListings = allListings.filter((l) => l.category === "home");
-  const hotelAndHostelListings = allListings.filter(
-    (l) => l.businessCategory === "hotel" || l.businessCategory === "hostel" || (l.roomTypes && l.roomTypes.length > 0)
-  );
+  const isHotelOrHostel = (l: (typeof allListings)[number]) =>
+    l.businessCategory === "hotel" || l.businessCategory === "hostel" || (l.roomTypes?.length ?? 0) > 0;
+  // Homes row = private homes only; hotels and hostels get their own row (same split as the tabs).
+  const homeListings = allListings.filter((l) => l.category === "home" && !isHotelOrHostel(l));
+  const hotelAndHostelListings = allListings.filter(isHotelOrHostel);
 
   // Filtered listings if category selected
   const filteredListings = categoryFilter
@@ -108,7 +109,7 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
       <HomeHero />
 
       {/* Main Feed Section */}
-      <Container className="max-w-[1360px] lg:px-10 pt-4 pb-20 space-y-20 sm:space-y-28">
+      <Container className="max-w-[1360px] lg:px-10 pt-12 pb-20 space-y-16 sm:space-y-20">
         {isTripVertical ? (
           /* Trips vertical grid view */
           <div className="space-y-6">
@@ -174,7 +175,7 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
             )}
           </div>
         ) : (
-          /* Default editorial feed */
+          /* Default editorial feed: same order as the hero tabs (HOME_VERTICAL_ORDER) */
           <>
             <ListingCarouselSection
               title={t("sections.homesTitle")}
@@ -185,7 +186,16 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
               viewMoreHref="/search?vertical=home"
             />
 
-            <WilayaTiles tiles={wilayaTiles} />
+            {hotelAndHostelListings.length > 0 && (
+              <ListingCarouselSection
+                title={t("sections.hotelsTitle")}
+                subtitle={t("sections.hotelsSubtitle")}
+                badge={t("sections.hotelsBadge")}
+                listings={hotelAndHostelListings.map(toCardListing)}
+                currentUser={currentUser}
+                viewMoreHref="/search?vertical=hotel"
+              />
+            )}
 
             <ListingCarouselSection
               title={t("sections.experiencesTitle")}
@@ -216,19 +226,6 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
               </section>
             )}
 
-            {hotelAndHostelListings.length > 0 && (
-              <ListingCarouselSection
-                title={t("sections.hotelsTitle")}
-                subtitle={t("sections.hotelsSubtitle")}
-                badge={t("sections.hotelsBadge")}
-                listings={hotelAndHostelListings.map(toCardListing)}
-                currentUser={currentUser}
-                viewMoreHref="/search?propertyType=Hotel"
-              />
-            )}
-
-            <TrustBand />
-
             <ListingCarouselSection
               title={t("sections.vehiclesTitle")}
               subtitle={t("sections.vehiclesSubtitle")}
@@ -237,6 +234,10 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
               currentUser={currentUser}
               viewMoreHref="/search?vertical=vehicle"
             />
+
+            <WilayaTiles tiles={wilayaTiles} />
+
+            <TrustBand />
 
             <ListingCarouselSection
               title={t("sections.weekendTitle")}

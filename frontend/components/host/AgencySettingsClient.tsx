@@ -142,7 +142,7 @@ export default function AgencySettingsClient({
       <header className="enter-up mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-eyebrow uppercase text-secondary-700">{org.name}</p>
-          <h1 className="mt-2 font-serif text-display-md text-primary-900">{t("title")}</h1>
+          <h1 className="mt-2 font-serif text-display-md text-primary-900">{t("titleByType", { type: org.businessCategory ?? "agency" })}</h1>
           <p className="mt-2 max-w-2xl text-body text-primary-600 [text-wrap:pretty]">{t("subtitle")}</p>
         </div>
         <Link
@@ -232,6 +232,7 @@ export default function AgencySettingsClient({
             />
             <Input
               id={ids.address}
+              containerClassName="sm:col-span-2"
               autoComplete="street-address"
               label={t("form.address")}
               value={address}

@@ -11,6 +11,8 @@ interface HostLayoutShellProps {
   children: React.ReactNode;
   currentUser: User | null;
   organization: Organization | null;
+  /** Organizations the user can switch to. */
+  workspaces?: { id: string; name: string; businessCategory?: string }[];
   hostType?: "individual" | "agency" | "hotel" | "hostel" | null;
 }
 
@@ -18,18 +20,25 @@ export default function HostLayoutShell({
   children,
   currentUser,
   organization,
+  workspaces = [],
   hostType,
 }: HostLayoutShellProps) {
   const t = useTranslations("hostNav");
   const pathname = usePathname();
   const isMessages = pathname?.includes("/host/messages");
+  // Focused wizard: the create-listing flow brings its own header and footer.
+  const isCreateFlow = pathname === "/host/listings/new";
+
+  if (isCreateFlow) {
+    return <div className="min-h-[100dvh] bg-darnaBg">{children}</div>;
+  }
 
   // 1. Host Messages: Full-screen app experience (like Slack/WhatsApp/Airbnb)
   // Takes 100% viewport height, NO outer page gutters or padding, NO mobile bottom nav conflict
   if (isMessages) {
     return (
       <div className="h-[100dvh] flex flex-col overflow-hidden bg-white">
-        <HostNavbar currentUser={currentUser} organization={organization} />
+        <HostNavbar currentUser={currentUser} organization={organization} hostType={hostType} workspaces={workspaces} />
         <main className="flex-1 flex flex-col overflow-hidden min-h-0 w-full">
           {children}
         </main>
@@ -66,7 +75,7 @@ export default function HostLayoutShell({
   // 2. Standard host pages (Today, Listings, Bookings, Calendar, Settings, Team, Trips)
   return (
     <div className="flex min-h-[100dvh] flex-col bg-darnaBg">
-      <HostNavbar currentUser={currentUser} organization={organization} />
+      <HostNavbar currentUser={currentUser} organization={organization} hostType={hostType} workspaces={workspaces} />
       {verificationBanner}
       <main className="flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-12">{children}</main>
       <HostBottomNav hostType={hostType} />

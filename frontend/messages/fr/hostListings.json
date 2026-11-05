@@ -1,8 +1,8 @@
 {
   "titleIndividual": "Mes annonces",
-  "titleAgency": "Logements et parc de l'hôte",
-  "subtitleIndividual": "Gérez vos logements, vos tarifs par nuit et la disponibilité de votre calendrier.",
-  "subtitleAgency": "Gérez vos annonces, ajustez vos tarifs par nuit en DZD et contrôlez la disponibilité de votre calendrier.",
+  "titleAgency": "Vos expériences",
+  "subtitleIndividual": "Gérez vos logements et véhicules, leurs tarifs et la disponibilité de votre calendrier.",
+  "subtitleAgency": "Gérez vos expériences, vos prix par personne en DZD et vos disponibilités. Les circuits ont leur propre page.",
   "addTrip": "Ajouter un circuit",
   "addListing": "Ajouter une annonce",
   "createListing": "Créer une annonce",
@@ -24,7 +24,9 @@
     "statusLabel": "Statut",
     "allStatuses": "Tous les statuts",
     "activeOnly": "Actives uniquement",
-    "draft": "Brouillon / en pause"
+    "draft": "Brouillon / en pause",
+    "typeLabel": "Type d'expérience",
+    "allTypes": "Tous les types"
   },
   "viewModeLabel": "Mode d'affichage",
   "gridView": "Vue en grille",
@@ -36,7 +38,8 @@
     "hotel": "Hôtel",
     "experience": "Expérience",
     "vehicle": "Véhicule",
-    "trip": "Circuit"
+    "trip": "Circuit",
+    "hostel": "Auberge"
   },
   "status": {
     "active": "Active",
@@ -129,5 +132,15 @@
     "day": "/ jour",
     "person": "/ personne",
     "bed": "/ lit"
-  }
+  },
+  "titleProperty": "Votre établissement & chambres",
+  "subtitleProperty": "Gérez votre établissement, ses types de chambres, ses tarifs par nuit en DZD et ses disponibilités.",
+  "createExperience": "Créer une expérience",
+  "addProperty": "Ajouter un établissement",
+  "firstListingTitle": "Rien de publié pour l'instant",
+  "firstListingText": "Créez votre première annonce : un logement ou un véhicule. Cela ne prend que quelques minutes.",
+  "firstListingTextAgency": "Créez votre première expérience ou votre premier circuit pour recevoir des réservations.",
+  "firstListingTextProperty": "Ajoutez votre établissement et ses types de chambres pour recevoir des réservations.",
+  "createFirstListing": "Créer votre première annonce",
+  "createFirstExperience": "Créer votre première expérience"
 }

@@ -1,5 +1,6 @@
 /** Client-safe host/organization role helpers. */
 import type { HostType, MembershipRole } from "@/types";
+import { HOST_ALLOWED_OFFERS, type HostOffer } from "@/lib/catalog-types";
 
 /** Host types that operate through an Organization (and its team). */
 export const ORG_HOST_TYPES = ["agency", "hotel", "hostel"] as const;
@@ -25,3 +26,28 @@ export const orgPermissions = {
   canTransferOwnership: (role?: MembershipRole | null) => role === "owner",
   canDeleteOrganization: (role?: MembershipRole | null) => role === "owner",
 };
+
+/**
+ * Which offer (lib/catalog-types.ts HostOffer) a listing payload represents.
+ * Hotel/hostel properties are stored as category "home" (or "hotel") with
+ * room types, so for those workspaces such a payload is the "hotel" offer.
+ * A missing category is a home (the data layer's default).
+ */
+export function listingOffer(
+  category: unknown,
+  hostType: HostType | null | undefined | string,
+  hasRoomTypes: boolean
+): HostOffer | null {
+  const c = category === undefined || category === null || category === "" ? "home" : category;
+  if (c === "hotel") return "hotel";
+  if (c === "home") return (hostType === "hotel" || hostType === "hostel") && hasRoomTypes ? "hotel" : "home";
+  if (c === "vehicle" || c === "experience" || c === "trip") return c;
+  return null;
+}
+
+/** Offers a host workspace may publish, in display order (from HOST_ALLOWED_OFFERS). */
+export function allowedOffersFor(hostType: HostType | null | undefined | string): HostOffer[] {
+  return hostType && hostType in HOST_ALLOWED_OFFERS
+    ? [...HOST_ALLOWED_OFFERS[hostType as keyof typeof HOST_ALLOWED_OFFERS]]
+    : [];
+}

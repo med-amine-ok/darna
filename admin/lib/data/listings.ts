@@ -30,10 +30,23 @@ export interface ListingFilterParams {
   minCapacity?: number;
   minBedrooms?: number;
   amenity?: string;
+  /** Canonical experience type id (EXPERIENCE_TYPES); "all" or empty = any. */
+  experienceType?: string;
+  /** Canonical trip type id (TRIP_TYPES); "all" or empty = any. */
+  tripType?: string;
   sortBy?: "created" | "price" | "rating" | "bookings";
   sortOrder?: "asc" | "desc";
   page?: number;
   pageSize?: number;
+}
+
+function countBy(rows: Listing[], key: (l: Listing) => string | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const l of rows) {
+    const k = key(l);
+    if (k) out[k] = (out[k] ?? 0) + 1;
+  }
+  return out;
 }
 
 export function matchListingStatus(listingStatus: string, filterStatus: string): boolean {
@@ -137,6 +150,12 @@ export async function listListings(
   if (params.amenity && params.amenity !== "all") {
     filtered = filtered.filter((l) => l.amenities.includes(params.amenity!));
   }
+  if (params.experienceType && params.experienceType !== "all") {
+    filtered = filtered.filter((l) => l.experienceType === params.experienceType);
+  }
+  if (params.tripType && params.tripType !== "all") {
+    filtered = filtered.filter((l) => l.tripType === params.tripType);
+  }
 
   // Facets - Scoped to vertical if provided, with alias support for both UI and DB keys
   const scopedListings = params.vertical && params.vertical !== "all"
@@ -168,6 +187,9 @@ export async function listListings(
       vehicle: store.listings.filter((l) => l.category === "vehicle").length,
       trip: store.listings.filter((l) => l.category === "trip").length,
     },
+    // Counts per canonical type (lib/catalog-types.ts), scoped like the status facet.
+    experienceType: countBy(scopedListings, (l) => l.experienceType),
+    tripType: countBy(scopedListings, (l) => l.tripType),
   };
 
   // Sorting
@@ -220,9 +242,9 @@ export async function exportListings(params: ListingFilterParams, actor: AdminAc
   const result = await listListings({ ...params, page: 1, pageSize: Number.MAX_SAFE_INTEGER });
   const rows = result.rows;
   const csv = toCsv(
-    ["ID", "Title", "Vertical", "Property Type", "Host", "Host Type", "Status", "Price (DZD)", "Wilaya", "City", "Capacity", "Rating", "Reviews", "Bookings", "Featured", "Reported", "Created"],
+    ["ID", "Title", "Vertical", "Property Type", "Experience / Trip Type", "Host", "Host Type", "Status", "Price (DZD)", "Wilaya", "City", "Capacity", "Rating", "Reviews", "Bookings", "Featured", "Reported", "Created"],
     rows.map((l) => [
-      l.formattedId || l.id, l.title, l.category, l.propertyType, l.hostName, l.hostType, l.status, l.price,
+      l.formattedId || l.id, l.title, l.category, l.propertyType, l.experienceType ?? l.tripType ?? "", l.hostName, l.hostType, l.status, l.price,
       l.wilayaCode, l.city, l.guestCapacity, l.rating, l.reviewsCount, l.bookingsCount, l.isFeatured, l.isReported, l.createdAt,
     ])
   );

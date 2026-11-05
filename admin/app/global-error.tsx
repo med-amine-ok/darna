@@ -21,8 +21,8 @@ export default function GlobalError({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#F8F6EE",
-          color: "#2E3A2F",
+          background: "#FFFFFF",
+          color: "#152C52",
           fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
           padding: 24,
         }}
@@ -36,18 +36,18 @@ export default function GlobalError({
             borderRadius: 20,
             padding: "36px 32px",
             boxShadow:
-              "0 0 0 1px rgba(30,38,31,0.05), 0 1px 2px rgba(30,38,31,0.05), 0 2px 6px rgba(30,38,31,0.05)",
+              "0 0 0 1px rgba(14,31,59,0.05), 0 1px 2px rgba(14,31,59,0.05), 0 2px 6px rgba(14,31,59,0.05)",
           }}
         >
-          <h1 style={{ fontSize: 26, fontWeight: 400, fontFamily: "Georgia, serif", margin: "0 0 10px", color: "#1E261F" }}>Something went wrong</h1>
-          <p lang="fr" style={{ margin: "0 0 4px", color: "#455243", fontSize: 14 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 400, fontFamily: "Georgia, serif", margin: "0 0 10px", color: "#0E1F3B" }}>Something went wrong</h1>
+          <p lang="fr" style={{ margin: "0 0 4px", color: "#2A4C85", fontSize: 14 }}>
             Une erreur inattendue est survenue.
           </p>
-          <p lang="ar" dir="rtl" style={{ margin: "0 0 16px", color: "#455243", fontSize: 14 }}>
+          <p lang="ar" dir="rtl" style={{ margin: "0 0 16px", color: "#2A4C85", fontSize: 14 }}>
             حدث خطأ غير متوقع.
           </p>
           {error.digest && (
-            <p style={{ fontSize: 12, color: "#5C6C5A" }}>
+            <p style={{ fontSize: 12, color: "#3A63A3" }}>
               Ref: <code>{error.digest}</code>
             </p>
           )}
@@ -60,10 +60,10 @@ export default function GlobalError({
               minHeight: 44,
               borderRadius: 12,
               border: "none",
-              background: "#2E3A2F",
+              background: "#152C52",
               color: "#fff",
               fontWeight: 600,
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(30,38,31,0.1)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(14,31,59,0.1)",
               cursor: "pointer",
             }}
           >

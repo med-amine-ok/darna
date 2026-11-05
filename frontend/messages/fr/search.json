@@ -143,7 +143,13 @@
     "hotelsIn": "Hôtels et auberges à {place}, Algérie",
     "hotels": "Hôtels et auberges en Algérie",
     "staysIn": "Séjours et locations à {place}, Algérie",
-    "all": "Tous les séjours, véhicules et expériences en Algérie"
+    "all": "Tous les séjours, véhicules et expériences en Algérie",
+    "home": "Logements à louer en Algérie",
+    "homeIn": "Logements à {place}, Algérie",
+    "experience": "Expériences et activités en Algérie",
+    "experienceIn": "Expériences à {place}, Algérie",
+    "vehicle": "Voitures et 4x4 à louer en Algérie",
+    "vehicleIn": "Véhicules à louer à {place}, Algérie"
   },
   "count": {
     "tripsInMap": "{count, plural, one {# circuit d'agence visible} other {# circuits d'agences visibles}} dans la zone de la carte ({total} au total)",

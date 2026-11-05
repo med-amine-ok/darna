@@ -36,6 +36,7 @@ import {
   focusRing,
 } from "@/components/ui";
 import { useActionError } from "@/hook/useActionError";
+import { tripTypeLabel } from "@/lib/catalog-types";
 
 interface AgencyTripsClientProps {
   initialTrips: Trip[];
@@ -268,6 +269,12 @@ export default function AgencyTripsClient({
                     <div className="absolute inset-x-0 bottom-0 p-5 text-white">
                       <p className="flex items-center gap-1.5 text-eyebrow uppercase text-tertiary-200">
                         <BrandPinIcon size={13} aria-hidden="true" />
+                        {trip.tripType && (
+                          <>
+                            <span>{tripTypeLabel(trip.tripType, locale)}</span>
+                            <span aria-hidden="true">·</span>
+                          </>
+                        )}
                         {t("cityCountry", { city: trip.city })}
                       </p>
                       <h2 className="mt-2 line-clamp-2 font-serif text-[1.375rem] leading-tight">{trip.title}</h2>

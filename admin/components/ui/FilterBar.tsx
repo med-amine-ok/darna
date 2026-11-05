@@ -83,9 +83,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-e1 mb-4 space-y-3">
       {/* Top Filter Controls Row */}
-      <div className="flex flex-col md:flex-row md:items-end gap-2.5 sm:gap-3">
-        {/* Search Input Row with Mobile Filter Button */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="flex flex-col md:flex-row md:flex-wrap md:items-end gap-2.5 sm:gap-3">
+        {/* Search Input Row with Mobile Filter Button. min-w keeps the search usable: with
+            several selects on one row it used to shrink to a few pixels. */}
+        <div className="flex items-center gap-2 flex-1 min-w-0 md:min-w-[18rem] md:basis-72">
           <div className="relative flex-1 min-w-0 flex items-center">
             <Search className="w-4 h-4 text-primary-600 absolute start-3 pointer-events-none shrink-0" aria-hidden="true" />
             <input
@@ -128,7 +129,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 id={selectId}
                 value={sel.value}
                 onChange={(e) => sel.onChange(e.target.value)}
-                className="w-full px-3 py-2 bg-white shadow-2xs hover:border-primary/25 border border-primary/[0.12] rounded-xl text-xs text-primary-900 font-medium focus:outline-none focus:border-primary-600 focus:bg-white focus:ring-4 focus:ring-primary/[0.08] transition cursor-pointer min-h-[38px]"
+                className="w-auto min-w-full ps-3 pe-8 py-2 bg-white shadow-2xs hover:border-primary/25 border border-primary/[0.12] rounded-xl text-xs text-primary-900 font-medium focus:outline-none focus:border-primary-600 focus:bg-white focus:ring-4 focus:ring-primary/[0.08] transition cursor-pointer min-h-[38px]"
               >
                 {sel.options.map((opt) => (
                   <option key={opt.value} value={opt.value}>

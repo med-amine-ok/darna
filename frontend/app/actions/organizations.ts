@@ -7,6 +7,7 @@ import { orgPermissions } from "@/lib/host-types";
 import { getOrgContext } from "@/lib/server/authz";
 import { getSessionUser, refreshSession } from "@/lib/server/session";
 import {
+  getMembership,
   addOrganizationMember,
   deleteOrganization,
   getMemberById,
@@ -176,4 +177,21 @@ export async function transferOwnershipAction(memberId: string): Promise<ActionR
   if (!ok) return actionFail("SERVER_ERROR");
   revalidatePath("/", "layout");
   return actionOk(await getOrganizationMembers(ctx.organization.id));
+}
+
+
+/**
+ * Switches the host workspace to another organization the user belongs to (owner or
+ * member). The membership is checked on the server; the session is re-issued with the
+ * new organization, and the workspace type follows that organization's category.
+ */
+export async function switchWorkspaceAction(organizationId: string): Promise<ActionResult<{ organizationId: string }>> {
+  const user = await getSessionUser();
+  if (!user) return actionFail("UNAUTHENTICATED");
+  if (typeof organizationId !== "string" || !organizationId) return actionFail("INVALID_INPUT");
+  const membership = await getMembership(organizationId, user.id);
+  if (!membership) return actionFail("FORBIDDEN");
+  await refreshSession(user, organizationId);
+  revalidatePath("/", "layout");
+  return actionOk({ organizationId });
 }

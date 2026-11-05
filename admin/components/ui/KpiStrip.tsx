@@ -98,10 +98,12 @@ export const KpiStrip: React.FC<KpiStripProps> = ({
 
             {/* Value (Fraunces numerals) & label */}
             <div className="min-w-0 flex-1">
-              <span className="block font-serif text-[1.375rem] text-primary-900 leading-none truncate tabular-nums">
+              {/* relative: keeps AnimatedNumber's screen-reader copy inside the card (it widened the page on phones);
+                  smaller numerals on phones so large DZD amounts stay fully visible. */}
+              <span className="relative block font-serif text-[1.125rem] sm:text-[1.375rem] text-primary-900 leading-none break-words tabular-nums">
                 <AnimatedNumber value={typeof card.value === "number" ? formatNumber(card.value, locale) : card.value} />
               </span>
-              <span className="block text-xs font-medium text-primary-600 truncate leading-snug mt-1">
+              <span className="block text-xs font-medium text-primary-600 line-clamp-2 leading-snug mt-1">
                 {card.label}
               </span>
             </div>

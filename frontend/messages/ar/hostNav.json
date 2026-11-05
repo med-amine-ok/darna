@@ -24,7 +24,10 @@
     "listings": "الإعلانات",
     "myListings": "إعلاناتي",
     "messages": "الرسائل",
-    "more": "المزيد"
+    "more": "المزيد",
+    "experiences": "التجارب",
+    "trips": "الرحلات",
+    "property": "المنشأة والغرف"
   },
   "orgDetails": "تفاصيل المؤسسة {name}",
   "orgWorkspace": "مساحة عمل المؤسسة",
@@ -44,11 +47,16 @@
   "notifications": "الإشعارات",
   "hostMenu": "قائمة المضيف",
   "hostFallback": "مضيف",
-  "createListing": "إنشاء إعلان جديد",
+  "createListing": "إنشاء إعلان",
   "createCircuit": "إنشاء جولة جديدة",
   "messagesInquiries": "الرسائل واستفسارات الضيوف",
   "moreOptions": "خيارات إضافية لمساحة العمل",
   "closeMenu": "إغلاق القائمة",
   "verificationPending": "{name} قيد التحقق. يمكنك الآن إعداد إعلاناتك وفريقك، وستظهر شارة التوثيق بمجرد موافقة بلادوس على وثائقك.",
-  "verificationRejected": "{name}: تم رفض التحقق. يرجى تحديث بياناتك القانونية في الإعدادات أو التواصل مع دعم بلادوس."
+  "verificationRejected": "{name}: تم رفض التحقق. يرجى تحديث بياناتك القانونية في الإعدادات أو التواصل مع دعم بلادوس.",
+  "createExperience": "إنشاء تجربة",
+  "createTrip": "إنشاء رحلة",
+  "addProperty": "إضافة منشأة",
+  "switchWorkspace": "تغيير مساحة العمل",
+  "switchFailed": "تعذّر تغيير مساحة العمل. حاول مرة أخرى."
 }

@@ -1,8 +1,8 @@
 {
   "titleIndividual": "إعلاناتي",
-  "titleAgency": "عقارات المضيف وأسطوله",
-  "subtitleIndividual": "أدِر منازلك وأسعار الليلة وتوفّر الحجز في تقويمك.",
-  "subtitleAgency": "أدِر إعلاناتك، وعدّل أسعار الليلة بالدينار الجزائري، وتحكّم في توفّر الحجز في تقويمك.",
+  "titleAgency": "تجاربك",
+  "subtitleIndividual": "أدِر منازلك ومركباتك وأسعارها وتوفّرها في التقويم.",
+  "subtitleAgency": "أدِر تجاربك وأسعارها للشخص بالدينار الجزائري وتوفرها. للرحلات صفحتها الخاصة.",
   "addTrip": "إضافة رحلة",
   "addListing": "إضافة إعلان جديد",
   "createListing": "إنشاء إعلان جديد",
@@ -24,7 +24,9 @@
     "statusLabel": "الحالة",
     "allStatuses": "كل الحالات",
     "activeOnly": "النشطة فقط",
-    "draft": "مسودة / متوقفة مؤقتًا"
+    "draft": "مسودة / متوقفة مؤقتًا",
+    "typeLabel": "نوع التجربة",
+    "allTypes": "كل الأنواع"
   },
   "viewModeLabel": "طريقة العرض",
   "gridView": "عرض شبكي",
@@ -36,7 +38,8 @@
     "hotel": "فندق",
     "experience": "تجربة",
     "vehicle": "مركبة",
-    "trip": "رحلة"
+    "trip": "رحلة",
+    "hostel": "نُزل"
   },
   "status": {
     "active": "نشط",
@@ -129,5 +132,15 @@
     "day": "/ يوم",
     "person": "/ شخص",
     "bed": "/ سرير"
-  }
+  },
+  "titleProperty": "منشأتك وغرفها",
+  "subtitleProperty": "أدِر منشأتك وأنواع غرفها وأسعار الليلة بالدينار الجزائري وتوفرها.",
+  "createExperience": "إنشاء تجربة",
+  "addProperty": "إضافة منشأة",
+  "firstListingTitle": "لم تنشر شيئًا بعد",
+  "firstListingText": "أنشئ إعلانك الأول: مسكنًا أو مركبة. لن يستغرق ذلك سوى دقائق.",
+  "firstListingTextAgency": "أنشئ تجربتك أو رحلتك الأولى لتبدأ في تلقي الحجوزات.",
+  "firstListingTextProperty": "أضف منشأتك مع أنواع غرفها لتبدأ في تلقي الحجوزات.",
+  "createFirstListing": "أنشئ إعلانك الأول",
+  "createFirstExperience": "أنشئ تجربتك الأولى"
 }

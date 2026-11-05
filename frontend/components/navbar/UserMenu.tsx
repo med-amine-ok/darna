@@ -131,12 +131,13 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
             type="button"
             aria-label={t("userMenu")}
             className={cn(
-              "relative flex h-11 shrink-0 items-center gap-2 rounded-full bg-white ps-3 pe-1 shadow-e1 cursor-pointer select-none",
+              "relative flex h-11 shrink-0 items-center gap-2 rounded-full bg-white ps-1 pe-1 sm:ps-3 shadow-e1 cursor-pointer select-none",
               "transition-shadow duration-fast ease-standard hover:shadow-e2 aria-expanded:shadow-e2",
               focusRing
             )}
           >
-            <BrandMenuIcon size={17} className="text-primary-800" />
+            {/* Phones: avatar only, so the header search pill keeps room for its text */}
+            <BrandMenuIcon size={17} className="hidden text-primary-800 sm:block" />
             {currentUser ? (
               <Avatar name={currentUser.name || currentUser.email || "BLADUS"} src={currentUser.image ?? undefined} size="sm" decorative />
             ) : (

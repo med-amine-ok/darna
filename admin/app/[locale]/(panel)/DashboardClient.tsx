@@ -585,25 +585,25 @@ export default function DashboardClient({
                       >
                         <stop
                           offset="0%"
-                          stopColor="#6B7F5B"
+                          stopColor="#0E6FAD"
                           stopOpacity={0.22}
                         />
                         <stop
                           offset="100%"
-                          stopColor="#6B7F5B"
+                          stopColor="#0E6FAD"
                           stopOpacity={0}
                         />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
                       vertical={false}
-                      stroke="#2E3A2F"
+                      stroke="#152C52"
                       strokeOpacity={0.06}
                     />
                     <XAxis
                       dataKey="day"
                       reversed={isRtl}
-                      tick={{ fontSize: 12, fill: "#5C6C5A" }}
+                      tick={{ fontSize: 12, fill: "#3A63A3" }}
                       axisLine={false}
                       tickLine={false}
                       tickMargin={8}
@@ -611,14 +611,14 @@ export default function DashboardClient({
                     <YAxis
                       orientation={isRtl ? "right" : "left"}
                       tickFormatter={(v: number) => formatNumber(v, locale)}
-                      tick={{ fontSize: 12, fill: "#5C6C5A" }}
+                      tick={{ fontSize: 12, fill: "#3A63A3" }}
                       axisLine={false}
                       tickLine={false}
                       width={44}
                     />
                     <RechartsTooltip
                       cursor={{
-                        stroke: "#2E3A2F",
+                        stroke: "#152C52",
                         strokeOpacity: 0.18,
                         strokeWidth: 1,
                       }}
@@ -650,13 +650,13 @@ export default function DashboardClient({
                     <Area
                       type="monotone"
                       dataKey="bookings"
-                      stroke="#6B7F5B"
+                      stroke="#0E6FAD"
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#bookingsGrad)"
                       activeDot={{
                         r: 5,
-                        fill: "#6B7F5B",
+                        fill: "#0E6FAD",
                         stroke: "#FFFFFF",
                         strokeWidth: 2,
                       }}

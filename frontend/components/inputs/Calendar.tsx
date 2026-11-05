@@ -38,7 +38,7 @@ export default function Calendar({
           monthPicker: t("monthPicker"),
           yearPicker: t("yearPicker"),
         }}
-        rangeColors={["#B65634"]}
+        rangeColors={["#0B57D0"]}
         ranges={[value]}
         date={new Date()}
         onChange={onChange}

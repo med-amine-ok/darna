@@ -10,6 +10,9 @@ import LanguageSwitcher from "@/components/navbar/LanguageSwitcher";
 import { Avatar, DropdownMenu, cn, focusRing } from "@/components/ui";
 import type { DropdownItem } from "@/components/ui";
 import { spring } from "@/lib/motion";
+import { canHostOffer } from "@/lib/catalog-types";
+import { switchWorkspaceAction } from "@/app/actions/organizations";
+import { toast } from "react-toastify";
 import {
   BrandBellIcon,
   BrandMenuIcon,
@@ -26,6 +29,9 @@ import {
 interface HostNavbarProps {
   currentUser?: User | null;
   organization?: Organization | null;
+  /** Active workspace type (server host context); falls back to the user's host type. */
+  hostType?: "individual" | "agency" | "hotel" | "hostel" | null;
+  workspaces?: { id: string; name: string; businessCategory?: string }[];
 }
 
 interface HostNavLink {
@@ -40,31 +46,36 @@ interface HostNavLink {
  * button only shows from xl (it is always in the user menu), the org switcher from lg,
  * and the pill nav can scroll inside itself instead of pushing the page wider.
  */
-export default function HostNavbar({ currentUser, organization }: HostNavbarProps) {
+export default function HostNavbar({ currentUser, organization, hostType: workspaceType, workspaces = [] }: HostNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("hostNav");
 
-  const isIndividual = currentUser?.hostType === "individual" || !currentUser?.hostType;
-  const isOrg =
-    currentUser?.hostType === "agency" || currentUser?.hostType === "hotel" || currentUser?.hostType === "hostel";
-  const isAgencyHost = currentUser?.hostType === "agency";
-  const hostType: "individual" | "agency" | "hotel" | "hostel" = currentUser?.hostType || "individual";
+  // What each workspace may publish comes from lib/catalog-types.ts (HOST_ALLOWED_OFFERS).
+  const hostType: "individual" | "agency" | "hotel" | "hostel" = workspaceType || currentUser?.hostType || "individual";
+  const isIndividual = hostType === "individual";
+  const isOrg = !isIndividual;
+  const isAgencyHost = canHostOffer(hostType, "trip");
 
   const soloNavLinks: HostNavLink[] = [
     { href: "/host/listings", label: t("tabs.myListings") },
     { href: "/host/bookings", label: t("tabs.bookings") },
   ];
+  // Agencies: experiences (listings) + trips. Hotels/hostels: their property and room types.
   const enterprisePrimaryLinks: HostNavLink[] = [
     { href: "/host", label: t("tabs.today"), exact: true },
     { href: "/host/bookings", label: t("tabs.bookings") },
     { href: "/host/calendar", label: t("tabs.calendar") },
-    { href: "/host/listings", label: t("tabs.listings") },
+    { href: "/host/listings", label: isAgencyHost ? t("tabs.experiences") : t("tabs.property") },
+    ...(isAgencyHost ? [{ href: "/host/agency/trips", label: t("tabs.trips") }] : []),
   ];
   const primaryLinks = isIndividual ? soloNavLinks : enterprisePrimaryLinks;
 
   const isActive = (href: string, exact = false) => (exact ? pathname === href : !!pathname?.startsWith(href));
-  const isManageActive = !!(pathname?.startsWith("/host/agency") || pathname?.startsWith("/host/settings"));
+  const isManageActive = !!(
+    (pathname?.startsWith("/host/agency") && !pathname?.startsWith("/host/agency/trips")) ||
+    pathname?.startsWith("/host/settings")
+  );
   const isMessagesPage = !!pathname?.startsWith("/host/messages");
 
   const switchToTraveling = () => {
@@ -78,9 +89,6 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
 
   const manageItems: DropdownItem[] = [
     { type: "label", label: t("workspaceOperations") },
-    ...(isAgencyHost
-      ? [{ label: t("tripsExpeditions"), href: "/host/agency/trips", icon: icon(BrandCompassIcon) } as DropdownItem]
-      : []),
     { label: t("teamMembers"), href: "/host/agency/team", icon: icon(BrandUsersIcon) },
     { label: t("orgSettings", { type: hostType }), href: "/host/agency/settings", icon: icon(BrandBuildingIcon) },
     { type: "separator" },
@@ -98,6 +106,33 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
       ]
     : [];
 
+  // Workspace switcher: shown when the user belongs to more than one organization.
+  const otherWorkspaces = workspaces.filter((w) => w.id !== organization?.id);
+  const switchTo = async (id: string) => {
+    const result = await switchWorkspaceAction(id);
+    if (!result.ok) {
+      toast.error(t("switchFailed"));
+      return;
+    }
+    router.push("/host");
+    router.refresh();
+  };
+  const workspaceItems: DropdownItem[] = otherWorkspaces.length
+    ? [
+        { type: "label", label: t("switchWorkspace") },
+        ...otherWorkspaces.map(
+          (w) =>
+            ({
+              label: w.name,
+              description: w.businessCategory ? t(`badge.${w.businessCategory}`) : undefined,
+              onSelect: () => void switchTo(w.id),
+              icon: icon(BrandBuildingIcon),
+            }) as DropdownItem
+        ),
+        { type: "separator" },
+      ]
+    : [];
+
   const userItems: DropdownItem[] = [
     {
       type: "label",
@@ -112,9 +147,14 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
       ),
     },
     { type: "separator" },
-    { label: t("createListing"), href: "/become-a-host/1", icon: <BrandPlusIcon size={16} aria-hidden="true" className="text-accent-700" /> },
+    ...workspaceItems,
+    {
+      label: isAgencyHost ? t("createExperience") : isIndividual ? t("createListing") : t("addProperty"),
+      href: isAgencyHost ? "/host/listings/new?offer=experience" : "/host/listings/new",
+      icon: <BrandPlusIcon size={16} aria-hidden="true" className="text-accent-700" />,
+    },
     ...(isAgencyHost
-      ? [{ label: t("createCircuit"), href: "/host/agency/trips/new", icon: icon(BrandCompassIcon) } as DropdownItem]
+      ? [{ label: t("createTrip"), href: "/host/agency/trips/new", icon: icon(BrandCompassIcon) } as DropdownItem]
       : []),
     { label: t("hostSettingsPayouts"), href: "/host/settings", icon: icon(BrandSettingsIcon) },
     { type: "separator" },
@@ -265,7 +305,7 @@ export default function HostNavbar({ currentUser, organization }: HostNavbarProp
           <DropdownMenu
             align="end"
             ariaLabel={t("hostMenu")}
-            className="w-64"
+            className="w-80 max-w-[calc(100vw-1.5rem)]"
             wrapperClassName="ms-1"
             trigger={
               <button

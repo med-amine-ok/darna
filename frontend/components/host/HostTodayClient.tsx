@@ -39,8 +39,11 @@ import {
   BrandChartIcon,
   BrandBookingsIcon,
   CategoryHouseIcon,
+  CategoryHotelIcon,
+  BrandPinIcon,
 } from "@/components/icons";
 import { useActionError } from "@/hook/useActionError";
+import { canHostOffer } from "@/lib/catalog-types";
 
 interface HostTodayClientProps {
   currentUser?: User | null;
@@ -145,11 +148,17 @@ export default function HostTodayClient({
   };
 
   const displayName = organization ? organization.name : currentUser?.name || t("hostFallback");
+  // Agencies create experiences and trips; hotels/hostels add a property (lib/catalog-types.ts).
+  const isAgency = canHostOffer(organization?.businessCategory ?? currentUser?.hostType, "trip");
   const dzdUnit = locale === "ar" ? "د.ج" : "DZD";
+  // Copy and figures follow what this workspace may publish (lib/catalog-types HOST_ALLOWED_OFFERS).
+  const kind: "agency" | "property" | "individual" = isAgency ? "agency" : organization ? "property" : "individual";
+  const pendingCount = reservations.filter((r) => r.status === "pending").length;
+  const ListingsIcon = kind === "agency" ? BrandPinIcon : kind === "property" ? CategoryHotelIcon : CategoryHouseIcon;
 
   const quickLinks = [
     { href: "/host/calendar", label: t("quick.calendar"), Icon: BrandCalendarIcon },
-    { href: "/host/listings", label: t("quick.listings", { count: listings.length }), Icon: CategoryHouseIcon },
+    { href: "/host/listings", label: t(`quick.listings_${kind}`, { count: listings.length }), Icon: ListingsIcon },
     { href: "/host/messages", label: t("quick.messages"), Icon: BrandMessageIcon },
     { href: "/host/settings", label: t("quick.payout"), Icon: BrandReceiptIcon },
   ];
@@ -160,7 +169,7 @@ export default function HostTodayClient({
       <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <p className="enter-up text-eyebrow uppercase text-secondary-700 rtl:normal-case rtl:tracking-normal">
-            {organization ? t("eyebrowAgency") : t("eyebrowIndividual")}
+            {kind === "agency" ? t("eyebrowAgency") : kind === "property" ? t("eyebrowProperty") : t("eyebrowIndividual")}
           </p>
           <h1
             className="enter-up mt-2 text-balance font-serif text-display-md text-primary-900"
@@ -176,9 +185,21 @@ export default function HostTodayClient({
           </p>
         </div>
         <div className="enter-up flex flex-wrap items-center gap-2" style={{ animationDelay: "160ms" }}>
-          <Button href="/become-a-host/1" leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}>
-            {t("createListing")}
+          <Button
+            href={isAgency ? "/host/listings/new?offer=experience" : "/host/listings/new"}
+            leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}
+          >
+            {isAgency ? t("createExperience") : organization ? t("addProperty") : t("createListing")}
           </Button>
+          {isAgency && (
+            <Button
+              href="/host/agency/trips/new"
+              variant="tertiary"
+              leadingIcon={<BrandPlusIcon size={18} aria-hidden="true" />}
+            >
+              {t("createTrip")}
+            </Button>
+          )}
           <Button
             href="/host/calendar"
             variant="tertiary"
@@ -288,7 +309,15 @@ export default function HostTodayClient({
             sparkline={hasSignal(earningsSpark) ? earningsSpark : undefined}
             icon={<BrandCashIcon size={18} />}
           />
-          {occupancyStats ? (
+          {kind === "agency" ? (
+            // Night-based occupancy means nothing for experiences and trips: show open requests instead.
+            <StatCard
+              label={t("kpi.pendingRequests")}
+              value={pendingCount}
+              hint={t("kpi.pendingRequestsNote", { count: pendingCount })}
+              icon={<BrandClockIcon size={18} />}
+            />
+          ) : occupancyStats ? (
             <StatCard
               label={t("kpi.occupancyRate")}
               value={Math.round(occupancyStats.rate * 100)}
@@ -303,13 +332,13 @@ export default function HostTodayClient({
           ) : (
             <Card className="flex flex-col justify-between gap-3">
               <p className="text-meta font-medium text-primary-600">{t("kpi.occupancyRate")}</p>
-              <p className="text-meta text-primary-500">{t("kpi.noOccupancy")}</p>
+              <p className="text-meta text-neutral-600">{t(`kpi.noOccupancy_${kind}`)}</p>
             </Card>
           )}
           <StatCard
             label={t("kpi.activeBookings")}
             value={confirmedReservations.length}
-            hint={t("kpi.activeBookingsNote")}
+            hint={t(`kpi.activeBookingsNote_${kind}`)}
             icon={<BrandBookingsIcon size={18} />}
           />
           {rating ? (
@@ -327,7 +356,7 @@ export default function HostTodayClient({
             <Card className="flex flex-col justify-between gap-3">
               <p className="text-meta font-medium text-primary-600">{t("kpi.overallRating")}</p>
               <p className="font-serif text-display-md leading-none text-secondary-700">{t("kpi.ratingNew")}</p>
-              <p className="text-meta text-primary-500">{t("kpi.ratingNote", { count: 0 })}</p>
+              <p className="text-meta text-neutral-600">{t("kpi.ratingNote", { count: 0 })}</p>
             </Card>
           )}
         </div>
@@ -455,7 +484,7 @@ export default function HostTodayClient({
               {t("recentReviews")}
             </h2>
             {hostReviews.length === 0 ? (
-              <KitEmptyState compact variant="messages" title={t("noReviews")} className="mt-2" />
+              <KitEmptyState compact variant="messages" title={rating ? t("noRecentReviews") : t("noReviews")} className="mt-2" />
             ) : (
               <ul className="mt-4 divide-y divide-primary/[0.06]">
                 {hostReviews.slice(0, 3).map((rev) => (
@@ -519,8 +548,8 @@ export default function HostTodayClient({
             <p className="text-eyebrow uppercase text-tertiary-300 rtl:normal-case rtl:tracking-normal">
               {t("tip.eyebrow")}
             </p>
-            <h2 className="mt-2 font-serif text-heading text-white">{t("tip.title")}</h2>
-            <p className="mt-2 text-pretty text-meta leading-relaxed text-white/80">{t("tip.body")}</p>
+            <h2 className="mt-2 font-serif text-heading text-white">{t(`tip.${kind}.title`)}</h2>
+            <p className="mt-2 text-pretty text-meta leading-relaxed text-white/90">{t(`tip.${kind}.body`)}</p>
             <Link
               href="/host/calendar"
               className="mt-4 inline-flex items-center gap-1 rounded-full text-meta font-semibold text-accent-200 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-800"

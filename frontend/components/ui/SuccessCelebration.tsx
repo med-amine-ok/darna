@@ -54,17 +54,17 @@ export function SuccessCelebration({
         aria-hidden="true"
         className="overflow-visible"
       >
-        <ellipse cx="80" cy="124" rx="58" ry="6" fill="#E9DFD0" opacity="0.7" />
+        <ellipse cx="80" cy="124" rx="58" ry="6" fill="#E4EAF2" opacity="0.7" />
         <m.path
           d={ARCH}
-          fill="#E8EDE3"
+          fill="#D7EEFA"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: dur.slow, delay: 0.25 }}
         />
         <m.path
           d={ARCH}
-          stroke="#2E3A2F"
+          stroke="#152C52"
           strokeWidth="1.75"
           strokeLinejoin="round"
           initial={reduce ? false : { pathLength: 0 }}
@@ -96,7 +96,7 @@ export function SuccessCelebration({
                   y1={y1}
                   x2={x2}
                   y2={y2}
-                  stroke={i % 2 ? "#6B7F5B" : "#C96F4F"}
+                  stroke={i % 2 ? "#0E6FAD" : "#0B57D0"}
                   strokeWidth="2"
                   strokeLinecap="round"
                 />
@@ -104,7 +104,7 @@ export function SuccessCelebration({
                   cx={80 + Math.cos(a + Math.PI / 8) * 58}
                   cy={80 + Math.sin(a + Math.PI / 8) * 58}
                   r="2"
-                  fill={i % 2 ? "#C96F4F" : "#D9C9B2"}
+                  fill={i % 2 ? "#0B57D0" : "#D3DCE8"}
                 />
               </m.g>
             );
@@ -114,7 +114,7 @@ export function SuccessCelebration({
           cx="80"
           cy="84"
           r="20"
-          fill="#6B7F5B"
+          fill="#0E6FAD"
           initial={reduce ? false : { scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ ...spring.pop, delay: 0.45 }}
@@ -132,7 +132,7 @@ export function SuccessCelebration({
         />
         <path
           d="M128 30l2.4 5.6L136 38l-5.6 2.4L128 46l-2.4-5.6L120 38l5.6-2.4z"
-          stroke="#C96F4F"
+          stroke="#0B57D0"
           strokeWidth="1.4"
           strokeLinejoin="round"
         />

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-02T22:01:49.986Z",
+  "timestamp": "2026-11-04T20:52:11.906Z",
   "totalRoutesChecked": 16,
   "localesChecked": [
     "fr",
@@ -13,53 +13,16 @@
     "tablet_768 (768x1024)",
     "desktop_1280 (1280x720)"
   ],
-  "totalFindings": 5,
-  "blockingCount": 5,
+  "totalFindings": 1,
+  "blockingCount": 1,
   "warningCount": 0,
   "findings": [
     {
-      "type": "horizontal_overflow",
-      "route": "/stats",
-      "locale": "fr",
-      "viewport": "390x844",
-      "message": "Document width (408px) exceeds viewport (390px)",
-      "element": "span.tabular-nums ",
-      "severity": "blocking"
-    },
-    {
-      "type": "horizontal_overflow",
-      "route": "/help",
-      "locale": "fr",
-      "viewport": "390x844",
-      "message": "Document width (397px) exceeds viewport (390px)",
-      "element": "span.tabular-nums ",
-      "severity": "blocking"
-    },
-    {
-      "type": "horizontal_overflow",
-      "route": "/stays/new",
-      "locale": "fr",
-      "viewport": "1280x720",
-      "message": "Document width (1356px) exceeds viewport (1280px)",
-      "element": "li.flex items-center select-none ",
-      "severity": "blocking"
-    },
-    {
-      "type": "horizontal_overflow",
-      "route": "/stats",
+      "type": "page_load_error",
+      "route": "/",
       "locale": "en",
       "viewport": "390x844",
-      "message": "Document width (414px) exceeds viewport (390px)",
-      "element": "span.tabular-nums ",
-      "severity": "blocking"
-    },
-    {
-      "type": "horizontal_overflow",
-      "route": "/help",
-      "locale": "en",
-      "viewport": "390x844",
-      "message": "Document width (397px) exceeds viewport (390px)",
-      "element": "span.tabular-nums ",
+      "message": "UNKNOWN: unknown error, open 'C:\\Users\\OASIS\\Documents\\darna\\admin\\docs\\responsive\\screenshots\\phone_390\\en\\dashboard.png'",
       "severity": "blocking"
     }
   ]

@@ -5,9 +5,9 @@
  * next-intl provider and the stylesheet may not exist: static trilingual copy and
  * inline styles in the BLADUS palette (paper, ink, terracotta) with the logo arch.
  */
-const ink = "#2E3A2F";
-const paper = "#F8F6EE";
-const terracotta = "#B65634";
+const ink = "#152C52";
+const paper = "#FFFFFF";
+const terracotta = "#0B57D0";
 
 export default function GlobalError({
   reset,
@@ -49,10 +49,10 @@ export default function GlobalError({
           <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 400, fontSize: 30, lineHeight: 1.15, margin: "0 0 12px" }}>
             Something went wrong
           </h1>
-          <p lang="fr" style={{ margin: "0 0 4px", color: "#455243" }}>
+          <p lang="fr" style={{ margin: "0 0 4px", color: "#2A4C85" }}>
             Un problème est survenu.
           </p>
-          <p lang="ar" dir="rtl" style={{ margin: "0 0 28px", color: "#455243" }}>
+          <p lang="ar" dir="rtl" style={{ margin: "0 0 28px", color: "#2A4C85" }}>
             حدث خطأ ما.
           </p>
           <button
@@ -62,7 +62,7 @@ export default function GlobalError({
               minHeight: 48,
               padding: "0 28px",
               borderRadius: 999,
-              background: `linear-gradient(135deg, #C96F4F 0%, ${terracotta} 55%, #974426 100%)`,
+              background: `linear-gradient(135deg, #0B57D0 0%, ${terracotta} 55%, #0846AB 100%)`,
               color: "#fff",
               border: 0,
               fontWeight: 600,

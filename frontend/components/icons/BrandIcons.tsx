@@ -24,12 +24,12 @@ export const WelcomeArchIcon: React.FC<IconProps> = ({ size = 24, className = ""
   >
     <line x1="3" y1="21" x2="21" y2="21" stroke="currentColor" strokeWidth="1.75" />
     <path d="M5 21V12.5C5 7.8 8.1 4 12 4C15.9 4 19 7.8 19 12.5V21" stroke="currentColor" strokeWidth="1.75" />
-    <path d="M8 21V13.2C8 9.8 9.8 7.2 12 7.2C14.2 7.2 16 9.8 16 13.2V21" stroke="#6B7F5B" strokeWidth="1.5" />
-    <path d="M4 14.5C6 13.2 8 13.2 12 13.2C16 13.2 18 13.2 20 14.5" stroke="#D9C9B2" strokeWidth="1.25" />
-    <line x1="12" y1="1" x2="12" y2="2.6" stroke="#C96F4F" strokeWidth="1.75" />
-    <line x1="8.2" y1="1.8" x2="9.4" y2="3.1" stroke="#C96F4F" strokeWidth="1.5" />
-    <line x1="15.8" y1="1.8" x2="14.6" y2="3.1" stroke="#C96F4F" strokeWidth="1.5" />
-    <circle cx="12" cy="10.5" r="1.1" fill="#C96F4F" />
+    <path d="M8 21V13.2C8 9.8 9.8 7.2 12 7.2C14.2 7.2 16 9.8 16 13.2V21" stroke="#0E6FAD" strokeWidth="1.5" />
+    <path d="M4 14.5C6 13.2 8 13.2 12 13.2C16 13.2 18 13.2 20 14.5" stroke="#D3DCE8" strokeWidth="1.25" />
+    <line x1="12" y1="1" x2="12" y2="2.6" stroke="#0B57D0" strokeWidth="1.75" />
+    <line x1="8.2" y1="1.8" x2="9.4" y2="3.1" stroke="#0B57D0" strokeWidth="1.5" />
+    <line x1="15.8" y1="1.8" x2="14.6" y2="3.1" stroke="#0B57D0" strokeWidth="1.5" />
+    <circle cx="12" cy="10.5" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -50,13 +50,13 @@ export const InstantBookingIcon: React.FC<IconProps> = ({ size = 24, className =
     focusable="false"
     {...props}
   >
-    <path d="M3.5 12H7" stroke="#D9C9B2" strokeWidth="1.75" />
-    <path d="M4.5 7.5L7.5 10.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <path d="M4.5 16.5L7.5 13.5" stroke="#6B7F5B" strokeWidth="1.5" />
+    <path d="M3.5 12H7" stroke="#D3DCE8" strokeWidth="1.75" />
+    <path d="M4.5 7.5L7.5 10.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <path d="M4.5 16.5L7.5 13.5" stroke="#0E6FAD" strokeWidth="1.5" />
     <path d="M9 4.5L16.5 12L9 19.5" stroke="currentColor" strokeWidth="2" />
-    <path d="M12.5 4.5L17.5 9.5M12.5 19.5L17.5 14.5" stroke="#6B7F5B" strokeWidth="1.25" />
-    <path d="M19.5 12L22.5 12" stroke="#C96F4F" strokeWidth="2" />
-    <circle cx="16.5" cy="12" r="1.2" fill="#C96F4F" />
+    <path d="M12.5 4.5L17.5 9.5M12.5 19.5L17.5 14.5" stroke="#0E6FAD" strokeWidth="1.25" />
+    <path d="M19.5 12L22.5 12" stroke="#0B57D0" strokeWidth="2" />
+    <circle cx="16.5" cy="12" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -79,9 +79,9 @@ export const RequestReviewIcon: React.FC<IconProps> = ({ size = 24, className = 
   >
     <rect x="3" y="5" width="18" height="15" rx="2" stroke="currentColor" strokeWidth="1.75" />
     <path d="M3 6.5L12 13.5L21 6.5" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M3 18.5L8.5 13.5M21 18.5L15.5 13.5" stroke="#D9C9B2" strokeWidth="1.25" />
-    <circle cx="12" cy="13.5" r="3.2" fill="#F8F6EE" stroke="#C96F4F" strokeWidth="1.5" />
-    <path d="M10.7 13.5L11.7 14.6L13.5 12.4" stroke="#C96F4F" strokeWidth="1.5" />
+    <path d="M3 18.5L8.5 13.5M21 18.5L15.5 13.5" stroke="#D3DCE8" strokeWidth="1.25" />
+    <circle cx="12" cy="13.5" r="3.2" fill="#FFFFFF" stroke="#0B57D0" strokeWidth="1.5" />
+    <path d="M10.7 13.5L11.7 14.6L13.5 12.4" stroke="#0B57D0" strokeWidth="1.5" />
   </svg>
 );
 
@@ -107,11 +107,11 @@ export const PremiumStarIcon: React.FC<IconProps> = ({ size = 20, className = ""
       stroke="currentColor"
       strokeWidth="1.75"
     />
-    <line x1="12" y1="5.5" x2="12" y2="8" stroke="#6B7F5B" strokeWidth="1.25" />
-    <line x1="12" y1="18.5" x2="12" y2="16" stroke="#6B7F5B" strokeWidth="1.25" />
-    <line x1="5.5" y1="12" x2="8" y2="12" stroke="#6B7F5B" strokeWidth="1.25" />
-    <line x1="18.5" y1="12" x2="16" y2="12" stroke="#6B7F5B" strokeWidth="1.25" />
-    <circle cx="12" cy="12" r="1.75" fill="#C96F4F" />
+    <line x1="12" y1="5.5" x2="12" y2="8" stroke="#0E6FAD" strokeWidth="1.25" />
+    <line x1="12" y1="18.5" x2="12" y2="16" stroke="#0E6FAD" strokeWidth="1.25" />
+    <line x1="5.5" y1="12" x2="8" y2="12" stroke="#0E6FAD" strokeWidth="1.25" />
+    <line x1="18.5" y1="12" x2="16" y2="12" stroke="#0E6FAD" strokeWidth="1.25" />
+    <circle cx="12" cy="12" r="1.75" fill="#0B57D0" />
   </svg>
 );
 
@@ -131,17 +131,17 @@ export const StampCasbahAlgiersIcon: React.FC<IconProps> = ({ size = 32, classNa
     focusable="false"
     {...props}
   >
-    <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
-    <line x1="6" y1="25" x2="26" y2="25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M7 25V17H12V14H18V17H21V25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <line x1="12" y1="14" x2="12" y2="25" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="18" y1="17" x2="18" y2="25" stroke="#6B7F5B" strokeWidth="1.2" />
-    <path d="M13 25V20.5C13 19.4 13.8 18.5 15 18.5C16.2 18.5 17 19.4 17 20.5V25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M21 17V8H24V17" stroke="#2E3A2F" strokeWidth="1.4" />
-    <path d="M20.5 8L22.5 5.5L24.5 8" stroke="#2E3A2F" strokeWidth="1.4" />
-    <circle cx="22.5" cy="4.2" r="1" fill="#C96F4F" />
-    <line x1="9" y1="19" x2="10" y2="19" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="15" y1="16" x2="15" y2="16.5" stroke="#C96F4F" strokeWidth="1.5" />
+    <circle cx="16" cy="16" r="14.5" stroke="#D3DCE8" strokeWidth="1.25" strokeDasharray="2 1.5" />
+    <line x1="6" y1="25" x2="26" y2="25" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M7 25V17H12V14H18V17H21V25" stroke="#152C52" strokeWidth="1.5" />
+    <line x1="12" y1="14" x2="12" y2="25" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="18" y1="17" x2="18" y2="25" stroke="#0E6FAD" strokeWidth="1.2" />
+    <path d="M13 25V20.5C13 19.4 13.8 18.5 15 18.5C16.2 18.5 17 19.4 17 20.5V25" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M21 17V8H24V17" stroke="#152C52" strokeWidth="1.4" />
+    <path d="M20.5 8L22.5 5.5L24.5 8" stroke="#152C52" strokeWidth="1.4" />
+    <circle cx="22.5" cy="4.2" r="1" fill="#0B57D0" />
+    <line x1="9" y1="19" x2="10" y2="19" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="15" y1="16" x2="15" y2="16.5" stroke="#0B57D0" strokeWidth="1.5" />
   </svg>
 );
 
@@ -161,16 +161,16 @@ export const StampTipazaCoastIcon: React.FC<IconProps> = ({ size = 32, className
     focusable="false"
     {...props}
   >
-    <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
-    <path d="M8 9H16M7 10.5C9 10.5 9.5 11.5 9.5 12H14.5C14.5 11.5 15 10.5 17 10.5" stroke="#2E3A2F" strokeWidth="1.5" />
-    <line x1="10" y1="12" x2="10" y2="20" stroke="#2E3A2F" strokeWidth="1.4" />
-    <line x1="12" y1="12" x2="12" y2="20" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="14" y1="12" x2="14" y2="20" stroke="#2E3A2F" strokeWidth="1.4" />
-    <path d="M8.5 20H15.5V22H8.5Z" stroke="#2E3A2F" strokeWidth="1.4" />
-    <circle cx="22" cy="11" r="2.5" stroke="#C96F4F" strokeWidth="1.5" />
-    <line x1="22" y1="6.8" x2="22" y2="7.8" stroke="#C96F4F" strokeWidth="1.2" />
-    <path d="M5 24C8.5 22.5 11.5 24.5 15.5 23C19.5 21.5 22.5 23.5 27 22.5" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M7 26.5C10.5 25.5 13 27 16.5 26C20 25 23 26.5 26.5 25.5" stroke="#6B7F5B" strokeWidth="1.25" />
+    <circle cx="16" cy="16" r="14.5" stroke="#D3DCE8" strokeWidth="1.25" strokeDasharray="2 1.5" />
+    <path d="M8 9H16M7 10.5C9 10.5 9.5 11.5 9.5 12H14.5C14.5 11.5 15 10.5 17 10.5" stroke="#152C52" strokeWidth="1.5" />
+    <line x1="10" y1="12" x2="10" y2="20" stroke="#152C52" strokeWidth="1.4" />
+    <line x1="12" y1="12" x2="12" y2="20" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="14" y1="12" x2="14" y2="20" stroke="#152C52" strokeWidth="1.4" />
+    <path d="M8.5 20H15.5V22H8.5Z" stroke="#152C52" strokeWidth="1.4" />
+    <circle cx="22" cy="11" r="2.5" stroke="#0B57D0" strokeWidth="1.5" />
+    <line x1="22" y1="6.8" x2="22" y2="7.8" stroke="#0B57D0" strokeWidth="1.2" />
+    <path d="M5 24C8.5 22.5 11.5 24.5 15.5 23C19.5 21.5 22.5 23.5 27 22.5" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M7 26.5C10.5 25.5 13 27 16.5 26C20 25 23 26.5 26.5 25.5" stroke="#0E6FAD" strokeWidth="1.25" />
   </svg>
 );
 
@@ -190,15 +190,15 @@ export const StampOranBahiaIcon: React.FC<IconProps> = ({ size = 32, className =
     focusable="false"
     {...props}
   >
-    <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
-    <path d="M5 25.5C9 24.5 13 24 16 24C20 24 24 25 27 26" stroke="#6B7F5B" strokeWidth="1.25" />
-    <path d="M8 24V14H13V17H19V12H24V24" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M8 14H9.5V12.5H11.5V14H13" stroke="#2E3A2F" strokeWidth="1.3" />
-    <path d="M19 12H20.5V10.5H22.5V12H24" stroke="#2E3A2F" strokeWidth="1.3" />
-    <path d="M14.5 24V20C14.5 19 15.2 18 16 18C16.8 18 17.5 19 17.5 20V24" stroke="#2E3A2F" strokeWidth="1.4" />
-    <line x1="10.5" y1="16" x2="10.5" y2="18.5" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="21.5" y1="14.5" x2="21.5" y2="17" stroke="#6B7F5B" strokeWidth="1.2" />
-    <path d="M21.5 10.5V7L25 8.5L21.5 10" stroke="#C96F4F" strokeWidth="1.3" fill="#C96F4F" />
+    <circle cx="16" cy="16" r="14.5" stroke="#D3DCE8" strokeWidth="1.25" strokeDasharray="2 1.5" />
+    <path d="M5 25.5C9 24.5 13 24 16 24C20 24 24 25 27 26" stroke="#0E6FAD" strokeWidth="1.25" />
+    <path d="M8 24V14H13V17H19V12H24V24" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M8 14H9.5V12.5H11.5V14H13" stroke="#152C52" strokeWidth="1.3" />
+    <path d="M19 12H20.5V10.5H22.5V12H24" stroke="#152C52" strokeWidth="1.3" />
+    <path d="M14.5 24V20C14.5 19 15.2 18 16 18C16.8 18 17.5 19 17.5 20V24" stroke="#152C52" strokeWidth="1.4" />
+    <line x1="10.5" y1="16" x2="10.5" y2="18.5" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="21.5" y1="14.5" x2="21.5" y2="17" stroke="#0E6FAD" strokeWidth="1.2" />
+    <path d="M21.5 10.5V7L25 8.5L21.5 10" stroke="#0B57D0" strokeWidth="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -218,18 +218,18 @@ export const StampConstantineBridgesIcon: React.FC<IconProps> = ({ size = 32, cl
     focusable="false"
     {...props}
   >
-    <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
-    <path d="M5 26.5L8.5 20L7.5 13.5" stroke="#6B7F5B" strokeWidth="1.3" />
-    <path d="M27 26.5L23.5 20L24.5 13.5" stroke="#6B7F5B" strokeWidth="1.3" />
-    <path d="M9.5 25C10.5 19 21.5 19 22.5 25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <circle cx="16" cy="19" r="1.1" fill="#C96F4F" />
-    <path d="M10 16V9H12.5V16" stroke="#2E3A2F" strokeWidth="1.4" />
-    <path d="M19.5 16V9H22V16" stroke="#2E3A2F" strokeWidth="1.4" />
-    <path d="M7.5 11C11.5 15.5 20.5 15.5 24.5 11" stroke="#2E3A2F" strokeWidth="1.3" />
-    <line x1="6" y1="16" x2="26" y2="16" stroke="#2E3A2F" strokeWidth="1.5" />
-    <line x1="14" y1="14" x2="14" y2="16" stroke="#6B7F5B" strokeWidth="1" />
-    <line x1="16" y1="14.5" x2="16" y2="16" stroke="#6B7F5B" strokeWidth="1" />
-    <line x1="18" y1="14" x2="18" y2="16" stroke="#6B7F5B" strokeWidth="1" />
+    <circle cx="16" cy="16" r="14.5" stroke="#D3DCE8" strokeWidth="1.25" strokeDasharray="2 1.5" />
+    <path d="M5 26.5L8.5 20L7.5 13.5" stroke="#0E6FAD" strokeWidth="1.3" />
+    <path d="M27 26.5L23.5 20L24.5 13.5" stroke="#0E6FAD" strokeWidth="1.3" />
+    <path d="M9.5 25C10.5 19 21.5 19 22.5 25" stroke="#152C52" strokeWidth="1.5" />
+    <circle cx="16" cy="19" r="1.1" fill="#0B57D0" />
+    <path d="M10 16V9H12.5V16" stroke="#152C52" strokeWidth="1.4" />
+    <path d="M19.5 16V9H22V16" stroke="#152C52" strokeWidth="1.4" />
+    <path d="M7.5 11C11.5 15.5 20.5 15.5 24.5 11" stroke="#152C52" strokeWidth="1.3" />
+    <line x1="6" y1="16" x2="26" y2="16" stroke="#152C52" strokeWidth="1.5" />
+    <line x1="14" y1="14" x2="14" y2="16" stroke="#0E6FAD" strokeWidth="1" />
+    <line x1="16" y1="14.5" x2="16" y2="16" stroke="#0E6FAD" strokeWidth="1" />
+    <line x1="18" y1="14" x2="18" y2="16" stroke="#0E6FAD" strokeWidth="1" />
   </svg>
 );
 
@@ -249,17 +249,17 @@ export const StampTaghitOasisIcon: React.FC<IconProps> = ({ size = 32, className
     focusable="false"
     {...props}
   >
-    <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
-    <path d="M5 24.5C9.5 21 16.5 25.5 27 21" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M11 23C16 25 21 26 27 24.5" stroke="#6B7F5B" strokeWidth="1.2" />
-    <circle cx="21.5" cy="14" r="2.6" stroke="#C96F4F" strokeWidth="1.4" />
-    <circle cx="21.5" cy="14" r="1" fill="#C96F4F" />
-    <path d="M12 24C12.5 18 14 14.5 14.5 11.5" stroke="#2E3A2F" strokeWidth="1.6" />
-    <path d="M14.5 11.5C11.5 9 7.5 10.5 6.5 13.5" stroke="#2E3A2F" strokeWidth="1.3" />
-    <path d="M14.5 11.5C11.5 7.5 9.5 5 7.5 6" stroke="#2E3A2F" strokeWidth="1.3" />
-    <path d="M14.5 11.5C14.5 7 15.5 5 16.5 4.5" stroke="#6B7F5B" strokeWidth="1.3" />
-    <path d="M14.5 11.5C17.5 7.5 19.5 7 21.5 8.5" stroke="#2E3A2F" strokeWidth="1.3" />
-    <path d="M14.5 11.5C18 10 19.5 12.5 20.5 14.5" stroke="#6B7F5B" strokeWidth="1.3" />
+    <circle cx="16" cy="16" r="14.5" stroke="#D3DCE8" strokeWidth="1.25" strokeDasharray="2 1.5" />
+    <path d="M5 24.5C9.5 21 16.5 25.5 27 21" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M11 23C16 25 21 26 27 24.5" stroke="#0E6FAD" strokeWidth="1.2" />
+    <circle cx="21.5" cy="14" r="2.6" stroke="#0B57D0" strokeWidth="1.4" />
+    <circle cx="21.5" cy="14" r="1" fill="#0B57D0" />
+    <path d="M12 24C12.5 18 14 14.5 14.5 11.5" stroke="#152C52" strokeWidth="1.6" />
+    <path d="M14.5 11.5C11.5 9 7.5 10.5 6.5 13.5" stroke="#152C52" strokeWidth="1.3" />
+    <path d="M14.5 11.5C11.5 7.5 9.5 5 7.5 6" stroke="#152C52" strokeWidth="1.3" />
+    <path d="M14.5 11.5C14.5 7 15.5 5 16.5 4.5" stroke="#0E6FAD" strokeWidth="1.3" />
+    <path d="M14.5 11.5C17.5 7.5 19.5 7 21.5 8.5" stroke="#152C52" strokeWidth="1.3" />
+    <path d="M14.5 11.5C18 10 19.5 12.5 20.5 14.5" stroke="#0E6FAD" strokeWidth="1.3" />
   </svg>
 );
 
@@ -279,17 +279,17 @@ export const StampTassiliPlateauIcon: React.FC<IconProps> = ({ size = 32, classN
     focusable="false"
     {...props}
   >
-    <circle cx="16" cy="16" r="14.5" stroke="#D9C9B2" strokeWidth="1.25" strokeDasharray="2 1.5" />
-    <line x1="5" y1="25" x2="27" y2="25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M7 25V12C7 9.5 9.5 8.5 12 8.5C16 8.5 19 9.5 21 11V25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <path d="M11 25V16.5C11 13 18 13 18 16.5V25" stroke="#2E3A2F" strokeWidth="1.5" />
-    <line x1="7.5" y1="14.5" x2="10.5" y2="14.5" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="7.5" y1="19.5" x2="10.5" y2="19.5" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="18.5" y1="15" x2="21" y2="15" stroke="#6B7F5B" strokeWidth="1.2" />
-    <line x1="18.5" y1="20" x2="21" y2="20" stroke="#6B7F5B" strokeWidth="1.2" />
-    <path d="M21 17L25 15V25" stroke="#6B7F5B" strokeWidth="1.2" />
-    <circle cx="14.5" cy="12.5" r="1.6" stroke="#C96F4F" strokeWidth="1.3" fill="#C96F4F" />
-    <line x1="14.5" y1="9" x2="14.5" y2="10" stroke="#C96F4F" strokeWidth="1.2" />
+    <circle cx="16" cy="16" r="14.5" stroke="#D3DCE8" strokeWidth="1.25" strokeDasharray="2 1.5" />
+    <line x1="5" y1="25" x2="27" y2="25" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M7 25V12C7 9.5 9.5 8.5 12 8.5C16 8.5 19 9.5 21 11V25" stroke="#152C52" strokeWidth="1.5" />
+    <path d="M11 25V16.5C11 13 18 13 18 16.5V25" stroke="#152C52" strokeWidth="1.5" />
+    <line x1="7.5" y1="14.5" x2="10.5" y2="14.5" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="7.5" y1="19.5" x2="10.5" y2="19.5" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="18.5" y1="15" x2="21" y2="15" stroke="#0E6FAD" strokeWidth="1.2" />
+    <line x1="18.5" y1="20" x2="21" y2="20" stroke="#0E6FAD" strokeWidth="1.2" />
+    <path d="M21 17L25 15V25" stroke="#0E6FAD" strokeWidth="1.2" />
+    <circle cx="14.5" cy="12.5" r="1.6" stroke="#0B57D0" strokeWidth="1.3" fill="#0B57D0" />
+    <line x1="14.5" y1="9" x2="14.5" y2="10" stroke="#0B57D0" strokeWidth="1.2" />
   </svg>
 );
 
@@ -309,15 +309,15 @@ export const GuestFavoriteIcon: React.FC<IconProps> = ({ size = 18, className = 
     focusable="false"
     {...props}
   >
-    <path d="M4 16.5C3.5 13 4.5 9 7 6" stroke="#6B7F5B" strokeWidth="1.3" />
-    <path d="M3 13C4.2 12.5 5 11 5 9.5" stroke="#6B7F5B" strokeWidth="1.2" />
-    <path d="M3.5 17C5 16 6 14.5 6 13" stroke="#6B7F5B" strokeWidth="1.2" />
-    <path d="M20 16.5C20.5 13 19.5 9 17 6" stroke="#6B7F5B" strokeWidth="1.3" />
-    <path d="M21 13C19.8 12.5 19 11 19 9.5" stroke="#6B7F5B" strokeWidth="1.2" />
-    <path d="M20.5 17C19 16 18 14.5 18 13" stroke="#6B7F5B" strokeWidth="1.2" />
+    <path d="M4 16.5C3.5 13 4.5 9 7 6" stroke="#0E6FAD" strokeWidth="1.3" />
+    <path d="M3 13C4.2 12.5 5 11 5 9.5" stroke="#0E6FAD" strokeWidth="1.2" />
+    <path d="M3.5 17C5 16 6 14.5 6 13" stroke="#0E6FAD" strokeWidth="1.2" />
+    <path d="M20 16.5C20.5 13 19.5 9 17 6" stroke="#0E6FAD" strokeWidth="1.3" />
+    <path d="M21 13C19.8 12.5 19 11 19 9.5" stroke="#0E6FAD" strokeWidth="1.2" />
+    <path d="M20.5 17C19 16 18 14.5 18 13" stroke="#0E6FAD" strokeWidth="1.2" />
     <circle cx="12" cy="11.5" r="5.5" stroke="currentColor" strokeWidth="1.6" />
     <path d="M9.5 16.5L8.5 21L12 19.5L15.5 21L14.5 16.5" stroke="currentColor" strokeWidth="1.4" />
-    <path d="M12 8L13 10.5L15.5 10.5L13.5 12L14.5 14.5L12 13L9.5 14.5L10.5 12L8.5 10.5L11 10.5Z" stroke="#C96F4F" strokeWidth="1.2" fill="#C96F4F" />
+    <path d="M12 8L13 10.5L15.5 10.5L13.5 12L14.5 14.5L12 13L9.5 14.5L10.5 12L8.5 10.5L11 10.5Z" stroke="#0B57D0" strokeWidth="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -337,7 +337,7 @@ export const WalletWarningIcon: React.FC<IconProps> = ({ size = 16, className = 
     focusable="false"
     {...props}
   >
-    <path d="M10.3 3.8C11 2.5 13 2.5 13.7 3.8L21.3 17.5C22 18.8 21 20.5 19.5 20.5H4.5C3 20.5 2 18.8 2.7 17.5L10.3 3.8Z" stroke="#C96F4F" strokeWidth="1.75" />
+    <path d="M10.3 3.8C11 2.5 13 2.5 13.7 3.8L21.3 17.5C22 18.8 21 20.5 19.5 20.5H4.5C3 20.5 2 18.8 2.7 17.5L10.3 3.8Z" stroke="#0B57D0" strokeWidth="1.75" />
     <line x1="12" y1="8.5" x2="12" y2="13.5" stroke="currentColor" strokeWidth="2" />
     <circle cx="12" cy="17" r="1.1" fill="currentColor" />
   </svg>
@@ -359,9 +359,9 @@ export const WalletSolventIcon: React.FC<IconProps> = ({ size = 16, className = 
     focusable="false"
     {...props}
   >
-    <circle cx="12" cy="12" r="9" stroke="#6B7F5B" strokeWidth="1.75" />
+    <circle cx="12" cy="12" r="9" stroke="#0E6FAD" strokeWidth="1.75" />
     <path d="M8 12L10.8 15L16 9" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="5.2" r="0.9" fill="#C96F4F" />
+    <circle cx="12" cy="5.2" r="0.9" fill="#0B57D0" />
   </svg>
 );
 
@@ -383,9 +383,9 @@ export const BrandStarIcon: React.FC<IconProps> = ({ size = 16, className = "", 
   >
     <path
       d="M12 2.5L14.9 8.5L21.5 9.4L16.7 14.1L17.8 20.7L12 17.6L6.2 20.7L7.3 14.1L2.5 9.4L9.1 8.5L12 2.5Z"
-      stroke="#C96F4F"
+      stroke="#0B57D0"
       strokeWidth="1.75"
-      fill="#C96F4F"
+      fill="#0B57D0"
     />
   </svg>
 );
@@ -432,9 +432,9 @@ export const BrandSearchIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     {...props}
   >
     <circle cx="10.5" cy="10.5" r="7" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M10.5 7.5L11.2 9.5L13.2 10.2L11.2 10.9L10.5 12.9L9.8 10.9L7.8 10.2L9.8 9.5Z" fill="#C96F4F" opacity="0.85" />
+    <path d="M10.5 7.5L11.2 9.5L13.2 10.2L11.2 10.9L10.5 12.9L9.8 10.9L7.8 10.2L9.8 9.5Z" fill="#0B57D0" opacity="0.85" />
     <path d="M15.5 15.5L20.5 20.5" stroke="currentColor" strokeWidth={Number(strokeWidth) + 0.2} />
-    <path d="M18.5 20.5L20.5 18.5" stroke="#6B7F5B" strokeWidth={strokeWidth} />
+    <path d="M18.5 20.5L20.5 18.5" stroke="#0E6FAD" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -475,7 +475,7 @@ export const BrandHeartIcon: React.FC<IconProps & { filled?: boolean }> = ({
         stroke="currentColor"
         strokeWidth={strokeWidth}
       />
-      {!isFilled && <circle cx="12" cy="7.5" r="1.1" fill="#C96F4F" opacity="0.9" />}
+      {!isFilled && <circle cx="12" cy="7.5" r="1.1" fill="#0B57D0" opacity="0.9" />}
     </svg>
   );
 };
@@ -502,10 +502,10 @@ export const BrandCompassIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     <line x1="12" y1="19.5" x2="12" y2="21.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="2.5" y1="12" x2="4.5" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="19.5" y1="12" x2="21.5" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,5.5 14,12 12,10.5" fill="#C96F4F" stroke="#C96F4F" strokeWidth="0.5" />
+    <polygon points="12,5.5 14,12 12,10.5" fill="#0B57D0" stroke="#0B57D0" strokeWidth="0.5" />
     <polygon points="12,5.5 10,12 12,10.5" fill="none" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.6} />
     <polygon points="12,18.5 14,12 12,13.5" fill="none" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.6} />
-    <polygon points="12,18.5 10,12 12,13.5" fill="#6B7F5B" stroke="#6B7F5B" strokeWidth="0.5" />
+    <polygon points="12,18.5 10,12 12,13.5" fill="#0E6FAD" stroke="#0E6FAD" strokeWidth="0.5" />
     <circle cx="12" cy="12" r="1.5" fill="currentColor" />
   </svg>
 );
@@ -532,9 +532,9 @@ export const BrandMessageIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <circle cx="8.5" cy="10.5" r="1.1" fill="#6B7F5B" />
-    <circle cx="12" cy="10.5" r="1.3" fill="#C96F4F" />
-    <circle cx="15.5" cy="10.5" r="1.1" fill="#6B7F5B" />
+    <circle cx="8.5" cy="10.5" r="1.1" fill="#0E6FAD" />
+    <circle cx="12" cy="10.5" r="1.3" fill="#0B57D0" />
+    <circle cx="15.5" cy="10.5" r="1.1" fill="#0E6FAD" />
   </svg>
 );
 
@@ -561,7 +561,7 @@ export const BrandUserIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <path d="M10.2 14.5C10.8 15.6 12 16.2 13.8 14.5" stroke="#C96F4F" strokeWidth="1.4" />
+    <path d="M10.2 14.5C10.8 15.6 12 16.2 13.8 14.5" stroke="#0B57D0" strokeWidth="1.4" />
   </svg>
 );
 
@@ -589,7 +589,7 @@ export const BrandBellIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
       strokeWidth={strokeWidth}
     />
     <path d="M10 18.5C10.5 19.8 11.2 20.5 12 20.5C12.8 20.5 13.5 19.8 14 18.5" stroke="currentColor" strokeWidth="1.5" />
-    <circle cx="12" cy="18.5" r="1.1" fill="#C96F4F" />
+    <circle cx="12" cy="18.5" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -611,11 +611,11 @@ export const BrandFilterIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     {...props}
   >
     <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
-    <polygon points="8,3.5 10.5,6 8,8.5 5.5,6" fill="#C96F4F" stroke="currentColor" strokeWidth="1.2" />
+    <polygon points="8,3.5 10.5,6 8,8.5 5.5,6" fill="#0B57D0" stroke="currentColor" strokeWidth="1.2" />
     <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
     <polygon points="16,9.5 18.5,12 16,14.5 13.5,12" fill="currentColor" stroke="currentColor" strokeWidth="1.2" />
     <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
-    <polygon points="11,15.5 13.5,18 11,20.5 8.5,18" fill="#6B7F5B" stroke="currentColor" strokeWidth="1.2" />
+    <polygon points="11,15.5 13.5,18 11,20.5 8.5,18" fill="#0E6FAD" stroke="currentColor" strokeWidth="1.2" />
   </svg>
 );
 
@@ -640,9 +640,9 @@ export const BrandShareIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     <line x1="8.5" y1="10.5" x2="15.5" y2="6.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
     <circle cx="6.5" cy="12" r="3" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
     <circle cx="17.5" cy="5.5" r="3" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
-    <circle cx="17.5" cy="5.5" r="1.1" fill="#C96F4F" />
+    <circle cx="17.5" cy="5.5" r="1.1" fill="#0B57D0" />
     <circle cx="17.5" cy="18.5" r="3" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
-    <circle cx="17.5" cy="18.5" r="1.1" fill="#6B7F5B" />
+    <circle cx="17.5" cy="18.5" r="1.1" fill="#0E6FAD" />
   </svg>
 );
 
@@ -665,7 +665,7 @@ export const BrandMenuIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <line x1="3.5" y1="6.5" x2="20.5" y2="6.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="3.5" y1="12" x2="16.5" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="18.5,12 20,10.7 21.5,12 20,13.3" fill="#C96F4F" stroke="#C96F4F" strokeWidth="0.5" />
+    <polygon points="18.5,12 20,10.7 21.5,12 20,13.3" fill="#0B57D0" stroke="#0B57D0" strokeWidth="0.5" />
     <line x1="3.5" y1="17.5" x2="20.5" y2="17.5" stroke="currentColor" strokeWidth={strokeWidth} />
   </svg>
 );
@@ -693,7 +693,7 @@ export const BrandCalendarIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     <line x1="16" y1="2.5" x2="16" y2="5" stroke="currentColor" strokeWidth={strokeWidth} />
     <circle cx="8" cy="13.5" r="1.1" fill="currentColor" />
     <circle cx="12" cy="13.5" r="1.1" fill="currentColor" />
-    <circle cx="16" cy="13.5" r="1.3" fill="#C96F4F" />
+    <circle cx="16" cy="13.5" r="1.3" fill="#0B57D0" />
     <circle cx="8" cy="17" r="1.1" fill="currentColor" />
     <circle cx="12" cy="17" r="1.1" fill="currentColor" />
     <circle cx="16" cy="17" r="1.1" fill="currentColor" />
@@ -722,7 +722,7 @@ export const BrandTagIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <circle cx="7.5" cy="6.5" r="1.5" fill="#C96F4F" />
+    <circle cx="7.5" cy="6.5" r="1.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -749,7 +749,7 @@ export const BrandShieldIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
       strokeWidth={strokeWidth}
     />
     <path d="M9 11.5L11.5 14L15.5 9.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 1.1} />
-    <circle cx="12" cy="4" r="0.8" fill="#C96F4F" />
+    <circle cx="12" cy="4" r="0.8" fill="#0B57D0" />
   </svg>
 );
 
@@ -773,7 +773,7 @@ export const BrandGlobeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="2.5" y1="12" x2="21.5" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
     <ellipse cx="12" cy="12" rx="5" ry="9.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
-    <circle cx="12" cy="12" r="1.3" fill="#C96F4F" />
+    <circle cx="12" cy="12" r="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -796,8 +796,8 @@ export const BrandHomeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <path d="M3 10.5L12 3L21 10.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M5.5 9.5V20.5H18.5V9.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M9.5 20.5V14.5C9.5 13 10.5 12 12 12C13.5 12 14.5 13 14.5 14.5V20.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <circle cx="12" cy="7.5" r="1.1" fill="#C96F4F" />
+    <path d="M9.5 20.5V14.5C9.5 13 10.5 12 12 12C13.5 12 14.5 13 14.5 14.5V20.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <circle cx="12" cy="7.5" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -822,8 +822,8 @@ export const BrandGridIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="7" cy="7" r="1" fill="#C96F4F" />
-    <circle cx="17" cy="17" r="1" fill="#6B7F5B" />
+    <circle cx="7" cy="7" r="1" fill="#0B57D0" />
+    <circle cx="17" cy="17" r="1" fill="#0E6FAD" />
   </svg>
 );
 
@@ -848,7 +848,7 @@ export const BrandBookingsIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
     <line x1="8" y1="2.5" x2="8" y2="5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="16" y1="2.5" x2="16" y2="5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M8.5 15L11 17.5L16 12.5" stroke="#C96F4F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8.5 15L11 17.5L16 12.5" stroke="#0B57D0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -872,9 +872,9 @@ export const BrandBriefcaseIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
     <rect x="3.5" y="7" width="17" height="13.5" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M8.5 7V4.5C8.5 3.7 9.2 3 10 3H14C14.8 3 15.5 3.7 15.5 4.5V7" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="3.5" y1="12" x2="20.5" y2="12" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.85} />
-    <line x1="8.5" y1="7" x2="8.5" y2="20.5" stroke="#6B7F5B" strokeWidth="1.25" />
-    <line x1="15.5" y1="7" x2="15.5" y2="20.5" stroke="#6B7F5B" strokeWidth="1.25" />
-    <circle cx="12" cy="12" r="1.2" fill="#C96F4F" />
+    <line x1="8.5" y1="7" x2="8.5" y2="20.5" stroke="#0E6FAD" strokeWidth="1.25" />
+    <line x1="15.5" y1="7" x2="15.5" y2="20.5" stroke="#0E6FAD" strokeWidth="1.25" />
+    <circle cx="12" cy="12" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -901,7 +901,7 @@ export const BrandSettingsIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <circle cx="12" cy="12" r="1.5" fill="#C96F4F" />
+    <circle cx="12" cy="12" r="1.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -924,12 +924,12 @@ export const BrandBuildingIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
   >
     <path d="M4 21V5.5C4 4.5 4.8 3.5 5.8 3.5H18.2C19.2 3.5 20 4.5 20 5.5V21" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="2" y1="21" x2="22" y2="21" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M9.5 21V16C9.5 14.8 10.6 14 12 14C13.4 14 14.5 14.8 14.5 16V21" stroke="#6B7F5B" strokeWidth="1.5" />
+    <path d="M9.5 21V16C9.5 14.8 10.6 14 12 14C13.4 14 14.5 14.8 14.5 16V21" stroke="#0E6FAD" strokeWidth="1.5" />
     <line x1="7.5" y1="8" x2="9.5" y2="8" stroke="currentColor" strokeWidth="1.5" />
     <line x1="14.5" y1="8" x2="16.5" y2="8" stroke="currentColor" strokeWidth="1.5" />
     <line x1="7.5" y1="12" x2="9.5" y2="12" stroke="currentColor" strokeWidth="1.5" />
     <line x1="14.5" y1="12" x2="16.5" y2="12" stroke="currentColor" strokeWidth="1.5" />
-    <circle cx="12" cy="6" r="1" fill="#C96F4F" />
+    <circle cx="12" cy="6" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -952,9 +952,9 @@ export const BrandUsersIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
   >
     <circle cx="9" cy="8" r="3.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M2.5 19.5C2.5 16 5.5 14.5 9 14.5C12.5 14.5 15.5 16 15.5 19.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M14.5 5C15.8 5.5 16.8 6.8 16.8 8.2C16.8 9.7 15.8 11 14.5 11.5" stroke="#6B7F5B" strokeWidth={Number(strokeWidth) * 0.9} />
-    <path d="M16.5 14.5C18.8 15.2 20.5 16.8 20.5 19.5" stroke="#6B7F5B" strokeWidth={Number(strokeWidth) * 0.9} />
-    <circle cx="9" cy="14.5" r="0.9" fill="#C96F4F" />
+    <path d="M14.5 5C15.8 5.5 16.8 6.8 16.8 8.2C16.8 9.7 15.8 11 14.5 11.5" stroke="#0E6FAD" strokeWidth={Number(strokeWidth) * 0.9} />
+    <path d="M16.5 14.5C18.8 15.2 20.5 16.8 20.5 19.5" stroke="#0E6FAD" strokeWidth={Number(strokeWidth) * 0.9} />
+    <circle cx="9" cy="14.5" r="0.9" fill="#0B57D0" />
   </svg>
 );
 
@@ -977,7 +977,7 @@ export const BrandPlusIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,10.2 13.8,12 12,13.8 10.2,12" fill="#C96F4F" stroke="#C96F4F" strokeWidth="0.5" />
+    <polygon points="12,10.2 13.8,12 12,13.8 10.2,12" fill="#0B57D0" stroke="#0B57D0" strokeWidth="0.5" />
   </svg>
 );
 
@@ -999,7 +999,7 @@ export const BrandMoreIcon: React.FC<IconProps> = ({ size = 20, className = "", 
     {...props}
   >
     <circle cx="5" cy="12" r="1.8" fill="currentColor" />
-    <polygon points="12,9.8 14.2,12 12,14.2 9.8,12" fill="#C96F4F" />
+    <polygon points="12,9.8 14.2,12 12,14.2 9.8,12" fill="#0B57D0" />
     <circle cx="19" cy="12" r="1.8" fill="currentColor" />
   </svg>
 );
@@ -1022,9 +1022,9 @@ export const BrandMapIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     {...props}
   >
     <path d="M9 18.5L3 15.5V4.5L9 7.5L15 4.5L21 7.5V18.5L15 15.5L9 18.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
-    <line x1="9" y1="7.5" x2="9" y2="18.5" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <line x1="15" y1="4.5" x2="15" y2="15.5" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="11.5" r="1.3" fill="#C96F4F" />
+    <line x1="9" y1="7.5" x2="9" y2="18.5" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <line x1="15" y1="4.5" x2="15" y2="15.5" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <circle cx="12" cy="11.5" r="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -1048,9 +1048,9 @@ export const BrandListIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     <line x1="8.5" y1="6" x2="20.5" y2="6" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="8.5" y1="12" x2="20.5" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="8.5" y1="18" x2="20.5" y2="18" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="4.5,4.8 6.2,6 4.5,7.2 2.8,6" fill="#C96F4F" />
+    <polygon points="4.5,4.8 6.2,6 4.5,7.2 2.8,6" fill="#0B57D0" />
     <circle cx="4.5" cy="12" r="1.3" fill="currentColor" />
-    <circle cx="4.5" cy="18" r="1.3" fill="#6B7F5B" />
+    <circle cx="4.5" cy="18" r="1.3" fill="#0E6FAD" />
   </svg>
 );
 
@@ -1091,7 +1091,7 @@ export const BrandCheckDoubleIcon: React.FC<IconProps> = ({ size = 16, strokeWid
     {...props}
   >
     <path d="M2 12.5L7.5 18L18 6" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M8 12.5L13.5 18L23 6" stroke="#C96F4F" strokeWidth={strokeWidth} />
+    <path d="M8 12.5L13.5 18L23 6" stroke="#0B57D0" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -1114,7 +1114,7 @@ export const BrandSendIcon: React.FC<IconProps> = ({ size = 18, strokeWidth = 1.
   >
     <path d="M21.5 2.5L10 14" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M21.5 2.5L14.5 21.5L10 14L2.5 9.5L21.5 2.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="10" cy="14" r="1" fill="#C96F4F" />
+    <circle cx="10" cy="14" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1165,7 +1165,7 @@ export const BrandPinIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
       strokeWidth={strokeWidth}
     />
     <circle cx="12" cy="9.5" r="3" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="9.5" r="1.3" fill="#C96F4F" />
+    <circle cx="12" cy="9.5" r="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -1188,7 +1188,7 @@ export const BrandCloseIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
   >
     <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="18.5" y1="5.5" x2="5.5" y2="18.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,10.6 13.4,12 12,13.4 10.6,12" fill="#C96F4F" stroke="#C96F4F" strokeWidth="0.5" />
+    <polygon points="12,10.6 13.4,12 12,13.4 10.6,12" fill="#0B57D0" stroke="#0B57D0" strokeWidth="0.5" />
   </svg>
 );
 
@@ -1311,8 +1311,8 @@ export const CategoryVillaIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
   >
     <path d="M3 20.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M4 20.5V8.5L12 3L20 8.5V20.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M9 20.5V13.5C9 12 10.2 11 12 11C13.8 11 15 12 15 13.5V20.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <circle cx="12" cy="7.5" r="1.3" fill="#C96F4F" />
+    <path d="M9 20.5V13.5C9 12 10.2 11 12 11C13.8 11 15 12 15 13.5V20.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <circle cx="12" cy="7.5" r="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -1333,10 +1333,10 @@ export const CategoryBeachfrontIcon: React.FC<IconProps> = ({ size = 24, strokeW
     focusable="false"
     {...props}
   >
-    <circle cx="16.5" cy="7.5" r="3" stroke="#C96F4F" strokeWidth="1.5" />
-    <circle cx="16.5" cy="7.5" r="1.2" fill="#C96F4F" />
+    <circle cx="16.5" cy="7.5" r="3" stroke="#0B57D0" strokeWidth="1.5" />
+    <circle cx="16.5" cy="7.5" r="1.2" fill="#0B57D0" />
     <path d="M3 15C5.5 13.5 8.5 15.5 11 14C13.5 12.5 16.5 14.5 21 13" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M3 19.5C6 18 9 20 12 18.5C15 17 18 19 21 17.5" stroke="#6B7F5B" strokeWidth="1.5" />
+    <path d="M3 19.5C6 18 9 20 12 18.5C15 17 18 19 21 17.5" stroke="#0E6FAD" strokeWidth="1.5" />
   </svg>
 );
 
@@ -1358,12 +1358,12 @@ export const CategoryDesertIcon: React.FC<IconProps> = ({ size = 24, strokeWidth
     {...props}
   >
     <path d="M2 19.5C6.5 16.5 12 20.5 22 15.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M8 18C13 19 18 19.5 22 18.5" stroke="#6B7F5B" strokeWidth="1.25" />
-    <path d="M7 19.5V10C7 6 12 6 12 10V19.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <path d="M7 10C5 7.5 2.5 8 2.5 8" stroke="#6B7F5B" strokeWidth="1.4" />
-    <path d="M7 8C7 5 9 4 11 5" stroke="#6B7F5B" strokeWidth="1.4" />
-    <circle cx="17.5" cy="7.5" r="2.5" stroke="#C96F4F" strokeWidth="1.4" />
-    <circle cx="17.5" cy="7.5" r="1" fill="#C96F4F" />
+    <path d="M8 18C13 19 18 19.5 22 18.5" stroke="#0E6FAD" strokeWidth="1.25" />
+    <path d="M7 19.5V10C7 6 12 6 12 10V19.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <path d="M7 10C5 7.5 2.5 8 2.5 8" stroke="#0E6FAD" strokeWidth="1.4" />
+    <path d="M7 8C7 5 9 4 11 5" stroke="#0E6FAD" strokeWidth="1.4" />
+    <circle cx="17.5" cy="7.5" r="2.5" stroke="#0B57D0" strokeWidth="1.4" />
+    <circle cx="17.5" cy="7.5" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1388,8 +1388,8 @@ export const CategoryRiadIcon: React.FC<IconProps> = ({ size = 24, strokeWidth =
     <path d="M5 20.5V8H9V11H15V8H19V20.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M5 8H6.5V6H7.5V8H9" stroke="currentColor" strokeWidth="1.3" />
     <path d="M15 8H16.5V6H17.5V8H19" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M10 20.5V15C10 13.8 10.8 13 12 13C13.2 13 14 13.8 14 15V20.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <circle cx="12" cy="7" r="1.1" fill="#C96F4F" />
+    <path d="M10 20.5V15C10 13.8 10.8 13 12 13C13.2 13 14 13.8 14 15V20.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <circle cx="12" cy="7" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1411,10 +1411,10 @@ export const CategoryMountainIcon: React.FC<IconProps> = ({ size = 24, strokeWid
     {...props}
   >
     <path d="M2 20.5L9 6.5L16 20.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M13 15L17.5 7.5L22 20.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <path d="M6.5 13L9 11L11.5 13" stroke="#D9C9B2" strokeWidth="1.4" />
-    <path d="M15.5 12L17.5 10.5L19.5 12" stroke="#D9C9B2" strokeWidth="1.4" />
-    <circle cx="9" cy="3.5" r="1" fill="#C96F4F" />
+    <path d="M13 15L17.5 7.5L22 20.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <path d="M6.5 13L9 11L11.5 13" stroke="#D3DCE8" strokeWidth="1.4" />
+    <path d="M15.5 12L17.5 10.5L19.5 12" stroke="#D3DCE8" strokeWidth="1.4" />
+    <circle cx="9" cy="3.5" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1436,11 +1436,11 @@ export const CategoryPoolIcon: React.FC<IconProps> = ({ size = 24, strokeWidth =
     {...props}
   >
     <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M3 11C6.5 10 9 12 12 11C15 10 17.5 12 21 11" stroke="#6B7F5B" strokeWidth="1.5" />
-    <path d="M3 15C6.5 14 9 16 12 15C15 14 17.5 16 21 15" stroke="#6B7F5B" strokeWidth="1.5" />
+    <path d="M3 11C6.5 10 9 12 12 11C15 10 17.5 12 21 11" stroke="#0E6FAD" strokeWidth="1.5" />
+    <path d="M3 15C6.5 14 9 16 12 15C15 14 17.5 16 21 15" stroke="#0E6FAD" strokeWidth="1.5" />
     <line x1="6.5" y1="5" x2="6.5" y2="10" stroke="currentColor" strokeWidth="1.4" />
     <line x1="8.5" y1="5" x2="8.5" y2="10" stroke="currentColor" strokeWidth="1.4" />
-    <circle cx="16.5" cy="8" r="1" fill="#C96F4F" />
+    <circle cx="16.5" cy="8" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1463,9 +1463,9 @@ export const CategoryCampingIcon: React.FC<IconProps> = ({ size = 24, strokeWidt
   >
     <path d="M2.5 20.5H21.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M3.5 19.5L12 4.5L20.5 19.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M12 4.5V19.5" stroke="#6B7F5B" strokeWidth="1.5" />
+    <path d="M12 4.5V19.5" stroke="#0E6FAD" strokeWidth="1.5" />
     <path d="M8.5 19.5L12 13.5L15.5 19.5" stroke="currentColor" strokeWidth="1.4" />
-    <circle cx="18.5" cy="7.5" r="1.3" fill="#C96F4F" />
+    <circle cx="18.5" cy="7.5" r="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -1491,8 +1491,8 @@ export const CategoryExpeditionsIcon: React.FC<IconProps> = ({ size = 24, stroke
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <circle cx="12" cy="12" r="2.5" stroke="#6B7F5B" strokeWidth="1.4" />
-    <circle cx="12" cy="12" r="1.1" fill="#C96F4F" />
+    <circle cx="12" cy="12" r="2.5" stroke="#0E6FAD" strokeWidth="1.4" />
+    <circle cx="12" cy="12" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1516,12 +1516,12 @@ export const CategoryVehicleIcon: React.FC<IconProps> = ({ size = 24, strokeWidt
     <path d="M3 13.5V9.5C3 8.5 3.8 7.5 4.8 7.5H14.5L18.5 11.5H21C21.8 11.5 22.5 12.2 22.5 13V15.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="1.5" y1="15.5" x2="5.5" y2="15.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <circle cx="7.5" cy="16.5" r="2.8" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="7.5" cy="16.5" r="1" fill="#C96F4F" />
+    <circle cx="7.5" cy="16.5" r="1" fill="#0B57D0" />
     <line x1="10.5" y1="15.5" x2="15.5" y2="15.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <circle cx="17.5" cy="16.5" r="2.8" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="17.5" cy="16.5" r="1" fill="#6B7F5B" />
-    <path d="M7 8V11.5H13V8" stroke="#6B7F5B" strokeWidth="1.3" />
-    <path d="M14 8V11.5H17.5L15.5 8Z" stroke="#6B7F5B" strokeWidth="1.3" />
+    <circle cx="17.5" cy="16.5" r="1" fill="#0E6FAD" />
+    <path d="M7 8V11.5H13V8" stroke="#0E6FAD" strokeWidth="1.3" />
+    <path d="M14 8V11.5H17.5L15.5 8Z" stroke="#0E6FAD" strokeWidth="1.3" />
   </svg>
 );
 
@@ -1544,8 +1544,8 @@ export const CategoryHouseIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
   >
     <path d="M2.5 10.5L12 3L21.5 10.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M4.5 9.5V20.5H19.5V9.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M9 20.5V14.5C9 13.5 10 12.5 12 12.5C14 12.5 15 13.5 15 14.5V20.5" stroke="#6B7F5B" strokeWidth="1.5" />
-    <circle cx="12" cy="7.5" r="1.1" fill="#C96F4F" />
+    <path d="M9 20.5V14.5C9 13.5 10 12.5 12 12.5C14 12.5 15 13.5 15 14.5V20.5" stroke="#0E6FAD" strokeWidth="1.5" />
+    <circle cx="12" cy="7.5" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1574,14 +1574,14 @@ export const CategoryHotelIcon: React.FC<IconProps> = ({ size = 24, strokeWidth 
     />
     <path
       d="M10 21V15.5C10 14.4 10.9 13.5 12 13.5C13.1 13.5 14 14.4 14 15.5V21"
-      stroke="#6B7F5B"
+      stroke="#0E6FAD"
       strokeWidth="1.5"
     />
     <rect x="6.5" y="7.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
     <rect x="14.5" y="7.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
     <rect x="6.5" y="12.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
     <rect x="14.5" y="12.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth="1.4" />
-    <circle cx="12" cy="7.5" r="1.1" fill="#C96F4F" />
+    <circle cx="12" cy="7.5" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1605,9 +1605,9 @@ export const BrandTrashIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     <line x1="3.5" y1="6" x2="20.5" y2="6" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M8.5 6V4C8.5 3.4 9 3 9.6 3H14.4C15 3 15.5 3.4 15.5 4V6" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M5.5 6L6.5 20C6.6 20.8 7.2 21.5 8 21.5H16C16.8 21.5 17.4 20.8 17.5 20L18.5 6" stroke="currentColor" strokeWidth={strokeWidth} />
-    <line x1="10" y1="10" x2="10" y2="17" stroke="#6B7F5B" strokeWidth="1.4" />
-    <line x1="14" y1="10" x2="14" y2="17" stroke="#6B7F5B" strokeWidth="1.4" />
-    <circle cx="12" cy="4.5" r="0.8" fill="#C96F4F" />
+    <line x1="10" y1="10" x2="10" y2="17" stroke="#0E6FAD" strokeWidth="1.4" />
+    <line x1="14" y1="10" x2="14" y2="17" stroke="#0E6FAD" strokeWidth="1.4" />
+    <circle cx="12" cy="4.5" r="0.8" fill="#0B57D0" />
   </svg>
 );
 
@@ -1630,7 +1630,7 @@ export const BrandCameraIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
   >
     <path d="M3.5 8.5C3.5 7.4 4.4 6.5 5.5 6.5H8.2L9.6 4.5H14.4L15.8 6.5H18.5C19.6 6.5 20.5 7.4 20.5 8.5V18.5C20.5 19.6 19.6 20.5 18.5 20.5H5.5C4.4 20.5 3.5 19.6 3.5 18.5V8.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <circle cx="12" cy="13.5" r="4" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="13.5" r="1.5" fill="#C96F4F" />
+    <circle cx="12" cy="13.5" r="1.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -1654,8 +1654,8 @@ export const BrandBedIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     <path d="M3 7V20" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M21 11V20" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M3 15H21V18H3Z" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M3 11C6 11 7 8 10 8C13 8 14 11 17 11V15H3V11Z" stroke="#6B7F5B" strokeWidth="1.5" />
-    <circle cx="6.5" cy="11.5" r="1.2" fill="#C96F4F" />
+    <path d="M3 11C6 11 7 8 10 8C13 8 14 11 17 11V15H3V11Z" stroke="#0E6FAD" strokeWidth="1.5" />
+    <circle cx="6.5" cy="11.5" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -1677,8 +1677,8 @@ export const BrandDoorIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <path d="M4 21H20" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M5.5 21V6.5C5.5 4.5 7.5 3 12 3C16.5 3 18.5 4.5 18.5 6.5V21" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="15.5" cy="13" r="1.2" fill="#C96F4F" />
-    <path d="M12 7.5C10.5 7.5 9.5 8.5 9.5 10" stroke="#6B7F5B" strokeWidth="1.4" />
+    <circle cx="15.5" cy="13" r="1.2" fill="#0B57D0" />
+    <path d="M12 7.5C10.5 7.5 9.5 8.5 9.5 10" stroke="#0E6FAD" strokeWidth="1.4" />
   </svg>
 );
 
@@ -1700,7 +1700,7 @@ export const BrandAlertCircleIcon: React.FC<IconProps> = ({ size = 20, strokeWid
   >
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="12" y1="7.5" x2="12" y2="12.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="16.5" r="1.2" fill="#C96F4F" />
+    <circle cx="12" cy="16.5" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -1722,7 +1722,7 @@ export const BrandClockIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
   >
     <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="12 6.5 12 12 16 14" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="12" r="1.2" fill="#C96F4F" />
+    <circle cx="12" cy="12" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -1744,7 +1744,7 @@ export const BrandFlagIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <line x1="4.5" y1="21.5" x2="4.5" y2="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M4.5 4H18.5L15.5 8.5L18.5 13H4.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="15.5" cy="8.5" r="1.1" fill="#C96F4F" />
+    <circle cx="15.5" cy="8.5" r="1.1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1767,7 +1767,7 @@ export const BrandSpinnerIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={strokeWidth} strokeOpacity="0.2" />
     <path d="M12 3C16.97 3 21 7.03 21 12" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="21" cy="12" r="1.5" fill="#C96F4F" />
+    <circle cx="21" cy="12" r="1.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -1791,7 +1791,7 @@ export const BrandUploadIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     <path d="M4 16V19.5C4 20.3 4.7 21 5.5 21H18.5C19.3 21 20 20.3 20 19.5V16" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="16 8 12 4 8 8" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="12" y1="4" x2="12" y2="15.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,2.5 13.5,4 12,5.5 10.5,4" fill="#C96F4F" stroke="#C96F4F" strokeWidth="0.5" />
+    <polygon points="12,2.5 13.5,4 12,5.5 10.5,4" fill="#0B57D0" stroke="#0B57D0" strokeWidth="0.5" />
   </svg>
 );
 
@@ -1814,7 +1814,7 @@ export const BrandEyeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
   >
     <path d="M2 12C3.8 7.5 7.5 4.5 12 4.5C16.5 4.5 20.2 7.5 22 12C20.2 16.5 16.5 19.5 12 19.5C7.5 19.5 3.8 16.5 2 12Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="12" r="1.4" fill="#C96F4F" />
+    <circle cx="12" cy="12" r="1.4" fill="#0B57D0" />
   </svg>
 );
 
@@ -1838,7 +1838,7 @@ export const BrandEyeOffIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     <path d="M9.88 9.88C9.33 10.43 9 11.18 9 12C9 13.66 10.34 15 12 15C12.82 15 13.57 14.67 14.12 14.12" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M10.73 5.08C11.15 5.03 11.57 5 12 5C16.5 5 20.2 8 22 12.5C21.27 14.33 20.1 15.91 18.61 17.09" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M6.61 6.61C4.62 7.97 3.03 9.92 2 12.5C3.8 17 7.5 20 12 20C13.68 20 15.28 19.53 16.71 18.71" stroke="currentColor" strokeWidth={strokeWidth} />
-    <line x1="3" y1="3" x2="21" y2="21" stroke="#C96F4F" strokeWidth={strokeWidth} />
+    <line x1="3" y1="3" x2="21" y2="21" stroke="#0B57D0" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -1862,7 +1862,7 @@ export const BrandExternalLinkIcon: React.FC<IconProps> = ({ size = 18, strokeWi
     <path d="M18 13V19C18 20.1 17.1 21 16 21H5C3.9 21 3 20.1 3 19V8C3 6.9 3.9 6 5 6H11" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="15 3 21 3 21 9" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="10" y1="14" x2="21" y2="3" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="21" cy="3" r="1" fill="#C96F4F" />
+    <circle cx="21" cy="3" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -1886,8 +1886,8 @@ export const BrandReceiptIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     <path d="M4 3H20V20L17.5 18.5L15 20L12 18.5L9 20L6.5 18.5L4 20V3Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="8" y1="7.5" x2="16" y2="7.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
     <line x1="8" y1="11.5" x2="16" y2="11.5" stroke="currentColor" strokeWidth={Number(strokeWidth) * 0.9} />
-    <line x1="8" y1="15.5" x2="12" y2="15.5" stroke="#6B7F5B" strokeWidth={Number(strokeWidth) * 0.9} />
-    <circle cx="15.5" cy="15.5" r="1.3" fill="#C96F4F" />
+    <line x1="8" y1="15.5" x2="12" y2="15.5" stroke="#0E6FAD" strokeWidth={Number(strokeWidth) * 0.9} />
+    <circle cx="15.5" cy="15.5" r="1.3" fill="#0B57D0" />
   </svg>
 );
 
@@ -1910,8 +1910,8 @@ export const BrandLockIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <rect x="4" y="10" width="16" height="11" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M7 10V6.5C7 4 9 2.5 12 2.5C15 2.5 17 4 17 6.5V10" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="15" r="1.5" fill="#C96F4F" />
-    <line x1="12" y1="16.5" x2="12" y2="18.5" stroke="#C96F4F" strokeWidth="1.5" />
+    <circle cx="12" cy="15" r="1.5" fill="#0B57D0" />
+    <line x1="12" y1="16.5" x2="12" y2="18.5" stroke="#0B57D0" strokeWidth="1.5" />
   </svg>
 );
 
@@ -1934,7 +1934,7 @@ export const BrandMailIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M3 6.5L12 13L21 6.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="13" r="1.4" fill="#C96F4F" />
+    <circle cx="12" cy="13" r="1.4" fill="#0B57D0" />
   </svg>
 );
 
@@ -1957,7 +1957,7 @@ export const BrandPhoneIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
   >
     <rect x="5.5" y="2.5" width="13" height="19" rx="3" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="10" y1="5.5" x2="14" y2="5.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="18" r="1.2" fill="#C96F4F" />
+    <circle cx="12" cy="18" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -1979,9 +1979,9 @@ export const BrandSparklesIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     {...props}
   >
     <path d="M12 2.5L13.8 8.2L19.5 10L13.8 11.8L12 17.5L10.2 11.8L4.5 10L10.2 8.2L12 2.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="10" r="1.3" fill="#C96F4F" />
-    <path d="M18.5 16L19.2 18.2L21.5 19L19.2 19.8L18.5 22L17.8 19.8L15.5 19L17.8 18.2L18.5 16Z" fill="#6B7F5B" />
-    <path d="M4.5 3L5.1 4.5L6.5 5.1L5.1 5.7L4.5 7L3.9 5.7L2.5 5.1L3.9 4.5L4.5 3Z" fill="#C96F4F" />
+    <circle cx="12" cy="10" r="1.3" fill="#0B57D0" />
+    <path d="M18.5 16L19.2 18.2L21.5 19L19.2 19.8L18.5 22L17.8 19.8L15.5 19L17.8 18.2L18.5 16Z" fill="#0E6FAD" />
+    <path d="M4.5 3L5.1 4.5L6.5 5.1L5.1 5.7L4.5 7L3.9 5.7L2.5 5.1L3.9 4.5L4.5 3Z" fill="#0B57D0" />
   </svg>
 );
 
@@ -2004,7 +2004,7 @@ export const BrandEditIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <path d="M12 20H21" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M16.5 3.5C17.3 2.7 18.7 2.7 19.5 3.5C20.3 4.3 20.3 5.7 19.5 6.5L7 19L3 20L4 16L16.5 3.5Z" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="16.5" cy="6.5" r="1" fill="#C96F4F" />
+    <circle cx="16.5" cy="6.5" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -2027,7 +2027,7 @@ export const BrandTrendingUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
   >
     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="16 7 22 7 22 13" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="22,7 20,8.5 20.5,10.5 22,9" fill="#C96F4F" />
+    <polygon points="22,7 20,8.5 20.5,10.5 22,9" fill="#0B57D0" />
   </svg>
 );
 
@@ -2050,7 +2050,7 @@ export const BrandArrowRightIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
   >
     <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="14 6 20 12 14 18" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="20,12 18,10.5 16,12 18,13.5" fill="#C96F4F" />
+    <polygon points="20,12 18,10.5 16,12 18,13.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -2072,7 +2072,7 @@ export const BrandArrowLeftIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
   >
     <line x1="20" y1="12" x2="4" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="10 18 4 12 10 6" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="4,12 6,10.5 8,12 6,13.5" fill="#C96F4F" />
+    <polygon points="4,12 6,10.5 8,12 6,13.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -2094,7 +2094,7 @@ export const BrandArrowUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
   >
     <line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="6 10 12 4 18 10" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,4 10.5,6 12,8 13.5,6" fill="#C96F4F" />
+    <polygon points="12,4 10.5,6 12,8 13.5,6" fill="#0B57D0" />
   </svg>
 );
 
@@ -2116,7 +2116,7 @@ export const BrandArrowDownIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
   >
     <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="18 14 12 20 6 14" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,20 10.5,18 12,16 13.5,18" fill="#C96F4F" />
+    <polygon points="12,20 10.5,18 12,16 13.5,18" fill="#0B57D0" />
   </svg>
 );
 
@@ -2138,9 +2138,9 @@ export const BrandWifiIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     {...props}
   >
     <path d="M2.5 8C8.5 2.5 15.5 2.5 21.5 8" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M5.5 12C9.5 8 14.5 8 18.5 12" stroke="#6B7F5B" strokeWidth={strokeWidth} />
+    <path d="M5.5 12C9.5 8 14.5 8 18.5 12" stroke="#0E6FAD" strokeWidth={strokeWidth} />
     <path d="M8.5 16C10.5 14 13.5 14 15.5 16" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="19.5" r="1.5" fill="#C96F4F" />
+    <circle cx="12" cy="19.5" r="1.5" fill="#0B57D0" />
   </svg>
 );
 
@@ -2164,9 +2164,9 @@ export const BrandSnowIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="3.3" y1="7" x2="20.7" y2="17" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="3.3" y1="17" x2="20.7" y2="7" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polyline points="10 4 12 2 14 4" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <polyline points="10 20 12 22 14 20" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="12" r="1.5" fill="#C96F4F" />
+    <polyline points="10 4 12 2 14 4" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <polyline points="10 20 12 22 14 20" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <circle cx="12" cy="12" r="1.5" fill="#0B57D0" />
   </svg>
 );
 export const BrandAcIcon = BrandSnowIcon;
@@ -2190,9 +2190,9 @@ export const BrandKitchenIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
   >
     <path d="M3 18.5H21" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M4 18.5C4 12.5 7.5 7.5 12 7.5C16.5 7.5 20 12.5 20 18.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M12 4V7.5" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="3.5" r="1.5" fill="#C96F4F" />
-    <line x1="8" y1="14" x2="16" y2="14" stroke="#D9C9B2" strokeWidth="1.25" />
+    <path d="M12 4V7.5" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <circle cx="12" cy="3.5" r="1.5" fill="#0B57D0" />
+    <line x1="8" y1="14" x2="16" y2="14" stroke="#D3DCE8" strokeWidth="1.25" />
   </svg>
 );
 
@@ -2218,7 +2218,7 @@ export const BrandFlameIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <path d="M12 18.5C10.5 18.5 9.5 17 9.5 15.5C9.5 13.5 12 11.5 12 11.5C12 11.5 14.5 13.5 14.5 15.5C14.5 17 13.5 18.5 12 18.5Z" fill="#C96F4F" />
+    <path d="M12 18.5C10.5 18.5 9.5 17 9.5 15.5C9.5 13.5 12 11.5 12 11.5C12 11.5 14.5 13.5 14.5 15.5C14.5 17 13.5 18.5 12 18.5Z" fill="#0B57D0" />
   </svg>
 );
 
@@ -2240,8 +2240,8 @@ export const BrandWaterIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     {...props}
   >
     <path d="M2.5 8.5C5.5 7 8.5 10 12 8.5C15.5 7 18.5 10 21.5 8.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M2.5 14C5.5 12.5 8.5 15.5 12 14C15.5 12.5 18.5 15.5 21.5 14" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <path d="M2.5 19.5C5.5 18 8.5 21 12 19.5C15.5 18 18.5 21 21.5 19.5" stroke="#C96F4F" strokeWidth={1.5} />
+    <path d="M2.5 14C5.5 12.5 8.5 15.5 12 14C15.5 12.5 18.5 15.5 21.5 14" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <path d="M2.5 19.5C5.5 18 8.5 21 12 19.5C15.5 18 18.5 21 21.5 19.5" stroke="#0B57D0" strokeWidth={1.5} />
   </svg>
 );
 
@@ -2265,8 +2265,8 @@ export const BrandCoffeeIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
     <path d="M4 8H17V14C17 17 14.5 19 10.5 19C6.5 19 4 17 4 14V8Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M17 10H19C20.1 10 21 10.9 21 12C21 13.1 20.1 14 19 14H17" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="2.5" y1="21.5" x2="19" y2="21.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M8 3V5" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <path d="M12 2.5V5.5" stroke="#C96F4F" strokeWidth={strokeWidth} />
+    <path d="M8 3V5" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <path d="M12 2.5V5.5" stroke="#0B57D0" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -2291,7 +2291,7 @@ export const BrandBathIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
     <path d="M6 12V6.5C6 5.1 7.1 4 8.5 4C9.9 4 11 5.1 11 6.5V7.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="5.5" y1="21" x2="4.5" y2="23" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="18.5" y1="21" x2="19.5" y2="23" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="8.5" cy="4" r="1" fill="#C96F4F" />
+    <circle cx="8.5" cy="4" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -2313,15 +2313,15 @@ export const BrandSunIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     {...props}
   >
     <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="12" r="1.5" fill="#C96F4F" />
+    <circle cx="12" cy="12" r="1.5" fill="#0B57D0" />
     <line x1="12" y1="2" x2="12" y2="4.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="12" y1="19.5" x2="12" y2="22" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="2" y1="12" x2="4.5" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="19.5" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth={strokeWidth} />
-    <line x1="4.9" y1="4.9" x2="6.8" y2="6.8" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <line x1="17.2" y1="17.2" x2="19.1" y2="19.1" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <line x1="4.9" y1="19.1" x2="6.8" y2="17.2" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <line x1="17.2" y1="6.8" x2="19.1" y2="4.9" stroke="#6B7F5B" strokeWidth={strokeWidth} />
+    <line x1="4.9" y1="4.9" x2="6.8" y2="6.8" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <line x1="17.2" y1="17.2" x2="19.1" y2="19.1" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <line x1="4.9" y1="19.1" x2="6.8" y2="17.2" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <line x1="17.2" y1="6.8" x2="19.1" y2="4.9" stroke="#0E6FAD" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -2344,8 +2344,8 @@ export const BrandCreditCardIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
   >
     <rect x="2.5" y="5" width="19" height="14" rx="2.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="2.5" y1="9.5" x2="21.5" y2="9.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <rect x="5.5" y="13" width="3.5" height="2.5" rx="0.5" fill="#C96F4F" />
-    <line x1="12" y1="14.5" x2="17.5" y2="14.5" stroke="#6B7F5B" strokeWidth="1.5" />
+    <rect x="5.5" y="13" width="3.5" height="2.5" rx="0.5" fill="#0B57D0" />
+    <line x1="12" y1="14.5" x2="17.5" y2="14.5" stroke="#0E6FAD" strokeWidth="1.5" />
   </svg>
 );
 
@@ -2368,9 +2368,9 @@ export const BrandCashIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.
   >
     <rect x="2.5" y="5.5" width="19" height="13" rx="2" stroke="currentColor" strokeWidth={strokeWidth} />
     <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="12" r="1.2" fill="#C96F4F" />
-    <line x1="6" y1="9" x2="6" y2="15" stroke="#6B7F5B" strokeWidth="1.5" />
-    <line x1="18" y1="9" x2="18" y2="15" stroke="#6B7F5B" strokeWidth="1.5" />
+    <circle cx="12" cy="12" r="1.2" fill="#0B57D0" />
+    <line x1="6" y1="9" x2="6" y2="15" stroke="#0E6FAD" strokeWidth="1.5" />
+    <line x1="18" y1="9" x2="18" y2="15" stroke="#0E6FAD" strokeWidth="1.5" />
   </svg>
 );
 
@@ -2392,7 +2392,7 @@ export const BrandKeyIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     {...props}
   >
     <circle cx="7.5" cy="14.5" r="4.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="7.5" cy="14.5" r="1.5" fill="#C96F4F" />
+    <circle cx="7.5" cy="14.5" r="1.5" fill="#0B57D0" />
     <line x1="10.8" y1="11.2" x2="20.5" y2="3.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="16" y1="8" x2="18.5" y2="10" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="18.5" y1="5.5" x2="21" y2="7.5" stroke="currentColor" strokeWidth={strokeWidth} />
@@ -2418,7 +2418,7 @@ export const BrandThumbUpIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
   >
     <path d="M7 10V21H3.5C2.7 21 2 20.3 2 19.5V11.5C2 10.7 2.7 10 3.5 10H7Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M7 10L11.5 3C12.5 3 13.5 4 13.5 5.5V8.5H19.5C20.6 8.5 21.5 9.4 21.5 10.5C21.5 10.9 21.3 11.3 21.1 11.6L18.5 18.6C18.2 19.4 17.4 20 16.5 20H7" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="13.5" cy="8.5" r="1" fill="#C96F4F" />
+    <circle cx="13.5" cy="8.5" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -2440,7 +2440,7 @@ export const BrandThumbDownIcon: React.FC<IconProps> = ({ size = 20, strokeWidth
   >
     <path d="M7 14V3H3.5C2.7 3 2 3.7 2 4.5V12.5C2 13.3 2.7 14 3.5 14H7Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <path d="M7 14L11.5 21C12.5 21 13.5 20 13.5 18.5V15.5H19.5C20.6 15.5 21.5 14.6 21.5 13.5C21.5 13.1 21.3 12.7 21.1 12.4L18.5 5.4C18.2 4.6 17.4 4 16.5 4H7" stroke="currentColor" strokeWidth={strokeWidth} />
-    <circle cx="13.5" cy="15.5" r="1" fill="#C96F4F" />
+    <circle cx="13.5" cy="15.5" r="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -2464,7 +2464,7 @@ export const BrandDownloadIcon: React.FC<IconProps> = ({ size = 20, strokeWidth 
     <path d="M4 16V19.5C4 20.3 4.7 21 5.5 21H18.5C19.3 21 20 20.3 20 19.5V16" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="8 12 12 16 16 12" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="12" y1="4" x2="12" y2="16" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="12,17.5 10.5,16 12,14.5 13.5,16" fill="#C96F4F" />
+    <polygon points="12,17.5 10.5,16 12,14.5 13.5,16" fill="#0B57D0" />
   </svg>
 );
 
@@ -2488,7 +2488,7 @@ export const BrandUserAddIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
     <path d="M3 20.5C3 16.5 6 14.5 9.5 14.5C13 14.5 16 16.5 16 20.5" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="19" y1="8" x2="19" y2="14" stroke="currentColor" strokeWidth={strokeWidth} />
     <line x1="16" y1="11" x2="22" y2="11" stroke="currentColor" strokeWidth={strokeWidth} />
-    <polygon points="19,10 19.8,11 19,12 18.2,11" fill="#C96F4F" />
+    <polygon points="19,10 19.8,11 19,12 18.2,11" fill="#0B57D0" />
   </svg>
 );
 
@@ -2510,9 +2510,9 @@ export const BrandRefreshIcon: React.FC<IconProps> = ({ size = 20, strokeWidth =
   >
     <path d="M21.5 10C20.5 5.5 16.5 2.5 12 2.5C6.8 2.5 2.5 6.8 2.5 12" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="21.5 4 21.5 10 15.5 10" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M2.5 14C3.5 18.5 7.5 21.5 12 21.5C17.2 21.5 21.5 17.2 21.5 12" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <polyline points="2.5 20 2.5 14 8.5 14" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <circle cx="12" cy="12" r="1.2" fill="#C96F4F" />
+    <path d="M2.5 14C3.5 18.5 7.5 21.5 12 21.5C17.2 21.5 21.5 17.2 21.5 12" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <polyline points="2.5 20 2.5 14 8.5 14" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <circle cx="12" cy="12" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -2584,8 +2584,8 @@ export const BrandTicketIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 
       stroke="currentColor"
       strokeWidth={strokeWidth}
     />
-    <line x1="12" y1="6" x2="12" y2="18" stroke="#6B7F5B" strokeWidth="1.5" strokeDasharray="2 2" />
-    <circle cx="8.5" cy="12" r="1.2" fill="#C96F4F" />
+    <line x1="12" y1="6" x2="12" y2="18" stroke="#0E6FAD" strokeWidth="1.5" strokeDasharray="2 2" />
+    <circle cx="8.5" cy="12" r="1.2" fill="#0B57D0" />
   </svg>
 );
 
@@ -2607,9 +2607,9 @@ export const BrandChartIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1
     {...props}
   >
     <line x1="3" y1="20.5" x2="21" y2="20.5" stroke="currentColor" strokeWidth={strokeWidth} />
-    <rect x="5" y="12" width="3" height="8.5" rx="1" fill="#6B7F5B" />
-    <rect x="10.5" y="7" width="3" height="13.5" rx="1" fill="#2E3A2F" />
-    <rect x="16" y="4" width="3" height="16.5" rx="1" fill="#C96F4F" />
+    <rect x="5" y="12" width="3" height="8.5" rx="1" fill="#0E6FAD" />
+    <rect x="10.5" y="7" width="3" height="13.5" rx="1" fill="#152C52" />
+    <rect x="16" y="4" width="3" height="16.5" rx="1" fill="#0B57D0" />
   </svg>
 );
 
@@ -2630,7 +2630,7 @@ export const BrandBanIcon: React.FC<IconProps> = ({ size = 20, strokeWidth = 1.8
     {...props}
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={strokeWidth} />
-    <line x1="5.6" y1="5.6" x2="18.4" y2="18.4" stroke="#C96F4F" strokeWidth={strokeWidth} />
+    <line x1="5.6" y1="5.6" x2="18.4" y2="18.4" stroke="#0B57D0" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -2651,7 +2651,7 @@ export const BrandCheckCircleIcon: React.FC<IconProps> = ({ size = 20, strokeWid
     {...props}
   >
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth={strokeWidth} />
-    <path d="M8 12.5L10.8 15.3L16 9" stroke="#6B7F5B" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 12.5L10.8 15.3L16 9" stroke="#0E6FAD" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -2673,11 +2673,11 @@ export const BrandBadgeCheckIcon: React.FC<IconProps> = ({ size = 20, strokeWidt
   >
     <path
       d="M12 2.5L14.7 5.2L18.5 5.5L19.5 9.2L22.5 11.5L20.8 15L21.7 18.8L18 20L15.8 23L12 21.8L8.2 23L6 20L2.3 18.8L3.2 15L1.5 11.5L4.5 9.2L5.5 5.5L9.3 5.2L12 2.5Z"
-      stroke="#6B7F5B"
+      stroke="#0E6FAD"
       strokeWidth={strokeWidth}
-      fill="#F9F6F0"
+      fill="#FFFFFF"
     />
-    <path d="M8.5 12L11 14.5L15.5 9.5" stroke="#2E3A2F" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8.5 12L11 14.5L15.5 9.5" stroke="#152C52" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -2697,8 +2697,8 @@ export const BrandTrendingDownIcon: React.FC<IconProps> = ({ size = 20, strokeWi
     focusable="false"
     {...props}
   >
-    <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" stroke="#C96F4F" strokeWidth={strokeWidth} />
-    <polyline points="16 17 22 17 22 11" stroke="#C96F4F" strokeWidth={strokeWidth} />
+    <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" stroke="#0B57D0" strokeWidth={strokeWidth} />
+    <polyline points="16 17 22 17 22 11" stroke="#0B57D0" strokeWidth={strokeWidth} />
   </svg>
 );
 
@@ -2727,9 +2727,9 @@ export const BrandDocumentTextIcon: React.FC<IconProps> = ({ size = 20, strokeWi
   >
     <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth={strokeWidth} />
     <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth={strokeWidth} />
-    <line x1="8" y1="13" x2="16" y2="13" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <line x1="8" y1="17" x2="13" y2="17" stroke="#6B7F5B" strokeWidth={strokeWidth} />
-    <polygon points="16,16 17.5,17 16,18 14.5,17" fill="#C96F4F" stroke="#C96F4F" strokeWidth="0.5" />
+    <line x1="8" y1="13" x2="16" y2="13" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <line x1="8" y1="17" x2="13" y2="17" stroke="#0E6FAD" strokeWidth={strokeWidth} />
+    <polygon points="16,16 17.5,17 16,18 14.5,17" fill="#0B57D0" stroke="#0B57D0" strokeWidth="0.5" />
   </svg>
 );
 export const BrandDocumentIcon = BrandDocumentTextIcon;

@@ -16,6 +16,16 @@ import {
   completeHostOnboardingAction,
   HostOnboardingInput,
 } from "@/app/actions/host";
+import { createMyListingAction } from "@/app/actions/listings";
+import type { ActionResult } from "@/lib/action-result";
+import {
+  EXPERIENCE_TYPES,
+  EXPERIENCE_TYPE_LABELS,
+  experienceTypeLabel,
+  type ExperienceTypeId,
+  type HostOffer,
+} from "@/lib/catalog-types";
+import { allowedOffersFor } from "@/lib/host-types";
 import {
   clearHostDraft,
   readHostDraft,
@@ -55,10 +65,12 @@ import {
 import { dur, ease } from "@/lib/motion";
 import { imagery } from "@/lib/imagery";
 import HostTypeStep, { type HostKind } from "./onboarding/HostTypeStep";
+import OfferTypeStep from "./onboarding/OfferTypeStep";
 import {
   AMENITIES,
   BUSINESS_TYPES,
   CATEGORIES,
+  EXPERIENCE_TYPE_ICONS,
   HOSTEL_FACILITY_IDS,
   HOSTEL_PHOTO_PRESETS,
   HOTEL_AMENITY_IDS,
@@ -86,12 +98,29 @@ import {
 } from "./onboarding/ui";
 import { useActionError } from "@/hook/useActionError";
 
+type WorkspaceType = "individual" | "agency" | "hotel" | "hostel";
+
 interface BecomeHostFlowProps {
   initialStep?: string;
-  initialHostType?: "individual" | "agency" | "hotel" | "hostel" | null;
+  initialHostType?: WorkspaceType | null;
   /** Session user id (from the server page), used only to key the local draft. */
   currentUserId: string;
+  /**
+   * "onboarding" (default): /become-a-host, becoming a host.
+   * "create": /host/listings/new, an existing host adds an offer. Only the
+   * offers the workspace may publish are shown (lib/catalog-types.ts), the
+   * listing is created with createMyListingAction and no org data is asked.
+   */
+  mode?: "onboarding" | "create";
+  /** Create mode: the active workspace type (server host context). */
+  workspaceType?: WorkspaceType;
+  /** Create mode: preselected offer (e.g. ?offer=experience). */
+  initialOffer?: string | null;
 }
+
+/** Default listing type (category value) when a vertical is picked. */
+const defaultCategoryFor = (vertical: "home" | "vehicle" | "experience") =>
+  vertical === "experience" ? "" : CATEGORIES.find((c) => c.vertical === vertical)?.value ?? "Villa";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -133,7 +162,19 @@ export default function BecomeHostFlow({
   initialStep = "0",
   initialHostType = null,
   currentUserId,
+  mode = "onboarding",
+  workspaceType = "individual",
+  initialOffer = null,
 }: BecomeHostFlowProps) {
+  const isCreate = mode === "create";
+  // Create mode: what this workspace may publish. Onboarding: individuals only get homes and vehicles.
+  const createOffers: HostOffer[] = isCreate ? allowedOffersFor(workspaceType) : [];
+  const startOffer: HostOffer | null =
+    isCreate && initialOffer && (createOffers as string[]).includes(initialOffer) && initialOffer !== "trip"
+      ? (initialOffer as HostOffer)
+      : null;
+  const startVertical: "home" | "vehicle" | "experience" =
+    startOffer === "vehicle" || startOffer === "experience" ? startOffer : "home";
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("hostFlow");
@@ -145,16 +186,21 @@ export default function BecomeHostFlow({
 
   // Mode: "none" (host type selection), "individual" (12 steps), "agency" (5 steps), "hotel" (7 steps), "hostel" (7 steps)
   const [currentStep, setCurrentStep] = useState<number>(() => {
+    if (isCreate) return startOffer && startOffer !== "hotel" ? 2 : 0;
     const parsed = parseInt(initialStep, 10);
     return isNaN(parsed) ? 0 : parsed;
   });
 
   const [hostType, setHostType] = useState<
     "individual" | "agency" | "hotel" | "hostel" | null
-  >(initialHostType);
+  >(isCreate ? workspaceType : initialHostType);
   const [activeFlow, setActiveFlow] = useState<
     "none" | "individual" | "agency" | "hotel" | "hostel"
   >(() => {
+    if (isCreate) {
+      if (startOffer === "hotel") return workspaceType === "hostel" ? "hostel" : "hotel";
+      return startOffer ? "individual" : "none";
+    }
     if (initialStep === "agency") return "agency";
     if (initialStep === "hotel") return "hotel";
     if (initialStep === "hostel") return "hostel";
@@ -177,8 +223,14 @@ export default function BecomeHostFlow({
   );
 
   useEffect(() => {
-    const currentHostType =
-      hostType ||
+    // Create mode reuses the listing (or property) wizard, never the org registration config.
+    const currentHostType = isCreate
+      ? isHotelFlow
+        ? "hotel"
+        : isHostelFlow
+          ? "hostel"
+          : "individual"
+      : hostType ||
       (isHotelFlow
         ? "hotel"
         : isHostelFlow
@@ -187,7 +239,7 @@ export default function BecomeHostFlow({
             ? "agency"
             : "individual");
     setConfiguredSteps(getOnboardingSteps(currentHostType));
-  }, [hostType, activeFlow, isAgencyFlow, isHotelFlow, isHostelFlow]);
+  }, [hostType, activeFlow, isAgencyFlow, isHotelFlow, isHostelFlow, isCreate]);
 
   const renderDynamicFieldsForStep = (stepId: string) => {
     const stepCfg = configuredSteps.find((s) => s.id === stepId);
@@ -206,10 +258,10 @@ export default function BecomeHostFlow({
   };
 
   // Individual Listing Form State
-  const [category, setCategory] = useState<string>("Villa");
-  const [vertical, setVertical] = useState<"home" | "vehicle" | "experience">(
-    "home",
-  );
+  const [category, setCategory] = useState<string>(() => defaultCategoryFor(startVertical));
+  const [vertical, setVertical] = useState<"home" | "vehicle" | "experience">(startVertical);
+  /** Canonical experience type (required for experiences, lib/catalog-types.ts). */
+  const [experienceType, setExperienceType] = useState<ExperienceTypeId | null>(null);
   const [placement, setPlacement] = useState<string>("entire");
   const [wilaya, setWilaya] = useState<string>("Algiers");
   const [city, setCity] = useState<string>("Hydra");
@@ -239,11 +291,10 @@ export default function BecomeHostFlow({
   ]);
   const [customPhotoUrl, setCustomPhotoUrl] = useState<string>("");
 
-  // Details (sample content is shown in the user's language)
-  const [title, setTitle] = useState<string>(() => t("titleStep.default"));
-  const [description, setDescription] = useState<string>(() =>
-    t("descriptionStep.default"),
-  );
+  // Details start empty: a prefilled villa sample was wrong for vehicles and experiences
+  // and could be published by mistake. The title step offers example titles instead.
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
   const [price, setPrice] = useState<number>(18500); // DZD
   const [instantBook, setInstantBook] = useState<boolean>(true);
   const [cancellationPolicy, setCancellationPolicy] = useState<
@@ -372,6 +423,8 @@ export default function BecomeHostFlow({
 
   // Load draft from localStorage on mount
   useEffect(() => {
+    // Create mode starts fresh: the saved draft belongs to the onboarding flow.
+    if (isCreate) return;
     if (typeof window !== "undefined") {
       const draft = readHostDraft(currentUserId) as Record<string, any> | null;
       if (draft) {
@@ -383,8 +436,11 @@ export default function BecomeHostFlow({
           if (draft.city) setCity(draft.city);
           if (draft.address) setAddress(draft.address);
           if (draft.photos && draft.photos.length > 0) setPhotos(draft.photos);
-          if (draft.category) setCategory(draft.category);
-          if (draft.vertical) setVertical(draft.vertical);
+          // Individuals publish homes and vehicles only (older drafts could hold an experience).
+          if (draft.vertical === "home" || draft.vertical === "vehicle") {
+            setVertical(draft.vertical);
+            if (draft.category) setCategory(draft.category);
+          }
           if (draft.placement) setPlacement(draft.placement);
           if (draft.guestCount) setGuestCount(draft.guestCount);
           if (draft.bedroomCount) setBedroomCount(draft.bedroomCount);
@@ -426,14 +482,21 @@ export default function BecomeHostFlow({
         } catch {}
       }
     }
-  }, [initialStep, currentUserId]);
+  }, [initialStep, currentUserId, isCreate]);
 
+  const exitHref = isCreate ? "/host/listings" : "/";
   const handleHeaderExitClick = () => {
     if (currentStep > 0 || isOrgFlow) {
       setIsExitDialogOpen(true);
     } else {
-      router.push("/");
+      router.push(exitHref);
     }
+  };
+
+  /** Create mode: leave without publishing (nothing is saved). */
+  const handleLeaveCreate = () => {
+    setIsExitDialogOpen(false);
+    router.push(exitHref);
   };
 
   const handleExecuteSaveAndExit = () => {
@@ -548,30 +611,33 @@ export default function BecomeHostFlow({
 
   const redirectTimer = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
-  const goToWorkspace = () => {
+  /** Where the celebration screen continues to (full reload: the session may have changed). */
+  const doneHref = isCreate ? "/host/listings" : "/host";
+  const goTo = (path: string) => {
     clearTimeout(redirectTimer.current);
-    window.location.href = `/${locale}/host`;
+    window.location.href = `/${locale}${path}`;
   };
+  const goToWorkspace = () => goTo(doneHref);
+  /** Agency onboarding ends on a choice (experience or trip) instead of an automatic redirect. */
+  const [agencyNextSteps, setAgencyNextSteps] = useState(false);
 
-  /**
-   * Sends onboarding to the server. The server decides ids, ownership and
-   * verification status and re-issues the signed session; we only redirect.
-   */
-  const submitOnboarding = async (
-    input: HostOnboardingInput,
+  /** Runs a server action, then shows the celebration and continues to the workspace. */
+  const submitWith = async (
+    run: () => Promise<ActionResult<unknown>>,
     successMessage: string,
-  ) => {
+    options: { autoRedirect?: boolean } = {},
+  ): Promise<boolean> => {
     setIsSubmitting(true);
     try {
-      const result = await completeHostOnboardingAction(input);
+      const result = await run();
       if (!result.ok) {
         if (result.code === "UNAUTHENTICATED") openLoginModal();
         toast.error(errorText(result));
         setIsSubmitting(false);
-        return;
+        return false;
       }
 
-      clearHostDraft(currentUserId);
+      if (!isCreate) clearHostDraft(currentUserId);
       try {
         localStorage.setItem("darna_mode", "host");
       } catch {}
@@ -579,13 +645,40 @@ export default function BecomeHostFlow({
       // Celebrate, then continue to the workspace (the button goes there right away).
       setCompleted(successMessage);
       setIsSubmitting(false);
-      redirectTimer.current = setTimeout(() => {
-        window.location.href = `/${locale}/host`;
-      }, 4000);
+      if (options.autoRedirect !== false) {
+        redirectTimer.current = setTimeout(goToWorkspace, 4000);
+      }
+      return true;
     } catch {
       toast.error(t("errors.generic"));
       setIsSubmitting(false);
+      return false;
     }
+  };
+
+  /**
+   * Sends onboarding to the server. The server decides ids, ownership and
+   * verification status and re-issues the signed session; we only redirect.
+   */
+  const submitOnboarding = (input: HostOnboardingInput, successMessage: string, options?: { autoRedirect?: boolean }) =>
+    submitWith(() => completeHostOnboardingAction(input), successMessage, options);
+
+  /** Create mode: publishes one listing for the current workspace (rules checked on the server). */
+  const submitListing = (listing: Record<string, unknown>) =>
+    submitWith(() => createMyListingAction(listing), t("create.published"));
+
+  /** Hotel/hostel: registers the organization (onboarding) or only adds the property (create mode). */
+  const submitOrgOrProperty = (input: HostOnboardingInput, successMessage: string) =>
+    isCreate && "property" in input && input.property && typeof input.property === "object"
+      ? submitListing(input.property as Record<string, unknown>)
+      : submitOnboarding(input, successMessage);
+
+  /** Create mode (hotel/hostel): only the property name and address are required. */
+  const propertyFieldsError = (kind: "hotel" | "hostel", name: string, address: string): StepError | null => {
+    if (!name.trim()) return { message: t(kind === "hotel" ? "errors.hotelName" : "errors.hostelName"), fields: ["name"] };
+    if (!address.trim())
+      return { message: t(kind === "hotel" ? "errors.hotelAddress" : "errors.hostelAddress"), fields: ["address"] };
+    return null;
   };
 
   /** Returns the first missing/invalid org field as a step error, else null. */
@@ -647,32 +740,38 @@ export default function BecomeHostFlow({
       return;
     }
 
-    await submitOnboarding(
-      {
-        hostType: "individual",
-        // Content fields only, ownership/ids/ratings are set on the server.
-        listing: {
-          title: title.trim(),
-          description: description.trim(),
-          price,
-          category: vertical,
-          type: category,
-          city: `${city || "Hydra"}, ${wilaya || "Algiers"}`,
-          locationValue: wilaya || "Algiers",
-          imageSrc: finalPhotos,
-          guestCount,
-          bedroomCount,
-          roomCount: bedroomCount + 1,
-          bathroomCount,
-          amenities: selectedAmenities,
-          latlng,
-          instantBook,
-          bookingApprovalMode: instantBook ? "instant" : "request",
-          cancellationPolicy,
-        },
-      },
-      t("review.published"),
-    );
+    if (vertical === "experience" && !experienceType) {
+      setStepError({ message: t("errors.experienceType"), fields: ["experienceType"] });
+      return;
+    }
+
+    // Content fields only, ownership/ids/ratings are set on the server.
+    const listing = {
+      title: title.trim(),
+      description: description.trim(),
+      price,
+      category: vertical,
+      type: vertical === "experience" && experienceType ? EXPERIENCE_TYPE_LABELS[experienceType].en : category,
+      ...(vertical === "experience" && experienceType ? { experienceType } : {}),
+      city: `${city || "Hydra"}, ${wilaya || "Algiers"}`,
+      locationValue: wilaya || "Algiers",
+      imageSrc: finalPhotos,
+      guestCount,
+      bedroomCount,
+      roomCount: bedroomCount + 1,
+      bathroomCount,
+      amenities: selectedAmenities,
+      latlng,
+      instantBook,
+      bookingApprovalMode: instantBook ? "instant" : "request",
+      cancellationPolicy,
+    };
+
+    if (isCreate) {
+      await submitListing(listing);
+      return;
+    }
+    await submitOnboarding({ hostType: "individual", listing }, t("review.published"));
   };
 
   const handleRegisterAgency = async () => {
@@ -688,7 +787,7 @@ export default function BecomeHostFlow({
       return;
     }
 
-    await submitOnboarding(
+    const ok = await submitOnboarding(
       {
         hostType: "agency",
         organization: {
@@ -703,17 +802,21 @@ export default function BecomeHostFlow({
         },
       },
       tAgency("success"),
+      { autoRedirect: false },
     );
+    if (ok) setAgencyNextSteps(true);
   };
 
   const handleRegisterHotel = async () => {
-    const error = validateOrgFields({
-      name: hotelName,
-      reg: hotelRegNumber,
-      email: hotelEmail,
-      phone: hotelPhone,
-      address: hotelAddress,
-    });
+    const error = isCreate
+      ? propertyFieldsError("hotel", hotelName, hotelAddress)
+      : validateOrgFields({
+          name: hotelName,
+          reg: hotelRegNumber,
+          email: hotelEmail,
+          phone: hotelPhone,
+          address: hotelAddress,
+        });
     if (error) {
       setStepError(error);
       return;
@@ -732,7 +835,7 @@ export default function BecomeHostFlow({
 
     // Note: the generated property/room descriptions below are stored listing
     // content (server data), not UI copy, so they are intentionally not localized here.
-    await submitOnboarding(
+    await submitOrgOrProperty(
       {
         hostType: "hotel",
         organization: {
@@ -812,13 +915,15 @@ export default function BecomeHostFlow({
   };
 
   const handleRegisterHostel = async () => {
-    const error = validateOrgFields({
-      name: hostelName,
-      reg: hostelRegNumber,
-      email: hostelEmail,
-      phone: hostelPhone,
-      address: hostelAddress,
-    });
+    const error = isCreate
+      ? propertyFieldsError("hostel", hostelName, hostelAddress)
+      : validateOrgFields({
+          name: hostelName,
+          reg: hostelRegNumber,
+          email: hostelEmail,
+          phone: hostelPhone,
+          address: hostelAddress,
+        });
     if (error) {
       setStepError(error);
       return;
@@ -835,7 +940,7 @@ export default function BecomeHostFlow({
           ];
     const name = hostelName.trim();
 
-    await submitOnboarding(
+    await submitOrgOrProperty(
       {
         hostType: "hostel",
         organization: {
@@ -910,6 +1015,23 @@ export default function BecomeHostFlow({
     );
   };
 
+  /*
+   * Step skipping. Listing wizard: placement (3) only applies to homes, the
+   * home amenities (6) don't apply to experiences. Hotel/hostel in create mode:
+   * the team step (6) belongs to the organization, not to a new property.
+   */
+  const skipListingStep = (n: number) => (vertical !== "home" && n === 3) || (vertical === "experience" && n === 6);
+  const nextListingStep = (from: number, dir: 1 | -1) => {
+    let n = from + dir;
+    while (skipListingStep(n)) n += dir;
+    return n;
+  };
+  const nextOrgStep = (from: number, dir: 1 | -1) => (isCreate && from + dir === 6 ? from + 2 * dir : from + dir);
+  /** Step number shown to the host (create mode hides the team step). */
+  const orgShown = (n: number) => (isCreate && n > 6 ? n - 1 : n);
+  const hotelTotal = isCreate ? HOTEL_STEPS - 1 : HOTEL_STEPS;
+  const hostelTotal = isCreate ? HOSTEL_STEPS - 1 : HOSTEL_STEPS;
+
   /** Footer "Next": validates the current step, then advances. */
   const handleNext = () => {
     if (isHotelFlow) {
@@ -919,7 +1041,7 @@ export default function BecomeHostFlow({
           fields: ["name"],
         });
       }
-      if (hotelStep === 2) {
+      if (hotelStep === 2 && !isCreate) {
         const error = contactDetailsError(
           hotelRegNumber,
           hotelEmail,
@@ -939,7 +1061,7 @@ export default function BecomeHostFlow({
           fields: ["photos"],
         });
       }
-      setHotelStep((prev) => prev + 1);
+      setHotelStep((prev) => nextOrgStep(prev, 1));
       return;
     }
     if (isHostelFlow) {
@@ -949,7 +1071,7 @@ export default function BecomeHostFlow({
           fields: ["name"],
         });
       }
-      if (hostelStep === 2) {
+      if (hostelStep === 2 && !isCreate) {
         const error = contactDetailsError(
           hostelRegNumber,
           hostelEmail,
@@ -969,7 +1091,7 @@ export default function BecomeHostFlow({
           fields: ["photos"],
         });
       }
-      setHostelStep((prev) => prev + 1);
+      setHostelStep((prev) => nextOrgStep(prev, 1));
       return;
     }
     if (isAgencyFlow) {
@@ -989,6 +1111,9 @@ export default function BecomeHostFlow({
       setAgencyStep((prev) => prev + 1);
       return;
     }
+    if (currentStep === 2 && vertical === "experience" && !experienceType) {
+      return setStepError({ message: t("errors.experienceType"), fields: ["experienceType"] });
+    }
     if (currentStep === 4 && (!city.trim() || !address.trim())) {
       return setStepError({
         message: t("errors.cityAddress"),
@@ -1000,7 +1125,10 @@ export default function BecomeHostFlow({
     if (currentStep === 8 && !title.trim()) {
       return setStepError({ message: t("errors.title"), fields: ["title"] });
     }
-    setCurrentStep((prev) => prev + 1);
+    if (currentStep === 9 && !description.trim()) {
+      return setStepError({ message: t("errors.description"), fields: ["description"] });
+    }
+    setCurrentStep((prev) => nextListingStep(prev, 1));
   };
 
   /** Footer "Back": previous step, or back to the host-type chooser from an org flow's first step. */
@@ -1011,15 +1139,36 @@ export default function BecomeHostFlow({
       : isAgencyFlow
         ? agencyStep
         : 0;
-  const backToChooser = isOrgFlow && orgStep <= 1;
+  // Create mode: the listing wizard starts at step 2 (no intro), back from there returns to the offer cards.
+  const backToChooser = (isOrgFlow && orgStep <= 1) || (isCreate && !isOrgFlow && currentStep <= 2);
   const handleBack = () => {
     if (backToChooser) {
       setActiveFlow("none");
       setCurrentStep(0);
-    } else if (isHotelFlow) setHotelStep((prev) => prev - 1);
-    else if (isHostelFlow) setHostelStep((prev) => prev - 1);
+    } else if (isHotelFlow) setHotelStep((prev) => nextOrgStep(prev, -1));
+    else if (isHostelFlow) setHostelStep((prev) => nextOrgStep(prev, -1));
     else if (isAgencyFlow) setAgencyStep((prev) => prev - 1);
-    else setCurrentStep((prev) => prev - 1);
+    else setCurrentStep((prev) => nextListingStep(prev, -1));
+  };
+
+  /** Create mode: the host picked what to create (only offers the workspace may publish are shown). */
+  const handleSelectOffer = (offer: HostOffer) => {
+    if (offer === "trip") {
+      router.push("/host/agency/trips/new");
+      return;
+    }
+    if (offer === "hotel") {
+      setActiveFlow(workspaceType === "hostel" ? "hostel" : "hotel");
+      setHotelStep(1);
+      setHostelStep(1);
+      return;
+    }
+    if (offer !== vertical) {
+      setVertical(offer);
+      setCategory(defaultCategoryFor(offer));
+    }
+    setActiveFlow("individual");
+    setCurrentStep(2);
   };
 
   const handleSelectHostType = (kind: HostKind) => {
@@ -1037,7 +1186,7 @@ export default function BecomeHostFlow({
     1,
   );
 
-  const currentStepNumber = isOrgFlow ? orgStep : currentStep;
+  const currentStepNumber = isOrgFlow ? orgShown(orgStep) : currentStep;
   const isChoosingHostType = currentStep === 0 && !isOrgFlow;
   const isIndividualStep = (n: number) => currentStep === n && !isOrgFlow;
 
@@ -1057,25 +1206,42 @@ export default function BecomeHostFlow({
     return w ? t(`wilayas.${w.id}`) : value;
   };
   const categoryLabel = (value: string) => {
+    if (vertical === "experience") return experienceTypeLabel(experienceType, locale) || t("verticals.experience");
     const c = CATEGORIES.find((item) => item.value === value);
     return c ? t(`categories.${c.id}`) : value;
   };
+  /** Homes, or vehicles: the grid only offers categories of the chosen vertical in create mode. */
+  const categoryChoices = isCreate ? CATEGORIES.filter((c) => c.vertical === vertical) : CATEGORIES;
+  /** Capacity facts shown in previews: homes list rooms, vehicles and experiences only people. */
+  const capacityFacts =
+    vertical === "home"
+      ? [
+          t("counts.guests", { count: guestCount }),
+          t("counts.bedrooms", { count: bedroomCount }),
+          t("counts.beds", { count: bedsCount }),
+          t("counts.bathrooms", { count: bathroomCount }),
+        ]
+      : [t("counts.guests", { count: guestCount })];
   const businessTypeLabel = (value: string) => {
     const b = BUSINESS_TYPES.find((item) => item.value === value);
     return b ? tAgency(`businessTypes.${b.id}`) : value;
   };
+  // The listing wizard can run for an agency (experiences) in create mode: show that workspace's rate.
+  const commissionRate = DEFAULT_COMMISSION_RATES[isCreate ? workspaceType : "individual"];
   const commission = Math.round(
-    (price * DEFAULT_COMMISSION_RATES.individual) / 100,
+    (price * commissionRate) / 100,
   );
   const payout = Math.round(
-    (price * (100 - DEFAULT_COMMISSION_RATES.individual)) / 100,
+    (price * (100 - commissionRate)) / 100,
   );
   const lang = (["en", "fr", "ar"].includes(locale) ? locale : "en") as
     | "en"
     | "fr"
     | "ar";
 
-  const flowBadge = isHotelFlow
+  const flowBadge = isCreate
+    ? t("create.badge")
+    : isHotelFlow
     ? t("header.hotel")
     : isHostelFlow
       ? t("header.hostel")
@@ -1085,9 +1251,9 @@ export default function BecomeHostFlow({
 
   /* Wizard chrome ---------------------------------------------------- */
   const flowTotal = isHotelFlow
-    ? HOTEL_STEPS
+    ? hotelTotal
     : isHostelFlow
-      ? HOSTEL_STEPS
+      ? hostelTotal
       : isAgencyFlow
         ? AGENCY_STEPS
         : activeStepsCount;
@@ -1138,9 +1304,7 @@ export default function BecomeHostFlow({
       kicker={t("review.location", { city, wilaya: wilayaLabel(wilaya) })}
       extra={
         <span className="block space-y-0.5">
-          <span className="block text-meta text-primary-600">
-            {t("counts.guests", { count: guestCount })} · {t("counts.bedrooms", { count: bedroomCount })}
-          </span>
+          <span className="block text-meta text-primary-600">{capacityFacts.slice(0, 2).join(" · ")}</span>
           <span className="block pt-1 text-[0.9375rem] text-primary-900">
             <span className="font-semibold tabular-nums">{formatDzd(price, locale)}</span>{" "}
             <span className="text-primary-600">{unitLabel}</span>
@@ -1171,12 +1335,16 @@ export default function BecomeHostFlow({
     if (isHotelFlow) {
       return hotelStep < HOTEL_STEPS
         ? nextButton("hotel-next-btn")
-        : submitButton("hotel-register-footer-btn", handleRegisterHotel, t("hotel.registering"), t("hotel.register"));
+        : isCreate
+          ? submitButton("hotel-publish-footer-btn", handleRegisterHotel, t("review.publishing"), t("create.publishProperty"))
+          : submitButton("hotel-register-footer-btn", handleRegisterHotel, t("hotel.registering"), t("hotel.register"));
     }
     if (isHostelFlow) {
       return hostelStep < HOSTEL_STEPS
         ? nextButton("hostel-next-btn")
-        : submitButton("hostel-register-footer-btn", handleRegisterHostel, t("hostel.registering"), t("hostel.register"));
+        : isCreate
+          ? submitButton("hostel-publish-footer-btn", handleRegisterHostel, t("review.publishing"), t("create.publishProperty"))
+          : submitButton("hostel-register-footer-btn", handleRegisterHostel, t("hostel.registering"), t("hostel.register"));
     }
     if (isAgencyFlow) {
       return agencyStep < AGENCY_STEPS
@@ -1202,7 +1370,7 @@ export default function BecomeHostFlow({
       <header className="glass sticky top-0 z-header border-b border-primary/[0.08]">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <Link href="/" className={cn("flex shrink-0 items-center rounded-xl", focusRing)}>
+            <Link href={isCreate ? "/host/listings" : "/"} className={cn("flex shrink-0 items-center rounded-xl", focusRing)}>
               <Image
                 src="/assets/logo-horizontal.png"
                 alt={t("header.logoAlt")}
@@ -1218,7 +1386,7 @@ export default function BecomeHostFlow({
           </div>
           {!completed && (
             <Button type="button" variant="tertiary" size="sm" onClick={handleHeaderExitClick}>
-              {t("saveAndExit")}
+              {isCreate ? t("create.exit") : t("saveAndExit")}
             </Button>
           )}
         </div>
@@ -1241,11 +1409,32 @@ export default function BecomeHostFlow({
           <div className="mx-auto flex max-w-xl flex-col items-center py-10 sm:py-16">
             <SuccessCelebration
               title={<span className="block font-serif text-display-md font-normal text-primary-900">{completed}</span>}
-              description={<span className="block text-body-lg text-primary-600">{t("complete.redirecting")}</span>}
+              description={
+                <span className="block text-body-lg text-primary-600">
+                  {agencyNextSteps ? t("agencyNext.body") : isCreate ? t("create.redirecting") : t("complete.redirecting")}
+                </span>
+              }
               actions={
-                <Button type="button" size="lg" onClick={goToWorkspace}>
-                  {t("complete.cta")}
-                </Button>
+                agencyNextSteps ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-body text-primary-700">{t("agencyNext.lead")}</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <Button type="button" size="lg" onClick={() => goTo("/host/listings/new?offer=experience")}>
+                        {t("agencyNext.experience")}
+                      </Button>
+                      <Button type="button" size="lg" variant="secondary" onClick={() => goTo("/host/agency/trips/new")}>
+                        {t("agencyNext.trip")}
+                      </Button>
+                    </div>
+                    <Button type="button" variant="ghost" size="md" onClick={goToWorkspace}>
+                      {t("complete.cta")}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button type="button" size="lg" onClick={goToWorkspace}>
+                    {isCreate ? t("create.done") : t("complete.cta")}
+                  </Button>
+                )
               }
             />
           </div>
@@ -1260,7 +1449,12 @@ export default function BecomeHostFlow({
               <AnimatePresence mode="wait" initial={false} custom={direction}>
                 <m.div key={stepKey} custom={direction} variants={stepVariants} initial="enter" animate="center" exit="exit">
                   {/* STEP 0: 4-WAY HOST-TYPE SELECTION (Section 2) */}
-                  {isChoosingHostType && <HostTypeStep onSelect={handleSelectHostType} />}
+                  {isChoosingHostType &&
+                    (isCreate ? (
+                      <OfferTypeStep offers={createOffers} hostType={workspaceType} onSelect={handleSelectOffer} />
+                    ) : (
+                      <HostTypeStep onSelect={handleSelectHostType} />
+                    ))}
 
                   {/* INDIVIDUAL FLOW: STEP 1 - INTRO */}
                   {isIndividualStep(1) && (
@@ -1301,11 +1495,44 @@ export default function BecomeHostFlow({
                   )}
 
                   {/* INDIVIDUAL FLOW: STEP 2 - PROPERTY TYPE / CATEGORY */}
-                  {isIndividualStep(2) && (
+                  {isIndividualStep(2) && vertical === "experience" && (
                     <div className="space-y-8">
-                      <StepHeader title={t("step1Title")} subtitle={t("step1Subtitle")} />
+                      <StepHeader title={t("experienceType.title")} subtitle={t("experienceType.subtitle")} />
+                      <div
+                        className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4"
+                        role="group"
+                        aria-label={t("experienceType.label")}
+                        aria-describedby={invalid("experienceType") ? STEP_ERROR_ID : undefined}
+                      >
+                        {EXPERIENCE_TYPES.map((id) => {
+                          const Icon = EXPERIENCE_TYPE_ICONS[id];
+                          return (
+                            <ChoiceCard
+                              key={id}
+                              size="sm"
+                              selected={experienceType === id}
+                              onSelect={() => {
+                                setExperienceType(id);
+                                setCategory(EXPERIENCE_TYPE_LABELS[id].en);
+                              }}
+                              icon={<Icon size={22} aria-hidden="true" />}
+                              title={<span className="text-body font-semibold">{experienceTypeLabel(id, locale)}</span>}
+                            />
+                          );
+                        })}
+                      </div>
+                      {renderDynamicFieldsForStep("category_vertical")}
+                    </div>
+                  )}
+
+                  {isIndividualStep(2) && vertical !== "experience" && (
+                    <div className="space-y-8">
+                      <StepHeader
+                        title={vertical === "vehicle" && isCreate ? t("vehicleCategory.title") : t("step1Title")}
+                        subtitle={vertical === "vehicle" && isCreate ? t("vehicleCategory.subtitle") : t("step1Subtitle")}
+                      />
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-                        {CATEGORIES.map((item) => {
+                        {categoryChoices.map((item) => {
                           const Icon = item.icon;
                           return (
                             <ChoiceCard
@@ -1383,17 +1610,29 @@ export default function BecomeHostFlow({
                       <div className="divide-y divide-primary/[0.06] rounded-3xl bg-white px-5 shadow-e1 sm:px-6">
                         {(
                           [
-                            ["guests", "capacity.guestsHint", guestCount, setGuestCount],
+                            [
+                              "guests",
+                              vertical === "experience"
+                                ? "capacity.groupHint"
+                                : vertical === "vehicle"
+                                  ? "capacity.seatsHint"
+                                  : "capacity.guestsHint",
+                              guestCount,
+                              setGuestCount,
+                            ],
                             ["bedrooms", "capacity.bedroomsHint", bedroomCount, setBedroomCount],
                             ["beds", "capacity.bedsHint", bedsCount, setBedsCount],
                             ["bathrooms", "capacity.bathroomsHint", bathroomCount, setBathroomCount],
                           ] as const
-                        ).map(([key, hint, value, setter]) => (
+                        )
+                          .filter(([key]) => vertical === "home" || key === "guests")
+                          .map(([key, hint, value, setter]) => (
                           <div key={key} className="py-4">
                             <Counter title={t(key)} subtitle={t(hint)} value={value} onChange={setter} />
                           </div>
                         ))}
                       </div>
+                      {vertical === "home" && (
                       <p
                         aria-live="polite"
                         className="rounded-2xl bg-tertiary-100 px-4 py-3 text-center text-body font-medium text-primary-800"
@@ -1405,6 +1644,7 @@ export default function BecomeHostFlow({
                           bathrooms: t("counts.bathrooms", { count: bathroomCount }),
                         })}
                       </p>
+                      )}
                       {renderDynamicFieldsForStep("capacity")}
                     </div>
                   )}
@@ -1518,6 +1758,7 @@ export default function BecomeHostFlow({
                         maxLength={500}
                         showCount
                         onChange={(e) => setDescription(e.target.value)}
+                        aria-invalid={invalid("description") || undefined}
                         placeholder={t("descPlaceholder")}
                         helper={t("descriptionStep.tip")}
                       />
@@ -1566,7 +1807,7 @@ export default function BecomeHostFlow({
                             <AnimatedNumber value={price} format={(n) => formatDzd(n, locale)} />
                           </ReviewRow>
                           <ReviewRow
-                            label={t("pricing.commission", { rate: DEFAULT_COMMISSION_RATES.individual })}
+                            label={t("pricing.commission", { rate: commissionRate })}
                             valueClassName="text-accent-700"
                           >
                             <AnimatedNumber value={-commission} format={(n) => formatDzd(n, locale)} />
@@ -1670,12 +1911,7 @@ export default function BecomeHostFlow({
                             </div>
                           </div>
                           <ul className="flex flex-wrap gap-2">
-                            {[
-                              t("counts.guests", { count: guestCount }),
-                              t("counts.bedrooms", { count: bedroomCount }),
-                              t("counts.beds", { count: bedsCount }),
-                              t("counts.bathrooms", { count: bathroomCount }),
-                            ].map((label) => (
+                            {capacityFacts.map((label) => (
                               <li key={label}>
                                 <Badge tone="neutral" size="md">
                                   {label}
@@ -1864,7 +2100,7 @@ export default function BecomeHostFlow({
                       {hotelStep === 1 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s1.eyebrow", { current: 1, total: HOTEL_STEPS })}
+                            eyebrow={t("hotel.s1.eyebrow", { current: orgShown(1), total: hotelTotal })}
                             title={t("hotel.s1.title")}
                             subtitle={t("hotel.s1.subtitle")}
                           />
@@ -1920,10 +2156,11 @@ export default function BecomeHostFlow({
                       {hotelStep === 2 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s2.eyebrow", { current: 2, total: HOTEL_STEPS })}
-                            title={t("hotel.s2.title")}
+                            eyebrow={t("hotel.s2.eyebrow", { current: orgShown(2), total: hotelTotal })}
+                            title={isCreate ? t("create.hotelDetailsTitle") : t("hotel.s2.title")}
                           />
                           <div className={`space-y-4 ${cardClass}`}>
+                            {!isCreate && (
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <TextField
                                 id="hotel-reg"
@@ -1943,6 +2180,7 @@ export default function BecomeHostFlow({
                                 mono
                               />
                             </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                               <TextField
                                 id="hotel-checkin"
@@ -1963,6 +2201,7 @@ export default function BecomeHostFlow({
                                 mono
                               />
                             </div>
+                            {!isCreate && (
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <TextField
                                 id="hotel-email"
@@ -1987,6 +2226,7 @@ export default function BecomeHostFlow({
                                 invalid={invalid("phone")}
                               />
                             </div>
+                            )}
                             <div className="pt-2">
                               <p id="hotel-amenities-label" className={labelClass}>
                                 {t("hotel.amenitiesLabel")}
@@ -2017,7 +2257,7 @@ export default function BecomeHostFlow({
                       {hotelStep === 3 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s3.eyebrow", { current: 3, total: HOTEL_STEPS })}
+                            eyebrow={t("hotel.s3.eyebrow", { current: orgShown(3), total: hotelTotal })}
                             title={t("hotel.s3.title")}
                             subtitle={t("hotel.s3.subtitle")}
                           />
@@ -2047,7 +2287,7 @@ export default function BecomeHostFlow({
                       {hotelStep === 4 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s4.eyebrow", { current: 4, total: HOTEL_STEPS })}
+                            eyebrow={t("hotel.s4.eyebrow", { current: orgShown(4), total: hotelTotal })}
                             title={t("photos.orgTitle")}
                             subtitle={t("photos.hotelSubtitle")}
                           />
@@ -2072,7 +2312,7 @@ export default function BecomeHostFlow({
                       {hotelStep === 5 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s5.eyebrow", { current: 5, total: HOTEL_STEPS })}
+                            eyebrow={t("hotel.s5.eyebrow", { current: orgShown(5), total: hotelTotal })}
                             title={t("bookingMode.title")}
                           />
                           <BookingModeChooser
@@ -2088,7 +2328,7 @@ export default function BecomeHostFlow({
                       {hotelStep === 6 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s6.eyebrow", { current: 6, total: HOTEL_STEPS })}
+                            eyebrow={t("hotel.s6.eyebrow", { current: orgShown(6), total: hotelTotal })}
                             title={t("hotel.s6.title")}
                             subtitle={t("hotel.s6.subtitle")}
                           />
@@ -2107,7 +2347,7 @@ export default function BecomeHostFlow({
                       {hotelStep === 7 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hotel.s7.eyebrow", { current: 7, total: HOTEL_STEPS })}
+                            eyebrow={t("hotel.s7.eyebrow", { current: orgShown(7), total: hotelTotal })}
                             title={t("hotel.s7.title")}
                           />
                           <div className={`space-y-5 ${cardClass}`}>
@@ -2123,13 +2363,19 @@ export default function BecomeHostFlow({
                               <ReviewRow label={t("hotel.review.totalRooms")}>
                                 {t("hotel.review.rooms", { count: hotelTotalRooms })}
                               </ReviewRow>
-                              <ReviewRow label={t("org.registerSummary")}>{hotelRegNumber || t("review.empty")}</ReviewRow>
+                              {!isCreate && (
+                                <ReviewRow label={t("org.registerSummary")}>{hotelRegNumber || t("review.empty")}</ReviewRow>
+                              )}
                               <ReviewRow label={t("org.bookingModeSummary")} valueClassName="text-secondary-800">
                                 {t(`bookingMode.${hotelBookingMode}`)}
                               </ReviewRow>
                             </dl>
-                            <Notice icon={<BrandShieldIcon size={18} />} title={t("hotel.notice.title")} tone="olive">
-                              {t("hotel.notice.body")}
+                            <Notice
+                              icon={<BrandShieldIcon size={18} />}
+                              title={isCreate ? t("create.propertyNotice.title") : t("hotel.notice.title")}
+                              tone="olive"
+                            >
+                              {isCreate ? t("create.propertyNotice.body") : t("hotel.notice.body")}
                             </Notice>
                           </div>
                         </>
@@ -2143,7 +2389,7 @@ export default function BecomeHostFlow({
                       {hostelStep === 1 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s1.eyebrow", { current: 1, total: HOSTEL_STEPS })}
+                            eyebrow={t("hostel.s1.eyebrow", { current: orgShown(1), total: hostelTotal })}
                             title={t("hostel.s1.title")}
                             subtitle={t("hostel.s1.subtitle")}
                           />
@@ -2172,10 +2418,12 @@ export default function BecomeHostFlow({
                       {hostelStep === 2 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s2.eyebrow", { current: 2, total: HOSTEL_STEPS })}
-                            title={t("hostel.s2.title")}
+                            eyebrow={t("hostel.s2.eyebrow", { current: orgShown(2), total: hostelTotal })}
+                            title={isCreate ? t("create.hostelDetailsTitle") : t("hostel.s2.title")}
                           />
                           <div className={`space-y-4 ${cardClass}`}>
+                            {!isCreate && (
+                            <>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <TextField
                                 id="hostel-reg"
@@ -2219,6 +2467,8 @@ export default function BecomeHostFlow({
                                 invalid={invalid("phone")}
                               />
                             </div>
+                            </>
+                            )}
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <TextField
                                 id="hostel-curfew"
@@ -2265,7 +2515,7 @@ export default function BecomeHostFlow({
                       {hostelStep === 3 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s3.eyebrow", { current: 3, total: HOSTEL_STEPS })}
+                            eyebrow={t("hostel.s3.eyebrow", { current: orgShown(3), total: hostelTotal })}
                             title={t("hostel.s3.title")}
                             subtitle={t("hostel.s3.subtitle")}
                           />
@@ -2295,7 +2545,7 @@ export default function BecomeHostFlow({
                       {hostelStep === 4 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s4.eyebrow", { current: 4, total: HOSTEL_STEPS })}
+                            eyebrow={t("hostel.s4.eyebrow", { current: orgShown(4), total: hostelTotal })}
                             title={t("photos.orgTitle")}
                             subtitle={t("photos.hostelSubtitle")}
                           />
@@ -2320,7 +2570,7 @@ export default function BecomeHostFlow({
                       {hostelStep === 5 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s5.eyebrow", { current: 5, total: HOSTEL_STEPS })}
+                            eyebrow={t("hostel.s5.eyebrow", { current: orgShown(5), total: hostelTotal })}
                             title={t("bookingMode.title")}
                           />
                           <BookingModeChooser
@@ -2336,7 +2586,7 @@ export default function BecomeHostFlow({
                       {hostelStep === 6 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s6.eyebrow", { current: 6, total: HOSTEL_STEPS })}
+                            eyebrow={t("hostel.s6.eyebrow", { current: orgShown(6), total: hostelTotal })}
                             title={t("hostel.s6.title")}
                             subtitle={t("team.optional")}
                           />
@@ -2355,7 +2605,7 @@ export default function BecomeHostFlow({
                       {hostelStep === 7 && (
                         <>
                           <StepHeader
-                            eyebrow={t("hostel.s7.eyebrow", { current: 7, total: HOSTEL_STEPS })}
+                            eyebrow={t("hostel.s7.eyebrow", { current: orgShown(7), total: hostelTotal })}
                             title={t("hostel.s7.title")}
                           />
                           <div className={`space-y-5 ${cardClass}`}>
@@ -2369,13 +2619,19 @@ export default function BecomeHostFlow({
                                 })}
                               </ReviewRow>
                               <ReviewRow label={t("org.location")}>{hostelAddress || t("review.empty")}</ReviewRow>
-                              <ReviewRow label={t("org.registerSummary")}>{hostelRegNumber || t("review.empty")}</ReviewRow>
+                              {!isCreate && (
+                                <ReviewRow label={t("org.registerSummary")}>{hostelRegNumber || t("review.empty")}</ReviewRow>
+                              )}
                               <ReviewRow label={t("org.bookingModeSummary")} valueClassName="text-secondary-800">
                                 {t(`bookingMode.${hostelBookingMode}`)}
                               </ReviewRow>
                             </dl>
-                            <Notice icon={<BrandShieldIcon size={18} />} title={t("hostel.notice.title")} tone="sand">
-                              {t("hostel.notice.body")}
+                            <Notice
+                              icon={<BrandShieldIcon size={18} />}
+                              title={isCreate ? t("create.propertyNotice.title") : t("hostel.notice.title")}
+                              tone="sand"
+                            >
+                              {isCreate ? t("create.propertyNotice.body") : t("hostel.notice.body")}
                             </Notice>
                           </div>
                         </>
@@ -2448,7 +2704,7 @@ export default function BecomeHostFlow({
                     onClick={handleBack}
                     leadingIcon={<BrandChevronLeftIcon size={18} aria-hidden="true" className="rtl:rotate-180" />}
                   >
-                    {backToChooser ? t("nav.chooseAccountType") : tCommon("back")}
+                    {backToChooser ? (isCreate ? t("create.chooseOffer") : t("nav.chooseAccountType")) : tCommon("back")}
                   </Button>
                 )}
               </div>
@@ -2461,7 +2717,19 @@ export default function BecomeHostFlow({
         </footer>
       )}
 
-      {/* Discard / Save & Exit 3-Button Confirm Dialog */}
+      {/* Discard / Save & Exit 3-Button Confirm Dialog (create mode: leave without publishing) */}
+      {isCreate ? (
+        <ConfirmDialog
+          isOpen={isExitDialogOpen}
+          variant="destructive"
+          title={t("create.exitTitle")}
+          message={t("create.exitDesc")}
+          cancelLabel={t("keepEditing")}
+          confirmLabel={t("create.leave")}
+          onCancel={() => setIsExitDialogOpen(false)}
+          onConfirm={handleLeaveCreate}
+        />
+      ) : (
       <ConfirmDialog
         isOpen={isExitDialogOpen}
         variant="discard"
@@ -2475,6 +2743,7 @@ export default function BecomeHostFlow({
         onSaveAndExit={handleExecuteSaveAndExit}
         onConfirm={handleExecuteSaveAndExit}
       />
+      )}
     </div>
   );
 }

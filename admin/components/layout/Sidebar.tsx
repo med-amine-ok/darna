@@ -417,11 +417,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen = false, onMobile
           >
             <div className="w-8 h-8 rounded-[10px] bg-white/[0.06] ring-1 ring-inset ring-white/10 flex items-center justify-center shrink-0">
               <Image
-                src="/assets/logo.png"
+                src="/assets/logo-white.png"
                 alt="BLADUS"
                 width={20}
                 height={20}
-                className="h-5 w-5 object-contain brightness-0 invert group-hover:scale-105 transition-transform duration-fast ease-out"
+                className="h-5 w-5 object-contain group-hover:scale-105 transition-transform duration-fast ease-out"
               />
             </div>
             {!isCollapsed && (

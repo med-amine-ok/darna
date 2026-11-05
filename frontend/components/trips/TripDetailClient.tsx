@@ -40,6 +40,7 @@ import { useActionError } from "@/hook/useActionError";
 import ListingSectionNav from "@/components/listing/ListingSectionNav";
 import PhotoLightbox from "@/components/listing/PhotoLightbox";
 import Timeline from "@/components/listing/detail/Timeline";
+import { tripTypeLabel } from "@/lib/catalog-types";
 import MobileBookingBar from "@/components/listing/detail/MobileBookingBar";
 import BookingSuccessDialog, { type BookingSummaryRow } from "@/components/listing/detail/BookingSuccessDialog";
 
@@ -341,7 +342,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
               <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5 pb-12 sm:p-8 md:p-10 md:pe-[19rem] lg:pe-[22rem]">
                 <div className="flex flex-wrap gap-2">
                   <Pill tone="glass" icon={<BrandCompassIcon size={13} />}>
-                    {t("detail.curatedBadge")}
+                    {tripTypeLabel(trip.tripType, locale) || t("detail.curatedBadge")}
                   </Pill>
                   <Pill tone="glass" icon={<BrandCalendarIcon size={13} />}>
                     {t("card.duration", { days: trip.durationDays, nights })}

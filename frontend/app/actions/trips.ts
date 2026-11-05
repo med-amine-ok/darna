@@ -7,6 +7,7 @@ import { getOrgContext } from "@/lib/server/authz";
 import { createTrip, deleteTrip, getTripById, TripInput, updateTrip } from "@/lib/data/trips";
 import { isAllowedImageUrl } from "@/lib/data/_sanitize";
 import { isValidPriceDzd, PRICE_MAX_DZD, PRICE_MIN_DZD } from "@/lib/booking/config";
+import { isTripType } from "@/lib/catalog-types";
 
 function str(v: unknown, max: number): string {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
@@ -67,6 +68,8 @@ function sanitizeTripInput(input: unknown, organizationId: string): TripInput | 
     status: d.status === "draft" ? "draft" : "active",
     departureDates,
     organizationId,
+    // Validated by the caller (required, one of TRIP_TYPES).
+    tripType: isTripType(d.tripType) ? d.tripType : undefined,
   };
 }
 
@@ -84,6 +87,8 @@ export async function createTripAction(input: unknown): Promise<ActionResult<Tri
   if (!isValidPriceDzd(raw.pricePerPerson)) {
     return actionFail("PRICE_RANGE", { min: PRICE_MIN_DZD, max: PRICE_MAX_DZD });
   }
+  // Trip type is required and must be one of the canonical TRIP_TYPES.
+  if (!isTripType(raw.tripType)) return actionFail("TRIP_TYPE_REQUIRED");
   const data = sanitizeTripInput(input, ctx.organization.id);
   if (!data) return actionFail("TRIP_TITLE_REQUIRED");
 

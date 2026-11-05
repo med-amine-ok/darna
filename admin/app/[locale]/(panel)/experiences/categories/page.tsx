@@ -1,22 +1,12 @@
-import { getTranslations } from "next-intl/server";
 import { guardPage } from "@/lib/auth/page-guard";
-import CategoriesManagerClient from "@/components/management/CategoriesManagerClient";
+import CatalogTypesList from "@/components/management/CatalogTypesList";
 import { pageMetadata } from "@/lib/metadata";
 
 export const generateMetadata = pageMetadata("experiences_categories");
 
+/** Canonical experience types (shared with the website), read-only with listing counts. */
 export default async function ExperienceCategoriesPage() {
   const denied = await guardPage("categories.manage");
   if (denied) return denied;
-  const t = await getTranslations("experiences");
-
-  return (
-    <CategoriesManagerClient
-      title={t("categoriesPage.title")}
-      subtitle={t("categoriesPage.subtitle")}
-      backRoute="/experiences"
-      defaultVertical="experience"
-      itemTypeLabel={t("categoriesPage.itemType")}
-    />
-  );
+  return <CatalogTypesList kind="experience" />;
 }

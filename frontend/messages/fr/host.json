@@ -211,6 +211,7 @@
     "agencyTrips": "Voyages de l’agence",
     "newTrip": "Créer un voyage",
     "becomeHost": "Devenir hôte",
-    "becomeHostDescription": "Publiez votre logement, votre expérience ou votre véhicule sur BLADUS et accueillez des voyageurs partout en Algérie."
+    "becomeHostDescription": "Publiez votre logement, votre expérience ou votre véhicule sur BLADUS et accueillez des voyageurs partout en Algérie.",
+    "newListing": "Créer une annonce"
   }
 }

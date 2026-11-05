@@ -45,18 +45,11 @@ import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+import { EXPERIENCE_TYPES, experienceTypeLabel } from "@/lib/catalog-types";
 
 /** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
 const SPLIT_HIDDEN_COLUMNS = ["guide", "location", "category", "rating", "bookings"];
 
-// value = filter value (unchanged), labelKey = translation key under experiences.categoryOptions
-const EXPERIENCE_CATEGORIES = [
-  { value: "aventure", labelKey: "adventure" },
-  { value: "culture", labelKey: "culture" },
-  { value: "nature", labelKey: "nature" },
-  { value: "gastronomie", labelKey: "gastronomy" },
-  { value: "mer", labelKey: "sea" },
-] as const;
 
 const errorMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
@@ -94,6 +87,7 @@ export default function ExperiencesListClient() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedWilaya, setSelectedWilaya] = useState("all");
+  /** Canonical experience type (lib/catalog-types.ts, same list as the website). */
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [page, setPage] = useState(initialPage);
   const [pageSize] = useState(10);
@@ -126,6 +120,7 @@ export default function ExperiencesListClient() {
         status: currentStatus,
         vertical: "experience",
         wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+        experienceType: selectedCategory !== "all" ? selectedCategory : undefined,
         search: searchQuery || undefined,
         page,
         pageSize,
@@ -139,12 +134,11 @@ export default function ExperiencesListClient() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentStatus, selectedWilaya, searchQuery, page, pageSize, addToast, tCommon]);
+  }, [currentStatus, selectedWilaya, selectedCategory, searchQuery, page, pageSize, addToast, tCommon]);
 
-  // selectedCategory is not sent to the server yet; changing it still refreshes the list.
   useEffect(() => {
     fetchData();
-  }, [fetchData, selectedCategory]);
+  }, [fetchData]);
 
   const statusActions = useListingStatusActions(() => fetchData());
 
@@ -240,7 +234,7 @@ export default function ExperiencesListClient() {
             <div className="text-xs text-primary-600 flex items-center gap-1.5 mt-0.5 min-w-0 whitespace-nowrap">
               <span>{row.formattedId || `#EXP${row.id.replace("lst_", "").padStart(4, "0")}`}</span>
               <span aria-hidden="true">•</span>
-              <span className="capitalize truncate">{row.propertyType}</span>
+              <span className="truncate">{experienceTypeLabel(row.experienceType, locale) || row.propertyType}</span>
             </div>
           </div>
         </div>
@@ -383,6 +377,7 @@ export default function ExperiencesListClient() {
                     status: currentStatus,
                     vertical: "experience",
                     wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
+                    experienceType: selectedCategory !== "all" ? selectedCategory : undefined,
                     search: searchQuery || undefined,
                   }),
                 variant: "outline" as const,
@@ -439,12 +434,15 @@ export default function ExperiencesListClient() {
             },
           },
           {
-            id: "category",
-            label: t("filters.category"),
+            id: "experienceType",
+            label: t("filters.experienceType"),
             value: selectedCategory,
             options: [
-              { value: "all", label: t("filters.allCategories") },
-              ...EXPERIENCE_CATEGORIES.map((c) => ({ value: c.value, label: t(`categoryOptions.${c.labelKey}`) })),
+              { value: "all", label: t("filters.allExperienceTypes") },
+              ...EXPERIENCE_TYPES.map((id) => ({
+                value: id,
+                label: t("filters.typeWithCount", { label: experienceTypeLabel(id, locale), count: facets.experienceType?.[id] ?? 0 }),
+              })),
             ],
             onChange: (val) => {
               setSelectedCategory(val);

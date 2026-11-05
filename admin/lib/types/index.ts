@@ -336,6 +336,10 @@ export interface Listing {
   category: ListingVertical;
   vertical?: ListingVertical;
   propertyType: string; // e.g. "Coastal Villa", "Casbah Riad", "4x4 Desert Tour", etc.
+  /** Experiences only: one of EXPERIENCE_TYPES (lib/catalog-types.ts, shared with the website). */
+  experienceType?: import("@/lib/catalog-types").ExperienceTypeId;
+  /** Trips only: one of TRIP_TYPES (lib/catalog-types.ts, shared with the website). */
+  tripType?: import("@/lib/catalog-types").TripTypeId;
   hostId: string;
   hostName: string;
   hostType: HostType;

@@ -1,6 +1,6 @@
 {
   "step1Title": "Which of these best describes your place?",
-  "step1Subtitle": "Choose the category for your Algerian stay, vehicle or experience.",
+  "step1Subtitle": "Choose the category for your Algerian stay or vehicle.",
   "step2Title": "Where is your place located?",
   "step2Subtitle": "Your address is only shared with guests after they make a reservation.",
   "step3Title": "Share some basics about your place",
@@ -38,7 +38,7 @@
   "individualTitle": "Individual Host",
   "individualDesc": "You are an individual hosting your private villa, Casbah apartment, Sahara tent, or personal 4x4. Dedicated lightweight workspace.",
   "agencyTitle": "Tourism Agency / Fleet",
-  "agencyDesc": "Licensed Algerian travel agency, excursions operator, or car rental fleet with staff, multi-day tours, and fleet management.",
+  "agencyDesc": "Licensed Algerian travel agency or excursion operator publishing experiences and multi-day trips, with a team workspace.",
   "businessName": "Agency / Business Name",
   "businessNamePlaceholder": "e.g. Algiers Prestige Stays SARL",
   "regNumber": "Business Registration / Tax Number",
@@ -64,7 +64,7 @@
       "cta": "Continue as Individual"
     },
     "agency": {
-      "badge": "Agency Fleet",
+      "badge": "Travel agency",
       "cta": "Register Agency Workspace"
     },
     "hotel": {
@@ -159,7 +159,9 @@
     "bedroomsHint": "How many bedrooms are available?",
     "bedsHint": "How many beds do guests have access to?",
     "bathroomsHint": "How many full or half bathrooms?",
-    "summary": "Summary: {guests} · {bedrooms} · {beds} · {bathrooms}"
+    "summary": "Summary: {guests} · {bedrooms} · {beds} · {bathrooms}",
+    "groupHint": "How many people can join one session?",
+    "seatsHint": "How many passengers can travel in the vehicle?"
   },
   "counts": {
     "guests": "{count, plural, one {# guest} other {# guests}}",
@@ -472,7 +474,9 @@
     "hotelName": "Please enter your hotel name.",
     "hotelAddress": "Please enter the hotel address.",
     "hostelName": "Please enter your hostel name.",
-    "hostelAddress": "Please enter the hostel address."
+    "hostelAddress": "Please enter the hostel address.",
+    "experienceType": "Please choose an experience type.",
+    "description": "Add a short description so travellers know what to expect."
   },
   "discarded": "Unsaved changes discarded.",
   "units": {
@@ -491,5 +495,76 @@
   "complete": {
     "cta": "Go to my host workspace",
     "redirecting": "Taking you to your workspace in a moment."
+  },
+  "create": {
+    "badge": "Create a listing",
+    "eyebrow": "Host mode",
+    "title": "What would you like to create?",
+    "subtitle": {
+      "individual": "As an individual host you can publish homes and vehicles.",
+      "agency": "As an agency you publish experiences and multi-day trips.",
+      "hotel": "Add a hotel property with its room types and nightly rates.",
+      "hostel": "Add a hostel with its dorm beds and private rooms."
+    },
+    "offers": {
+      "home": {
+        "title": "A home",
+        "desc": "A villa, an apartment, a traditional house or a desert camp, rented by the night.",
+        "cta": "List a home"
+      },
+      "vehicle": {
+        "title": "A vehicle",
+        "desc": "Your car or 4x4, rented by the day.",
+        "cta": "List a vehicle"
+      },
+      "experience": {
+        "title": "Experience",
+        "desc": "An excursion, a guided tour, a workshop or an activity of a few hours, booked per person.",
+        "cta": "Create an experience"
+      },
+      "trip": {
+        "title": "Trip",
+        "desc": "A multi-day trip with an itinerary and departure dates.",
+        "cta": "Create a trip"
+      },
+      "hotel": {
+        "title": {
+          "hotel": "Your hotel property",
+          "hostel": "Your hostel"
+        },
+        "desc": "Name, location, photos and booking mode, with starter room types you can edit afterwards.",
+        "cta": "Add the property"
+      }
+    },
+    "published": "Your listing is now live on BLADUS.",
+    "publishProperty": "Publish property",
+    "exit": "Exit",
+    "done": "Go to my listings",
+    "redirecting": "Taking you to your listings in a moment.",
+    "chooseOffer": "Choose what to create",
+    "exitTitle": "Leave without publishing?",
+    "exitDesc": "What you entered here will not be saved.",
+    "leave": "Leave",
+    "hotelDetailsTitle": "Timings & amenities",
+    "hostelDetailsTitle": "House policies & facilities",
+    "propertyNotice": {
+      "title": "Room types",
+      "body": "Your property is published with two starter room types. Adjust names, prices and inventory from My listings, Manage room types."
+    }
+  },
+  "experienceType": {
+    "title": "What kind of experience do you offer?",
+    "subtitle": "Travelers find experiences by type. Pick the one that fits best.",
+    "label": "Experience type"
+  },
+  "vehicleCategory": {
+    "title": "What kind of vehicle is it?",
+    "subtitle": "Choose the category that matches your vehicle."
+  },
+  "agencyNext": {
+    "lead": "What would you like to publish first?",
+    "body": "Your agency workspace is ready. Agencies publish experiences and trips.",
+    "experience": "Create an experience",
+    "trip": "Create a trip"
   }
 }

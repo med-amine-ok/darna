@@ -1,6 +1,6 @@
 {
   "step1Title": "Lequel de ces logements décrit le mieux votre bien ?",
-  "step1Subtitle": "Choisissez la catégorie de votre séjour, véhicule ou expérience en Algérie.",
+  "step1Subtitle": "Choisissez la catégorie de votre logement ou de votre véhicule en Algérie.",
   "step2Title": "Où se situe votre logement ?",
   "step2Subtitle": "Votre adresse n'est partagée avec les voyageurs qu'après la confirmation de leur réservation.",
   "step3Title": "Partagez quelques détails essentiels",
@@ -38,7 +38,7 @@
   "individualTitle": "Hôte particulier",
   "individualDesc": "Vous êtes un particulier qui loue sa villa, son appartement dans la Casbah, sa tente saharienne ou son 4x4. Espace de gestion simple et dédié.",
   "agencyTitle": "Agence de tourisme / Flotte",
-  "agencyDesc": "Agence de voyage agréée, organisateur d’excursions ou loueur de véhicules avec personnel, circuits de plusieurs jours et gestion de flotte.",
+  "agencyDesc": "Agence de voyage agréée ou organisateur d'excursions qui publie des expériences et des circuits de plusieurs jours, avec un espace d'équipe.",
   "businessName": "Nom de l'agence / entreprise",
   "businessNamePlaceholder": "ex. Algiers Prestige Stays SARL",
   "regNumber": "Numéro de registre du commerce / NIF",
@@ -64,7 +64,7 @@
       "cta": "Continuer en tant que particulier"
     },
     "agency": {
-      "badge": "Agence & flotte",
+      "badge": "Agence de voyage",
       "cta": "Créer l’espace agence"
     },
     "hotel": {
@@ -159,7 +159,9 @@
     "bedroomsHint": "Combien de chambres sont disponibles ?",
     "bedsHint": "À combien de lits les voyageurs ont-ils accès ?",
     "bathroomsHint": "Combien de salles de bain (complètes ou d’appoint) ?",
-    "summary": "Résumé : {guests} · {bedrooms} · {beds} · {bathrooms}"
+    "summary": "Résumé : {guests} · {bedrooms} · {beds} · {bathrooms}",
+    "groupHint": "Combien de personnes peuvent participer à une session ?",
+    "seatsHint": "Combien de passagers le véhicule peut-il transporter ?"
   },
   "counts": {
     "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
@@ -472,7 +474,9 @@
     "hotelName": "Veuillez saisir le nom de votre hôtel.",
     "hotelAddress": "Veuillez saisir l’adresse de l’hôtel.",
     "hostelName": "Veuillez saisir le nom de votre auberge.",
-    "hostelAddress": "Veuillez saisir l’adresse de l’auberge."
+    "hostelAddress": "Veuillez saisir l’adresse de l’auberge.",
+    "experienceType": "Veuillez choisir un type d'expérience.",
+    "description": "Ajoutez une courte description pour que les voyageurs sachent à quoi s'attendre."
   },
   "discarded": "Modifications non enregistrées abandonnées.",
   "units": {
@@ -491,5 +495,76 @@
   "complete": {
     "cta": "Aller à mon espace hôte",
     "redirecting": "Nous vous emmenons vers votre espace dans un instant."
+  },
+  "create": {
+    "badge": "Créer une annonce",
+    "eyebrow": "Mode hôte",
+    "title": "Que souhaitez-vous créer ?",
+    "subtitle": {
+      "individual": "En tant qu'hôte particulier, vous pouvez publier des logements et des véhicules.",
+      "agency": "En tant qu'agence, vous publiez des expériences et des circuits de plusieurs jours.",
+      "hotel": "Ajoutez un établissement hôtelier avec ses types de chambres et ses tarifs par nuit.",
+      "hostel": "Ajoutez une auberge avec ses lits en dortoir et ses chambres privées."
+    },
+    "offers": {
+      "home": {
+        "title": "Un logement",
+        "desc": "Une villa, un appartement, une maison traditionnelle ou un campement dans le désert, loué à la nuit.",
+        "cta": "Publier un logement"
+      },
+      "vehicle": {
+        "title": "Un véhicule",
+        "desc": "Votre voiture ou votre 4x4, loué à la journée.",
+        "cta": "Publier un véhicule"
+      },
+      "experience": {
+        "title": "Expérience",
+        "desc": "Une excursion, une visite guidée, un atelier ou une activité de quelques heures, réservé par personne.",
+        "cta": "Créer une expérience"
+      },
+      "trip": {
+        "title": "Circuit",
+        "desc": "Un voyage de plusieurs jours avec un itinéraire et des dates de départ.",
+        "cta": "Créer un circuit"
+      },
+      "hotel": {
+        "title": {
+          "hotel": "Votre établissement hôtelier",
+          "hostel": "Votre auberge"
+        },
+        "desc": "Nom, adresse, photos et mode de réservation, avec des types de chambres de départ modifiables ensuite.",
+        "cta": "Ajouter l'établissement"
+      }
+    },
+    "published": "Votre annonce est en ligne sur BLADUS.",
+    "publishProperty": "Publier l'établissement",
+    "exit": "Quitter",
+    "done": "Voir mes annonces",
+    "redirecting": "Redirection vers vos annonces dans un instant.",
+    "chooseOffer": "Choisir quoi créer",
+    "exitTitle": "Quitter sans publier ?",
+    "exitDesc": "Les informations saisies ne seront pas enregistrées.",
+    "leave": "Quitter",
+    "hotelDetailsTitle": "Horaires & équipements",
+    "hostelDetailsTitle": "Règles & équipements",
+    "propertyNotice": {
+      "title": "Types de chambres",
+      "body": "Votre établissement est publié avec deux types de chambres de départ. Modifiez noms, prix et disponibilités depuis Mes annonces, Gérer les types de chambres."
+    }
+  },
+  "experienceType": {
+    "title": "Quel type d'expérience proposez-vous ?",
+    "subtitle": "Les voyageurs trouvent les expériences par type. Choisissez celui qui correspond le mieux.",
+    "label": "Type d'expérience"
+  },
+  "vehicleCategory": {
+    "title": "Quel type de véhicule ?",
+    "subtitle": "Choisissez la catégorie qui correspond à votre véhicule."
+  },
+  "agencyNext": {
+    "lead": "Que souhaitez-vous publier en premier ?",
+    "body": "Votre espace agence est prêt. Les agences publient des expériences et des circuits.",
+    "experience": "Créer une expérience",
+    "trip": "Créer un circuit"
   }
 }

@@ -6,6 +6,7 @@ import { m } from "framer-motion";
 import { Link, usePathname, useRouter } from "@/navigation";
 import { Sheet, cn, focusRingInset } from "@/components/ui";
 import { spring } from "@/lib/motion";
+import { canHostOffer } from "@/lib/catalog-types";
 import {
   BrandHomeIcon,
   BrandBookingsIcon,
@@ -42,7 +43,8 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const isIndividual = hostType === "individual" || !hostType;
-  const isAgency = hostType === "agency";
+  // Agencies publish experiences + trips, hotels/hostels their property (lib/catalog-types.ts).
+  const isAgency = canHostOffer(hostType, "trip");
   const orgType = hostType || "agency";
 
   const soloTabs: HostTab[] = [
@@ -50,17 +52,25 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
     { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
     { href: "/host/messages", label: t("tabs.messages"), icon: BrandMessageIcon },
   ];
-  const enterpriseTabs: HostTab[] = [
-    { href: "/host", label: t("tabs.today"), icon: BrandHomeIcon, exact: true },
-    { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
-    { href: "/host/calendar", label: t("tabs.calendar"), icon: BrandCalendarIcon },
-    { href: "/host/listings", label: t("tabs.listings"), icon: BrandGridIcon },
-  ];
+  const enterpriseTabs: HostTab[] = isAgency
+    ? [
+        { href: "/host", label: t("tabs.today"), icon: BrandHomeIcon, exact: true },
+        { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
+        { href: "/host/listings", label: t("tabs.experiences"), icon: BrandGridIcon },
+        { href: "/host/agency/trips", label: t("tabs.trips"), icon: BrandCompassIcon },
+      ]
+    : [
+        { href: "/host", label: t("tabs.today"), icon: BrandHomeIcon, exact: true },
+        { href: "/host/bookings", label: t("tabs.bookings"), icon: BrandBookingsIcon },
+        { href: "/host/calendar", label: t("tabs.calendar"), icon: BrandCalendarIcon },
+        { href: "/host/listings", label: t("tabs.property"), icon: BrandGridIcon },
+      ];
   const tabs = isIndividual ? soloTabs : enterpriseTabs;
 
   const isActive = (href: string, exact = false) => (exact ? pathname === href : !!pathname?.startsWith(href));
   const isMoreActive =
-    !!pathname?.startsWith("/host/agency") ||
+    (!!pathname?.startsWith("/host/agency") && !(isAgency && pathname?.startsWith("/host/agency/trips"))) ||
+    (isAgency && !!pathname?.startsWith("/host/calendar")) ||
     pathname === "/host/settings" ||
     (!isIndividual && !!pathname?.startsWith("/host/messages"));
 
@@ -111,7 +121,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
           {!isIndividual &&
             sheetLink("/host/messages", t("messagesInquiries"), BrandMessageIcon, !!pathname?.startsWith("/host/messages"))}
           {isAgency &&
-            sheetLink("/host/agency/trips", t("agencyTrips"), BrandCompassIcon, !!pathname?.startsWith("/host/agency/trips"))}
+            sheetLink("/host/calendar", t("tabs.calendar"), BrandCalendarIcon, !!pathname?.startsWith("/host/calendar"))}
           {!isIndividual &&
             sheetLink("/host/agency/team", t("teamRoles"), BrandUsersIcon, !!pathname?.startsWith("/host/agency/team"))}
           {!isIndividual &&
@@ -126,7 +136,7 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
           <div className="my-2 h-px bg-primary/[0.08]" aria-hidden="true" />
 
           <Link
-            href="/become-a-host/1"
+            href={isAgency ? "/host/listings/new?offer=experience" : "/host/listings/new"}
             onClick={close}
             className={cn(
               "flex min-h-[52px] items-center gap-3 rounded-2xl px-3 text-body font-semibold text-accent-700 hover:bg-accent-50",
@@ -136,8 +146,23 @@ export default function HostBottomNav({ hostType }: HostBottomNavProps) {
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-100 text-accent-700">
               <BrandPlusIcon size={18} aria-hidden="true" />
             </span>
-            {t("createListing")}
+            {isAgency ? t("createExperience") : isIndividual ? t("createListing") : t("addProperty")}
           </Link>
+          {isAgency && (
+            <Link
+              href="/host/agency/trips/new"
+              onClick={close}
+              className={cn(
+                "flex min-h-[52px] items-center gap-3 rounded-2xl px-3 text-body font-semibold text-accent-700 hover:bg-accent-50",
+                focusRingInset
+              )}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-100 text-accent-700">
+                <BrandCompassIcon size={18} aria-hidden="true" />
+              </span>
+              {t("createTrip")}
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => {

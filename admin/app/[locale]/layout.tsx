@@ -14,7 +14,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#2E3A2F",
+  themeColor: "#152C52",
 };
 
 // Icons come from the file conventions app/favicon.ico, app/icon.png and app/apple-icon.png.

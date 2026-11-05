@@ -169,7 +169,7 @@
     }
   },
   "header": {
-    "searchPlaceholder": "Search platform or type a command...",
+    "searchPlaceholder": "Search or type a command",
     "approvalsTooltip": "Central Moderation Approvals Inbox",
     "signedInAs": "Signed in as",
     "accountSettings": "Account Settings",
@@ -183,13 +183,13 @@
     "openCommandPalette": "Open the command palette (⌘K)",
     "searchLabel": "Search the platform",
     "searchPlaceholders": {
-      "trips": "Search a trip, destination, organiser...",
-      "stays": "Search an accommodation, host, city...",
-      "experiences": "Search an experience, guide, city...",
-      "cars": "Search a car, city, category...",
-      "bookings": "Search a booking, customer, accommodation...",
-      "moderation": "Search a provider, agency, hotel...",
-      "default": "Search an accommodation, trip, experience, agency, hotel, car..."
+      "trips": "Search trips",
+      "stays": "Search stays",
+      "experiences": "Search experiences",
+      "cars": "Search vehicles",
+      "bookings": "Search bookings",
+      "moderation": "Search providers",
+      "default": "Search everything"
     },
     "markAllRead": "Mark all as read",
     "unread": "Unread",
@@ -213,7 +213,8 @@
         "description": "Comment reported on Hôtel El Aurassi"
       }
     },
-    "notificationsUnread": "{count, plural, one {# unread notification} other {# unread notifications}}"
+    "notificationsUnread": "{count, plural, one {# unread notification} other {# unread notifications}}",
+    "searchShort": "Search"
   },
   "commandPalette": {
     "placeholder": "Type a query, host name, wilaya, or command...",
@@ -436,7 +437,7 @@
   "hosts": {
     "title": "Partners & Hosts",
     "subtitle": "Browse and moderate all 4 categories across Algeria with granular financial filters.",
-    "searchPlaceholder": "Search by name, business, email, phone, city...",
+    "searchPlaceholder": "Name, email or city",
     "allPartners": "All Partners",
     "individualTab": "Individual (Solo)",
     "agencyTab": "Tourism Agencies",
@@ -603,7 +604,7 @@
   "listings": {
     "title": "Listings & Stays Fleet",
     "subtitle": "Moderate, verify, and inspect inventory across Algerian properties, hotels, and tours.",
-    "searchPlaceholder": "Search by title, host, city, wilaya...",
+    "searchPlaceholder": "Title, host or city",
     "allTab": "All Listings",
     "pendingTab": "Pending Review",
     "approvedTab": "Approved",
@@ -762,9 +763,9 @@
     },
     "search": {
       "label": "Search the queue",
-      "hosts": "Search by host, business, ID, city...",
-      "listings": "Search by listing title, host, city, ID...",
-      "default": "Search pending items...",
+      "hosts": "Host, ID or city",
+      "listings": "Title, host or ID",
+      "default": "Search pending items",
       "clear": "Clear search"
     },
     "filterChip": "{label}: {value}",
@@ -878,7 +879,7 @@
   "network": {
     "title": "Network Marketplace Explorer",
     "subtitle": "Browse and search live accommodations, desert tours, and rental 4x4s exactly as guests see them across Algeria.",
-    "searchPlaceholder": "Where do you want to explore? (e.g. Algiers, Oran, Djanet, Taghit...)",
+    "searchPlaceholder": "Where to? e.g. Oran",
     "destination": "Destination",
     "dates": "Dates",
     "guests": "Guests",
@@ -919,7 +920,7 @@
   "users": {
     "title": "Guests & Users",
     "subtitle": "Monitor traveler accounts, ID verification badges, bookings activity, and moderation controls.",
-    "searchPlaceholder": "Search users by name, email, or phone...",
+    "searchPlaceholder": "Name, email or phone",
     "guestUser": "Guest User",
     "role": "Role",
     "status": "Status",
@@ -1038,7 +1039,7 @@
   "bookings": {
     "title": "Reservations & Stays",
     "subtitle": "Track transactions, monitor SLA countdowns, and arbitrate guest-host dispute claims.",
-    "searchPlaceholder": "Search by reservation code, guest, host, or stay...",
+    "searchPlaceholder": "Code, guest, host",
     "allTab": "All Bookings",
     "pendingTab": "Pending Confirmation",
     "confirmedTab": "Confirmed Stays",
@@ -1125,7 +1126,7 @@
   "reviews": {
     "title": "Review Moderation",
     "subtitle": "Audit guest reviews, flag inappropriate content, and enforce trust standards across Algeria.",
-    "searchPlaceholder": "Search by guest name, listing, or review text...",
+    "searchPlaceholder": "Guest, listing or word",
     "allTab": "All Reviews",
     "flaggedTab": "Flagged Reviews",
     "publishedTab": "Published",
@@ -1447,7 +1448,7 @@
     "appendOnlyBadge": "Append-only ledger",
     "anonymous": "Anonymous",
     "loadFailed": "Could not load the audit trail",
-    "searchPlaceholder": "Search action, staff member, record ID or details…",
+    "searchPlaceholder": "Action, staff or ID",
     "allEntities": "All record types",
     "allRoles": "All staff roles",
     "entities": {
@@ -1866,7 +1867,7 @@
       "traveler": "Traveler"
     },
     "searchLabel": "Search conversations",
-    "searchPlaceholder": "Search a conversation...",
+    "searchPlaceholder": "Search conversations",
     "threadsLabel": "Conversations",
     "unread": "{count, plural, one {# unread message} other {# unread messages}}",
     "viewProfile": "View profile",
@@ -2165,7 +2166,10 @@
       "description": "Description",
       "approvalMode": "Approval mode",
       "constructionYear": "Year built",
-      "pricePerNight": "Price per night"
+      "pricePerNight": "Price per night",
+      "experienceType": "Experience type",
+      "tripType": "Trip type",
+      "typeMissing": "Not set"
     },
     "values": {
       "guests": "{count, plural, one {# guest} other {# guests}}",
@@ -2219,7 +2223,7 @@
       "subtitle": "Browse, edit and validate every stay listed on BLADUS.",
       "export": "Export",
       "add": "Add a stay",
-      "searchPlaceholder": "Search by title, city, owner…",
+      "searchPlaceholder": "Title, city or owner",
       "empty": "No stays match these filters.",
       "itemLabel": "stays",
       "kpis": {
@@ -2646,7 +2650,7 @@
     "export": "Export",
     "categories": "Categories",
     "add": "Add an experience",
-    "searchPlaceholder": "Search by title, guide, location...",
+    "searchPlaceholder": "Title, guide or place",
     "empty": "No experiences match these filters.",
     "itemLabel": "experiences",
     "fullScreen": "Full screen",
@@ -2684,7 +2688,10 @@
       "allWilayas": "All wilayas",
       "category": "Category",
       "allCategories": "All categories",
-      "allStatuses": "All statuses"
+      "allStatuses": "All statuses",
+      "experienceType": "Experience type",
+      "allExperienceTypes": "All experience types",
+      "typeWithCount": "{label} ({count})"
     },
     "statusOptions": {
       "pending": "Awaiting validation",
@@ -2830,7 +2837,10 @@
       "fullDescription": "Detailed description",
       "fullDescriptionPlaceholder": "Describe the experience in detail...",
       "highlights": "Experience highlights",
-      "removeHighlight": "Remove highlight: {item}"
+      "removeHighlight": "Remove highlight: {item}",
+      "experienceType": "Experience type",
+      "tripType": "Trip type",
+      "typeSharedHint": "Same list as on the website: travelers filter by this type in search."
     },
     "type": {
       "heading": "Experience type & keywords",
@@ -2843,7 +2853,8 @@
         "workshop": "Workshop / class",
         "tasting": "Tasting / gastronomy",
         "other": "Other experience"
-      }
+      },
+      "headingTrip": "Trip type & keywords"
     },
     "location": {
       "heading": "Address & location",
@@ -2901,7 +2912,8 @@
       "category": "Category",
       "categoryValue": "{category} ({difficulty})",
       "location": "Location",
-      "pricePerPerson": "Price per person"
+      "pricePerPerson": "Price per person",
+      "type": "Type"
     },
     "tips": {
       "title": "Tips for your experience",
@@ -2913,8 +2925,11 @@
       "draftSaved": "Draft saved",
       "draftSavedAt": "Saved at {time}.",
       "created": "Experience created",
-      "createdDescription": "The activity has been submitted to BLADUS moderation."
-    }
+      "createdDescription": "The activity has been submitted to BLADUS moderation.",
+      "createdTrip": "Trip created"
+    },
+    "titleTrip": "Add a trip",
+    "subtitleTrip": "Describe the circuit, its route and prices to welcome travelers."
   },
   "cars": {
     "title": "Car rental",
@@ -2922,7 +2937,7 @@
     "export": "Export",
     "categories": "Categories",
     "add": "Add a car",
-    "searchPlaceholder": "Search by make, model, agency...",
+    "searchPlaceholder": "Make, model or agency",
     "empty": "No vehicles found.",
     "itemLabel": "vehicles",
     "fullScreen": "Full screen",
@@ -3066,7 +3081,7 @@
     "export": "Export",
     "categories": "Categories",
     "add": "Add a trip",
-    "searchPlaceholder": "Search for a trip, a destination...",
+    "searchPlaceholder": "Trip or destination",
     "empty": "No trips found.",
     "itemLabel": "trips",
     "fullScreen": "Full screen",
@@ -3105,7 +3120,10 @@
       "allDestinations": "All destinations",
       "category": "Category",
       "allCategories": "All categories",
-      "allStatuses": "All statuses"
+      "allStatuses": "All statuses",
+      "tripType": "Trip type",
+      "allTripTypes": "All trip types",
+      "typeWithCount": "{label} ({count})"
     },
     "statusOptions": {
       "published": "Published",
@@ -3371,7 +3389,7 @@
     "title": "Where did my old page go?",
     "subtitle": "To save you time and clicks, navigation now has {count} main sections. Find all previous pages and their new locations below.",
     "searchLabel": "Search previous pages",
-    "searchPlaceholder": "Type the old page name or a keyword…",
+    "searchPlaceholder": "Old page name or keyword",
     "tableCaption": "Previous pages and their new location",
     "columns": {
       "oldName": "Previous name",
@@ -3896,5 +3914,20 @@
       "users_guests": "Guests",
       "wherediditgo": "Where did my page go?"
     }
+  },
+  "catalogTypes": {
+    "experienceTitle": "Experience types",
+    "experienceSubtitle": "The types every experience is filed under, with the number of listings per type.",
+    "tripTitle": "Trip types",
+    "tripSubtitle": "The types every organized trip is filed under, with the number of listings per type.",
+    "backToExperiences": "Back to experiences",
+    "backToTrips": "Back to trips",
+    "sharedNote": "This list is shared with the BLADUS website (search filters, cards and host creation flows). It is read-only here: changing it is a product change made in code, in both apps at once.",
+    "columns": {
+      "label": "Type",
+      "id": "Identifier",
+      "listings": "Listings"
+    },
+    "total": "Total"
   }
 }
