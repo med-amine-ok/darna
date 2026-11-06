@@ -9,20 +9,19 @@ import { Range } from "react-date-range";
 import { AnimatePresence, m } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchModal } from "@/hook/useSearchModal";
-import Counter from "@/components/inputs/Counter";
 import { Button, Dialog, IconButton, cn, useIsRtl } from "@/components/ui";
 import { slideIn } from "@/lib/motion";
 import { shortDayLabel } from "@/components/search/dateLabels";
 import { useDestinationLabel } from "@/hook/useDestinationLabel";
 import WherePopover from "@/components/navbar/search/WherePopover";
 import WhenPopover, { type FlexDays } from "@/components/navbar/search/WhenPopover";
+import WhoPopover, { DEFAULT_PARTY, partyGuests, type Party } from "@/components/navbar/search/WhoPopover";
+import TypePopover from "@/components/navbar/search/TypePopover";
+import { useVertical } from "@/hook/useVertical";
+import { experienceTypeLabel, tripTypeLabel } from "@/lib/catalog-types";
 import { BrandCloseIcon, BrandSearchIcon, BrandChevronLeftIcon } from "@/components/icons";
 
-enum STEPS {
-  LOCATION = 0,
-  DATE = 1,
-  INFO = 2,
-}
+type StepId = "type" | "where" | "when" | "who";
 
 /**
  * Full-screen search on phones (dialog on larger screens) as a stepped sheet:
@@ -41,12 +40,16 @@ export default function SearchModal() {
   const t = useTranslations("search");
   const destinationLabel = useDestinationLabel();
 
-  const [step, setStep] = useState(STEPS.LOCATION);
+  const vertical = useVertical((s) => s.activeVertical) || "home";
+  const typeVertical = vertical === "experience" || vertical === "trip" ? vertical : null;
+  const order: StepId[] = typeVertical ? ["type", "where", "when", "who"] : ["where", "when", "who"];
+  const [stepIndex, setStepIndex] = useState(0);
+  const step = order[Math.min(stepIndex, order.length - 1)];
   const [direction, setDirection] = useState<1 | -1>(1);
   const [destination, setDestination] = useState<string>("");
-  const [guestCount, setGuestCount] = useState(1);
-  const [roomCount, setRoomCount] = useState(1);
-  const [bathroomCount, setBathroomCount] = useState(1);
+  const [party, setParty] = useState<Party>(DEFAULT_PARTY);
+  const [types, setTypes] = useState<string[]>([]);
+  const guestCount = partyGuests(party);
   const [flexDays, setFlexDays] = useState<FlexDays>(0);
   const [dateRange, setDateRange] = useState<Range>({
     startDate: new Date(),
@@ -55,30 +58,34 @@ export default function SearchModal() {
   });
 
   const goTo = useCallback(
-    (next: STEPS) => {
-      setDirection(next >= step ? 1 : -1);
-      setStep(next);
+    (next: number) => {
+      setDirection(next >= stepIndex ? 1 : -1);
+      setStepIndex(next);
     },
-    [step]
+    [stepIndex]
   );
 
   const close = useCallback(() => {
     closeSearchModal();
-    setStep(STEPS.LOCATION);
+    setStepIndex(0);
   }, [closeSearchModal]);
 
+  const isLast = stepIndex >= order.length - 1;
+
   const onSubmit = useCallback(() => {
-    if (step !== STEPS.INFO) return goTo(step + 1);
+    if (!isLast) return goTo(stepIndex + 1);
 
     const updatedQuery: qs.StringifiableRecord = {
       ...(searchParams ? qs.parse(searchParams.toString()) : {}),
+      vertical: vertical === "home" ? undefined : vertical,
       destination: destination || undefined,
-      guests: guestCount,
-      guestCount,
-      rooms: roomCount,
-      roomCount,
-      bathrooms: bathroomCount,
-      bathroomCount,
+      guests: guestCount > 1 ? guestCount : undefined,
+      adults: vertical === "vehicle" ? undefined : party.adults,
+      children: party.children || undefined,
+      infants: vertical === "home" && party.infants ? party.infants : undefined,
+      rooms: vertical === "hotel" ? party.rooms : undefined,
+      expType: typeVertical === "experience" && types.length ? types.join(",") : undefined,
+      tripType: typeVertical === "trip" && types.length ? types.join(",") : undefined,
     };
     if (dateRange.startDate) updatedQuery.startDate = formatISO(dateRange.startDate);
     if (dateRange.endDate) updatedQuery.endDate = formatISO(dateRange.endDate);
@@ -86,16 +93,15 @@ export default function SearchModal() {
     const url = qs.stringifyUrl({ url: "/search", query: updatedQuery }, { skipNull: true });
     close();
     router.push(url);
-  }, [step, goTo, searchParams, destination, guestCount, roomCount, bathroomCount, dateRange, close, router]);
+  }, [isLast, goTo, stepIndex, searchParams, vertical, typeVertical, types, destination, guestCount, party, dateRange, close, router]);
 
   const resetAll = () => {
     setDestination("");
-    setGuestCount(1);
-    setRoomCount(1);
-    setBathroomCount(1);
+    setParty(DEFAULT_PARTY);
+    setTypes([]);
     setFlexDays(0);
     setDateRange({ startDate: new Date(), endDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), key: "selection" });
-    goTo(STEPS.LOCATION);
+    goTo(0);
   };
 
   const dateSummary =
@@ -104,43 +110,51 @@ export default function SearchModal() {
         (flexDays ? ` · ${t("flex.short", { count: flexDays })}` : "")
       : t("bar.home.whenPlaceholder");
 
-  const steps = [
-    { id: STEPS.LOCATION, label: t("bar.home.whereTitle"), title: t("modal.whereTitle"), summary: destination ? destinationLabel(destination) : t("anywhereInAlgeria") },
-    { id: STEPS.DATE, label: t("bar.home.whenTitle"), title: t("modal.whenTitle"), summary: dateSummary },
-    { id: STEPS.INFO, label: t("bar.home.whoTitle"), title: t("modal.whoTitle"), summary: t("guestCount", { count: guestCount }) },
-  ];
+  const tv = typeVertical ?? "experience";
+  const typeSummary =
+    types.length === 0
+      ? t(`bar.${tv}.typeAny`)
+      : types.length === 1
+        ? tv === "trip"
+          ? tripTypeLabel(types[0], locale)
+          : experienceTypeLabel(types[0], locale)
+        : t("typeCount", { count: types.length });
+
+  const allSteps: Record<StepId, { label: string; title: string; summary: string }> = {
+    type: { label: t(`bar.${tv}.typeTitle`), title: t(`bar.${tv}.typeTitle`), summary: typeSummary },
+    where: { label: t(`bar.${vertical}.whereTitle`), title: t("modal.whereTitle"), summary: destination ? destinationLabel(destination) : t("anywhereInAlgeria") },
+    when: { label: t(`bar.${vertical}.whenTitle`), title: t("modal.whenTitle"), summary: dateSummary },
+    who: {
+      label: t(`bar.${vertical}.whoTitle`),
+      title: t("modal.whoTitle"),
+      summary: vertical === "vehicle" ? t("passengerCount", { count: guestCount }) : t("guestCount", { count: guestCount }),
+    },
+  };
+  const steps = order.map((id, index) => ({ id, index, ...allSteps[id] }));
 
   const variants = slideIn(direction === 1 ? "end" : "start", isRtl, 32);
 
   const body =
-    step === STEPS.LOCATION ? (
+    step === "type" && typeVertical ? (
+      <TypePopover vertical={typeVertical} selected={types} onChange={setTypes} />
+    ) : step === "where" ? (
       <WherePopover
         query={destination}
         onQueryChange={setDestination}
         onSelect={(d) => {
           setDestination(d.name);
-          goTo(STEPS.DATE);
+          goTo(stepIndex + 1);
         }}
         placeholder={t("modal.destinationPlaceholder")}
         autoFocus={false}
         tall
       />
-    ) : step === STEPS.DATE ? (
+    ) : step === "when" ? (
       <div className="flex justify-center">
         <WhenPopover dateRange={dateRange} onChangeDateRange={setDateRange} label={t("modal.whenSubtitle")} flexDays={flexDays} onFlexDaysChange={setFlexDays} />
       </div>
     ) : (
-      <div className="divide-y divide-primary/[0.08]">
-        <div className="pb-5">
-          <Counter title={t("modal.guests")} subtitle={t("modal.guestsSubtitle")} value={guestCount} onChange={setGuestCount} />
-        </div>
-        <div className="py-5">
-          <Counter title={t("modal.rooms")} subtitle={t("modal.roomsSubtitle")} value={roomCount} onChange={setRoomCount} />
-        </div>
-        <div className="pt-5">
-          <Counter title={t("modal.bathrooms")} subtitle={t("modal.bathroomsSubtitle")} value={bathroomCount} onChange={setBathroomCount} />
-        </div>
-      </div>
+      <WhoPopover vertical={vertical as "home"} party={party} onChange={setParty} />
     );
 
   return (
@@ -152,8 +166,8 @@ export default function SearchModal() {
     >
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-3 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] sm:pt-4">
-        {step > STEPS.LOCATION ? (
-          <IconButton label={tCommon("back")} icon={<BrandChevronLeftIcon size={18} className="rtl:rotate-180" />} variant="tertiary" size="sm" onClick={() => goTo(step - 1)} />
+        {stepIndex > 0 ? (
+          <IconButton label={tCommon("back")} icon={<BrandChevronLeftIcon size={18} className="rtl:rotate-180" />} variant="tertiary" size="sm" onClick={() => goTo(stepIndex - 1)} />
         ) : (
           <span className="w-9" aria-hidden="true" />
         )}
@@ -162,7 +176,7 @@ export default function SearchModal() {
             <li key={s.id}>
               <span
                 aria-current={s.id === step ? "step" : undefined}
-                className={cn("block h-1.5 rounded-full transition-[width,background-color] duration-base ease-out", s.id === step ? "w-6 bg-primary-800" : s.id < step ? "w-1.5 bg-primary-500" : "w-1.5 bg-primary/20")}
+                className={cn("block h-1.5 rounded-full transition-[width,background-color] duration-base ease-out", s.id === step ? "w-6 bg-primary-800" : s.index < stepIndex ? "w-1.5 bg-primary-500" : "w-1.5 bg-primary/20")}
               >
                 <span className="sr-only">{s.label}</span>
               </span>
@@ -190,7 +204,7 @@ export default function SearchModal() {
             <button
               key={s.id}
               type="button"
-              onClick={() => goTo(s.id)}
+              onClick={() => goTo(s.index)}
               className="flex h-14 w-full items-center justify-between gap-4 rounded-2xl bg-white px-5 text-start shadow-e1 cursor-pointer transition-shadow duration-fast ease-standard hover:shadow-e2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >
               <span className="text-sm text-primary-600">{s.label}</span>
@@ -205,8 +219,8 @@ export default function SearchModal() {
         <Button variant="ghost" onClick={resetAll} className="-ms-3 underline underline-offset-4">
           {tCommon("clearAll")}
         </Button>
-        <Button size="lg" onClick={onSubmit} leadingIcon={step === STEPS.INFO ? <BrandSearchIcon size={18} /> : undefined}>
-          {step === STEPS.INFO ? tNav("search") : tCommon("next")}
+        <Button size="lg" onClick={onSubmit} leadingIcon={isLast ? <BrandSearchIcon size={18} /> : undefined}>
+          {isLast ? tNav("search") : tCommon("next")}
         </Button>
       </div>
     </Dialog>

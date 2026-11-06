@@ -112,7 +112,10 @@
       "whenPlaceholder": "Date de l'expérience",
       "whoTitle": "Taille du groupe",
       "whoPlaceholder": "Nombre de participants",
-      "whoSubtitle": "Nombre de participants"
+      "whoSubtitle": "Nombre de participants",
+      "typeTitle": "Activité",
+      "typePlaceholder": "Toutes activités",
+      "typeAny": "Toutes les activités"
     },
     "trip": {
       "whereTitle": "Circuit / région",
@@ -121,7 +124,10 @@
       "whenPlaceholder": "Dates de départ",
       "whoTitle": "Voyageurs",
       "whoPlaceholder": "Nombre de participants",
-      "whoSubtitle": "Tous âges bienvenus"
+      "whoSubtitle": "Tous âges bienvenus",
+      "typeTitle": "Type de séjour",
+      "typePlaceholder": "Tous séjours",
+      "typeAny": "Tous les séjours"
     }
   },
   "loadingMap": "Chargement de la carte interactive…",
@@ -200,5 +206,21 @@
     "exact": "Dates exactes",
     "plusMinus": "± {count, plural, one {# jour} other {# jours}}",
     "short": "±{count}"
+  },
+  "typeCount": "{count, plural, one {# type} other {# types}}",
+  "roomCount": "{count, plural, one {# chambre} other {# chambres}}",
+  "infantCount": "{count, plural, one {# bébé} other {# bébés}}",
+  "who": {
+    "adults": "Adultes",
+    "adultsHint": "13 ans et plus",
+    "children": "Enfants",
+    "childrenHint": "De 2 à 12 ans",
+    "infants": "Bébés",
+    "infantsHint": "Moins de 2 ans, sans place ni lit",
+    "rooms": "Chambres",
+    "roomsHint": "Au moins un adulte par chambre",
+    "passengers": "Passagers",
+    "passengersHint": "Places nécessaires, conducteur compris",
+    "childrenNote": "L'hôte voit l'âge des enfants après la réservation pour préparer un lit bébé ou d'appoint."
   }
 }

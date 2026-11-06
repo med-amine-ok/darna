@@ -253,12 +253,12 @@ export default function ReservationsClient({ initialReservations, listings }: Re
                               onClick={() => setDecliningId(res.id)}
                               aria-label={t("declineAria", { id: res.id })}
                               leadingIcon={<BrandCloseIcon size={16} aria-hidden="true" />}
-                              className="!text-accent-700"
+                              className="!text-red-700 ring-1 ring-inset ring-red-200 hover:!bg-red-50"
                             >
                               {t("decline")}
                             </Button>
                             <Button
-                              variant="secondary"
+                              variant="confirm"
                               size="sm"
                               loading={busy && !decliningId}
                               disabled={busy}

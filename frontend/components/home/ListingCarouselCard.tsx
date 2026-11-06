@@ -42,7 +42,7 @@ export default function ListingCarouselCard({ listing, currentUser, customHref, 
 
   return (
     <article className="group relative select-none">
-      <div className="relative aspect-[20/19] w-full rounded-2xl overflow-hidden bg-tertiary-100 shadow-e1 transition-[box-shadow,transform] duration-base ease-out group-hover:shadow-e3 group-hover:-translate-y-1">
+      <div className="relative z-[2] pointer-events-none aspect-[20/19] w-full rounded-2xl overflow-hidden bg-tertiary-100 shadow-e1 transition-[box-shadow,transform] duration-base ease-out group-hover:shadow-e3 group-hover:-translate-y-1">
         <Image
           src={displayImage || "/assets/template.jpeg"}
           alt=""
@@ -58,7 +58,7 @@ export default function ListingCarouselCard({ listing, currentUser, customHref, 
           </div>
         )}
 
-        <div className="absolute top-1.5 end-1.5 z-10">
+        <div className="pointer-events-auto absolute top-1.5 end-1.5 z-10">
           <HeartButton listingId={listing.id} currentUser={currentUser} />
         </div>
       </div>

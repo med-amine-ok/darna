@@ -14,7 +14,7 @@ export default function HostCta() {
   const t = useTranslations("homeHero.sections");
   return (
     <Reveal as="section" className="relative overflow-hidden rounded-[2rem] bg-primary-800 text-white shadow-e4">
-      <div aria-hidden="true" className="absolute inset-0 texture-zellige opacity-[0.35] invert" />
+      <div aria-hidden="true" className="texture-zellige-dark zellige-fade-edges pointer-events-none absolute inset-0 opacity-80" />
       <div aria-hidden="true" className="absolute -bottom-32 -start-24 w-[28rem] h-[28rem] rounded-full bg-[radial-gradient(closest-side,rgba(122,145,104,0.35),rgba(122,145,104,0))]" />
       <div className="relative grid md:grid-cols-12 gap-10 items-center p-8 sm:p-12 lg:p-16">
         <div className="md:col-span-7">

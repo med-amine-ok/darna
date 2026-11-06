@@ -44,7 +44,8 @@ export default function FavoritesClient({ initialListings, currentUser }: Favori
 
   if (savedListings.length === 0) {
     return (
-      <Card padding="none" className="enter-up">
+      <Card padding="none" className="enter-up relative overflow-hidden">
+        <div aria-hidden="true" className="texture-zellige zellige-fade-corner pointer-events-none absolute inset-0" />
         <KitEmptyState
           variant="favorites"
           title={t("emptyTitle")}

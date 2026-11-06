@@ -29,7 +29,7 @@ const DarnaToastTransition = cssTransition({
   collapseDuration: 220,
 });
 
-/** Tinted circular icon per toast type (olive success, terracotta error, ochre warning, sand info). */
+/** Tinted circular icon per toast type (green success, red error, amber warning, blue info). */
 export function DarnaToastIcon({
   type,
   isLoading,
@@ -52,7 +52,7 @@ export function DarnaToastIcon({
     case "success":
       return (
         <span
-          className={`${base} bg-secondary-100 text-secondary-700`}
+          className={`${base} bg-emerald-100 text-emerald-700`}
           aria-hidden="true"
         >
           <DrawnCheck size={16} strokeWidth={2.6} />
@@ -61,7 +61,7 @@ export function DarnaToastIcon({
     case "error":
       return (
         <span
-          className={`${base} bg-accent-100 text-accent-700`}
+          className={`${base} bg-red-100 text-red-700`}
           aria-hidden="true"
         >
           <BrandAlertCircleIcon size={17} strokeWidth={2} />
@@ -80,7 +80,7 @@ export function DarnaToastIcon({
     default:
       return (
         <span
-          className={`${base} bg-tertiary-200 text-tertiary-800`}
+          className={`${base} bg-accent-100 text-accent-700`}
           aria-hidden="true"
         >
           <BrandAlertCircleIcon size={17} strokeWidth={2} />

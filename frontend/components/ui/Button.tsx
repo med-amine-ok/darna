@@ -26,7 +26,8 @@ export type ButtonVariant =
   | "secondary"
   | "tertiary"
   | "ghost"
-  | "destructive";
+  | "destructive"
+  | "confirm";
 export type ButtonSize = "sm" | "md" | "lg";
 
 type NativeButtonProps = Omit<
@@ -78,7 +79,9 @@ export const buttonVariants: Record<ButtonVariant, string> = {
   ghost:
     "bg-transparent text-primary-800 hover:bg-primary/[0.06] hover:text-primary-900 active:bg-primary/[0.1]",
   destructive:
-    "bg-accent-700 text-white shadow-e1 hover:bg-accent-800 hover:shadow-e2",
+    "bg-red-700 text-white shadow-e1 hover:bg-red-800 hover:shadow-e2",
+  confirm:
+    "bg-emerald-700 text-white shadow-e1 hover:bg-emerald-800 hover:shadow-e2",
 };
 
 export const buttonSizes: Record<ButtonSize, string> = {

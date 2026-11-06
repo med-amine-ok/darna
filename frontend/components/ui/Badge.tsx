@@ -28,13 +28,13 @@ const toneClasses: Record<BadgeTone, { bg: string; dot: string }> = {
   neutral: { bg: "bg-primary/[0.07] text-primary-700", dot: "bg-primary-500" },
   olive: { bg: "bg-secondary-100 text-secondary-800", dot: "bg-secondary-600" },
   success: {
-    bg: "bg-secondary-100 text-secondary-800",
-    dot: "bg-secondary-600",
+    bg: "bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200",
+    dot: "bg-emerald-600",
   },
   terracotta: { bg: "bg-accent-100 text-accent-800", dot: "bg-accent-600" },
-  danger: { bg: "bg-accent-100 text-accent-800", dot: "bg-accent-700" },
+  danger: { bg: "bg-red-50 text-red-800 ring-1 ring-inset ring-red-200", dot: "bg-red-600" },
   ochre: { bg: "bg-amber-100 text-amber-800", dot: "bg-amber-600" },
-  warning: { bg: "bg-amber-100 text-amber-800", dot: "bg-amber-600" },
+  warning: { bg: "bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-200", dot: "bg-amber-500" },
   sand: { bg: "bg-tertiary-200 text-tertiary-900", dot: "bg-tertiary-600" },
   ink: { bg: "bg-primary-800 text-white", dot: "bg-tertiary-300" },
 };

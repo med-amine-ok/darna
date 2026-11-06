@@ -254,7 +254,7 @@ export default function HostTodayClient({
                 <div className="flex shrink-0 items-center gap-2">
                   <Button
                     size="sm"
-                    variant="secondary"
+                    variant="confirm"
                     loading={isProcessing === req.id}
                     disabled={isProcessing === req.id}
                     onClick={() => handleStatusChange(req.id, "confirmed")}
@@ -265,6 +265,7 @@ export default function HostTodayClient({
                   <Button
                     size="sm"
                     variant="tertiary"
+                    className="!text-red-700 ring-1 ring-inset ring-red-200 hover:!bg-red-50"
                     disabled={isProcessing === req.id}
                     onClick={() => handleStatusChange(req.id, "cancelled")}
                     leadingIcon={<BrandCloseIcon size={16} aria-hidden="true" />}
@@ -544,7 +545,7 @@ export default function HostTodayClient({
           <HostWalletWidget />
 
           <aside className="relative isolate overflow-hidden rounded-2xl bg-primary-800 p-6 text-white shadow-e2">
-            <div aria-hidden="true" className="absolute inset-0 -z-10 texture-zellige opacity-[0.3] invert" />
+            <div aria-hidden="true" className="texture-zellige-dark zellige-fade-edges pointer-events-none absolute inset-0 -z-10 opacity-70" />
             <p className="text-eyebrow uppercase text-tertiary-300 rtl:normal-case rtl:tracking-normal">
               {t("tip.eyebrow")}
             </p>

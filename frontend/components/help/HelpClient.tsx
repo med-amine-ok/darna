@@ -184,7 +184,7 @@ export default function HelpClient() {
         aria-labelledby={fieldId("title")}
         className="relative isolate overflow-hidden rounded-3xl bg-primary-800 px-5 py-12 text-white shadow-e3 sm:px-10 sm:py-16 lg:py-20"
       >
-        <div aria-hidden="true" className="absolute inset-0 -z-10 texture-zellige opacity-60 invert" />
+        <div aria-hidden="true" className="texture-zellige-dark zellige-fade-edges pointer-events-none absolute inset-0 -z-10 opacity-70" />
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,rgba(201,111,79,0.28),transparent_60%)]"

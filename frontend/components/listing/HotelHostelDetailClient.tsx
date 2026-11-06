@@ -754,7 +754,7 @@ export default function HotelHostelDetailClient({
 
               {bookingFields(false)}
 
-              <Button size="lg" fullWidth onClick={handleReserveRoom} loading={isReserving} disabled={Boolean(validationError)}>
+              <Button size="lg" fullWidth variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserveRoom} loading={isReserving} disabled={Boolean(validationError)}>
                 {ctaLabel}
               </Button>
               <p className="text-center text-meta text-primary-500">{tp("notChargedUntilConfirmed")}</p>
@@ -819,7 +819,7 @@ export default function HotelHostelDetailClient({
                 {datesLabel} · {unitSummary}
               </span>
             </p>
-            <Button size="lg" onClick={handleReserveRoom} loading={isReserving} disabled={Boolean(validationError)} className="shrink-0">
+            <Button size="lg" variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserveRoom} loading={isReserving} disabled={Boolean(validationError)} className="shrink-0">
               {isRequestToBook ? tp("requestRoom") : t("reserve")}
             </Button>
           </div>

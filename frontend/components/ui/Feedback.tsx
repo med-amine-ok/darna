@@ -46,8 +46,8 @@ const bannerTones: Record<
     Icon: BrandAlertCircleIcon,
   },
   success: {
-    box: "bg-secondary-50 text-secondary-900 ring-secondary-200",
-    icon: "text-secondary-700",
+    box: "bg-emerald-50 text-emerald-900 ring-emerald-200",
+    icon: "text-emerald-700",
     Icon: BrandCheckCircleIcon,
   },
   warning: {
@@ -56,8 +56,8 @@ const bannerTones: Record<
     Icon: BrandExclamationIcon,
   },
   danger: {
-    box: "bg-accent-50 text-accent-900 ring-accent-200",
-    icon: "text-accent-700",
+    box: "bg-red-50 text-red-900 ring-red-200",
+    icon: "text-red-700",
     Icon: BrandAlertCircleIcon,
   },
 };
@@ -332,7 +332,7 @@ export function InlineStatus({
           transition={{ duration: dur.fast, ease: ease.out }}
           className={cn(
             "text-meta font-semibold",
-            tone === "success" ? "text-secondary-700" : "text-accent-700",
+            tone === "success" ? "text-emerald-700" : "text-red-700",
           )}
         >
           {children}

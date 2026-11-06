@@ -16,9 +16,11 @@ import { dur, ease, spring } from "@/lib/motion";
 
 import WherePopover, { DestinationItem } from "./search/WherePopover";
 import WhenPopover, { type FlexDays } from "./search/WhenPopover";
-import WhoPopover from "./search/WhoPopover";
+import WhoPopover, { DEFAULT_PARTY, partyGuests, type Party } from "./search/WhoPopover";
+import TypePopover from "./search/TypePopover";
+import { experienceTypeLabel, isExperienceType, isTripType, tripTypeLabel } from "@/lib/catalog-types";
 
-type PopoverType = "where" | "when" | "who" | null;
+type PopoverType = "what" | "where" | "when" | "who" | null;
 
 interface SearchProps {
   isHero?: boolean;
@@ -59,7 +61,19 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
     key: "selection",
   });
   const [flexDays, setFlexDays] = useState<FlexDays>(0);
-  const [guestCount, setGuestCount] = useState<number>(searchParams?.get("guests") ? parseInt(searchParams.get("guests")!, 10) : 1);
+  const [party, setParty] = useState<Party>(() => {
+    const num = (k: string, d: number) => {
+      const v = parseInt(searchParams?.get(k) || "", 10);
+      return Number.isFinite(v) && v >= 0 ? v : d;
+    };
+    const guests = num("guests", 1);
+    const children = num("children", 0);
+    return { adults: num("adults", Math.max(1, guests - children)), children, infants: num("infants", 0), rooms: num("rooms", 1) };
+  });
+  const guestCount = partyGuests(party);
+  const [types, setTypes] = useState<string[]>(() =>
+    (searchParams?.get("expType") || searchParams?.get("tripType") || "").split(",").filter(Boolean)
+  );
 
   // On non-hero pages progress is always 1 (docked).
   const progress = isHero ? scrollProgress : 1;
@@ -73,6 +87,9 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
   useDismiss(expanded || activePopover !== null, containerRef, collapse, summaryRef);
 
   const vertical = activeVertical || "home";
+  const typeVertical = vertical === "experience" || vertical === "trip" ? vertical : null;
+  // Keep only types that belong to the active vertical.
+  const activeTypes = types.filter((id) => (typeVertical === "experience" ? isExperienceType(id) : typeVertical === "trip" ? isTripType(id) : false));
   const labels = {
     whereTitle: t(`bar.${vertical}.whereTitle`),
     wherePlaceholder: t(`bar.${vertical}.wherePlaceholder`),
@@ -97,8 +114,27 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
         (flexDays ? ` · ${t("flex.short", { count: flexDays })}` : "")
       : "";
 
-  const guestSummary =
-    guestCount > 1 ? (vertical === "vehicle" ? t("passengerCount", { count: guestCount }) : t("guestCount", { count: guestCount })) : "";
+  const typeSummary =
+    activeTypes.length === 0
+      ? ""
+      : activeTypes.length === 1
+        ? typeVertical === "experience"
+          ? experienceTypeLabel(activeTypes[0], locale)
+          : tripTypeLabel(activeTypes[0], locale)
+        : t("typeCount", { count: activeTypes.length });
+
+  const partyIsDefault = party.adults === 1 && party.children === 0 && party.infants === 0 && party.rooms === 1;
+  const guestSummary = partyIsDefault
+    ? ""
+    : vertical === "vehicle"
+      ? t("passengerCount", { count: guestCount })
+      : [
+          vertical === "hotel" ? t("roomCount", { count: party.rooms }) : null,
+          t("guestCount", { count: guestCount }),
+          party.infants > 0 && vertical === "home" ? t("infantCount", { count: party.infants }) : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
 
   const destinationText = destination ? destinationLabel(destination) : "";
 
@@ -112,9 +148,16 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
       if (dateRange.startDate) query.set("startDate", dateRange.startDate.toISOString());
       if (dateRange.endDate) query.set("endDate", dateRange.endDate.toISOString());
       if (guestCount > 1) query.set("guests", guestCount.toString());
+      if (!partyIsDefault && vertical !== "vehicle") {
+        query.set("adults", String(party.adults));
+        if (party.children) query.set("children", String(party.children));
+        if (party.infants && vertical === "home") query.set("infants", String(party.infants));
+        if (vertical === "hotel") query.set("rooms", String(party.rooms));
+      }
+      if (typeVertical && activeTypes.length) query.set(typeVertical === "experience" ? "expType" : "tripType", activeTypes.join(","));
       router.push(`/search?${query.toString()}`);
     },
-    [destination, activeVertical, dateRange, guestCount, router, collapse]
+    [destination, activeVertical, dateRange, guestCount, party, partyIsDefault, vertical, typeVertical, activeTypes, router, collapse]
   );
 
   const handleSelectDestination = (item: DestinationItem) => {
@@ -188,9 +231,26 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
             )}
             style={inline ? undefined : { width: isHero && !expanded ? "calc(100vw - 32px)" : "min(640px, calc(100vw - 32px))", maxWidth: 768 }}
           >
+            {typeVertical && (
+              <>
+                <Popover
+                  ariaLabel={t(`bar.${typeVertical}.typeTitle`)}
+                  align="start"
+                  open={activePopover === "what"}
+                  onOpenChange={openFor("what")}
+                  wrapperClassName="h-full flex-1 min-w-0"
+                  className="p-5 rounded-3xl shadow-e4 mt-1"
+                  trigger={segment("what", t(`bar.${typeVertical}.typeTitle`), typeSummary, t(`bar.${typeVertical}.typePlaceholder`))}
+                >
+                  <TypePopover vertical={typeVertical} selected={activeTypes} onChange={setTypes} onApply={() => setActivePopover("where")} />
+                </Popover>
+                {divider(activePopover === "what" || activePopover === "where")}
+              </>
+            )}
+
             <Popover
               ariaLabel={labels.whereTitle}
-              align="start"
+              align={typeVertical ? "center" : "start"}
               open={activePopover === "where"}
               onOpenChange={openFor("where")}
               wrapperClassName="h-full flex-[1.25] min-w-0"
@@ -233,13 +293,7 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
               className="p-5 rounded-3xl shadow-e4 mt-1"
               trigger={segment("who", labels.whoTitle, guestSummary, labels.whoPlaceholder)}
             >
-              <WhoPopover
-                guestCount={guestCount}
-                onChangeGuests={setGuestCount}
-                title={labels.whoTitle}
-                subtitle={labels.whoSubtitle}
-                onApply={() => setActivePopover(null)}
-              />
+              <WhoPopover vertical={vertical as "home"} party={party} onChange={setParty} onApply={() => setActivePopover(null)} />
             </Popover>
 
             <m.button
@@ -274,7 +328,7 @@ export default function Search({ isHero = false, scrollProgress = 0, inline = fa
               aria-expanded={false}
               onClick={() => {
                 setExpanded(true);
-                setActivePopover("where");
+                setActivePopover(typeVertical ? "what" : "where");
               }}
               className="flex h-full min-w-0 items-center rounded-full ps-3 text-sm cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
             >

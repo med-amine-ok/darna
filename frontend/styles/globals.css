@@ -158,9 +158,38 @@ html[data-reduce-motion] *::after {
     background-image: url("/brand/grain.svg");
     background-size: 180px 180px;
   }
+  /* Zellige (star-and-cross of Qal'at Bani Hammad), the same geometry as the Khatam B logo.
+     Light sections: .texture-zellige (navy lines). Navy sections: .texture-zellige-dark (white lines).
+     Line opacity is baked into the SVG (16 % / 20 %); keep the element opacity low and pair it
+     with a fade mask so the pattern never sits behind body text. */
   .texture-zellige {
-    background-image: url("/brand/zellige.svg");
-    background-size: 96px 96px;
+    background-image: url("/brand/zellige-light.svg");
+    background-size: 112px 112px;
+    background-position: center top;
+  }
+  .texture-zellige-dark {
+    background-image: url("/brand/zellige-dark.svg");
+    background-size: 112px 112px;
+    background-position: center top;
+  }
+  /* Pattern only toward the edges, clean in the middle. */
+  .zellige-fade-edges {
+    -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 35%, #000 100%);
+    mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 35%, #000 100%);
+  }
+  /* Pattern at the top, fading out downwards. */
+  .zellige-fade-down {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
+  }
+  /* Pattern in the reading-end corner only. */
+  .zellige-fade-corner {
+    -webkit-mask-image: radial-gradient(circle at 100% 0%, #000 0%, transparent 60%);
+    mask-image: radial-gradient(circle at 100% 0%, #000 0%, transparent 60%);
+  }
+  [dir="rtl"] .zellige-fade-corner {
+    -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 0%, transparent 60%);
+    mask-image: radial-gradient(circle at 0% 0%, #000 0%, transparent 60%);
   }
 
   /* Image scrim for text on photos. */
@@ -512,10 +541,10 @@ input:focus, textarea:focus, select:focus {
   border-end-end-radius: 9999px;
   background-color: var(--toast-accent, #0B57D0);
 }
-.darna-toast--success { --toast-accent: #0E6FAD; }
-.darna-toast--error { --toast-accent: #0A3B8A; }
-.darna-toast--warning { --toast-accent: #D97706; }
-.darna-toast--info { --toast-accent: #64748B; }
+.darna-toast--success { --toast-accent: #047857; }
+.darna-toast--error { --toast-accent: #B91C1C; }
+.darna-toast--warning { --toast-accent: #B45309; }
+.darna-toast--info { --toast-accent: #0B57D0; }
 .darna-toast--default { --toast-accent: #0B57D0; }
 
 .darna-toast-body {

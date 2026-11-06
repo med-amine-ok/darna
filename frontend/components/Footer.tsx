@@ -110,7 +110,7 @@ export default function Footer() {
     <footer className="mt-16 bg-darnaBg-300/70 text-primary-700">
       {/* Brand band */}
       <div className="relative overflow-hidden bg-primary-900 text-darnaBg">
-        <div aria-hidden="true" className="texture-zellige absolute inset-0 opacity-[0.07] invert" />
+        <div aria-hidden="true" className="texture-zellige-dark zellige-fade-edges pointer-events-none absolute inset-0 opacity-70" />
         <Container className="relative flex flex-col gap-6 py-10 sm:py-12 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl">
             <p className="text-eyebrow uppercase font-semibold text-tertiary-300">{t("bandEyebrow")}</p>

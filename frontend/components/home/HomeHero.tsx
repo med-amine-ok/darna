@@ -58,6 +58,7 @@ export default function HomeHero(_props: { promoData?: PromoData }) {
 
   return (
     <section aria-labelledby="home-hero-title" className="relative w-full">
+      <div aria-hidden="true" className="texture-zellige zellige-fade-down pointer-events-none absolute inset-x-0 bottom-[-6rem] h-56 opacity-70" />
       {/* Photo band with the headline */}
       <div className="relative isolate overflow-hidden bg-primary-900">
         <Image
@@ -68,6 +69,8 @@ export default function HomeHero(_props: { promoData?: PromoData }) {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
+        {/* Zellige in the corner opposite the headline (decorative, never behind text). */}
+        <div aria-hidden="true" className="texture-zellige-dark zellige-fade-corner pointer-events-none absolute inset-0 opacity-90" />
         {/* Navy scrim: keeps white text above 7:1 on any part of the photo */}
         <div
           aria-hidden="true"

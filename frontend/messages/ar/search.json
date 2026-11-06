@@ -112,7 +112,10 @@
       "whenPlaceholder": "اختر تاريخ التجربة",
       "whoTitle": "حجم المجموعة",
       "whoPlaceholder": "عدد المشاركين",
-      "whoSubtitle": "عدد الحاضرين"
+      "whoSubtitle": "عدد الحاضرين",
+      "typeTitle": "النشاط",
+      "typePlaceholder": "كل الأنشطة",
+      "typeAny": "كل الأنشطة"
     },
     "trip": {
       "whereTitle": "الجولة / المنطقة",
@@ -121,7 +124,10 @@
       "whenPlaceholder": "تواريخ الانطلاق",
       "whoTitle": "المسافرون",
       "whoPlaceholder": "عدد المشاركين",
-      "whoSubtitle": "جميع الأعمار مرحب بها"
+      "whoSubtitle": "جميع الأعمار مرحب بها",
+      "typeTitle": "نوع الرحلة",
+      "typePlaceholder": "كل الرحلات",
+      "typeAny": "كل الرحلات"
     }
   },
   "loadingMap": "جارٍ تحميل الخريطة التفاعلية…",
@@ -200,5 +206,21 @@
     "exact": "تواريخ محددة",
     "plusMinus": "± {count, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}",
     "short": "±{count}"
+  },
+  "typeCount": "{count, plural, one {نوع واحد} two {نوعان} few {# أنواع} many {# نوعًا} other {# نوع}}",
+  "roomCount": "{count, plural, one {غرفة واحدة} two {غرفتان} few {# غرف} many {# غرفة} other {# غرفة}}",
+  "infantCount": "{count, plural, one {رضيع واحد} two {رضيعان} few {# رضّع} many {# رضيعًا} other {# رضيع}}",
+  "who": {
+    "adults": "البالغون",
+    "adultsHint": "13 سنة فما فوق",
+    "children": "الأطفال",
+    "childrenHint": "من 2 إلى 12 سنة",
+    "infants": "الرضّع",
+    "infantsHint": "أقل من سنتين، بدون مقعد أو سرير",
+    "rooms": "الغرف",
+    "roomsHint": "بالغ واحد على الأقل في كل غرفة",
+    "passengers": "الركاب",
+    "passengersHint": "عدد المقاعد مع السائق",
+    "childrenNote": "يرى المضيف أعمار الأطفال بعد الحجز ليجهّز سرير رضيع أو سريرًا إضافيًا."
   }
 }

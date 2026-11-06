@@ -416,7 +416,7 @@ export default function ListingReservation({
         {noteField("desktop")}
         {validationAlert}
 
-        <Button size="lg" fullWidth onClick={handleReserve} loading={isLoading} disabled={Boolean(validationError)}>
+        <Button size="lg" fullWidth variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserve} loading={isLoading} disabled={Boolean(validationError)}>
           {isRequestToBook ? t("requestToBook") : t("reserve")}
         </Button>
 

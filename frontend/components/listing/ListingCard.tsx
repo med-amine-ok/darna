@@ -207,7 +207,7 @@ export default function ListingCard({
   const dotStart = Math.min(Math.max(0, index - Math.floor(MAX_DOTS / 2)), Math.max(0, images.length - MAX_DOTS));
 
   const arrowClass = cn(
-    "absolute top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full",
+    "pointer-events-auto absolute top-1/2 z-10 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full",
     "bg-white/90 text-primary-900 shadow-e2 cursor-pointer",
     "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:hidden",
     "transition-[opacity,transform,background-color] duration-fast ease-standard hover:bg-white hover:scale-105 active:scale-95",
@@ -232,7 +232,7 @@ export default function ListingCard({
       <div
         ref={imageAreaRef}
         className={cn(
-          "relative aspect-[20/19] w-full overflow-hidden rounded-2xl bg-tertiary-100",
+          "relative z-[2] pointer-events-none aspect-[20/19] w-full overflow-hidden rounded-2xl bg-tertiary-100",
           "transition-[box-shadow,transform] duration-base ease-out",
           isHovered
             ? "-translate-y-1 shadow-e3 ring-2 ring-primary-800/80 ring-offset-2 ring-offset-darnaBg"
@@ -281,7 +281,7 @@ export default function ListingCard({
           </div>
         )}
 
-        <div className="absolute top-1.5 end-1.5 z-10">
+        <div className="pointer-events-auto absolute top-1.5 end-1.5 z-10">
           <HeartButton listingId={data.id} currentUser={currentUser} />
         </div>
 

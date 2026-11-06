@@ -16,7 +16,7 @@ interface HeartButtonProps {
 
 const BURST_ANGLES = [0, 60, 120, 180, 240, 300];
 
-/** Wishlist toggle with a spring pop and a small terracotta burst when saving. */
+/** Wishlist toggle with a spring pop and a small rose burst when saving (rose = wishlist everywhere). */
 export default function HeartButton({ listingId, currentUser, variant = "overlay" }: HeartButtonProps) {
   const { hasFavorite, toggleFavorite } = useFavorite({ listingId, currentUser });
   const t = useTranslations("common");
@@ -60,7 +60,7 @@ export default function HeartButton({ listingId, currentUser, variant = "overlay
           filled={hasFavorite}
           className={`transition-colors duration-fast ease-standard ${
             hasFavorite
-              ? "fill-accent-500 text-accent-500 drop-shadow-[0_2px_6px_rgba(182,86,52,0.45)]"
+              ? "fill-rose-600 text-rose-600 drop-shadow-[0_2px_6px_rgba(225,29,72,0.45)]"
               : isCircle
                 ? "text-primary-800"
                 : "text-white fill-primary-900/30 drop-shadow-[0_1px_3px_rgba(30,38,31,0.45)]"
@@ -77,7 +77,7 @@ export default function HeartButton({ listingId, currentUser, variant = "overlay
               return (
                 <m.span
                   key={deg}
-                  className="absolute left-1/2 top-1/2 w-1.5 h-1.5 -ml-[3px] -mt-[3px] rounded-full bg-accent-400"
+                  className="absolute left-1/2 top-1/2 w-1.5 h-1.5 -ml-[3px] -mt-[3px] rounded-full bg-rose-500"
                   variants={{
                     from: { x: 0, y: 0, opacity: 1, scale: 1 },
                     to: { x: Math.cos(rad) * 20, y: Math.sin(rad) * 20, opacity: 0, scale: 0.4 },

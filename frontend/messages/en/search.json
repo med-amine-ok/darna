@@ -112,7 +112,10 @@
       "whenPlaceholder": "Select experience date",
       "whoTitle": "Group size",
       "whoPlaceholder": "Number of participants",
-      "whoSubtitle": "Number of attendees"
+      "whoSubtitle": "Number of attendees",
+      "typeTitle": "Activity",
+      "typePlaceholder": "Any activity",
+      "typeAny": "All activities"
     },
     "trip": {
       "whereTitle": "Circuit / region",
@@ -121,7 +124,10 @@
       "whenPlaceholder": "Departure dates",
       "whoTitle": "Travelers",
       "whoPlaceholder": "Number of participants",
-      "whoSubtitle": "All ages welcome"
+      "whoSubtitle": "All ages welcome",
+      "typeTitle": "Trip type",
+      "typePlaceholder": "Any trip",
+      "typeAny": "All trips"
     }
   },
   "loadingMap": "Loading interactive map…",
@@ -200,5 +206,21 @@
     "exact": "Exact dates",
     "plusMinus": "± {count, plural, one {# day} other {# days}}",
     "short": "±{count}"
+  },
+  "typeCount": "{count, plural, one {# type} other {# types}}",
+  "roomCount": "{count, plural, one {# room} other {# rooms}}",
+  "infantCount": "{count, plural, one {# infant} other {# infants}}",
+  "who": {
+    "adults": "Adults",
+    "adultsHint": "Ages 13 or above",
+    "children": "Children",
+    "childrenHint": "Ages 2 to 12",
+    "infants": "Infants",
+    "infantsHint": "Under 2, no seat or bed needed",
+    "rooms": "Rooms",
+    "roomsHint": "One adult at least per room",
+    "passengers": "Passengers",
+    "passengersHint": "Seats needed, driver included",
+    "childrenNote": "Hosts see the children's ages after you book, so they can prepare a cot or extra bed."
   }
 }

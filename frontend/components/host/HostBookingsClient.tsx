@@ -707,7 +707,7 @@ export default function HostBookingsClient({
                           ) : (
                             <>
                               <Button
-                                variant="primary"
+                                variant="confirm"
                                 size="md"
                                 onClick={() => handleAccept(res.id)}
                                 loading={actionLoading === res.id && !decliningId}
@@ -723,7 +723,7 @@ export default function HostBookingsClient({
                                 onClick={() => handleDecline(res.id)}
                                 disabled={actionLoading === res.id}
                                 leadingIcon={<BrandCloseIcon size={16} aria-hidden="true" />}
-                                className="flex-1 sm:flex-none"
+                                className="flex-1 sm:flex-none !text-red-700 ring-1 ring-inset ring-red-200 hover:!bg-red-50"
                               >
                                 {t("decline")}
                               </Button>

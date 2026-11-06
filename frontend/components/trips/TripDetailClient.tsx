@@ -619,6 +619,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
               <Button
                 size="lg"
                 fullWidth
+                variant={isRequest ? "primary" : "confirm"}
                 onClick={handleBookTrip}
                 loading={isBooking}
                 disabled={Boolean(validationError)}
@@ -660,7 +661,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
               <AnimatedNumber value={quote.total} format={formatDzd} className="block font-semibold text-title text-primary-900 tabular-nums" />
               <span className="block text-meta text-primary-500 truncate">{travelersLabel}</span>
             </p>
-            <Button size="lg" onClick={handleBookTrip} loading={isBooking} disabled={Boolean(validationError)} className="shrink-0">
+            <Button size="lg" variant={isRequest ? "primary" : "confirm"} onClick={handleBookTrip} loading={isBooking} disabled={Boolean(validationError)} className="shrink-0">
               {ctaLabel}
             </Button>
           </div>
