@@ -1,0 +1,4090 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BLADUS frontend inventory (raw analysis notes for the backend blueprint) · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="on" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="bladus-frontend-inventory-raw-analysis-notes-for-the-backend-blueprint">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</h1>
+<p>Scope: <code>frontend/</code> only (guest and host website, Next.js 14 App Router, next-intl en/fr/ar). Admin app not covered.
+All paths are relative to <code>frontend/</code> unless stated. <code>file:line</code> refers to the state of the tree on 2026-11-04 (branch <code>main</code>, commit <code>03fc50c</code>).
+Persistence today: <code>lib/data/*</code> over in-memory <code>globalThis</code> arrays (<code>lib/data/_store.ts:14</code>, <code>lib/data/_tables.ts:31-62</code>) seeded from <code>lib/mock-data/*</code>; some tables are seeded inline inside <code>lib/data</code> (<code>calendar.ts:13</code>, <code>wallet.ts:16</code>, <code>reviews.ts:6</code>, credentials in <code>auth.ts:39</code>). Every <code>lib/data</code> file carries <code>// TODO: replace with Supabase query</code>: the comments predate the Django + PostgreSQL decision.</p>
+<p>Legend for status: <strong>built</strong> = UI + server action/data function round trip works end to end on the mock store; <strong>partial</strong> = works but limited or inconsistent; <strong>mocked-only</strong> = UI exists, action is a toast, local state, hardcoded data or <code>localStorage</code>.</p>
+<hr>
+<h2 id="1-feature-inventory-per-actor">1. Feature inventory per actor</h2>
+<h3 id="11-visitor-not-logged-in">1.1 Visitor (not logged in)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Route(s) / component(s)</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home editorial feed (homes, experiences, agency trips, hotels/hostels, vehicles, &quot;weekend&quot; featured, wilaya tiles, trust band, host CTA)</td>
+<td><code>app/[locale]/page.tsx</code>, <code>components/home/*</code></td>
+<td>built</td>
+<td>Uses <code>getListings</code>, <code>getVehicles</code>, <code>getExperiences</code>, <code>getFeaturedListings</code>, <code>getTrips</code>. Card DTO slimming in <code>lib/server/card-dto.ts</code>. Category chip filter (<code>?category=</code>) is hardcoded string matching on <code>type</code>, <code>amenities</code>, <code>city</code> (<code>app/[locale]/page.tsx:77-94</code>). Wilaya tile counts by normalized city (<code>page.tsx:99-103</code>).</td>
+</tr>
+<tr>
+<td>Global search bar (where / when / who)</td>
+<td><code>components/navbar/Search.tsx</code>, <code>navbar/search/{Where,When,Who}Popover.tsx</code>, <code>models/SearchModal.tsx</code></td>
+<td>built</td>
+<td>Destinations list is static (<code>components/search/destinations.ts:14-25</code>, 10 cities).</td>
+</tr>
+<tr>
+<td>Search results with side filters, facet counts, map, &quot;show total price&quot; toggle</td>
+<td><code>app/[locale]/search/page.tsx</code>, <code>components/search/SearchResultsClient.tsx</code>, <code>SearchFilterSidebar.tsx</code>, <code>SearchMap.tsx</code>, <code>searchFacets.ts</code>, <code>models/FilterModal.tsx</code>, <code>hook/useShowTotalPrice.ts</code></td>
+<td>built</td>
+<td>Base search server side (<code>getListings</code>), side filters applied server side with the same matchers as the client (<code>search/page.tsx:62-65</code>). Map is OpenFreeMap (<code>components/map/OpenFreeMapLayer.tsx</code>). Total price toggle stored in <code>localStorage</code> <code>darna_show_total_price</code>. No sort, no pagination.</td>
+</tr>
+<tr>
+<td>Vertical tabs (all, home, hotel, vehicle, experience, trip) with counts</td>
+<td>same</td>
+<td>built</td>
+<td><code>categoryCounts</code> computed in <code>search/page.tsx:67-71</code>.</td>
+</tr>
+<tr>
+<td>Listing detail (home, vehicle, experience): gallery, lightbox, info, amenities, house rules, policies, reviews summary, map, similar listings, booking widget preview</td>
+<td><code>app/[locale]/listings/[listingId]/page.tsx</code>, <code>components/listing/ListingClient.tsx</code>, <code>ListingHead.tsx</code>, <code>ListingInfo.tsx</code>, <code>ListingReservation.tsx</code>, <code>PhotoLightbox.tsx</code>, <code>detail/*</code></td>
+<td>built</td>
+<td>Availability and price overrides built server side and passed as props (<code>listings/[listingId]/page.tsx:89-90</code>). &quot;Similar listings&quot; = first 4 of same vertical, not geo based (<code>page.tsx:93-96</code>).</td>
+</tr>
+<tr>
+<td>Hotel / hostel detail with room-type cards and per-room or per-bed booking</td>
+<td><code>components/listing/HotelHostelDetailClient.tsx</code>, <code>listing/hotel/RoomCard.tsx</code></td>
+<td>built</td>
+<td>Chosen when listing has <code>roomTypes</code>.</td>
+</tr>
+<tr>
+<td>Report listing</td>
+<td><code>ListingReservation.tsx:439</code>, <code>HotelHostelDetailClient.tsx:767</code></td>
+<td>mocked-only</td>
+<td><code>toast.info(reportSuccess)</code>; no entity, no action.</td>
+</tr>
+<tr>
+<td>Share listing / trip</td>
+<td><code>ListingHead.tsx:69</code>, <code>TripDetailClient.tsx:136</code></td>
+<td>built (client)</td>
+<td>Web Share / clipboard only.</td>
+</tr>
+<tr>
+<td>Trip (agency circuit) detail with departures and seats left</td>
+<td><code>app/[locale]/trips/[tripId]/page.tsx</code>, <code>components/trips/TripDetailClient.tsx</code></td>
+<td>built</td>
+<td>Seats sold per departure server side (<code>seatsSoldByDeparture</code>). &quot;Save trip&quot; heart is a toast (<code>TripDetailClient.tsx:336</code>): trips cannot be favorited. No &quot;message agency&quot; button.</td>
+</tr>
+<tr>
+<td>Public host profile (individual)</td>
+<td><code>app/[locale]/users/[userId]/page.tsx</code>, <code>components/profile/UserProfileClient.tsx</code>, <code>ProfileHero.tsx</code></td>
+<td>built</td>
+<td>Public projection via <code>toPublicUser</code> (<code>lib/server/dto.ts:12</code>). Lists the user&#39;s individual listings and verified businesses they own.</td>
+</tr>
+<tr>
+<td>Public organization profile (agency / hotel / hostel)</td>
+<td><code>app/[locale]/{agencies,hotels,hostels}/[organizationId]/page.tsx</code>, <code>components/agency/orgProfilePage.tsx</code>, <code>AgencyProfileClient.tsx</code></td>
+<td>partial</td>
+<td>Shows org facts, active team members, active listings, agency trips. Shows unverified orgs too (only a &quot;pending verification&quot; label, <code>messages/en/agencyPublic.json</code>). Category mismatch redirects 308 to the right route (<code>orgProfilePage.tsx:59-61</code>). No contact form.</td>
+</tr>
+<tr>
+<td>Help center (FAQ search, categories, helpful vote, contact form)</td>
+<td><code>app/[locale]/help/page.tsx</code>, <code>components/help/HelpClient.tsx</code></td>
+<td>mocked-only</td>
+<td>6 static articles in messages; feedback vote toast (<code>HelpClient.tsx:105</code>); contact form is a <code>setTimeout</code> + toast (<code>HelpClient.tsx:119-125</code>).</td>
+</tr>
+<tr>
+<td>Register (email + password)</td>
+<td><code>components/models/LoginModal.tsx</code> (<code>AuthPanel</code>), <code>app/api/auth/register/route.ts</code></td>
+<td>built</td>
+<td>Min password 8 (<code>lib/auth/password-rules.ts:2</code>). No email verification.</td>
+</tr>
+<tr>
+<td>Login</td>
+<td><code>app/[locale]/login/page.tsx</code>, <code>LoginForm.tsx</code>, <code>LoginModal.tsx</code>, <code>app/api/auth/login/route.ts</code></td>
+<td>built</td>
+<td>Demo quick-login buttons with hardcoded password <code>darna-demo-2026</code> (<code>LoginModal.tsx:46-51</code>).</td>
+</tr>
+<tr>
+<td>Forgot password, social login, phone login</td>
+<td><code>LoginModal.tsx:330</code>, <code>:360</code>, <code>:374</code></td>
+<td>mocked-only</td>
+<td>Toasts (<code>forgotPasswordSoon</code>, <code>socialSimulated</code>, <code>phoneSimulated</code>).</td>
+</tr>
+<tr>
+<td>Language switch (en / fr / ar, RTL)</td>
+<td><code>components/navbar/LanguageSwitcher.tsx</code>, <code>middleware.ts</code>, <code>i18n.ts</code></td>
+<td>built</td>
+<td>36 namespaces, 3417 keys per locale, full parity en/fr/ar (checked by script).</td>
+</tr>
+<tr>
+<td>Currency display (DZD + approximate EUR)</td>
+<td><code>hook/useCurrency.ts</code>, <code>lib/currency.ts:1</code>, <code>components/common/PriceDisplay.tsx</code></td>
+<td>partial</td>
+<td>Fixed rate <code>DEFAULT_EUR_TO_DZD = 152.47</code> (<code>lib/currency.ts:1</code>); no live rate source.</td>
+</tr>
+<tr>
+<td>SEO: sitemap, robots, OG metadata, hreflang</td>
+<td><code>app/sitemap.ts</code>, <code>app/robots.ts</code>, <code>lib/site.ts</code></td>
+<td>built</td>
+<td>Sitemap lists active listings, active trips, verified orgs.</td>
+</tr>
+</tbody></table>
+<h3 id="12-guest-logged-in-traveller">1.2 Guest (logged in traveller)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Route(s) / component(s)</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Book a home / vehicle / experience (instant or request-to-book, optional message to host)</td>
+<td><code>ListingReservation.tsx</code> -&gt; <code>createBookingAction</code></td>
+<td>built</td>
+<td>Server recomputes quote and validates rules (<code>app/actions/bookings.ts:78-161</code>). No payment step: reservation is immediately <code>paymentStatus: &quot;paid&quot;</code> for instant bookings with <code>paymentMethod</code> defaulted to <code>&quot;CIB / Edahabia Card&quot;</code> (<code>lib/data/reservations.ts:291-293</code>).</td>
+</tr>
+<tr>
+<td>Book hotel rooms / hostel beds</td>
+<td><code>HotelHostelDetailClient.tsx</code> -&gt; <code>createBookingAction</code></td>
+<td>built</td>
+<td>Beds: <code>unitCount</code> forced to <code>guestCount</code> (<code>bookings.ts:115-118</code>).</td>
+</tr>
+<tr>
+<td>Book an agency trip seat on a departure</td>
+<td><code>TripDetailClient.tsx</code> -&gt; <code>createBookingAction({kind:&quot;trip&quot;})</code></td>
+<td>built</td>
+<td>Approval mode from the organization (<code>bookings.ts:190-193</code>).</td>
+</tr>
+<tr>
+<td>Booking success dialog</td>
+<td><code>components/listing/detail/BookingSuccessDialog.tsx</code></td>
+<td>built</td>
+<td></td>
+</tr>
+<tr>
+<td>My trips (upcoming / past / cancelled tabs, receipt dialog, cancel with refund preview)</td>
+<td><code>app/[locale]/trips/page.tsx</code>, <code>components/trips/TripsClient.tsx</code>, <code>TripCard.tsx</code></td>
+<td>built</td>
+<td>Refund preview computed client side with the same pure function (<code>TripsClient.tsx:70-75</code>), recomputed server side. Receipt &quot;download&quot; is <code>window.print</code> of a print area (<code>TripsClient.tsx:397-508</code>). &quot;Message host&quot; links to the generic inbox (<code>TripsClient.tsx:311</code>), not to a booking thread.</td>
+</tr>
+<tr>
+<td>Favorites / wishlist (listings only)</td>
+<td><code>components/HeartButton.tsx</code>, <code>hook/useFavorite.ts</code>, <code>app/[locale]/favorites/page.tsx</code>, <code>components/favorites/FavoritesClient.tsx</code></td>
+<td>built</td>
+<td>Stored as <code>User.favoriteIds: string[]</code> (<code>types.ts:15</code>). No named wishlists. Favoriting a draft listing id is allowed (<code>app/actions/favorites.ts:13</code> uses raw <code>getListingById</code>).</td>
+</tr>
+<tr>
+<td>Messaging (inbox, thread, send, mark read, start thread from listing)</td>
+<td><code>app/[locale]/messages/page.tsx</code>, <code>messages/[conversationId]/page.tsx</code>, <code>components/messages/MessagesClient.tsx</code>, <code>ListingInfo.tsx:92</code></td>
+<td>partial</td>
+<td>No realtime, no polling. Attachments (<code>MessagesClient.tsx:762</code>), conversation settings (<code>:395</code>) and options (<code>:638</code>) are toasts. Start thread exists only from listing pages (not trips, not bookings).</td>
+</tr>
+<tr>
+<td>Notifications (dropdown + page, mark one / all read)</td>
+<td><code>components/navbar/NotificationsDropdown.tsx</code>, <code>app/[locale]/notifications/page.tsx</code>, <code>components/notifications/NotificationsClient.tsx</code></td>
+<td>partial</td>
+<td>Read and mark-read are real; nothing in the code ever creates a notification (only 4 seeded rows for <code>usr_yacine</code>).</td>
+</tr>
+<tr>
+<td>Own profile view + edit (name, bio, phone, address)</td>
+<td><code>app/[locale]/profile/page.tsx</code>, <code>UserProfileClient.tsx</code> -&gt; <code>updateProfileAction</code></td>
+<td>built</td>
+<td>Photo change is a toast (<code>UserProfileClient.tsx:186</code>). <code>profile.json</code> has unused keys for trips/favorites/security tabs, emergency contact, passport (copy implies features not built).</td>
+</tr>
+<tr>
+<td>Account settings: personal info</td>
+<td><code>app/[locale]/settings/page.tsx</code>, <code>components/settings/SettingsClient.tsx</code>, <code>PersonalSection.tsx</code></td>
+<td>partial</td>
+<td>Legal name, phone, address saved via <code>updateProfileAction</code>. Preferred name and mailing address are toasts only (<code>PersonalSection.tsx:199</code>, <code>:277</code>). Email change is a toast (<code>:215-218</code>).</td>
+</tr>
+<tr>
+<td>Account settings: change password</td>
+<td><code>SecuritySection.tsx</code> -&gt; <code>changePasswordAction</code></td>
+<td>built</td>
+<td>Sessions list / other devices is &quot;coming soon&quot; (<code>SecuritySection.tsx:140</code>).</td>
+</tr>
+<tr>
+<td>Account settings: deactivate account</td>
+<td><code>SettingsClient.tsx:212</code></td>
+<td>mocked-only</td>
+<td>Toast <code>deactivateSoon</code>.</td>
+</tr>
+<tr>
+<td>Account settings: notifications matrix, payments (saved cards, payout account), languages and currency, privacy (search indexing, data export), taxes (NIF), booking permissions, travel for work, pro hosting</td>
+<td><code>NotificationsSection.tsx</code>, <code>PaymentsSection.tsx</code>, <code>LanguagesSection.tsx</code>, <code>HostingSections.tsx</code></td>
+<td>mocked-only</td>
+<td>All local <code>useState</code> + toasts. Saved cards are hardcoded (CIB <code>4242</code>, Edahabia <code>8890</code>, BNA RIP) in <code>PaymentsSection.tsx:21-102</code>. Currency preference not persisted (<code>LanguagesSection.tsx:24</code>).</td>
+</tr>
+<tr>
+<td>Accessibility (reduced motion)</td>
+<td><code>AccessibilitySection.tsx</code>, <code>components/motion/MotionProvider.tsx</code></td>
+<td>built (device)</td>
+<td><code>localStorage</code> only.</td>
+</tr>
+<tr>
+<td>Leave a review</td>
+<td>none</td>
+<td>missing</td>
+<td>No UI, no action, no data function writes reviews.</td>
+</tr>
+<tr>
+<td>Report a user, block a user</td>
+<td>none</td>
+<td>missing</td>
+<td></td>
+</tr>
+<tr>
+<td>Become a host entry</td>
+<td><code>components/navbar/UserMenu.tsx</code>, <code>/become-a-host</code></td>
+<td>built</td>
+<td>See 1.3 / 1.4.</td>
+</tr>
+</tbody></table>
+<h3 id="13-host-individual">1.3 Host, individual</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Route(s) / component(s)</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Become a host: choose host type</td>
+<td><code>app/[locale]/become-a-host/page.tsx</code>, <code>components/host/BecomeHostFlow.tsx</code>, <code>onboarding/HostTypeStep.tsx</code></td>
+<td>built</td>
+<td>4 host types (<code>HostTypeStep.tsx</code>).</td>
+</tr>
+<tr>
+<td>Individual listing wizard (vertical, category, placement, location, capacity, amenities, photos, title/description, approval mode, price, cancellation policy, review, publish)</td>
+<td><code>/become-a-host/[step]</code>, <code>BecomeHostFlow.tsx</code>, <code>DynamicStepFields.tsx</code>, <code>lib/onboarding-config.ts</code></td>
+<td>partial</td>
+<td>Draft saved in <code>localStorage</code> keyed by user (<code>lib/client/user-storage.ts:7-41</code>). Photos are URLs typed by the host; fewer than 4 photos are silently replaced by 4 Unsplash stock photos (<code>BecomeHostFlow.tsx:628-637</code>). <code>city</code> sent as free text <code>&quot;&lt;city&gt;, &lt;wilaya&gt;&quot;</code> and no <code>commune</code> (<code>:659-660</code>). <code>placement</code>, <code>bedsCount</code> and admin-configured <code>customFieldsData</code> are collected but never sent (<code>:113-116</code>, <code>:175</code>, payload <code>:651-672</code>). Cleaning fee, min/max nights, advance notice, check-in/out times are not asked. Listing goes straight to <code>status: &quot;active&quot;</code> (no moderation, <code>lib/data/listings.ts:309</code>).</td>
+</tr>
+<tr>
+<td>Host workspace guard</td>
+<td><code>app/[locale]/host/layout.tsx</code>, <code>lib/server/host-context.ts:47-60</code>, <code>middleware.ts:73-85</code></td>
+<td>built</td>
+<td>Individual hosts with 0 listings are sent back to <code>/become-a-host/1</code> (<code>host/layout.tsx:25-30</code>). Individual hosts never see <code>/host</code> &quot;Today&quot;: redirected to <code>/host/listings</code> (<code>host/page.tsx:20-22</code>).</td>
+</tr>
+<tr>
+<td>My listings (grid / table, stats, search, filter, pause/activate, edit title/price/instant book, manage room types, delete)</td>
+<td><code>app/[locale]/host/listings/page.tsx</code>, <code>components/host/HostListingsClient.tsx</code></td>
+<td>partial</td>
+<td>Edit modal only sends <code>title</code>, <code>price</code>, <code>instantBook</code> (<code>HostListingsClient.tsx:188-192</code>) although <code>updateListing</code> accepts ~45 fields. No editing of description, photos, location, fees, stay rules, cancellation policy. Delete is a hard delete.</td>
+</tr>
+<tr>
+<td>Bookings (tabs all/pending/upcoming/current/past/cancelled, search, filter by listing, request timer, accept / decline with reason / cancel, net payout breakdown, mini calendar block/unblock)</td>
+<td><code>app/[locale]/host/bookings/page.tsx</code>, <code>components/host/HostBookingsClient.tsx</code></td>
+<td>built</td>
+<td>Payout via <code>computeHostPayout</code> (<code>HostBookingsClient.tsx:589</code>, <code>:842</code>). &quot;Message guest&quot; links to <code>/host/messages</code> generic inbox (<code>:734</code>).</td>
+</tr>
+<tr>
+<td>Calendar (month / week / day / year views, per listing, block / reopen dates and ranges, per-date custom price)</td>
+<td><code>app/[locale]/host/calendar/page.tsx</code>, <code>components/host/HostCalendarClient.tsx</code></td>
+<td>built</td>
+<td>Price overrides refused for room-type listings (<code>app/actions/calendar.ts:74-76</code>). Blocking is per listing, not per room type.</td>
+</tr>
+<tr>
+<td>Messages (host side)</td>
+<td><code>app/[locale]/host/messages/page.tsx</code>, <code>MessagesClient.tsx</code></td>
+<td>partial</td>
+<td>Same component as guest inbox.</td>
+</tr>
+<tr>
+<td>Prepaid wallet widget (balance, commission rate, ledger, negative balance alert, offline recharge instructions)</td>
+<td><code>components/host/HostWalletWidget.tsx</code> (in <code>HostListingsClient.tsx:378</code>, <code>HostTodayClient.tsx:515</code>, <code>AgencySettingsClient.tsx:185</code>) -&gt; <code>getMyWalletAction</code></td>
+<td>built (read-only)</td>
+<td>Recharge is offline, credited by admin (<code>messages/en/hostWallet.json</code>).</td>
+</tr>
+<tr>
+<td>Host settings: payout methods (CCP / BNA / BEA), payout history</td>
+<td><code>app/[locale]/host/settings/page.tsx</code>, <code>components/host/HostSettingsClient.tsx</code></td>
+<td>mocked-only</td>
+<td>Hardcoded payout methods (<code>HostSettingsClient.tsx:79-95</code>) and <code>PAYOUT_HISTORY</code> (<code>:63-66</code>); add / set default are toasts (<code>:141</code>, <code>:154</code>).</td>
+</tr>
+<tr>
+<td>Host settings: identity / upgrade to agency</td>
+<td><code>HostSettingsClient.tsx:354</code></td>
+<td>mocked-only</td>
+<td>Toast <code>agencyUpgradeRequested</code>.</td>
+</tr>
+<tr>
+<td>Host settings: booking defaults (approval mode, advance notice, prep time, check-in/out, cancellation policy)</td>
+<td><code>HostSettingsClient.tsx:98-163</code></td>
+<td>partial</td>
+<td>Only approval mode is saved (<code>setBookingApprovalModeAction</code>), onto <code>User.bookingApprovalMode</code>, which the booking engine never reads. Other defaults are local state.</td>
+</tr>
+<tr>
+<td>Host settings: communication (SMS, email, auto welcome message)</td>
+<td><code>HostSettingsClient.tsx:109-111</code>, <code>:476</code></td>
+<td>mocked-only</td>
+<td>Toast.</td>
+</tr>
+<tr>
+<td>Host reservations page (account area variant)</td>
+<td><code>app/[locale]/reservations/page.tsx</code>, <code>components/reservations/ReservationsClient.tsx</code></td>
+<td>built</td>
+<td>Duplicate of host bookings with KPIs (revenue, occupancy). Guests are redirected to <code>/trips</code>.</td>
+</tr>
+<tr>
+<td>Legacy &quot;properties&quot; page</td>
+<td><code>app/[locale]/properties/page.tsx</code></td>
+<td>redirect</td>
+<td>Redirects to <code>/host/listings</code>.</td>
+</tr>
+</tbody></table>
+<h3 id="14-host-agency--hotel--hostel-team-member">1.4 Host, agency / hotel / hostel team member</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Route(s) / component(s)</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Agency registration (5 steps: basics, details, team invites, approval mode, review)</td>
+<td><code>/become-a-host/agency</code>, <code>BecomeHostFlow.tsx:676-708</code></td>
+<td>partial</td>
+<td>Agency approval mode step exists in <code>onboarding-config.ts</code> (<code>agencyBookingMode</code>) but the payload omits <code>bookingApprovalMode</code> (<code>BecomeHostFlow.tsx:692-703</code>), so agencies always start <code>instant</code>.</td>
+</tr>
+<tr>
+<td>Hotel registration (7 steps incl. star rating, total rooms, check-in/out, amenities, team, approval mode, rooms)</td>
+<td><code>/become-a-host/hotel</code>, <code>BecomeHostFlow.tsx:710-819</code></td>
+<td>partial</td>
+<td>Creates org + one property listing. Room types are hardcoded (&quot;Standard Deluxe Room&quot; 24000 x20, &quot;Executive Sea View Suite&quot; 42000 x8) regardless of input (<code>:777-813</code>); property price hardcoded 24000. <code>hotelTaxId</code> collected, never sent.</td>
+</tr>
+<tr>
+<td>Hostel registration (7 steps incl. beds, private rooms, facilities, curfew, age policy)</td>
+<td><code>/become-a-host/hostel</code>, <code>BecomeHostFlow.tsx:821-900</code></td>
+<td>partial</td>
+<td>Same pattern: hardcoded dorm/private room types and price 3200.</td>
+</tr>
+<tr>
+<td>Org pending verification banner</td>
+<td><code>components/host/HostLayoutShell.tsx:40-64</code></td>
+<td>built</td>
+<td>Workspace usable while <code>pending</code>; <code>rejected</code> shows a red banner, nothing is blocked.</td>
+</tr>
+<tr>
+<td>Today dashboard (KPIs: gross earnings, occupancy, active bookings, rating; pending requests; check-ins today; in-house; recent reviews; upcoming)</td>
+<td><code>app/[locale]/host/page.tsx</code>, <code>components/host/HostTodayClient.tsx</code>, <code>lib/host-kpis.ts</code></td>
+<td>partial</td>
+<td>Reviews come from <code>getReviewsByUserId(ctx.user.id)</code> which matches <code>listing.hostUserId === userId</code> (<code>lib/data/reviews.ts:112</code>): seeded org listings have no <code>hostUserId</code>, so org reviews are always empty.</td>
+</tr>
+<tr>
+<td>Listings / bookings / calendar / messages / wallet</td>
+<td>same routes as 1.3</td>
+<td>built / partial</td>
+<td>Scoped by <code>organizationId</code> (<code>lib/server/host-context.ts:63-67</code>). Org hosts add listings through the individual wizard; it publishes under the org (<code>app/actions/host.ts:78-89</code>).</td>
+</tr>
+<tr>
+<td>Agency trips list (KPIs, search, filter, publish/pause, delete)</td>
+<td><code>app/[locale]/host/agency/trips/page.tsx</code>, <code>components/host/agency/AgencyTripsClient.tsx</code></td>
+<td>partial</td>
+<td>No edit of an existing trip (no <code>updateTripAction</code> for content).</td>
+</tr>
+<tr>
+<td>Create trip (basics, itinerary, logistics, inclusions, review; save draft or publish)</td>
+<td><code>app/[locale]/host/agency/trips/new/page.tsx</code>, <code>components/host/agency/TripCreationClient.tsx</code></td>
+<td>built</td>
+<td>No <code>commune</code>, no coordinates input (derived from city text, <code>lib/data/trips.ts:85</code>).</td>
+</tr>
+<tr>
+<td>Team (roster, invite by email with role, change role, remove, transfer ownership, resend invite, permission matrix)</td>
+<td><code>app/[locale]/host/agency/team/page.tsx</code>, <code>components/host/AgencyTeamClient.tsx</code></td>
+<td>partial</td>
+<td>Invites create <code>status: &quot;invited&quot;</code> rows with <code>userId: null</code>; there is no accept-invite flow and no email sent, so invited members can never become active. Resend is a toast (<code>AgencyTeamClient.tsx:179-182</code>).</td>
+</tr>
+<tr>
+<td>Organization settings (profile, legal fields, approval mode, delete org)</td>
+<td><code>app/[locale]/host/agency/settings/page.tsx</code>, <code>components/host/AgencySettingsClient.tsx</code></td>
+<td>built</td>
+<td>Legal field change resets verification to <code>pending</code> (<code>lib/data/organizations.ts:269</code>). Settings form does not expose hotel/hostel operational fields (star rating, amenities, facilities) even though the patch sanitizer accepts check-in/out, curfew, age policy (<code>app/actions/organizations.ts:52-55</code>). Delete org is a hard delete plus listings/trips set to draft.</td>
+</tr>
+<tr>
+<td>Switch between organizations</td>
+<td>none</td>
+<td>missing</td>
+<td>A user can own several orgs (seed: Karim owns 3, Amina owns 2) but there is no switcher; active org = session org or first membership (<code>lib/server/active-org.ts:22-23</code>).</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="2-data-inventory">2. Data inventory</h2>
+<p>Row counts are seed counts. &quot;Store&quot; = globalThis key.</p>
+<h3 id="21-enums-all-values">2.1 Enums (all values)</h3>
+<table>
+<thead>
+<tr>
+<th>Enum</th>
+<th>Values</th>
+<th>Defined</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UserRole</td>
+<td><code>guest</code>, <code>host</code>, <code>admin</code></td>
+<td><code>types.ts:1</code></td>
+</tr>
+<tr>
+<td>HostType</td>
+<td><code>individual</code>, <code>agency</code>, <code>hotel</code>, <code>hostel</code></td>
+<td><code>types.ts:2</code></td>
+</tr>
+<tr>
+<td>CancellationPolicy</td>
+<td><code>flexible</code>, <code>moderate</code>, <code>strict</code></td>
+<td><code>types.ts:45</code></td>
+</tr>
+<tr>
+<td>ListingVertical (Listing.category)</td>
+<td><code>home</code>, <code>hotel</code>, <code>experience</code>, <code>vehicle</code>, <code>trip</code></td>
+<td><code>types.ts:47-52</code></td>
+</tr>
+<tr>
+<td>ListingOwnerType</td>
+<td><code>individual</code>, <code>organization</code></td>
+<td><code>types.ts:53</code></td>
+</tr>
+<tr>
+<td>ListingStatus</td>
+<td><code>active</code>, <code>pending</code>, <code>suspended</code>, <code>draft</code> (owner may set only <code>active</code>, <code>draft</code>: <code>lib/data/_sanitize.ts:124</code>)</td>
+<td><code>types.ts:54</code></td>
+</tr>
+<tr>
+<td>Amenity.category</td>
+<td><code>essentials</code>, <code>features</code>, <code>location</code>, <code>safety</code></td>
+<td><code>types.ts:60</code></td>
+</tr>
+<tr>
+<td>BookingUnit</td>
+<td><code>room</code>, <code>bed</code></td>
+<td><code>types.ts:90</code></td>
+</tr>
+<tr>
+<td>businessCategory (Listing, Organization)</td>
+<td><code>agency</code>, <code>hotel</code>, <code>hostel</code></td>
+<td><code>types.ts:147</code>, <code>:300</code></td>
+</tr>
+<tr>
+<td>Listing.transmission</td>
+<td><code>automatic</code>, <code>manual</code></td>
+<td><code>types.ts:182</code></td>
+</tr>
+<tr>
+<td>Listing.fuelType</td>
+<td><code>petrol</code>, <code>diesel</code>, <code>electric</code>, <code>hybrid</code></td>
+<td><code>types.ts:184</code></td>
+</tr>
+<tr>
+<td>approval mode (User, Listing, Organization, Reservation)</td>
+<td><code>instant</code>, <code>request</code></td>
+<td><code>types.ts:12</code>, <code>:150</code>, <code>:325</code>, <code>:240</code></td>
+</tr>
+<tr>
+<td>ReservationStatus</td>
+<td><code>confirmed</code>, <code>pending</code>, <code>cancelled</code>, <code>completed</code>, <code>declined</code>, <code>expired</code></td>
+<td><code>types.ts:198-204</code></td>
+</tr>
+<tr>
+<td>PaymentStatus</td>
+<td><code>paid</code>, <code>pending</code>, <code>refunded</code>, <code>partially_refunded</code>, <code>voided</code></td>
+<td><code>types.ts:206-211</code></td>
+</tr>
+<tr>
+<td>Reservation.cancelledBy</td>
+<td><code>guest</code>, <code>host</code>, <code>system</code> (<code>system</code> never set in code)</td>
+<td><code>types.ts:236</code></td>
+</tr>
+<tr>
+<td>Trip.status</td>
+<td><code>active</code>, <code>draft</code></td>
+<td><code>types.ts:283</code></td>
+</tr>
+<tr>
+<td>OrganizationVerificationStatus</td>
+<td><code>pending</code>, <code>verified</code>, <code>rejected</code></td>
+<td><code>types.ts:292-295</code></td>
+</tr>
+<tr>
+<td>Organization.teamSizeEstimate</td>
+<td><code>1</code>, <code>2-10</code>, <code>11-50</code>, <code>50+</code></td>
+<td><code>types.ts:312</code></td>
+</tr>
+<tr>
+<td>MembershipRole</td>
+<td><code>owner</code>, <code>admin</code>, <code>manager</code></td>
+<td><code>types.ts:361</code></td>
+</tr>
+<tr>
+<td>MembershipStatus</td>
+<td><code>active</code>, <code>invited</code>, <code>removed</code> (<code>removed</code> never set: removal is a hard delete)</td>
+<td><code>types.ts:362</code></td>
+</tr>
+<tr>
+<td>NotificationType</td>
+<td><code>booking</code>, <code>message</code>, <code>price</code>, <code>system</code>, <code>review</code></td>
+<td><code>types.ts:488-493</code></td>
+</tr>
+<tr>
+<td>TransactionType</td>
+<td><code>recharge</code>, <code>commission_deduction</code>, <code>payout</code>, <code>adjustment</code> (<code>payout</code> never written)</td>
+<td><code>types.ts:574-578</code></td>
+</tr>
+<tr>
+<td>Wallet.ownerType</td>
+<td><code>user</code>, <code>organization</code></td>
+<td><code>types.ts:594</code></td>
+</tr>
+<tr>
+<td>Wallet / Transaction currency</td>
+<td><code>DZD</code> only</td>
+<td><code>types.ts:585</code>, <code>:598</code></td>
+</tr>
+<tr>
+<td>OnboardingFieldType</td>
+<td><code>text</code>, <code>number</code>, <code>textarea</code>, <code>select</code>, <code>multi-select</code>, <code>image-upload</code>, <code>toggle</code></td>
+<td><code>types.ts:507-514</code></td>
+</tr>
+<tr>
+<td>PricingModel (not in types.ts)</td>
+<td><code>per_night</code>, <code>per_room_night</code>, <code>per_bed_night</code>, <code>per_person</code>, <code>per_day</code>, <code>per_traveller</code></td>
+<td><code>lib/booking/pricing.ts:27-33</code></td>
+</tr>
+<tr>
+<td>Coupon.discountType (admin type, unused here)</td>
+<td><code>percentage</code>, <code>fixed</code></td>
+<td><code>types.ts:477</code></td>
+</tr>
+<tr>
+<td>AuditLogEntry.targetType (admin type, unused here)</td>
+<td><code>listing</code>, <code>booking</code>, <code>user</code>, <code>review</code>, <code>setting</code>, <code>organization</code></td>
+<td><code>types.ts:462-468</code></td>
+</tr>
+<tr>
+<td>KpiPeriod</td>
+<td><code>month</code>, <code>30days</code>, <code>year</code></td>
+<td><code>lib/host-kpis.ts:10</code></td>
+</tr>
+<tr>
+<td>Action error codes</td>
+<td>66 codes (generic, auth, booking, calendar, messages, orgs, trips)</td>
+<td><code>lib/action-result.ts:8-83</code></td>
+</tr>
+</tbody></table>
+<h3 id="22-entities">2.2 Entities</h3>
+<h4 id="user-typests4-24-store-__darna_users__-seed-libmock-datausersts-6-rows">User (<code>types.ts:4-24</code>), store <code>__darna_users__</code>, seed <code>lib/mock-data/users.ts</code> (6 rows)</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>string</td>
+<td><code>usr_&lt;uuid&gt;</code> for new users (<code>lib/data/auth.ts:104</code>)</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>max 80</td>
+</tr>
+<tr>
+<td>email</td>
+<td>string</td>
+<td>normalized lower case; unique (checked in <code>registerUser</code>)</td>
+</tr>
+<tr>
+<td>image</td>
+<td>string | null</td>
+<td>only local paths <code>/...</code> accepted on update (<code>auth.ts:177</code>); no upload</td>
+</tr>
+<tr>
+<td>role</td>
+<td>UserRole</td>
+<td><code>guest</code> -&gt; <code>host</code> when onboarding (<code>auth.ts:152</code>)</td>
+</tr>
+<tr>
+<td>hostType</td>
+<td>HostType | null</td>
+<td>one host type per user (cannot be individual and org at once)</td>
+</tr>
+<tr>
+<td>organizationId</td>
+<td>string | null</td>
+<td>&quot;preferred&quot; org; real link is Membership</td>
+</tr>
+<tr>
+<td>bookingApprovalMode</td>
+<td>instant | request</td>
+<td>written by host settings; unused by booking engine</td>
+</tr>
+<tr>
+<td>createdAt</td>
+<td>ISO string</td>
+<td></td>
+</tr>
+<tr>
+<td>emailVerified</td>
+<td>string | null</td>
+<td>never written</td>
+</tr>
+<tr>
+<td>favoriteIds</td>
+<td>string[]</td>
+<td>listing ids (wishlist)</td>
+</tr>
+<tr>
+<td>bio, phone, address</td>
+<td>string</td>
+<td>max 1000 / 40 / 200</td>
+</tr>
+<tr>
+<td>languages</td>
+<td>string[]</td>
+<td>free text, max 10</td>
+</tr>
+<tr>
+<td>isIdentityVerified</td>
+<td>boolean</td>
+<td>no verification flow</td>
+</tr>
+<tr>
+<td>yearsHosting, responseRate, responseTime</td>
+<td>number, number, string</td>
+<td>stored static, should be derived</td>
+</tr>
+</tbody></table>
+<p>Seed rows: <code>usr_amina</code> (host individual, also owns 2 hostel orgs), <code>usr_karim</code> (host agency, owns agency + 2 hotels, also has 3 individual listings), <code>usr_yacine</code> (guest), <code>usr_admin</code> (admin), <code>usr_sofiane</code> (guest), <code>usr_leila</code> (guest). Credentials table (<code>auth.ts:39-44</code>, store <code>__darna_credentials__</code>): <code>userId -&gt; &quot;scrypt$salt$hash&quot;</code>, all seeded users share <code>DEMO_PASSWORD = &quot;darna-demo-2026&quot;</code> (<code>auth.ts:14</code>).</p>
+<p>PublicUser (<code>types.ts:30-43</code>) = projection without email, phone, address, favoriteIds, organizationId, bookingApprovalMode.</p>
+<h4 id="listing-typests110-196-store-__darna_listings__-seed-libmock-datalistingsts-18-rows">Listing (<code>types.ts:110-196</code>), store <code>__darna_listings__</code>, seed <code>lib/mock-data/listings.ts</code> (18 rows)</h4>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Fields (type)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Identity / ownership</td>
+<td>id (string), ownerType (ListingOwnerType), hostUserId (string|null), organizationId (string|null), businessCategory (agency|hotel|hostel), status (ListingStatus), createdAt, updatedAt</td>
+</tr>
+<tr>
+<td>Content</td>
+<td>title, description, subtitle (string), category (ListingVertical), type (free text subtype, e.g. &quot;Villa&quot;, &quot;SUV / 4x4&quot;, &quot;Boutique Hotel&quot;), imageSrc (string[] URLs)</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>locationValue (string, &quot;City or country code&quot;), city (free text), commune (free text matched to <code>lib/algeria.ts</code>), country (always &quot;Algeria&quot; on create), latlng ([lat,lng])</td>
+</tr>
+<tr>
+<td>Merchandising</td>
+<td>featured, isGuestFavorite (boolean, manual flags), rating, reviewCount, bookingsCount (numbers stored, not derived)</td>
+</tr>
+<tr>
+<td>Availability window</td>
+<td>availableFrom, availableTo (date keys; <code>availableTo</code> = last checkout date)</td>
+</tr>
+<tr>
+<td>Search-only computed</td>
+<td>matchedAvailability (MatchedAvailability), quotedTotal (number)</td>
+</tr>
+<tr>
+<td>Booking</td>
+<td>instantBook (boolean), bookingApprovalMode (instant|request), cancellationPolicy</td>
+</tr>
+<tr>
+<td>Pricing</td>
+<td>price (DZD int; per night / per day / per person by vertical), originalPrice, cleaningFee, serviceFeeRate (ignored), taxRate</td>
+</tr>
+<tr>
+<td>Stay rules</td>
+<td>minNights, maxNights, advanceNoticeDays, checkInTime, checkOutTime (&quot;HH:mm&quot;)</td>
+</tr>
+<tr>
+<td>Home</td>
+<td>guestCount, roomCount, bathroomCount, bedroomCount, amenities (string[] snake_case keys), houseRules (string[] free text)</td>
+</tr>
+<tr>
+<td>Hotel / hostel</td>
+<td>hotelStarRating, roomTypes (RoomType[] embedded)</td>
+</tr>
+<tr>
+<td>Vehicle</td>
+<td>make, model, year, transmission, seats, fuelType, pickupLocation, mileagePolicy, insuranceNotes</td>
+</tr>
+<tr>
+<td>Experience</td>
+<td>activityName, durationHours, groupSize, perPersonPrice (unused by pricing), includedItems, experienceLanguages</td>
+</tr>
+</tbody></table>
+<p>Seed composition: 7 homes (<code>lst_tipaza_villa</code>, <code>lst_algiers_casbah</code>, <code>lst_casbah_loft</code>, <code>lst_oran_seafront</code>, <code>lst_constantine_cliff</code> (request), <code>lst_tlemcen_andalusian</code>, <code>lst_ghardaia_ksar</code>), 4 vehicles (<code>lst_toyota_landcruiser</code>, <code>lst_nissan_patrol</code>, <code>lst_dacia_duster</code>, <code>lst_renault_clio</code>), 3 experiences (<code>lst_djanet_tassili</code>, <code>lst_taghit_dunes</code>, <code>lst_casbah_culinary</code>), 2 hotels (<code>lst_hotel_el_djazair</code>, <code>lst_hotel_royal_oran</code>), 2 hostels (<code>lst_casbah_hostel</code>, <code>lst_hostel_taghit_desert</code>). Hotels/hostels use <code>category: &quot;home&quot;</code> + <code>businessCategory</code>. All <code>status: &quot;active&quot;</code>. 10 owned by orgs (<code>org_atlas_escapes</code> 6: algiers_casbah, ghardaia_ksar, toyota_landcruiser, nissan_patrol, djanet_tassili, taghit_dunes; one each for the 2 hotels and 2 hostels), 8 by individuals (<code>usr_amina</code> 5: tipaza_villa, oran_seafront, tlemcen_andalusian, renault_clio, casbah_culinary; <code>usr_karim</code> 3: casbah_loft, constantine_cliff, dacia_duster).</p>
+<h4 id="roomtype-typests92-108-embedded-in-listingroomtypes-10-rows-across-4-listings">RoomType (<code>types.ts:92-108</code>), embedded in <code>Listing.roomTypes</code> (10 rows across 4 listings)</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>string</td>
+<td>kept if <code>/^[\w-]{1,80}$/</code> else <code>rt_&lt;uuid&gt;</code> (<code>_sanitize.ts:100</code>)</td>
+</tr>
+<tr>
+<td>propertyListingId</td>
+<td>string</td>
+<td>parent listing</td>
+</tr>
+<tr>
+<td>name, description, bedsDescription</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td>price</td>
+<td>number</td>
+<td>nightly per room or per bed</td>
+</tr>
+<tr>
+<td>basePrice</td>
+<td>number</td>
+<td>mirrors price; pricing reads <code>basePrice ?? price</code> (<code>pricing.ts:72-76</code>)</td>
+</tr>
+<tr>
+<td>bookingUnit</td>
+<td>room | bed</td>
+<td></td>
+</tr>
+<tr>
+<td>totalInventory</td>
+<td>number</td>
+<td>1 to 10000</td>
+</tr>
+<tr>
+<td>inventoryCount</td>
+<td>number</td>
+<td>used first by <code>roomTypeInventory</code> (<code>pricing.ts:78-82</code>)</td>
+</tr>
+<tr>
+<td>availableInventory</td>
+<td>number</td>
+<td>never written</td>
+</tr>
+<tr>
+<td>capacity</td>
+<td>number</td>
+<td>max guests per unit</td>
+</tr>
+<tr>
+<td>amenities</td>
+<td>string[]</td>
+<td>free English text (&quot;King bed&quot;, &quot;Privacy curtain&quot;), different vocabulary than listing amenities</td>
+</tr>
+<tr>
+<td>imageSrc</td>
+<td>string[]</td>
+<td></td>
+</tr>
+<tr>
+<td>isAvailable</td>
+<td>boolean</td>
+<td>never read by booking engine</td>
+</tr>
+</tbody></table>
+<p>Seed: El Djazair hotel (deluxe x12 @18000, executive x4 @32000, family x3 @40000), Casbah hostel (6-bed mixed bed x18 @3500, 4-bed female bed x8 @4200, private double x4 @9500), Royal Oran (superior x18 @24000, presidential x2 @48000), Taghit hostel (8-bed dorm bed x24 @3200, adobe private x6 @7800).</p>
+<h4 id="reservation-typests213-250-store-__darna_reservations__-seed-libmock-datareservationsts-9-rows">Reservation (<code>types.ts:213-250</code>), store <code>__darna_reservations__</code>, seed <code>lib/mock-data/reservations.ts</code> (9 rows)</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>string</td>
+<td><code>res_&lt;uuid&gt;</code></td>
+</tr>
+<tr>
+<td>userId</td>
+<td>string</td>
+<td>guest</td>
+</tr>
+<tr>
+<td>listingId</td>
+<td>string</td>
+<td>for trips equals the trip id (<code>reservations.ts:349</code>)</td>
+</tr>
+<tr>
+<td>tripId</td>
+<td>string?</td>
+<td>set for trip seat bookings</td>
+</tr>
+<tr>
+<td>startDate, endDate</td>
+<td>date key <code>yyyy-MM-dd</code></td>
+<td>half-open; experiences start = end; trips end = departure + duration - 1</td>
+</tr>
+<tr>
+<td>totalPrice, subtotal, nightlyPrice (average unit price), cleaningFee, serviceFee, taxes</td>
+<td>number DZD</td>
+<td>snapshot of the server quote</td>
+</tr>
+<tr>
+<td>guestsCount</td>
+<td>number</td>
+<td></td>
+</tr>
+<tr>
+<td>unitCount</td>
+<td>number?</td>
+<td>rooms or beds</td>
+</tr>
+<tr>
+<td>selectedRoomTypeId</td>
+<td>string?</td>
+<td></td>
+</tr>
+<tr>
+<td>status</td>
+<td>ReservationStatus</td>
+<td></td>
+</tr>
+<tr>
+<td>paymentStatus</td>
+<td>PaymentStatus</td>
+<td></td>
+</tr>
+<tr>
+<td>paymentMethod</td>
+<td>string</td>
+<td>free text, default &quot;CIB / Edahabia Card&quot;</td>
+</tr>
+<tr>
+<td>approvalMode</td>
+<td>instant | request</td>
+<td></td>
+</tr>
+<tr>
+<td>expiresAt</td>
+<td>ISO</td>
+<td>request + 24h</td>
+</tr>
+<tr>
+<td>guestMessage, declineReason</td>
+<td>string</td>
+<td>max 2000 / 500</td>
+</tr>
+<tr>
+<td>respondedAt, cancelledAt</td>
+<td>ISO</td>
+<td></td>
+</tr>
+<tr>
+<td>cancelledBy</td>
+<td>guest | host | system</td>
+<td></td>
+</tr>
+<tr>
+<td>cancellationPolicy</td>
+<td>snapshot</td>
+<td></td>
+</tr>
+<tr>
+<td>refundAmount</td>
+<td>number</td>
+<td></td>
+</tr>
+<tr>
+<td>commissionAmount, commissionRate</td>
+<td>number</td>
+<td>written after wallet deduction</td>
+</tr>
+<tr>
+<td>listing, trip, user</td>
+<td>populated relations (not stored)</td>
+<td><code>user</code> = guest contact projection incl. email + phone (<code>reservations.ts:17-41</code>)</td>
+</tr>
+</tbody></table>
+<p>Seed: 4 for <code>usr_yacine</code> + others; statuses: confirmed 3, completed 2, cancelled 1, pending 2, declined 1. No trip reservations seeded (wallet ledger references non-existent trip bookings).</p>
+<h4 id="trip-typests261-290-itinerary-252-259-store-__darna_trips__-seed-libmock-datatripsts-4-rows-all-org_atlas_escapes-all-active">Trip (<code>types.ts:261-290</code>, itinerary <code>:252-259</code>), store <code>__darna_trips__</code>, seed <code>lib/mock-data/trips.ts</code> (4 rows, all <code>org_atlas_escapes</code>, all active)</h4>
+<p>Fields: id, title, slug (unique, unicode-aware <code>lib/ids.ts:20-40</code>), description, coverPhoto, gallery[], itinerary[] {day, title, description, activities[], meals, accommodation}, durationDays, maxGroupSize, minGroupSize (not enforced), pricePerPerson, inclusions[], exclusions[], meetingPoint, city (free text, e.g. &quot;Tipaza &amp; Cherchell&quot;), commune (never set by UI), locationValue, latlng (derived from city text), cancellationPolicy, organizationId (agency), status, rating, reviewsCount (stored static), departureDates (date keys[]), createdAt, organization (PublicOrganization, populated).</p>
+<h4 id="organization-typests297-326-store-__darna_orgs__-seed-libmock-dataorganizationsts-5-rows-all-verified">Organization (<code>types.ts:297-326</code>), store <code>__darna_orgs__</code>, seed <code>lib/mock-data/organizations.ts</code> (5 rows, all <code>verified</code>)</h4>
+<p>Fields: id, name, businessCategory, logo, description, businessRegistrationNumber (RC), businessType (free text), businessEmail, businessPhone, address, country, verificationStatus, createdAt, ownerUserId (denormalized from owner membership), teamSizeEstimate, rating, reviewCount (static), hotelStarRating, totalRoomCount, checkInTime, checkOutTime, hotelAmenities[], hostelFacilities[], curfewPolicy, agePolicy, bookingApprovalMode.</p>
+<p>Seed: <code>org_atlas_escapes</code> (agency, owner karim), <code>org_el_djazair_hotel</code> (hotel, karim), <code>org_royal_oran</code> (hotel, karim), <code>org_casbah_hostel</code> (hostel, amina), <code>org_taghit_hostel</code> (hostel, amina). PublicOrganization (<code>types.ts:329-350</code>) drops RC, email, phone, address, ownerUserId; adds <code>isVerified</code>.</p>
+<h4 id="membership-typests364-376-store-__darna_memberships__-seed-6-rows">Membership (<code>types.ts:364-376</code>), store <code>__darna_memberships__</code>, seed (6 rows)</h4>
+<p>Fields: id, organizationId, userId (null while invited), name, email, role, status, invitedBy (userId or <code>&quot;system&quot;</code>), createdAt, joinedAt, avatar. Seed: 5 active owners + <code>mem_sarah_manager</code> (invited, Atlas). PublicMember (<code>types.ts:353-359</code>) drops email.</p>
+<h4 id="conversation-typests378-393--message-typests395-403-stores-__darna_conversations__-3-rows-__darna_messages__-6-rows-seed-libmock-dataconversationsts">Conversation (<code>types.ts:378-393</code>) + Message (<code>types.ts:395-403</code>), stores <code>__darna_conversations__</code> (3 rows), <code>__darna_messages__</code> (6 rows), seed <code>lib/mock-data/conversations.ts</code></h4>
+<p>Conversation: id, participants (string[2]), listingId (listing or trip id, used as &quot;subject&quot;), lastMessage, lastMessageAt (denormalized), unreadCount (Record&lt;userId, number&gt;), createdAt, populated <code>listing</code>, <code>otherUser</code>. Message: id, conversationId, senderId, receiverId, text (max 4000), createdAt, read.</p>
+<h4 id="notification-typests495-505-store-__darna_notifications__-seed-libmock-datanotificationsts-4-rows-all-usr_yacine">Notification (<code>types.ts:495-505</code>), store <code>__darna_notifications__</code>, seed <code>lib/mock-data/notifications.ts</code> (4 rows, all <code>usr_yacine</code>)</h4>
+<p>Fields: id, userId, type, title, message (English text stored, not i18n keys), link (relative path), read, createdAt, timestamp (unused duplicate).</p>
+<h4 id="review-typests71-88-not-in-_tables-module-const-mockreviews-in-libdatareviewsts6-5-rows-read-only">Review (<code>types.ts:71-88</code>), NOT in <code>_tables</code>: module const <code>mockReviews</code> in <code>lib/data/reviews.ts:6</code> (5 rows, read-only)</h4>
+<p>Fields: id, listingId, userId, rating, cleanliness, accuracy, communication, location, value (numbers), comment, createdAt, embedded <code>user {id,name,image}</code> snapshot. No reservationId, no host reply, no trip reviews.</p>
+<h4 id="dateavailabilityoverride-typests405-412-store-__darna_calendar_overrides__-seed-inline-libdatacalendarts13-17-3-rows-on-lst_tipaza_villa">DateAvailabilityOverride (<code>types.ts:405-412</code>), store <code>__darna_calendar_overrides__</code>, seed inline <code>lib/data/calendar.ts:13-17</code> (3 rows on <code>lst_tipaza_villa</code>)</h4>
+<p>Fields: id, listingId, date (date key), isBlocked, customPrice, note. Unique per (listingId, date) by convention (<code>calendar.ts:45-52</code>); rows with neither block nor price are pruned.</p>
+<h4 id="wallet--transaction-typests580-603-store-__darna_wallets__-seed-inline-libdatawalletts16-232-5-wallets-15-transactions">Wallet + Transaction (<code>types.ts:580-603</code>), store <code>__darna_wallets__</code>, seed inline <code>lib/data/wallet.ts:16-232</code> (5 wallets, 15 transactions)</h4>
+<p>Wallet: id (<code>wal_&lt;ownerId&gt;</code> for new), ownerType, ownerId, ownerName, hostType, currency, balance (stored, recomputed as sum), transactions (embedded array, newest first), createdAt, updatedAt. Transaction: id (<code>tx_rec_</code>, <code>tx_com_</code>, <code>tx_rev_</code> prefixes), walletId, type, amount (signed), currency, relatedBookingId, adminUserId, note (free text), timestamp. Seed wallets: <code>wal_amina</code> (32000), <code>wal_atlas_escapes</code> (145000), <code>wal_el_djazair</code> (310000), <code>wal_casbah_hostel</code> (-4200, intentionally negative), <code>wal_karim</code> (40000). No wallet for <code>org_royal_oran</code> / <code>org_taghit_hostel</code> (created lazily on first commission, <code>wallet.ts:331-367</code>).</p>
+<h4 id="commission-rates-hosttypecommissionrates-typests605-610-store-__darna_commission_rates__-walletts239-244">Commission rates (<code>HostTypeCommissionRates</code>, <code>types.ts:605-610</code>), store <code>__darna_commission_rates__</code> (<code>wallet.ts:239-244</code>)</h4>
+<p><code>{individual: 12, agency: 15, hotel: 18, hostel: 10}</code> percent, defaults in <code>lib/booking/config.ts:15-20</code>.</p>
+<h4 id="session-not-an-entity-in-typests-sessionpayload-libauthsession-tokents19-27">Session (not an entity in types.ts): <code>SessionPayload</code> (<code>lib/auth/session-token.ts:19-27</code>)</h4>
+<p><code>{sid, userId, hostType, organizationId, exp}</code> HMAC-SHA256 signed cookie <code>darna_session</code>, 30 days. Revocation list store <code>__darna_revoked_sessions__</code> (<code>lib/server/session.ts:22-25</code>). Extra non-identity cookie <code>darna_mode</code> = <code>host</code> | <code>traveler</code>.</p>
+<h4 id="onboarding-config-typests507-572-libonboarding-configts">Onboarding config (<code>types.ts:507-572</code>), <code>lib/onboarding-config.ts</code></h4>
+<p>Per host type step/field definitions (trilingual labels, required, options, order, isCore). Stored in browser <code>localStorage</code> (<code>darna_onboarding_config_&lt;hostType&gt;</code>, <code>onboarding-config.ts:1064-1092</code>), editable from the admin app on the same browser only.</p>
+<h4 id="static-reference-data">Static reference data</h4>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>File</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Wilayas (code, name, nameEn, nameAr)</td>
+<td><code>lib/algeria.ts:14-73</code></td>
+<td>58</td>
+</tr>
+<tr>
+<td>Communes (name, nameAr, wilaya)</td>
+<td><code>lib/algeria.ts:81-95</code></td>
+<td>13</td>
+</tr>
+<tr>
+<td>City -&gt; wilaya map</td>
+<td><code>lib/algeria.ts:98-111</code></td>
+<td>12</td>
+</tr>
+<tr>
+<td>Popular destinations (key, name, wilaya, latlng)</td>
+<td><code>components/search/destinations.ts:14-25</code></td>
+<td>10</td>
+</tr>
+<tr>
+<td>City coordinates for trips</td>
+<td><code>lib/trip-coordinates.ts:2-24</code></td>
+<td>23 keys</td>
+</tr>
+<tr>
+<td>Amenity filter groups</td>
+<td><code>components/search/searchFacets.ts:127-148</code></td>
+<td>20</td>
+</tr>
+<tr>
+<td>Amenity labels</td>
+<td><code>messages/en/amenities.json</code></td>
+<td>23</td>
+</tr>
+<tr>
+<td>Amenity icons</td>
+<td><code>components/listing/detail/amenityIcons.ts</code></td>
+<td>~35 keys</td>
+</tr>
+<tr>
+<td>Cancellation policy tiers</td>
+<td><code>lib/booking/cancellation.ts:45-72</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td>Help articles</td>
+<td><code>messages/*/help.json</code></td>
+<td>6</td>
+</tr>
+</tbody></table>
+<p>Admin-only types present but unused in this app: <code>AdminKPI</code> (<code>types.ts:442</code>), <code>AuditLogEntry</code> (<code>:457</code>), <code>Coupon</code> (<code>:474</code>), <code>Amenity</code> and <code>Category</code> interfaces (<code>:56</code>, <code>:63</code>; type names collide only with local identifiers).</p>
+<h3 id="23-relations-as-the-ui-uses-them">2.3 Relations as the UI uses them</h3>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>How</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Listing</td>
+<td>User (host)</td>
+<td><code>hostUserId</code></td>
+<td>listing page host card (<code>listings/[listingId]/page.tsx:76-78</code>)</td>
+</tr>
+<tr>
+<td>Listing</td>
+<td>Organization</td>
+<td><code>organizationId</code></td>
+<td>host profile link (<code>:80-85</code>), ownership</td>
+</tr>
+<tr>
+<td>Listing</td>
+<td>RoomType</td>
+<td>embedded array</td>
+<td>hotel/hostel detail, booking</td>
+</tr>
+<tr>
+<td>Listing</td>
+<td>DateAvailabilityOverride</td>
+<td><code>listingId</code></td>
+<td>calendar, availability, pricing</td>
+</tr>
+<tr>
+<td>Listing</td>
+<td>Review</td>
+<td><code>listingId</code></td>
+<td>listing page</td>
+</tr>
+<tr>
+<td>Reservation</td>
+<td>User (guest)</td>
+<td><code>userId</code></td>
+<td>host booking views (with email + phone)</td>
+</tr>
+<tr>
+<td>Reservation</td>
+<td>Listing or Trip</td>
+<td><code>listingId</code> / <code>tripId</code></td>
+<td>both directions; trip bookings put trip id in <code>listingId</code> too</td>
+</tr>
+<tr>
+<td>Reservation</td>
+<td>RoomType</td>
+<td><code>selectedRoomTypeId</code></td>
+<td>availability per room type</td>
+</tr>
+<tr>
+<td>Reservation</td>
+<td>Wallet Transaction</td>
+<td><code>Transaction.relatedBookingId</code></td>
+<td>commission ledger</td>
+</tr>
+<tr>
+<td>Trip</td>
+<td>Organization (agency)</td>
+<td><code>organizationId</code></td>
+<td>trip page, org profile</td>
+</tr>
+<tr>
+<td>Organization</td>
+<td>User</td>
+<td><code>ownerUserId</code> + Membership rows</td>
+<td>owner resolution (messages go to owner)</td>
+</tr>
+<tr>
+<td>Membership</td>
+<td>User</td>
+<td><code>userId</code> (null while invited), <code>email</code></td>
+<td>team page</td>
+</tr>
+<tr>
+<td>Conversation</td>
+<td>User x2</td>
+<td><code>participants</code></td>
+<td>inbox</td>
+</tr>
+<tr>
+<td>Conversation</td>
+<td>Listing / Trip</td>
+<td><code>listingId</code></td>
+<td>thread header</td>
+</tr>
+<tr>
+<td>User</td>
+<td>Listing</td>
+<td><code>favoriteIds[]</code></td>
+<td>favorites</td>
+</tr>
+<tr>
+<td>Wallet</td>
+<td>User or Organization</td>
+<td><code>ownerType</code> + <code>ownerId</code></td>
+<td>wallet widget</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-libdata-and-server-action-function-inventory">3. lib/data and server action function inventory</h2>
+<p>Conventions: &quot;R&quot; read, &quot;W&quot; write. &quot;Auth&quot; column describes checks performed inside the function itself; most <code>lib/data</code> functions perform none and rely on the caller. Proposed endpoints are REST under <code>/api/v1</code>.</p>
+<h3 id="31-libdata_storets-_tablests-_sanitizets-infrastructure">3.1 <code>lib/data/_store.ts</code>, <code>_tables.ts</code>, <code>_sanitize.ts</code> (infrastructure)</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>globalStore&lt;T&gt;</code> (<code>_store.ts:14</code>)</td>
+<td>key: string, init: () =&gt; T</td>
+<td>T</td>
+<td>W (init)</td>
+<td>all stores, <code>lib/server/session.ts:22</code></td>
+<td>none</td>
+<td>Django ORM / PostgreSQL tables</td>
+</tr>
+<tr>
+<td><code>removeWhere&lt;T&gt;</code> (<code>_store.ts:23</code>)</td>
+<td>items: T[], predicate</td>
+<td>number</td>
+<td>W</td>
+<td>calendar, listings, organizations, trips</td>
+<td>none</td>
+<td>ORM <code>delete()</code></td>
+</tr>
+<tr>
+<td><code>clone&lt;T&gt;</code> (<code>_store.ts:38</code>)</td>
+<td>value</td>
+<td>T</td>
+<td>R</td>
+<td>all data modules</td>
+<td>none</td>
+<td>serializer</td>
+</tr>
+<tr>
+<td><code>delay</code> (<code>_store.ts:44</code>)</td>
+<td>ms</td>
+<td>Promise<void></td>
+<td>none</td>
+<td>data modules (fake latency)</td>
+<td>none</td>
+<td>drop</td>
+</tr>
+<tr>
+<td>table consts (<code>_tables.ts:31-62</code>)</td>
+<td>n/a</td>
+<td>arrays</td>
+<td>n/a</td>
+<td>lib/data only</td>
+<td>none</td>
+<td>models: User, Listing, Organization, Membership, Reservation, Trip, Conversation, Message, Notification</td>
+</tr>
+<tr>
+<td><code>ListingInputError</code> (<code>_sanitize.ts:9</code>)</td>
+<td>code, params</td>
+<td>Error</td>
+<td>n/a</td>
+<td><code>actions/host.ts</code>, <code>actions/listings.ts</code></td>
+<td>n/a</td>
+<td>DRF <code>ValidationError</code> with error code</td>
+</tr>
+<tr>
+<td><code>isAllowedImageUrl</code> (<code>_sanitize.ts:47</code>)</td>
+<td>unknown</td>
+<td>boolean</td>
+<td>R</td>
+<td><code>_sanitize</code>, <code>actions/trips.ts</code></td>
+<td>allowlist of 6 hosts + local paths</td>
+<td>media upload + storage URL validation</td>
+</tr>
+<tr>
+<td><code>OWNER_SETTABLE_LISTING_STATUSES</code> (<code>_sanitize.ts:124</code>)</td>
+<td>n/a</td>
+<td><code>[&quot;active&quot;,&quot;draft&quot;]</code></td>
+<td>n/a</td>
+<td><code>_sanitize</code> only</td>
+<td>n/a</td>
+<td>serializer choice restriction</td>
+</tr>
+<tr>
+<td><code>sanitizeListingInput</code> (<code>_sanitize.ts:130</code>)</td>
+<td>input: unknown, listingId: string</td>
+<td>Partial<Listing></td>
+<td>R</td>
+<td><code>createListing</code>, <code>updateListing</code>, <code>actions/host.ts:128</code> (pre-validation)</td>
+<td>whitelist, price range, max&gt;=min nights</td>
+<td>DRF <code>ListingWriteSerializer</code></td>
+</tr>
+</tbody></table>
+<h3 id="32-libdataauthts">3.2 <code>lib/data/auth.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DEMO_PASSWORD</code> (<code>:14</code>)</td>
+<td>const</td>
+<td>string</td>
+<td>n/a</td>
+<td>(duplicated literal in <code>components/models/LoginModal.tsx:47</code>)</td>
+<td>n/a</td>
+<td>remove; seed fixtures only</td>
+</tr>
+<tr>
+<td><code>getUserById</code> (<code>:53</code>)</td>
+<td>userId: string</td>
+<td>User | null</td>
+<td>R</td>
+<td><code>lib/server/session.ts:49</code>, <code>listings/[listingId]/page.tsx:76</code>, <code>users/[userId]/page.tsx:22</code></td>
+<td>none (full record incl. email)</td>
+<td><code>GET /api/v1/users/{id}</code> (public projection), <code>GET /api/v1/me</code> (private)</td>
+</tr>
+<tr>
+<td><code>getUsersByIds</code> (<code>:59</code>)</td>
+<td>userIds: string[]</td>
+<td>User[]</td>
+<td>R</td>
+<td>none</td>
+<td>none</td>
+<td>internal</td>
+</tr>
+<tr>
+<td><code>getUserByEmail</code> (<code>:63</code>)</td>
+<td>email: string</td>
+<td>User | null</td>
+<td>R</td>
+<td>none</td>
+<td>none</td>
+<td>internal (invite linking)</td>
+</tr>
+<tr>
+<td><code>verifyCredentials</code> (<code>:70</code>)</td>
+<td>email, password</td>
+<td>User | null</td>
+<td>R</td>
+<td><code>app/api/auth/login/route.ts:23</code></td>
+<td>scrypt timing-safe, dummy hash for unknown emails</td>
+<td><code>POST /api/v1/auth/login</code></td>
+</tr>
+<tr>
+<td><code>registerUser</code> (<code>:85</code>)</td>
+<td>{name, email, password}</td>
+<td>RegisterResult</td>
+<td>W</td>
+<td><code>app/api/auth/register/route.ts:21</code></td>
+<td>email regex, min 8 chars, unique email</td>
+<td><code>POST /api/v1/auth/register</code></td>
+</tr>
+<tr>
+<td><code>changePassword</code> (<code>:124</code>)</td>
+<td>userId, currentPassword, newPassword</td>
+<td>ChangePasswordResult</td>
+<td>W</td>
+<td><code>actions/account.ts:28</code></td>
+<td>verifies current password</td>
+<td><code>POST /api/v1/me/password</code></td>
+</tr>
+<tr>
+<td><code>updateUserHostStatus</code> (<code>:143</code>)</td>
+<td>userId, {hostType?, organizationId?, bookingApprovalMode?}</td>
+<td>User | null</td>
+<td>W</td>
+<td><code>actions/host.ts:92,164,182</code>, <code>actions/organizations.ts:84</code></td>
+<td>none</td>
+<td>internal service (onboarding); <code>PATCH /api/v1/me/host-preferences</code></td>
+</tr>
+<tr>
+<td><code>updateUserProfile</code> (<code>:162</code>)</td>
+<td>userId, {name?, bio?, phone?, address?, languages?, image?}</td>
+<td>User | null</td>
+<td>W</td>
+<td><code>actions/account.ts:54</code></td>
+<td>field whitelist and length caps</td>
+<td><code>PATCH /api/v1/me</code></td>
+</tr>
+<tr>
+<td><code>setUserFavorite</code> (<code>:182</code>)</td>
+<td>userId, listingId, favorite: boolean</td>
+<td>string[] | null</td>
+<td>W</td>
+<td><code>actions/favorites.ts:15</code></td>
+<td>none</td>
+<td><code>PUT/DELETE /api/v1/me/favorites/{listingId}</code></td>
+</tr>
+</tbody></table>
+<h3 id="33-libdatalistingsts">3.3 <code>lib/data/listings.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>isPublicListing</code> (<code>:14</code>)</td>
+<td>Pick&lt;Listing,&quot;status&quot;&gt;</td>
+<td>boolean</td>
+<td>R</td>
+<td><code>getListings</code>, <code>getFeaturedListings</code>, <code>getPublicListingById</code>, <code>actions/bookings.ts:97</code>, <code>actions/messages.ts:65</code></td>
+<td>n/a</td>
+<td>queryset filter <code>status=&#39;active&#39;</code></td>
+</tr>
+<tr>
+<td><code>getListings</code> (<code>:18</code>)</td>
+<td>SearchParams? (destination, checkIn/startDate, checkOut/endDate, guests, vertical, category, minPrice, maxPrice, propertyType, amenities, instantBook (ignored))</td>
+<td>Listing[] (with <code>matchedAvailability</code>, <code>quotedTotal</code> when dates)</td>
+<td>R (also triggers reservation settle via availability)</td>
+<td><code>app/[locale]/page.tsx:64</code>, <code>search/page.tsx:57-58</code>, <code>listings/[listingId]/page.tsx:93</code>, <code>users/[userId]/page.tsx:90</code>, <code>app/sitemap.ts:24</code>, <code>experiences.ts</code>, <code>vehicles.ts</code></td>
+<td>active only</td>
+<td><code>GET /api/v1/listings?vertical=&amp;destination=&amp;check_in=&amp;check_out=&amp;guests=&amp;min_price=&amp;max_price=&amp;property_type=&amp;amenities=&amp;wilaya=&amp;commune=...</code> (+ facets endpoint)</td>
+</tr>
+<tr>
+<td><code>getListingById</code> (<code>:221</code>)</td>
+<td>id</td>
+<td>Listing | null</td>
+<td>R</td>
+<td><code>actions/bookings.ts:94</code>, <code>actions/calendar.ts:34</code>, <code>actions/favorites.ts:13</code>, <code>actions/listings.ts:27,51</code>, <code>actions/messages.ts:64</code>, <code>getPublicListingById</code></td>
+<td>none (any status)</td>
+<td>internal; <code>GET /api/v1/host/listings/{id}</code> for owners</td>
+</tr>
+<tr>
+<td><code>getPublicListingById</code> (<code>:231</code>)</td>
+<td>id, canSeeUnpublished?(listing)</td>
+<td>Listing | null</td>
+<td>R</td>
+<td><code>listings/[listingId]/layout.tsx:19</code>, <code>listings/[listingId]/page.tsx:35,69</code></td>
+<td>active, or owner via callback</td>
+<td><code>GET /api/v1/listings/{id}</code></td>
+</tr>
+<tr>
+<td><code>getFeaturedListings</code> (<code>:241</code>)</td>
+<td>vertical?</td>
+<td>Listing[]</td>
+<td>R</td>
+<td><code>app/[locale]/page.tsx:67</code></td>
+<td>active + <code>featured</code></td>
+<td><code>GET /api/v1/listings?featured=true</code></td>
+</tr>
+<tr>
+<td><code>getHostListings</code> (<code>:256</code>)</td>
+<td>{userId?, organizationId?}</td>
+<td>Listing[] (all statuses)</td>
+<td>R</td>
+<td><code>host/layout.tsx:26</code>, <code>host/listings/page.tsx:14</code>, <code>host/bookings/page.tsx:20</code>, <code>host/calendar/page.tsx:19</code>, <code>host/page.tsx:28</code>, <code>reservations/page.tsx:40</code>, <code>profile/page.tsx:29</code>, <code>components/agency/orgProfilePage.tsx:65</code></td>
+<td>none (caller scopes)</td>
+<td><code>GET /api/v1/host/listings</code> (owner scoped); public org listings <code>GET /api/v1/organizations/{id}/listings</code></td>
+</tr>
+<tr>
+<td><code>createListing</code> (<code>:282</code>)</td>
+<td>owner: ListingOwner {hostUserId, organizationId?, businessCategory?}, input: unknown</td>
+<td>Listing</td>
+<td>W</td>
+<td><code>actions/host.ts:79,91,157</code></td>
+<td>whitelist; server sets id/owner/stats; defaults <code>status:&quot;active&quot;</code></td>
+<td><code>POST /api/v1/host/listings</code></td>
+</tr>
+<tr>
+<td><code>updateListing</code> (<code>:332</code>)</td>
+<td>id, input: unknown</td>
+<td>Listing | null</td>
+<td>W</td>
+<td><code>actions/listings.ts:33</code></td>
+<td>whitelist only (no ownership)</td>
+<td><code>PATCH /api/v1/host/listings/{id}</code></td>
+</tr>
+<tr>
+<td><code>deleteListing</code> (<code>:346</code>)</td>
+<td>id</td>
+<td>boolean</td>
+<td>W (hard delete)</td>
+<td><code>actions/listings.ts:55</code></td>
+<td>none</td>
+<td><code>DELETE /api/v1/host/listings/{id}</code> (soft delete / archive)</td>
+</tr>
+</tbody></table>
+<h3 id="34-libdatareservationsts">3.4 <code>lib/data/reservations.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getReservations</code> (<code>:94</code>)</td>
+<td>{userId?, listingId?, tripId?, hostId?, organizationId?, status?}</td>
+<td>Reservation[] populated (guest email/phone included)</td>
+<td>R + W (settles every row: expired / completed, <code>:105</code>)</td>
+<td><code>trips/page.tsx:29</code> (userId), <code>host/page.tsx:27</code>, <code>host/bookings/page.tsx:19</code>, <code>host/calendar/page.tsx:20</code>, <code>reservations/page.tsx:39</code> (hostId/orgId)</td>
+<td>none</td>
+<td><code>GET /api/v1/me/reservations</code>, <code>GET /api/v1/host/reservations?status=&amp;listing=</code></td>
+</tr>
+<tr>
+<td><code>getReservationById</code> (<code>:125</code>)</td>
+<td>id</td>
+<td>Reservation | null</td>
+<td>R + W (settle)</td>
+<td><code>actions/bookings.ts:228,265</code></td>
+<td>none</td>
+<td><code>GET /api/v1/reservations/{id}</code> (guest or host scoped)</td>
+</tr>
+<tr>
+<td><code>getReservationOwner</code> (<code>:132</code>)</td>
+<td>reservationId</td>
+<td>{hostUserId, organizationId, guestUserId} | null</td>
+<td>R</td>
+<td><code>actions/bookings.ts:224</code>, <code>lib/server/authz.ts:28</code></td>
+<td>none</td>
+<td>internal permission helper</td>
+</tr>
+<tr>
+<td><code>ReservationConflictError</code> (<code>:150</code>)</td>
+<td>message</td>
+<td>Error</td>
+<td>n/a</td>
+<td><code>actions/bookings.ts:203,301</code></td>
+<td>n/a</td>
+<td>HTTP 409 with code</td>
+</tr>
+<tr>
+<td><code>unavailableNights</code> (<code>:202</code>)</td>
+<td>listing, roomTypeId?, now?</td>
+<td>Set<DateKey></td>
+<td>R</td>
+<td><code>actions/bookings.ts:132</code>, <code>getListingAvailability</code>, <code>isListingFreeForRange</code></td>
+<td>none</td>
+<td>internal availability service</td>
+</tr>
+<tr>
+<td><code>getListingAvailability</code> (<code>:213</code>)</td>
+<td>listing</td>
+<td>ListingAvailability {today, unavailable[], unavailableByRoomType}</td>
+<td>R</td>
+<td><code>listings/[listingId]/page.tsx:89</code></td>
+<td>none</td>
+<td><code>GET /api/v1/listings/{id}/availability?from=&amp;to=</code></td>
+</tr>
+<tr>
+<td><code>isListingFreeForRange</code> (<code>:227</code>)</td>
+<td>listing, start, end</td>
+<td>boolean</td>
+<td>R</td>
+<td><code>getListings</code> (<code>listings.ts:191</code>)</td>
+<td>none</td>
+<td>SQL availability filter in search</td>
+</tr>
+<tr>
+<td><code>seatsSoldByDeparture</code> (<code>:244</code>)</td>
+<td>tripId, now?</td>
+<td>Record&lt;DateKey, number&gt;</td>
+<td>R</td>
+<td><code>actions/bookings.ts:177</code>, <code>trips/[tripId]/page.tsx:83</code></td>
+<td>none</td>
+<td><code>GET /api/v1/trips/{id}/departures</code> (seats left)</td>
+</tr>
+<tr>
+<td><code>createListingReservation</code> (<code>:310</code>)</td>
+<td>listingId, CreateReservationInput &amp; {selectedRoomTypeId?, unitCount?}</td>
+<td>Reservation</td>
+<td>W (+ wallet commission when confirmed)</td>
+<td><code>actions/bookings.ts:147</code></td>
+<td>capacity check atomic in-process</td>
+<td><code>POST /api/v1/reservations</code> (transaction + row locks / exclusion constraint)</td>
+</tr>
+<tr>
+<td><code>createTripReservation</code> (<code>:341</code>)</td>
+<td>tripId, CreateReservationInput</td>
+<td>Reservation</td>
+<td>W (+ commission)</td>
+<td><code>actions/bookings.ts:184</code></td>
+<td>seat check</td>
+<td><code>POST /api/v1/reservations</code> (kind=trip)</td>
+</tr>
+<tr>
+<td><code>cancelReservation</code> (<code>:402</code>)</td>
+<td>id, by: guest|host, refund: RefundBreakdown</td>
+<td>Reservation | null</td>
+<td>W (+ commission reversal)</td>
+<td><code>actions/bookings.ts:241,288</code></td>
+<td>none (trusts caller refund)</td>
+<td><code>POST /api/v1/reservations/{id}/cancel</code></td>
+</tr>
+<tr>
+<td><code>respondToRequest</code> (<code>:428</code>)</td>
+<td>id, decision: confirmed|declined, {declineReason?}</td>
+<td>Reservation | null</td>
+<td>W (+ commission charge or reversal)</td>
+<td><code>actions/bookings.ts:274</code></td>
+<td>must be pending after settle</td>
+<td><code>POST /api/v1/host/reservations/{id}/accept</code> / <code>/decline</code></td>
+</tr>
+<tr>
+<td>internal: <code>guestForHost</code> (<code>:17</code>), <code>tripFor</code> (<code>:43</code>), <code>settle</code> (<code>:51</code>), <code>populate</code> (<code>:64</code>), <code>ownedInventory</code> (<code>:76</code>), <code>activeListingReservations</code> (<code>:157</code>), <code>reservationRoomTypeId</code> (<code>:162</code>), <code>usageByNight</code> (<code>:171</code>), <code>capacityOf</code> (<code>:192</code>), <code>buildReservation</code> (<code>:269</code>), <code>commissionOwner</code> (<code>:357</code>), <code>commissionBase</code> (<code>:377</code>), <code>chargeCommission</code> (<code>:381</code>)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>domain services</td>
+</tr>
+</tbody></table>
+<h3 id="35-libdatacalendarts">3.5 <code>lib/data/calendar.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getAvailabilityOverrides</code> (<code>:23</code>)</td>
+<td>listingId</td>
+<td>DateAvailabilityOverride[]</td>
+<td>R</td>
+<td><code>setDatesBlocked</code>, <code>setDatePrice</code></td>
+<td>none</td>
+<td><code>GET /api/v1/host/listings/{id}/calendar</code></td>
+</tr>
+<tr>
+<td><code>getOverridesForListings</code> (<code>:27</code>)</td>
+<td>listingIds[]</td>
+<td>DateAvailabilityOverride[]</td>
+<td>R</td>
+<td><code>host/bookings/page.tsx:24</code>, <code>host/calendar/page.tsx:23</code></td>
+<td>none</td>
+<td><code>GET /api/v1/host/calendar?listing_ids=&amp;from=&amp;to=</code></td>
+</tr>
+<tr>
+<td><code>blockedDateKeys</code> (<code>:33</code>)</td>
+<td>listingId</td>
+<td>Set<DateKey></td>
+<td>R (sync)</td>
+<td><code>reservations.ts:204,233,320</code></td>
+<td>none</td>
+<td>internal</td>
+</tr>
+<tr>
+<td><code>priceOverridesFor</code> (<code>:37</code>)</td>
+<td>listingId</td>
+<td>PriceOverrides</td>
+<td>R (sync)</td>
+<td><code>actions/bookings.ts:143</code>, <code>listings/[listingId]/page.tsx:90</code>, <code>listings.ts:211</code></td>
+<td>none</td>
+<td>internal pricing service</td>
+</tr>
+<tr>
+<td><code>setDatesBlocked</code> (<code>:58</code>)</td>
+<td>listingId, dates[], blocked</td>
+<td>overrides[]</td>
+<td>W</td>
+<td><code>actions/calendar.ts:54</code></td>
+<td>none</td>
+<td><code>PUT /api/v1/host/listings/{id}/calendar/blocks</code></td>
+</tr>
+<tr>
+<td><code>setDatePrice</code> (<code>:68</code>)</td>
+<td>listingId, dates[], price | null</td>
+<td>overrides[]</td>
+<td>W</td>
+<td><code>actions/calendar.ts:78</code></td>
+<td>none</td>
+<td><code>PUT /api/v1/host/listings/{id}/calendar/prices</code></td>
+</tr>
+</tbody></table>
+<h3 id="36-libdataconversationsts">3.6 <code>lib/data/conversations.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getConversations</code> (<code>:27</code>)</td>
+<td>userId</td>
+<td>Conversation[] (with listing + otherUser public fields)</td>
+<td>R</td>
+<td><code>messages/page.tsx:27</code>, <code>messages/[conversationId]/page.tsx:38</code>, <code>host/messages/page.tsx:14</code></td>
+<td>participant filter</td>
+<td><code>GET /api/v1/conversations</code></td>
+</tr>
+<tr>
+<td><code>getConversationForParticipant</code> (<code>:37</code>)</td>
+<td>id, viewerId</td>
+<td>Conversation | null</td>
+<td>R</td>
+<td><code>messages/[conversationId]/page.tsx:32</code></td>
+<td>participant</td>
+<td><code>GET /api/v1/conversations/{id}</code></td>
+</tr>
+<tr>
+<td><code>isConversationParticipant</code> (<code>:47</code>)</td>
+<td>conversationId, userId</td>
+<td>boolean</td>
+<td>R</td>
+<td><code>actions/messages.ts:21,43</code></td>
+<td>n/a</td>
+<td>permission class</td>
+</tr>
+<tr>
+<td><code>getMessages</code> (<code>:56</code>)</td>
+<td>conversationId</td>
+<td>Message[]</td>
+<td>R</td>
+<td><code>actions/messages.ts:24</code>, <code>messages/page.tsx:31</code>, <code>messages/[conversationId]/page.tsx:39</code>, <code>host/messages/page.tsx:18</code></td>
+<td>none (caller checks)</td>
+<td><code>GET /api/v1/conversations/{id}/messages?cursor=</code></td>
+</tr>
+<tr>
+<td><code>sendMessage</code> (<code>:63</code>)</td>
+<td>{conversationId, senderId, text}</td>
+<td>Message | null</td>
+<td>W</td>
+<td><code>actions/messages.ts:35</code></td>
+<td>sender must be participant</td>
+<td><code>POST /api/v1/conversations/{id}/messages</code></td>
+</tr>
+<tr>
+<td><code>markConversationAsRead</code> (<code>:95</code>)</td>
+<td>conversationId, userId</td>
+<td>void</td>
+<td>W</td>
+<td><code>actions/messages.ts:46</code></td>
+<td>none</td>
+<td><code>POST /api/v1/conversations/{id}/read</code></td>
+</tr>
+<tr>
+<td><code>findOrCreateConversation</code> (<code>:112</code>)</td>
+<td>{userId, otherUserId, listingId?}</td>
+<td>Conversation</td>
+<td>W</td>
+<td><code>actions/messages.ts:82</code></td>
+<td>none</td>
+<td><code>POST /api/v1/conversations</code></td>
+</tr>
+</tbody></table>
+<h3 id="37-libdatanotificationsts-favoritests-experiencests-vehiclests-reviewsts">3.7 <code>lib/data/notifications.ts</code>, <code>favorites.ts</code>, <code>experiences.ts</code>, <code>vehicles.ts</code>, <code>reviews.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getNotifications</code> (<code>notifications.ts:8</code>)</td>
+<td>userId</td>
+<td>Notification[]</td>
+<td>R</td>
+<td><code>actions/notifications.ts:16</code>, <code>notifications/page.tsx:22</code></td>
+<td>user scoped</td>
+<td><code>GET /api/v1/me/notifications</code></td>
+</tr>
+<tr>
+<td><code>markNotificationAsRead</code> (<code>notifications.ts:16</code>)</td>
+<td>id, userId</td>
+<td>boolean</td>
+<td>W</td>
+<td><code>actions/notifications.ts:23</code></td>
+<td>owner</td>
+<td><code>POST /api/v1/me/notifications/{id}/read</code></td>
+</tr>
+<tr>
+<td><code>markAllNotificationsAsRead</code> (<code>notifications.ts:29</code>)</td>
+<td>userId</td>
+<td>void</td>
+<td>W</td>
+<td><code>actions/notifications.ts:30</code></td>
+<td>user scoped</td>
+<td><code>POST /api/v1/me/notifications/read-all</code></td>
+</tr>
+<tr>
+<td><code>getFavoriteListings</code> (<code>favorites.ts:7</code>)</td>
+<td>userId</td>
+<td>Listing[] (any status)</td>
+<td>R</td>
+<td><code>favorites/page.tsx:29</code></td>
+<td>none</td>
+<td><code>GET /api/v1/me/favorites</code></td>
+</tr>
+<tr>
+<td><code>getExperiences</code> (<code>experiences.ts:6</code>)</td>
+<td>none</td>
+<td>Listing[]</td>
+<td>R</td>
+<td><code>app/[locale]/page.tsx:66</code></td>
+<td>active</td>
+<td><code>GET /api/v1/listings?vertical=experience</code></td>
+</tr>
+<tr>
+<td><code>getVehicles</code> (<code>vehicles.ts:6</code>)</td>
+<td>none</td>
+<td>Listing[]</td>
+<td>R</td>
+<td><code>app/[locale]/page.tsx:65</code></td>
+<td>active</td>
+<td><code>GET /api/v1/listings?vertical=vehicle</code></td>
+</tr>
+<tr>
+<td><code>mockReviews</code> (<code>reviews.ts:6</code>)</td>
+<td>const</td>
+<td>Review[]</td>
+<td>n/a</td>
+<td>module only</td>
+<td>n/a</td>
+<td>Review table</td>
+</tr>
+<tr>
+<td><code>getReviewsByListingId</code> (<code>reviews.ts:104</code>)</td>
+<td>listingId</td>
+<td>Review[]</td>
+<td>R</td>
+<td><code>listings/[listingId]/page.tsx:86</code></td>
+<td>none</td>
+<td><code>GET /api/v1/listings/{id}/reviews</code></td>
+</tr>
+<tr>
+<td><code>getReviewsByUserId</code> (<code>reviews.ts:109</code>)</td>
+<td>userId</td>
+<td>Review[] (written by the user + on listings they host individually)</td>
+<td>R</td>
+<td><code>host/page.tsx:29</code>, <code>profile/page.tsx:30</code>, <code>users/[userId]/page.tsx:90</code></td>
+<td>none</td>
+<td><code>GET /api/v1/users/{id}/reviews?role=author|host</code>, <code>GET /api/v1/host/reviews</code></td>
+</tr>
+</tbody></table>
+<h3 id="38-libdataorganizationsts">3.8 <code>lib/data/organizations.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ORGANIZATION_LEGAL_FIELDS</code> (<code>:14</code>)</td>
+<td>const</td>
+<td>name, businessRegistrationNumber, businessType, businessCategory, address, country</td>
+<td>n/a</td>
+<td><code>updateOrganization</code></td>
+<td>n/a</td>
+<td>serializer: re-verification trigger fields</td>
+</tr>
+<tr>
+<td><code>ORGANIZATION_EDITABLE_FIELDS</code> (<code>:24</code>)</td>
+<td>const</td>
+<td>legal + logo, description, businessEmail, businessPhone, teamSizeEstimate, hotelStarRating, totalRoomCount, checkInTime, checkOutTime, hotelAmenities, hostelFacilities, curfewPolicy, agePolicy, bookingApprovalMode</td>
+<td>n/a</td>
+<td><code>updateOrganization</code></td>
+<td>n/a</td>
+<td>serializer fields</td>
+</tr>
+<tr>
+<td><code>getOrganizationById</code> (<code>:44</code>)</td>
+<td>id</td>
+<td>Organization | null (full, private)</td>
+<td>R</td>
+<td><code>lib/server/active-org.ts:24</code>, <code>actions/messages.ts:68,74</code>, <code>listings/[listingId]/page.tsx:80</code>, <code>users/[userId]/page.tsx:94</code>, <code>orgProfilePage.tsx:26</code>, <code>trips.ts:55,65</code></td>
+<td>none</td>
+<td><code>GET /api/v1/organizations/{id}</code> (public), <code>GET /api/v1/host/organization</code> (private)</td>
+</tr>
+<tr>
+<td><code>getOrganizations</code> (<code>:50</code>)</td>
+<td>none</td>
+<td>Organization[]</td>
+<td>R</td>
+<td><code>app/sitemap.ts:24</code></td>
+<td>none</td>
+<td><code>GET /api/v1/organizations?verified=true</code></td>
+</tr>
+<tr>
+<td><code>getOrganizationMembers</code> (<code>:55</code>)</td>
+<td>organizationId</td>
+<td>Membership[] (with emails)</td>
+<td>R</td>
+<td><code>actions/organizations.ts:109,178</code>, <code>host/agency/team/page.tsx:22</code>, <code>orgProfilePage.tsx:64</code></td>
+<td>none</td>
+<td><code>GET /api/v1/host/organization/members</code>; public <code>GET /api/v1/organizations/{id}/members</code></td>
+</tr>
+<tr>
+<td><code>getMembershipsForUser</code> (<code>:61</code>)</td>
+<td>userId</td>
+<td>Membership[] active</td>
+<td>R</td>
+<td><code>lib/server/active-org.ts:19</code>, <code>users/[userId]/page.tsx:90</code></td>
+<td>n/a</td>
+<td><code>GET /api/v1/me/memberships</code></td>
+</tr>
+<tr>
+<td><code>getMembership</code> (<code>:65</code>)</td>
+<td>organizationId, userId</td>
+<td>Membership | null</td>
+<td>R</td>
+<td>none</td>
+<td>n/a</td>
+<td>permission helper</td>
+</tr>
+<tr>
+<td><code>getMemberById</code> (<code>:72</code>)</td>
+<td>memberId</td>
+<td>Membership | null</td>
+<td>R</td>
+<td><code>actions/organizations.ts:135,152,169</code></td>
+<td>none</td>
+<td>internal</td>
+</tr>
+<tr>
+<td><code>createOrganization</code> (<code>:77</code>)</td>
+<td>{name, businessCategory, ..., owner {userId,name,email}, invitedMembers[]}</td>
+<td>Organization</td>
+<td>W (org + owner membership + invites)</td>
+<td><code>actions/host.ts:131</code></td>
+<td>forces <code>verificationStatus:&quot;pending&quot;</code></td>
+<td><code>POST /api/v1/organizations</code></td>
+</tr>
+<tr>
+<td><code>updateOrganizationVerification</code> (<code>:173</code>)</td>
+<td>id, status</td>
+<td>Organization | null</td>
+<td>W</td>
+<td>none (admin)</td>
+<td>none</td>
+<td>admin: <code>POST /api/v1/admin/organizations/{id}/verification</code></td>
+</tr>
+<tr>
+<td><code>addOrganizationMember</code> (<code>:184</code>)</td>
+<td>{organizationId, name, email, role: admin|manager, invitedBy}</td>
+<td>Membership</td>
+<td>W</td>
+<td><code>actions/organizations.ts:114</code></td>
+<td>none</td>
+<td><code>POST /api/v1/host/organization/invitations</code></td>
+</tr>
+<tr>
+<td><code>updateOrganizationMemberRole</code> (<code>:208</code>)</td>
+<td>memberId, role</td>
+<td>Membership | null</td>
+<td>W</td>
+<td><code>actions/organizations.ts:141</code></td>
+<td>none</td>
+<td><code>PATCH /api/v1/host/organization/members/{id}</code></td>
+</tr>
+<tr>
+<td><code>transferOrganizationOwnership</code> (<code>:220</code>)</td>
+<td>organizationId, newOwnerMemberId</td>
+<td>boolean</td>
+<td>W (demotes all owners to admin)</td>
+<td><code>actions/organizations.ts:175</code></td>
+<td>target active with userId</td>
+<td><code>POST /api/v1/host/organization/transfer-ownership</code></td>
+</tr>
+<tr>
+<td><code>removeOrganizationMember</code> (<code>:238</code>)</td>
+<td>memberId</td>
+<td>boolean</td>
+<td>W (hard delete)</td>
+<td><code>actions/organizations.ts:158</code></td>
+<td>none</td>
+<td><code>DELETE /api/v1/host/organization/members/{id}</code></td>
+</tr>
+<tr>
+<td><code>updateOrganization</code> (<code>:247</code>)</td>
+<td>id, Partial<editable></td>
+<td>Organization | null</td>
+<td>W (legal change -&gt; <code>pending</code>)</td>
+<td><code>actions/organizations.ts:65</code></td>
+<td>field whitelist</td>
+<td><code>PATCH /api/v1/host/organization</code></td>
+</tr>
+<tr>
+<td><code>deleteOrganization</code> (<code>:274</code>)</td>
+<td>id</td>
+<td>boolean</td>
+<td>W (hard delete org + memberships, listings/trips -&gt; draft)</td>
+<td><code>actions/organizations.ts:81</code></td>
+<td>none</td>
+<td><code>DELETE /api/v1/host/organization</code> (soft)</td>
+</tr>
+</tbody></table>
+<h3 id="39-libdatatripsts">3.9 <code>lib/data/trips.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getTrips</code> (<code>:20</code>)</td>
+<td>TripSearchParams {organizationId?, destination?, city?, status? active|draft|all, maxPrice?, duration? (ignored)}</td>
+<td>Trip[] + public org</td>
+<td>R</td>
+<td><code>app/[locale]/page.tsx:68</code>, <code>search/page.tsx:59</code>, <code>host/agency/trips/page.tsx:22</code> (status all), <code>orgProfilePage.tsx:66</code>, <code>app/sitemap.ts:24</code></td>
+<td>default active only</td>
+<td><code>GET /api/v1/trips?destination=&amp;max_price=</code>; <code>GET /api/v1/host/trips</code></td>
+</tr>
+<tr>
+<td><code>getTripById</code> (<code>:61</code>)</td>
+<td>idOrSlug</td>
+<td>Trip | null (any status)</td>
+<td>R</td>
+<td><code>actions/bookings.ts:166</code>, <code>actions/messages.ts:71</code>, <code>actions/trips.ts:98,111</code>, <code>getPublicTripById</code></td>
+<td>none</td>
+<td>internal</td>
+</tr>
+<tr>
+<td><code>getPublicTripById</code> (<code>:70</code>)</td>
+<td>idOrSlug, canSeeUnpublished?</td>
+<td>Trip | null</td>
+<td>R</td>
+<td><code>trips/[tripId]/layout.tsx:19</code>, <code>trips/[tripId]/page.tsx:27</code></td>
+<td>active or owner</td>
+<td><code>GET /api/v1/trips/{id_or_slug}</code></td>
+</tr>
+<tr>
+<td><code>createTrip</code> (<code>:82</code>)</td>
+<td>TripInput</td>
+<td>Trip</td>
+<td>W</td>
+<td><code>actions/trips.ts:90</code></td>
+<td>none (slug + coords derived)</td>
+<td><code>POST /api/v1/host/trips</code></td>
+</tr>
+<tr>
+<td><code>updateTrip</code> (<code>:95</code>)</td>
+<td>id, Partial<TripInput></td>
+<td>Trip | null</td>
+<td>W (<code>Object.assign</code> raw)</td>
+<td><code>actions/trips.ts:102</code></td>
+<td>none</td>
+<td><code>PATCH /api/v1/host/trips/{id}</code></td>
+</tr>
+<tr>
+<td><code>deleteTrip</code> (<code>:102</code>)</td>
+<td>id</td>
+<td>boolean</td>
+<td>W (hard delete)</td>
+<td><code>actions/trips.ts:114</code></td>
+<td>none</td>
+<td><code>DELETE /api/v1/host/trips/{id}</code></td>
+</tr>
+</tbody></table>
+<h3 id="310-libdatawalletts">3.10 <code>lib/data/wallet.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DEFAULT_COMMISSION_RATES</code> re-export (<code>:14</code>)</td>
+<td>const</td>
+<td>rates</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>PlatformSettings</td>
+</tr>
+<tr>
+<td><code>getCommissionRates</code> (<code>:250</code>)</td>
+<td>none</td>
+<td>HostTypeCommissionRates</td>
+<td>R</td>
+<td>none (admin)</td>
+<td>none</td>
+<td><code>GET /api/v1/admin/settings/commission-rates</code></td>
+</tr>
+<tr>
+<td><code>saveCommissionRates</code> (<code>:255</code>)</td>
+<td>Partial<rates></td>
+<td>rates</td>
+<td>W</td>
+<td>none (admin)</td>
+<td>none</td>
+<td><code>PATCH /api/v1/admin/settings/commission-rates</code></td>
+</tr>
+<tr>
+<td><code>getRateForHostType</code> (<code>:262</code>)</td>
+<td>hostType</td>
+<td>number (fallback 12.0)</td>
+<td>R</td>
+<td><code>actions/wallet.ts:21</code>, internal</td>
+<td>n/a</td>
+<td>internal</td>
+</tr>
+<tr>
+<td><code>getWallets</code> (<code>:268</code>)</td>
+<td>none</td>
+<td>Wallet[]</td>
+<td>R</td>
+<td>none (admin)</td>
+<td>none</td>
+<td><code>GET /api/v1/admin/wallets</code></td>
+</tr>
+<tr>
+<td><code>getWalletById</code> (<code>:272</code>)</td>
+<td>id</td>
+<td>Wallet | null</td>
+<td>R</td>
+<td>none</td>
+<td>none</td>
+<td>admin</td>
+</tr>
+<tr>
+<td><code>getWalletByOwner</code> (<code>:277</code>)</td>
+<td>ownerId, ownerType?</td>
+<td>Wallet | null</td>
+<td>R</td>
+<td><code>actions/wallet.ts:18,20</code></td>
+<td>none (ownerType effectively ignored, <code>:281-285</code>)</td>
+<td><code>GET /api/v1/host/wallet</code></td>
+</tr>
+<tr>
+<td><code>rechargeWallet</code> (<code>:290</code>)</td>
+<td>{walletId, amount, note?, adminUserId?}</td>
+<td>{wallet, transaction}</td>
+<td>W</td>
+<td>none (admin)</td>
+<td>none; default adminUserId <code>&quot;usr_admin&quot;</code></td>
+<td><code>POST /api/v1/admin/wallets/{id}/recharges</code></td>
+</tr>
+<tr>
+<td><code>deductBookingCommission</code> (<code>:405</code>)</td>
+<td>{bookingId, commissionBase, hostType, hostUserId?, organizationId?, ownerName?}</td>
+<td>{transaction, rate, amount}</td>
+<td>W (idempotent)</td>
+<td><code>reservations.ts:383</code></td>
+<td>none</td>
+<td>domain service on booking confirmation</td>
+</tr>
+<tr>
+<td><code>reverseBookingCommission</code> (<code>:446</code>)</td>
+<td>bookingId, keepShare (0..1)</td>
+<td>Transaction | null</td>
+<td>W (idempotent)</td>
+<td><code>reservations.ts:419,447</code></td>
+<td>none</td>
+<td>domain service on cancel / decline</td>
+</tr>
+<tr>
+<td><code>getBookingCommission</code> (<code>:478</code>)</td>
+<td>bookingId</td>
+<td>number | null</td>
+<td>R</td>
+<td><code>reservations.ts:68,420</code></td>
+<td>none</td>
+<td>internal</td>
+</tr>
+<tr>
+<td>internal: <code>computeBalance</code> (<code>:246</code>), <code>findOrCreateWallet</code> (<code>:331</code>), <code>appendTransaction</code> (<code>:369</code>), <code>netCommissionFor</code> (<code>:382</code>)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>ledger service</td>
+</tr>
+</tbody></table>
+<h3 id="311-server-actions-appactions">3.11 Server actions (<code>app/actions/*</code>)</h3>
+<p>All return <code>ActionResult&lt;T&gt;</code> (<code>lib/action-result.ts:93-95</code>) with stable error codes.</p>
+<table>
+<thead>
+<tr>
+<th>File:line</th>
+<th>Action</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Auth / ownership checks</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>account.ts:10</code></td>
+<td><code>changePasswordAction</code></td>
+<td>{currentPassword, newPassword, confirmPassword}</td>
+<td>null</td>
+<td>W</td>
+<td><code>components/settings/SecuritySection.tsx:48</code></td>
+<td>session; confirm match; new != current</td>
+<td><code>POST /api/v1/me/password</code></td>
+</tr>
+<tr>
+<td><code>account.ts:40</code></td>
+<td><code>updateProfileAction</code></td>
+<td>{name?, bio?, phone?, address?, languages?}</td>
+<td>User</td>
+<td>W</td>
+<td><code>UserProfileClient.tsx:91</code>, <code>settings/PersonalSection.tsx:145</code></td>
+<td>session; non-empty name</td>
+<td><code>PATCH /api/v1/me</code></td>
+</tr>
+<tr>
+<td><code>bookings.ts:78</code></td>
+<td><code>createBookingAction</code></td>
+<td>CreateBookingInput: {kind:&quot;listing&quot;, listingId, startDate, endDate, guestCount, unitCount?, selectedRoomTypeId?, guestMessage?} | {kind:&quot;trip&quot;, tripId, departureDate, guestCount, guestMessage?}</td>
+<td>Reservation</td>
+<td>W</td>
+<td><code>ListingReservation.tsx</code>, <code>HotelHostelDetailClient.tsx</code>, <code>TripDetailClient.tsx</code></td>
+<td>session; listing active; not own individual listing (<code>:99-101</code>, org members can book own org listings); trip active; full rule validation; server quote</td>
+<td><code>POST /api/v1/reservations</code></td>
+</tr>
+<tr>
+<td><code>bookings.ts:216</code></td>
+<td><code>cancelMyReservationAction</code></td>
+<td>reservationId</td>
+<td>Reservation</td>
+<td>W</td>
+<td><code>components/trips/TripsClient.tsx</code></td>
+<td>session; guest owns reservation; policy refund; must be allowed</td>
+<td><code>POST /api/v1/reservations/{id}/cancel</code></td>
+</tr>
+<tr>
+<td><code>bookings.ts:253</code></td>
+<td><code>respondToReservationAction</code></td>
+<td>reservationId, decision confirm|decline|cancel, declineReason?</td>
+<td>Reservation</td>
+<td>W</td>
+<td><code>HostBookingsClient.tsx:218,245,280</code>, <code>HostTodayClient.tsx</code>, <code>ReservationsClient.tsx</code></td>
+<td>host context owns inventory (any org role); confirm/decline only if pending and not expired; cancel only if confirmed</td>
+<td><code>POST /api/v1/host/reservations/{id}/accept|decline|cancel</code></td>
+</tr>
+<tr>
+<td><code>calendar.ts:40</code></td>
+<td><code>setListingDatesBlockedAction</code></td>
+<td>{listingId, dates? | from+to (inclusive), blocked}</td>
+<td>DateAvailabilityOverride[]</td>
+<td>W</td>
+<td><code>HostCalendarClient.tsx</code>, <code>HostBookingsClient.tsx:127</code></td>
+<td>host owns listing; max 366 dates; no past dates</td>
+<td><code>PUT /api/v1/host/listings/{id}/calendar/blocks</code></td>
+</tr>
+<tr>
+<td><code>calendar.ts:60</code></td>
+<td><code>setListingDatePriceAction</code></td>
+<td>{listingId, dates? | from+to, price | null}</td>
+<td>DateAvailabilityOverride[]</td>
+<td>W</td>
+<td><code>HostCalendarClient.tsx</code></td>
+<td>host owns listing; price 100..10,000,000 int; not room-type listings (past dates allowed)</td>
+<td><code>PUT /api/v1/host/listings/{id}/calendar/prices</code></td>
+</tr>
+<tr>
+<td><code>favorites.ts:9</code></td>
+<td><code>setFavoriteAction</code></td>
+<td>listingId, favorite: boolean</td>
+<td>string[]</td>
+<td>W</td>
+<td><code>hook/useFavorite.ts</code> (HeartButton, cards)</td>
+<td>session; listing exists (any status)</td>
+<td><code>PUT/DELETE /api/v1/me/favorites/{id}</code></td>
+</tr>
+<tr>
+<td><code>host.ts:65</code></td>
+<td><code>completeHostOnboardingAction</code></td>
+<td>{hostType:&quot;individual&quot;, listing} | {hostType: agency|hotel|hostel, organization: OrganizationOnboardingInput, property?}</td>
+<td>{hostType, organizationId, listingId}</td>
+<td>W (listing and/or org, user host status, session refresh)</td>
+<td><code>BecomeHostFlow.tsx:566</code></td>
+<td>session; org fields required; email regex; invites capped 20 and self excluded; price validation before creating anything</td>
+<td><code>POST /api/v1/host/onboarding</code> (or <code>POST /api/v1/organizations</code> + <code>POST /api/v1/host/listings</code>)</td>
+</tr>
+<tr>
+<td><code>host.ts:177</code></td>
+<td><code>setBookingApprovalModeAction</code></td>
+<td>mode instant|request</td>
+<td>null</td>
+<td>W</td>
+<td><code>HostSettingsClient.tsx:158</code></td>
+<td>session; user has hostType</td>
+<td><code>PATCH /api/v1/me/host-preferences</code></td>
+</tr>
+<tr>
+<td><code>listings.ts:19</code></td>
+<td><code>updateMyListingAction</code></td>
+<td>listingId, patch: unknown</td>
+<td>Listing</td>
+<td>W</td>
+<td><code>HostListingsClient.tsx:154,188,216</code></td>
+<td>host owns listing (any org role)</td>
+<td><code>PATCH /api/v1/host/listings/{id}</code></td>
+</tr>
+<tr>
+<td><code>listings.ts:44</code></td>
+<td><code>deleteMyListingAction</code></td>
+<td>listingId</td>
+<td>{id}</td>
+<td>W</td>
+<td><code>HostListingsClient.tsx:235</code></td>
+<td>host owns listing (any org role)</td>
+<td><code>DELETE /api/v1/host/listings/{id}</code></td>
+</tr>
+<tr>
+<td><code>messages.ts:18</code></td>
+<td><code>getConversationMessagesAction</code></td>
+<td>conversationId</td>
+<td>Message[]</td>
+<td>R</td>
+<td><code>MessagesClient.tsx:154</code></td>
+<td>participant</td>
+<td><code>GET /api/v1/conversations/{id}/messages</code></td>
+</tr>
+<tr>
+<td><code>messages.ts:27</code></td>
+<td><code>sendMessageAction</code></td>
+<td>conversationId, text</td>
+<td>Message</td>
+<td>W</td>
+<td><code>MessagesClient.tsx:227</code></td>
+<td>session; participant (in data layer); 1..4000 chars</td>
+<td><code>POST /api/v1/conversations/{id}/messages</code></td>
+</tr>
+<tr>
+<td><code>messages.ts:40</code></td>
+<td><code>markConversationReadAction</code></td>
+<td>conversationId</td>
+<td>null</td>
+<td>W</td>
+<td><code>MessagesClient.tsx:162</code></td>
+<td>participant</td>
+<td><code>POST /api/v1/conversations/{id}/read</code></td>
+</tr>
+<tr>
+<td><code>messages.ts:54</code></td>
+<td><code>startConversationAction</code></td>
+<td>{listingId?} | {tripId?}</td>
+<td>{conversationId}</td>
+<td>W</td>
+<td><code>ListingInfo.tsx:92</code> (tripId path has no caller)</td>
+<td>session; listing/trip public; recipient = listing host or org owner; not self</td>
+<td><code>POST /api/v1/conversations</code></td>
+</tr>
+<tr>
+<td><code>notifications.ts:13</code></td>
+<td><code>getMyNotificationsAction</code></td>
+<td>none</td>
+<td>Notification[]</td>
+<td>R</td>
+<td><code>NotificationsDropdown.tsx:48</code></td>
+<td>session</td>
+<td><code>GET /api/v1/me/notifications</code></td>
+</tr>
+<tr>
+<td><code>notifications.ts:19</code></td>
+<td><code>markNotificationReadAction</code></td>
+<td>notificationId</td>
+<td>null</td>
+<td>W</td>
+<td><code>NotificationsDropdown.tsx:89</code>, <code>NotificationsClient.tsx</code></td>
+<td>owner</td>
+<td><code>POST /api/v1/me/notifications/{id}/read</code></td>
+</tr>
+<tr>
+<td><code>notifications.ts:27</code></td>
+<td><code>markAllNotificationsReadAction</code></td>
+<td>none</td>
+<td>null</td>
+<td>W</td>
+<td><code>NotificationsDropdown.tsx:103</code>, <code>NotificationsClient.tsx:78</code></td>
+<td>session</td>
+<td><code>POST /api/v1/me/notifications/read-all</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts:60</code></td>
+<td><code>updateOrganizationAction</code></td>
+<td>patch: unknown</td>
+<td>Organization</td>
+<td>W</td>
+<td><code>AgencySettingsClient.tsx</code></td>
+<td>owner or admin</td>
+<td><code>PATCH /api/v1/host/organization</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts:72</code></td>
+<td><code>deleteOrganizationAction</code></td>
+<td>confirmName</td>
+<td>{id}</td>
+<td>W</td>
+<td><code>AgencySettingsClient.tsx:114</code></td>
+<td>owner; exact name match</td>
+<td><code>DELETE /api/v1/host/organization</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts:90</code></td>
+<td><code>inviteMemberAction</code></td>
+<td>{name?, email, role admin|manager}</td>
+<td>Membership</td>
+<td>W</td>
+<td><code>AgencyTeamClient.tsx:113</code></td>
+<td>owner or admin; only owner grants admin; no duplicate email</td>
+<td><code>POST /api/v1/host/organization/invitations</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts:126</code></td>
+<td><code>changeMemberRoleAction</code></td>
+<td>memberId, role admin|manager</td>
+<td>Membership</td>
+<td>W</td>
+<td><code>AgencyTeamClient.tsx:139</code></td>
+<td>owner; same org; owner role locked</td>
+<td><code>PATCH /api/v1/host/organization/members/{id}</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts:147</code></td>
+<td><code>removeMemberAction</code></td>
+<td>memberId</td>
+<td>{id}</td>
+<td>W</td>
+<td><code>AgencyTeamClient.tsx:164</code></td>
+<td>owner removes non-owner; admin removes manager</td>
+<td><code>DELETE /api/v1/host/organization/members/{id}</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts:164</code></td>
+<td><code>transferOwnershipAction</code></td>
+<td>memberId</td>
+<td>Membership[]</td>
+<td>W</td>
+<td><code>AgencyTeamClient.tsx:188</code></td>
+<td>owner; target active with userId</td>
+<td><code>POST /api/v1/host/organization/transfer-ownership</code></td>
+</tr>
+<tr>
+<td><code>trips.ts:76</code></td>
+<td><code>createTripAction</code></td>
+<td>input: unknown (trip fields)</td>
+<td>Trip</td>
+<td>W</td>
+<td><code>TripCreationClient.tsx:256</code></td>
+<td>org context with hostType agency (any role); min&lt;=max group; price 100..10M</td>
+<td><code>POST /api/v1/host/trips</code></td>
+</tr>
+<tr>
+<td><code>trips.ts:95</code></td>
+<td><code>setTripStatusAction</code></td>
+<td>tripId, status active|draft</td>
+<td>Trip</td>
+<td>W</td>
+<td><code>AgencyTripsClient.tsx</code></td>
+<td>agency org owns trip (any role)</td>
+<td><code>PATCH /api/v1/host/trips/{id}</code></td>
+</tr>
+<tr>
+<td><code>trips.ts:108</code></td>
+<td><code>deleteTripAction</code></td>
+<td>tripId</td>
+<td>{id}</td>
+<td>W</td>
+<td><code>AgencyTripsClient.tsx</code></td>
+<td>agency org owns trip (any role)</td>
+<td><code>DELETE /api/v1/host/trips/{id}</code></td>
+</tr>
+<tr>
+<td><code>wallet.ts:12</code></td>
+<td><code>getMyWalletAction</code></td>
+<td>none</td>
+<td>{wallet, commissionRate}</td>
+<td>R</td>
+<td><code>HostWalletWidget.tsx</code></td>
+<td>host context; org wallet for org hosts</td>
+<td><code>GET /api/v1/host/wallet</code></td>
+</tr>
+</tbody></table>
+<h3 id="312-route-handlers-appapi">3.12 Route handlers (<code>app/api/*</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Method</th>
+<th>Body</th>
+<th>Response</th>
+<th>Checks</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>app/api/auth/login/route.ts:9</code></td>
+<td>POST</td>
+<td>{email, password} JSON</td>
+<td><code>{success, user{id,name,hostType}}</code> + cookies <code>darna_session</code>, <code>darna_mode</code></td>
+<td>JSON content type + same Origin (<code>lib/server/request-guard.ts:9</code>); 401 on bad credentials</td>
+<td><code>POST /api/v1/auth/login</code> (session or JWT)</td>
+</tr>
+<tr>
+<td><code>app/api/auth/register/route.ts:10</code></td>
+<td>POST</td>
+<td>{name, email, password}</td>
+<td>same, 409 EMAIL_TAKEN</td>
+<td>same</td>
+<td><code>POST /api/v1/auth/register</code></td>
+</tr>
+<tr>
+<td><code>app/api/auth/logout/route.ts:7</code></td>
+<td>POST</td>
+<td>none</td>
+<td><code>{success}</code>; clears cookies incl. legacy <code>darna_user_id</code>, <code>darna_host_type</code>, <code>darna_agency_id</code></td>
+<td>Origin match only</td>
+<td><code>POST /api/v1/auth/logout</code></td>
+</tr>
+</tbody></table>
+<h3 id="313-server-helpers-relevant-to-authorization-libserver">3.13 Server helpers relevant to authorization (<code>lib/server/*</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>File:line</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getSession</code></td>
+<td><code>session.ts:35</code></td>
+<td>verify cookie + revocation list</td>
+</tr>
+<tr>
+<td><code>getSessionUser</code></td>
+<td><code>session.ts:46</code></td>
+<td>load User from store by session userId</td>
+</tr>
+<tr>
+<td><code>startSession</code> / <code>refreshSession</code> / <code>endSession</code></td>
+<td><code>session.ts:67</code>, <code>:84</code>, <code>:109</code></td>
+<td>issue, re-issue (same sid), revoke</td>
+</tr>
+<tr>
+<td><code>resolveActiveOrganization</code></td>
+<td><code>active-org.ts:15</code></td>
+<td>org via active memberships only; preferred org honoured if member</td>
+</tr>
+<tr>
+<td><code>getHostContext</code></td>
+<td><code>host-context.ts:24</code></td>
+<td>{user, hostType, isOrgHost, organization, membership}</td>
+</tr>
+<tr>
+<td><code>requireHostContext</code></td>
+<td><code>host-context.ts:47</code></td>
+<td>redirects: login, <code>/become-a-host</code>, <code>/become-a-host/&lt;type&gt;</code></td>
+</tr>
+<tr>
+<td><code>hostOwnerKey</code></td>
+<td><code>host-context.ts:63</code></td>
+<td><code>{organizationId}</code> for org hosts, <code>{userId}</code> for individuals</td>
+</tr>
+<tr>
+<td><code>hostOwnsListing</code> / <code>hostOwnsTrip</code></td>
+<td><code>authz.ts:13</code>, <code>:20</code></td>
+<td>ownership predicates</td>
+</tr>
+<tr>
+<td><code>getHostContextForReservation</code></td>
+<td><code>authz.ts:25</code></td>
+<td>host may act on reservation</td>
+</tr>
+<tr>
+<td><code>getOrgContext(check)</code></td>
+<td><code>authz.ts:38</code></td>
+<td>org host with role predicate</td>
+</tr>
+<tr>
+<td><code>toPublicUser</code> / <code>toPublicOrganization</code> / <code>toPublicMembers</code></td>
+<td><code>dto.ts:12</code>, <code>:29</code>, <code>:55</code></td>
+<td>projections</td>
+</tr>
+<tr>
+<td><code>toCardListing</code> / <code>toCardTrip</code></td>
+<td><code>card-dto.ts:12</code>, <code>:30</code></td>
+<td>slim DTOs for cards</td>
+</tr>
+<tr>
+<td><code>isTrustedJsonRequest</code></td>
+<td><code>request-guard.ts:9</code></td>
+<td>CSRF guard for JSON routes</td>
+</tr>
+<tr>
+<td><code>orgPermissions</code></td>
+<td><code>lib/host-types.ts:18-27</code></td>
+<td>role matrix (see 4.13)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="4-business-rules-found-in-code">4. Business rules found in code</h2>
+<h3 id="41-money-and-pricing-libbookingpricingts-libbookingconfigts">4.1 Money and pricing (<code>lib/booking/pricing.ts</code>, <code>lib/booking/config.ts</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Value / formula</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Currency</td>
+<td>integer DZD; single rounding rule <code>Math.round</code> (<code>roundDzd</code>)</td>
+<td><code>pricing.ts:56-58</code></td>
+</tr>
+<tr>
+<td>Price bounds (listing, room type, trip, date override)</td>
+<td>100 to 10,000,000 DZD, integer</td>
+<td><code>config.ts:58-68</code>; <code>_sanitize.ts:20-25</code>; <code>actions/calendar.ts:71</code>; <code>actions/trips.ts:84</code></td>
+</tr>
+<tr>
+<td>Pricing model selection</td>
+<td>room type -&gt; <code>per_bed_night</code> if bookingUnit bed else <code>per_room_night</code>; experience -&gt; <code>per_person</code>; vehicle -&gt; <code>per_day</code>; trip -&gt; <code>per_traveller</code>; else <code>per_night</code></td>
+<td><code>pricing.ts:95-105</code></td>
+</tr>
+<tr>
+<td>Home (per night)</td>
+<td>subtotal = sum over each night of (override[night] ?? listing.price)</td>
+<td><code>pricing.ts:233-253</code></td>
+</tr>
+<tr>
+<td>Vehicle (per day)</td>
+<td>same loop as home, nights = days between pickup and return</td>
+<td><code>pricing.ts:233-253</code></td>
+</tr>
+<tr>
+<td>Experience (per person)</td>
+<td>subtotal = (override[startDate] ?? listing.price) x guests; nights = 1</td>
+<td><code>pricing.ts:193-208</code></td>
+</tr>
+<tr>
+<td>Hotel room</td>
+<td>subtotal = roomTypePrice x rooms x nights; no per-date overrides</td>
+<td><code>pricing.ts:212-231</code></td>
+</tr>
+<tr>
+<td>Hostel bed</td>
+<td>subtotal = bedPrice x beds x nights; beds default to guests</td>
+<td><code>pricing.ts:214-217</code>; server forces beds = guests (<code>actions/bookings.ts:115-118</code>)</td>
+</tr>
+<tr>
+<td>Trip</td>
+<td>subtotal = pricePerPerson x travellers; cleaning 0; tax 0</td>
+<td><code>pricing.ts:256-274</code></td>
+</tr>
+<tr>
+<td>Room type price</td>
+<td><code>basePrice ?? price</code></td>
+<td><code>pricing.ts:72-76</code></td>
+</tr>
+<tr>
+<td>Room type default selection</td>
+<td>first room type when none or unknown id</td>
+<td><code>pricing.ts:85-93</code></td>
+</tr>
+<tr>
+<td>Cleaning fee</td>
+<td>once per booking, <code>listing.cleaningFee ?? DEFAULT_CLEANING_FEES[vertical]</code> (all 0), 0 valid</td>
+<td><code>pricing.ts:183-186</code>; <code>config.ts:40-46</code></td>
+</tr>
+<tr>
+<td>Guest service fee</td>
+<td>0 for every vertical; per-listing <code>serviceFeeRate</code> override ignored on purpose</td>
+<td><code>config.ts:28-34</code>; <code>pricing.ts:125-130</code></td>
+</tr>
+<tr>
+<td>Taxes</td>
+<td><code>round((subtotal + cleaning) x taxRate)</code>, <code>taxRate = clamp(listing.taxRate ?? PLATFORM_TAX_RATE)</code>, platform rate 0</td>
+<td><code>pricing.ts:148,188-191</code>; <code>config.ts:52</code></td>
+</tr>
+<tr>
+<td>Total</td>
+<td>subtotal + cleaning + serviceFee + taxes</td>
+<td><code>pricing.ts:159</code></td>
+</tr>
+<tr>
+<td>Average unit price stored as <code>nightlyPrice</code></td>
+<td>round(subtotal / (nights x quantity))</td>
+<td><code>pricing.ts:158</code>; <code>reservations.ts:284</code></td>
+</tr>
+<tr>
+<td>Search card quote</td>
+<td>quoted on overlap range, cheapest room type, 1 unit, max(1, guests)</td>
+<td><code>lib/data/listings.ts:194-214</code></td>
+</tr>
+<tr>
+<td>Approval mode for listing bookings</td>
+<td>request if <code>listing.bookingApprovalMode === &quot;request&quot;</code> OR <code>listing.instantBook === false</code></td>
+<td><code>pricing.ts:276-282</code></td>
+</tr>
+<tr>
+<td>Approval mode for trips</td>
+<td><code>organization.bookingApprovalMode === &quot;request&quot;</code></td>
+<td><code>actions/bookings.ts:190-193</code></td>
+</tr>
+<tr>
+<td>Client totals are display only; server recomputes</td>
+<td></td>
+<td><code>pricing.ts:1-5</code>; <code>actions/bookings.ts:136-145</code></td>
+</tr>
+<tr>
+<td>Zero total rejected</td>
+<td><code>quote.total &lt;= 0</code> -&gt; INVALID_DATES</td>
+<td><code>actions/bookings.ts:145</code></td>
+</tr>
+</tbody></table>
+<h3 id="42-commission-by-host-type">4.2 Commission by host type</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Value</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Default rates (% of accommodation subtotal)</td>
+<td>individual 12, agency 15, hotel 18, hostel 10</td>
+<td><code>lib/booking/config.ts:15-20</code>; also documented in <code>types.ts:605-610</code></td>
+</tr>
+<tr>
+<td>Live rates</td>
+<td>server store, admin editable, fallback to defaults then 12.0</td>
+<td><code>lib/data/wallet.ts:239-244</code>, <code>:262-266</code></td>
+</tr>
+<tr>
+<td>Host type used</td>
+<td>listing org&#39;s <code>businessCategory</code>; org without category -&gt; agency; no org -&gt; individual</td>
+<td><code>lib/data/reservations.ts:357-374</code></td>
+</tr>
+<tr>
+<td>Rate precedence</td>
+<td>existing wallet&#39;s stored <code>hostType</code> wins over the booking&#39;s host type</td>
+<td><code>wallet.ts:423</code></td>
+</tr>
+<tr>
+<td>Commission base</td>
+<td><code>res.subtotal ?? max(0, total - cleaning - serviceFee - taxes)</code></td>
+<td><code>reservations.ts:377-379</code></td>
+</tr>
+<tr>
+<td>Amount</td>
+<td><code>round(base x rate / 100)</code></td>
+<td><code>wallet.ts:424</code></td>
+</tr>
+<tr>
+<td>When charged</td>
+<td>on creation if instant (confirmed), on host accept for requests</td>
+<td><code>reservations.ts:336,353,443</code></td>
+</tr>
+<tr>
+<td>Idempotency</td>
+<td>no second charge if net commission for booking &gt; 0</td>
+<td><code>wallet.ts:413-420</code></td>
+</tr>
+<tr>
+<td>Reversal</td>
+<td>credit <code>net - round(original x keepShare)</code>; guest cancel keepShare = 1 - refundPercent/100; host cancel and decline keepShare = 0</td>
+<td><code>reservations.ts:417-420,447</code>; <code>wallet.ts:446-475</code></td>
+</tr>
+<tr>
+<td>Where charged</td>
+<td>host prepaid wallet (user wallet for individuals, org wallet for orgs), created lazily <code>wal_&lt;ownerId&gt;</code> with balance 0</td>
+<td><code>wallet.ts:331-367</code></td>
+</tr>
+</tbody></table>
+<h3 id="43-host-payout-display-formula-libbookingpayoutts17-34">4.3 Host payout (display formula, <code>lib/booking/payout.ts:17-34</code>)</h3>
+<ul>
+<li>subtotal = <code>res.subtotal ?? max(0, total - cleaning - serviceFee - taxes)</code>.</li>
+<li>declined / expired -&gt; net 0, commission 0.</li>
+<li>refunded = <code>refund &gt;= total ? subtotal + cleaning : min(subtotal + cleaning, refund)</code>.</li>
+<li>net = <code>max(0, subtotal + cleaning - refunded - commissionAmount)</code>.</li>
+<li>Taxes never go to the host in the formula (they are excluded from subtotal and not added back). Service fee never goes to the host.</li>
+<li>Used by <code>HostBookingsClient.tsx:589,842</code>. KPIs instead use gross <code>totalPrice</code> (<code>lib/host-kpis.ts:36-40</code>).</li>
+</ul>
+<h3 id="44-dates-and-availability">4.4 Dates and availability</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Detail</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Date keys</td>
+<td><code>yyyy-MM-dd</code> strings, never timestamps; compared as strings</td>
+<td><code>lib/booking/dates.ts:1-9,24-30</code></td>
+</tr>
+<tr>
+<td>Business timezone</td>
+<td><code>Africa/Algiers</code> for &quot;today&quot; and legacy timestamps</td>
+<td><code>dates.ts:22,56-69</code></td>
+</tr>
+<tr>
+<td>Half-open stays</td>
+<td>nights = [checkIn, checkOut); checkout day free for next guest (back-to-back allowed)</td>
+<td><code>dates.ts:80-96</code></td>
+</tr>
+<tr>
+<td>Night enumeration cap</td>
+<td>3660 nights</td>
+<td><code>dates.ts:84</code></td>
+</tr>
+<tr>
+<td>Inventory-holding statuses</td>
+<td><code>confirmed</code>, and <code>pending</code> not past <code>expiresAt</code></td>
+<td><code>lib/booking/lifecycle.ts:40-43</code></td>
+</tr>
+<tr>
+<td>Whole listing capacity</td>
+<td>1 per night (homes, vehicles)</td>
+<td><code>reservations.ts:192-196</code></td>
+</tr>
+<tr>
+<td>Room type capacity</td>
+<td><code>inventoryCount ?? totalInventory</code> units per night; usage = <code>unitCount ?? (bed ? guests : 1)</code></td>
+<td><code>reservations.ts:179-183</code>; <code>pricing.ts:78-82</code></td>
+</tr>
+<tr>
+<td>Experience capacity</td>
+<td><code>groupSize ?? guestCount ?? 10</code> guests per date</td>
+<td><code>reservations.ts:176-178,193</code>; <code>availability.ts:37</code></td>
+</tr>
+<tr>
+<td>Trip capacity</td>
+<td><code>maxGroupSize</code> seats per departure (sum of guestsCount)</td>
+<td><code>reservations.ts:244-251,347-348</code></td>
+</tr>
+<tr>
+<td>Host blocks</td>
+<td>blocked override dates are unavailable for every unit of the listing (incl. all room types)</td>
+<td><code>reservations.ts:202-210</code>, <code>:233-234</code></td>
+</tr>
+<tr>
+<td>Legacy rows without room type</td>
+<td>treated as first room type</td>
+<td><code>reservations.ts:162-165</code></td>
+</tr>
+<tr>
+<td>Atomic capacity check</td>
+<td>check + insert in one synchronous block (single process only)</td>
+<td><code>reservations.ts:305-334</code></td>
+</tr>
+<tr>
+<td>Availability window</td>
+<td><code>availableFrom</code> = first check-in; <code>availableTo</code> = last checkout (homes, vehicles) or last date (experiences)</td>
+<td><code>availability.ts:88-106</code>; <code>listings.ts:164</code></td>
+</tr>
+<tr>
+<td>Partial availability in search</td>
+<td>listing kept if window overlaps the searched range; <code>matchedAvailability.isPartial</code> with overlapStart/End; free check and quote use the overlap</td>
+<td><code>lib/data/listings.ts:147-215</code></td>
+</tr>
+<tr>
+<td>Property search with room types</td>
+<td>listed if property not blocked and at least one room type is free every night</td>
+<td><code>reservations.ts:231-239</code></td>
+</tr>
+<tr>
+<td>Calendar shown to guests</td>
+<td>from today forward only</td>
+<td><code>reservations.ts:216</code></td>
+</tr>
+</tbody></table>
+<h3 id="45-stay-rules-libbookingconfigts71-117-libbookingavailabilityts57-123">4.5 Stay rules (<code>lib/booking/config.ts:71-117</code>, <code>lib/booking/availability.ts:57-123</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Default</th>
+<th>Validation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>minNights</td>
+<td>1</td>
+<td><code>nights &lt; min</code> -&gt; MIN_NIGHTS / MIN_DAYS (vehicles); clamp &gt;= 1</td>
+</tr>
+<tr>
+<td>maxNights</td>
+<td>90</td>
+<td><code>nights &gt; max</code> -&gt; MAX_NIGHTS / MAX_DAYS; max &gt;= min; owner input 1..365 and MAX_NIGHTS_BELOW_MIN (<code>_sanitize.ts:149-156</code>)</td>
+</tr>
+<tr>
+<td>advanceNoticeDays</td>
+<td>0</td>
+<td>start &lt; today + N -&gt; ADVANCE_NOTICE; owner input 0..365</td>
+</tr>
+<tr>
+<td>checkInTime</td>
+<td>&quot;15:00&quot;</td>
+<td>used for cancellation cut-off</td>
+</tr>
+<tr>
+<td>checkOutTime</td>
+<td>&quot;11:00&quot;</td>
+<td>used for auto-complete</td>
+</tr>
+<tr>
+<td>Past start</td>
+<td>n/a</td>
+<td>start &lt; today -&gt; PAST_DATE (same-day booking allowed)</td>
+</tr>
+<tr>
+<td>Min one night</td>
+<td>n/a</td>
+<td>nights &lt; 1 -&gt; MIN_ONE_NIGHT / MIN_ONE_DAY</td>
+</tr>
+<tr>
+<td>Units</td>
+<td>n/a</td>
+<td>rooms/beds &gt; inventory -&gt; MAX_ROOMS / MAX_BEDS</td>
+</tr>
+<tr>
+<td>Guests</td>
+<td>n/a</td>
+<td>integer &gt;= 1; max = beds count (hostel), capacity x rooms (hotel), <code>seats ?? guestCount ?? 5</code> (vehicle), <code>groupSize ?? guestCount ?? 10</code> (experience), <code>guestCount ?? 16</code> (home) (<code>availability.ts:27-39</code>); server caps raw guests at 500 (<code>actions/bookings.ts:61-64</code>)</td>
+</tr>
+<tr>
+<td>Trips</td>
+<td>n/a</td>
+<td>departure must be in <code>departureDates</code> and strictly after today; seats left; <code>minGroupSize</code> NOT enforced (<code>availability.ts:126-144</code>)</td>
+</tr>
+<tr>
+<td>Trip end date</td>
+<td>departure + max(1, durationDays) - 1</td>
+<td><code>availability.ts:147-149</code></td>
+</tr>
+</tbody></table>
+<h3 id="46-approval-modes-and-request-expiry">4.6 Approval modes and request expiry</h3>
+<ul>
+<li>Request TTL: <code>REQUEST_TO_BOOK_TTL_HOURS = 24</code> (<code>config.ts:55</code>); <code>expiresAt = createdAt + 24h</code> (<code>reservations.ts:296-299</code>).</li>
+<li>Pending requests hold inventory until expiry (<code>lifecycle.ts:40-43</code>), payment status <code>pending</code>.</li>
+<li>Expiry is lazy: applied whenever reservations are read (<code>reservations.ts:51-62</code>, <code>:105</code>, <code>:128</code>); sets <code>status=expired</code>, <code>paymentStatus=voided</code>, <code>respondedAt=expiresAt</code>. No background job, no notification.</li>
+<li>Approval mode exists at three levels: <code>Listing.bookingApprovalMode</code> + <code>instantBook</code> (used for listings), <code>Organization.bookingApprovalMode</code> (used for trips only), <code>User.bookingApprovalMode</code> (written, never read by the engine).</li>
+</ul>
+<h3 id="47-reservation-status-transitions">4.7 Reservation status transitions</h3>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Trigger</th>
+<th>Who</th>
+<th>Side effects</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(new)</td>
+<td>confirmed</td>
+<td>create on instant listing / trip</td>
+<td>guest</td>
+<td>paymentStatus paid; commission charged</td>
+<td><code>reservations.ts:273,291,336</code></td>
+</tr>
+<tr>
+<td>(new)</td>
+<td>pending</td>
+<td>create on request listing / trip</td>
+<td>guest</td>
+<td>paymentStatus pending; expiresAt +24h</td>
+<td><code>reservations.ts:273,291,296</code></td>
+</tr>
+<tr>
+<td>pending</td>
+<td>confirmed</td>
+<td>accept</td>
+<td>host or any org member</td>
+<td>paymentStatus paid; respondedAt; commission charged</td>
+<td><code>reservations.ts:439-443</code>; <code>actions/bookings.ts:270-283</code></td>
+</tr>
+<tr>
+<td>pending</td>
+<td>declined</td>
+<td>decline (optional reason &lt;= 500)</td>
+<td>host or any org member</td>
+<td>paymentStatus voided; respondedAt; commission reversal (none charged)</td>
+<td><code>reservations.ts:444-447</code></td>
+</tr>
+<tr>
+<td>pending</td>
+<td>expired</td>
+<td>clock passes expiresAt (lazy)</td>
+<td>system</td>
+<td>paymentStatus voided</td>
+<td><code>lifecycle.ts:12-16</code>; <code>reservations.ts:55-58</code></td>
+</tr>
+<tr>
+<td>pending</td>
+<td>cancelled</td>
+<td>guest cancels</td>
+<td>guest</td>
+<td>refund 0, paymentStatus voided, cancelledBy guest</td>
+<td><code>cancellation.ts:159-169</code>; <code>actions/bookings.ts:216-245</code></td>
+</tr>
+<tr>
+<td>confirmed</td>
+<td>cancelled</td>
+<td>guest cancels before check-in time on arrival day</td>
+<td>guest</td>
+<td>refund per policy; commission partly reversed</td>
+<td><code>cancellation.ts:181-213</code>; <code>reservations.ts:402-425</code></td>
+</tr>
+<tr>
+<td>confirmed</td>
+<td>cancelled</td>
+<td>host cancels</td>
+<td>host or any org member</td>
+<td>full refund <code>totalPrice</code>, paymentStatus refunded, full commission reversal</td>
+<td><code>cancellation.ts:217-239</code>; <code>actions/bookings.ts:284-292</code></td>
+</tr>
+<tr>
+<td>confirmed</td>
+<td>completed</td>
+<td>clock passes checkout time on endDate (trips: 23:59 on last day) (lazy)</td>
+<td>system</td>
+<td>none</td>
+<td><code>lifecycle.ts:19-37</code></td>
+</tr>
+<tr>
+<td>any</td>
+<td>cancelled by system</td>
+<td>never implemented</td>
+<td>n/a</td>
+<td><code>cancelledBy: &quot;system&quot;</code> unused</td>
+<td><code>types.ts:236</code></td>
+</tr>
+</tbody></table>
+<p>Not allowed: host cancel of pending (RESERVATION_NOT_CANCELLABLE), accept/decline of non-pending (REQUEST_NOT_PENDING / REQUEST_EXPIRED), guest cancel of completed/declined/expired/cancelled (RESERVATION_NOT_CANCELLABLE), guest cancel after check-in time (CHECK_IN_PASSED; for trips the cut-off is <code>00:00</code> on departure day, <code>actions/bookings.ts:237</code>).</p>
+<h3 id="48-cancellation-policies-and-refunds-libbookingcancellationts">4.8 Cancellation policies and refunds (<code>lib/booking/cancellation.ts</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Tiers (days before check-in -&gt; refund % of subtotal)</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>flexible</td>
+<td>&gt;= 1 day: 100%; arrival day before check-in time: 50%</td>
+<td><code>:49-55</code></td>
+</tr>
+<tr>
+<td>moderate</td>
+<td>&gt;= 5 days: 100%; 1 to 4 days: 50%; arrival day: 0%</td>
+<td><code>:56-63</code></td>
+</tr>
+<tr>
+<td>strict</td>
+<td>&gt;= 14 days: 100%; 7 to 13 days: 50%; 0 to 6 days: 0%</td>
+<td><code>:64-71</code></td>
+</tr>
+</tbody></table>
+<ul>
+<li>Days before = calendar days between today in Algeria and startDate (<code>:154-157</code>).</li>
+<li>Guest refund = <code>min(total, round(subtotal x pct/100) + cleaningFee + round(taxes x pct/100) + (pct == 100 ? serviceFee : 0))</code> (<code>:199-205</code>). Cleaning fee always refunded in full. (The header comment at <code>:14-15</code> says the cleaning share of taxes is always refunded; code prorates all taxes: minor mismatch, irrelevant while tax rate is 0.)</li>
+<li>Payment status after refund: refund &gt;= total -&gt; refunded; &gt; 0 -&gt; partially_refunded; else paid (<code>:139-143</code>).</li>
+<li>Policy snapshot: <code>reservation.cancellationPolicy ?? listing ?? trip</code> (<code>actions/bookings.ts:233-236</code>); default <code>flexible</code> (<code>:74-81</code>).</li>
+<li>Host cancel / decline: always full refund (<code>:217-239</code>).</li>
+<li>Refund is only a number on the reservation: there is no refund transaction, no payment provider call.</li>
+</ul>
+<h3 id="49-wallet--ledger-behaviour-libdatawalletts">4.9 Wallet / ledger behaviour (<code>lib/data/wallet.ts</code>)</h3>
+<ul>
+<li>Prepaid commission deposit model: hosts top up offline (CCP, BaridiMob, bank wire); admin credits via <code>rechargeWallet</code> with a note and <code>adminUserId</code> (<code>:290-329</code>); messages <code>hostWallet.json</code> (<code>howItWorksBody</code>, <code>creditedManually</code>).</li>
+<li>Commission deductions are negative transactions, reversals are positive <code>adjustment</code> transactions; balance = sum of amounts, recomputed on each append (<code>:246-248</code>, <code>:369-379</code>).</li>
+<li>Balance may go negative (seed <code>wal_casbah_hostel</code> -4200, <code>:173</code>). UI warns that listings could be paused; no code pauses anything.</li>
+<li>Append-only in practice (no edit or delete functions).</li>
+<li><code>payout</code> transaction type defined but never produced.</li>
+</ul>
+<h3 id="410-ratings-and-reviews">4.10 Ratings and reviews</h3>
+<ul>
+<li>Reviews are read-only seed data (<code>lib/data/reviews.ts:6-102</code>), 5 rows.</li>
+<li>Summary: overall = mean of <code>rating</code>; categories = mean of positive values of cleanliness, accuracy, communication, location, value; null when no reviews (show &quot;New&quot;) (<code>lib/reviews.ts:15-26</code>).</li>
+<li>Listing <code>rating</code> / <code>reviewCount</code>, org <code>rating</code> / <code>reviewCount</code>, trip <code>rating</code> / <code>reviewsCount</code> are stored numbers unrelated to the review rows (e.g. <code>lst_tipaza_villa</code> reviewCount 48 vs 2 rows).</li>
+<li>Hotel UI relabels categories (communication = staff, value = value for money) (<code>HotelHostelDetailClient.tsx:72</code>).</li>
+<li>No rule on who may review (no reservation link), no review window, no host response.</li>
+<li>Search <code>minRating</code> filter compares stored <code>rating</code> (<code>searchFacets.ts:374</code>).</li>
+</ul>
+<h3 id="411-favorites">4.11 Favorites</h3>
+<ul>
+<li>Listing ids on <code>User.favoriteIds</code>; set semantics (<code>lib/data/auth.ts:182-194</code>).</li>
+<li>Adding requires the listing to exist (any status), removing does not (<code>actions/favorites.ts:13</code>).</li>
+<li>Optimistic UI with shared in-memory cache keyed by user (<code>hook/useFavorite.ts:16-27</code>).</li>
+<li>Trips cannot be favorited (toast only).</li>
+</ul>
+<h3 id="412-messaging">4.12 Messaging</h3>
+<ul>
+<li>One conversation per (2 participants, subject) where subject = listing id or trip id or null (<code>conversations.ts:112-137</code>).</li>
+<li>Recipient for org listings and trips = organization <code>ownerUserId</code> (not the team, not the listing creator) (<code>actions/messages.ts:67-74</code>).</li>
+<li>Cannot message yourself (<code>OWN_LISTING_MESSAGE</code>); listing/trip must be public.</li>
+<li>Text trimmed, 1 to 4000 chars (<code>actions/messages.ts:30</code>).</li>
+<li><code>unreadCount[receiver] += 1</code> on send (only if the map exists), reset to 0 on read; messages <code>read=true</code> for receiver (<code>conversations.ts:88-106</code>).</li>
+<li><code>lastMessage</code> / <code>lastMessageAt</code> denormalized on the conversation.</li>
+<li>No link between a reservation and a conversation; booking <code>guestMessage</code> is stored on the reservation only, not posted to the inbox.</li>
+</ul>
+<h3 id="413-notifications">4.13 Notifications</h3>
+<ul>
+<li>Per user, mark one (ownership checked) or all read (<code>lib/data/notifications.ts</code>).</li>
+<li>No producer: booking created/confirmed/declined/expired/cancelled, new message, org verification do not create notifications. Types <code>price</code> and <code>review</code> imply price-drop alerts and review prompts that do not exist.</li>
+<li>Stored English <code>title</code> / <code>message</code> text (not i18n keys).</li>
+</ul>
+<h3 id="414-onboarding--become-a-host-4-types">4.14 Onboarding / become a host (4 types)</h3>
+<table>
+<thead>
+<tr>
+<th>Host type</th>
+<th>Creates</th>
+<th>Rules</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>individual</td>
+<td>1 listing (active), user role host + hostType individual + bookingApprovalMode from listing; session refreshed</td>
+<td>if the user is already an org host with an org, the listing is created under the org instead</td>
+<td><code>actions/host.ts:74-100</code></td>
+</tr>
+<tr>
+<td>agency</td>
+<td>Organization (pending verification) + owner Membership + invited Memberships</td>
+<td>name, RC, phone, address required; valid business email; invites: valid emails, not self, max 20, role admin or manager (default manager)</td>
+<td><code>actions/host.ts:103-168</code>; <code>lib/data/organizations.ts:77-171</code></td>
+</tr>
+<tr>
+<td>hotel</td>
+<td>Organization + owner membership + invites + optional property listing with room types</td>
+<td>defaults: businessType &quot;Commercial Luxury Hotel&quot;, check-in 14:00, check-out 12:00</td>
+<td><code>organizations.ts:112-131</code>; <code>actions/host.ts:156-162</code></td>
+</tr>
+<tr>
+<td>hostel</td>
+<td>same as hotel</td>
+<td>defaults: businessType &quot;Youth &amp; Backpacker Hostel&quot;, check-in 13:00, check-out 11:00</td>
+<td>same</td>
+</tr>
+</tbody></table>
+<ul>
+<li>Org defaults: logo <code>/assets/logo-vertical.png</code>, country Algeria, teamSizeEstimate <code>2-10</code>, bookingApprovalMode <code>instant</code>, rating 0 (<code>organizations.ts:105-139</code>).</li>
+<li>Property is validated (prices) before anything is created (<code>actions/host.ts:128</code>), but org creation and listing creation are not transactional.</li>
+<li>Middleware / layout gates: no session -&gt; login; no hostType -&gt; <code>/become-a-host</code>; org host without org -&gt; <code>/become-a-host/&lt;type&gt;</code>; individual host without listing -&gt; <code>/become-a-host/1</code> (<code>middleware.ts:65-85</code>; <code>host/layout.tsx:25-30</code>).</li>
+<li>Verification: new orgs <code>pending</code>; workspace usable; public listing immediately active and bookable regardless of verification. Legal-field edits reset to <code>pending</code> (<code>organizations.ts:247-272</code>).</li>
+</ul>
+<h3 id="415-organizations-memberships-roles-libhost-typests12-27">4.15 Organizations, memberships, roles (<code>lib/host-types.ts:12-27</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>owner</th>
+<th>admin</th>
+<th>manager</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>canManageOperations (listings, bookings, calendar, trips)</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>canEditSettings</td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>canInviteMembers</td>
+<td>yes</td>
+<td>yes (manager role only)</td>
+<td>no</td>
+</tr>
+<tr>
+<td>canRemoveMember</td>
+<td>any non-owner</td>
+<td>managers only</td>
+<td>no</td>
+</tr>
+<tr>
+<td>canChangeRoles</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>canTransferOwnership</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>canDeleteOrganization</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+</tr>
+</tbody></table>
+<ul>
+<li>Only the owner can grant admin on invite (<code>actions/organizations.ts:105-108</code>).</li>
+<li>Owner role cannot be changed through role change (<code>OWNER_ROLE_LOCKED</code>), owner cannot be removed.</li>
+<li>Transfer: target must be active with userId; all current owners demoted to admin; <code>org.ownerUserId</code> updated (<code>organizations.ts:220-236</code>).</li>
+<li>Duplicate invite check by email among non-removed members (<code>actions/organizations.ts:109-112</code>).</li>
+<li>Delete org: owner only, typed name must equal org name; memberships deleted; listings and trips set to draft; deleting user&#39;s <code>organizationId</code> cleared and session refreshed (<code>actions/organizations.ts:72-88</code>; <code>organizations.ts:274-282</code>). Other members keep <code>hostType</code> of an org type with no org and will be sent back to onboarding.</li>
+<li>Ops actions (<code>updateMyListingAction</code>, <code>deleteMyListingAction</code>, calendar, <code>respondToReservationAction</code>, trip status/delete) check ownership only, not role, consistent with <code>canManageOperations</code>.</li>
+<li>Trips are agency-only (<code>AGENCY_ONLY</code>, <code>actions/trips.ts:73-78</code>).</li>
+</ul>
+<h3 id="416-search-filters-semantics">4.16 Search filters semantics</h3>
+<p>Base search (<code>lib/data/listings.ts:18-218</code>): active only; <code>vertical=hotel</code> matches businessCategory hotel/hostel, category hotel, or type containing &quot;hotel&quot;/&quot;hostel&quot;; <code>vertical=home</code> excludes hotels/hostels; <code>category</code> substring on type/amenities; <code>destination</code> substring on city, locationValue, country; <code>minPrice</code>/<code>maxPrice</code> on base <code>price</code> (not quoted total); guests filter only when &gt; 1 and only on <code>guestCount</code> (listings without it pass); dates as in 4.4. <code>instantBook</code> in <code>SearchParams</code> is ignored by the data layer. Trips: destination substring on title/city/locationValue (<code>trips.ts:34-42</code>).</p>
+<p>Side filters (<code>components/search/searchFacets.ts</code>), applied in-process on the base pool, same code client and server:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>URL param</th>
+<th>Semantics</th>
+<th>Ref</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>wilayas</td>
+<td><code>wilayas</code> (codes 1..58, CSV)</td>
+<td>any of; wilaya from commune, else first known city part</td>
+<td><code>:278</code>, <code>:355-359</code>; <code>lib/algeria.ts</code> <code>locatePlace</code></td>
+</tr>
+<tr>
+<td>communes</td>
+<td><code>communes</code></td>
+<td>any of; accent-insensitive equality</td>
+<td><code>:279</code>, <code>:357</code></td>
+</tr>
+<tr>
+<td>types</td>
+<td><code>propertyType</code></td>
+<td>any of; special values hotel, hostel, entire/entire home (no hotel/hostel, no bed units), private room (type contains room or has room units), riad (riad/ksar/heritage); else exact type or businessCategory</td>
+<td><code>:339-347</code></td>
+</tr>
+<tr>
+<td>subtypes</td>
+<td><code>subtype</code></td>
+<td>any of; equals host-typed <code>type</code></td>
+<td><code>:366</code></td>
+</tr>
+<tr>
+<td>price</td>
+<td><code>minPrice</code>, <code>maxPrice</code></td>
+<td>inclusive on base price (per-night/day/person/traveller)</td>
+<td><code>:367-370</code></td>
+</tr>
+<tr>
+<td>amenities</td>
+<td><code>amenities</code></td>
+<td>ALL of; each key maps to alias substrings over listing + room-type amenities</td>
+<td><code>:127-165</code>, <code>:371</code></td>
+</tr>
+<tr>
+<td>bedrooms</td>
+<td><code>roomCount</code></td>
+<td>min, applied only when &gt; 1; <code>bedroomCount ?? roomCount</code></td>
+<td><code>:77</code>, <code>:372</code></td>
+</tr>
+<tr>
+<td>bathrooms</td>
+<td><code>bathroomCount</code></td>
+<td>min, only when &gt; 1</td>
+<td><code>:373</code></td>
+</tr>
+<tr>
+<td>rating</td>
+<td><code>minRating</code></td>
+<td>min stored rating</td>
+<td><code>:374</code>, <code>:409</code></td>
+</tr>
+<tr>
+<td>instant</td>
+<td><code>instantBook=true</code></td>
+<td><code>instantBook</code> OR <code>bookingApprovalMode === &quot;instant&quot;</code> (differs from engine rule 4.1)</td>
+<td><code>:80</code>, <code>:375</code></td>
+</tr>
+<tr>
+<td>favorite</td>
+<td><code>isGuestFavorite=true</code></td>
+<td>manual flag</td>
+<td><code>:376</code></td>
+</tr>
+<tr>
+<td>freeCancel</td>
+<td><code>freeCancellation=true</code></td>
+<td>policy === flexible</td>
+<td><code>:377</code></td>
+</tr>
+<tr>
+<td>hosts</td>
+<td><code>host</code></td>
+<td>ownerType individual / organization</td>
+<td><code>:378</code></td>
+</tr>
+<tr>
+<td>stars</td>
+<td><code>stars</code></td>
+<td>min hotelStarRating</td>
+<td><code>:379</code></td>
+</tr>
+<tr>
+<td>transmissions</td>
+<td><code>transmission</code></td>
+<td>any of</td>
+<td><code>:380</code></td>
+</tr>
+<tr>
+<td>fuels</td>
+<td><code>fuel</code></td>
+<td>any of</td>
+<td><code>:381</code></td>
+</tr>
+<tr>
+<td>seats</td>
+<td><code>seats</code></td>
+<td>min seats</td>
+<td><code>:382</code></td>
+</tr>
+<tr>
+<td>expLengths</td>
+<td><code>expLength</code></td>
+<td>any of buckets upTo4h [0,4], halfDay (4,12], multiDay (12,inf) hours</td>
+<td><code>:174-178</code>, <code>:383-389</code></td>
+</tr>
+<tr>
+<td>languages</td>
+<td><code>lang</code></td>
+<td>any of experienceLanguages</td>
+<td><code>:390</code></td>
+</tr>
+<tr>
+<td>durations (trips)</td>
+<td><code>duration</code></td>
+<td>buckets 1-3, 4-7, 8-14, 15+ days</td>
+<td><code>:167-172</code>, <code>:401-407</code></td>
+</tr>
+<tr>
+<td>months (trips)</td>
+<td><code>months</code> (1..12)</td>
+<td>any departure month</td>
+<td><code>:408</code></td>
+</tr>
+<tr>
+<td>group (trips)</td>
+<td><code>groupSize</code></td>
+<td>min maxGroupSize</td>
+<td><code>:410</code></td>
+</tr>
+<tr>
+<td>agencies (trips)</td>
+<td><code>agency</code></td>
+<td>org name equality</td>
+<td><code>:411</code></td>
+</tr>
+</tbody></table>
+<p>Facet counts use the same matchers with the group skipped (<code>matchesListing(f, filters, skip)</code>, <code>:361-392</code>). Category counts from the unfiltered pool across all verticals (<code>search/page.tsx:67-71</code>).</p>
+<h3 id="417-algeria-geography-libalgeriats">4.17 Algeria geography (<code>lib/algeria.ts</code>)</h3>
+<ul>
+<li>58 wilayas with official codes incl. 2019 reform (49 to 58), French/Latin name, optional English (<code>Alger</code> -&gt; <code>Algiers</code>), Arabic name (<code>:14-73</code>).</li>
+<li>13 communes with wilaya code (<code>:81-95</code>), &quot;extend as hosts add places&quot;.</li>
+<li><code>locatePlace</code>: explicit commune first, else split <code>city</code> on <code>&amp;</code>, <code>,</code>, <code>/</code>, &quot; et &quot;, &quot; and &quot; and match commune or city-&gt;wilaya map (<code>:97-155</code>).</li>
+<li>Wilaya filter accepts 1..58 (<code>searchFacets.ts:278</code>).</li>
+</ul>
+<h3 id="418-auth-and-session">4.18 Auth and session</h3>
+<ul>
+<li>scrypt N default, 16-byte salt, 64-byte key, format <code>scrypt$salt$hash</code> (<code>lib/data/auth.ts:18-36</code>); timing-equalized unknown email (<code>:46-47,76</code>).</li>
+<li>Password min length 8, no other complexity (<code>lib/auth/password-rules.ts:2</code>).</li>
+<li>Cookie <code>darna_session</code>: HMAC-SHA256, httpOnly, SameSite lax, secure in production, 30 days, secret <code>DARNA_SESSION_SECRET</code> &gt;= 32 chars (dev fallback secret) (<code>lib/auth/session-token.ts:15-49,159-168</code>).</li>
+<li>Logout revokes <code>sid</code> in an in-memory map (<code>lib/server/session.ts:22-32,109-116</code>).</li>
+<li>Open-redirect guard for <code>callbackUrl</code> (<code>lib/auth/callback-url.ts:11-23</code>).</li>
+<li>CSRF: JSON content type + Origin host match for auth routes; server actions rely on Next&#39;s origin check (<code>lib/server/request-guard.ts</code>).</li>
+<li>No rate limiting, no lockout, no email verification, no password reset.</li>
+</ul>
+<hr>
+<h2 id="5-gaps-and-inconsistencies">5. Gaps and inconsistencies</h2>
+<h3 id="51-missing-entities--flows-the-ui-implies">5.1 Missing entities / flows the UI implies</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Evidence</th>
+<th>Backend implication</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Payments: no payment intent, charge, provider, capture, refund transaction, invoice</td>
+<td>Reservation goes straight to <code>paid</code> with free-text <code>paymentMethod</code> default <code>&quot;CIB / Edahabia Card&quot;</code> (<code>lib/data/reservations.ts:291-293</code>); receipt is a print dialog (<code>TripsClient.tsx:397-508</code>); settings show fake saved cards (<code>components/settings/PaymentsSection.tsx</code>)</td>
+<td>Need Payment / PaymentIntent (CIB / Edahabia via SATIM or similar), Refund, Invoice / Receipt numbering; <code>paymentStatus</code> must be driven by provider callbacks</td>
+</tr>
+<tr>
+<td>Money flow contradiction</td>
+<td><code>lib/booking/payout.ts:1-5</code> and <code>NoGuestFees.tsx</code> say BLADUS deducts commission from the host payout (implies BLADUS collects guest money) while the wallet copy says commission is taken from an offline prepaid deposit &quot;rather than from automated guest payouts&quot; (<code>messages/en/hostWallet.json</code> <code>howItWorksBody</code>); host settings show payout methods and a payout history (<code>HostSettingsClient.tsx:63-95</code>)</td>
+<td>Decide collection model (platform collects then pays out vs host collects and prepays commission). Need Payout, PayoutMethod (CCP / RIP with key), PayoutBatch if platform collects</td>
+</tr>
+<tr>
+<td>Payout methods and history</td>
+<td>hardcoded <code>PAYOUT_HISTORY</code> and <code>payoutMethods</code> (<code>HostSettingsClient.tsx:63-95</code>)</td>
+<td>PayoutMethod table (CCP number + key, RIB), Payout table</td>
+</tr>
+<tr>
+<td>Reviews write path</td>
+<td>no action, no UI; reviews are a module constant (<code>lib/data/reviews.ts:6</code>); seed users <code>usr_meriem</code>, <code>usr_tarek</code> do not exist; names differ from users table (Sofiane Boudiaf vs Mebarki, Leila Zerrouki vs Hadj)</td>
+<td>Review table linked to reservation, eligibility window, host reply, aggregate denormalization job</td>
+</tr>
+<tr>
+<td>Notification producers</td>
+<td>nothing creates notifications (<code>lib/data/notifications.ts</code> has no create)</td>
+<td>Event -&gt; notification service (booking lifecycle, messages, verification, wallet low balance), plus email / SMS channels; preferences matrix (<code>NotificationsSection.tsx</code>) needs a table</td>
+</tr>
+<tr>
+<td>Invitation acceptance</td>
+<td>invited memberships have <code>userId: null</code>, no token, no email, no accept route (<code>organizations.ts:155-168,184-206</code>; resend toast <code>AgencyTeamClient.tsx:179-182</code>)</td>
+<td>Invitation table with token + expiry, email delivery, accept endpoint that links <code>userId</code> and sets user hostType</td>
+</tr>
+<tr>
+<td>Organization switcher / multi-org</td>
+<td>users own several orgs (Karim 3, Amina 2) but active org = session or first membership (<code>lib/server/active-org.ts:22-23</code>); <code>ctx.hostType</code> comes from <code>User.hostType</code>, not from the active org&#39;s category (<code>host-context.ts:28</code>)</td>
+<td>Active org must be explicit (header or session) and host type derived from org <code>businessCategory</code>; User.hostType should not be a single value</td>
+</tr>
+<tr>
+<td>Individual user also owning orgs</td>
+<td>Amina is <code>hostType: individual</code> but owns 2 hostels she can never manage (<code>getHostContext</code> treats her as individual)</td>
+<td>Separate &quot;personal hosting profile&quot; from org memberships</td>
+</tr>
+<tr>
+<td>Agency owner with individual listings</td>
+<td>Karim (<code>hostType: agency</code>) is <code>hostUserId</code> of 3 individual listings (<code>lst_casbah_loft</code>, <code>lst_constantine_cliff</code>, <code>lst_dacia_duster</code>) that <code>hostOwnsListing</code> will never let him manage (<code>authz.ts:13-18</code>)</td>
+<td>Same as above</td>
+</tr>
+<tr>
+<td>Listing moderation</td>
+<td><code>ListingStatus</code> has <code>pending</code>, <code>suspended</code> but new listings go <code>active</code> immediately (<code>lib/data/listings.ts:309</code>); org verification does not gate publishing</td>
+<td>Listing review workflow, gating on org verification</td>
+</tr>
+<tr>
+<td>Identity verification</td>
+<td><code>isIdentityVerified</code> static; notification seed mentions national ID verification; settings identity section</td>
+<td>KYC / document upload entity</td>
+</tr>
+<tr>
+<td>Media upload</td>
+<td>images are URLs typed by hosts, allowlist of 6 hosts (<code>_sanitize.ts:38-45</code>); stock photos substituted (<code>BecomeHostFlow.tsx:628-637</code>); avatar change toast (<code>UserProfileClient.tsx:186</code>)</td>
+<td>Media storage (S3-compatible), image entity with ordering, upload endpoints</td>
+</tr>
+<tr>
+<td>Reports / trust and safety</td>
+<td>report listing toast (<code>ListingReservation.tsx:439</code>)</td>
+<td>Report entity + admin queue</td>
+</tr>
+<tr>
+<td>Help / support tickets</td>
+<td>help form is <code>setTimeout</code> (<code>HelpClient.tsx:119-125</code>)</td>
+<td>SupportTicket entity, email</td>
+</tr>
+<tr>
+<td>Password reset, email verification, email change, social and phone login, account deactivation, data export, sessions list</td>
+<td>toasts (<code>LoginModal.tsx:330,360,374</code>; <code>PersonalSection.tsx:218</code>; <code>SettingsClient.tsx:212</code>; <code>HostingSections.tsx:103</code>; <code>SecuritySection.tsx:140</code>)</td>
+<td>Auth endpoints and token tables; <code>emailVerified</code> is never set</td>
+</tr>
+<tr>
+<td>User preferences</td>
+<td>currency, notifications matrix, preferred name, mailing address, booking permissions, travel for work, tax NIF are local state</td>
+<td>UserPreferences / TaxProfile tables</td>
+</tr>
+<tr>
+<td>Host booking defaults</td>
+<td>advance notice, prep time, check-in/out, cancellation policy defaults are local state (<code>HostSettingsClient.tsx:102-106</code>)</td>
+<td>HostDefaults table applied to new listings</td>
+</tr>
+<tr>
+<td>Trip content edit</td>
+<td>only status and delete actions exist (<code>app/actions/trips.ts</code>)</td>
+<td><code>PATCH /host/trips/{id}</code></td>
+</tr>
+<tr>
+<td>Listing full edit</td>
+<td>edit modal sends only title, price, instantBook (<code>HostListingsClient.tsx:188-192</code>)</td>
+<td>full listing editor endpoints</td>
+</tr>
+<tr>
+<td>Trip &lt;-&gt; conversation and booking &lt;-&gt; conversation</td>
+<td><code>startConversationAction({tripId})</code> has no caller; &quot;message host/guest&quot; buttons open the generic inbox (<code>TripsClient.tsx:311</code>, <code>HostBookingsClient.tsx:734</code>)</td>
+<td>Conversation <code>reservation_id</code> FK, auto thread on booking with <code>guestMessage</code> as first message</td>
+</tr>
+<tr>
+<td>Realtime messaging</td>
+<td>no polling or websocket</td>
+<td>Django Channels / SSE or polling endpoint</td>
+</tr>
+<tr>
+<td>Coupons</td>
+<td><code>Coupon</code> type exists (<code>types.ts:474-486</code>), no UI</td>
+<td>Coupon + redemption tables if admin feature ships</td>
+</tr>
+<tr>
+<td>Wallet enforcement</td>
+<td>negative balance has no effect besides a banner</td>
+<td>Rule: pause listings or block confirmations under threshold (needs product decision)</td>
+</tr>
+<tr>
+<td>Commission on trips</td>
+<td>agency rate applies via org; seeded ledger references trip bookings <code>res_trip_*</code> and <code>res_tipaza_02</code>, <code>res_hotel_*</code>, <code>res_hostel_*</code> that do not exist in reservations seed (<code>wallet.ts:44-206</code>)</td>
+<td>Seed consistency; FK from transaction to reservation</td>
+</tr>
+<tr>
+<td>Price drop alerts</td>
+<td>notification type <code>price</code> seeded</td>
+<td>Saved-search / price watch feature not built</td>
+</tr>
+</tbody></table>
+<h3 id="52-mock-shortcuts-that-will-not-survive-a-real-backend">5.2 Mock shortcuts that will not survive a real backend</h3>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Where</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>globalThis arrays as DB; data lost on restart; not shared across instances</td>
+<td><code>lib/data/_store.ts:14-20</code>, <code>_tables.ts</code></td>
+<td>PostgreSQL</td>
+</tr>
+<tr>
+<td>Reviews, calendar overrides, wallets, credentials seeded inline in data modules</td>
+<td><code>reviews.ts:6</code>, <code>calendar.ts:13</code>, <code>wallet.ts:16</code>, <code>auth.ts:39</code></td>
+<td>move to fixtures</td>
+</tr>
+<tr>
+<td>Demo password shared by all seed users and duplicated in client bundle</td>
+<td><code>lib/data/auth.ts:14</code>; <code>components/models/LoginModal.tsx:46-51</code></td>
+<td>remove from client; fixtures only in dev</td>
+</tr>
+<tr>
+<td>Dev fallback session secret</td>
+<td><code>lib/auth/session-token.ts:29</code></td>
+<td>env-only secret</td>
+</tr>
+<tr>
+<td>In-memory session revocation list (lost on restart, per instance)</td>
+<td><code>lib/server/session.ts:22-32</code></td>
+<td>server-side session table or JWT denylist</td>
+</tr>
+<tr>
+<td>No rate limiting anywhere (login, register, messages, bookings)</td>
+<td>grep found none</td>
+<td>DRF throttling / reverse-proxy limits</td>
+</tr>
+<tr>
+<td>Capacity check &quot;atomic&quot; only within one Node process</td>
+<td><code>lib/data/reservations.ts:305-334</code></td>
+<td>DB transaction with <code>SELECT ... FOR UPDATE</code> per listing/room type, or PostgreSQL exclusion constraint on daterange for whole-listing stays</td>
+</tr>
+<tr>
+<td>Write-on-read lifecycle (<code>settle</code> mutates every reservation on each <code>getReservations</code>)</td>
+<td><code>reservations.ts:51-62,105</code></td>
+<td>scheduled job (Celery beat) for expiry / completion + read-time computation</td>
+</tr>
+<tr>
+<td>Commission charged in a try/catch that only logs failures</td>
+<td><code>reservations.ts:381-396,418-423</code></td>
+<td>same DB transaction as status change, outbox</td>
+</tr>
+<tr>
+<td>Org creation + listing creation + user update not transactional</td>
+<td><code>actions/host.ts:131-166</code></td>
+<td>one transaction</td>
+</tr>
+<tr>
+<td>Derived values stored as truth: <code>Listing.rating</code>, <code>reviewCount</code>, <code>bookingsCount</code>, <code>isGuestFavorite</code>, <code>featured</code>; <code>Organization.rating</code>, <code>reviewCount</code>; <code>Trip.rating</code>, <code>reviewsCount</code>; <code>User.yearsHosting</code>, <code>responseRate</code>, <code>responseTime</code>; <code>Wallet.balance</code>; <code>Conversation.lastMessage</code>, <code>unreadCount</code></td>
+<td><code>types.ts</code></td>
+<td>compute or maintain via signals, mark read-only in API</td>
+</tr>
+<tr>
+<td>Mock reservation totals inconsistent with the pricing engine and stored <code>taxes</code> while tax rate is 0 (e.g. <code>res_tipaza_01</code> 5 nights x 18500 + 4000 + 2500 = 99000 but <code>totalPrice</code> 86000; no <code>subtotal</code> stored)</td>
+<td><code>lib/mock-data/reservations.ts:5-21</code></td>
+<td>regenerate fixtures through the pricing service</td>
+</tr>
+<tr>
+<td>Mock statuses contradicting rules: declined row with <code>paymentStatus: &quot;refunded&quot;</code> (code uses <code>voided</code>); request rows on <code>lst_tipaza_villa</code> which is instant; <code>res_constantine_pending</code> is Karim booking his own listing (blocked by OWN_LISTING)</td>
+<td><code>lib/mock-data/reservations.ts:75-127</code></td>
+<td>fix fixtures</td>
+</tr>
+<tr>
+<td>Conversation seed: <code>unreadCount</code> keyed by non-participants (<code>usr_amina</code> in conv_02/03); <code>usr_sofiane</code> acts as a host but is a guest with no listings; <code>otherUser</code> snapshot names differ from users</td>
+<td><code>lib/mock-data/conversations.ts:20-49</code></td>
+<td>fixtures</td>
+</tr>
+<tr>
+<td>Free text where references are needed: <code>Listing.city</code> (&quot;Hydra, Algiers&quot; from onboarding, <code>BecomeHostFlow.tsx:659</code>), <code>locationValue</code>, <code>commune</code> (string, not FK), <code>Trip.city</code> (&quot;Tipaza &amp; Cherchell&quot;), <code>Listing.type</code> (free subtype), <code>Organization.businessType</code>, <code>paymentMethod</code>, <code>RoomType.amenities</code> (English sentences), <code>houseRules</code>, <code>languages</code>, <code>experienceLanguages</code>, <code>Notification.title/message</code> (English)</td>
+<td><code>types.ts</code>, onboarding</td>
+<td>Wilaya / Commune tables (FK), ListingType / Subtype lookup, Amenity table (one vocabulary), Language codes (ISO), PaymentMethod enum, notification template keys</td>
+</tr>
+<tr>
+<td>Three amenity vocabularies: listing snake_case keys (<code>sea_view</code>), filter keys camelCase (<code>seaView</code>, <code>messages/en/amenities.json</code>), room-type free text; search bridges them with substring aliases</td>
+<td><code>searchFacets.ts:127-165</code>; <code>amenityIcons.ts</code>; mock listings</td>
+<td>single Amenity table with i18n labels and scope (listing / room / hotel / hostel facility)</td>
+</tr>
+<tr>
+<td><code>Listing.category</code> vs <code>businessCategory</code> vs <code>type</code> all used to infer &quot;hotel&quot; (<code>listings.ts:28-36</code>, <code>searchFacets.ts:55-61</code>); hotels stored as <code>category: &quot;home&quot;</code></td>
+<td></td>
+<td>explicit <code>vertical</code> enum + property kind</td>
+</tr>
+<tr>
+<td>Trip bookings put the trip id in <code>Reservation.listingId</code> (<code>reservations.ts:349</code>) and <code>getReservations({listingId})</code> matches either (<code>:110-112</code>)</td>
+<td></td>
+<td>separate nullable FKs <code>listing_id</code>, <code>trip_id</code>, <code>departure_id</code> with a check constraint</td>
+</tr>
+<tr>
+<td>Trip departures are a string array; seats computed by summing reservations</td>
+<td><code>types.ts:286</code>; <code>reservations.ts:244-251</code></td>
+<td>TripDeparture table (date, capacity, status, price override)</td>
+</tr>
+<tr>
+<td>Room types embedded in listing JSON; ids client-suppliable when they match <code>/^[\w-]{1,80}$/</code> (<code>_sanitize.ts:100</code>)</td>
+<td></td>
+<td>RoomType table, server ids only</td>
+</tr>
+<tr>
+<td>Calendar overrides per listing only, not per room type; price overrides refused for room types</td>
+<td><code>actions/calendar.ts:74-76</code></td>
+<td>per room-type inventory / rate calendar</td>
+</tr>
+<tr>
+<td><code>inventoryCount</code> vs <code>totalInventory</code> vs <code>availableInventory</code> vs <code>isAvailable</code> overlap</td>
+<td><code>types.ts:100-107</code>; <code>pricing.ts:78-82</code></td>
+<td>single inventory field + calendar</td>
+</tr>
+<tr>
+<td><code>basePrice</code> mirrors <code>price</code> &quot;for older readers&quot;</td>
+<td><code>_sanitize.ts:108-109</code></td>
+<td>drop</td>
+</tr>
+<tr>
+<td><code>perPersonPrice</code> on experiences never used (pricing uses <code>price</code>)</td>
+<td><code>types.ts:193</code></td>
+<td>drop or use</td>
+</tr>
+<tr>
+<td><code>serviceFeeRate</code> and <code>taxRate</code> per listing labelled &quot;admin-only override&quot; but <code>serviceFeeRate</code> is ignored and neither is admin editable here</td>
+<td><code>types.ts:163-166</code>; <code>pricing.ts:125-130</code></td>
+<td>platform settings + tax rules (TVA / taxe de séjour)</td>
+</tr>
+<tr>
+<td>Approval mode in three places with different readers (User, Listing + instantBook, Organization) and search facet &quot;instant&quot; disagrees with engine (<code>searchFacets.ts:80</code> vs <code>pricing.ts:276-282</code>)</td>
+<td></td>
+<td>one source per inventory item; drop <code>instantBook</code> or derive it</td>
+</tr>
+<tr>
+<td>Agency onboarding never sends <code>bookingApprovalMode</code>; hotel/hostel onboarding hardcodes room types and prices; <code>hotelTaxId</code>, <code>placement</code>, <code>bedsCount</code>, admin custom fields collected but not sent</td>
+<td><code>BecomeHostFlow.tsx:692-703,777-813,175</code>; <code>:113-116</code></td>
+<td>onboarding API must accept real room types, tax id, custom fields</td>
+</tr>
+<tr>
+<td>Onboarding step config in browser <code>localStorage</code> (admin edits only affect that browser)</td>
+<td><code>lib/onboarding-config.ts:1064-1092</code></td>
+<td>OnboardingConfig table served by API</td>
+</tr>
+<tr>
+<td>Host drafts in <code>localStorage</code></td>
+<td><code>lib/client/user-storage.ts:7-41</code></td>
+<td>optional server-side ListingDraft</td>
+</tr>
+<tr>
+<td><code>getListingById</code>, <code>getTripById</code> return any status; favorites can include drafts; <code>getFavoriteListings</code> returns unpublished listings to the guest</td>
+<td><code>actions/favorites.ts:13</code>; <code>lib/data/favorites.ts:7-11</code></td>
+<td>filter public status</td>
+</tr>
+<tr>
+<td>Org profile pages render unverified and rejected orgs and their listings</td>
+<td><code>components/agency/orgProfilePage.tsx:56-80</code></td>
+<td>decide visibility rules</td>
+</tr>
+<tr>
+<td>Guest contact (email + phone) is included on every populated reservation, including in guest-side <code>getReservations({userId})</code> responses and host lists for all statuses</td>
+<td><code>reservations.ts:17-31,64-73</code></td>
+<td>host-only serializer, possibly reveal contact only after confirmation</td>
+</tr>
+<tr>
+<td><code>ownerType</code> arg effectively ignored in <code>getWalletByOwner</code> (<code>wallet.ts:281-285</code>)</td>
+<td></td>
+<td>query by (owner_type, owner_id)</td>
+</tr>
+<tr>
+<td>Wallet <code>hostType</code> stored on wallet and preferred over booking host type (<code>wallet.ts:423</code>)</td>
+<td></td>
+<td>derive from owner</td>
+</tr>
+<tr>
+<td>Hard deletes: listings (<code>listings.ts:346-349</code>), trips, members, organizations; reservations keep dangling <code>listingId</code></td>
+<td></td>
+<td>soft delete / archive, PROTECT FKs</td>
+</tr>
+<tr>
+<td><code>MembershipStatus.removed</code> never used; <code>transferOrganizationOwnership</code> demotes every owner</td>
+<td><code>organizations.ts:230-232</code></td>
+<td>unique owner constraint</td>
+</tr>
+<tr>
+<td>Deleting an org leaves other members with an org <code>hostType</code> and no org</td>
+<td><code>actions/organizations.ts:72-88</code></td>
+<td>cascade membership + user role logic</td>
+</tr>
+<tr>
+<td><code>ListingOwnerType</code> duplicated by <code>hostUserId</code>/<code>organizationId</code> presence; org listings also store creator <code>hostUserId</code> (<code>actions/host.ts:79-85</code>) which then makes <code>getReviewsByUserId</code> and public user profiles inconsistent</td>
+<td></td>
+<td><code>created_by</code> separate from owner</td>
+</tr>
+<tr>
+<td>KPIs computed client side from full reservation lists (<code>lib/host-kpis.ts</code>); revenue uses gross <code>totalPrice</code> not net payout</td>
+<td><code>HostTodayClient.tsx:98-104</code>; <code>ReservationsClient.tsx:95</code></td>
+<td>server KPI endpoint</td>
+</tr>
+<tr>
+<td>Exchange rate constant 152.47</td>
+<td><code>lib/currency.ts:1</code></td>
+<td>ExchangeRate table or provider</td>
+</tr>
+<tr>
+<td>Search is in-memory full scan with substring matching; no pagination; price filter on base price only</td>
+<td><code>lib/data/listings.ts:18-218</code></td>
+<td>SQL / PostGIS (latlng), trigram search on city, pagination, sort</td>
+</tr>
+<tr>
+<td><code>SearchParams.instantBook</code> ignored by data layer (handled only by facets); <code>TripSearchParams.duration</code> ignored</td>
+<td><code>listings.ts</code>, <code>trips.ts:17</code></td>
+<td>clean API params</td>
+</tr>
+<tr>
+<td>Fake latency <code>delay()</code> in data layer</td>
+<td><code>_store.ts:44</code></td>
+<td>drop</td>
+</tr>
+<tr>
+<td>Legacy cookies <code>darna_user_id</code>, <code>darna_host_type</code>, <code>darna_agency_id</code> cleared on logout</td>
+<td><code>app/api/auth/logout/route.ts:25-27</code></td>
+<td>drop after migration</td>
+</tr>
+<tr>
+<td><code>TODO: replace with Supabase</code> comments everywhere</td>
+<td>every <code>lib/data/*.ts</code></td>
+<td>update to Django</td>
+</tr>
+<tr>
+<td><code>ListingVertical</code> includes <code>trip</code> and <code>hotel</code> but trips are a separate entity and hotels are stored as <code>home</code></td>
+<td><code>types.ts:47-52</code></td>
+<td>clarify enum</td>
+</tr>
+<tr>
+<td><code>minGroupSize</code> on trips not enforced; trip departure dates can be in the past at creation; <code>durationDays</code> not reconciled with itinerary length</td>
+<td><code>availability.ts:126-144</code>; <code>actions/trips.ts:44-57</code></td>
+<td>validation in API</td>
+</tr>
+<tr>
+<td>Reservation <code>subtotal</code> missing on legacy rows, so commission base / refunds fall back to <code>total - fees - taxes</code></td>
+<td><code>reservations.ts:377-379</code>; <code>cancellation.ts:129-137</code>; <code>payout.ts:25</code></td>
+<td>make <code>subtotal</code> NOT NULL</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="6-page-routes-34-pagetsx">6. Page routes (34 <code>page.tsx</code>)</h2>
+<p>33 pages under <code>app/[locale]/</code> + root <code>app/page.tsx</code>. Auth column: &quot;MW&quot; = middleware redirect when no session (<code>middleware.ts:14-25,62-71</code>), &quot;page&quot; = page-level check.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Route</th>
+<th>File</th>
+<th>Purpose</th>
+<th>Data functions used</th>
+<th>Actor</th>
+<th>Auth required</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>/</code></td>
+<td><code>app/page.tsx</code></td>
+<td>redirect to <code>/en</code></td>
+<td>none</td>
+<td>any</td>
+<td>no</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>/[locale]</code></td>
+<td><code>app/[locale]/page.tsx</code></td>
+<td>home feed, category grid, trips grid</td>
+<td><code>getSessionUser</code>, <code>getListings</code>, <code>getVehicles</code>, <code>getExperiences</code>, <code>getFeaturedListings</code>, <code>getTrips</code>, <code>toCardListing</code>, <code>toCardTrip</code></td>
+<td>visitor, guest</td>
+<td>no</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>/[locale]/[...rest]</code></td>
+<td><code>app/[locale]/[...rest]/page.tsx</code></td>
+<td>localized 404 catch-all</td>
+<td>none</td>
+<td>any</td>
+<td>no</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>/[locale]/search</code></td>
+<td><code>app/[locale]/search/page.tsx</code></td>
+<td>search results, facets, map, trips</td>
+<td><code>getSessionUser</code>, <code>getListings</code> (x2), <code>getTrips</code>, <code>parseSideFilters</code>, <code>toFacet</code>, <code>toTripFacet</code>, <code>matchesListing</code>, <code>matchesTrip</code>, <code>verticalOf</code></td>
+<td>visitor, guest</td>
+<td>no</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>/[locale]/listings/[listingId]</code></td>
+<td><code>app/[locale]/listings/[listingId]/page.tsx</code> (+ <code>layout.tsx</code> existence check)</td>
+<td>listing detail + booking</td>
+<td><code>getHostContext</code>, <code>hostOwnsListing</code>, <code>getPublicListingById</code>, <code>getSessionUser</code>, <code>getUserById</code>, <code>toPublicUser</code>, <code>getOrganizationById</code>, <code>getReviewsByListingId</code>, <code>getListingAvailability</code>, <code>priceOverridesFor</code>, <code>getListings</code></td>
+<td>visitor, guest; owner sees drafts</td>
+<td>no (booking needs login)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>/[locale]/trips/[tripId]</code></td>
+<td><code>app/[locale]/trips/[tripId]/page.tsx</code> (+ <code>layout.tsx</code>)</td>
+<td>agency trip detail + seat booking</td>
+<td><code>getHostContext</code>, <code>hostOwnsTrip</code>, <code>getPublicTripById</code>, <code>getSessionUser</code>, <code>seatsSoldByDeparture</code>, <code>todayKey</code></td>
+<td>visitor, guest; agency sees drafts</td>
+<td>no (booking needs login)</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>/[locale]/users/[userId]</code></td>
+<td><code>app/[locale]/users/[userId]/page.tsx</code></td>
+<td>public user / host profile (<code>me</code>/<code>current</code> redirect to <code>/profile</code>)</td>
+<td><code>getUserById</code>, <code>getSessionUser</code>, <code>toPublicUser</code>, <code>getListings</code>, <code>getReviewsByUserId</code>, <code>getMembershipsForUser</code>, <code>getOrganizationById</code></td>
+<td>visitor, guest</td>
+<td>no</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>/[locale]/agencies/[organizationId]</code></td>
+<td><code>app/[locale]/agencies/[organizationId]/page.tsx</code> -&gt; <code>components/agency/orgProfilePage.tsx</code></td>
+<td>public agency profile</td>
+<td><code>getOrganizationById</code>, <code>getOrganizationMembers</code>, <code>getHostListings</code>, <code>getTrips</code>, <code>toPublicOrganization</code>, <code>toPublicMembers</code></td>
+<td>visitor</td>
+<td>no</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>/[locale]/hotels/[organizationId]</code></td>
+<td><code>app/[locale]/hotels/[organizationId]/page.tsx</code></td>
+<td>public hotel profile</td>
+<td>same as 8 (no trips)</td>
+<td>visitor</td>
+<td>no</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>/[locale]/hostels/[organizationId]</code></td>
+<td><code>app/[locale]/hostels/[organizationId]/page.tsx</code></td>
+<td>public hostel profile</td>
+<td>same as 8 (no trips)</td>
+<td>visitor</td>
+<td>no</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>/[locale]/help</code></td>
+<td><code>app/[locale]/help/page.tsx</code></td>
+<td>help center + contact form (mock)</td>
+<td>none</td>
+<td>any</td>
+<td>no</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>/[locale]/login</code></td>
+<td><code>app/[locale]/login/page.tsx</code></td>
+<td>login / register page</td>
+<td>none (client posts to <code>/api/auth/*</code>)</td>
+<td>visitor</td>
+<td>no</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>/[locale]/design-system</code></td>
+<td><code>app/[locale]/design-system/page.tsx</code></td>
+<td>internal UI gallery, 404 in production</td>
+<td>none</td>
+<td>developer</td>
+<td>no</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>/[locale]/trips</code></td>
+<td><code>app/[locale]/trips/page.tsx</code></td>
+<td>guest bookings (upcoming / past / cancelled), cancel, receipt</td>
+<td><code>getSessionUser</code>, <code>getReservations({userId})</code></td>
+<td>guest</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>/[locale]/favorites</code></td>
+<td><code>app/[locale]/favorites/page.tsx</code></td>
+<td>wishlist</td>
+<td><code>getSessionUser</code>, <code>getFavoriteListings</code></td>
+<td>guest</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>/[locale]/messages</code></td>
+<td><code>app/[locale]/messages/page.tsx</code></td>
+<td>inbox (first thread opened)</td>
+<td><code>getSessionUser</code>, <code>getConversations</code>, <code>getMessages</code></td>
+<td>guest, host</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>/[locale]/messages/[conversationId]</code></td>
+<td><code>app/[locale]/messages/[conversationId]/page.tsx</code></td>
+<td>specific thread</td>
+<td><code>getSessionUser</code>, <code>getConversationForParticipant</code>, <code>getConversations</code>, <code>getMessages</code></td>
+<td>participant</td>
+<td>MW + page (404 for non participants)</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>/[locale]/notifications</code></td>
+<td><code>app/[locale]/notifications/page.tsx</code></td>
+<td>notifications list</td>
+<td><code>getSessionUser</code>, <code>getNotifications</code></td>
+<td>guest, host</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>/[locale]/profile</code></td>
+<td><code>app/[locale]/profile/page.tsx</code></td>
+<td>own profile view / edit</td>
+<td><code>getSessionUser</code>, <code>getHostListings({userId})</code>, <code>getReviewsByUserId</code></td>
+<td>guest, host</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>/[locale]/settings</code></td>
+<td><code>app/[locale]/settings/page.tsx</code></td>
+<td>account settings (mostly mocked sections)</td>
+<td><code>getSessionUser</code></td>
+<td>guest, host</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>/[locale]/reservations</code></td>
+<td><code>app/[locale]/reservations/page.tsx</code></td>
+<td>host reservations with KPIs (guests redirected to <code>/trips</code>)</td>
+<td><code>getSessionUser</code>, <code>getHostContext</code>, <code>hostOwnerKey</code>, <code>getReservations({hostId|organizationId})</code>, <code>getHostListings</code></td>
+<td>host (any type)</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>/[locale]/properties</code></td>
+<td><code>app/[locale]/properties/page.tsx</code></td>
+<td>legacy, redirects to <code>/host/listings</code></td>
+<td>none</td>
+<td>host</td>
+<td>MW</td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>/[locale]/become-a-host</code></td>
+<td><code>app/[locale]/become-a-host/page.tsx</code></td>
+<td>host type selection / wizard start</td>
+<td><code>getSessionUser</code></td>
+<td>guest becoming host</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>/[locale]/become-a-host/[step]</code></td>
+<td><code>app/[locale]/become-a-host/[step]/page.tsx</code></td>
+<td>wizard step (<code>1..n</code>, <code>agency</code>, <code>hotel</code>, <code>hostel</code>)</td>
+<td><code>getSessionUser</code></td>
+<td>guest becoming host, existing host adding listing</td>
+<td>MW + page</td>
+</tr>
+<tr>
+<td>25</td>
+<td><code>/[locale]/host</code></td>
+<td><code>app/[locale]/host/page.tsx</code></td>
+<td>Today dashboard (org hosts only; individuals redirected to listings)</td>
+<td><code>requireHostContext</code>, <code>hostOwnerKey</code>, <code>getReservations</code>, <code>getHostListings</code>, <code>getReviewsByUserId</code></td>
+<td>org host</td>
+<td>MW + layout (<code>requireHostContext</code>)</td>
+</tr>
+<tr>
+<td>26</td>
+<td><code>/[locale]/host/listings</code></td>
+<td><code>app/[locale]/host/listings/page.tsx</code></td>
+<td>manage listings + wallet compact</td>
+<td><code>requireHostContext</code>, <code>getHostListings</code> (+ client <code>getMyWalletAction</code>)</td>
+<td>host</td>
+<td>MW + layout</td>
+</tr>
+<tr>
+<td>27</td>
+<td><code>/[locale]/host/bookings</code></td>
+<td><code>app/[locale]/host/bookings/page.tsx</code></td>
+<td>manage bookings, accept / decline / cancel, mini calendar</td>
+<td><code>requireHostContext</code>, <code>hostOwnerKey</code>, <code>getReservations</code>, <code>getHostListings</code>, <code>getOverridesForListings</code></td>
+<td>host</td>
+<td>MW + layout</td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>/[locale]/host/calendar</code></td>
+<td><code>app/[locale]/host/calendar/page.tsx</code></td>
+<td>multi-view calendar, block / price</td>
+<td><code>requireHostContext</code>, <code>getHostListings</code>, <code>getReservations</code>, <code>getOverridesForListings</code></td>
+<td>host</td>
+<td>MW + layout</td>
+</tr>
+<tr>
+<td>29</td>
+<td><code>/[locale]/host/messages</code></td>
+<td><code>app/[locale]/host/messages/page.tsx</code></td>
+<td>host inbox (full screen)</td>
+<td><code>requireHostContext</code>, <code>getConversations</code>, <code>getMessages</code></td>
+<td>host</td>
+<td>MW + layout</td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>/[locale]/host/settings</code></td>
+<td><code>app/[locale]/host/settings/page.tsx</code></td>
+<td>payouts (mock), identity, booking defaults, communication</td>
+<td><code>requireHostContext</code></td>
+<td>host</td>
+<td>MW + layout</td>
+</tr>
+<tr>
+<td>31</td>
+<td><code>/[locale]/host/agency/team</code></td>
+<td><code>app/[locale]/host/agency/team/page.tsx</code></td>
+<td>org team management</td>
+<td><code>requireHostContext</code>, <code>getOrganizationMembers</code></td>
+<td>org host (any role; actions role-gated)</td>
+<td>MW + layout; individuals redirected</td>
+</tr>
+<tr>
+<td>32</td>
+<td><code>/[locale]/host/agency/settings</code></td>
+<td><code>app/[locale]/host/agency/settings/page.tsx</code></td>
+<td>org settings, wallet, delete org</td>
+<td><code>requireHostContext</code> (+ client <code>getMyWalletAction</code>)</td>
+<td>org host (owner / admin to save)</td>
+<td>MW + layout; individuals redirected</td>
+</tr>
+<tr>
+<td>33</td>
+<td><code>/[locale]/host/agency/trips</code></td>
+<td><code>app/[locale]/host/agency/trips/page.tsx</code></td>
+<td>agency trips list</td>
+<td><code>requireHostContext</code>, <code>getTrips({organizationId, status:&quot;all&quot;})</code></td>
+<td>agency member</td>
+<td>MW + layout; non agency redirected</td>
+</tr>
+<tr>
+<td>34</td>
+<td><code>/[locale]/host/agency/trips/new</code></td>
+<td><code>app/[locale]/host/agency/trips/new/page.tsx</code></td>
+<td>create trip wizard</td>
+<td><code>requireHostContext</code></td>
+<td>agency member</td>
+<td>MW + layout; non agency redirected</td>
+</tr>
+</tbody></table>
+<p>Non-page server files that also read data: <code>app/[locale]/layout.tsx</code> (<code>getSessionUser</code> for every page), <code>app/[locale]/host/layout.tsx</code> (<code>requireHostContext</code>, <code>getHostListings</code>), <code>app/[locale]/listings/[listingId]/layout.tsx</code>, <code>app/[locale]/trips/[tripId]/layout.tsx</code>, <code>app/sitemap.ts</code> (<code>getListings</code>, <code>getTrips</code>, <code>getOrganizations</code>), <code>app/robots.ts</code>.</p>
+<div class="pager"><span><a href="15-readiness-and-first-build-prompt.html">&larr; 15. Readiness verdict and first build prompt</a></span><span><a href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint &rarr;</a></span></div></main></div></body></html>

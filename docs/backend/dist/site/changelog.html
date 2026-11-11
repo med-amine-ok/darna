@@ -1,0 +1,88 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backend blueprint changelog · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="on" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="backend-blueprint-changelog">Backend blueprint changelog</h1>
+<p>All notable changes to the backend documentation package. Newest first.</p>
+<h2 id="2026-11-09">2026-11-09</h2>
+<ul>
+<li>Product rules added since the schema pause: DEC-014 (what each host type may publish) and DEC-015 (8 experience types, 8 trip types). Requirements now 147 (LST-12, TRP-07, HST-07), rules BR-LST-05 and BR-HST-05, enums <code>experience_type</code> and <code>trip_type</code> in the schema.</li>
+<li>Schema now 77 tables: <code>incident_record</code>, <code>calendar_feed</code>, <code>otp_send_log</code> (closes decision T5); profile fields on <code>user</code> (bio, spoken languages, home commune, private address) and <code>trip.slug</code> (gaps found while writing the API). <code>schema.sql</code> added (PostgreSQL rendering of <code>schema.dbml</code>).</li>
+<li>OpenAPI generator copied into <code>_tools/openapi_gen/</code>; permission name aligned to <code>privacy.handle_requests</code>; trip slug and profile fields added; lint still 0 errors, 0 warnings.</li>
+<li><code>traceability.csv</code> now takes its API column from <code>openapi.yaml</code> (<code>x-requirements</code>); 127 requirements map to operations, 20 are jobs, quality targets or R2 items without endpoints.</li>
+<li>Decisions: L13 to L16 (from 08) and T11 (new staff permissions) added to <code>13-decisions-needed.md</code>; total 49, 48 open.</li>
+<li><code>diagrams/03-django-apps</code> redrawn in layers L0 to L6 with <code>search</code> and <code>core</code>, matching 07.</li>
+<li>Plain-language layer: <code>00-START-HERE.md</code>, <code>explain-like-im-new.md</code>, <code>README.md</code>, glossary extended to 63 terms.</li>
+<li><code>15-readiness-and-first-build-prompt.md</code>: verdict GO for M0, gates before live data, and the first build prompt.</li>
+<li><code>dist/</code>: browsable HTML site and one PDF with everything, built by <code>_tools/build_dist.mjs</code>.</li>
+<li>Phase 8 done: <code>11-roadmap.md</code> (assumptions, mock-to-API switch method, milestones M0 to M7 plus buffer to launch, R2-A, R2-B and LATER, each with scope by requirement ID, exit criteria, dependencies, weeks, <code>lib/data</code> switches and legal/accounting gates; Mermaid gantt chart).</li>
+<li>Phase 8: <code>12-risks.md</code> (32 risks K-01 to K-32 with likelihood, impact, score, owner role, mitigation, early signal and links; heat map).</li>
+<li>Phase 8: <code>13-decisions-needed.md</code> (DEC-001 to DEC-015 for reference; 44 open decisions: product owner Q14 to Q28, lawyer L1 to L12, accountant/bank F1 to F7, tech lead T1 to T10, each with options, recommendation, blocking milestone and default).</li>
+<li>Phase 8: <code>14-open-questions.md</code> status note; Q14 to Q20, L1 to L7, F1 to F4 marked as moved to <code>13-decisions-needed.md</code>; new questions Q21 to Q28, L8 to L12, F5 to F7.</li>
+<li>Phase 8: <code>traceability.csv</code> and <code>traceability.md</code> (all 147 requirements linked to rules, tables, API area, test file area, milestone and <code>lib/data</code> module), generated by <code>_tools/build_traceability.py</code>, which also checks that every cited rule exists and that each milestone matches the requirement&#39;s release.</li>
+<li>Phase 7: <code>07-architecture.md</code> (modular monolith with 17 apps + <code>core</code> kernel owning all 77 tables, layered dependencies checked by import-linter, services/selectors, transaction and lock order rules, outbox, 31 Celery jobs with schedules and rule IDs, caching, search, upload pipeline, i18n, BFF and typed client, module-by-module migration from mock <code>lib/data</code> behind server-only flags, future repo tree, ADR-015 to ADR-026).</li>
+<li>Phase 7: <code>08-security-privacy.md</code> (assets, actors, STRIDE table, OWASP API Top 10 mapped to endpoints, sessions and cookie flags, OTP and lockout, staff MFA, staff and organisation permission matrices, secrets and key inventory, field encryption and ID hashing, file security, rate limits incl. <code>otp_send_log</code>, hash-chained audit, fraud controls, Law 18-07/25-11 register of processing, DPIA outline, retention table, 5-day breach runbook on <code>incident_record</code>, data residency, pre-launch checklist, lawyer items incl. new L13 to L16).</li>
+<li>Phase 7: <code>09-devops-hosting.md</code> (dev/ci/staging/production, Algeria-first hosting with a second Algerian site, Docker Compose container layout, <code>.com.dz</code> domains, TLS, CDN policy, GitHub Actions pipelines incl. test-mode build guard, migrations policy, pgBackRest PITR, RPO 15 min / RTO 4 h, monthly restore drill, observability and alerts, rough cost in DZD and EUR, deploy/rollback/incident/restore runbooks, env var list).</li>
+<li>Phase 7: <code>10-testing-quality.md</code> (test pyramid, tests per app, hypothesis properties for money, refunds and date ranges, concurrency tests on real PostgreSQL, schemathesis and OpenAPI diff contract tests, migration tests, k6 scenarios against NFR-01/02, i18n checks for API messages, factories, Definition of Done, coverage targets, CI quality gates, BR rule traceability with <code>test_br_&lt;area&gt;_&lt;nn&gt;_...</code> naming).</li>
+<li>Phase 6: <code>openapi.yaml</code> (OpenAPI 3.1 contract: 266 operations on 220 paths under <code>/api/v1</code>, tags for auth, public, me, host, admin and webhooks; Money, Problem, cursor and page schemas; enums copied from <code>schema.dbml</code>; every operation has <code>x-requirements</code>, <code>x-rules</code>, <code>x-release</code>; 8 dormant M2 to M4 operations with <code>x-dormant</code>; Redocly lint: 0 errors, 0 warnings).</li>
+<li>Phase 6: <code>06-api-design.md</code> (conventions, BFF and allauth session model, staff MFA, active host account and permissions, error code catalogue, rate limits, idempotency and booking race, webhooks, versioning, Next.js consumption with openapi-typescript and openapi-fetch, every website and admin <code>lib/data</code> function and server action mapped to an endpoint or marked removed, five worked examples).</li>
+</ul>
+<h2 id="2026-11-04">2026-11-04</h2>
+<ul>
+<li>Started the BLADUS (formerly DARNA) backend discovery and blueprint. Target stack: Django + PostgreSQL. Documentation only, no backend code.</li>
+<li>Recovered the original specification documents from git history into <code>_sources/</code>: <code>darna_spec.md</code>, <code>clean_user_spec.md</code>, <code>usability-report.md</code>, <code>admin-usability-report.md</code> (they were deleted from the working tree in earlier commits).</li>
+<li>Phase 1 started: inventory of the website and admin apps, spec-versus-code comparison, live click-through of the main guest and host flows (<code>_work/click-through.md</code>).</li>
+<li>Phase 2 started: research on comparable platforms, the Django ecosystem, Algeria (payments, messaging, legal, geography, hosting, culture) and security.</li>
+<li>Phase 1 done: <code>01-system-inventory.md</code> (features per actor, data, <code>lib/data</code> bridge, 25 business rules, click-through, gaps), with raw appendices A to E.</li>
+<li>Phase 2 done: <code>02-research.md</code> (sections A to E, decisions R-1 to R-11, verification flags).</li>
+<li>Added <code>glossary.md</code> and <code>14-open-questions.md</code> (13 product questions, 7 legal, 4 finance).</li>
+<li>Paused for product-owner feedback before Phase 3, as agreed.</li>
+<li>Product owner accepted all defaults (Q1 to Q13), recorded as DEC-001 to DEC-013.</li>
+<li>Phase 3 done: <code>03-requirements.md</code> + <code>requirements.csv</code> (144 requirements: 123 MVP, 19 R2, 2 Later; generated from <code>_tools/requirements_data.py</code>), <code>04-business-rules.md</code> (rules by area, 4 state machines, worked money examples, ledger postings). Every rule ID cited by a requirement exists.</li>
+<li>Phase 4 done: 29 diagrams in <code>diagrams/</code> (context, containers, Django apps, 4 state machines, 5 sequences, money flow, document map, 15 ERDs), each with caption and legend in <code>diagrams/README.md</code>; rendered to SVG and PNG in <code>diagrams/rendered/</code>.</li>
+<li>Phase 5 done: <code>schema.dbml</code> (74 tables, 33 enums, 152 foreign keys; validated with the official DBML CLI), <code>05-database-schema.md</code> (14 ADRs, SQL constraints, query plan, mapping, seed plan), <code>05b-data-dictionary.md</code> (generated). Added questions Q14 to Q20.</li>
+<li>Paused for product-owner feedback on the schema, as agreed.</li>
+</ul>
+<div class="pager"><span><a href="work-research-algeria-security.html">&larr; BLADUS backend research: Algeria context, payments, compliance, infra, security</a></span><span></span></div></main></div></body></html>

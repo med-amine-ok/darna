@@ -10,6 +10,7 @@ erDiagram
         listing_status status
         listing_status status_before_delete
         inventory_kind inventory_kind
+        experience_type experience_type
         varchar_120 title
         text description
         varchar_2 source_language
@@ -89,6 +90,8 @@ erDiagram
         smallint capacity_per_unit
         bigint base_price_minor
         varchar_120 beds_description
+        varchar_80 external_id
+        uuid integration_id FK
         int sort_order
         boolean is_active
         timestamptz created_at
@@ -141,6 +144,9 @@ erDiagram
     media_asset {
         uuid id PK
     }
+    property_integration {
+        uuid id PK
+    }
     property_type {
         uuid id PK
     }
@@ -161,6 +167,7 @@ erDiagram
     listing ||--o| vehicle_detail : "listing_id"
     listing ||--o| experience_detail : "listing_id"
     listing ||--o{ room_type : "listing_id"
+    property_integration ||--o{ room_type : "integration_id"
     listing ||--o{ listing_amenity : "listing_id"
     amenity ||--o{ listing_amenity : "amenity_id"
     room_type ||--o{ room_type_amenity : "room_type_id"

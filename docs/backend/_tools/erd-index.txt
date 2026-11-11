@@ -1,8 +1,8 @@
-erd-01-accounts.mmd	Accounts	user, staff_profile, staff_permission, staff_role_permission, consent_record, favorite	listing, media_asset, trip
+erd-01-accounts.mmd	Accounts	user, staff_profile, staff_permission, staff_role_permission, consent_record, favorite	commune, listing, media_asset, trip
 erd-02-geography.mmd	Geography	wilaya, daira, commune	
 erd-03-host-accounts-and-organisations.mmd	Host Accounts And Organisations	host_account, organization, membership, invitation, host_document, payout_account	commune, listing, media_asset, reason_code, user
 erd-04-taxonomy.mmd	Taxonomy	category, property_type, amenity, cancellation_policy	
-erd-05-catalogue-listings-and-room-types.mmd	Catalogue: Listings And Room Types	listing, listing_revision, vehicle_detail, experience_detail, room_type, listing_amenity, room_type_amenity, listing_photo, featured_placement	amenity, cancellation_policy, category, commune, host_account, media_asset, property_type, trip, user
+erd-05-catalogue-listings-and-room-types.mmd	Catalogue: Listings And Room Types	listing, listing_revision, vehicle_detail, experience_detail, room_type, listing_amenity, room_type_amenity, listing_photo, featured_placement	amenity, cancellation_policy, category, commune, host_account, media_asset, property_integration, property_type, trip, user
 erd-06-inventory-and-calendar.mmd	Inventory And Calendar	listing_day, room_type_night, experience_slot	listing, room_type
 erd-07-trips-agency-only.mmd	Trips (Agency Only)	trip, trip_itinerary_day, trip_departure	cancellation_policy, commune, host_account, membership
 erd-08-pricing.mmd	Pricing	quote, tax_rate	experience_slot, listing, room_type, trip_departure, user
@@ -11,4 +11,4 @@ erd-10-money-ledger-wallet-dormant-payments.mmd	Money: Ledger, Wallet, Dormant P
 erd-11-reviews.mmd	Reviews	review, review_reply, review_report	booking, host_account, listing, reason_code, trip, user
 erd-12-messaging-and-notifications.mmd	Messaging And Notifications	conversation, conversation_participant, message, notification, notification_preference, outbox_event, delivery_log	booking, host_account, listing, trip, user
 erd-13-media.mmd	Media	media_asset	host_account, user
-erd-14-moderation-config-audit-privacy-system.mmd	Moderation, Config, Audit, Privacy, System	reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc	booking, host_account, listing, media_asset, user
+erd-14-moderation-config-audit-privacy-system.mmd	Moderation, Config, Audit, Privacy, System	reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, incident_record, calendar_feed, otp_send_log, property_integration, integration_sync_log, property_service, listing_search_doc	booking, host_account, listing, media_asset, organization, room_type, user

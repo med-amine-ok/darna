@@ -1,0 +1,2193 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Traceability matrix: requirement to rule, table, API, test and milestone · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="on" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="traceability-matrix-requirement-to-rule-table-api-test-and-milestone">Traceability matrix: requirement to rule, table, API, test and milestone</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>One line per requirement (all 147 from <a href="files/requirements.csv">requirements.csv</a>).<br>Each line says which business rules it follows, which database tables hold its data, which API calls serve it,<br>where its tests will live, in which roadmap milestone it is built, and which app data module stops using demo data.<br>Use it to answer &quot;if we change X, what else moves?&quot; and &quot;is everything planned somewhere?&quot;.<br>This page and <a href="files/traceability.csv">traceability.csv</a> are generated by <code>python _tools/build_traceability.py</code>. Edit the script, not the tables.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Traceability</strong>: being able to follow one need from the request, through the rules and the database, to the test that proves it.</li>
+<li><strong>Milestone</strong>: a block of build work with an exit test, defined in <a href="11-roadmap.html">11-roadmap.md</a>.</li>
+<li><strong>API area</strong>: the family of web addresses (endpoints) the apps call. Final paths are in <code>06-api-design.md</code> and <code>openapi.yaml</code> (tagged with <code>x-requirements</code>); names here are plain REST guesses.</li>
+<li><strong>job:</strong> a scheduled background task (Celery). <strong>internal:</strong> a service called by other code, with no public address.</li>
+<li><strong><code>lib/data</code> module</strong>: the file in the website (<code>web:</code>) or admin (<code>admin:</code>) app whose functions switch from demo data to the API, behind a per-module flag.</li>
+</ul>
+<hr>
+<h2 id="1-requirements-per-milestone">1. Requirements per milestone</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Name</th>
+<th>Release</th>
+<th>Requirements</th>
+<th>of which Must</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>M0</td>
+<td>Foundations</td>
+<td>MVP</td>
+<td>18</td>
+<td>17</td>
+</tr>
+<tr>
+<td>M1</td>
+<td>Accounts, staff and host verification</td>
+<td>MVP</td>
+<td>28</td>
+<td>26</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Catalogue, trips and moderation</td>
+<td>MVP</td>
+<td>23</td>
+<td>20</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Search, availability and quotes</td>
+<td>MVP</td>
+<td>11</td>
+<td>8</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Bookings, cancellations and the commission wallet</td>
+<td>MVP</td>
+<td>27</td>
+<td>25</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Messaging and reviews</td>
+<td>MVP</td>
+<td>8</td>
+<td>6</td>
+</tr>
+<tr>
+<td>M6</td>
+<td>Reports, privacy and hardening</td>
+<td>MVP</td>
+<td>8</td>
+<td>5</td>
+</tr>
+<tr>
+<td>M7</td>
+<td>Production in Algeria, closed beta, launch</td>
+<td>MVP</td>
+<td>3</td>
+<td>2</td>
+</tr>
+<tr>
+<td>R2-A</td>
+<td>Release 2, online money (gateway, invoices, taxes)</td>
+<td>R2</td>
+<td>4</td>
+<td>0</td>
+</tr>
+<tr>
+<td>R2-B</td>
+<td>Release 2, trust and growth</td>
+<td>R2</td>
+<td>15</td>
+<td>0</td>
+</tr>
+<tr>
+<td>LATER</td>
+<td>Later, behind a legal or business gate</td>
+<td>Later</td>
+<td>2</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td></td>
+<td><strong>147</strong></td>
+<td><strong>109</strong></td>
+</tr>
+</tbody></table>
+<h2 id="2-requirements-per-module-and-milestone">2. Requirements per module and milestone</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>M0</th>
+<th>M1</th>
+<th>M2</th>
+<th>M3</th>
+<th>M4</th>
+<th>M5</th>
+<th>M6</th>
+<th>M7</th>
+<th>R2-A</th>
+<th>R2-B</th>
+<th>LATER</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACC</td>
+<td>5</td>
+<td>3</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>9</td>
+</tr>
+<tr>
+<td>ORG</td>
+<td></td>
+<td>7</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>7</td>
+</tr>
+<tr>
+<td>HST</td>
+<td></td>
+<td>5</td>
+<td>1</td>
+<td></td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>7</td>
+</tr>
+<tr>
+<td>LST</td>
+<td></td>
+<td></td>
+<td>11</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>12</td>
+</tr>
+<tr>
+<td>TRP</td>
+<td></td>
+<td></td>
+<td>5</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>7</td>
+</tr>
+<tr>
+<td>AVL</td>
+<td></td>
+<td></td>
+<td>1</td>
+<td>1</td>
+<td>3</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td>6</td>
+</tr>
+<tr>
+<td>PRC</td>
+<td></td>
+<td></td>
+<td></td>
+<td>4</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td></td>
+<td>5</td>
+</tr>
+<tr>
+<td>BKG</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>10</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>11</td>
+</tr>
+<tr>
+<td>CAN</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>4</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>4</td>
+</tr>
+<tr>
+<td>PAY</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td>7</td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+<td></td>
+<td>1</td>
+<td>12</td>
+</tr>
+<tr>
+<td>REV</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>4</td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>5</td>
+</tr>
+<tr>
+<td>MSG</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>4</td>
+<td></td>
+<td></td>
+<td></td>
+<td>2</td>
+<td></td>
+<td>6</td>
+</tr>
+<tr>
+<td>NTF</td>
+<td></td>
+<td>1</td>
+<td></td>
+<td></td>
+<td>2</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>4</td>
+</tr>
+<tr>
+<td>SRC</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td>5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>6</td>
+</tr>
+<tr>
+<td>MED</td>
+<td></td>
+<td>1</td>
+<td>2</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+</tr>
+<tr>
+<td>MOD</td>
+<td></td>
+<td>4</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+<td></td>
+<td>8</td>
+</tr>
+<tr>
+<td>STF</td>
+<td></td>
+<td>5</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>6</td>
+</tr>
+<tr>
+<td>CFG</td>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>5</td>
+</tr>
+<tr>
+<td>PRM</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>2</td>
+<td></td>
+<td>2</td>
+</tr>
+<tr>
+<td>RPT</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>2</td>
+<td></td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>3</td>
+</tr>
+<tr>
+<td>PRV</td>
+<td>1</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>3</td>
+<td>1</td>
+<td></td>
+<td>1</td>
+<td></td>
+<td>6</td>
+</tr>
+<tr>
+<td>NFR</td>
+<td>9</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>2</td>
+<td>2</td>
+<td></td>
+<td></td>
+<td></td>
+<td>13</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td>18</td>
+<td>28</td>
+<td>23</td>
+<td>11</td>
+<td>27</td>
+<td>8</td>
+<td>8</td>
+<td>3</td>
+<td>4</td>
+<td>15</td>
+<td>2</td>
+<td><strong>147</strong></td>
+</tr>
+</tbody></table>
+<h2 id="3-full-matrix-sorted-by-milestone-then-id-order-of-requirementscsv">3. Full matrix (sorted by milestone, then ID order of requirements.csv)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Pri.</th>
+<th>Milestone</th>
+<th>Rules</th>
+<th>Tables</th>
+<th>API area</th>
+<th>Tests</th>
+<th><code>lib/data</code> switch</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACC-01</td>
+<td>Sign up with email or Algerian phone number</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-ACC-01</td>
+<td>user; consent_record; allauth email tables</td>
+<td>POST /api/v1/auth/signup; POST /api/v1/auth/phone/verify; POST /api/v1/auth/email/verify; PUT /api/v1/me/phone; POST /api/v1/me/bookings</td>
+<td><code>tests/accounts/test_signup.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>ACC-02</td>
+<td>Sign in with password or one-time phone code</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-ACC-02</td>
+<td>user; allauth tables (one-time codes in Redis)</td>
+<td>POST /api/v1/auth/login; POST /api/v1/auth/code/request; POST /api/v1/auth/code/confirm</td>
+<td><code>tests/accounts/test_login_otp.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>ACC-03</td>
+<td>Session for both Next.js apps</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-ACC-03</td>
+<td>allauth session tables</td>
+<td>POST /api/v1/auth/login; GET /api/v1/auth/session; DELETE /api/v1/auth/session; POST /api/v1/admin/auth/login; GET /api/v1/admin/auth/session; DELETE /api/v1/admin/auth/session; (+4 more)</td>
+<td><code>tests/accounts/test_sessions.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>ACC-04</td>
+<td>Password reset and change</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>user; allauth tables</td>
+<td>POST /api/v1/auth/password/request; POST /api/v1/auth/password/reset; POST /api/v1/auth/password/change; POST /api/v1/admin/auth/password/change</td>
+<td><code>tests/accounts/test_password.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>ACC-07</td>
+<td>Login rate limiting shared across servers</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-ACC-05</td>
+<td>none (Redis counters)</td>
+<td>POST /api/v1/auth/login; POST /api/v1/auth/code/request; POST /api/v1/admin/auth/login</td>
+<td><code>tests/accounts/test_login_lockout.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>PAY-12</td>
+<td>Money as centimes with currency</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-PAY-01</td>
+<td>all *_minor columns with currency</td>
+<td>POST /api/v1/quotes</td>
+<td><code>tests/core/test_money.py</code></td>
+<td>none (shared convention)</td>
+</tr>
+<tr>
+<td>SRC-04</td>
+<td>69 wilayas and 1,541 communes</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-SRC-02</td>
+<td>wilaya; daira; commune</td>
+<td>GET /api/v1/geo/wilayas; GET /api/v1/geo/wilayas/{wilaya_code}/communes; GET /api/v1/geo/communes</td>
+<td><code>tests/geo/test_seed_69_wilayas.py</code></td>
+<td>web:lib/algeria.ts (static list)</td>
+</tr>
+<tr>
+<td>CFG-01</td>
+<td>Platform settings</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-CFG-01</td>
+<td>platform_settings</td>
+<td>GET /api/v1/admin/commission-rates; PUT /api/v1/admin/commission-rates; GET /api/v1/admin/settings; PATCH /api/v1/admin/settings; GET /api/v1/admin/settings/versions</td>
+<td><code>tests/config/test_settings.py</code></td>
+<td>admin:settings.ts (switches in M1, after staff sign-in works)</td>
+</tr>
+<tr>
+<td>PRV-01</td>
+<td>Consent records</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-PRV-01</td>
+<td>consent_record</td>
+<td>POST /api/v1/auth/signup; GET /api/v1/me/consents; POST /api/v1/me/consents</td>
+<td><code>tests/privacy/test_consents.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>NFR-05</td>
+<td>Security baseline</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>none</td>
+<td>no endpoint: all /api/v1/*</td>
+<td><code>tests/security/test_baseline.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-06</td>
+<td>Three languages and right-to-left</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-SYS-04</td>
+<td>name_en/name_fr/name_ar columns on reference tables</td>
+<td>no endpoint: all errors and notifications</td>
+<td><code>tests/core/test_i18n_errors.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-07</td>
+<td>Time and dates</td>
+<td>Must</td>
+<td>M0</td>
+<td>BR-SYS-05</td>
+<td>timestamptz and date columns</td>
+<td>no endpoint: all /api/v1/*</td>
+<td><code>tests/core/test_time_rules.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-08</td>
+<td>API contract</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>none</td>
+<td>no endpoint: GET /api/v1/schema (OpenAPI)</td>
+<td><code>tests/core/test_openapi_contract.py</code></td>
+<td>both apps: generated typed client</td>
+</tr>
+<tr>
+<td>NFR-09</td>
+<td>Observability</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>none</td>
+<td>no endpoint: GET /api/v1/health; metrics endpoint</td>
+<td><code>tests/core/test_logging.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-10</td>
+<td>Test coverage</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>all</td>
+<td>no endpoint: all</td>
+<td><code>CI coverage gate (pytest-cov) and tests/**/test_*_property.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-11</td>
+<td>Rate limits</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>none (Redis)</td>
+<td>POST /api/v1/auth/login</td>
+<td><code>tests/core/test_rate_limits.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-12</td>
+<td>Unique identifiers</td>
+<td>Must</td>
+<td>M0</td>
+<td></td>
+<td>all primary keys (UUIDv7); booking.reference</td>
+<td>GET /api/v1/me/bookings/{booking_id}</td>
+<td><code>tests/core/test_ids.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-13</td>
+<td>Accessibility of messages</td>
+<td>Should</td>
+<td>M0</td>
+<td></td>
+<td>none</td>
+<td>no endpoint: error envelope on all /api/v1/*</td>
+<td><code>tests/core/test_error_codes.py</code></td>
+<td>both apps: ActionResult mapping</td>
+</tr>
+<tr>
+<td>ACC-05</td>
+<td>Two-factor login</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ACC-04</td>
+<td>allauth MFA authenticator tables; staff_profile</td>
+<td>POST /api/v1/auth/2fa/authenticate; GET /api/v1/auth/authenticators; GET /api/v1/auth/authenticators/totp; POST /api/v1/auth/authenticators/totp; POST /api/v1/host/payout-accounts; POST /api/v1/admin/auth/2fa/authenticate; (+2 more)</td>
+<td><code>tests/accounts/test_mfa.py</code></td>
+<td>admin:credentials.ts</td>
+</tr>
+<tr>
+<td>ACC-06</td>
+<td>Profile management</td>
+<td>Must</td>
+<td>M1</td>
+<td></td>
+<td>user</td>
+<td>POST /api/v1/auth/phone/verify; POST /api/v1/auth/email/verify; GET /api/v1/users/{user_id}; GET /api/v1/me; PATCH /api/v1/me; PUT /api/v1/me/phone</td>
+<td><code>tests/accounts/test_profile.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>ACC-08</td>
+<td>One user, many roles</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ORG-01</td>
+<td>user; host_account; membership</td>
+<td>GET /api/v1/me; POST /api/v1/me/invitations/accept; GET /api/v1/me/workspaces; GET /api/v1/admin/users; GET /api/v1/admin/users/{user_id}</td>
+<td><code>tests/hosts/test_one_user_many_roles.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-01</td>
+<td>Create an organisation (agency, hotel, hostel)</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ORG-02</td>
+<td>organization; host_account; membership</td>
+<td>POST /api/v1/host/onboarding/drafts/{host_type}/submit; GET /api/v1/host/organization; PATCH /api/v1/host/organization</td>
+<td><code>tests/hosts/test_org_create.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-02</td>
+<td>Active-organisation switcher</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ORG-01</td>
+<td>membership; host_account</td>
+<td>GET /api/v1/me/workspaces; PUT /api/v1/me/workspaces/active; GET /api/v1/host/account</td>
+<td><code>tests/hosts/test_active_host_account.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-03</td>
+<td>Invite a team member</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ORG-03</td>
+<td>invitation; membership; outbox_event</td>
+<td>POST /api/v1/me/invitations/accept; GET /api/v1/host/organization/invitations; POST /api/v1/host/organization/invitations; DELETE /api/v1/host/organization/invitations/{invitation_id}</td>
+<td><code>tests/hosts/test_invitations.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-04</td>
+<td>Change role, remove member, transfer ownership</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ORG-04</td>
+<td>membership; audit_event</td>
+<td>DELETE /api/v1/host/organization; GET /api/v1/host/organization/members; PATCH /api/v1/host/organization/members/{membership_id}; DELETE /api/v1/host/organization/members/{membership_id}; POST /api/v1/host/organization/transfer-ownership</td>
+<td><code>tests/hosts/test_members.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-05</td>
+<td>Per-role permissions inside an organisation</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-ORG-05</td>
+<td>membership</td>
+<td>GET /api/v1/host/organization/members; PATCH /api/v1/host/organization/members/{membership_id}; POST /api/v1/host/bookings/{booking_id}/accept; POST /api/v1/host/bookings/{booking_id}/decline</td>
+<td><code>tests/hosts/test_org_permissions.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-06</td>
+<td>Re-verification on legal field change</td>
+<td>Should</td>
+<td>M1</td>
+<td>BR-ORG-06</td>
+<td>organization; moderation_case</td>
+<td>GET /api/v1/host/organization; PATCH /api/v1/host/organization</td>
+<td><code>tests/hosts/test_org_reverification.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>ORG-07</td>
+<td>Public organisation profile</td>
+<td>Must</td>
+<td>M1</td>
+<td></td>
+<td>organization; host_account; listing; trip</td>
+<td>GET /api/v1/organizations; GET /api/v1/organizations/{org_slug}</td>
+<td><code>tests/hosts/test_org_public_profile.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>HST-01</td>
+<td>Guided onboarding per host type</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-HST-01</td>
+<td>onboarding_flow_version; onboarding_draft</td>
+<td>GET /api/v1/onboarding-flows/{host_type}; POST /api/v1/host/onboarding/drafts/{host_type}/submit</td>
+<td><code>tests/hosts/test_onboarding_flow.py</code></td>
+<td>web:auth.ts (updateUserHostStatus)</td>
+</tr>
+<tr>
+<td>HST-02</td>
+<td>Save onboarding drafts on the server</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-HST-02</td>
+<td>onboarding_draft</td>
+<td>GET /api/v1/host/onboarding/drafts; GET /api/v1/host/onboarding/drafts/{host_type}; PUT /api/v1/host/onboarding/drafts/{host_type}; DELETE /api/v1/host/onboarding/drafts/{host_type}; POST /api/v1/host/onboarding/drafts/{host_type}/submit</td>
+<td><code>tests/hosts/test_onboarding_draft.py</code></td>
+<td>web:auth.ts (updateUserHostStatus)</td>
+</tr>
+<tr>
+<td>HST-03</td>
+<td>Upload verification documents</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-HST-03</td>
+<td>host_document; media_asset</td>
+<td>GET /api/v1/host/documents; POST /api/v1/host/documents; DELETE /api/v1/host/documents/{document_id}</td>
+<td><code>tests/hosts/test_documents_upload.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>HST-04</td>
+<td>Host verification lifecycle</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-HST-04</td>
+<td>host_account; moderation_case; moderation_decision</td>
+<td>GET /api/v1/host/account; POST /api/v1/host/verification/submit; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/hosts; GET /api/v1/admin/hosts/{host_account_id}; DELETE /api/v1/admin/hosts/{host_account_id}; (+7 more)</td>
+<td><code>tests/hosts/test_verification_states.py</code></td>
+<td>admin:hosts.ts</td>
+</tr>
+<tr>
+<td>HST-06</td>
+<td>Default approval mode per host or organisation</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-BKG-02</td>
+<td>host_account; listing; platform_settings</td>
+<td>GET /api/v1/host/account; PATCH /api/v1/host/account</td>
+<td><code>tests/hosts/test_approval_mode_default.py</code></td>
+<td>web:organizations.ts</td>
+</tr>
+<tr>
+<td>NTF-04</td>
+<td>Outbox pattern</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-SYS-03</td>
+<td>outbox_event; delivery_log</td>
+<td>no endpoint: internal: core.outbox_dispatch</td>
+<td><code>tests/core/test_outbox.py</code></td>
+<td>none (workers)</td>
+</tr>
+<tr>
+<td>MED-02</td>
+<td>Private documents</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-MED-02</td>
+<td>media_asset; host_document; audit_event</td>
+<td>POST /api/v1/media/uploads; POST /api/v1/media/{media_id}/complete; GET /api/v1/media/{media_id}/url; POST /api/v1/host/documents; GET /api/v1/admin/documents/{document_id}/url</td>
+<td><code>tests/media/test_private_documents.py</code></td>
+<td>admin:hosts.ts</td>
+</tr>
+<tr>
+<td>MOD-01</td>
+<td>Moderation queues with waiting time</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-MOD-01</td>
+<td>moderation_case</td>
+<td>GET /api/v1/admin/moderation/counts; GET /api/v1/admin/dashboard/attention; GET /api/v1/admin/moderation/cases; GET /api/v1/admin/moderation/cases/{case_id}; POST /api/v1/admin/moderation/cases/{case_id}/assign; GET /api/v1/admin/hosts; (+1 more)</td>
+<td><code>tests/trust/test_queues.py</code></td>
+<td>admin:approvals.ts</td>
+</tr>
+<tr>
+<td>MOD-02</td>
+<td>Change requests to hosts</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-MOD-02</td>
+<td>moderation_case; change_request_item</td>
+<td>POST /api/v1/host/verification/submit; GET /api/v1/host/change-requests; GET /api/v1/admin/moderation/cases/{case_id}; POST /api/v1/admin/moderation/cases/{case_id}/decisions; POST /api/v1/admin/hosts/{host_account_id}/request-changes; POST /api/v1/admin/listings/{listing_id}/request-changes</td>
+<td><code>tests/trust/test_change_requests.py</code></td>
+<td>admin:approvals.ts</td>
+</tr>
+<tr>
+<td>MOD-03</td>
+<td>Reason catalogue</td>
+<td>Should</td>
+<td>M1</td>
+<td></td>
+<td>reason_code</td>
+<td>GET /api/v1/reference/reasons; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/reason-codes</td>
+<td><code>tests/trust/test_reason_codes.py</code></td>
+<td>admin:approvals.ts</td>
+</tr>
+<tr>
+<td>MOD-08</td>
+<td>Document-level review</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-HST-03</td>
+<td>host_document; moderation_decision</td>
+<td>GET /api/v1/host/documents; GET /api/v1/admin/moderation/cases; POST /api/v1/admin/moderation/cases/{case_id}/decisions; POST /api/v1/admin/hosts/{host_account_id}/approve; GET /api/v1/admin/documents/{document_id}/url; POST /api/v1/admin/documents/{document_id}/approve; (+1 more)</td>
+<td><code>tests/trust/test_document_review.py</code></td>
+<td>admin:hosts.ts</td>
+</tr>
+<tr>
+<td>STF-01</td>
+<td>Staff roles and permissions in the database</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-STF-01</td>
+<td>staff_profile; staff_permission; staff_role_permission</td>
+<td>GET /api/v1/admin/auth/session; GET /api/v1/admin/staff; GET /api/v1/admin/staff/roles; PATCH /api/v1/admin/staff/{staff_id}</td>
+<td><code>tests/accounts/test_staff_permissions.py</code></td>
+<td>admin:team.ts</td>
+</tr>
+<tr>
+<td>STF-02</td>
+<td>Staff invitation and activation</td>
+<td>Must</td>
+<td>M1</td>
+<td></td>
+<td>staff_profile; user; allauth session tables</td>
+<td>POST /api/v1/admin/auth/invitations/accept; POST /api/v1/admin/auth/authenticators/totp; GET /api/v1/admin/staff; POST /api/v1/admin/staff/invitations; POST /api/v1/admin/staff/{staff_id}/deactivate; POST /api/v1/admin/staff/{staff_id}/activate; (+1 more)</td>
+<td><code>tests/accounts/test_staff_invite.py</code></td>
+<td>admin:team.ts</td>
+</tr>
+<tr>
+<td>STF-03</td>
+<td>Append-only audit log</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-STF-02</td>
+<td>audit_event</td>
+<td>GET /api/v1/admin/documents/{document_id}/url; POST /api/v1/admin/users/{user_id}/suspend; POST /api/v1/admin/users/{user_id}/unsuspend; POST /api/v1/admin/users/{user_id}/ban; POST /api/v1/admin/users/{user_id}/restore; GET /api/v1/admin/audit-events</td>
+<td><code>tests/audit/test_append_only.py</code></td>
+<td>admin:audit.ts</td>
+</tr>
+<tr>
+<td>STF-04</td>
+<td>Actors by id, not name</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-STF-03</td>
+<td>every actor foreign key (ledger_transaction, moderation_decision, onboarding_flow_version, refund)</td>
+<td>GET /api/v1/admin/audit-events</td>
+<td><code>tests/audit/test_actor_ids.py</code></td>
+<td>admin:audit.ts</td>
+</tr>
+<tr>
+<td>STF-05</td>
+<td>Separate admin API surface</td>
+<td>Must</td>
+<td>M1</td>
+<td></td>
+<td>none</td>
+<td>POST /api/v1/admin/auth/login; POST /api/v1/admin/auth/2fa/authenticate; GET /api/v1/admin/search</td>
+<td><code>tests/accounts/test_admin_surface.py</code></td>
+<td>admin:credentials.ts</td>
+</tr>
+<tr>
+<td>CFG-02</td>
+<td>Versioned onboarding config</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-CFG-02</td>
+<td>onboarding_flow_version</td>
+<td>GET /api/v1/admin/onboarding-flows; GET /api/v1/admin/onboarding-flows/{host_type}/versions; GET /api/v1/admin/onboarding-flows/{host_type}/versions/{version}; PUT /api/v1/admin/onboarding-flows/{host_type}/draft; POST /api/v1/admin/onboarding-flows/{host_type}/publish; POST /api/v1/admin/onboarding-flows/{host_type}/versions/{version}/republish</td>
+<td><code>tests/config/test_flow_versions.py</code></td>
+<td>admin:onboarding.ts</td>
+</tr>
+<tr>
+<td>CFG-04</td>
+<td>Serve published config to the website</td>
+<td>Must</td>
+<td>M1</td>
+<td>BR-HST-02</td>
+<td>onboarding_flow_version; onboarding_draft</td>
+<td>GET /api/v1/onboarding-flows/{host_type}; PUT /api/v1/host/onboarding/drafts/{host_type}; POST /api/v1/host/onboarding/drafts/{host_type}/submit; POST /api/v1/admin/onboarding-flows/{host_type}/publish</td>
+<td><code>tests/config/test_serve_flow.py</code></td>
+<td>web:auth.ts (updateUserHostStatus)</td>
+</tr>
+<tr>
+<td>ACC-09</td>
+<td>Favourites</td>
+<td>Should</td>
+<td>M2</td>
+<td></td>
+<td>favorite</td>
+<td>GET /api/v1/me/favorites; PUT /api/v1/me/favorites/{target_type}/{target_id}; DELETE /api/v1/me/favorites/{target_type}/{target_id}</td>
+<td><code>tests/accounts/test_favorites.py</code></td>
+<td>web:favorites.ts</td>
+</tr>
+<tr>
+<td>HST-07</td>
+<td>What each host type may publish</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-HST-05</td>
+<td>host_account; organization; listing; trip</td>
+<td>GET /api/v1/reference; GET /api/v1/host/account; POST /api/v1/host/onboarding/drafts/{host_type}/submit; POST /api/v1/host/listings; PATCH /api/v1/host/listings/{listing_id}; POST /api/v1/host/trips</td>
+<td><code>tests/catalog/test_host_offer_rule.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>LST-01</td>
+<td>Create and edit a listing (home, hotel, hostel, experience, vehicle)</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-01</td>
+<td>listing; vehicle_detail; experience_detail; listing_revision</td>
+<td>POST /api/v1/host/onboarding/drafts/{host_type}/submit; GET /api/v1/host/listings; POST /api/v1/host/listings; GET /api/v1/host/listings/{listing_id}; PATCH /api/v1/host/listings/{listing_id}</td>
+<td><code>tests/catalog/test_listing_create.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>LST-02</td>
+<td>Listing review before publication</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-02</td>
+<td>listing; listing_revision; moderation_case</td>
+<td>PATCH /api/v1/host/listings/{listing_id}; POST /api/v1/host/listings/{listing_id}/status; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/listings/{listing_id}; POST /api/v1/admin/listings/{listing_id}/approve; POST /api/v1/admin/listings/{listing_id}/reject; (+3 more)</td>
+<td><code>tests/catalog/test_listing_review.py</code></td>
+<td>admin:listings.ts</td>
+</tr>
+<tr>
+<td>LST-03</td>
+<td>Listing status lifecycle</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-03</td>
+<td>listing</td>
+<td>GET /api/v1/host/listings; POST /api/v1/host/listings/{listing_id}/status; POST /api/v1/host/trips/{trip_id}/status; GET /api/v1/admin/listings; POST /api/v1/admin/listings/{listing_id}/approve; POST /api/v1/admin/listings/{listing_id}/reject; (+4 more)</td>
+<td><code>tests/catalog/test_listing_states.py</code></td>
+<td>admin:listings.ts</td>
+</tr>
+<tr>
+<td>LST-04</td>
+<td>Room types for hotels and hostels</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-AVL-03</td>
+<td>room_type; room_type_amenity</td>
+<td>POST /api/v1/host/listings; GET /api/v1/host/listings/{listing_id}/room-types; POST /api/v1/host/listings/{listing_id}/room-types; PATCH /api/v1/host/listings/{listing_id}/room-types/{room_type_id}; DELETE /api/v1/host/listings/{listing_id}/room-types/{room_type_id}</td>
+<td><code>tests/catalog/test_room_types.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>LST-05</td>
+<td>Amenities and categories from a shared list</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-04</td>
+<td>amenity; category; property_type; listing_amenity</td>
+<td>GET /api/v1/reference; POST /api/v1/host/listings; GET /api/v1/admin/categories; POST /api/v1/admin/categories; PATCH /api/v1/admin/categories/{category_id}; DELETE /api/v1/admin/categories/{category_id}; (+8 more)</td>
+<td><code>tests/catalog/test_reference_lists.py</code></td>
+<td>admin:categories.ts</td>
+</tr>
+<tr>
+<td>LST-06</td>
+<td>Location: wilaya, commune, exact and public point</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-SRC-03</td>
+<td>listing; commune; wilaya</td>
+<td>GET /api/v1/listings/{listing_id}; POST /api/v1/host/listings</td>
+<td><code>tests/catalog/test_listing_location.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>LST-07</td>
+<td>House rules, stay rules and cancellation policy</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-CAN-01</td>
+<td>listing; cancellation_policy</td>
+<td>POST /api/v1/host/listings; PATCH /api/v1/host/listings/{listing_id}</td>
+<td><code>tests/catalog/test_stay_rules.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>LST-08</td>
+<td>Pause and soft delete</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-03</td>
+<td>listing</td>
+<td>DELETE /api/v1/host/organization; DELETE /api/v1/host/listings/{listing_id}; POST /api/v1/host/listings/{listing_id}/status; DELETE /api/v1/host/trips/{trip_id}; DELETE /api/v1/admin/listings/{listing_id}</td>
+<td><code>tests/catalog/test_listing_soft_delete.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>LST-10</td>
+<td>Vehicle listing specifics</td>
+<td>Should</td>
+<td>M2</td>
+<td></td>
+<td>vehicle_detail</td>
+<td>GET /api/v1/listings/{listing_id}; POST /api/v1/host/listings</td>
+<td><code>tests/catalog/test_vehicle_fields.py</code></td>
+<td>web:vehicles.ts</td>
+</tr>
+<tr>
+<td>LST-12</td>
+<td>Canonical experience types</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-05</td>
+<td>listing (experience_type enum)</td>
+<td>GET /api/v1/reference; GET /api/v1/listings; GET /api/v1/listings/facets; POST /api/v1/host/listings; PATCH /api/v1/host/listings/{listing_id}; GET /api/v1/admin/listings</td>
+<td><code>tests/catalog/test_experience_types.py</code></td>
+<td>web:experiences.ts</td>
+</tr>
+<tr>
+<td>LST-11</td>
+<td>Experience listing specifics</td>
+<td>Should</td>
+<td>M2</td>
+<td></td>
+<td>experience_detail; experience_slot</td>
+<td>GET /api/v1/listings/{listing_id}; GET /api/v1/listings/{listing_id}/availability; POST /api/v1/host/listings; GET /api/v1/host/listings/{listing_id}/slots; POST /api/v1/host/listings/{listing_id}/slots; PATCH /api/v1/host/listings/{listing_id}/slots/{slot_id}</td>
+<td><code>tests/catalog/test_experience_fields.py</code></td>
+<td>web:experiences.ts</td>
+</tr>
+<tr>
+<td>TRP-01</td>
+<td>Agency-only trips</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-TRP-01</td>
+<td>trip; host_account; organization</td>
+<td>GET /api/v1/host/trips; POST /api/v1/host/trips; DELETE /api/v1/host/trips/{trip_id}</td>
+<td><code>tests/trips/test_agency_only.py</code></td>
+<td>web:trips.ts</td>
+</tr>
+<tr>
+<td>TRP-02</td>
+<td>Trip itinerary and inclusions</td>
+<td>Must</td>
+<td>M2</td>
+<td></td>
+<td>trip; trip_itinerary_day</td>
+<td>GET /api/v1/trips/{trip_id}; POST /api/v1/host/trips; GET /api/v1/host/trips/{trip_id}; PATCH /api/v1/host/trips/{trip_id}</td>
+<td><code>tests/trips/test_itinerary.py</code></td>
+<td>web:trips.ts</td>
+</tr>
+<tr>
+<td>TRP-03</td>
+<td>Departures with seats and price</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-TRP-02</td>
+<td>trip_departure</td>
+<td>GET /api/v1/trips/{trip_id}; GET /api/v1/trips/{trip_id}/departures; GET /api/v1/host/trips/{trip_id}/departures; POST /api/v1/host/trips/{trip_id}/departures; PATCH /api/v1/host/trips/{trip_id}/departures/{departure_id}</td>
+<td><code>tests/trips/test_departures.py</code></td>
+<td>web:trips.ts</td>
+</tr>
+<tr>
+<td>TRP-04</td>
+<td>Trips go through review</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-02</td>
+<td>trip; moderation_case</td>
+<td>PATCH /api/v1/host/trips/{trip_id}; POST /api/v1/host/trips/{trip_id}/status; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/trips; GET /api/v1/admin/trips/{trip_id}; POST /api/v1/admin/trips/{trip_id}/status</td>
+<td><code>tests/trips/test_trip_review.py</code></td>
+<td>admin:listings.ts</td>
+</tr>
+<tr>
+<td>TRP-07</td>
+<td>Canonical trip types</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-05</td>
+<td>trip (trip_type enum)</td>
+<td>GET /api/v1/reference; GET /api/v1/trips; POST /api/v1/host/trips; PATCH /api/v1/host/trips/{trip_id}; GET /api/v1/admin/trips</td>
+<td><code>tests/trips/test_trip_types.py</code></td>
+<td>web:trips.ts</td>
+</tr>
+<tr>
+<td>AVL-03</td>
+<td>Host calendar: block days and set prices</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-AVL-04</td>
+<td>listing_day; room_type_night</td>
+<td>GET /api/v1/host/calendar; GET /api/v1/host/listings/{listing_id}/calendar; PUT /api/v1/host/listings/{listing_id}/calendar/blocks; PUT /api/v1/host/listings/{listing_id}/calendar/prices</td>
+<td><code>tests/inventory/test_host_calendar.py</code></td>
+<td>web:calendar.ts</td>
+</tr>
+<tr>
+<td>MED-01</td>
+<td>Photo upload with direct-to-storage</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-MED-01</td>
+<td>media_asset; listing_photo</td>
+<td>POST /api/v1/media/uploads; POST /api/v1/media/{media_id}/complete; GET /api/v1/media/{media_id}; PUT /api/v1/host/listings/{listing_id}/photos</td>
+<td><code>tests/media/test_photo_pipeline.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>MED-03</td>
+<td>Photo ordering and cover</td>
+<td>Must</td>
+<td>M2</td>
+<td></td>
+<td>listing_photo</td>
+<td>PUT /api/v1/host/listings/{listing_id}/photos</td>
+<td><code>tests/media/test_photo_order.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>MOD-06</td>
+<td>Cascade on host suspension</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-MOD-03</td>
+<td>host_account; listing; trip; booking; moderation_case</td>
+<td>POST /api/v1/admin/hosts/{host_account_id}/suspend; POST /api/v1/admin/hosts/{host_account_id}/unsuspend; POST /api/v1/admin/hosts/{host_account_id}/ban</td>
+<td><code>tests/trust/test_suspension_cascade.py</code></td>
+<td>admin:hosts.ts</td>
+</tr>
+<tr>
+<td>CFG-05</td>
+<td>Taxonomy management</td>
+<td>Must</td>
+<td>M2</td>
+<td>BR-LST-04</td>
+<td>category; amenity; property_type</td>
+<td>GET /api/v1/reference; GET /api/v1/admin/categories; POST /api/v1/admin/categories; PATCH /api/v1/admin/categories/{category_id}; DELETE /api/v1/admin/categories/{category_id}; GET /api/v1/admin/amenities; (+7 more)</td>
+<td><code>tests/catalog/test_taxonomy_admin.py</code></td>
+<td>admin:categories.ts</td>
+</tr>
+<tr>
+<td>TRP-05</td>
+<td>Search trips by date</td>
+<td>Should</td>
+<td>M3</td>
+<td></td>
+<td>trip_departure; listing_search_doc</td>
+<td>GET /api/v1/trips</td>
+<td><code>tests/search/test_trip_dates.py</code></td>
+<td>web:trips.ts</td>
+</tr>
+<tr>
+<td>AVL-04</td>
+<td>Availability window and partial matches</td>
+<td>Must</td>
+<td>M3</td>
+<td>BR-AVL-05</td>
+<td>listing_day; room_type_night; listing_search_doc</td>
+<td>GET /api/v1/listings; GET /api/v1/listings/{listing_id}/availability; POST /api/v1/quotes</td>
+<td><code>tests/inventory/test_partial_availability.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>PRC-01</td>
+<td>Server-side price quote</td>
+<td>Must</td>
+<td>M3</td>
+<td>BR-PRC-01</td>
+<td>quote; listing_day; room_type_night; tax_rate</td>
+<td>POST /api/v1/quotes; GET /api/v1/quotes/{quote_id}; PUT /api/v1/host/listings/{listing_id}/calendar/prices</td>
+<td><code>tests/pricing/test_quote.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>PRC-02</td>
+<td>No guest service fee</td>
+<td>Must</td>
+<td>M3</td>
+<td>BR-PRC-02</td>
+<td>quote</td>
+<td>POST /api/v1/quotes</td>
+<td><code>tests/pricing/test_no_guest_fee.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>PRC-03</td>
+<td>Length-of-stay discounts</td>
+<td>Should</td>
+<td>M3</td>
+<td>BR-PRC-03</td>
+<td>listing; quote</td>
+<td>POST /api/v1/quotes; PATCH /api/v1/host/listings/{listing_id}</td>
+<td><code>tests/pricing/test_length_of_stay_discount.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>PRC-05</td>
+<td>Whole dinars to guests, centimes inside</td>
+<td>Must</td>
+<td>M3</td>
+<td>BR-PAY-01</td>
+<td>quote; booking</td>
+<td>POST /api/v1/quotes</td>
+<td><code>tests/pricing/test_rounding.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>SRC-01</td>
+<td>Search with filters and facets</td>
+<td>Must</td>
+<td>M3</td>
+<td>BR-SRC-01</td>
+<td>listing_search_doc</td>
+<td>GET /api/v1/listings; GET /api/v1/listings/facets</td>
+<td><code>tests/search/test_filters_facets.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>SRC-02</td>
+<td>Map search</td>
+<td>Must</td>
+<td>M3</td>
+<td></td>
+<td>listing_search_doc</td>
+<td>GET /api/v1/listings; GET /api/v1/listings/map</td>
+<td><code>tests/search/test_map_search.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>SRC-03</td>
+<td>Text search in three languages</td>
+<td>Should</td>
+<td>M3</td>
+<td></td>
+<td>listing_search_doc; wilaya; commune</td>
+<td>GET /api/v1/geo/communes; GET /api/v1/listings</td>
+<td><code>tests/search/test_text_search_ar_fr_en.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>SRC-05</td>
+<td>Sorting and pagination</td>
+<td>Must</td>
+<td>M3</td>
+<td></td>
+<td>listing_search_doc</td>
+<td>GET /api/v1/listings; GET /api/v1/trips</td>
+<td><code>tests/search/test_sort_pagination.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>SRC-06</td>
+<td>Hotels as their own vertical</td>
+<td>Must</td>
+<td>M3</td>
+<td>BR-SRC-04</td>
+<td>listing; listing_search_doc</td>
+<td>GET /api/v1/listings; GET /api/v1/listings/{listing_id}</td>
+<td><code>tests/search/test_hotel_vertical.py</code></td>
+<td>web:listings.ts</td>
+</tr>
+<tr>
+<td>HST-05</td>
+<td>Payout or refund account details</td>
+<td>Should</td>
+<td>M4</td>
+<td>BR-PAY-09</td>
+<td>payout_account; audit_event</td>
+<td>GET /api/v1/host/payout-accounts; POST /api/v1/host/payout-accounts; DELETE /api/v1/host/payout-accounts/{payout_account_id}; POST /api/v1/host/payouts</td>
+<td><code>tests/hosts/test_payout_account.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>AVL-01</td>
+<td>No double booking for single units</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-AVL-01</td>
+<td>booking (exclusion constraint on unit and stay range)</td>
+<td>POST /api/v1/me/bookings</td>
+<td><code>tests/bookings/test_no_double_booking.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>AVL-02</td>
+<td>Pooled inventory for rooms, beds, seats</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-AVL-02</td>
+<td>room_type_night; experience_slot; trip_departure</td>
+<td>GET /api/v1/listings/{listing_id}/availability; POST /api/v1/me/bookings</td>
+<td><code>tests/inventory/test_pooled_inventory.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>AVL-05</td>
+<td>Temporary holds during payment</td>
+<td>Should</td>
+<td>M4</td>
+<td>BR-AVL-06</td>
+<td>room_type_night; experience_slot; trip_departure; quote</td>
+<td>no endpoint: POST /api/v1/bookings (hold step); job: inventory.release_holds</td>
+<td><code>tests/inventory/test_holds.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-01</td>
+<td>Instant booking</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-BKG-01</td>
+<td>booking; booking_event; ledger_transaction; account_balance</td>
+<td>POST /api/v1/me/bookings</td>
+<td><code>tests/bookings/test_booking_create_instant.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-02</td>
+<td>Request to book</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-BKG-03</td>
+<td>booking; booking_event</td>
+<td>GET /api/v1/reference/reasons; POST /api/v1/me/bookings; POST /api/v1/host/listings/{listing_id}/status; POST /api/v1/host/bookings/{booking_id}/accept; POST /api/v1/host/bookings/{booking_id}/decline</td>
+<td><code>tests/bookings/test_request_to_book.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-03</td>
+<td>Automatic expiry of requests</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-BKG-04</td>
+<td>booking; booking_event; outbox_event</td>
+<td>PATCH /api/v1/admin/settings</td>
+<td><code>tests/bookings/test_request_expiry.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-04</td>
+<td>Automatic completion after check-out</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-BKG-05</td>
+<td>booking; booking_event</td>
+<td>no endpoint: job: bookings.complete_stays</td>
+<td><code>tests/bookings/test_auto_complete.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-05</td>
+<td>Unified booking state machine</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-BKG-06</td>
+<td>booking; booking_event</td>
+<td>POST /api/v1/me/bookings; POST /api/v1/me/bookings/{booking_id}/cancel; GET /api/v1/admin/bookings; GET /api/v1/admin/bookings/{booking_id}</td>
+<td><code>tests/bookings/test_booking_states.py</code></td>
+<td>admin:bookings.ts</td>
+</tr>
+<tr>
+<td>BKG-06</td>
+<td>Booking snapshot</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-BKG-07</td>
+<td>booking; quote</td>
+<td>POST /api/v1/me/bookings; GET /api/v1/admin/bookings/{booking_id}</td>
+<td><code>tests/bookings/test_booking_snapshot.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-07</td>
+<td>Guest and host booking lists</td>
+<td>Must</td>
+<td>M4</td>
+<td></td>
+<td>booking</td>
+<td>GET /api/v1/me/bookings; GET /api/v1/me/bookings/{booking_id}; GET /api/v1/host/listings; GET /api/v1/host/bookings; GET /api/v1/host/bookings/{booking_id}; GET /api/v1/admin/bookings</td>
+<td><code>tests/bookings/test_booking_lists.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-08</td>
+<td>Booking reference</td>
+<td>Must</td>
+<td>M4</td>
+<td></td>
+<td>booking</td>
+<td>GET /api/v1/me/bookings/{booking_id}; GET /api/v1/host/bookings/{booking_id}; GET /api/v1/admin/bookings</td>
+<td><code>tests/bookings/test_booking_reference.py</code></td>
+<td>admin:bookings.ts</td>
+</tr>
+<tr>
+<td>BKG-09</td>
+<td>Trip departure booking</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-TRP-02</td>
+<td>booking; trip_departure</td>
+<td>POST /api/v1/quotes; GET /api/v1/trips/{trip_id}/departures; POST /api/v1/me/bookings</td>
+<td><code>tests/bookings/test_trip_booking.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>BKG-10</td>
+<td>Idempotent booking creation</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-SYS-01</td>
+<td>idempotency_record</td>
+<td>POST /api/v1/me/bookings</td>
+<td><code>tests/bookings/test_booking_idempotency.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>CAN-01</td>
+<td>Guest cancellation by policy</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-CAN-02</td>
+<td>booking; refund; booking_event; cancellation_policy</td>
+<td>GET /api/v1/me/bookings/{booking_id}/cancellation-preview; POST /api/v1/me/bookings/{booking_id}/cancel</td>
+<td><code>tests/bookings/test_guest_cancel.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>CAN-02</td>
+<td>Host cancellation</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-CAN-03</td>
+<td>booking; refund; ledger_transaction</td>
+<td>GET /api/v1/reference/reasons; GET /api/v1/host/bookings/{booking_id}/cancellation-preview; POST /api/v1/host/bookings/{booking_id}/cancel</td>
+<td><code>tests/bookings/test_host_cancel.py</code></td>
+<td>web:reservations.ts</td>
+</tr>
+<tr>
+<td>CAN-03</td>
+<td>Staff cancellation and refund</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-CAN-04</td>
+<td>refund; booking; audit_event</td>
+<td>POST /api/v1/admin/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/refunds; GET /api/v1/admin/refunds</td>
+<td><code>tests/bookings/test_staff_refund.py</code></td>
+<td>admin:bookings.ts</td>
+</tr>
+<tr>
+<td>CAN-04</td>
+<td>Commission reversal rules</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-05</td>
+<td>ledger_transaction; ledger_entry</td>
+<td>POST /api/v1/me/bookings/{booking_id}/cancel; POST /api/v1/host/bookings/{booking_id}/decline; POST /api/v1/host/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/refunds</td>
+<td><code>tests/ledger/test_commission_reversal.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>PAY-01</td>
+<td>Double-entry ledger</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-02</td>
+<td>ledger_account; ledger_transaction; ledger_entry</td>
+<td>GET /api/v1/host/wallet/entries; POST /api/v1/admin/bookings/{booking_id}/refunds; GET /api/v1/admin/ledger/transactions; POST /api/v1/admin/ledger/adjustments</td>
+<td><code>tests/ledger/test_double_entry.py</code></td>
+<td>admin:ledger.ts</td>
+</tr>
+<tr>
+<td>PAY-02</td>
+<td>Prepaid commission wallet (model M1)</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-03</td>
+<td>ledger_account; account_balance</td>
+<td>GET /api/v1/host/wallet; GET /api/v1/admin/finance/summary; GET /api/v1/admin/wallets; GET /api/v1/admin/wallets/{host_account_id}; POST /api/v1/admin/wallets/{host_account_id}/topups</td>
+<td><code>tests/ledger/test_wallet_balance.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>PAY-03</td>
+<td>Commission deduction on confirmation</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-04</td>
+<td>ledger_transaction; ledger_entry; booking</td>
+<td>POST /api/v1/me/bookings; POST /api/v1/host/bookings/{booking_id}/accept</td>
+<td><code>tests/ledger/test_commission_on_confirm.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>PAY-04</td>
+<td>Commission rate resolution</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-06</td>
+<td>host_account; platform_settings; booking</td>
+<td>POST /api/v1/host/bookings/{booking_id}/accept; GET /api/v1/host/wallet; PUT /api/v1/admin/hosts/{host_account_id}/commission-override; DELETE /api/v1/admin/hosts/{host_account_id}/commission-override; GET /api/v1/admin/commission-rates; PUT /api/v1/admin/commission-rates</td>
+<td><code>tests/ledger/test_rate_resolution.py</code></td>
+<td>admin:hosts.ts</td>
+</tr>
+<tr>
+<td>PAY-05</td>
+<td>Manual wallet top-up by staff</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-07</td>
+<td>wallet_topup; ledger_transaction</td>
+<td>POST /api/v1/admin/wallets/{host_account_id}/topups; GET /api/v1/admin/topups; POST /api/v1/admin/topups/{topup_id}/approve; POST /api/v1/admin/topups/{topup_id}/reject</td>
+<td><code>tests/ledger/test_manual_topup.py</code></td>
+<td>admin:finance.ts</td>
+</tr>
+<tr>
+<td>PAY-07</td>
+<td>Negative balance handling</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-PAY-10</td>
+<td>account_balance; platform_settings; notification</td>
+<td>POST /api/v1/host/bookings/{booking_id}/accept; GET /api/v1/host/wallet; GET /api/v1/admin/dashboard/attention; GET /api/v1/admin/hosts; PUT /api/v1/admin/hosts/{host_account_id}/credit-limit-override; GET /api/v1/admin/finance/summary; (+1 more)</td>
+<td><code>tests/ledger/test_negative_balance.py</code></td>
+<td>admin:finance.ts</td>
+</tr>
+<tr>
+<td>PAY-08</td>
+<td>Wallet history for hosts</td>
+<td>Must</td>
+<td>M4</td>
+<td></td>
+<td>ledger_entry; account_balance</td>
+<td>GET /api/v1/host/wallet; GET /api/v1/host/wallet/entries; GET /api/v1/admin/ledger/transactions</td>
+<td><code>tests/ledger/test_wallet_history.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>NTF-01</td>
+<td>In-app notifications</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-NTF-01</td>
+<td>notification; outbox_event</td>
+<td>GET /api/v1/me/notifications; POST /api/v1/me/notifications/{notification_id}/read; POST /api/v1/me/notifications/read-all</td>
+<td><code>tests/notifications/test_in_app.py</code></td>
+<td>web:notifications.ts</td>
+</tr>
+<tr>
+<td>NTF-02</td>
+<td>Email and SMS notifications</td>
+<td>Must</td>
+<td>M4</td>
+<td>BR-NTF-02</td>
+<td>outbox_event; delivery_log</td>
+<td>no endpoint: internal: notifications.send_email_sms</td>
+<td><code>tests/notifications/test_email_sms.py</code></td>
+<td>none (workers)</td>
+</tr>
+<tr>
+<td>REV-01</td>
+<td>Write a review after a stay</td>
+<td>Must</td>
+<td>M5</td>
+<td>BR-REV-01</td>
+<td>review; booking</td>
+<td>POST /api/v1/me/bookings/{booking_id}/review; GET /api/v1/me/reviews</td>
+<td><code>tests/reviews/test_write_review.py</code></td>
+<td>web:reviews.ts</td>
+</tr>
+<tr>
+<td>REV-03</td>
+<td>Host reply</td>
+<td>Should</td>
+<td>M5</td>
+<td></td>
+<td>review_reply</td>
+<td>GET /api/v1/listings/{listing_id}/reviews; GET /api/v1/host/reviews; PUT /api/v1/host/reviews/{review_id}/reply</td>
+<td><code>tests/reviews/test_host_reply.py</code></td>
+<td>web:reviews.ts</td>
+</tr>
+<tr>
+<td>REV-04</td>
+<td>Report and moderate reviews</td>
+<td>Must</td>
+<td>M5</td>
+<td>BR-REV-03</td>
+<td>review; review_report; moderation_case</td>
+<td>POST /api/v1/reviews/{review_id}/reports; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/reviews; POST /api/v1/admin/reviews/{review_id}/hide; POST /api/v1/admin/reviews/{review_id}/restore; POST /api/v1/admin/reviews/{review_id}/dismiss-reports; (+1 more)</td>
+<td><code>tests/reviews/test_review_moderation.py</code></td>
+<td>admin:reviews.ts</td>
+</tr>
+<tr>
+<td>REV-05</td>
+<td>Ratings derived from reviews</td>
+<td>Must</td>
+<td>M5</td>
+<td>BR-REV-04</td>
+<td>review; listing; host_account; organization</td>
+<td>GET /api/v1/listings/{listing_id}/reviews; GET /api/v1/trips/{trip_id}/reviews; GET /api/v1/users/{user_id}/reviews; GET /api/v1/host/reviews; POST /api/v1/admin/reviews/{review_id}/hide; POST /api/v1/admin/reviews/{review_id}/restore; (+1 more)</td>
+<td><code>tests/reviews/test_ratings.py</code></td>
+<td>web:reviews.ts</td>
+</tr>
+<tr>
+<td>MSG-01</td>
+<td>Conversations between guest and host</td>
+<td>Must</td>
+<td>M5</td>
+<td></td>
+<td>conversation; conversation_participant; message</td>
+<td>GET /api/v1/conversations; POST /api/v1/conversations; GET /api/v1/conversations/{conversation_id}; GET /api/v1/conversations/{conversation_id}/messages; POST /api/v1/conversations/{conversation_id}/messages</td>
+<td><code>tests/messaging/test_conversations.py</code></td>
+<td>web:conversations.ts</td>
+</tr>
+<tr>
+<td>MSG-02</td>
+<td>Incremental sync</td>
+<td>Must</td>
+<td>M5</td>
+<td></td>
+<td>message</td>
+<td>GET /api/v1/conversations/sync; GET /api/v1/conversations/{conversation_id}/messages</td>
+<td><code>tests/messaging/test_sync_cursor.py</code></td>
+<td>web:conversations.ts</td>
+</tr>
+<tr>
+<td>MSG-03</td>
+<td>Read state and unread counts</td>
+<td>Must</td>
+<td>M5</td>
+<td></td>
+<td>conversation_participant</td>
+<td>GET /api/v1/conversations; GET /api/v1/conversations/sync; POST /api/v1/conversations/{conversation_id}/read</td>
+<td><code>tests/messaging/test_read_state.py</code></td>
+<td>web:conversations.ts</td>
+</tr>
+<tr>
+<td>MSG-04</td>
+<td>Contact detail masking before confirmation</td>
+<td>Should</td>
+<td>M5</td>
+<td>BR-MSG-01</td>
+<td>message</td>
+<td>GET /api/v1/conversations/{conversation_id}/messages; POST /api/v1/conversations/{conversation_id}/messages</td>
+<td><code>tests/messaging/test_contact_masking.py</code></td>
+<td>web:conversations.ts</td>
+</tr>
+<tr>
+<td>STF-06</td>
+<td>Audited CSV exports</td>
+<td>Must</td>
+<td>M6</td>
+<td>BR-STF-04</td>
+<td>export_job; audit_event</td>
+<td>POST /api/v1/admin/exports; GET /api/v1/admin/exports; GET /api/v1/admin/exports/{export_id}</td>
+<td><code>tests/audit/test_exports.py</code></td>
+<td>admin:analytics.ts</td>
+</tr>
+<tr>
+<td>RPT-01</td>
+<td>KPIs by period, host type, vertical, wilaya</td>
+<td>Should</td>
+<td>M6</td>
+<td>BR-RPT-01</td>
+<td>booking; ledger_entry; listing; host_account</td>
+<td>GET /api/v1/admin/finance/summary; GET /api/v1/admin/analytics/kpis; GET /api/v1/admin/analytics/charts</td>
+<td><code>tests/reports/test_kpis.py</code></td>
+<td>admin:analytics.ts</td>
+</tr>
+<tr>
+<td>RPT-03</td>
+<td>Host earnings dashboard</td>
+<td>Should</td>
+<td>M6</td>
+<td>BR-RPT-02</td>
+<td>booking; ledger_entry</td>
+<td>GET /api/v1/host/earnings</td>
+<td><code>tests/reports/test_host_earnings.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>PRV-02</td>
+<td>Data subject requests</td>
+<td>Must</td>
+<td>M6</td>
+<td>BR-PRV-02</td>
+<td>data_subject_request</td>
+<td>GET /api/v1/me/data-requests; POST /api/v1/me/data-requests; DELETE /api/v1/admin/users/{user_id}; GET /api/v1/admin/data-requests; POST /api/v1/admin/data-requests/{data_request_id}/complete</td>
+<td><code>tests/privacy/test_data_requests.py</code></td>
+<td>admin:users.ts (privacy actions; the module itself switches in M1)</td>
+</tr>
+<tr>
+<td>PRV-04</td>
+<td>Retention schedule</td>
+<td>Should</td>
+<td>M6</td>
+<td>BR-PRV-05</td>
+<td>host_document; media_asset; data_subject_request</td>
+<td>no endpoint: job: privacy.apply_retention</td>
+<td><code>tests/privacy/test_retention.py</code></td>
+<td>none (jobs)</td>
+</tr>
+<tr>
+<td>PRV-05</td>
+<td>Breach response</td>
+<td>Must</td>
+<td>M6</td>
+<td></td>
+<td>no table yet (incident register, decision T5 in 13-decisions-needed.md)</td>
+<td>no endpoint: none (runbook)</td>
+<td><code>tests/ops/breach_drill.md (manual)</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-01</td>
+<td>API response time</td>
+<td>Must</td>
+<td>M6</td>
+<td></td>
+<td>all</td>
+<td>no endpoint: all /api/v1/*</td>
+<td><code>tests/perf/locust_api.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-02</td>
+<td>Search response time</td>
+<td>Must</td>
+<td>M6</td>
+<td></td>
+<td>listing_search_doc</td>
+<td>GET /api/v1/listings</td>
+<td><code>tests/perf/locust_search.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>PRV-03</td>
+<td>Data residency</td>
+<td>Must</td>
+<td>M7</td>
+<td>BR-PRV-04</td>
+<td>none (infrastructure and backups)</td>
+<td>no endpoint: none</td>
+<td><code>tests/ops/test_residency_checklist.md (manual)</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-03</td>
+<td>Availability</td>
+<td>Should</td>
+<td>M7</td>
+<td></td>
+<td>none</td>
+<td>no endpoint: GET /api/v1/health</td>
+<td><code>tests/ops/test_health.py</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>NFR-04</td>
+<td>Backups and restore</td>
+<td>Must</td>
+<td>M7</td>
+<td></td>
+<td>all</td>
+<td>no endpoint: none</td>
+<td><code>tests/ops/restore_drill.md (manual)</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td>PRC-04</td>
+<td>Tourist tax and VAT lines</td>
+<td>Should</td>
+<td>R2-A</td>
+<td>BR-PRC-04</td>
+<td>tax_rate; quote; platform_settings</td>
+<td>POST /api/v1/quotes</td>
+<td><code>tests/pricing/test_tax_lines.py</code></td>
+<td>admin:settings.ts</td>
+</tr>
+<tr>
+<td>PAY-06</td>
+<td>Online wallet top-up via gateway</td>
+<td>Should</td>
+<td>R2-A</td>
+<td>BR-PAY-08</td>
+<td>wallet_topup; gateway_event; payment</td>
+<td>POST /api/v1/host/wallet/topups; POST /api/v1/webhooks/gateway/{provider}</td>
+<td><code>tests/ledger/test_online_topup.py</code></td>
+<td>web:wallet.ts</td>
+</tr>
+<tr>
+<td>PAY-09</td>
+<td>Gateway webhooks</td>
+<td>Should</td>
+<td>R2-A</td>
+<td>BR-SYS-02</td>
+<td>gateway_event</td>
+<td>POST /api/v1/webhooks/gateway/{provider}</td>
+<td><code>tests/ledger/test_gateway_webhooks.py</code></td>
+<td>none (server to server)</td>
+</tr>
+<tr>
+<td>PAY-11</td>
+<td>Commission invoices to hosts</td>
+<td>Should</td>
+<td>R2-A</td>
+<td>BR-PAY-12</td>
+<td>invoice</td>
+<td>GET /api/v1/host/invoices; GET /api/v1/admin/invoices</td>
+<td><code>tests/ledger/test_commission_invoices.py</code></td>
+<td>admin:finance.ts</td>
+</tr>
+<tr>
+<td>LST-09</td>
+<td>Featured listings</td>
+<td>Could</td>
+<td>R2-B</td>
+<td></td>
+<td>featured_placement</td>
+<td>PUT /api/v1/admin/listings/{listing_id}/featured</td>
+<td><code>tests/catalog/test_featured.py</code></td>
+<td>admin:listings.ts</td>
+</tr>
+<tr>
+<td>TRP-06</td>
+<td>Cancel a departure under minimum group</td>
+<td>Should</td>
+<td>R2-B</td>
+<td>BR-TRP-03</td>
+<td>trip_departure; booking; refund; ledger_transaction</td>
+<td>POST /api/v1/host/trips/{trip_id}/departures/{departure_id}/cancel</td>
+<td><code>tests/trips/test_departure_cancel.py</code></td>
+<td>web:trips.ts</td>
+</tr>
+<tr>
+<td>BKG-11</td>
+<td>Disputes</td>
+<td>Should</td>
+<td>R2-B</td>
+<td>BR-CAN-05</td>
+<td>dispute; media_asset; moderation_case</td>
+<td>POST /api/v1/me/bookings/{booking_id}/dispute; POST /api/v1/host/bookings/{booking_id}/dispute; POST /api/v1/admin/bookings/{booking_id}/dispute/resolve</td>
+<td><code>tests/bookings/test_disputes.py</code></td>
+<td>admin:bookings.ts</td>
+</tr>
+<tr>
+<td>REV-02</td>
+<td>Host reviews guest</td>
+<td>Should</td>
+<td>R2-B</td>
+<td>BR-REV-02</td>
+<td>review</td>
+<td>POST /api/v1/host/bookings/{booking_id}/guest-review</td>
+<td><code>tests/reviews/test_double_blind.py</code></td>
+<td>web:reviews.ts</td>
+</tr>
+<tr>
+<td>MSG-05</td>
+<td>Attachments</td>
+<td>Could</td>
+<td>R2-B</td>
+<td></td>
+<td>message; media_asset</td>
+<td>POST /api/v1/media/uploads</td>
+<td><code>tests/messaging/test_attachments.py</code></td>
+<td>web:conversations.ts</td>
+</tr>
+<tr>
+<td>MSG-06</td>
+<td>Staff messages and broadcast</td>
+<td>Should</td>
+<td>R2-B</td>
+<td></td>
+<td>conversation; message; audit_event</td>
+<td>no endpoint: POST /api/v1/admin/messages; POST /api/v1/admin/broadcasts</td>
+<td><code>tests/messaging/test_staff_broadcast.py</code></td>
+<td>admin (messages pages, no lib/data module yet)</td>
+</tr>
+<tr>
+<td>NTF-03</td>
+<td>Notification preferences</td>
+<td>Should</td>
+<td>R2-B</td>
+<td>BR-PRV-03</td>
+<td>notification_preference</td>
+<td>POST /api/v1/me/consents; GET /api/v1/me/notification-preferences; PUT /api/v1/me/notification-preferences</td>
+<td><code>tests/notifications/test_preferences.py</code></td>
+<td>web:notifications.ts</td>
+</tr>
+<tr>
+<td>MOD-04</td>
+<td>Bulk actions with per-item results</td>
+<td>Should</td>
+<td>R2-B</td>
+<td></td>
+<td>moderation_decision; audit_event</td>
+<td>POST /api/v1/admin/moderation/bulk-decisions</td>
+<td><code>tests/trust/test_bulk_actions.py</code></td>
+<td>admin:approvals.ts</td>
+</tr>
+<tr>
+<td>MOD-05</td>
+<td>Undo window</td>
+<td>Could</td>
+<td>R2-B</td>
+<td></td>
+<td>moderation_decision; audit_event</td>
+<td>POST /api/v1/admin/moderation/cases/{case_id}/decisions</td>
+<td><code>tests/trust/test_undo.py</code></td>
+<td>admin:approvals.ts</td>
+</tr>
+<tr>
+<td>MOD-07</td>
+<td>Risk flags</td>
+<td>Should</td>
+<td>R2-B</td>
+<td>BR-MOD-04</td>
+<td>moderation_case</td>
+<td>GET /api/v1/admin/users</td>
+<td><code>tests/trust/test_risk_flags.py</code></td>
+<td>admin:approvals.ts</td>
+</tr>
+<tr>
+<td>CFG-03</td>
+<td>Onboarding field editor</td>
+<td>Should</td>
+<td>R2-B</td>
+<td>BR-CFG-03</td>
+<td>onboarding_flow_version</td>
+<td>PUT /api/v1/admin/onboarding-flows/{host_type}/draft</td>
+<td><code>tests/config/test_field_editor.py</code></td>
+<td>admin:onboarding.ts</td>
+</tr>
+<tr>
+<td>PRM-01</td>
+<td>Coupons</td>
+<td>Could</td>
+<td>R2-B</td>
+<td>BR-PRM-01</td>
+<td>coupon; coupon_redemption; quote</td>
+<td>GET /api/v1/admin/coupons; POST /api/v1/admin/coupons; PATCH /api/v1/admin/coupons/{coupon_id}; DELETE /api/v1/admin/coupons/{coupon_id}</td>
+<td><code>tests/promotions/test_coupons.py</code></td>
+<td>admin:promotions.ts</td>
+</tr>
+<tr>
+<td>PRM-02</td>
+<td>Who pays the discount</td>
+<td>Could</td>
+<td>R2-B</td>
+<td>BR-PRM-02</td>
+<td>coupon; ledger_transaction</td>
+<td>POST /api/v1/admin/coupons</td>
+<td><code>tests/promotions/test_coupon_funding.py</code></td>
+<td>admin:promotions.ts</td>
+</tr>
+<tr>
+<td>RPT-02</td>
+<td>Host-type by vertical cross-tab</td>
+<td>Could</td>
+<td>R2-B</td>
+<td></td>
+<td>booking; listing; host_account</td>
+<td>GET /api/v1/admin/analytics/charts</td>
+<td><code>tests/reports/test_crosstab.py</code></td>
+<td>admin:analytics.ts</td>
+</tr>
+<tr>
+<td>PRV-06</td>
+<td>Foreign guest declaration support</td>
+<td>Could</td>
+<td>R2-B</td>
+<td></td>
+<td>user (nationality_iso2); booking</td>
+<td>no endpoint: PATCH /api/v1/me (nationality, ID type when required)</td>
+<td><code>tests/privacy/test_foreign_guest_fields.py</code></td>
+<td>web:auth.ts</td>
+</tr>
+<tr>
+<td>AVL-06</td>
+<td>External calendar sync (iCal)</td>
+<td>Could</td>
+<td>LATER</td>
+<td></td>
+<td>new table needed (ical_feed, not in schema.dbml yet)</td>
+<td>no endpoint: GET /api/v1/host/listings/{id}/ical; POST /api/v1/host/listings/{id}/ical-imports</td>
+<td><code>tests/inventory/test_ical_sync.py</code></td>
+<td>web:calendar.ts</td>
+</tr>
+<tr>
+<td>PAY-10</td>
+<td>Payouts and guest payments (model M4)</td>
+<td>Could</td>
+<td>LATER</td>
+<td>BR-PAY-11</td>
+<td>payment; payout; payout_account; ledger_account</td>
+<td>POST /api/v1/me/bookings/{booking_id}/payments; GET /api/v1/host/payouts; POST /api/v1/host/payouts; POST /api/v1/webhooks/gateway/{provider}; GET /api/v1/admin/payouts; POST /api/v1/admin/payouts/{payout_id}/approve; (+2 more)</td>
+<td><code>tests/ledger/test_payout_models.py</code></td>
+<td>admin:finance.ts</td>
+</tr>
+</tbody></table>
+<h2 id="4-known-gaps-found-while-building-this-matrix">4. Known gaps found while building this matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Gap</th>
+<th>Where it is tracked</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AVL-06</td>
+<td>No table for external calendar feeds in <code>schema.dbml</code> (Later release, so not urgent)</td>
+<td>T5 in <a href="13-decisions-needed.html">13-decisions-needed.md</a></td>
+</tr>
+<tr>
+<td>PRV-05</td>
+<td>No incident register table; the breach runbook needs one to record the 5-day ANPDP clock</td>
+<td>T5 in <a href="13-decisions-needed.html">13-decisions-needed.md</a></td>
+</tr>
+<tr>
+<td>ACC-02</td>
+<td>One-time codes are kept in Redis, not in a table; the audit of code sends relies on <code>delivery_log</code></td>
+<td>T5 in <a href="13-decisions-needed.html">13-decisions-needed.md</a></td>
+</tr>
+<tr>
+<td>MSG-06</td>
+<td>The admin messages pages have no <code>lib/data</code> module today (screens are mocked inline)</td>
+<td><a href="11-roadmap.html">11-roadmap.md</a> R2-B</td>
+</tr>
+</tbody></table>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> In which milestone is BKG-01 (instant booking) built, and why can it not come before the wallet?</li>
+<li><input disabled="" type="checkbox"> Which tables hold the data for AVL-01, and which database feature stops double bookings?</li>
+<li><input disabled="" type="checkbox"> Which <code>lib/data</code> modules switch to the API in M4?</li>
+<li><input disabled="" type="checkbox"> How many requirements are planned for R2-A, and which outside answers (F1 to F4) do they wait for?</li>
+<li><input disabled="" type="checkbox"> Find a requirement with no business rule. Is that a problem? Why or why not?</li>
+<li><input disabled="" type="checkbox"> If you change BR-PAY-04, which requirements and test files must you look at?</li>
+<li><input disabled="" type="checkbox"> Where do you change a mapping so the CSV and this page stay the same?</li>
+</ul>
+<div class="pager"><span><a href="14-open-questions.html">&larr; 14. Open questions (running list)</a></span><span><a href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt &rarr;</a></span></div></main></div></body></html>

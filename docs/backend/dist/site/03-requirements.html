@@ -1,0 +1,2310 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>03. Requirements: what the backend must do · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="on" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 3: requirements and rules</div><h1 id="03-requirements-what-the-backend-must-do">03. Requirements: what the backend must do</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This is the list of everything the Django backend must do, one line per need, each with an ID like <code>BKG-03</code>.<br>Each line says who needs it, how important it is, in which release, and how we will know it works (&quot;accepted when&quot;).<br>It also says what the apps do today, so you can see the size of the gap.<br>The same list is in <a href="files/requirements.csv">requirements.csv</a> for spreadsheets. The rules behind the lines are in <a href="04-business-rules.html">04-business-rules.md</a>.<br>The product decisions you approved on 2026-11-04 are written first, because many lines depend on them.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>MoSCoW priority</strong>: <strong>Must</strong> (no launch without it), <strong>Should</strong> (important, can slip a little), <strong>Could</strong> (nice to have).</li>
+<li><strong>Release</strong>: <strong>MVP</strong> (first public launch), <strong>R2</strong> (the next release after launch), <strong>Later</strong> (needs a legal or business decision first).</li>
+<li><strong>Acceptance criterion</strong> (&quot;accepted when&quot;): a sentence a tester can check with yes or no.</li>
+<li><strong>Non-functional requirement (NFR)</strong>: a quality the system must have (speed, safety, backups) rather than a feature.</li>
+</ul>
+<hr>
+<h2 id="1-how-to-read-the-ids">1. How to read the IDs</h2>
+<table>
+<thead>
+<tr>
+<th>Prefix in &quot;Source&quot;</th>
+<th>Meaning</th>
+<th>Where to find it</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1 to R69</td>
+<td>A requirement from the original spec</td>
+<td><a href="work-spec-vs-code.html">_work/spec-vs-code.md</a> section 1</td>
+</tr>
+<tr>
+<td>D-1 to D-22</td>
+<td>A disagreement between spec, website and admin</td>
+<td>same file, section 2</td>
+</tr>
+<tr>
+<td>U1 to U16</td>
+<td>A usability finding</td>
+<td>same file, section 4</td>
+</tr>
+<tr>
+<td>O1 to O11</td>
+<td>Something seen while clicking through</td>
+<td><a href="01-system-inventory.html">01-system-inventory.md</a> section 6</td>
+</tr>
+<tr>
+<td>INV-F / INV-A</td>
+<td>Website / admin inventory section</td>
+<td>Appendices A and B</td>
+</tr>
+<tr>
+<td>RES</td>
+<td>Research section</td>
+<td><a href="02-research.html">02-research.md</a></td>
+</tr>
+<tr>
+<td>DEC-001 to DEC-013</td>
+<td>A product decision (section 2 below)</td>
+<td>here</td>
+</tr>
+<tr>
+<td>BR-xxx</td>
+<td>A business rule</td>
+<td><a href="04-business-rules.html">04-business-rules.md</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="2-product-decisions-approved-2026-11-04">2. Product decisions (approved 2026-11-04)</h2>
+<p>The product owner accepted the proposed defaults for all open product questions (DEC-001 to DEC-013) and later asked for two more rules, already built in the apps (DEC-014, DEC-015).</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Question</th>
+<th>Decision</th>
+<th>Consequence for the design</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DEC-001</td>
+<td>Money model</td>
+<td><strong>M1: prepaid commission.</strong> Guests pay the host directly (cash, transfer, or the host&#39;s own means). The host keeps a commission deposit with BLADUS, which deducts its commission on each confirmed booking. The ledger is designed so models M2 to M4 can be switched on later.</td>
+<td>No guest payment or payout in MVP; double-entry ledger with accounts ready for them</td>
+</tr>
+<tr>
+<td>DEC-002</td>
+<td>Commission base</td>
+<td><strong>Accommodation subtotal</strong>: nights x nightly price (after length-of-stay discount), excluding cleaning fee and taxes. For trips and experiences: seats x price per person.</td>
+<td>One base, stored on each booking</td>
+</tr>
+<tr>
+<td>DEC-003</td>
+<td>Review before publishing</td>
+<td><strong>Yes.</strong> New listings and trips go to <code>pending_review</code>; edits of key fields return them to review.</td>
+<td>Moderation queue drives publication</td>
+</tr>
+<tr>
+<td>DEC-004</td>
+<td>One person, many host roles</td>
+<td><strong>Yes</strong>, with an active-organisation switcher.</td>
+<td>Host account = user or organisation; memberships</td>
+</tr>
+<tr>
+<td>DEC-005</td>
+<td>Hotel vertical</td>
+<td><strong>Own vertical in search</strong>, rolled into the home family in analytics.</td>
+<td><code>vertical</code> enum includes <code>hotel</code></td>
+</tr>
+<tr>
+<td>DEC-006</td>
+<td>Trips</td>
+<td><strong>Own tables with departures</strong> (dates, seats, price, status).</td>
+<td><code>trip</code>, <code>trip_departure</code> tables</td>
+</tr>
+<tr>
+<td>DEC-007</td>
+<td>Individual onboarding length</td>
+<td><strong>Keep 12 steps</strong>; drop the admin&#39;s 2-step cap.</td>
+<td>Config schema without that rule</td>
+</tr>
+<tr>
+<td>DEC-008</td>
+<td>Request reply window</td>
+<td><strong>24 hours</strong>, as a platform setting.</td>
+<td>Scheduled expiry job</td>
+</tr>
+<tr>
+<td>DEC-009</td>
+<td>Who may answer requests in an organisation</td>
+<td><strong>Owner, admin, manager.</strong></td>
+<td>Permission <code>bookings.respond</code></td>
+</tr>
+<tr>
+<td>DEC-010</td>
+<td>When earnings count</td>
+<td><strong>At completion</strong> (after check-out).</td>
+<td>Reporting rule</td>
+</tr>
+<tr>
+<td>DEC-011</td>
+<td>Cancellation policies</td>
+<td><strong>Flexible, moderate, strict</strong>, stored as time windows.</td>
+<td><code>cancellation_policy</code> table</td>
+</tr>
+<tr>
+<td>DEC-012</td>
+<td>Guest phone verification</td>
+<td><strong>Required before the first booking.</strong></td>
+<td>Phone OTP in MVP</td>
+</tr>
+<tr>
+<td>DEC-014</td>
+<td>What each host type may publish (2026-11-04)</td>
+<td><strong>Individual: homes and vehicles. Agency: experiences and trips. Hotel and hostel: their property.</strong></td>
+<td><code>HST-07</code>, <code>BR-HST-05</code>; demo data moved accordingly</td>
+</tr>
+<tr>
+<td>DEC-015</td>
+<td>Experience and trip types (2026-11-04)</td>
+<td><strong>8 experience types and 8 trip types, one shared list</strong> used everywhere</td>
+<td><code>LST-12</code>, <code>TRP-07</code>, <code>BR-LST-05</code>; enums in the schema</td>
+</tr>
+<tr>
+<td>DEC-013</td>
+<td>Wilaya count shown</td>
+<td><strong>69</strong> (codes 59 to 69 to be confirmed against the official journal).</td>
+<td>Geography seed</td>
+</tr>
+</tbody></table>
+<p>Legal and accounting questions (L1 to L7, F1 to F4 in <a href="14-open-questions.html">14-open-questions.md</a>) are still open. Every requirement that depends on them carries &quot;VERIFY&quot; in its source.</p>
+<hr>
+<h2 id="3-actors">3. Actors</h2>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Who</th>
+<th>App</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Visitor</td>
+<td>Anyone not signed in</td>
+<td>Website</td>
+</tr>
+<tr>
+<td>Guest</td>
+<td>Signed-in traveller</td>
+<td>Website</td>
+</tr>
+<tr>
+<td>Host</td>
+<td>Individual host, or a member of an organisation acting for it</td>
+<td>Website (host mode)</td>
+</tr>
+<tr>
+<td>Org owner / admin / manager / agent / guide</td>
+<td>Roles inside an agency, hotel or hostel</td>
+<td>Website (host mode)</td>
+</tr>
+<tr>
+<td>Moderator, Support, Finance, Analyst, Super admin</td>
+<td>BLADUS staff roles</td>
+<td>Admin</td>
+</tr>
+<tr>
+<td>System</td>
+<td>Scheduled jobs and automatic checks</td>
+<td>Backend</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="4-summary-and-full-list">4. Summary and full list</h2>
+<p>The tables below are generated from <a href="files/requirements_data.py">_tools/requirements_data.py</a> by <code>python _tools/build_requirements.py</code>, which also writes <a href="files/requirements.csv">requirements.csv</a>. Edit the data file, not the tables.</p>
+<!-- BEGIN GENERATED REQUIREMENTS -->
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>MVP</th>
+<th>R2</th>
+<th>Later</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Must</td>
+<td>109</td>
+<td>0</td>
+<td>0</td>
+<td>109</td>
+</tr>
+<tr>
+<td>Should</td>
+<td>17</td>
+<td>12</td>
+<td>0</td>
+<td>29</td>
+</tr>
+<tr>
+<td>Could</td>
+<td>0</td>
+<td>7</td>
+<td>2</td>
+<td>9</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td>126</td>
+<td>19</td>
+<td>2</td>
+<td><strong>147</strong></td>
+</tr>
+</tbody></table>
+<h3 id="acc-accounts-and-sign-in-9">ACC: Accounts and sign-in (9)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ACC-01</td>
+<td>Sign up with email or Algerian phone number</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A visitor can create an account with email+password or phone (+213[5-7]XXXXXXXX) and must verify it by code before booking</td>
+<td>Email+password only, no verification</td>
+<td>INV-F 1.1, RES B.3</td>
+<td>BR-ACC-01</td>
+</tr>
+<tr>
+<td>ACC-02</td>
+<td>Sign in with password or one-time phone code</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Login works with email+password or phone OTP (6 digits, 10 min, 5 tries); same generic error for every failure</td>
+<td>Email+password only</td>
+<td>RES B.3, O1</td>
+<td>BR-ACC-02</td>
+</tr>
+<tr>
+<td>ACC-03</td>
+<td>Session for both Next.js apps</td>
+<td>All</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Website and admin hold an httpOnly cookie on the Next.js server; Django session tokens can be revoked server-side; logout revokes the token</td>
+<td>Signed cookie; admin JWT cannot be revoked</td>
+<td>RES B.3</td>
+<td>BR-ACC-03</td>
+</tr>
+<tr>
+<td>ACC-04</td>
+<td>Password reset and change</td>
+<td>Guest, Host, Staff</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Reset by email or phone code; change requires current password; all other sessions revoked after change</td>
+<td>Change only (website); none for staff</td>
+<td>INV-A 4.15</td>
+<td></td>
+</tr>
+<tr>
+<td>ACC-05</td>
+<td>Two-factor login</td>
+<td>Staff, Host with payouts</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Staff must enrol TOTP or passkey before first use; hosts must enrol before editing payout details</td>
+<td>Flag only, never enforced</td>
+<td>RES B.3, D.1</td>
+<td>BR-ACC-04</td>
+</tr>
+<tr>
+<td>ACC-06</td>
+<td>Profile management</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>User edits name (Arabic and Latin), avatar, language, phone; changing phone or email requires re-verification</td>
+<td>Built (no re-verification)</td>
+<td>INV-F 3.2</td>
+<td></td>
+</tr>
+<tr>
+<td>ACC-07</td>
+<td>Login rate limiting shared across servers</td>
+<td>All</td>
+<td>Must</td>
+<td>MVP</td>
+<td>5 failures in 15 min lock 60 s per account and per IP, stored in Redis</td>
+<td>In-process memory</td>
+<td>INV-A 4.15, gap 6.1-4</td>
+<td>BR-ACC-05</td>
+</tr>
+<tr>
+<td>ACC-08</td>
+<td>One user, many roles</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>One user may be a guest, an individual host and a member of several organisations at once</td>
+<td>Single hostType per user</td>
+<td>DEC-004, D-1</td>
+<td>BR-ORG-01</td>
+</tr>
+<tr>
+<td>ACC-09</td>
+<td>Favourites</td>
+<td>Guest</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Guest adds or removes a listing or trip from favourites; list endpoint paginated</td>
+<td>Built</td>
+<td>INV-F 3.2</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="org-organisations-and-teams-7">ORG: Organisations and teams (7)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ORG-01</td>
+<td>Create an organisation (agency, hotel, hostel)</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Creating an organisation makes the creator its owner; status starts pending_verification</td>
+<td>Built (frontend)</td>
+<td>R3, R7-R9</td>
+<td>BR-ORG-02</td>
+</tr>
+<tr>
+<td>ORG-02</td>
+<td>Active-organisation switcher</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A user with several memberships picks the active one; every host request carries it and is checked</td>
+<td>Built in website 2026-11-04 (host menu, membership checked server-side)</td>
+<td>DEC-004, INV-F gaps</td>
+<td>BR-ORG-01</td>
+</tr>
+<tr>
+<td>ORG-03</td>
+<td>Invite a team member</td>
+<td>Org owner/admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Invite by email or phone with a role; invite token expires in 7 days; invitee accepts after signing in</td>
+<td>Invites cannot be accepted</td>
+<td>INV-F 3.8, gap</td>
+<td>BR-ORG-03</td>
+</tr>
+<tr>
+<td>ORG-04</td>
+<td>Change role, remove member, transfer ownership</td>
+<td>Org owner/admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Only owner transfers ownership; an organisation always has exactly one owner; audited</td>
+<td>Built</td>
+<td>INV-F 3.8</td>
+<td>BR-ORG-04</td>
+</tr>
+<tr>
+<td>ORG-05</td>
+<td>Per-role permissions inside an organisation</td>
+<td>Org members</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Permissions per role (owner, admin, manager, agent, guide) incl. bookings.respond for owner/admin/manager only</td>
+<td>Any member can do anything operational</td>
+<td>DEC-009, D-7</td>
+<td>BR-ORG-05</td>
+</tr>
+<tr>
+<td>ORG-06</td>
+<td>Re-verification on legal field change</td>
+<td>Org owner</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Changing legal name, RC, NIF or licence number moves verification back to pending and notifies staff</td>
+<td>Field list exists</td>
+<td>INV-F 3.8</td>
+<td>BR-ORG-06</td>
+</tr>
+<tr>
+<td>ORG-07</td>
+<td>Public organisation profile</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Public page shows name, logo, verified badge, listings, trips, rating; never legal numbers or staff phones</td>
+<td>Built</td>
+<td>INV-F 1.1</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="hst-becoming-a-host-and-verification-7">HST: Becoming a host and verification (7)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HST-01</td>
+<td>Guided onboarding per host type</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Individual 12 steps, agency 5, hotel 7, hostel 7, all served from the published config; every flow asks the booking approval mode</td>
+<td>Hardcoded; agency misses approval step</td>
+<td>R6-R9, R17, D-14</td>
+<td>BR-HST-01</td>
+</tr>
+<tr>
+<td>HST-02</td>
+<td>Save onboarding drafts on the server</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Draft saved per user and host type with the config version it started from; resumable on any device</td>
+<td>Browser localStorage</td>
+<td>O9, R49</td>
+<td>BR-HST-02</td>
+</tr>
+<tr>
+<td>HST-03</td>
+<td>Upload verification documents</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Required document list depends on host type; files go to a private bucket; each document has its own review status</td>
+<td>Placeholder images only</td>
+<td>RES C3.5</td>
+<td>BR-HST-03</td>
+</tr>
+<tr>
+<td>HST-04</td>
+<td>Host verification lifecycle</td>
+<td>Host, Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Statuses applied, under_review, approved, changes_requested, rejected, suspended, banned; moves only along the allowed transitions with reasons</td>
+<td>Admin only, not linked to website</td>
+<td>INV-A 4.6</td>
+<td>BR-HST-04</td>
+</tr>
+<tr>
+<td>HST-05</td>
+<td>Payout or refund account details</td>
+<td>Host</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Host stores CCP (RIP) or bank RIB in own name; changing it needs 2FA and holds payouts 72 h</td>
+<td>Missing</td>
+<td>RES C1, D4</td>
+<td>BR-PAY-09</td>
+</tr>
+<tr>
+<td>HST-07</td>
+<td>What each host type may publish</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Individual: homes and vehicles; agency: experiences and trips; hotel and hostel: their property with room types; enforced by API and database, create-listing flow offers only allowed choices</td>
+<td>Built in website 2026-11-04 (UI + server actions)</td>
+<td>DEC-014</td>
+<td>BR-HST-05</td>
+</tr>
+<tr>
+<td>HST-06</td>
+<td>Default approval mode per host or organisation</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Owner default applies to new listings; a listing may override; platform switch can force request mode</td>
+<td>Stored in 3 places, not applied</td>
+<td>R20, D-6</td>
+<td>BR-BKG-02</td>
+</tr>
+</tbody></table>
+<h3 id="lst-listings-and-catalogue-12">LST: Listings and catalogue (12)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LST-01</td>
+<td>Create and edit a listing (home, hotel, hostel, experience, vehicle)</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host creates a draft, fills vertical-specific fields, submits; server validates every field</td>
+<td>Built (no review)</td>
+<td>INV-F 3.3</td>
+<td>BR-LST-01</td>
+</tr>
+<tr>
+<td>LST-02</td>
+<td>Listing review before publication</td>
+<td>Host, Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Submitted listing goes to pending_review; published only after staff approval; edits of key fields go back to review</td>
+<td>Live at once</td>
+<td>DEC-003, D-10</td>
+<td>BR-LST-02</td>
+</tr>
+<tr>
+<td>LST-03</td>
+<td>Listing status lifecycle</td>
+<td>Host, Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Statuses draft, pending_review, changes_requested, published, paused, rejected, suspended, archived, deleted (soft); allowed moves enforced</td>
+<td>Two different sets</td>
+<td>INV-A 4.7</td>
+<td>BR-LST-03</td>
+</tr>
+<tr>
+<td>LST-04</td>
+<td>Room types for hotels and hostels</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A property has room types with price, capacity, unit (room or bed), inventory count, amenities, photos</td>
+<td>Built</td>
+<td>R4, R5, R14</td>
+<td>BR-AVL-03</td>
+</tr>
+<tr>
+<td>LST-05</td>
+<td>Amenities and categories from a shared list</td>
+<td>Host, Staff</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Amenities and property types are reference rows with en/fr/ar names; listings link to them</td>
+<td>Three vocabularies, free text</td>
+<td>INV-A 6.3</td>
+<td>BR-LST-04</td>
+</tr>
+<tr>
+<td>LST-06</td>
+<td>Location: wilaya, commune, exact and public point</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Listing references a commune; exact point hidden until booking confirmed; public point fuzzed by about 500 m</td>
+<td>Free text city, exact coordinates public</td>
+<td>RES C.5, B.1</td>
+<td>BR-SRC-03</td>
+</tr>
+<tr>
+<td>LST-07</td>
+<td>House rules, stay rules and cancellation policy</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Min/max nights, check-in/out times, rules list, policy chosen from templates</td>
+<td>Built (website only)</td>
+<td>INV-F 4.5, 4.8</td>
+<td>BR-CAN-01</td>
+</tr>
+<tr>
+<td>LST-08</td>
+<td>Pause and soft delete</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host can pause or delete; delete is soft and keeps bookings; staff can restore</td>
+<td>Hard delete on website</td>
+<td>U7</td>
+<td>BR-LST-03</td>
+</tr>
+<tr>
+<td>LST-09</td>
+<td>Featured listings</td>
+<td>Staff</td>
+<td>Could</td>
+<td>R2</td>
+<td>Staff feature a published listing with optional start and end dates and position</td>
+<td>Boolean only</td>
+<td>INV-A 4.7</td>
+<td></td>
+</tr>
+<tr>
+<td>LST-10</td>
+<td>Vehicle listing specifics</td>
+<td>Host</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Make, model, year, seats, gearbox, fuel, pickup points, driver age and licence rules</td>
+<td>Built (website)</td>
+<td>INV-F 2.2</td>
+<td></td>
+</tr>
+<tr>
+<td>LST-12</td>
+<td>Canonical experience types</td>
+<td>Agency, Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Every experience has one of 8 types (excursion, guided tour, nature and adventure, desert, sport, workshops and culture, gastronomy, wellness); search filters, cards, creation forms and admin use the same list</td>
+<td>Built in both apps 2026-11-04 (frontend/lib/catalog-types.ts)</td>
+<td>DEC-015</td>
+<td>BR-LST-05</td>
+</tr>
+<tr>
+<td>LST-11</td>
+<td>Experience listing specifics</td>
+<td>Host</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Duration, languages, meeting point, time slots with seats</td>
+<td>Built partly</td>
+<td>INV-F 2.2</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="trp-agency-trips-and-departures-7">TRP: Agency trips and departures (7)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TRP-01</td>
+<td>Agency-only trips</td>
+<td>Agency</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Only verified agencies create trips; hotels and hostels never see the option</td>
+<td>Built</td>
+<td>R29, R30, DEC-006</td>
+<td>BR-TRP-01</td>
+</tr>
+<tr>
+<td>TRP-02</td>
+<td>Trip itinerary and inclusions</td>
+<td>Agency</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Day-by-day itinerary, inclusions, exclusions, meeting point, group limits, cancellation policy step</td>
+<td>5 steps, no policy step</td>
+<td>R29, R31</td>
+<td></td>
+</tr>
+<tr>
+<td>TRP-03</td>
+<td>Departures with seats and price</td>
+<td>Agency</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Each departure has dates, seats total, price per person, minimum group, status (scheduled, guaranteed, cancelled, completed)</td>
+<td>Array of dates</td>
+<td>R36, DEC-006</td>
+<td>BR-TRP-02</td>
+</tr>
+<tr>
+<td>TRP-04</td>
+<td>Trips go through review</td>
+<td>Agency, Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Same review flow as listings</td>
+<td>Live at once</td>
+<td>DEC-003</td>
+<td>BR-LST-02</td>
+</tr>
+<tr>
+<td>TRP-05</td>
+<td>Search trips by date</td>
+<td>Guest</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Trip search filters departures overlapping the searched dates</td>
+<td>Missing</td>
+<td>R43</td>
+<td></td>
+</tr>
+<tr>
+<td>TRP-07</td>
+<td>Canonical trip types</td>
+<td>Agency, Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Every trip has one of 8 types (group tour, private trip, adventure, Saharan expedition, cultural, hiking, relaxation, religious); used by trip creation, search filters, cards and admin</td>
+<td>Built in both apps 2026-11-04</td>
+<td>DEC-015</td>
+<td>BR-LST-05</td>
+</tr>
+<tr>
+<td>TRP-06</td>
+<td>Cancel a departure under minimum group</td>
+<td>Agency</td>
+<td>Should</td>
+<td>R2</td>
+<td>Agency cancels a departure; all its bookings are cancelled with full refund and notifications</td>
+<td>Missing</td>
+<td>RES A.4</td>
+<td>BR-TRP-03</td>
+</tr>
+</tbody></table>
+<h3 id="avl-availability-and-calendar-6">AVL: Availability and calendar (6)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AVL-01</td>
+<td>No double booking for single units</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Database refuses two active bookings on the same unit with overlapping half-open ranges, even under concurrent requests</td>
+<td>App-level check only</td>
+<td>O4, RES A.5</td>
+<td>BR-AVL-01</td>
+</tr>
+<tr>
+<td>AVL-02</td>
+<td>Pooled inventory for rooms, beds, seats</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Per day or slot: held + booked never exceeds total, enforced by a database check</td>
+<td>In-process count</td>
+<td>R4, RES A.5</td>
+<td>BR-AVL-02</td>
+</tr>
+<tr>
+<td>AVL-03</td>
+<td>Host calendar: block days and set prices</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Block or unblock days and set per-day price, per listing or per room type</td>
+<td>Per listing only</td>
+<td>INV-F 3.5, R15</td>
+<td>BR-AVL-04</td>
+</tr>
+<tr>
+<td>AVL-04</td>
+<td>Availability window and partial matches</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Search shows listings overlapping the dates with a &#39;available X to Y&#39; hint; booking only inside free nights</td>
+<td>Built</td>
+<td>R38-R40</td>
+<td>BR-AVL-05</td>
+</tr>
+<tr>
+<td>AVL-05</td>
+<td>Temporary holds during payment</td>
+<td>System</td>
+<td>Should</td>
+<td>MVP</td>
+<td>A hold blocks inventory for 15 min while a guest pays; expires automatically</td>
+<td>Missing</td>
+<td>RES A.5</td>
+<td>BR-AVL-06</td>
+</tr>
+<tr>
+<td>AVL-06</td>
+<td>External calendar sync (iCal)</td>
+<td>Host</td>
+<td>Could</td>
+<td>Later</td>
+<td>Import and export iCal feeds with SSRF protection</td>
+<td>Missing</td>
+<td>RES D.1 API7</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="prc-pricing-and-quotes-5">PRC: Pricing and quotes (5)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PRC-01</td>
+<td>Server-side price quote</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Quote lists nights x per-day price, cleaning fee, taxes, discounts, total; has an ID and expires in 30 min</td>
+<td>Client and server compute separately</td>
+<td>RES A.5</td>
+<td>BR-PRC-01</td>
+</tr>
+<tr>
+<td>PRC-02</td>
+<td>No guest service fee</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Guests never pay a BLADUS fee; quote shows &#39;No BLADUS fees&#39;</td>
+<td>Built</td>
+<td>Policy 2026-10</td>
+<td>BR-PRC-02</td>
+</tr>
+<tr>
+<td>PRC-03</td>
+<td>Length-of-stay discounts</td>
+<td>Host</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Weekly and monthly discount percentages applied in the quote</td>
+<td>Display only</td>
+<td>INV-A 4.1</td>
+<td>BR-PRC-03</td>
+</tr>
+<tr>
+<td>PRC-04</td>
+<td>Tourist tax and VAT lines</td>
+<td>System</td>
+<td>Should</td>
+<td>R2</td>
+<td>Quote shows taxe de séjour by star rating and VAT where applicable; rates from settings</td>
+<td>Free &#39;taxes&#39; number</td>
+<td>RES C.4</td>
+<td>BR-PRC-04</td>
+</tr>
+<tr>
+<td>PRC-05</td>
+<td>Whole dinars to guests, centimes inside</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Prices shown in whole DZD; stored in centimes; rounding rule documented and tested</td>
+<td>Integer DZD</td>
+<td>RES B.17</td>
+<td>BR-PAY-01</td>
+</tr>
+</tbody></table>
+<h3 id="bkg-bookings-11">BKG: Bookings (11)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BKG-01</td>
+<td>Instant booking</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Instant mode: booking confirmed once the commission deposit check passes (model M1)</td>
+<td>Confirmed at once</td>
+<td>R18, O2</td>
+<td>BR-BKG-01</td>
+</tr>
+<tr>
+<td>BKG-02</td>
+<td>Request to book</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Request mode creates pending; host accepts or declines within 24 h (setting)</td>
+<td>Built</td>
+<td>R22, O6</td>
+<td>BR-BKG-03</td>
+</tr>
+<tr>
+<td>BKG-03</td>
+<td>Automatic expiry of requests</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A scheduled job expires pending requests at the deadline and notifies both sides</td>
+<td>Lazy on read</td>
+<td>D-8</td>
+<td>BR-BKG-04</td>
+</tr>
+<tr>
+<td>BKG-04</td>
+<td>Automatic completion after check-out</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Job marks confirmed bookings completed after check-out; opens the review window</td>
+<td>Lazy on read</td>
+<td>INV-F 4.7</td>
+<td>BR-BKG-05</td>
+</tr>
+<tr>
+<td>BKG-05</td>
+<td>Unified booking state machine</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Statuses: pending, confirmed, declined, expired, cancelled, completed, disputed; payment status is separate</td>
+<td>Two sets</td>
+<td>D-9</td>
+<td>BR-BKG-06</td>
+</tr>
+<tr>
+<td>BKG-06</td>
+<td>Booking snapshot</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>At confirmation store price lines, commission rate and amount, cancellation policy, listing title and address</td>
+<td>Partly</td>
+<td>INV-A 4.1</td>
+<td>BR-BKG-07</td>
+</tr>
+<tr>
+<td>BKG-07</td>
+<td>Guest and host booking lists</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Paginated lists filtered by status and dates; host list scoped to active organisation</td>
+<td>Built</td>
+<td>INV-F 3.4</td>
+<td></td>
+</tr>
+<tr>
+<td>BKG-08</td>
+<td>Booking reference</td>
+<td>All</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Human reference BLD-YYYY-XXXXXX unique, shown everywhere</td>
+<td>Admin only</td>
+<td>INV-A 2.1</td>
+<td></td>
+</tr>
+<tr>
+<td>BKG-09</td>
+<td>Trip departure booking</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Books seats on a departure; per-person price; respects agency approval mode</td>
+<td>Built (string dates)</td>
+<td>R35</td>
+<td>BR-TRP-02</td>
+</tr>
+<tr>
+<td>BKG-10</td>
+<td>Idempotent booking creation</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>POST with the same Idempotency-Key returns the same booking</td>
+<td>Missing</td>
+<td>RES B.12</td>
+<td>BR-SYS-01</td>
+</tr>
+<tr>
+<td>BKG-11</td>
+<td>Disputes</td>
+<td>Guest, Host, Support</td>
+<td>Should</td>
+<td>R2</td>
+<td>Either party opens a dispute within 14 days after check-out with statement and files; support resolves</td>
+<td>Admin only</td>
+<td>U8, D-9</td>
+<td>BR-CAN-05</td>
+</tr>
+</tbody></table>
+<h3 id="can-cancellations-and-refunds-4">CAN: Cancellations and refunds (4)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CAN-01</td>
+<td>Guest cancellation by policy</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Refund percentage computed from the snapshot policy and time before check-in</td>
+<td>Built</td>
+<td>INV-F 4.8</td>
+<td>BR-CAN-02</td>
+</tr>
+<tr>
+<td>CAN-02</td>
+<td>Host cancellation</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host cancels with reason; guest gets full refund of anything paid; host commission returned; host cancellation counted</td>
+<td>Built partly</td>
+<td>D-4</td>
+<td>BR-CAN-03</td>
+</tr>
+<tr>
+<td>CAN-03</td>
+<td>Staff cancellation and refund</td>
+<td>Support, Finance</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Staff cancel or refund with reason; partial refunds add up and never exceed amount paid</td>
+<td>Built (admin)</td>
+<td>INV-A 4.5</td>
+<td>BR-CAN-04</td>
+</tr>
+<tr>
+<td>CAN-04</td>
+<td>Commission reversal rules</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Decline and host cancel: full reversal; guest cancel: commission on the non-refunded part kept</td>
+<td>Built (website)</td>
+<td>D-4</td>
+<td>BR-PAY-05</td>
+</tr>
+</tbody></table>
+<h3 id="pay-payments-wallet-and-ledger-12">PAY: Payments, wallet and ledger (12)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PAY-01</td>
+<td>Double-entry ledger</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Every money movement is a transaction whose entries sum to zero; entries never updated or deleted</td>
+<td>Single-sided lists</td>
+<td>RES A.5, D-16</td>
+<td>BR-PAY-02</td>
+</tr>
+<tr>
+<td>PAY-02</td>
+<td>Prepaid commission wallet (model M1)</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Each host account (user or organisation) has a commission wallet; balance derived from the ledger</td>
+<td>Built (website)</td>
+<td>DEC-001</td>
+<td>BR-PAY-03</td>
+</tr>
+<tr>
+<td>PAY-03</td>
+<td>Commission deduction on confirmation</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>On confirm: commission = rate x accommodation subtotal (excl. cleaning, taxes), posted once per booking</td>
+<td>Built (website)</td>
+<td>R63, DEC-002</td>
+<td>BR-PAY-04</td>
+</tr>
+<tr>
+<td>PAY-04</td>
+<td>Commission rate resolution</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host override if set, else host-type default from settings; rate snapshot on booking</td>
+<td>Two sources</td>
+<td>D-5</td>
+<td>BR-PAY-06</td>
+</tr>
+<tr>
+<td>PAY-05</td>
+<td>Manual wallet top-up by staff</td>
+<td>Finance</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Amount 1 to 10,000,000 DZD, method, receipt reference unique per method, optional four-eyes above a threshold</td>
+<td>No duplicate check</td>
+<td>R60, D-17</td>
+<td>BR-PAY-07</td>
+</tr>
+<tr>
+<td>PAY-06</td>
+<td>Online wallet top-up via gateway</td>
+<td>Host</td>
+<td>Should</td>
+<td>R2</td>
+<td>Host tops up with CIB/Edahabia through Chargily; credited only after a verified webhook</td>
+<td>Missing</td>
+<td>RES C.1</td>
+<td>BR-PAY-08</td>
+</tr>
+<tr>
+<td>PAY-07</td>
+<td>Negative balance handling</td>
+<td>Host, Finance</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Negative balance shows host banner, admin flag and dashboard item; below a threshold new instant bookings switch to request</td>
+<td>Banner only</td>
+<td>R65</td>
+<td>BR-PAY-10</td>
+</tr>
+<tr>
+<td>PAY-08</td>
+<td>Wallet history for hosts</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host sees balance and paginated entries with booking links</td>
+<td>Built</td>
+<td>R64</td>
+<td></td>
+</tr>
+<tr>
+<td>PAY-09</td>
+<td>Gateway webhooks</td>
+<td>System</td>
+<td>Should</td>
+<td>R2</td>
+<td>Webhook payloads stored raw, signature verified, deduplicated by event id, processed once</td>
+<td>Missing</td>
+<td>RES D.1 API10</td>
+<td>BR-SYS-02</td>
+</tr>
+<tr>
+<td>PAY-10</td>
+<td>Payouts and guest payments (model M4)</td>
+<td>Finance</td>
+<td>Could</td>
+<td>Later</td>
+<td>Schema supports guest payments, escrow and host payouts; disabled until legal approval</td>
+<td>Admin mock</td>
+<td>DEC-001</td>
+<td>BR-PAY-11</td>
+</tr>
+<tr>
+<td>PAY-11</td>
+<td>Commission invoices to hosts</td>
+<td>Finance</td>
+<td>Should</td>
+<td>R2</td>
+<td>Monthly invoice per host with sequential number, NIF/NIS of both sides, HT, VAT, TTC; PDF kept 10 years</td>
+<td>Missing</td>
+<td>RES C.4</td>
+<td>BR-PAY-12</td>
+</tr>
+<tr>
+<td>PAY-12</td>
+<td>Money as centimes with currency</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>All amounts BIGINT centimes + currency code DZD</td>
+<td>Integer DZD</td>
+<td>RES B.17</td>
+<td>BR-PAY-01</td>
+</tr>
+</tbody></table>
+<h3 id="rev-reviews-5">REV: Reviews (5)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REV-01</td>
+<td>Write a review after a stay</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Only for a completed booking, within 14 days, one per booking; 5 sub-ratings + comment</td>
+<td>Missing (read only)</td>
+<td>INV-F gaps</td>
+<td>BR-REV-01</td>
+</tr>
+<tr>
+<td>REV-02</td>
+<td>Host reviews guest</td>
+<td>Host</td>
+<td>Should</td>
+<td>R2</td>
+<td>Host reviews guest under the same window; double-blind reveal</td>
+<td>Missing</td>
+<td>RES A.1</td>
+<td>BR-REV-02</td>
+</tr>
+<tr>
+<td>REV-03</td>
+<td>Host reply</td>
+<td>Host</td>
+<td>Should</td>
+<td>MVP</td>
+<td>One public reply per review, editable for 48 h</td>
+<td>Display only</td>
+<td>INV-A 4.8</td>
+<td></td>
+</tr>
+<tr>
+<td>REV-04</td>
+<td>Report and moderate reviews</td>
+<td>Guest, Host, Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Anyone reports with a reason; moderator hides, restores or deletes with reason; allowed moves enforced</td>
+<td>No state machine</td>
+<td>INV-A 4.8</td>
+<td>BR-REV-03</td>
+</tr>
+<tr>
+<td>REV-05</td>
+<td>Ratings derived from reviews</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Listing, host and organisation ratings and counts recomputed from published reviews</td>
+<td>Stored numbers</td>
+<td>O10</td>
+<td>BR-REV-04</td>
+</tr>
+</tbody></table>
+<h3 id="msg-messaging-6">MSG: Messaging (6)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MSG-01</td>
+<td>Conversations between guest and host</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Thread per listing inquiry or booking; org members with access see org threads</td>
+<td>Built</td>
+<td>O8</td>
+<td></td>
+</tr>
+<tr>
+<td>MSG-02</td>
+<td>Incremental sync</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Endpoint returns messages changed since a cursor; clients poll every 5 to 15 s while open</td>
+<td>Full fetch</td>
+<td>RES B.6</td>
+<td></td>
+</tr>
+<tr>
+<td>MSG-03</td>
+<td>Read state and unread counts</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Per participant last-read pointer; unread counts per thread and total</td>
+<td>Built</td>
+<td>O8</td>
+<td></td>
+</tr>
+<tr>
+<td>MSG-04</td>
+<td>Contact detail masking before confirmation</td>
+<td>System</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Phone numbers, emails, RIP/CCP numbers and WhatsApp links masked until a booking is confirmed</td>
+<td>Missing</td>
+<td>RES D.2</td>
+<td>BR-MSG-01</td>
+</tr>
+<tr>
+<td>MSG-05</td>
+<td>Attachments</td>
+<td>Guest, Host</td>
+<td>Could</td>
+<td>R2</td>
+<td>Images and PDFs up to 10 MB, scanned</td>
+<td>Missing</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>MSG-06</td>
+<td>Staff messages and broadcast</td>
+<td>Support</td>
+<td>Should</td>
+<td>R2</td>
+<td>Staff message a user or segment with permission and audit</td>
+<td>Mocked, no permission</td>
+<td>INV-A 6.2</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="ntf-notifications-4">NTF: Notifications (4)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NTF-01</td>
+<td>In-app notifications</td>
+<td>All</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Events (request, accept, decline, expiry, cancel, review, verification) create notifications; mark read, read all</td>
+<td>Seeds only</td>
+<td>INV-F 3.7</td>
+<td>BR-NTF-01</td>
+</tr>
+<tr>
+<td>NTF-02</td>
+<td>Email and SMS notifications</td>
+<td>All</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Critical events also by email or SMS in the user&#39;s language; provider behind an interface</td>
+<td>Missing</td>
+<td>RES C.2</td>
+<td>BR-NTF-02</td>
+</tr>
+<tr>
+<td>NTF-03</td>
+<td>Notification preferences</td>
+<td>All</td>
+<td>Should</td>
+<td>R2</td>
+<td>User opts in or out per channel for non-critical events; marketing needs explicit opt-in</td>
+<td>Missing</td>
+<td>INV-A 6.2</td>
+<td>BR-PRV-03</td>
+</tr>
+<tr>
+<td>NTF-04</td>
+<td>Outbox pattern</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Events written in the same transaction as the change, then sent by workers with retries</td>
+<td>Missing</td>
+<td>U5</td>
+<td>BR-SYS-03</td>
+</tr>
+</tbody></table>
+<h3 id="src-search-and-geography-6">SRC: Search and geography (6)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SRC-01</td>
+<td>Search with filters and facets</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Filters: vertical, wilaya, commune, dates, guests, price, property type, amenities, rating, instant; facet counts returned</td>
+<td>Built (in memory)</td>
+<td>INV-F 1.1, U4</td>
+<td>BR-SRC-01</td>
+</tr>
+<tr>
+<td>SRC-02</td>
+<td>Map search</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Bounding box filter and up to 500 pins; public points only</td>
+<td>Built</td>
+<td>INV-F 1.1</td>
+<td></td>
+</tr>
+<tr>
+<td>SRC-03</td>
+<td>Text search in three languages</td>
+<td>Visitor</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Title and place search tolerant to accents and transliteration (trigram)</td>
+<td>Static list of 10 cities</td>
+<td>RES B.7</td>
+<td></td>
+</tr>
+<tr>
+<td>SRC-04</td>
+<td>69 wilayas and 1,541 communes</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Reference tables seeded from el-amin (CC0) + ihahachi (MIT) with source and valid_from</td>
+<td>58 or 68</td>
+<td>RES C.5</td>
+<td>BR-SRC-02</td>
+</tr>
+<tr>
+<td>SRC-05</td>
+<td>Sorting and pagination</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Sort by relevance, price, rating, newest; cursor or page pagination capped at 50</td>
+<td>Built partly</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>SRC-06</td>
+<td>Hotels as their own vertical</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Vertical filter includes hotel; analytics roll hotel into the home family</td>
+<td>Inconsistent</td>
+<td>DEC-005</td>
+<td>BR-SRC-04</td>
+</tr>
+</tbody></table>
+<h3 id="med-photos-and-documents-3">MED: Photos and documents (3)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MED-01</td>
+<td>Photo upload with direct-to-storage</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Presigned upload to quarantine, validation, re-encode, EXIF stripped, renditions, perceptual hash</td>
+<td>Placeholders</td>
+<td>RES B.8</td>
+<td>BR-MED-01</td>
+</tr>
+<tr>
+<td>MED-02</td>
+<td>Private documents</td>
+<td>Host, Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>KYC files in a private bucket, virus scanned, short-lived signed URLs, every view logged</td>
+<td>Placeholders</td>
+<td>RES C3.5</td>
+<td>BR-MED-02</td>
+</tr>
+<tr>
+<td>MED-03</td>
+<td>Photo ordering and cover</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host orders photos and picks a cover; minimum 5 photos for homes</td>
+<td>Built partly</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="mod-moderation-and-trust-8">MOD: Moderation and trust (8)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MOD-01</td>
+<td>Moderation queues with waiting time</td>
+<td>Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Queues for hosts, listings, trips, documents, reviews, disputes with count, oldest submitted_at, priority</td>
+<td>Partly hardcoded</td>
+<td>U1, INV-A 4.10</td>
+<td>BR-MOD-01</td>
+</tr>
+<tr>
+<td>MOD-02</td>
+<td>Change requests to hosts</td>
+<td>Moderator, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Moderator sends checklist items and a note; host sees them and resubmits</td>
+<td>Admin only, mocked</td>
+<td>U6</td>
+<td>BR-MOD-02</td>
+</tr>
+<tr>
+<td>MOD-03</td>
+<td>Reason catalogue</td>
+<td>Moderator</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Preset reasons per action with localized host-facing text; free note allowed</td>
+<td>Free text</td>
+<td>U5</td>
+<td></td>
+</tr>
+<tr>
+<td>MOD-04</td>
+<td>Bulk actions with per-item results</td>
+<td>Moderator</td>
+<td>Should</td>
+<td>R2</td>
+<td>Bulk approve returns success or error per item; one audit entry per item</td>
+<td>Client loop</td>
+<td>U3</td>
+<td></td>
+</tr>
+<tr>
+<td>MOD-05</td>
+<td>Undo window</td>
+<td>Moderator</td>
+<td>Could</td>
+<td>R2</td>
+<td>Approve and hide can be reversed within 8 s via the inverse transition, audited</td>
+<td>Toast only</td>
+<td>U2</td>
+<td></td>
+</tr>
+<tr>
+<td>MOD-06</td>
+<td>Cascade on host suspension</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Suspending or banning a host pauses its listings and trips; future bookings flagged for support</td>
+<td>No cascade</td>
+<td>INV-A 4.6</td>
+<td>BR-MOD-03</td>
+</tr>
+<tr>
+<td>MOD-07</td>
+<td>Risk flags</td>
+<td>System</td>
+<td>Should</td>
+<td>R2</td>
+<td>Rules flag new account + high value, duplicate photos, contact info in messages; flags create review cases</td>
+<td>Missing</td>
+<td>RES A.5, D.2</td>
+<td>BR-MOD-04</td>
+</tr>
+<tr>
+<td>MOD-08</td>
+<td>Document-level review</td>
+<td>Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Approve or reject each document separately; host approval requires all required documents approved</td>
+<td>Approves whole host</td>
+<td>INV-A 6.4-7</td>
+<td>BR-HST-03</td>
+</tr>
+</tbody></table>
+<h3 id="stf-staff-roles-and-audit-6">STF: Staff, roles and audit (6)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>STF-01</td>
+<td>Staff roles and permissions in the database</td>
+<td>Super admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>5 roles, 34+ permissions stored and enforced by the API, deny by default</td>
+<td>Code constants</td>
+<td>U16, INV-A 1.1</td>
+<td>BR-STF-01</td>
+</tr>
+<tr>
+<td>STF-02</td>
+<td>Staff invitation and activation</td>
+<td>Super admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Invite sends a one-time link; staff sets password and MFA; deactivation revokes sessions immediately</td>
+<td>No acceptance</td>
+<td>INV-A 4.15</td>
+<td></td>
+</tr>
+<tr>
+<td>STF-03</td>
+<td>Append-only audit log</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; no update or delete</td>
+<td>Admin memory only</td>
+<td>U13</td>
+<td>BR-STF-02</td>
+</tr>
+<tr>
+<td>STF-04</td>
+<td>Actors by id, not name</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Ledger, payouts, disputes, config publishes reference staff user ids</td>
+<td>Names</td>
+<td>INV-A 6.1-6</td>
+<td>BR-STF-03</td>
+</tr>
+<tr>
+<td>STF-05</td>
+<td>Separate admin API surface</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>/api/v1/admin/* only for staff tokens; never reachable with a guest or host session</td>
+<td>n/a</td>
+<td>RES D.1 API5</td>
+<td></td>
+</tr>
+<tr>
+<td>STF-06</td>
+<td>Audited CSV exports</td>
+<td>Analyst, Finance</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Exports cover full filtered set, formula-injection safe, audited with filters and row count; large exports run as jobs</td>
+<td>Built (admin)</td>
+<td>INV-A 4.16</td>
+<td>BR-STF-04</td>
+</tr>
+</tbody></table>
+<h3 id="cfg-platform-settings-and-onboarding-config-5">CFG: Platform settings and onboarding config (5)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CFG-01</td>
+<td>Platform settings</td>
+<td>Super admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>One settings record: commission defaults, request TTL, instant-book switch, maintenance mode, session timeout, locales</td>
+<td>Field mismatches</td>
+<td>D-2, INV-A 6.4-1</td>
+<td>BR-CFG-01</td>
+</tr>
+<tr>
+<td>CFG-02</td>
+<td>Versioned onboarding config</td>
+<td>Super admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Draft and published versions per host type; publish creates an immutable version; rollback = republish older</td>
+<td>Global counter, no history</td>
+<td>D-13, D-15</td>
+<td>BR-CFG-02</td>
+</tr>
+<tr>
+<td>CFG-03</td>
+<td>Onboarding field editor</td>
+<td>Super admin</td>
+<td>Should</td>
+<td>R2</td>
+<td>Add, edit, reorder fields with canonical types; core steps and fields cannot be removed</td>
+<td>Steps only</td>
+<td>R48</td>
+<td>BR-CFG-03</td>
+</tr>
+<tr>
+<td>CFG-04</td>
+<td>Serve published config to the website</td>
+<td>Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>GET returns the published flow; answers to custom fields stored as JSON and validated against that version</td>
+<td>Not read</td>
+<td>R49</td>
+<td>BR-HST-02</td>
+</tr>
+<tr>
+<td>CFG-05</td>
+<td>Taxonomy management</td>
+<td>Moderator</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Categories, amenities, property types with en/fr/ar, order, active flag; soft delete only when unused</td>
+<td>Hard delete</td>
+<td>INV-A 4.12</td>
+<td>BR-LST-04</td>
+</tr>
+</tbody></table>
+<h3 id="prm-promotions-2">PRM: Promotions (2)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PRM-01</td>
+<td>Coupons</td>
+<td>Moderator, Guest</td>
+<td>Could</td>
+<td>R2</td>
+<td>Code, type, value, dates, usage limits, scope; redemption at quote time with per-user limit</td>
+<td>Not consumed</td>
+<td>INV-A 4.11</td>
+<td>BR-PRM-01</td>
+</tr>
+<tr>
+<td>PRM-02</td>
+<td>Who pays the discount</td>
+<td>Finance</td>
+<td>Could</td>
+<td>R2</td>
+<td>A coupon is funded by BLADUS (reduces commission) or by the host; recorded in the ledger</td>
+<td>n/a</td>
+<td>Policy</td>
+<td>BR-PRM-02</td>
+</tr>
+</tbody></table>
+<h3 id="rpt-reports-and-analytics-3">RPT: Reports and analytics (3)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RPT-01</td>
+<td>KPIs by period, host type, vertical, wilaya</td>
+<td>Analyst</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Bookings, gross booking value, commission, active listings, hosts; period over period from real dates</td>
+<td>Hardcoded</td>
+<td>R52-R55, U12</td>
+<td>BR-RPT-01</td>
+</tr>
+<tr>
+<td>RPT-02</td>
+<td>Host-type by vertical cross-tab</td>
+<td>Analyst</td>
+<td>Could</td>
+<td>R2</td>
+<td>Impossible cells shown as not applicable, not zero</td>
+<td>Missing</td>
+<td>R54</td>
+<td></td>
+</tr>
+<tr>
+<td>RPT-03</td>
+<td>Host earnings dashboard</td>
+<td>Host</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Earnings recognised at completion; shows upcoming, completed, commission paid</td>
+<td>Shows 0</td>
+<td>O11, DEC-010</td>
+<td>BR-RPT-02</td>
+</tr>
+</tbody></table>
+<h3 id="prv-privacy-and-legal-6">PRV: Privacy and legal (6)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PRV-01</td>
+<td>Consent records</td>
+<td>Visitor</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Terms version, privacy notice version, marketing opt-in stored with timestamp</td>
+<td>Missing</td>
+<td>RES C.3 18-05 art 26, 31</td>
+<td>BR-PRV-01</td>
+</tr>
+<tr>
+<td>PRV-02</td>
+<td>Data subject requests</td>
+<td>User, Staff</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Access export (JSON), correction, deletion by anonymisation keeping legal records; tracked with deadlines</td>
+<td>Missing</td>
+<td>RES D.3</td>
+<td>BR-PRV-02</td>
+</tr>
+<tr>
+<td>PRV-03</td>
+<td>Data residency</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Personal data and backups stored in Algeria unless an ANPDP authorisation exists</td>
+<td>n/a</td>
+<td>RES C.3 (VERIFY)</td>
+<td>BR-PRV-04</td>
+</tr>
+<tr>
+<td>PRV-04</td>
+<td>Retention schedule</td>
+<td>System</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Jobs delete or redact KYC images after the retention window; accounting records kept 10 years</td>
+<td>Missing</td>
+<td>RES C3.5 (VERIFY)</td>
+<td>BR-PRV-05</td>
+</tr>
+<tr>
+<td>PRV-05</td>
+<td>Breach response</td>
+<td>Staff</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Runbook with a 5-day ANPDP notification clock and incident register</td>
+<td>Missing</td>
+<td>RES C3.1</td>
+<td></td>
+</tr>
+<tr>
+<td>PRV-06</td>
+<td>Foreign guest declaration support</td>
+<td>Host</td>
+<td>Could</td>
+<td>R2</td>
+<td>Guest nationality and ID type captured when required; host reminded of the declaration duty</td>
+<td>Missing</td>
+<td>RES C3.3 (VERIFY)</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="nfr-quality-non-functional-13">NFR: Quality (non-functional) (13)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Requirement</th>
+<th>Actor</th>
+<th>Pri.</th>
+<th>Release</th>
+<th>Accepted when</th>
+<th>Today in code</th>
+<th>Source</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-01</td>
+<td>API response time</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>p95 under 300 ms for reads and 600 ms for booking create at 50 requests/s on one app node</td>
+<td>n/a</td>
+<td>RES A.5</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-02</td>
+<td>Search response time</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>p95 under 500 ms with 20,000 listings and dates</td>
+<td>n/a</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-03</td>
+<td>Availability</td>
+<td>System</td>
+<td>Should</td>
+<td>MVP</td>
+<td>99.5% monthly for the public API; planned maintenance announced</td>
+<td>n/a</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-04</td>
+<td>Backups and restore</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Point-in-time recovery 7 days, nightly encrypted dump in a second Algerian location, monthly restore drill; RPO 15 min, RTO 4 h</td>
+<td>n/a</td>
+<td>RES D.3</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-05</td>
+<td>Security baseline</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>OWASP API Top 10 controls, TLS everywhere, secrets outside code, dependency scanning in CI</td>
+<td>Partly</td>
+<td>RES D.1</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-06</td>
+<td>Three languages and right-to-left</td>
+<td>All</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Every API error and notification has en/fr/ar text; Latin digits in Arabic</td>
+<td>Partly</td>
+<td>R68</td>
+<td>BR-SYS-04</td>
+</tr>
+<tr>
+<td>NFR-07</td>
+<td>Time and dates</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Timestamps stored in UTC; business dates in Africa/Algiers; week starts Sunday; weekend Friday-Saturday</td>
+<td>Partly</td>
+<td>U15</td>
+<td>BR-SYS-05</td>
+</tr>
+<tr>
+<td>NFR-08</td>
+<td>API contract</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>OpenAPI generated in CI; typed client shared by both apps; breaking changes need a new version</td>
+<td>n/a</td>
+<td>RES B.13</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-09</td>
+<td>Observability</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>JSON logs with request, user and org ids; error tracking; metrics and health checks</td>
+<td>n/a</td>
+<td>RES B.16</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-10</td>
+<td>Test coverage</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Services 90% line coverage; property tests for money and dates; concurrency tests on real PostgreSQL</td>
+<td>n/a</td>
+<td>RES B.14</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-11</td>
+<td>Rate limits</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Per user and per IP throttles per endpoint group; SMS budget alarms</td>
+<td>Login only (admin)</td>
+<td>RES B.12</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-12</td>
+<td>Unique identifiers</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>UUIDv7 primary keys plus human references; no time or random based ids</td>
+<td>Date.now/Math.random</td>
+<td>INV-A 6.1-3</td>
+<td></td>
+</tr>
+<tr>
+<td>NFR-13</td>
+<td>Accessibility of messages</td>
+<td>All</td>
+<td>Should</td>
+<td>MVP</td>
+<td>Errors have stable codes the apps map to localized text</td>
+<td>Built (ActionResult codes)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<!-- END GENERATED REQUIREMENTS --><hr>
+<h2 id="5-what-is-deliberately-out-of-the-mvp">5. What is deliberately out of the MVP</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Why</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BLADUS collecting guest payments and paying hosts (models M2 to M4)</td>
+<td>Needs legal approval (payment licence)</td>
+<td>Later, behind a decision gate</td>
+</tr>
+<tr>
+<td>Online wallet top-up by card</td>
+<td>Needs a gateway contract</td>
+<td>R2</td>
+</tr>
+<tr>
+<td>Host reviews of guests, disputes, coupons, iCal sync</td>
+<td>Not needed to launch</td>
+<td>R2 or Later</td>
+</tr>
+<tr>
+<td>Realtime messaging (WebSockets)</td>
+<td>Polling is enough at launch</td>
+<td>R2</td>
+</tr>
+<tr>
+<td>Commission invoices as PDFs</td>
+<td>Needs an accountant&#39;s answer on VAT (F1)</td>
+<td>R2</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> What is the difference between &quot;Must / MVP&quot; and &quot;Should / R2&quot;?</li>
+<li><input disabled="" type="checkbox"> Which decision explains why there is no guest payment in the MVP?</li>
+<li><input disabled="" type="checkbox"> Find the requirement that prevents double booking. What is its acceptance criterion?</li>
+<li><input disabled="" type="checkbox"> Which requirements change what the website does today (live listings, invites, ratings)?</li>
+<li><input disabled="" type="checkbox"> Where do you edit a requirement so the CSV and this page stay identical?</li>
+</ul>
+<div class="pager"><span><a href="02-research.html">&larr; 02. Research: what others do, which Django tools to use, and what Algeria requires</a></span><span><a href="04-business-rules.html">04. Business rules &rarr;</a></span></div></main></div></body></html>

@@ -1,0 +1,261 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>15. Readiness verdict and first build prompt · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="on" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="15-readiness-verdict-and-first-build-prompt">15. Readiness verdict and first build prompt</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This page answers one question: can the team start building the Django backend now?<br>Short answer: <strong>yes, start the first milestone (M0, foundations) now</strong>, with three conditions.<br>Real customer data must wait for the lawyer&#39;s answers on hosting and data transfer (before the end of M5).<br>Collecting guests&#39; money must wait for a payment licence decision (not in the first release).<br>At the end you will find the exact prompt to give a developer or an AI coding assistant to start M0.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Milestone (M0 to M7)</strong>: a block of work of 3 to 5 weeks with clear &quot;done&quot; criteria (<a href="11-roadmap.html">11-roadmap.md</a>).</li>
+<li><strong>Gate</strong>: a decision or legal answer that must exist before a milestone can finish.</li>
+<li><strong>Readiness verdict</strong>: our judgement of whether the plan is complete enough to start coding.</li>
+</ul>
+<p>Date: 2026-11-09.</p>
+<hr>
+<h2 id="1-verdict">1. Verdict</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What exists today is understood</td>
+<td><strong>Ready</strong></td>
+<td><a href="01-system-inventory.html">01-system-inventory.md</a>: every feature, entity and <code>lib/data</code> function of both apps, 22 spec disagreements resolved by decisions</td>
+</tr>
+<tr>
+<td>Product scope</td>
+<td><strong>Ready</strong></td>
+<td>147 requirements, 126 in the first release (<a href="03-requirements.html">03-requirements.md</a>); 15 product decisions taken (DEC-001 to DEC-015)</td>
+</tr>
+<tr>
+<td>Business rules</td>
+<td><strong>Ready</strong></td>
+<td>Testable rules with state machines and worked money examples (<a href="04-business-rules.html">04-business-rules.md</a>)</td>
+</tr>
+<tr>
+<td>Database design</td>
+<td><strong>Ready</strong></td>
+<td>77 tables, 35 enumerations, 156 foreign keys, database-level guarantees against double booking and unbalanced money (<a href="05-database-schema.html">05-database-schema.md</a>, <a href="files/schema.dbml">schema.dbml</a>, <a href="files/schema.sql">schema.sql</a>)</td>
+</tr>
+<tr>
+<td>API contract</td>
+<td><strong>Ready</strong></td>
+<td>266 operations, valid OpenAPI 3.1 (lint: 0 errors, 0 warnings), every website and admin data function mapped (<a href="06-api-design.html">06-api-design.md</a>, <a href="files/openapi.yaml">openapi.yaml</a>)</td>
+</tr>
+<tr>
+<td>Architecture, security, hosting, testing</td>
+<td><strong>Ready</strong></td>
+<td><a href="07-architecture.html">07</a>, <a href="08-security-privacy.html">08</a>, <a href="09-devops-hosting.html">09</a>, <a href="10-testing-quality.html">10</a></td>
+</tr>
+<tr>
+<td>Plan, risks, decisions</td>
+<td><strong>Ready</strong></td>
+<td>11 milestones, 32 risks, 49 decisions listed with owners and deadlines (<a href="11-roadmap.html">11</a>, <a href="12-risks.html">12</a>, <a href="13-decisions-needed.html">13</a>); traceability for all 147 requirements (<a href="traceability.html">traceability.md</a>)</td>
+</tr>
+<tr>
+<td>Legal and tax answers</td>
+<td><strong>Not ready (not needed to start)</strong></td>
+<td>L1 to L16 and F1 to F7 open; they gate production data (end of M5), payments (R2) and the licence question (later)</td>
+</tr>
+</tbody></table>
+<p><strong>Verdict: GO for M0 now. GO for production launch only after the gates in section 3.</strong></p>
+<h2 id="2-conditions-to-start-m0-answer-in-the-first-week">2. Conditions to start M0 (answer in the first week)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Recommended answer</th>
+<th>Who</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>T2: where the backend code lives</td>
+<td><code>backend/</code> folder in this repository</td>
+<td>Tech lead</td>
+</tr>
+<tr>
+<td>2</td>
+<td>T3 and T9: how the apps switch from demo data to the API, and the typed client</td>
+<td>One flag per <code>lib/data</code> module, API seeded with the same demo cast; <code>openapi-typescript</code> + <code>openapi-fetch</code></td>
+<td>Tech lead</td>
+</tr>
+<tr>
+<td>3</td>
+<td>T4: how the Next.js servers hold the session</td>
+<td>allauth headless session token in an httpOnly cookie on the Next.js server</td>
+<td>Tech lead</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Q22: guests without an Algerian mobile number</td>
+<td>Email code for non-Algerian numbers, with stricter booking limits</td>
+<td>Product owner</td>
+</tr>
+<tr>
+<td>5</td>
+<td>T1 (staging only) and T8 (third-party processors)</td>
+<td>Staging anywhere with demo data only; prefer Algerian or self-hosted services for anything with personal data</td>
+<td>Tech lead, then lawyer (L10)</td>
+</tr>
+</tbody></table>
+<p>And one action that cannot wait: <strong>engage a lawyer now</strong> for L1, L2, L4, L5, L9 and L11. Their answers take months and block production (M5 to M7).</p>
+<h2 id="3-gates-before-going-live">3. Gates before going live</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Blocks</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L1, L2: hosting in Algeria and personal data transfer abroad</td>
+<td>Signing production hosting (end of M5); any real personal data</td>
+<td><a href="02-research.html">02-research.md</a> C.3, risks K-01 and K-02</td>
+</tr>
+<tr>
+<td>L4, L5, L9, L11: host documents, short-term rental rules, platform licence, company formalities</td>
+<td>Real hosts joining (M7)</td>
+<td><a href="13-decisions-needed.html">13-decisions-needed.md</a></td>
+</tr>
+<tr>
+<td>F1 to F4: VAT on commission, tourist tax, gateway contract, invoices</td>
+<td>Online wallet top-up and invoices (R2-A)</td>
+<td><a href="13-decisions-needed.html">13-decisions-needed.md</a></td>
+</tr>
+<tr>
+<td>L3 and a payment licence or bank partner</td>
+<td>Collecting guests&#39; money (models M2 to M4)</td>
+<td>DEC-001, BR-PAY-11</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_BLADUS_TEST_MODE=0</code> in production builds</td>
+<td>Public launch</td>
+<td><a href="09-devops-hosting.html">09-devops-hosting.md</a></td>
+</tr>
+</tbody></table>
+<h2 id="4-known-gaps-carried-into-the-build">4. Known gaps carried into the build</h2>
+<p>These are small and tracked; none blocks M0.</p>
+<ul>
+<li>Two R2 features have no endpoint yet: staff broadcast messages (MSG-06) and the foreign-guest declaration (PRV-06). Design them when R2-B starts.</li>
+<li>18 requirements are jobs or quality targets and have no endpoint by nature (for example BKG-04 automatic completion, NFR-01 response times); they are covered by jobs (<a href="07-architecture.html">07-architecture.md</a>) and tests (<a href="10-testing-quality.html">10-testing-quality.md</a>). See the &quot;no endpoint&quot; rows in <a href="files/traceability.csv">traceability.csv</a>.</li>
+<li>Someone who is both a solo host and an organisation member cannot yet reach their solo workspace from the website&#39;s workspace switcher (the API supports it: <code>GET /api/v1/me/workspaces</code> lists every host account, including the solo one).</li>
+<li>Dates, costs and SMS prices are estimates; legal and tax points are research, not advice (VERIFY WITH A PROFESSIONAL).</li>
+</ul>
+<h2 id="5-first-build-prompt-m0">5. First build prompt (M0)</h2>
+<p>Give this prompt, unchanged, to the developer or AI coding assistant who starts the backend. It is self-contained but expects the <code>docs/backend</code> folder to be in the repository.</p>
+<pre><code class="lang-text">You are starting the BLADUS backend (Algerian travel marketplace: homes, hotels,
+hostels, experiences, vehicles, agency trips). The full blueprint is in
+docs/backend/ of this repository. Read, in this order, before writing code:
+00-START-HERE.md, 03-requirements.md, 04-business-rules.md,
+05-database-schema.md, 06-api-design.md, 07-architecture.md,
+08-security-privacy.md, 09-devops-hosting.md, 10-testing-quality.md,
+11-roadmap.md (section M0), 13-decisions-needed.md (T1 to T4, T8, T9, Q22).
+
+Goal: deliver milestone M0 &quot;Foundations&quot; exactly as defined in 11-roadmap.md:
+requirements ACC-01, ACC-02, ACC-03, ACC-04, ACC-07, PAY-12, SRC-04, CFG-01,
+PRV-01, NFR-05 to NFR-13. Nothing from later milestones.
+
+Build:
+1. A Django 6.1 project in backend/ (Python 3.13) with the folder layout of
+   07-architecture.md. Create only the apps M0 needs: core, accounts, geo,
+   config, audit, notifications (outbox only). Use the services/selectors
+   pattern and import-linter layers from 07-architecture.md.
+2. PostgreSQL 17 + PostGIS, Redis, Celery worker and beat, all in Docker
+   Compose for local development (09-devops-hosting.md). Settings with
+   pydantic-settings; no secrets in code.
+3. Tables for M0 only, matching docs/backend/schema.dbml exactly (names,
+   types, enums, constraints): user, consent_record, staff_profile,
+   staff_permission, staff_role_permission, wilaya, daira, commune,
+   platform_settings, audit_event, outbox_event, delivery_log, otp_send_log,
+   idempotency_record. Money is BIGINT centimes + currency; IDs are UUIDv7.
+4. Accounts with django-allauth headless (session tokens, email and phone
+   one-time codes, rate limits of BR-ACC-01, BR-ACC-02, BR-ACC-05) and the
+   /api/v1/auth/* and /api/v1/me endpoints exactly as in
+   docs/backend/openapi.yaml (same paths, schemas, error codes).
+5. Geography seed: 69 wilayas and 1,541 communes from
+   el-amin-dev/algeria-wilayas-communes (CC0) with coordinates from
+   ihahachi/Algeria-Cities (MIT), keeping source and valid_from columns
+   (BR-SRC-02), plus the read endpoints in openapi.yaml.
+6. platform_settings v1 with the defaults of 05-database-schema.md section 9
+   (commission bp 1200/1500/1800/1000, request TTL 24 h) and the error
+   envelope of 06-api-design.md (stable codes, en/fr/ar messages).
+7. drf-spectacular generates the schema in CI; CI fails if the generated
+   schema differs from docs/backend/openapi.yaml for the M0 paths.
+8. Tests (10-testing-quality.md): pytest-django, factory_boy, hypothesis for
+   the Money and UUIDv7 helpers, one test per business rule named
+   test_br_&lt;area&gt;_&lt;nn&gt;_..., a test that counts 69 wilayas and 1,541 communes,
+   and the auth flow end to end. Coverage gate as in 10-testing-quality.md.
+9. GitHub Actions: ruff, mypy with django-stubs, pytest with a PostGIS
+   service, dependency scan, OpenAPI check.
+10. Website integration for M0 only: behind the flag DATA_SOURCE_AUTH
+    (default mock), make frontend/lib/data/auth.ts call the API through a
+    typed client generated with openapi-typescript + openapi-fetch, using the
+    BFF pattern (allauth session token in an httpOnly cookie on the Next.js
+    server). Do not change any other frontend module.
+
+Rules: follow the decisions DEC-001 to DEC-015; do not invent endpoints or
+columns that are not in openapi.yaml or schema.dbml (if something is missing,
+stop and write it in docs/backend/14-open-questions.md); no personal data
+outside demo fixtures; never use the em dash character in code comments or
+docs; keep internal &quot;darna&quot; identifiers that already exist. Finish with: the
+M0 exit criteria of 11-roadmap.md checked one by one, test results, and a
+CHANGELOG entry in docs/backend/CHANGELOG.md.</code></pre><hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Can the team start coding today? Which milestone, and what must be decided in the first week?</li>
+<li><input disabled="" type="checkbox"> Which two legal answers must arrive before production hosting can be signed, and by when?</li>
+<li><input disabled="" type="checkbox"> Why is collecting guests&#39; money not part of the first release?</li>
+<li><input disabled="" type="checkbox"> Which two R2 features still have no API endpoint?</li>
+<li><input disabled="" type="checkbox"> In the first build prompt, what must the developer do if a column or endpoint they need is missing from the blueprint?</li>
+</ul>
+<div class="pager"><span><a href="traceability.html">&larr; Traceability matrix: requirement to rule, table, API, test and milestone</a></span><span><a href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint) &rarr;</a></span></div></main></div></body></html>

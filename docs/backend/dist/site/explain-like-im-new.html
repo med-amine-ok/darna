@@ -1,0 +1,183 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Explain it like I'm new · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="on" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Start here</div><h1 id="explain-it-like-im-new">Explain it like I&#39;m new</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This page explains the whole BLADUS backend plan with no jargon, as a story.<br>Read it first if words like &quot;API&quot;, &quot;database&quot; or &quot;ledger&quot; feel unclear.<br>It follows one guest, one host and one staff member through the system.<br>Every other document goes deeper into one part of this story.<br>Words in <strong>bold</strong> are explained in <a href="glossary.html">glossary.md</a>.</p>
+</blockquote>
+<hr>
+<h2 id="1-what-we-have-today-and-what-is-missing">1. What we have today, and what is missing</h2>
+<p>BLADUS already has two websites:</p>
+<ul>
+<li>the <strong>website</strong> where travellers search and book, and where hosts manage their places (the <code>frontend</code> folder);</li>
+<li>the <strong>admin</strong> where BLADUS staff check hosts, listings, bookings and money (the <code>admin</code> folder).</li>
+</ul>
+<p>Both look finished, but behind the screens there is no real storage. Every booking, every host, every message lives in the computer&#39;s memory and disappears when the server restarts. The two websites also do not talk to each other: a booking made on the website never appears in the admin.</p>
+<p>The missing piece is the <strong>backend</strong>: one program, running on a server, that keeps all the data safely in a <strong>database</strong> and is the single source of truth for both websites. We will build it with <strong>Django</strong> (a Python framework the owner already knows).</p>
+<h2 id="2-the-main-idea-in-one-picture">2. The main idea in one picture</h2>
+<pre><code class="lang-">Traveller / Host browser ──&gt; Website (Next.js) ──┐
+                                                 ├──&gt; Django API ──&gt; PostgreSQL database
+Staff browser ───────────&gt; Admin (Next.js)  ─────┘          │
+                                                           └──&gt; SMS, email, file storage</code></pre><ul>
+<li>The websites stay as they are. Only the inside of their &quot;data&quot; functions changes: instead of reading memory, they ask the API.</li>
+<li>The <strong>API</strong> is a list of addresses like <code>POST /api/v1/bookings</code> (&quot;create a booking&quot;). The full list is in <a href="06-api-design.html">06-api-design.md</a> and <a href="files/openapi.yaml">openapi.yaml</a>.</li>
+<li>The <strong>database</strong> is PostgreSQL. It has 77 tables (like 77 spreadsheet tabs) described in <a href="05-database-schema.html">05-database-schema.md</a>.</li>
+</ul>
+<h2 id="3-a-guest-books-a-villa">3. A guest books a villa</h2>
+<p>Yacine wants 3 nights in a villa in Tipaza.</p>
+<ol>
+<li><strong>Search.</strong> The website asks the API for villas in Tipaza for his dates. The API looks in the database and only returns villas whose nights are free.</li>
+<li><strong>Price.</strong> He opens the villa. The API calculates the price itself (3 nights x 18,500 DZD + 4,000 cleaning = 59,500 DZD). Guests pay <strong>no BLADUS fee</strong>.</li>
+<li><strong>Book.</strong> He clicks Reserve. The API saves the booking. The database has a built-in rule that refuses two bookings on the same night for the same villa, so even if two people click at the same second, only one wins.</li>
+<li><strong>Pay.</strong> At launch Yacine pays the host directly (cash or transfer). BLADUS does not touch the guest&#39;s money. (This is decision <strong>DEC-001</strong>; the reason is Algerian payment law, see <a href="02-research.html">02-research.md</a> section C.1.)</li>
+<li><strong>Messages.</strong> He and the host chat in the app. Phone numbers are hidden until the booking is confirmed, to stop scams.</li>
+</ol>
+<h2 id="4-how-bladus-earns-money">4. How BLADUS earns money</h2>
+<p>BLADUS takes a <strong>commission</strong> from the host, not from the guest:</p>
+<table>
+<thead>
+<tr>
+<th>Host type</th>
+<th>Commission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Individual</td>
+<td>12%</td>
+</tr>
+<tr>
+<td>Agency</td>
+<td>15%</td>
+</tr>
+<tr>
+<td>Hotel</td>
+<td>18%</td>
+</tr>
+<tr>
+<td>Hostel</td>
+<td>10%</td>
+</tr>
+</tbody></table>
+<p>Each host keeps a <strong>deposit</strong> with BLADUS (like a prepaid phone card). When a booking is confirmed, the commission is taken from that deposit. For Yacine&#39;s villa: 12% of 55,500 = 6,660 DZD.</p>
+<p>Every money movement is written in a <strong>ledger</strong>: a notebook where lines are only added, never erased. If there is a mistake, a correcting line is added. This makes it easy to prove where every dinar went.</p>
+<h2 id="5-a-host-joins">5. A host joins</h2>
+<p>Amina wants to rent her home.</p>
+<ol>
+<li>She signs up and verifies her phone with a code by SMS.</li>
+<li>She fills the &quot;become a host&quot; steps. Her answers are saved on the server, so she can continue on another device.</li>
+<li>She uploads her ID and proof of ownership. These files go to private storage that only staff can open, and every opening is recorded.</li>
+<li>A moderator checks the documents and approves her.</li>
+<li>She creates a listing. It is checked by staff before it appears in search (<strong>DEC-003</strong>).</li>
+</ol>
+<p>What each host type can publish is fixed (<strong>DEC-014</strong>): individuals publish homes and vehicles, agencies publish experiences and trips, hotels and hostels publish their property with its rooms.</p>
+<h2 id="6-staff-work-in-the-admin">6. Staff work in the admin</h2>
+<p>Nadia, a moderator, opens the admin. She sees queues: hosts to verify, listings to review, reported reviews. Each item shows how long it has been waiting. When she approves or refuses, the reason is saved and the host is notified. Every action she takes is written in an <strong>audit log</strong> that nobody can edit.</p>
+<p>Finance staff record host deposits (for example a transfer to BLADUS&#39;s CCP account). Above 500,000 DZD a second person must approve, to prevent mistakes and fraud.</p>
+<h2 id="7-things-that-happen-by-themselves">7. Things that happen by themselves</h2>
+<p>Some work runs in the background on a schedule (<strong>jobs</strong>):</p>
+<ul>
+<li>a request that the host does not answer within 24 hours expires and both sides are told;</li>
+<li>after check-out, the booking becomes &quot;completed&quot; and the review window opens;</li>
+<li>SMS and emails are sent after a change is saved, and retried if they fail.</li>
+</ul>
+<h2 id="8-why-algeria-matters-in-the-design">8. Why Algeria matters in the design</h2>
+<ul>
+<li><strong>Hosting</strong>: Algerian law likely requires an e-commerce site hosted in Algeria with a <code>.com.dz</code> name, and personal data should not leave the country without permission. So the plan puts the servers in Algeria (VERIFY WITH A PROFESSIONAL).</li>
+<li><strong>Payments</strong>: collecting guests&#39; money and paying hosts may need a payment licence, which is why we start with the deposit model.</li>
+<li><strong>Geography</strong>: 69 wilayas and 1,541 communes, in Arabic, French and English.</li>
+<li><strong>Formats</strong>: weekend is Friday and Saturday, Latin digits even in Arabic, phone numbers start with +213 5, 6 or 7.</li>
+</ul>
+<h2 id="9-where-to-read-next">9. Where to read next</h2>
+<table>
+<thead>
+<tr>
+<th>If you want to know...</th>
+<th>Read</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What exists today and what is broken</td>
+<td><a href="01-system-inventory.html">01-system-inventory.md</a></td>
+</tr>
+<tr>
+<td>What other platforms do and which tools we chose</td>
+<td><a href="02-research.html">02-research.md</a></td>
+</tr>
+<tr>
+<td>The full list of what the backend must do</td>
+<td><a href="03-requirements.html">03-requirements.md</a></td>
+</tr>
+<tr>
+<td>The exact rules (prices, refunds, statuses)</td>
+<td><a href="04-business-rules.html">04-business-rules.md</a></td>
+</tr>
+<tr>
+<td>The database</td>
+<td><a href="05-database-schema.html">05-database-schema.md</a></td>
+</tr>
+<tr>
+<td>The API</td>
+<td><a href="06-api-design.html">06-api-design.md</a></td>
+</tr>
+<tr>
+<td>How it is built, secured, hosted and tested</td>
+<td><a href="07-architecture.html">07</a>, <a href="08-security-privacy.html">08</a>, <a href="09-devops-hosting.html">09</a>, <a href="10-testing-quality.html">10</a></td>
+</tr>
+<tr>
+<td>The plan, risks and open decisions</td>
+<td><a href="11-roadmap.html">11</a>, <a href="12-risks.html">12</a>, <a href="13-decisions-needed.html">13</a>, <a href="14-open-questions.html">14</a></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Why does a booking made today on the website not appear in the admin?</li>
+<li><input disabled="" type="checkbox"> Who pays BLADUS, the guest or the host? How much for an agency?</li>
+<li><input disabled="" type="checkbox"> What stops two people from booking the same night?</li>
+<li><input disabled="" type="checkbox"> Why does BLADUS not collect guests&#39; money at launch?</li>
+<li><input disabled="" type="checkbox"> What is a ledger, and why are its lines never erased?</li>
+<li><input disabled="" type="checkbox"> Name two things that happen by themselves without anyone clicking.</li>
+</ul>
+<div class="pager"><span><a href="index.html">&larr; 00. Start here: BLADUS backend blueprint</a></span><span><a href="glossary.html">Glossary &rarr;</a></span></div></main></div></body></html>

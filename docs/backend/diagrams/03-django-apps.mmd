@@ -1,43 +1,34 @@
 ---
-title: Django apps (bounded contexts) and allowed calls
+title: "Django apps in layers (arrow = may use; only downward)"
 ---
-flowchart LR
-    accounts["accounts"]
-    hosts["hosts<br/>(host_account, orgs)"]
-    geo["geo"]
-    catalog["catalog"]
-    inventory["inventory"]
-    trips["trips"]
-    pricing["pricing"]
-    bookings["bookings"]
-    ledger["ledger"]
-    reviews["reviews"]
-    messaging["messaging"]
-    notifications["notifications<br/>+ outbox"]
-    media["media"]
-    trust["trust<br/>(moderation)"]
-    config["config"]
-    audit["audit"]
-    hosts --> accounts
-    catalog --> hosts
-    catalog --> geo
-    catalog --> media
-    inventory --> catalog
-    trips --> hosts
-    pricing --> catalog
-    pricing --> inventory
-    bookings --> pricing
-    bookings --> inventory
-    bookings --> trips
-    bookings --> ledger
-    ledger --> hosts
-    reviews --> bookings
-    messaging --> bookings
-    trust --> catalog
-    trust --> hosts
-    trust --> reviews
-    hosts --> config
-    bookings -. "events" .-> notifications
-    trust -. "events" .-> notifications
-    bookings -. "events" .-> audit
-    ledger -. "events" .-> audit
+flowchart TB
+    subgraph L6["L6 oversight and read models"]
+        trust["trust<br/>(moderation, risk)"]
+        search["search<br/>(listing_search_doc)"]
+    end
+    subgraph L5["L5 after booking"]
+        reviews["reviews"]
+        messaging["messaging"]
+    end
+    subgraph L4["L4 commerce"]
+        bookings["bookings"] --> pricing["pricing"]
+        bookings --> ledger["ledger"]
+    end
+    subgraph L3["L3 offer"]
+        inventory["inventory"] --> catalog["catalog"]
+        trips["trips"] --> catalog
+    end
+    subgraph L2["L2 identity"]
+        hosts["hosts<br/>(host_account, orgs)"] --> accounts["accounts"]
+    end
+    subgraph L1["L1 platform"]
+        geo["geo"]
+        config["config"]
+        audit["audit"]
+        media["media"]
+        notifications["notifications<br/>+ outbox"]
+    end
+    subgraph L0["L0 kernel"]
+        core["core<br/>(Money, ids, errors)"]
+    end
+    L6 --> L5 --> L4 --> L3 --> L2 --> L1 --> L0

@@ -1,0 +1,1046 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BLADUS backend research: Algeria context, payments, compliance, infra, security · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="on" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="bladus-backend-research-algeria-context-payments-compliance-infra-security">BLADUS backend research: Algeria context, payments, compliance, infra, security</h1>
+<p>Research date / access date for every source below: <strong>2026-11-04</strong>.</p>
+<p>Conventions used in this file:</p>
+<ul>
+<li><strong>[verified]</strong> = read on an official or primary source page during this session.</li>
+<li><strong>[secondary]</strong> = from a press article, agency blog or vendor page (not official text).</li>
+<li><strong>[unverified]</strong> = could not confirm, conflicting, or inferred. Treat as a lead only.</li>
+<li>Every legal, tax and financial point is flagged <strong>VERIFY WITH A PROFESSIONAL (not legal advice)</strong>. This file is engineering research, not legal, tax or financial advice.</li>
+</ul>
+<hr>
+<h2 id="executive-summary-of-risks-and-surprises">Executive summary of risks and surprises</h2>
+<ol>
+<li><strong>Law 18-05 art. 8 requires an e-commerce site to be &quot;hosted in Algeria&quot; with a <code>.com.dz</code> extension</strong>, plus RC registration and CNRC e-supplier filing. Text read directly in JO n° 28 of 16 May 2018 [verified]. This directly conflicts with an &quot;EU VPS only&quot; plan. VERIFY WITH A PROFESSIONAL.</li>
+<li><strong>Law 18-07 was amended by Law 25-11 of 24 July 2025</strong> (JO n° 48). Transfers of personal data abroad need ANPDP authorization; illicit transfer abroad carries 1 to 5 years prison and 500,000 to 1,000,000 DA fine [secondary]. Hosting user data in the EU is a transfer abroad. VERIFY WITH A PROFESSIONAL.</li>
+<li><strong>Marketplace payouts to hosts are a regulated activity risk.</strong> Collecting guest money and paying it out to third parties looks like a payment service; Banque d&#39;Algérie Règlement 25-02 (PSP licence, minimum capital 160 million DA) now frames this [secondary]. Practical route: each host gets paid through their own gateway account, or BLADUS invoices only its commission. VERIFY WITH A PROFESSIONAL.</li>
+<li><strong>Online card acceptance is DZD only and domestic (CIB / Edahabia) for most merchants.</strong> Since a Banque d&#39;Algérie update of 14 May 2026, banks may let e-merchants accept foreign Visa/Mastercard/Amex [secondary]; BDL already offers it at 5% per transaction + 65,000 DA/month + 70,000 DA setup, legal entities only [verified on bdl.dz].</li>
+<li><strong>The country now has 69 wilayas and 1,541 communes</strong> (Loi 26-06, JO n° 25 of 5 April 2026, per datasets quoting the JO) [secondary, JO itself not opened]. Codes 59 to 69 differ between sources.</li>
+<li><strong>Public Nominatim forbids autocomplete</strong> and caps at 1 req/s for the whole app [verified].</li>
+<li><strong>SMS OTP via Twilio costs about USD 0.27 per SMS to Algeria</strong> and needs sender ID registration [verified on twilio.com]. Local routes are much cheaper but less documented.</li>
+<li><strong>Hetzner raised cloud prices twice in 2026</strong> (April and June); old cheap plans are not orderable [secondary].</li>
+</ol>
+<hr>
+<h2 id="c1-payments-in-algeria">C1. Payments in Algeria</h2>
+<h3 id="c11-the-rails">C1.1 The rails</h3>
+<table>
+<thead>
+<tr>
+<th>Rail</th>
+<th>Operator</th>
+<th>What it is</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CIB card</td>
+<td>SATIM (interbank switch) + banks</td>
+<td>Domestic interbank debit card</td>
+<td>Online acceptance through SATIM e-payment gateway. Merchant needs GIE Monétique authorization + bank contract [verified, cibweb.dz / satim.dz].</td>
+</tr>
+<tr>
+<td>Edahabia card</td>
+<td>Algérie Poste (CCP accounts)</td>
+<td>Postal debit card</td>
+<td>Also accepted via SATIM gateway on e-commerce sites [verified, cibweb.dz].</td>
+</tr>
+<tr>
+<td>BaridiMob / CCP-to-CCP transfer (RIP)</td>
+<td>Algérie Poste</td>
+<td>App transfer between CCP accounts</td>
+<td>MPT FAQ gives 1,000 DZD min and 200,000 DZD/day max [secondary, older]; Algerie360 says min 500 DZD [secondary]. Fees conflicting (baridimob.com says fee by amount; others say free) [unverified].</td>
+</tr>
+<tr>
+<td>BaridiPay (QR)</td>
+<td>Algérie Poste</td>
+<td>Merchant QR payment in BaridiMob, since 14 June 2025, min 100 DA</td>
+<td>Needs a commercial CCP account [secondary]. No public API found [unverified].</td>
+</tr>
+<tr>
+<td>Bank transfer (RIB)</td>
+<td>Banks via ACI / interbank</td>
+<td>Virement</td>
+<td>Manual reconciliation; no public instant-payment API found [unverified].</td>
+</tr>
+<tr>
+<td>Cash on arrival / COD</td>
+<td>n/a</td>
+<td>Very common in Algerian e-commerce</td>
+<td>Yalidine COD capped at 150,000 DZD per parcel [secondary].</td>
+</tr>
+<tr>
+<td>Foreign Visa/Mastercard</td>
+<td>Acquiring banks (e.g. BDL) via SATIM</td>
+<td>Since 14 May 2026 update of BdA list of authorized products, banks may offer it after a declaration + 15 days [secondary]</td>
+<td>BDL &quot;E-commerce international&quot;: legal entities domiciled at BDL; 5% per transaction, pack 65,000 DA HT/month, onboarding 70,000 DA HT; tourism, travel and vehicle rental listed as priority sectors [verified, bdl.dz].</td>
+</tr>
+</tbody></table>
+<p><strong>Legal anchor (Law 18-05, JO n° 28, 2018) [verified, text read]:</strong></p>
+<ul>
+<li>Art. 27: payment by authorized means, remote or on delivery; electronic payment goes through platforms &quot;mises en place et exploitées exclusivement par les banques agréées par la Banque d&#39;Algérie et Algérie Poste&quot;.</li>
+<li>Art. 28: connection to payment platform secured by electronic certification.</li>
+<li>Art. 29: payment platforms are under Banque d&#39;Algérie control.</li>
+<li>Art. 7: proceeds of cross-border sales must land in the e-supplier&#39;s account domiciled in Algeria.
+VERIFY WITH A PROFESSIONAL.</li>
+</ul>
+<h3 id="c12-how-a-merchant-gets-direct-cibedahabia-acceptance-gie-monétique--satim">C1.2 How a merchant gets direct CIB/Edahabia acceptance (GIE Monétique / SATIM)</h3>
+<p>From the official CIBWeb portal and bank pages [verified + secondary]:</p>
+<ol>
+<li>Prerequisites: inscription au <strong>registre du commerce</strong> (or registre de l&#39;artisanat et des métiers) and in the <strong>CNRC national file of e-suppliers</strong> (e-commerce activity code) [verified, cibweb.dz FAQ as quoted in search].</li>
+<li>Apply on cibweb.dz with RC attached; GIE Monétique decides acceptability &quot;en moins de 24h&quot; [verified, cibweb.dz].</li>
+<li>Two paths: with a <strong>GIE-referenced payment module</strong> (4 steps) or a <strong>non-referenced module</strong> (8 steps incl. API retrieval, test slot, certification appointment, PV of certification) [verified, cibweb.dz pages p21/p22].</li>
+<li>Sign adhesion contract with your bank; SATIM issues the web-merchant ID [secondary, Al Baraka Bank].</li>
+<li>Adhesion is for one year, renewable [secondary, BNA].</li>
+<li>Fees: no official grid found. Agencies cite 1% to 2.5% per transaction, sometimes about 50 DA fixed + 1.2%; settlement typically D+1/D+2; agency-reported ceilings 100,000 DA/transaction and 500,000 DA/month [secondary, conflicting, unverified]. Negotiated with the bank.</li>
+</ol>
+<p>Referenced modules on cibweb.dz (page 1 of 3): Guiddini (NC/04/000013/2021), EBLINK, ATA CORP, ADEX Technology (ADEXEPAY), CONEX (ALPAY), Smart Solution and Innovation (Mpay), LRD Algérie (MYBUSI), shipili store, Web Rocket (WooCommerce), TROIS S PAY (3SPAY) [verified]. These are certified <strong>integration modules</strong>: the merchant still needs its own RC + bank contract.</p>
+<h3 id="c13-aggregators--gateways-comparison">C1.3 Aggregators / gateways comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Exists?</th>
+<th>Model</th>
+<th>Fees</th>
+<th>Onboarding</th>
+<th>Methods</th>
+<th>Payout / settlement</th>
+<th>Limits</th>
+<th>Refunds</th>
+<th>Webhooks</th>
+<th>Docs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Chargily Pay V2</strong></td>
+<td>Yes [verified]</td>
+<td>Aggregator (merchant uses Chargily&#39;s acceptance)</td>
+<td>Starter 0% (cap 300 tx or 300,000 DZD); Comfort 1.5% (min 15 / max 1,500 DZD); Supreme 3% (30/3,000); Elite 4.5% (45/4,500). First month 0%. Fees can be on merchant, customer or split [verified, chargily.com pricing + dev docs]</td>
+<td>Two-step verification (user account + application) by Chargily team; required documents not published [verified]; whether RC/auto-entrepreneur is required: <strong>unverified</strong></td>
+<td><code>edahabia</code>, <code>cib</code>, <code>chargily_app</code> [verified]; Visa/MC &quot;coming soon&quot; on marketing page [secondary]</td>
+<td>Balance hold 72h / 48h / 24h by plan; 1, 2 or 4 free payouts/month; extra payout 1.5% (min 150 DZD) [verified]</td>
+<td>Starter capped as above; others unlimited [verified]</td>
+<td>Yes, 2% commission (min 20, max 2,000 DZD) [verified]</td>
+<td>Yes, &quot;Webhooks&quot; page in docs [verified exists; signature details not read]</td>
+<td><a href="https://dev.chargily.com/pay-v2">https://dev.chargily.com/pay-v2</a> ; SDKs JS, PHP, Go, C#, WordPress, Shopify, Odoo on GitHub [verified]</td>
+</tr>
+<tr>
+<td><strong>SlickPay</strong></td>
+<td>Yes [verified]</td>
+<td>Aggregator / fintech, Algiers, founded 2022 [secondary]</td>
+<td>Auto 2% (instant after SATIM confirm), Daily 1.9%, Weekly 1.6%, Bimonthly 1.5%, Monthly 1.4%, Enterprise custom [verified, slick-pay.com]</td>
+<td>Search summary says merchant needs RC, business bank account, SATIM / GIE authorization [secondary, unverified]</td>
+<td>CIB, Edahabia; payment links; app [verified]</td>
+<td>Per schedule above [verified]</td>
+<td>Not published</td>
+<td>Not found [unverified]</td>
+<td>Not confirmed (docs site did not render) [unverified]</td>
+<td><a href="https://developers.slick-pay.com/">https://developers.slick-pay.com/</a> ; prod base <code>https://prodapi.slick-pay.com/api/v2</code> [secondary] ; WordPress plugin [verified]</td>
+</tr>
+<tr>
+<td><strong>Guiddini Pay</strong></td>
+<td>Yes [verified, cibweb registry]</td>
+<td>Certified SATIM module + API (&quot;Api paiement en ligne Satim-gateway&quot;)</td>
+<td>Not published [unverified]</td>
+<td>Merchant still needs its own RC + bank/SATIM contract (module path) [inferred from cibweb process]</td>
+<td>CIB, Edahabia</td>
+<td>Bank settlement</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><a href="https://guiddini.dz/docs/api">https://guiddini.dz/docs/api</a> [secondary]</td>
+</tr>
+<tr>
+<td><strong>Yalidine Pay</strong></td>
+<td><strong>No evidence it exists</strong> [unverified]</td>
+<td>Yalidine is a courier with COD (&quot;recouvrement&quot;)</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>Cash on delivery</td>
+<td>n/a</td>
+<td>150,000 DZD/parcel COD [secondary]</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><strong>BDL e-commerce international</strong></td>
+<td>Yes [verified]</td>
+<td>Direct bank acquiring for foreign cards</td>
+<td>5% per tx, 65,000 DA HT/month, 70,000 DA HT setup [verified]</td>
+<td>Legal entity domiciled at BDL, business plan, web-merchant contract, NDA [verified]</td>
+<td>Visa, Mastercard</td>
+<td>Likely DZD (fees &quot;converties en DZD&quot;) [unverified]</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><a href="https://www.bdl.dz/ecommerce-international/">https://www.bdl.dz/ecommerce-international/</a></td>
+</tr>
+<tr>
+<td>Other modules (ADEXEPAY, ALPAY, Mpay, 3SPAY...)</td>
+<td>Listed as certified [verified]</td>
+<td>Modules</td>
+<td>Not researched</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><a href="https://cibweb.dz/fr/modules-autorise">https://cibweb.dz/fr/modules-autorise</a></td>
+</tr>
+</tbody></table>
+<h3 id="c14-payout-escrow-refunds-realities-for-a-marketplace">C1.4 Payout, escrow, refunds: realities for a marketplace</h3>
+<ul>
+<li><strong>No public split-payment / connected-account product found</strong> for any Algerian gateway (no Stripe Connect equivalent) [unverified: absence of evidence].</li>
+<li>Collecting funds for third parties and redistributing them is close to the definition of a payment service. <strong>Règlement 25-02 of 14 April 2025</strong> (JO n° 28) sets PSP licensing with <strong>160 million DA minimum capital</strong>; Instruction 06-2025 requires segregated (&quot;cantonnement&quot;) customer-fund accounts [secondary, algerie-eco / El Watan; official list at bank-of-algeria.dz]. VERIFY WITH A PROFESSIONAL.</li>
+<li><strong>Realistic startup patterns</strong> (engineering options, each needs legal review):<ol>
+<li><strong>Commission-only + pay at property</strong>: guest pays host directly (cash on arrival / BaridiMob to host&#39;s CCP); BLADUS invoices hosts a monthly commission. Lowest regulatory risk, weakest trust.</li>
+<li><strong>Deposit via BLADUS gateway = BLADUS service fee only</strong> (Chargily/SlickPay), remainder paid to host on arrival.</li>
+<li><strong>Host-owned gateway accounts</strong>: each pro host (hotel, agency) has its own Chargily/SlickPay/SATIM account; BLADUS creates checkouts with the host&#39;s keys. Not possible for individuals without verified accounts.</li>
+<li><strong>Full collection + payout (Airbnb model)</strong>: needs a licensed PSP or bank partner. Treat as phase 2.</li>
+</ol>
+</li>
+<li><strong>Escrow</strong>: no consumer escrow product found [unverified]. &quot;Hold until check-in + 24h&quot; can only be emulated with gateway balance holds or BLADUS&#39;s own account (see risk above).</li>
+<li><strong>Refunds</strong>: Chargily supports refunds (2% fee) [verified]. Plan refunds as partial amounts stored in a ledger; COD/cash refunds are manual.</li>
+<li><strong>Ledger</strong>: build a double-entry ledger regardless (booking, fee, payout, refund, chargeback-like reversal), DZD integer amounts (centimes are not used in practice; store minor units anyway).</li>
+</ul>
+<h3 id="c15-diaspora--tourists-with-foreign-cards">C1.5 Diaspora / tourists with foreign cards</h3>
+<ul>
+<li>Options found: bank acquiring for foreign cards via BDL (legal entity, 5%) [verified]; other banks may follow the 14 May 2026 BdA update [secondary]. International gateways (Stripe, PayPal merchant) for an Algerian entity: <strong>not supported / unverified</strong>; using a foreign entity to collect for Algerian stays raises exchange-control questions (Law 18-05 art. 7 requires proceeds domiciled in Algeria) [verified text]. VERIFY WITH A PROFESSIONAL.</li>
+</ul>
+<hr>
+<h2 id="c2-messaging-and-verification">C2. Messaging and verification</h2>
+<h3 id="sms--otp">SMS / OTP</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Algeria price per SMS</th>
+<th>Notes</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Twilio</td>
+<td>USD 0.273 outbound; alphanumeric sender ID &quot;Registration Required&quot;</td>
+<td>Unregistered traffic may be filtered by carriers</td>
+<td>twilio.com/en-us/sms/pricing/dz ; support.twilio.com article 223133767 [verified]</td>
+</tr>
+<tr>
+<td>Plivo</td>
+<td>from USD 0.2077 (by network 0.21 to 0.32)</td>
+<td>Network names outdated</td>
+<td>plivo.com/sms/pricing/dz/ [secondary]</td>
+</tr>
+<tr>
+<td>BulkGate</td>
+<td>Djezzy EUR 0.076, Mobilis EUR 0.2412, Ooredoo EUR 0.1685</td>
+<td>OTP API</td>
+<td>bulkgate.com/en/pricing/sms/dz/algeria/ [secondary]</td>
+</tr>
+<tr>
+<td>Messaggio</td>
+<td>Djezzy EUR 0.12, Mobilis EUR 0.30, Ooredoo EUR 0.29</td>
+<td>Also WhatsApp</td>
+<td>messaggio.com [secondary]</td>
+</tr>
+<tr>
+<td>Unimatrix</td>
+<td>USD 0.16 flat</td>
+<td></td>
+<td>unimtx.com/sms/dz [secondary]</td>
+</tr>
+<tr>
+<td>Infobip, Vonage</td>
+<td>Quote only</td>
+<td>Not published</td>
+<td>[unverified]</td>
+</tr>
+<tr>
+<td><strong>Sobersys</strong> (local)</td>
+<td>Not published; 30 free SMS trial</td>
+<td>Claims direct links to Djezzy, Ooredoo, Mobilis; REST API</td>
+<td>sobersys.com [secondary]</td>
+</tr>
+<tr>
+<td>Direct operator bulk SMS (Djezzy/Mobilis/Ooredoo business)</td>
+<td>Not found; one blog cites 5 to 8 DZD domestic</td>
+<td>Usually requires company contract</td>
+<td>[unverified]</td>
+</tr>
+</tbody></table>
+<p>Recommendation: abstract an <code>SmsProvider</code> interface, start with a local aggregator for cost, keep an international fallback (Twilio/BulkGate) for reliability, and prefer <strong>WhatsApp or email OTP</strong> where possible. Rate-limit OTP sends per phone, per IP and per device (SMS pumping fraud is real).</p>
+<h3 id="whatsapp-business-platform">WhatsApp Business Platform</h3>
+<ul>
+<li>Since <strong>1 July 2025 Meta charges per delivered template message</strong> (marketing, utility, authentication), priced by recipient country; 1,000 free service messages per business number per month noted by secondary sources; new rate cards 1 July 2026 and 1 October 2026 [secondary]. Algeria&#39;s exact authentication rate: <strong>not found</strong> (likely in a &quot;Rest of Africa&quot; style region bucket) [unverified]. Official source to check: <a href="https://developers.facebook.com/docs/whatsapp/pricing">https://developers.facebook.com/docs/whatsapp/pricing</a> . BSPs (e.g. Twilio) add a markup [secondary].</li>
+</ul>
+<h3 id="email">Email</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Free tier</th>
+<th>Paid</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Resend</td>
+<td>3,000/month, max 100/day, 1 domain</td>
+<td>USD 20 for 50k; USD 35 for 100k</td>
+<td>secondary (wpmailsmtp, dreamlit)</td>
+</tr>
+<tr>
+<td>Amazon SES</td>
+<td>3,000 msgs/month for 12 months (new accounts, changed recently)</td>
+<td>USD 0.10 per 1,000</td>
+<td>secondary (saaspricepulse, courier)</td>
+</tr>
+<tr>
+<td>Brevo</td>
+<td>300/day (marketing + transactional shared)</td>
+<td>Starter from USD 9</td>
+<td>brevo.com/bulk-email-service/ [verified claim of 300/day]</td>
+</tr>
+<tr>
+<td>Use SPF, DKIM, DMARC on the BLADUS domain; if the main site must be <code>.com.dz</code>, send mail from that domain.</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="push">Push</h3>
+<ul>
+<li>Web Push (VAPID) and Firebase Cloud Messaging are free to send (general knowledge, <strong>not re-verified in this session</strong>). Note Algeria has periodic national internet restrictions (e.g. exam periods) [secondary, algeriatech.news], so do not rely on push for critical flows.</li>
+</ul>
+<hr>
+<h2 id="c3-legal-and-compliance-all-items-verify-with-a-professional-not-legal-advice">C3. Legal and compliance (ALL items: VERIFY WITH A PROFESSIONAL, not legal advice)</h2>
+<h3 id="c31-personal-data-law-18-07-as-amended-by-law-25-11">C3.1 Personal data: Law 18-07 as amended by Law 25-11</h3>
+<table>
+<thead>
+<tr>
+<th>Point</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Base law</td>
+<td>Loi n° 18-07 du 10 juin 2018; in force 10 August 2023</td>
+<td>secondary (cna.dz, Gide)</td>
+</tr>
+<tr>
+<td>Amendment</td>
+<td><strong>Loi n° 25-11 du 24 juillet 2025</strong>, JO n° 48 (2025); amends, does not replace 18-07</td>
+<td>secondary (ACF, upgrowth, douane PDF title)</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td><strong>ANPDP</strong>, 15 rue Yahia Cherif Omar, Hydra, Alger; portal <a href="https://portail.anpdp.dz/">https://portail.anpdp.dz/</a></td>
+<td>secondary (multiple)</td>
+</tr>
+<tr>
+<td>Prior formality</td>
+<td>Art. 12: prior <strong>declaration</strong> or <strong>authorization</strong> for any processing. Authorization regime if: transfer abroad, sensitive data, or file interconnection. Online filing then signed paper deposit at ANPDP by appointment. Receipt immediately or within 48h; review within 10 days</td>
+<td>secondary (anpdp.dz pages as summarized in search)</td>
+</tr>
+<tr>
+<td>Transfer abroad</td>
+<td>Original art. 44: prior ANPDP authorization. 25-11 adds chapter 6 / art. 45 bis 13: adequacy assessment of destination, derogations if &quot;necessary&quot;</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Penalty for illicit transfer abroad</td>
+<td>1 to 5 years prison, 500,000 to 1,000,000 DA</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>DPO</td>
+<td>Mandatory per one source; another says mainly public sector</td>
+<td><strong>conflicting, unverified</strong></td>
+</tr>
+<tr>
+<td>Breach notification</td>
+<td>To ANPDP <strong>within 5 days</strong>; inform data subjects if high risk</td>
+<td>secondary (two vendor blogs)</td>
+</tr>
+<tr>
+<td>Foreign controller</td>
+<td>Must appoint a representative in Algeria to deal with ANPDP</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Data localization mandate in 18-07/25-11</td>
+<td>Not found as an explicit rule; but transfer abroad needs authorization</td>
+<td>unverified</td>
+</tr>
+<tr>
+<td>Admin fine</td>
+<td>up to 500,000 DA</td>
+<td>secondary</td>
+</tr>
+</tbody></table>
+<p>Engineering consequences: processing register, DPIA for ID-document KYC (biometric photos, NIN), consent capture (Law 18-05 art. 26 also requires prior consent and data minimization) [verified text], breach runbook with a 5-day clock, data-subject request workflow.</p>
+<h3 id="c32-e-commerce-law-18-05-jo-n-28-16-may-2018-verified-text-read">C3.2 E-commerce Law 18-05 (JO n° 28, 16 May 2018) [verified, text read]</h3>
+<ul>
+<li><strong>Art. 2</strong> applies if any party is Algerian, resides in Algeria, is an Algerian legal person, or contract concluded/performed in Algeria.</li>
+<li><strong>Art. 3</strong> bans online transactions on gambling, alcohol/tobacco, pharma, IP-infringing goods, prohibited goods, and <strong>any good or service requiring an &quot;acte authentique&quot;</strong> (notarial deed). Long-term leases needing a notarial act are therefore out of scope for online contracting; short stays: <strong>verify</strong>.</li>
+<li><strong>Art. 8</strong> e-commerce requires RC (or craft register) registration <strong>and a website hosted in Algeria with a &quot;.com.dz&quot; extension</strong>.</li>
+<li><strong>Art. 9</strong> national file of e-suppliers at CNRC.</li>
+<li><strong>Art. 10 to 13</strong> mandatory electronic offer content and three-step order (review, confirm, contract).</li>
+<li><strong>Art. 25</strong> e-supplier must keep transaction records and transmit them electronically to CNRC (modalities by regulation). Fine 20,000 to 200,000 DA [secondary].</li>
+<li><strong>Art. 31 to 33</strong> opt-in required for marketing messages; free unsubscribe; burden of proof on the e-supplier.</li>
+<li>No general consumer &quot;droit de rétractation&quot; for services found in 18-05; art. 22/23 cover delivery delay and non-conformity of goods. Cancellation terms must be in the offer/contract (art. 11/13). Consumer protection Law 09-03 also applies [not researched in detail, unverified].</li>
+</ul>
+<p><strong>Hosting implication</strong>: if BLADUS is an &quot;e-fournisseur&quot; (or the platform is treated as one), the site must be hosted in Algeria on <code>.com.dz</code>. Whether an intermediary marketplace or an API backend abroad behind an Algerian-hosted front satisfies &quot;hébergé en Algérie&quot; is <strong>not defined in sources found</strong> [unverified]. A web agency claims the rule is specific to e-commerce, not general websites [secondary].</p>
+<h3 id="c33-tourism-accommodation-agencies-vehicles">C3.3 Tourism, accommodation, agencies, vehicles</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hotel classification</td>
+<td>Décret exécutif n° 19-158 du 30 avril 2019 (definition, operation, classification of hotel establishments)</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Rooms at the owner&#39;s home (&quot;logement chez l&#39;habitant&quot;)</td>
+<td>Interministerial circular of <strong>16 June 2012</strong>: max 15 guests, max 5 rooms, insurance fire/theft/civil liability, owner greets guests, furnished + hygiene/safety; <strong>declaration at the APC</strong> with copy of property title; APC may issue written authorization</td>
+<td>secondary (Maghreb Emergent, 8 June 2026, citing FNAI)</td>
+</tr>
+<tr>
+<td>Foreign guests</td>
+<td>Must be declared to security services, art. 29 of Law 08-11 of 25 June 2008</td>
+<td>secondary (search summary)</td>
+</tr>
+<tr>
+<td>Whole-apartment short-term rental (Airbnb style)</td>
+<td><strong>No specific framework found</strong>; general contract law; announced ministry project (Minister Didouche, ~2024) not found published</td>
+<td>secondary, unverified</td>
+</tr>
+<tr>
+<td>Rental income tax</td>
+<td>IRG 7% on rental income cited (G n°51 monthly, G n°1 annual)</td>
+<td>secondary, unverified</td>
+</tr>
+<tr>
+<td>Travel agencies</td>
+<td>Loi 99-06 du 4 avril 1999; Décret exécutif 17-161 du 15 mai 2017; licence signed by the Minister of Tourism after national commission opinion and security inquiry; categories A (domestic/inbound) and B (outbound)</td>
+<td>verified exists on mta.gov.dz &quot;Devenir agent de tourisme&quot; + secondary</td>
+</tr>
+<tr>
+<td>Usurping travel-agent title</td>
+<td>50,000 to 200,000 DA + 3 months to 3 years</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Vehicle rental (without driver)</td>
+<td><strong>No decree found</strong> in this session; agencies&#39; own T&amp;Cs: civil liability insurance mandatory and included, driver usually 25+ with licence 2+ years</td>
+<td><strong>unverified</strong> (needs JORADP search; likely a regulated activity in the RC nomenclature)</td>
+</tr>
+<tr>
+<td>Motor insurance</td>
+<td>Civil liability motor insurance mandatory (general knowledge + agency T&amp;Cs)</td>
+<td>secondary</td>
+</tr>
+</tbody></table>
+<h3 id="c34-tax-identifiers-and-rates">C3.4 Tax identifiers and rates</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RC</td>
+<td>Registre du commerce (CNRC, Sidjilcom portal)</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>NIF</td>
+<td>Tax ID, required on invoices</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>NIS</td>
+<td>Statistical ID (ONS), required on invoices</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Article d&#39;imposition</td>
+<td>On invoices</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Carte d&#39;artisan</td>
+<td>Registre de l&#39;artisanat et des métiers; accepted alternative to RC by art. 8 of 18-05</td>
+<td>verified (text)</td>
+</tr>
+<tr>
+<td>Auto-entrepreneur</td>
+<td>Loi 22-23 du 18 décembre 2022; card from ANAE (anae.dz); turnover cap 5,000,000 DA/year (LF 2023 art. 51); IFU 0.5% of turnover (LF 2024 art. 18); minimum 10,000 DA/year; outside VAT; liberal, regulated and artisanal activities excluded; activity list exists but not retrieved</td>
+<td>secondary, VERIFY</td>
+</tr>
+<tr>
+<td>Can an auto-entrepreneur sell online / be a host?</td>
+<td>RC/craft register is required by 18-05 art. 8; whether the ANAE card satisfies this is <strong>unverified</strong></td>
+<td>unverified</td>
+</tr>
+<tr>
+<td>NIN</td>
+<td>18-digit national identification number (Décret 10-210 of 2010; new decree in JO n° 60, 2023); different from the CNI card number</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>VAT standard</td>
+<td>19%</td>
+<td>PwC tax summaries [verified]</td>
+</tr>
+<tr>
+<td>VAT reduced</td>
+<td>9% (art. 23 CTCA list)</td>
+<td>PwC [verified]</td>
+</tr>
+<tr>
+<td>VAT tourism</td>
+<td><strong>9% for tourism, hotel, thermal, classified restaurants, travel and tourist vehicle rental until 31 Dec 2027</strong> (art. 42 LFC 2009 as amended by art. 215 LF 2025)</td>
+<td>secondary (ACF, Deloitte)</td>
+</tr>
+<tr>
+<td>Taxe de séjour</td>
+<td>Per person per day (CIDTA art. 266 bis to 266 octies since LF 2022): 5* 600 DA, 4* 500, 3* 300, 2* 200, 1* 100. PLF 2027 proposes 50 DA for unclassified hotels and other accommodation (draft only)</td>
+<td>secondary (visa-algerie.com, CNCC circular)</td>
+</tr>
+<tr>
+<td>Invoices</td>
+<td>Décret exécutif 05-468 du 10 décembre 2005 (under Law 04-02): seller identity, legal form, address, RC, NIF, NIS, article d&#39;imposition, sequential number, date, description, HT, VAT rate and amount, TTC; cancelled invoices kept and marked</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Retention of accounting docs</td>
+<td>10 years commonly cited (Code de commerce; article number conflicting 12 vs 18)</td>
+<td>secondary, unverified article</td>
+</tr>
+</tbody></table>
+<h3 id="c35-documents-to-collect-per-host-type-proposal-verify-with-a-professional">C3.5 Documents to collect per host type (proposal, VERIFY WITH A PROFESSIONAL)</h3>
+<table>
+<thead>
+<tr>
+<th>Host type</th>
+<th>Identity</th>
+<th>Business / legal</th>
+<th>Property / asset</th>
+<th>Payout</th>
+<th>Suggested retention</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Individual (rooms / home)</strong></td>
+<td>CNI biométrique or passport (front/back), selfie liveness; NIN only if legally needed</td>
+<td>Optional: auto-entrepreneur card (ANAE) if applicable; APC declaration receipt for &quot;chez l&#39;habitant&quot;</td>
+<td>Proof of ownership (acte) or lease + owner authorization; insurance certificate (fire/theft/civil liability)</td>
+<td>CCP (RIP) or bank RIB in host&#39;s own name</td>
+<td>ID images: delete or redact after verification + short window (e.g. 90 days) unless law requires; verification result + audit log: duration of account + 10 years if tied to invoices</td>
+</tr>
+<tr>
+<td><strong>Travel agency</strong></td>
+<td>Legal representative ID</td>
+<td>RC, NIF, NIS, <strong>Ministry of Tourism licence</strong> (category A/B)</td>
+<td>Office address</td>
+<td>Company bank RIB</td>
+<td>Contract + licence copies: relationship + 10 years</td>
+</tr>
+<tr>
+<td><strong>Hotel</strong></td>
+<td>Manager ID</td>
+<td>RC, NIF, NIS, classification decision (Décret 19-158 regime), operating authorization</td>
+<td>Address, star rating (drives taxe de séjour)</td>
+<td>Company RIB</td>
+<td>Relationship + 10 years</td>
+</tr>
+<tr>
+<td><strong>Hostel / auberge</strong></td>
+<td>Manager ID</td>
+<td>RC or association/public status, operating authorization (regime <strong>unverified</strong>)</td>
+<td>Address</td>
+<td>RIB</td>
+<td>Relationship + 10 years</td>
+</tr>
+<tr>
+<td><strong>Vehicle owner / rental agency</strong></td>
+<td>ID + driving licence of operator</td>
+<td>RC with rental activity code (regime <strong>unverified</strong>), NIF, NIS</td>
+<td>Carte grise, valid insurance (civil liability mandatory), contrôle technique</td>
+<td>RIB</td>
+<td>Relationship + 10 years; rental contracts per agency obligations</td>
+</tr>
+<tr>
+<td><strong>Experience guide</strong></td>
+<td>ID</td>
+<td>Auto-entrepreneur card or RC; guide accreditation if any (<strong>unverified</strong>)</td>
+<td>Activity insurance (civil liability) recommended</td>
+<td>CCP/RIB</td>
+<td>Relationship + 10 years</td>
+</tr>
+</tbody></table>
+<p>Retention rules of thumb: invoices/accounting 10 years [secondary]; transaction records to CNRC (18-05 art. 25, no duration in law) [verified text]; personal data no longer than needed for purpose (18-07 principle) [secondary]. Store KYC files encrypted, separate bucket, short-lived signed URLs, access logged.</p>
+<hr>
+<h2 id="c4-geography-data">C4. Geography data</h2>
+<h3 id="official-count">Official count</h3>
+<ul>
+<li><strong>69 wilayas, 1,541 communes</strong>: Loi n° 26-06 (signed 4 April 2026, JO n° 25 of 5 April 2026) supplementing Loi 84-09 with art. 52 bis 10 to 52 bis 20; announced at the Council of Ministers of 16 November 2025 [secondary: GitHub datasets quoting JO text; Morocco World News; DzairTube]. JO not opened directly: <strong>check <a href="https://www.joradp.dz/">https://www.joradp.dz/</a></strong>.</li>
+<li>11 new wilayas and commune counts quoted from JO text: Aflou 12, Barika 8, El Kantara 5, Bir El Ater 4, El Aricha 4, Ksar Chellala 6, Aïn Oussera 10, Messaad 8, Ksar El Boukhari 21, Bou Saada 23, El Abiodh Sidi Cheikh 7 (total 108) [secondary].</li>
+<li><strong>Codes 59 to 69: inconsistent across sources</strong> [unverified]; use ONS codes when published.</li>
+<li><strong>Dairas</strong>: 546 (58-wilaya era, othmanus) vs 591 (el-amin dataset, 2026) [conflicting, unverified].</li>
+</ul>
+<h3 id="datasets">Datasets</h3>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Coverage</th>
+<th>Fields</th>
+<th>License</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>el-amin-dev/algeria-wilayas-communes</td>
+<td>69 / 591 dairas / 1,541</td>
+<td>ar/fr/en names, postal codes (27 null)</td>
+<td>CC0 1.0</td>
+<td><a href="https://github.com/el-amin-dev/algeria-wilayas-communes">https://github.com/el-amin-dev/algeria-wilayas-communes</a> [verified]</td>
+</tr>
+<tr>
+<td>ihahachi/Algeria-Cities</td>
+<td>69 / 1,541</td>
+<td>ar/fr, coordinates; CSV/JSON/GeoJSON/SQL</td>
+<td>MIT</td>
+<td><a href="https://github.com/ihahachi/Algeria-Cities">https://github.com/ihahachi/Algeria-Cities</a> [secondary]</td>
+</tr>
+<tr>
+<td>S450R1/algeria-cities-2025</td>
+<td>69 / 1,541</td>
+<td>ar/latin; SQL/JSON/XML</td>
+<td>Public domain</td>
+<td><a href="https://github.com/S450R1/algeria-cities-2025">https://github.com/S450R1/algeria-cities-2025</a> [secondary]</td>
+</tr>
+<tr>
+<td>othmanus/algeria-cities</td>
+<td>58 / 546 / 1,541 / 3,940 postcodes</td>
+<td>ar/fr, dairas codes</td>
+<td>MIT (per mirror)</td>
+<td><a href="https://github.com/othmanus/algeria-cities">https://github.com/othmanus/algeria-cities</a> [secondary, outdated]</td>
+</tr>
+<tr>
+<td>kossa/algerian-cities</td>
+<td>58 + lat/lng</td>
+<td>Laravel</td>
+<td>MIT</td>
+<td><a href="https://github.com/kossa/algerian-cities">https://github.com/kossa/algerian-cities</a> [secondary]</td>
+</tr>
+<tr>
+<td>OpenStreetMap</td>
+<td>boundaries, POIs</td>
+<td></td>
+<td>ODbL (share-alike)</td>
+<td><a href="https://www.openstreetmap.org">https://www.openstreetmap.org</a></td>
+</tr>
+<tr>
+<td>GeoNames</td>
+<td>places + admin codes</td>
+<td></td>
+<td>CC BY 4.0 (general knowledge, not re-verified)</td>
+<td><a href="https://www.geonames.org">https://www.geonames.org</a></td>
+</tr>
+<tr>
+<td>data.gov.dz / ONS</td>
+<td>official codes</td>
+<td></td>
+<td>not checked</td>
+<td>[unverified]</td>
+</tr>
+</tbody></table>
+<p>Recommendation: seed from el-amin (CC0) for names, merge coordinates from ihahachi (MIT, keep notice), keep a <code>source</code> and <code>valid_from</code> column so the next reform is a migration, and store both legacy 58-wilaya codes and new codes.</p>
+<h3 id="geocoding--maps">Geocoding / maps</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Terms</th>
+<th>Fit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Nominatim (public)</td>
+<td>Max 1 req/s for the whole app, valid User-Agent/Referer, cache results, <strong>autocomplete forbidden</strong>, ODbL attribution</td>
+<td>Backend reverse-geocode only, cached [verified, operations.osmfoundation.org/policies/nominatim/]</td>
+</tr>
+<tr>
+<td>Photon (photon.komoot.io)</td>
+<td>&quot;please be fair, extensive usage will be throttled&quot;, no SLA; Apache 2.0 code, OSM data</td>
+<td>Autocomplete prototype; self-host for production [secondary]</td>
+</tr>
+<tr>
+<td>OpenFreeMap</td>
+<td>Free, no limits, no keys, commercial use allowed, OSM attribution required</td>
+<td>Vector tiles for MapLibre [verified, openfreemap.org]</td>
+</tr>
+<tr>
+<td>Mapbox / Google Maps</td>
+<td>Paid per request; Algeria address quality not assessed</td>
+<td>[unverified]</td>
+</tr>
+<tr>
+<td>Algerian addresses are often informal; geocode to commune + manual pin on map, not street-level text.</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="c5-hosting-and-infrastructure">C5. Hosting and infrastructure</h2>
+<h3 id="connectivity">Connectivity</h3>
+<ul>
+<li>Submarine cables: Medex (Annaba to Marseille branch), SeaMeWe-4 (Annaba to Marseille), ORVAL/ALVAL (Algiers/Oran to Valencia, 40 Tbps, live 31 Dec 2020), plus Medusa landing in Algiers and Collo (2026) [secondary].</li>
+<li><strong>Measured latency Algeria to Paris/Frankfurt/Marseille/Milan: not found</strong> [unverified]. Secondary article context suggests tens of ms (40 to 80 ms discussed) [secondary]. Measure with RIPE Atlas probes in AS36947 (Algérie Télécom) before deciding.</li>
+<li>Government internet restrictions during exam periods disabled Cloudflare Algerian PoPs in June 2025 and rerouted via Europe (+30 to 70 ms) [secondary].</li>
+</ul>
+<h3 id="algerian-hosting">Algerian hosting</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Offer</th>
+<th>Price</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ICOSNET</td>
+<td>DCs in Algiers and Oran; VPS, public cloud instances, VDC</td>
+<td>Cloud instance from 2,800 DZD/month or 4.5 DZD/hour; VPS from 2,800 DZD HT/month</td>
+<td>icosnet.com.dz [secondary/vendor]</td>
+</tr>
+<tr>
+<td>Djezzy Cloud</td>
+<td>Sovereign cloud IaaS/PaaS, ARPCE accredited, DC in Béjaïa</td>
+<td>Not published</td>
+<td>datacenters.com [secondary]</td>
+</tr>
+<tr>
+<td>Algérie Télécom</td>
+<td>Data centers</td>
+<td>Not found</td>
+<td>[unverified]</td>
+</tr>
+<tr>
+<td>Others listed</td>
+<td>Hostarts (Birtouta), AYRADE (Zeralda)</td>
+<td>n/a</td>
+<td>datacenters.com [secondary]</td>
+</tr>
+</tbody></table>
+<h3 id="cdn">CDN</h3>
+<ul>
+<li>Cloudflare has PoPs listed for Algiers (ALG), Oran (ORN), Constantine (CZL), Annaba (AAE); status varies between &quot;operational&quot; and &quot;re-routed&quot;; one tracker says ALG does not serve traffic [conflicting, check <a href="https://www.cloudflarestatus.com/locations]">https://www.cloudflarestatus.com/locations]</a>.</li>
+</ul>
+<h3 id="recommended-setups-costs-rough-verify-current-prices">Recommended setups (costs rough, VERIFY current prices)</h3>
+<p>Because of 18-05 art. 8 and 18-07 transfers, the default should be <strong>production data in Algeria</strong>, with EU only for non-personal assets or encrypted offsite backups subject to ANPDP authorization.</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Setup</th>
+<th>Rough monthly cost</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Starter (compliant-leaning)</td>
+<td>1 to 2 ICOSNET (or Djezzy Cloud) VMs: Docker Compose (API, Postgres, Redis, worker, Caddy), daily <code>pg_dump</code> + WAL archiving to a second Algerian VM/DC (Oran vs Algiers), Cloudflare in front for static assets only</td>
+<td>~6,000 to 20,000 DZD (from 2,800 DZD per VPS; sizes unverified)</td>
+</tr>
+<tr>
+<td>Starter (EU, legal risk)</td>
+<td>Hetzner CX23 / CX33 class: CX23 EUR 5.49 after June 2026, CX33 EUR 8.49 [secondary]; CPX22 jumped to EUR 19.49 for new orders</td>
+<td>EUR 10 to 40</td>
+</tr>
+<tr>
+<td>Scale-up</td>
+<td>2+ app nodes behind LB, managed or self-run Postgres primary + replica in a second DC, object storage for photos, separate KYC bucket, observability stack</td>
+<td>Algeria: quote-based; EU: EUR 100 to 400 (OVH/Scaleway/DigitalOcean managed Postgres prices <strong>not verified</strong> this session)</td>
+</tr>
+<tr>
+<td>Backups: 3-2-1 rule, encrypted, restore test monthly, PITR for Postgres; ledger tables append-only.</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="c6-languages-and-culture">C6. Languages and culture</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Languages</td>
+<td>Arabic (official), Tamazight (official), French widely used in business, English growing</td>
+<td>general knowledge, not re-verified</td>
+</tr>
+<tr>
+<td>RTL</td>
+<td>Arabic UI is RTL; use logical CSS properties and <code>dir</code> per locale</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Digits</td>
+<td>Maghreb (incl. Algeria) uses Western digits 0-9 in everyday Arabic text; Eastern Arabic-Indic mostly Mashreq</td>
+<td>secondary (Wikipedia + language sites). For <code>Intl</code>, use <code>ar-DZ</code> with <code>numberingSystem: &quot;latn&quot;</code> to force Latin digits</td>
+</tr>
+<tr>
+<td>Weekend</td>
+<td>Friday and Saturday since 2009 (work week Sunday to Thursday)</td>
+<td>secondary (The National, OfficeHolidays, Lloyds)</td>
+</tr>
+<tr>
+<td>Phone</td>
+<td>+213; mobiles 9 digits after country code starting 5, 6, 7 (since ARPCE plan of 22 Feb 2008); historical mapping 5 Ooredoo, 6 Mobilis, 7 Djezzy but number portability means prefix does not prove carrier; landlines 8 digits</td>
+<td>verified (arpce.dz PDF title), secondary (Wikipedia). Safe regex <code>^\+213[5-7]\d{8}$</code></td>
+</tr>
+<tr>
+<td>National ID</td>
+<td>CNIBE (biometric electronic ID card, chip, photo + fingerprints); NIN 18 digits (Décret 10-210), distinct from card number</td>
+<td>secondary (interieur.gov.dz, mfa.gov.dz pages exist)</td>
+</tr>
+<tr>
+<td>Passport</td>
+<td>Biometric passport, used to request CNIBE online</td>
+<td>secondary</td>
+</tr>
+<tr>
+<td>Names</td>
+<td>Arabic and Latin transliterations differ across documents; store <code>name_ar</code>, <code>name_latin</code> separately, family name often written first on official docs</td>
+<td>[unverified]</td>
+</tr>
+<tr>
+<td>Time zone</td>
+<td>Africa/Algiers, UTC+1, no DST</td>
+<td>general knowledge (IANA tzdb), not re-verified</td>
+</tr>
+<tr>
+<td>Currency</td>
+<td>DZD, no minor unit used in practice</td>
+<td>general knowledge</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="d-security-and-trust">D. Security and trust</h2>
+<h3 id="d1-owasp-api-security-top-10-2023-mapped-to-bladus">D1. OWASP API Security Top 10 (2023) mapped to BLADUS</h3>
+<p>Official list: <a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">https://owasp.org/API-Security/editions/2023/en/0x11-t10/</a> [verified].</p>
+<table>
+<thead>
+<tr>
+<th>OWASP</th>
+<th>BLADUS example</th>
+<th>Control</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API1 BOLA</td>
+<td><code>GET /bookings/{id}</code>, <code>/wallets/{id}</code>, <code>/payouts/{id}</code>, <code>/kyc/{fileId}</code>, <code>/conversations/{id}</code></td>
+<td>Authorize on every object: guest owns booking OR host owns listing OR admin; use non-guessable IDs (UUIDv7/ULID) but never rely on them</td>
+</tr>
+<tr>
+<td>API2 Broken Authentication</td>
+<td>OTP brute force, SMS pumping, session fixation</td>
+<td>OTP 6 digits, 5 attempts, 10 min TTL, per-phone/IP/device rate limits, refresh-token rotation, MFA for hosts and admins</td>
+</tr>
+<tr>
+<td>API3 Broken Object Property Level Authorization</td>
+<td>Guest sees host phone/address before confirmation; mass-assignment of <code>status</code>, <code>price</code>, <code>commission_rate</code>, <code>is_verified</code></td>
+<td>Response DTOs per role; allowlist writable fields</td>
+</tr>
+<tr>
+<td>API4 Unrestricted Resource Consumption</td>
+<td>Search scraping, image upload size, SMS cost</td>
+<td>Pagination caps, upload limits, per-user quotas, SMS budget alarms</td>
+</tr>
+<tr>
+<td>API5 Broken Function Level Authorization</td>
+<td>Host calling admin <code>/approve-listing</code> or <code>/refund</code></td>
+<td>RBAC middleware + deny-by-default routes, separate admin API</td>
+</tr>
+<tr>
+<td>API6 Sensitive Business Flows</td>
+<td>Calendar hoarding with unpaid holds, coupon abuse, review farming, mass account creation</td>
+<td>Hold TTL, deposit before hold, device fingerprint, velocity limits</td>
+</tr>
+<tr>
+<td>API7 SSRF</td>
+<td>iCal import URL, image-by-URL upload, webhook URLs</td>
+<td>Allowlist schemes, block private IP ranges, fetch via egress proxy</td>
+</tr>
+<tr>
+<td>API8 Security Misconfiguration</td>
+<td>Open Postgres/Redis, debug endpoints, CORS <code>*</code></td>
+<td>Hardening checklist, CIS baseline, secrets in env/secret store</td>
+</tr>
+<tr>
+<td>API9 Improper Inventory Management</td>
+<td>Old <code>/v1</code> endpoints, staging with prod data</td>
+<td>OpenAPI inventory, version sunset, no prod data in staging</td>
+</tr>
+<tr>
+<td>API10 Unsafe Consumption of APIs</td>
+<td>Trusting gateway redirects instead of webhooks; unsigned webhooks</td>
+<td>Verify webhook signatures (Chargily provides webhooks), re-fetch checkout status server-side, idempotency keys</td>
+</tr>
+</tbody></table>
+<h3 id="d2-fraud-and-fake-listing-patterns">D2. Fraud and fake-listing patterns</h3>
+<ul>
+<li><strong>Off-platform payment pushes</strong>: fake host asks for transfer outside the platform for a &quot;discount&quot;; scammers prefer wire, gift cards, crypto [verified, consumer.ftc.gov/articles/rental-listing-scams; Airbnb off-platform policy via secondary]. In Algeria the equivalent is BaridiMob/CCP transfers and &quot;versement&quot; deposits: detect RIP/CCP numbers, phone numbers and WhatsApp links in messages before booking confirmation.</li>
+<li><strong>Hijacked / fake listings</strong> with stolen or AI-generated photos [verified FTC]: perceptual-hash photos against other listings, reverse-image checks, require property proof for first listing, first-payout delay.</li>
+<li><strong>Too-low prices, new profiles</strong> [secondary]: risk scoring.</li>
+<li><strong>Triangulation / stolen cards</strong>: less relevant while domestic cards require OTP (3-D Secure style SMS), but relevant once foreign cards are accepted.</li>
+<li><strong>Host-side fraud</strong>: duplicate accounts after bans (device + phone + NIN hash), fake cancellations to rebook off-platform.</li>
+</ul>
+<h3 id="d3-review-manipulation">D3. Review manipulation</h3>
+<ul>
+<li>Only allow reviews tied to a completed booking; double-blind publishing (both sides or after 14 days); detect review rings (same device/IP/payment instrument), sudden review bursts; keep edit history.</li>
+</ul>
+<h3 id="d4-account-takeover">D4. Account takeover</h3>
+<ul>
+<li>OTP-based login is SIM-swap exposed: require re-verification for payout detail changes, notify old channels, hold payouts 48 to 72 h after payout account change; admin accounts with TOTP/WebAuthn.</li>
+</ul>
+<h3 id="d5-data-subject-rights-18-07">D5. Data subject rights (18-07)</h3>
+<ul>
+<li>Access, rectification, opposition, deletion workflow with identity check; export as JSON/PDF; deletion = anonymize users but retain booking/invoice records for legal retention (10 years for accounting [secondary]). Track each request in an auditable table with deadlines. Exact legal response deadlines: <strong>unverified</strong>.</li>
+</ul>
+<h3 id="d6-backup-restore-audit-trail">D6. Backup, restore, audit trail</h3>
+<ul>
+<li>Postgres: nightly logical dump + continuous WAL archiving (PITR), encrypted (age/GPG), stored in a second location (second Algerian DC preferred; offsite abroad only after ANPDP transfer analysis).</li>
+<li>Monthly restore drill, documented RPO/RTO.</li>
+<li>Append-only <code>audit_log</code> (actor, action, object, before/after hash, IP, user agent, request id), hash-chained for tamper evidence; admin actions, payouts, refunds, KYC views always logged.</li>
+<li>Incident register + 5-day ANPDP breach notification runbook [secondary].</li>
+</ul>
+<hr>
+<h2 id="sources-all-accessed-2026-11-04">Sources (all accessed 2026-11-04)</h2>
+<p>Payments</p>
+<ul>
+<li><a href="https://www.cibweb.dz/fr/home">https://www.cibweb.dz/fr/home</a> ; <a href="https://cibweb.dz/fr/modules-autorise">https://cibweb.dz/fr/modules-autorise</a> ; <a href="https://cibweb.dz/fr/page/processus-dautorisation-avec-un-module-de-paiement-reference-gie-monetique-p21">https://cibweb.dz/fr/page/processus-dautorisation-avec-un-module-de-paiement-reference-gie-monetique-p21</a> ; <a href="https://cibweb.dz/fr/page/processus-dautorisation-avec-un-module-de-paiement-non-reference-gie-monetique-p22">https://cibweb.dz/fr/page/processus-dautorisation-avec-un-module-de-paiement-non-reference-gie-monetique-p22</a></li>
+<li><a href="https://www.satim.dz/index.php/fr/services-cib/paiement-en-ligne">https://www.satim.dz/index.php/fr/services-cib/paiement-en-ligne</a></li>
+<li><a href="https://www.bna.dz/professionnel-integrer-le-paiement-en-ligne/">https://www.bna.dz/professionnel-integrer-le-paiement-en-ligne/</a></li>
+<li><a href="https://www.albaraka-bank.dz/web-marchand-integrez-a-votre-site-de-commerce-le-paiement-en-ligne-rapide-et-sur-via-les-cartes-cib-ou-dhahabia-et-suivez-notre-guide-pratique/">https://www.albaraka-bank.dz/web-marchand-integrez-a-votre-site-de-commerce-le-paiement-en-ligne-rapide-et-sur-via-les-cartes-cib-ou-dhahabia-et-suivez-notre-guide-pratique/</a></li>
+<li><a href="https://web-rocket.dz/activer-paiement-en-ligne-cibweb-procedure/">https://web-rocket.dz/activer-paiement-en-ligne-cibweb-procedure/</a></li>
+<li><a href="https://dev.chargily.com/pay-v2/fees">https://dev.chargily.com/pay-v2/fees</a> ; <a href="https://chargily.com/business/pay/pricing">https://chargily.com/business/pay/pricing</a> ; <a href="https://dev.chargily.com/pay-v2/account-verification">https://dev.chargily.com/pay-v2/account-verification</a> ; <a href="https://dev.chargily.com/pay-v2/api-reference/checkouts/create">https://dev.chargily.com/pay-v2/api-reference/checkouts/create</a> ; <a href="https://chargily.com/dz/business/pay/help?lang=fr">https://chargily.com/dz/business/pay/help?lang=fr</a> ; <a href="https://github.com/chargily">https://github.com/chargily</a></li>
+<li><a href="https://www.slick-pay.com/">https://www.slick-pay.com/</a> ; <a href="https://developers.slick-pay.com/">https://developers.slick-pay.com/</a> ; <a href="https://wordpress.org/plugins/slickpay-payment-gateway/">https://wordpress.org/plugins/slickpay-payment-gateway/</a> ; <a href="https://amarneche.me/blog/accept-online-payments-algeria">https://amarneche.me/blog/accept-online-payments-algeria</a></li>
+<li><a href="https://guiddini.dz/docs/api/satim">https://guiddini.dz/docs/api/satim</a> ; <a href="https://guiddini.com.dz/e-paiement-en-algerie/">https://guiddini.com.dz/e-paiement-en-algerie/</a></li>
+<li><a href="https://www.bdl.dz/ecommerce-international/">https://www.bdl.dz/ecommerce-international/</a></li>
+<li><a href="https://maghrebemergent.news/fr/algerie-les-e-commercants-pourront-encaisser-des-cartes-bancaires-etrangeres/">https://maghrebemergent.news/fr/algerie-les-e-commercants-pourront-encaisser-des-cartes-bancaires-etrangeres/</a></li>
+<li><a href="https://algerie-eco.com/2026/10/28/la-satim-certifiee-pour-personnaliser-les-cartes-visa-et-mastercard-en-algerie/">https://algerie-eco.com/2026/10/28/la-satim-certifiee-pour-personnaliser-les-cartes-visa-et-mastercard-en-algerie/</a></li>
+<li><a href="https://www.algerie360.com/algerie-poste-quelles-sont-conditions-pour-transferer-de-largent-via-lapplication-baridimob/">https://www.algerie360.com/algerie-poste-quelles-sont-conditions-pour-transferer-de-largent-via-lapplication-baridimob/</a> ; <a href="https://algerie-eco.com/2025/08/25/algerie-poste-fixe-le-minimum-de-paiement-via-baridpay-a-100-da/">https://algerie-eco.com/2025/08/25/algerie-poste-fixe-le-minimum-de-paiement-via-baridpay-a-100-da/</a> ; <a href="https://www.mpt.gov.dz/faq-electronic-banking-services/">https://www.mpt.gov.dz/faq-electronic-banking-services/</a> ; <a href="https://www.baridimob.com/">https://www.baridimob.com/</a></li>
+<li><a href="https://dz-ecom.com/en/blog/integrer-paiement-cib-satim-site-ecommerce-algerie">https://dz-ecom.com/en/blog/integrer-paiement-cib-satim-site-ecommerce-algerie</a> ; <a href="https://webminds.dz/blog/paiement-en-ligne-algerie-cib-dahabia.html">https://webminds.dz/blog/paiement-en-ligne-algerie-cib-dahabia.html</a> ; <a href="https://symloop.com/blog/ecommerce-cib-edahabia-algerie/">https://symloop.com/blog/ecommerce-cib-edahabia-algerie/</a></li>
+<li><a href="https://www.storeino.com/fr/articles/yalidine-express-storeino">https://www.storeino.com/fr/articles/yalidine-express-storeino</a></li>
+<li><a href="https://algerie-eco.com/2025/05/14/banque-dalgerie-nouveau-cadre-reglementaire-pour-les-prestataires-de-services-de-paiement/">https://algerie-eco.com/2025/05/14/banque-dalgerie-nouveau-cadre-reglementaire-pour-les-prestataires-de-services-de-paiement/</a> ; <a href="https://elwatan.dz/prestataires-de-services-de-paiement-la-banque-dalgerie-complete-le-dispositif-reglementaire/">https://elwatan.dz/prestataires-de-services-de-paiement-la-banque-dalgerie-complete-le-dispositif-reglementaire/</a> ; <a href="https://www.bank-of-algeria.dz/agrement-instruction/">https://www.bank-of-algeria.dz/agrement-instruction/</a></li>
+</ul>
+<p>Messaging</p>
+<ul>
+<li><a href="https://www.twilio.com/en-us/sms/pricing/dz">https://www.twilio.com/en-us/sms/pricing/dz</a> ; <a href="https://support.twilio.com/hc/en-us/articles/223133767-International-Support-for-Alphanumeric-Sender-ID">https://support.twilio.com/hc/en-us/articles/223133767-International-Support-for-Alphanumeric-Sender-ID</a></li>
+<li><a href="https://www.plivo.com/sms/pricing/dz/">https://www.plivo.com/sms/pricing/dz/</a> ; <a href="https://www.bulkgate.com/en/pricing/sms/dz/algeria/">https://www.bulkgate.com/en/pricing/sms/dz/algeria/</a> ; <a href="https://messaggio.com/bulk-sms/algeria/">https://messaggio.com/bulk-sms/algeria/</a> ; <a href="https://www.unimtx.com/sms/dz">https://www.unimtx.com/sms/dz</a> ; <a href="https://sobersys.com/en/">https://sobersys.com/en/</a></li>
+<li><a href="https://developers.facebook.com/docs/whatsapp/pricing">https://developers.facebook.com/docs/whatsapp/pricing</a> ; <a href="https://sleekflow.io/blog/whatsapp-business-price">https://sleekflow.io/blog/whatsapp-business-price</a></li>
+<li><a href="https://wpmailsmtp.com/resend-review/">https://wpmailsmtp.com/resend-review/</a> ; <a href="https://www.saaspricepulse.com/tools/amazon-ses">https://www.saaspricepulse.com/tools/amazon-ses</a> ; <a href="https://www.brevo.com/bulk-email-service/">https://www.brevo.com/bulk-email-service/</a> ; <a href="https://dreamlit.ai/blog/brevo-review">https://dreamlit.ai/blog/brevo-review</a></li>
+</ul>
+<p>Legal / tax</p>
+<ul>
+<li><a href="https://www.joradp.dz/FTP/JO-FRANCAIS/2018/F2018028.pdf">https://www.joradp.dz/FTP/JO-FRANCAIS/2018/F2018028.pdf</a> (Law 18-05, text read)</li>
+<li><a href="https://www.commerce.gov.dz/fr/actualites/la-loi-relative-au-commerce-electronique-fixant-les-regles-generales-du-commerce-electronique-des-biens-et-des-services">https://www.commerce.gov.dz/fr/actualites/la-loi-relative-au-commerce-electronique-fixant-les-regles-generales-du-commerce-electronique-des-biens-et-des-services</a> ; <a href="https://legal-doctrine.com/en/edition/ecommerce-en-algerie-les-conditions-dexercice-des-activites-commerciales-en-ligne">https://legal-doctrine.com/en/edition/ecommerce-en-algerie-les-conditions-dexercice-des-activites-commerciales-en-ligne</a> ; <a href="https://www.reporters.dz/ce-qu-il-faut-savoir-sur-la-loi-sur-le-commerce-electronique-hebergement-obligatoire-en-algerie/">https://www.reporters.dz/ce-qu-il-faut-savoir-sur-la-loi-sur-le-commerce-electronique-hebergement-obligatoire-en-algerie/</a></li>
+<li><a href="https://www.douane.gov.dz/IMG/pdf/loi_18-07_du_24_07_2025_fr_dz.pdf">https://www.douane.gov.dz/IMG/pdf/loi_18-07_du_24_07_2025_fr_dz.pdf</a> (title only; fetch failed) ; <a href="https://www.acf-dz.com/modification-de-la-loi-relative-a-la-protection-des-personnes-physiques-dans-le-traitement-des-donnees-a-caractere-personnel/">https://www.acf-dz.com/modification-de-la-loi-relative-a-la-protection-des-personnes-physiques-dans-le-traitement-des-donnees-a-caractere-personnel/</a> ; <a href="https://itsolutions.dz/loi-25-11-vs-18-07-algerie/">https://itsolutions.dz/loi-25-11-vs-18-07-algerie/</a> ; <a href="https://intervalle-technologies.com/blog/loi-25-11-donnees-personnelles-algerie-guide/">https://intervalle-technologies.com/blog/loi-25-11-donnees-personnelles-algerie-guide/</a> ; <a href="https://www.upgrowth.dz/journal-officiel/loi-18-07-protection-donnees-personnelles">https://www.upgrowth.dz/journal-officiel/loi-18-07-protection-donnees-personnelles</a></li>
+<li><a href="https://anpdp.dz/fr/quelles-sont-vos-obligations/">https://anpdp.dz/fr/quelles-sont-vos-obligations/</a> ; <a href="https://portail.anpdp.dz/">https://portail.anpdp.dz/</a> ; <a href="https://cna.dz/entree-en-vigueur-de-la-loi-sur-la-protection-des-donnees-a-caractere-personnel-en-algerie/14/08/2023/">https://cna.dz/entree-en-vigueur-de-la-loi-sur-la-protection-des-donnees-a-caractere-personnel-en-algerie/14/08/2023/</a> ; <a href="https://www.gide.com/en/news-insights/setting-up-of-the-national-authority-for-the-protection-of-personal-data-anpdp/">https://www.gide.com/en/news-insights/setting-up-of-the-national-authority-for-the-protection-of-personal-data-anpdp/</a></li>
+<li><a href="https://maghrebemergent.news/fr/location-chez-lhabitant-la-fnai-rappelle-lexistence-dun-cadre-reglementaire/">https://maghrebemergent.news/fr/location-chez-lhabitant-la-fnai-rappelle-lexistence-dun-cadre-reglementaire/</a> ; <a href="https://www.layyali.com/legislation-algerienne-location-saisonniere">https://www.layyali.com/legislation-algerienne-location-saisonniere</a> ; <a href="https://www.visa-algerie.com/chambres-dhotes-pour-touristes-en-algerie-lactivite-sera-reglementee/">https://www.visa-algerie.com/chambres-dhotes-pour-touristes-en-algerie-lactivite-sera-reglementee/</a> ; <a href="https://zoomalgerie.com/location-airbnb-algerie-rentabilite-investissement-locatif-diaspora/">https://zoomalgerie.com/location-airbnb-algerie-rentabilite-investissement-locatif-diaspora/</a></li>
+<li><a href="https://www.mta.gov.dz/devenir-agent-de-tourisme/?lang=fr">https://www.mta.gov.dz/devenir-agent-de-tourisme/?lang=fr</a> ; <a href="https://www.mta.gov.dz/wp-content/uploads/2022/06/recueil-texte-tourism-fr2022-.pdf">https://www.mta.gov.dz/wp-content/uploads/2022/06/recueil-texte-tourism-fr2022-.pdf</a> ; <a href="https://www.algerie360.com/omra-2026-2027-agences-agreees-arnaques/">https://www.algerie360.com/omra-2026-2027-agences-agreees-arnaques/</a></li>
+<li><a href="https://algeria-rental.com/conditions-generales/">https://algeria-rental.com/conditions-generales/</a> ; <a href="https://algerlocation.com/conditions-generales-de-location/">https://algerlocation.com/conditions-generales-de-location/</a></li>
+<li><a href="https://www.upgrowth.dz/en/auto-entrepreneur-algeria">https://www.upgrowth.dz/en/auto-entrepreneur-algeria</a> ; <a href="https://www.algerie360.com/carte-auto-entrepreneur-anae-algerie/">https://www.algerie360.com/carte-auto-entrepreneur-anae-algerie/</a> ; <a href="https://www.village-justice.com/articles/les-avantages-statut-auto-entrepreneur-focus-sur-recente-loi-algerienne,49162.html">https://www.village-justice.com/articles/les-avantages-statut-auto-entrepreneur-focus-sur-recente-loi-algerienne,49162.html</a></li>
+<li><a href="https://taxsummaries.pwc.com/algeria">https://taxsummaries.pwc.com/algeria</a> ; <a href="https://www.pwc.co.za/en/publications/vat-in-africa/algeria-overview.html">https://www.pwc.co.za/en/publications/vat-in-africa/algeria-overview.html</a> ; <a href="https://www.acf-dz.com/wp-content/uploads/2025/01/Mesure-phase-loi-de-finances-2025-ACF.pdf">https://www.acf-dz.com/wp-content/uploads/2025/01/Mesure-phase-loi-de-finances-2025-ACF.pdf</a> ; <a href="https://blog.avocats.deloitte.fr/algerie-les-principales-mesures-importantes-de-la-loi-de-finances-pour-2025/">https://blog.avocats.deloitte.fr/algerie-les-principales-mesures-importantes-de-la-loi-de-finances-pour-2025/</a> ; <a href="https://lesenjeuxeco.dz/loi-de-finances-2026-les-principales-mesures-fiscales/">https://lesenjeuxeco.dz/loi-de-finances-2026-les-principales-mesures-fiscales/</a></li>
+<li><a href="https://www.visa-algerie.com/hotels-lalgerie-veut-instaurer-une-nouvelle-taxe-de-sejour/">https://www.visa-algerie.com/hotels-lalgerie-veut-instaurer-une-nouvelle-taxe-de-sejour/</a> ; <a href="https://www.cn-cncc.dz/admin/Upload/site/revue/revue-5bfc01759dece5d6c71e6bd2ee96e7b3.pdf">https://www.cn-cncc.dz/admin/Upload/site/revue/revue-5bfc01759dece5d6c71e6bd2ee96e7b3.pdf</a></li>
+<li><a href="https://www.dcwalger.dz/fr/index.php/component/content/category/9-haut-p">https://www.dcwalger.dz/fr/index.php/component/content/category/9-haut-p</a> ; <a href="https://lamacta.com/en/blog/decret-executif-05-468-facture-legale-algerie/">https://lamacta.com/en/blog/decret-executif-05-468-facture-legale-algerie/</a></li>
+<li><a href="https://algerie-eco.com/2023/09/22/les-dispositions-applicables-au-numero-didentification-national-definies-par-decret/">https://algerie-eco.com/2023/09/22/les-dispositions-applicables-au-numero-didentification-national-definies-par-decret/</a> ; <a href="https://passeport.interieur.gov.dz/">https://passeport.interieur.gov.dz/</a> ; <a href="https://clr.africanchildforum.org/Legislation%20Per%20Country/algeria/algeria_idnumber_2010_fr.pdf">https://clr.africanchildforum.org/Legislation%20Per%20Country/algeria/algeria_idnumber_2010_fr.pdf</a></li>
+</ul>
+<p>Geography / maps</p>
+<ul>
+<li><a href="https://github.com/islam-re/Algeria-wilayas/blob/main/JO%20Article%202026.md">https://github.com/islam-re/Algeria-wilayas/blob/main/JO%20Article%202026.md</a> ; <a href="https://github.com/el-amin-dev/algeria-wilayas-communes">https://github.com/el-amin-dev/algeria-wilayas-communes</a> ; <a href="https://github.com/ihahachi/Algeria-Cities">https://github.com/ihahachi/Algeria-Cities</a> ; <a href="https://github.com/S450R1/algeria-cities-2025">https://github.com/S450R1/algeria-cities-2025</a> ; <a href="https://github.com/othmanus/algeria-cities">https://github.com/othmanus/algeria-cities</a> ; <a href="https://github.com/kossa/algerian-cities">https://github.com/kossa/algerian-cities</a></li>
+<li><a href="https://www.moroccoworldnews.com/2025/11/268183/algeria-creates-11-new-wilayas-as-critics-question-political-motives/">https://www.moroccoworldnews.com/2025/11/268183/algeria-creates-11-new-wilayas-as-critics-question-political-motives/</a> ; <a href="https://www.dzair-tube.dz/en/algeria-sets-stage-for-new-territorial-order-69-provinces-over-1500-communes-enter-final-phase-of-realization/">https://www.dzair-tube.dz/en/algeria-sets-stage-for-new-territorial-order-69-provinces-over-1500-communes-enter-final-phase-of-realization/</a> ; <a href="https://en.wikipedia.org/wiki/Provinces_of_Algeria">https://en.wikipedia.org/wiki/Provinces_of_Algeria</a></li>
+<li><a href="https://operations.osmfoundation.org/policies/nominatim/">https://operations.osmfoundation.org/policies/nominatim/</a> ; <a href="https://github.com/komoot/photon/discussions/730">https://github.com/komoot/photon/discussions/730</a> ; <a href="https://openfreemap.org/">https://openfreemap.org/</a></li>
+</ul>
+<p>Infra</p>
+<ul>
+<li><a href="https://icosnet.com.dz/en/web-hosting/">https://icosnet.com.dz/en/web-hosting/</a> ; <a href="https://icosnet.com.dz/cloud-link/">https://icosnet.com.dz/cloud-link/</a> ; <a href="https://www.datacenters.com/providers/djezzy-cloud">https://www.datacenters.com/providers/djezzy-cloud</a> ; <a href="https://www.datacenters.com/locations/algeria">https://www.datacenters.com/locations/algeria</a></li>
+<li><a href="https://www.cloudflarestatus.com/locations">https://www.cloudflarestatus.com/locations</a> ; <a href="https://mining.cloudflare.manfredi.io/pops/alg/">https://mining.cloudflare.manfredi.io/pops/alg/</a> ; <a href="https://algeriatech.news/dns-cdn-web-performance-algeria/">https://algeriatech.news/dns-cdn-web-performance-algeria/</a> ; <a href="https://algeriatech.news/algeria-medusa-cable-2026-bandwidth-enterprise-cloud-latency-guide-2026/">https://algeriatech.news/algeria-medusa-cable-2026-bandwidth-enterprise-cloud-latency-guide-2026/</a> ; <a href="https://www.samenacouncil.org/samena_daily_news?news=76897">https://www.samenacouncil.org/samena_daily_news?news=76897</a></li>
+<li><a href="https://northflank.com/blog/hetzner-cloud-server-price-increases">https://northflank.com/blog/hetzner-cloud-server-price-increases</a> ; <a href="https://www.bitdoze.com/hetzner-cloud-cost-optimized-plans/">https://www.bitdoze.com/hetzner-cloud-cost-optimized-plans/</a></li>
+</ul>
+<p>Culture</p>
+<ul>
+<li><a href="https://www.arpce.dz/fr/file/u1h4y0">https://www.arpce.dz/fr/file/u1h4y0</a> ; <a href="https://en.wikipedia.org/wiki/Telephone_numbers_in_Algeria">https://en.wikipedia.org/wiki/Telephone_numbers_in_Algeria</a></li>
+<li><a href="https://www.thenationalnews.com/mena/2021/12/07/when-is-the-weekend-in-the-arab-world/">https://www.thenationalnews.com/mena/2021/12/07/when-is-the-weekend-in-the-arab-world/</a> ; <a href="https://www.officeholidays.com/countries/algeria/2026">https://www.officeholidays.com/countries/algeria/2026</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Arabic_numerals">https://en.wikipedia.org/wiki/Arabic_numerals</a> ; <a href="https://en.wikipedia.org/wiki/Modern_Arabic_mathematical_notation">https://en.wikipedia.org/wiki/Modern_Arabic_mathematical_notation</a></li>
+</ul>
+<p>Security</p>
+<ul>
+<li><a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">https://owasp.org/API-Security/editions/2023/en/0x11-t10/</a> ; <a href="https://api-security.owasp.org/editions/2023/en/0x00-toc/">https://api-security.owasp.org/editions/2023/en/0x00-toc/</a></li>
+<li><a href="https://consumer.ftc.gov/articles/rental-listing-scams">https://consumer.ftc.gov/articles/rental-listing-scams</a> ; <a href="https://guard.io/blog/airbnb-vacation-rental-scams-fake-listing">https://guard.io/blog/airbnb-vacation-rental-scams-fake-listing</a></li>
+</ul>
+<div class="pager"><span><a href="work-research-platforms-django.html">&larr; BLADUS backend research: comparable platforms and Django ecosystem</a></span><span><a href="changelog.html">Backend blueprint changelog &rarr;</a></span></div></main></div></body></html>

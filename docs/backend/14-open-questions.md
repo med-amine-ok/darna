@@ -4,6 +4,12 @@
 > Questions the code, the spec and the research could not answer. Some need you, some need a lawyer or accountant.
 > This list is kept up to date after each phase. The ones that block design are marked **blocking**.
 
+**Status (2026-11-09, Phase 8):**
+- Q1 to Q13: decided (DEC-001 to DEC-013); DEC-014 and DEC-015 were added later by the product owner.
+- **Moved to [13-decisions-needed.md](13-decisions-needed.md)** with options, recommendation, deadline (roadmap milestone) and the default if nobody decides: **Q14 to Q20**, **L1 to L7**, **F1 to F4**, and the new items below (**Q21 to Q28**, **L8 to L12**, **F5 to F7**). The tables on this page stay as the running record; answers are written here and in 13 when they arrive.
+- New technical decisions for the tech lead (**T1 to T10**: hosting provider, mock-to-API switch, session model, storage, search, processors, backups) are listed only in [13-decisions-needed.md](13-decisions-needed.md) section 6.
+- Deadlines refer to the milestones in [11-roadmap.md](11-roadmap.md). The most urgent outside answers are **L1 and L2, needed by the end of M5**.
+
 Started 2026-11-04 (end of Phase 2). On 2026-11-04 the product owner accepted all defaults for Q1 to Q13; they are recorded as decisions DEC-001 to DEC-013 in `03-requirements.md` section 2.
 
 ## For you (product owner)
@@ -24,7 +30,7 @@ Started 2026-11-04 (end of Phase 2). On 2026-11-04 the product owner accepted al
 | Q12 | Do guests need phone verification before their first booking? | no | **Decided 2026-11-04 (default accepted):** Yes, phone OTP |
 | Q13 | Which wilaya count do the apps show until the official codes 59 to 69 are confirmed? | no | **Decided 2026-11-04 (default accepted):** 69 |
 
-### Raised by the schema (Phase 5), open
+### Raised by the schema (Phase 5), open (moved to 13-decisions-needed.md on 2026-11-09)
 
 These are proposals built into the schema and rules. Each one can be changed without a redesign.
 
@@ -40,6 +46,8 @@ These are proposals built into the schema and rules. Each one can be changed wit
 
 ## For a lawyer (VERIFY WITH A PROFESSIONAL)
 
+L1 to L7 moved to [13-decisions-needed.md](13-decisions-needed.md) section 4 on 2026-11-09 (still open).
+
 | # | Question |
 |---|---|
 | L1 | Does Law 18-05 art. 8 ("hosted in Algeria", `.com.dz`) apply to BLADUS as an intermediary, and to the API server as well as the website? |
@@ -52,9 +60,56 @@ These are proposals built into the schema and rules. Each one can be changed wit
 
 ## For an accountant or bank
 
+F1 to F4 moved to [13-decisions-needed.md](13-decisions-needed.md) section 5 on 2026-11-09 (still open).
+
 | # | Question |
 |---|---|
 | F1 | VAT on BLADUS commission: 19% or 9% (tourism)? Who issues which invoice? |
 | F2 | Taxe de séjour: does BLADUS collect it or only show it? |
 | F3 | Chargily or SlickPay contract terms, settlement delays, amount units in their APIs. |
 | F4 | Invoice numbering and retention rules for commission invoices to hosts. |
+
+## Added 2026-11-09 (Phase 8: roadmap, risks, decisions)
+
+Found while planning the build. All are open and listed with options and deadlines in [13-decisions-needed.md](13-decisions-needed.md).
+
+### For you (product owner)
+
+| # | Question | Blocking? | Deadline | Proposal |
+|---|---|---|---|---|
+| Q21 | Launch geography: all 69 wilayas or a few pilot wilayas? | no | M7 | All open, beta hosts recruited in pilot wilayas |
+| Q22 | How do guests without an Algerian mobile (diaspora, foreigners) verify? DEC-012 and BR-ACC-01 only accept `+213[5-7]` numbers | **blocking** (sign-up) | M0 | Email code for non-Algerian numbers, stricter booking limits |
+| Q23 | Public launch date relative to the baccalaureate exams (internet cuts, usually June) and the summer season | no | M6 | Closed beta May to June, public launch early July 2027 |
+| Q24 | Who moderates at launch, and what review time do we promise hosts? | no | M2 | 2 moderators, 1 working day |
+| Q25 | Must a host top up a first deposit before going live or before instant booking? | no | M4 | No, the credit floor (Q14) is enough |
+| Q26 | Is the 24 h request reply window right for agencies whose trips depart weeks later? | no | M4 | 24 h default, 48 h for agencies (setting per host type) |
+| Q27 | Support channels and hours at launch | no | M7 | WhatsApp Business + email + in-app, office hours Sunday to Thursday |
+| Q28 | Which verticals open at launch? | no | M2 | All six, unless a legal answer (L4, L5, L9) closes one; closed by setting |
+
+### For a lawyer (VERIFY WITH A PROFESSIONAL)
+
+| # | Question |
+|---|---|
+| L8 | Terms of use, host terms and privacy notice texts in ar/fr/en, versioned for consent records (PRV-01). Who drafts, who signs off? |
+| L9 | Does BLADUS itself need a tourism registration or travel agency licence (Law 99-06, Décret 17-161) because it lists and books agency trips and experiences? |
+| L10 | Do foreign service providers that touch personal data (transactional email, international SMS fallback, error tracking, uptime monitoring) count as a transfer abroad needing ANPDP authorisation? |
+| L11 | Company formalities before launch: commerce register activity code for an online marketplace, CNRC e-commerce registration, holder of the `.com.dz` domain. |
+| L12 | Does the booking flow (instant and request) meet Law 18-05 art. 10 to 13 (offer content, 3-step order: review, confirm, contract)? |
+
+### For an accountant or bank
+
+| # | Question |
+|---|---|
+| F5 | Before commission invoices (PAY-11, R2), what must BLADUS give a host at launch for each top-up and each commission deducted: a receipt, a monthly statement, or a full invoice? |
+| F6 | Accounting treatment of the prepaid deposit: customer advance (liability) until commission is deducted, then revenue? When is VAT due? |
+| F7 | Which bank or CCP account receives host top-ups, and can we get statements in a format fit for daily reconciliation? |
+
+
+---
+
+## Check yourself
+
+- [ ] Which product questions were decided on 2026-11-04, and where are they recorded?
+- [ ] Where do the open questions go once they become decisions to make?
+- [ ] Which questions need a lawyer, and which need an accountant or bank?
+- [ ] What is the default if a product question is not answered in time?

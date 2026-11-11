@@ -10,7 +10,7 @@ sequenceDiagram
     actor H as Host manager
     G->>A: POST /bookings (listing in request mode)
     A->>DB: INSERT booking pending, expires in 24 h
-    Note over DB: dates stay blocked while pending
+    Note over A,DB: dates stay blocked while pending
     A-->>G: 201 pending
     A-)H: notification and SMS (via outbox)
     alt host accepts in time

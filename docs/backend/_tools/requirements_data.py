@@ -44,7 +44,7 @@ R = [
 ("ACC-09","ACC","Favourites","Guest","Should","MVP","INV-F 3.2","Guest adds or removes a listing or trip from favourites; list endpoint paginated","Built",""),
 # ---------------- ORG
 ("ORG-01","ORG","Create an organisation (agency, hotel, hostel)","Host","Must","MVP","R3, R7-R9","Creating an organisation makes the creator its owner; status starts pending_verification","Built (frontend)","BR-ORG-02"),
-("ORG-02","ORG","Active-organisation switcher","Host","Must","MVP","DEC-004, INV-F gaps","A user with several memberships picks the active one; every host request carries it and is checked","Missing (fixed per session)","BR-ORG-01"),
+("ORG-02","ORG","Active-organisation switcher","Host","Must","MVP","DEC-004, INV-F gaps","A user with several memberships picks the active one; every host request carries it and is checked","Built in website 2026-11-04 (host menu, membership checked server-side)","BR-ORG-01"),
 ("ORG-03","ORG","Invite a team member","Org owner/admin","Must","MVP","INV-F 3.8, gap","Invite by email or phone with a role; invite token expires in 7 days; invitee accepts after signing in","Invites cannot be accepted","BR-ORG-03"),
 ("ORG-04","ORG","Change role, remove member, transfer ownership","Org owner/admin","Must","MVP","INV-F 3.8","Only owner transfers ownership; an organisation always has exactly one owner; audited","Built","BR-ORG-04"),
 ("ORG-05","ORG","Per-role permissions inside an organisation","Org members","Must","MVP","DEC-009, D-7","Permissions per role (owner, admin, manager, agent, guide) incl. bookings.respond for owner/admin/manager only","Any member can do anything operational","BR-ORG-05"),
@@ -56,6 +56,8 @@ R = [
 ("HST-03","HST","Upload verification documents","Host","Must","MVP","RES C3.5","Required document list depends on host type; files go to a private bucket; each document has its own review status","Placeholder images only","BR-HST-03"),
 ("HST-04","HST","Host verification lifecycle","Host, Moderator","Must","MVP","INV-A 4.6","Statuses applied, under_review, approved, changes_requested, rejected, suspended, banned; moves only along the allowed transitions with reasons","Admin only, not linked to website","BR-HST-04"),
 ("HST-05","HST","Payout or refund account details","Host","Should","MVP","RES C1, D4","Host stores CCP (RIP) or bank RIB in own name; changing it needs 2FA and holds payouts 72 h","Missing","BR-PAY-09"),
+("HST-08","HST","Connect a hotel's own system","Hotel, Hostel","Must","MVP","DEC-017","A hotel or hostel connects its channel manager, PMS, iCal feed or CSV file; room types, availability, prices and services (restaurants, spa, parking) are imported and kept in sync; manual entry stays possible","Missing (rooms hardcoded at onboarding)","BR-HST-06"),
+("HST-07","HST","What each host type may publish","Host","Must","MVP","DEC-014","Individual: homes and vehicles; agency: experiences and trips; hotel and hostel: their property with room types; enforced by API and database, create-listing flow offers only allowed choices","Built in website 2026-11-04 (UI + server actions)","BR-HST-05"),
 ("HST-06","HST","Default approval mode per host or organisation","Host","Must","MVP","R20, D-6","Owner default applies to new listings; a listing may override; platform switch can force request mode","Stored in 3 places, not applied","BR-BKG-02"),
 # ---------------- LST
 ("LST-01","LST","Create and edit a listing (home, hotel, hostel, experience, vehicle)","Host","Must","MVP","INV-F 3.3","Host creates a draft, fills vertical-specific fields, submits; server validates every field","Built (no review)","BR-LST-01"),
@@ -68,6 +70,7 @@ R = [
 ("LST-08","LST","Pause and soft delete","Host","Must","MVP","U7","Host can pause or delete; delete is soft and keeps bookings; staff can restore","Hard delete on website","BR-LST-03"),
 ("LST-09","LST","Featured listings","Staff","Could","R2","INV-A 4.7","Staff feature a published listing with optional start and end dates and position","Boolean only",""),
 ("LST-10","LST","Vehicle listing specifics","Host","Should","MVP","INV-F 2.2","Make, model, year, seats, gearbox, fuel, pickup points, driver age and licence rules","Built (website)",""),
+("LST-12","LST","Canonical experience types","Agency, Guest","Must","MVP","DEC-015","Every experience has one of 8 types (excursion, guided tour, nature and adventure, desert, sport, workshops and culture, gastronomy, wellness); search filters, cards, creation forms and admin use the same list","Built in both apps 2026-11-04 (frontend/lib/catalog-types.ts)","BR-LST-05"),
 ("LST-11","LST","Experience listing specifics","Host","Should","MVP","INV-F 2.2","Duration, languages, meeting point, time slots with seats","Built partly",""),
 # ---------------- TRP
 ("TRP-01","TRP","Agency-only trips","Agency","Must","MVP","R29, R30, DEC-006","Only verified agencies create trips; hotels and hostels never see the option","Built","BR-TRP-01"),
@@ -75,6 +78,7 @@ R = [
 ("TRP-03","TRP","Departures with seats and price","Agency","Must","MVP","R36, DEC-006","Each departure has dates, seats total, price per person, minimum group, status (scheduled, guaranteed, cancelled, completed)","Array of dates","BR-TRP-02"),
 ("TRP-04","TRP","Trips go through review","Agency, Moderator","Must","MVP","DEC-003","Same review flow as listings","Live at once","BR-LST-02"),
 ("TRP-05","TRP","Search trips by date","Guest","Should","MVP","R43","Trip search filters departures overlapping the searched dates","Missing",""),
+("TRP-07","TRP","Canonical trip types","Agency, Guest","Must","MVP","DEC-015","Every trip has one of 8 types (group tour, private trip, adventure, Saharan expedition, cultural, hiking, relaxation, religious); used by trip creation, search filters, cards and admin","Built in both apps 2026-11-04","BR-LST-05"),
 ("TRP-06","TRP","Cancel a departure under minimum group","Agency","Should","R2","RES A.4","Agency cancels a departure; all its bookings are cancelled with full refund and notifications","Missing","BR-TRP-03"),
 # ---------------- AVL
 ("AVL-01","AVL","No double booking for single units","System","Must","MVP","O4, RES A.5","Database refuses two active bookings on the same unit with overlapping half-open ranges, even under concurrent requests","App-level check only","BR-AVL-01"),
@@ -158,7 +162,7 @@ R = [
 ("MOD-07","MOD","Risk flags","System","Should","R2","RES A.5, D.2","Rules flag new account + high value, duplicate photos, contact info in messages; flags create review cases","Missing","BR-MOD-04"),
 ("MOD-08","MOD","Document-level review","Moderator","Must","MVP","INV-A 6.4-7","Approve or reject each document separately; host approval requires all required documents approved","Approves whole host","BR-HST-03"),
 # ---------------- STF
-("STF-01","STF","Staff roles and permissions in the database","Super admin","Must","MVP","U16, INV-A 1.1","5 roles, 34+ permissions stored and enforced by the API, deny by default","Code constants","BR-STF-01"),
+("STF-01","STF","Staff roles and permissions in the database","Super admin","Must","MVP","U16, INV-A 1.1","One staff role (admin) with every permission, stored and enforced by the API, deny by default (DEC-016)","Code constants","BR-STF-01"),
 ("STF-02","STF","Staff invitation and activation","Super admin","Must","MVP","INV-A 4.15","Invite sends a one-time link; staff sets password and MFA; deactivation revokes sessions immediately","No acceptance",""),
 ("STF-03","STF","Append-only audit log","System","Must","MVP","U13","Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; no update or delete","Admin memory only","BR-STF-02"),
 ("STF-04","STF","Actors by id, not name","System","Must","MVP","INV-A 6.1-6","Ledger, payouts, disputes, config publishes reference staff user ids","Names","BR-STF-03"),

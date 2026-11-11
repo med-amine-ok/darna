@@ -1,0 +1,4213 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>BLADUS backend: compact blueprint</title><style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:#334155;font-size:10.5px;line-height:1.5}
+h1,h2,h3,h4{color:#152C52;line-height:1.25}
+h2{font-size:17px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid #0B57D0;page-break-after:avoid}
+h3{font-size:12.5px;margin:16px 0 6px;page-break-after:avoid}
+h4{font-size:11px;margin:12px 0 4px;page-break-after:avoid}
+p{margin:5px 0}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:9.3px}
+th,td{border:1px solid #D3DCE8;padding:3px 5px;text-align:left;vertical-align:top}
+th{background:#F1F5FB;color:#152C52}
+tr{page-break-inside:avoid}
+code{font-family:Consolas,monospace;font-size:.92em;background:#F1F5FB;padding:0 2px;border-radius:3px}
+pre{background:#F5F8FC;border:1px solid #D3DCE8;border-radius:5px;padding:7px 9px;font-size:8px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
+pre code{background:none;padding:0}
+.keep{page-break-inside:avoid}
+figure{margin:8px 0;text-align:center;page-break-inside:avoid}
+figure img{max-width:100%;max-height:205mm}
+.sql pre{font-size:6.3px;line-height:1.25;column-count:2;column-gap:14px;border:0;background:none;padding:0}
+.cover{height:297mm;page-break-after:always;display:flex;flex-direction:column;justify-content:center;padding:0 16mm;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:34px;margin:6px 0 10px}
+.cover p{font-size:13px;margin:4px 0;color:#E2EAF5}
+.cover code{background:none;color:#fff}
+.toc{page-break-after:always}
+.toc h2{page-break-before:avoid}
+.toc ol{font-size:12px;line-height:2}
+.toc a{color:#152C52;text-decoration:none}
+@page{size:A4;margin:15mm 13mm 16mm}
+@page:first{margin:0}
+</style></head><body><div class="cover"><p>BLADUS</p><h1>BLADUS backend: compact blueprint</h1><p><strong>What we will build, the choices, the flows, the database and the API.</strong> Version of 2026-11-11. The complete blueprint (all research, requirements and details) stays in <code>dist/BLADUS-backend-blueprint.pdf</code>.</p>
+<p style="margin-top:28px;font-size:10px">Legal and tax points are research, to confirm with a professional.</p></div><div class="toc"><h2>Contents</h2><ol><li><a href="#s2-1-what-we-will-build">What we will build</a></li><li><a href="#s3-2-technical-choices-with-short-comparisons">Technical choices, with short comparisons</a></li><li><a href="#s4-3-payment-now-and-later">Payment: now and later</a></li><li><a href="#s5-4-people-and-roles">People and roles</a></li><li><a href="#s6-5-hotels-connecting-their-own-system">Hotels: connecting their own system</a></li><li><a href="#s7-6-main-rules">Main rules</a></li><li><a href="#s8-7-architecture">Architecture</a></li><li><a href="#s12-8-life-cycles">Life cycles</a></li><li><a href="#s17-9-flows">Flows</a></li><li><a href="#s25-10-database">Database</a></li><li><a href="#s42-11-api-design">API design</a></li><li><a href="#s51-12-build-plan">Build plan</a></li><li><a href="#s52-appendix-database-sql">Appendix: database SQL</a></li></ol></div><h2 id="s2-1-what-we-will-build">1. What we will build</h2><p>BLADUS has a website (guests and hosts) and an admin app, but no real backend: data lives in memory, disappears on restart, and the two apps do not share it. We will build <strong>one Django backend with a PostgreSQL database</strong> that both apps call through an API.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Products</td>
+<td>Homes, hotels, hostels, experiences, vehicles, agency trips</td>
+</tr>
+<tr>
+<td>Who publishes what</td>
+<td>Solo host: homes and vehicles. Agency: experiences and trips. Hotel and hostel: their property with rooms and services</td>
+</tr>
+<tr>
+<td>BLADUS income</td>
+<td>Commission paid by the host: individual 12%, agency 15%, hotel 18%, hostel 10%. Guests pay no BLADUS fee</td>
+</tr>
+<tr>
+<td>Payment</td>
+<td><strong>No online payment in the first release.</strong> The guest pays the host directly; the host keeps a deposit at BLADUS. Online payment comes later</td>
+</tr>
+<tr>
+<td>Cancellation</td>
+<td>The host <strong>always recovers the full commission</strong> when a confirmed booking is cancelled</td>
+</tr>
+<tr>
+<td>Admin</td>
+<td><strong>One role: admin</strong>, with all permissions</td>
+</tr>
+<tr>
+<td>Hotels</td>
+<td>BLADUS <strong>connects directly to the hotel&#39;s own system</strong> to import rooms, availability, prices and services</td>
+</tr>
+<tr>
+<td>Moderation</td>
+<td>New listings and trips are checked by the admin before going live</td>
+</tr>
+<tr>
+<td>Double booking</td>
+<td>Impossible: the database itself refuses it</td>
+</tr>
+<tr>
+<td>Languages</td>
+<td>English, French, Arabic (right-to-left), Latin digits</td>
+</tr>
+<tr>
+<td>Geography</td>
+<td>69 wilayas, 1,541 communes</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>80 tables, 264 API operations in the first release</td>
+</tr>
+</tbody></table>
+<h2 id="s3-2-technical-choices-with-short-comparisons">2. Technical choices, with short comparisons</h2><table>
+<thead>
+<tr>
+<th>Need</th>
+<th>We choose</th>
+<th>Instead of</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Backend framework</td>
+<td><strong>Django 6.1</strong> (Python)</td>
+<td>Node/NestJS, Laravel</td>
+<td>The owner knows Django; admin tools, security and database support are built in</td>
+</tr>
+<tr>
+<td>API layer</td>
+<td><strong>Django REST Framework</strong></td>
+<td>Django Ninja</td>
+<td>Mature permissions, rate limits and documentation tools; most Django developers know it</td>
+</tr>
+<tr>
+<td>Database</td>
+<td><strong>PostgreSQL + PostGIS</strong></td>
+<td>MySQL, MongoDB</td>
+<td>Date ranges and exclusion rules stop double booking inside the database; real map queries</td>
+</tr>
+<tr>
+<td>Sign-in</td>
+<td><strong>django-allauth (headless)</strong>, session tokens</td>
+<td>JWT tokens with SimpleJWT</td>
+<td>Phone codes and two-step login included; sessions can be cancelled at once</td>
+</tr>
+<tr>
+<td>Session in the apps</td>
+<td><strong>Next.js server keeps an httpOnly cookie</strong> and calls Django</td>
+<td>Token stored in the browser</td>
+<td>The browser never holds a token that scripts could steal</td>
+</tr>
+<tr>
+<td>Background jobs</td>
+<td><strong>Celery + Redis</strong></td>
+<td>Django tasks, Dramatiq</td>
+<td>Schedules, retries and monitoring are proven</td>
+</tr>
+<tr>
+<td>Search</td>
+<td><strong>PostgreSQL</strong> (text + map + availability)</td>
+<td>Meilisearch, Elasticsearch</td>
+<td>One system, always consistent with availability; add a search engine only if needed</td>
+</tr>
+<tr>
+<td>Messages</td>
+<td><strong>Polling &quot;what is new since...&quot;</strong></td>
+<td>WebSockets from day one</td>
+<td>Much simpler to run; real-time can be added later</td>
+</tr>
+<tr>
+<td>Files</td>
+<td><strong>S3-compatible storage hosted in Algeria</strong>, direct uploads</td>
+<td>Files on the app server, Cloudinary</td>
+<td>Cheap, safe, and personal documents stay in the country</td>
+</tr>
+<tr>
+<td>Money storage</td>
+<td><strong>Whole centimes + double-entry ledger</strong></td>
+<td>Decimal numbers, simple balance column</td>
+<td>No rounding errors; every dinar can be explained</td>
+</tr>
+<tr>
+<td>Code structure</td>
+<td><strong>One project, small apps in layers</strong></td>
+<td>Many microservices</td>
+<td>Right size for a small team</td>
+</tr>
+<tr>
+<td>API contract</td>
+<td><strong>OpenAPI file + generated TypeScript client</strong></td>
+<td>Hand-written fetch calls</td>
+<td>The two apps cannot drift from the API</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td><strong>Algerian data centre</strong> (two sites)</td>
+<td>European cloud</td>
+<td>Algerian e-commerce and personal data laws point to hosting in Algeria (to confirm with a lawyer)</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td><strong>pytest + property tests + contract tests</strong></td>
+<td>Manual testing</td>
+<td>Money and date rules are checked on thousands of cases automatically</td>
+</tr>
+</tbody></table>
+<h2 id="s4-3-payment-now-and-later">3. Payment: now and later</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>First release (now)</th>
+<th>Later</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Guest pays</td>
+<td>Directly to the host: cash on arrival or transfer</td>
+<td>By CIB or Edahabia card on BLADUS, through a payment gateway</td>
+</tr>
+<tr>
+<td>BLADUS is paid</td>
+<td>From the host&#39;s deposit: commission taken at confirmation</td>
+<td>Commission kept from the guest&#39;s payment</td>
+</tr>
+<tr>
+<td>Host deposit top-up</td>
+<td>Transfer to BLADUS (CCP or bank); the admin records it with the receipt reference</td>
+<td>Also online by card</td>
+</tr>
+<tr>
+<td>Refund to guest</td>
+<td>Owed by the host; BLADUS shows the amount to both sides</td>
+<td>Made by BLADUS through the gateway</td>
+</tr>
+<tr>
+<td>What is needed first</td>
+<td>Nothing more</td>
+<td>Gateway contract and legal confirmation that BLADUS may collect guests&#39; money</td>
+</tr>
+</tbody></table>
+<p>The database and API already contain the tables and operations for online payment (<code>payment</code>, <code>payout</code>, <code>gateway_event</code>), but they stay switched off. Adding online payment later will not need a redesign.</p>
+<h2 id="s5-4-people-and-roles">4. People and roles</h2><table>
+<thead>
+<tr>
+<th>Who</th>
+<th>Where</th>
+<th>What they can do</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Visitor</td>
+<td>Website</td>
+<td>Search, view listings and trips</td>
+</tr>
+<tr>
+<td>Guest</td>
+<td>Website</td>
+<td>Book, cancel, message hosts, save favourites, review after a stay</td>
+</tr>
+<tr>
+<td>Solo host</td>
+<td>Website, host mode</td>
+<td>Publish homes and vehicles, manage calendar and bookings, see the deposit</td>
+</tr>
+<tr>
+<td>Organisation member</td>
+<td>Website, host mode</td>
+<td>Works for an agency, hotel or hostel with a team role (table below)</td>
+</tr>
+<tr>
+<td><strong>Admin</strong></td>
+<td>Admin app</td>
+<td>Everything on the staff side: verify hosts, review listings, handle bookings and reports, record deposits, settings, exports. Two-step login is required</td>
+</tr>
+</tbody></table>
+<p>There is <strong>one admin role</strong>. Sensitive actions that need two people (a deposit top-up above 500,000 DZD) need a second admin account. The permission tables stay in the database so roles can be split later without changing the design.</p>
+<p>Team roles inside an organisation:</p>
+<table>
+<thead>
+<tr>
+<th>Can do</th>
+<th>owner</th>
+<th>admin</th>
+<th>manager</th>
+<th>agent</th>
+<th>guide</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Edit organisation, manage team</td>
+<td>yes</td>
+<td>yes (cannot delete or transfer)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Manage listings, trips, calendar, hotel system connection</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>See bookings</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>own departures</td>
+</tr>
+<tr>
+<td>Accept or decline requests</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Cancel as host</td>
+<td>yes</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Reply to messages</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>See deposit and commission</td>
+<td>yes</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Edit bank or CCP details</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="s6-5-hotels-connecting-their-own-system">5. Hotels: connecting their own system</h2><p>When a hotel or hostel becomes a host, BLADUS connects to the system the hotel already uses, so the hotel does not type everything twice and availability stays correct.</p>
+<table>
+<thead>
+<tr>
+<th>Way to connect</th>
+<th>What BLADUS gets</th>
+<th>Good for</th>
+<th>Limit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Channel manager</strong> (the tool hotels use to feed booking sites)</td>
+<td>Room types, prices, availability per night; can receive BLADUS bookings</td>
+<td>Hotels already selling on several sites</td>
+<td>One adapter to write per channel manager</td>
+</tr>
+<tr>
+<td><strong>Hotel management system (PMS)</strong> API</td>
+<td>Same, plus services (restaurant, spa, parking)</td>
+<td>Larger hotels with a modern system</td>
+<td>Each system has its own API and access rules</td>
+</tr>
+<tr>
+<td><strong>iCal calendar link</strong></td>
+<td>Blocked and free dates only</td>
+<td>Small hotels and hostels</td>
+<td>No prices, no room details</td>
+</tr>
+<tr>
+<td><strong>CSV file import</strong></td>
+<td>Rooms, prices and services once</td>
+<td>Hotels with no connected system</td>
+<td>Not automatic</td>
+</tr>
+<tr>
+<td><strong>Manual entry</strong></td>
+<td>Whatever the hotel types</td>
+<td>Always available</td>
+<td>Hotel must keep it up to date</td>
+</tr>
+</tbody></table>
+<p>How it works: the hotel owner chooses the system and enters its access key; BLADUS tests it, stores the key encrypted, imports room types, prices, availability and services, then refreshes every 15 minutes. Imported fields are read-only on BLADUS while the connection is active. A booking made on BLADUS lowers BLADUS availability immediately and is sent to the hotel system when that system accepts reservations. If a sync fails, the last good data stays and the connection is flagged for the hotel and the admin. Which hotel systems are used in Algeria must be checked with the first partner hotels; the design uses one small adapter per system, so new systems can be added without touching the rest.</p>
+<h2 id="s7-6-main-rules">6. Main rules</h2><p><strong>Price.</strong> The server calculates every price: nights x price per night (with per-day prices and weekly or monthly discounts) + cleaning fee. No BLADUS fee for the guest.</p>
+<p><strong>Commission.</strong> Rate by host type x the nights total (cleaning fee excluded). Taken from the host&#39;s deposit when the booking is confirmed. <strong>Returned in full if the booking is cancelled</strong>, whoever cancels. If the deposit goes more than 20,000 DZD below zero, instant bookings become requests until the host tops up.</p>
+<p><strong>Dates.</strong> Check-in day is booked, check-out day is free for the next guest. Two bookings can never overlap on the same home or vehicle; rooms, beds and seats can never be oversold.</p>
+<p><strong>Booking modes.</strong> Instant (confirmed at once) or request (host answers within 24 hours, otherwise it expires automatically).</p>
+<p><strong>Cancellation by the guest</strong> (refund owed by the host on the nights total; the cleaning fee is always returned before arrival):</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Full refund</th>
+<th>Half refund</th>
+<th>No refund</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Flexible</td>
+<td>1 day or more before arrival</td>
+<td>on arrival day</td>
+<td></td>
+</tr>
+<tr>
+<td>Moderate</td>
+<td>5 days or more before</td>
+<td>4 to 1 days before</td>
+<td>on arrival day</td>
+</tr>
+<tr>
+<td>Strict</td>
+<td>14 days or more before</td>
+<td>13 to 7 days before</td>
+<td>6 days or less</td>
+</tr>
+</tbody></table>
+<p><strong>Worked example</strong> (villa, individual host, 12%): 3 nights x 18,500 = 55,500 DZD + cleaning 4,000 = <strong>59,500 DZD</strong> paid by the guest to the host.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Host deposit</th>
+<th>BLADUS commission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Admin records a 50,000 DZD top-up</td>
+<td>50,000</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Booking confirmed: commission 12% x 55,500</td>
+<td>43,340 (-6,660)</td>
+<td>6,660</td>
+</tr>
+<tr>
+<td>Guest cancels 3 days before (moderate policy): host owes the guest 27,750 + 4,000 = 31,750</td>
+<td><strong>50,000 (+6,660, full commission back)</strong></td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p><strong>Reviews.</strong> Only after a completed stay, within 14 days, one per booking. Ratings on listings and hosts are always calculated from reviews.</p>
+<p><strong>Safety.</strong> Phone verified before the first booking; exact address shown only after confirmation; contact details masked in messages before confirmation; every admin action written in a log that cannot be edited.</p>
+<h2 id="s8-7-architecture">7. Architecture</h2><div class="keep"><h3 id="s9-who-uses-bladus-and-what-it-talks-to">Who uses BLADUS and what it talks to</h3><figure><img src="../diagrams/rendered/01-system-context.svg" alt="Who uses BLADUS and what it talks to"></figure></div>
+<p>Guests and hosts use the website; the admin uses the admin app. Both apps call one Django API, which is the only place where data is stored and rules are applied. The API sends SMS and emails, stores photos and documents, and exchanges data with hotel systems. The payment gateway is drawn with a dotted line because online payment is not part of the first release.</p>
+<div class="keep"><h3 id="s10-what-runs-where">What runs where</h3><figure><img src="../diagrams/rendered/02-containers.svg" alt="What runs where"></figure></div>
+<p>The browser reaches a reverse proxy, then the two Next.js servers. These servers keep the login cookie and call the Django API on the user&#39;s behalf, so the browser never talks to Django directly. Background workers send messages and run timed jobs (expire requests, complete stays, sync hotel systems). PostgreSQL keeps all data, Redis is used for queues and limits, and file storage keeps photos and documents. Everything that holds personal data is planned in Algerian data centres, with a copy in a second site.</p>
+<div class="keep"><h3 id="s11-how-the-backend-code-is-organised">How the backend code is organised</h3><figure><img src="../diagrams/rendered/03-django-apps.svg" alt="How the backend code is organised"></figure></div>
+<p>The backend is one Django project split into small apps arranged in layers. An arrow means &quot;may use&quot;. An app may only use apps in lower layers: for example <code>bookings</code> uses <code>pricing</code> and <code>ledger</code>, never the opposite. This keeps the code easy to change and to test. Emails, SMS and search updates are not called directly: they go through the outbox in <code>notifications</code>.</p>
+<h2 id="s12-8-life-cycles">8. Life cycles</h2><div class="keep"><h3 id="s13-life-of-a-booking">Life of a booking</h3><figure><img src="../diagrams/rendered/10-booking-states.svg" alt="Life of a booking"></figure></div>
+<p>Each box is a status and each arrow an allowed move. A booking starts as <code>pending</code> (the host must answer within 24 hours) or directly <code>confirmed</code> (instant booking). A pending request can be accepted, declined, withdrawn by the guest, or expire by itself. A confirmed booking ends as <code>completed</code> after check-out or <code>cancelled</code>. <code>disputed</code> is for a later release. Any move not drawn is refused by the API.</p>
+<div class="keep"><h3 id="s14-life-of-a-listing-or-a-trip">Life of a listing or a trip</h3><figure><img src="../diagrams/rendered/11-listing-states.svg" alt="Life of a listing or a trip"></figure></div>
+<p>A host writes a draft and submits it. The admin approves it (published), asks for changes or rejects it. Only published listings appear in search and can be booked. The host can pause or archive a listing; the admin can suspend it. Deleting is reversible by the admin.</p>
+<div class="keep"><h3 id="s15-verification-of-a-host">Verification of a host</h3><figure><img src="../diagrams/rendered/12-host-verification-states.svg" alt="Verification of a host"></figure></div>
+<p>A new host applies and sends documents. The admin approves when all required documents are approved, asks for changes, or rejects. Changing legal details sends an approved host back to review. The admin can suspend or ban a host; a suspended host&#39;s listings are paused automatically.</p>
+<div class="keep"><h3 id="s16-life-of-a-review">Life of a review</h3><figure><img src="../diagrams/rendered/13-review-states.svg" alt="Life of a review"></figure></div>
+<p>A guest can write a review only after a completed stay, within 14 days. It becomes public when published. If someone reports it, the admin can dismiss the report, hide the review or remove it.</p>
+<h2 id="s17-9-flows">9. Flows</h2><div class="keep"><h3 id="s18-instant-booking-step-by-step">Instant booking, step by step</h3><figure><img src="../diagrams/rendered/20-seq-instant-booking.svg" alt="Instant booking, step by step"></figure></div>
+<p>Read from top to bottom. The website first asks the API for a price (quote), then creates the booking with that quote. Everything happens in one database transaction: the booking is saved, the database itself refuses overlapping dates, the commission is taken from the host&#39;s deposit, and the messages to send are written in the outbox. After the save, a worker sends the SMS, email and notifications. The exact address is shown to the guest only after confirmation.</p>
+<div class="keep"><h3 id="s19-request-to-book">Request to book</h3><figure><img src="../diagrams/rendered/21-seq-request-to-book.svg" alt="Request to book"></figure></div>
+<p>The guest sends a request and the dates are blocked while it waits. Three endings are possible: the host accepts (the booking is confirmed and the commission is taken), the host declines (dates are freed), or nobody answers and a timed job expires the request after 24 hours and tells both sides.</p>
+<div class="keep"><h3 id="s20-host-deposit-top-up">Host deposit top-up</h3><figure><img src="../diagrams/rendered/22-seq-wallet-topup.svg" alt="Host deposit top-up"></figure></div>
+<p>There is no online payment in the first release. The host sends money to BLADUS by CCP or bank transfer; the admin records the top-up with the receipt reference (the same receipt cannot be used twice). Large amounts need a second admin to approve. Each confirmed booking then takes its commission from this deposit, and a cancelled booking gives the full commission back.</p>
+<div class="keep"><h3 id="s21-becoming-a-host">Becoming a host</h3><figure><img src="../diagrams/rendered/23-seq-host-onboarding.svg" alt="Becoming a host"></figure></div>
+<p>The form steps come from the published configuration, and the draft is saved on the server so the host can continue later. Documents are uploaded directly to private storage. When the host submits, a case appears in the admin queue; the admin checks each document, then approves the host, who can then create a first listing.</p>
+<div class="keep"><h3 id="s22-connecting-a-hotel-39-s-own-system">Connecting a hotel&#39;s own system</h3><figure><img src="../diagrams/rendered/25-seq-hotel-sync.svg" alt="Connecting a hotel's own system"></figure></div>
+<p>A hotel owner enters the access key of the hotel system. The API tests the connection, saves the key encrypted, and a job imports room types, prices, availability and services (restaurants, spa, parking...). The job then refreshes availability and prices every 15 minutes. If a sync fails, the last good data stays and the connection is flagged.</p>
+<div class="keep"><h3 id="s23-messages">Messages</h3><figure><img src="../diagrams/rendered/24-seq-message-sync.svg" alt="Messages"></figure></div>
+<p>The website asks the API for messages after the last one it already has (a cursor), so repeated checks are cheap. Before a booking is confirmed, phone numbers, emails and payment account numbers written in a message are masked for the other person, to protect guests from off-platform scams.</p>
+<div class="keep"><h3 id="s24-where-the-money-goes">Where the money goes</h3><figure><img src="../diagrams/rendered/30-money-flow.svg" alt="Where the money goes"></figure></div>
+<p>In the first release the guest pays the host directly. The host keeps a deposit at BLADUS, topped up by transfer. BLADUS takes its commission from that deposit when a booking is confirmed and returns it in full if the booking is cancelled. Online card payment comes later.</p>
+<h2 id="s25-10-database">10. Database</h2><p>The database has <strong>80 tables</strong> in 14 groups. Conventions: every row has a time-ordered unique id; money is stored in whole centimes with a currency code; rates are stored in hundredths of a percent (1,200 = 12%); times are stored in UTC and stay dates in Algerian time; names of platform lists exist in English, French and Arabic; deleting is &quot;soft&quot; (a deleted date) wherever the admin must be able to restore.</p>
+<div class="keep"><h3 id="s26-relation-diagram-overview">Relation diagram (overview)</h3><figure><img src="../diagrams/rendered/erd-00-overview.svg" alt="Relation diagram"></figure></div>
+<p>This is the map of the central tables. Each box is a table; a line links a table to the table it points to, and the label is the linking column. Read it from <code>host_account</code> in the middle: on one side it is linked to <code>user</code> or <code>organization</code> (who hosts), on the other side it owns <code>listing</code>, <code>trip</code> and the money accounts. A <code>booking</code> points to the guest (<code>user</code>), the host account, and exactly one target: a listing, a room type, an experience slot or a trip departure. Money lines (<code>ledger_entry</code>) belong to a <code>ledger_transaction</code> and an account. The detailed diagrams below show every column.</p>
+<div class="keep"><h3 id="s27-1-accounts">1. Accounts</h3><figure><img src="../diagrams/rendered/erd-01-accounts.svg" alt="Accounts"></figure></div>
+<p>People and access. One <code>user</code> table for everybody; an admin is a user with a <code>staff_profile</code>. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>user</code></td>
+<td>Every person: guest, host, team member or admin. Email, phone, names in Latin and Arabic, language, status.</td>
+</tr>
+<tr>
+<td><code>staff_profile</code></td>
+<td>Marks a user as BLADUS staff. One role today: admin.</td>
+</tr>
+<tr>
+<td><code>staff_permission</code></td>
+<td>List of admin permissions (kept so roles can be split later).</td>
+</tr>
+<tr>
+<td><code>staff_role_permission</code></td>
+<td>Which role has which permission. Today: admin has all.</td>
+</tr>
+<tr>
+<td><code>consent_record</code></td>
+<td>History of accepted terms, privacy notice and marketing opt-in.</td>
+</tr>
+<tr>
+<td><code>favorite</code></td>
+<td>Listings and trips a guest saved.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s28-2-geography">2. Geography</h3><figure><img src="../diagrams/rendered/erd-02-geography.svg" alt="Geography"></figure></div>
+<p>Algeria&#39;s official places. A listing points to a commune and the wilaya is deduced from it. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>wilaya</code></td>
+<td>The 69 wilayas with names in three languages and map shape.</td>
+</tr>
+<tr>
+<td><code>daira</code></td>
+<td>Dairas, between wilaya and commune.</td>
+</tr>
+<tr>
+<td><code>commune</code></td>
+<td>The 1,541 communes; every listing points to one.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s29-3-host-accounts-and-organisations">3. Host Accounts and Organisations</h3><figure><img src="../diagrams/rendered/erd-03-host-accounts-and-organisations.svg" alt="Host Accounts and Organisations"></figure></div>
+<p>Who hosts. A <code>host_account</code> is either one person or one organisation; team members are linked through <code>membership</code>. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>host_account</code></td>
+<td>The one who hosts: either one person (solo host) or one organisation. Owns listings, trips and the deposit wallet.</td>
+</tr>
+<tr>
+<td><code>organization</code></td>
+<td>An agency, hotel or hostel business with its legal details.</td>
+</tr>
+<tr>
+<td><code>membership</code></td>
+<td>Who works in an organisation and with which role.</td>
+</tr>
+<tr>
+<td><code>invitation</code></td>
+<td>Invitation sent to a future team member (expires after 7 days).</td>
+</tr>
+<tr>
+<td><code>host_document</code></td>
+<td>Verification documents of a host (ID, commerce register, licence...), each reviewed on its own.</td>
+</tr>
+<tr>
+<td><code>payout_account</code></td>
+<td>The host&#39;s CCP or bank details, stored encrypted (used to return unused deposit; payouts later).</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s30-4-taxonomy">4. Taxonomy</h3><figure><img src="../diagrams/rendered/erd-04-taxonomy.svg" alt="Taxonomy"></figure></div>
+<p>Shared lists used by listings: categories, property types, amenities, cancellation policies. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>category</code></td>
+<td>Categories shown on the site, per product family.</td>
+</tr>
+<tr>
+<td><code>property_type</code></td>
+<td>Villa, apartment, riad, SUV... per product family.</td>
+</tr>
+<tr>
+<td><code>amenity</code></td>
+<td>One shared list of amenities (Wi-Fi, pool, parking...).</td>
+</tr>
+<tr>
+<td><code>cancellation_policy</code></td>
+<td>Flexible, moderate, strict: refund percentages by days before arrival.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s31-5-catalogue-listings-and-room-types">5. Catalogue: Listings and Room Types</h3><figure><img src="../diagrams/rendered/erd-05-catalogue-listings-and-room-types.svg" alt="Catalogue: Listings and Room Types"></figure></div>
+<p>What is offered. A <code>listing</code> holds the common fields; vehicles and experiences have an extra detail table; hotels and hostels have room types. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing</code></td>
+<td>Something to book: home, hotel, hostel, experience or vehicle. Price, place, rules, status.</td>
+</tr>
+<tr>
+<td><code>listing_revision</code></td>
+<td>Edits of a published listing waiting for admin review.</td>
+</tr>
+<tr>
+<td><code>vehicle_detail</code></td>
+<td>Extra fields for vehicles (make, model, gearbox, driver rules).</td>
+</tr>
+<tr>
+<td><code>experience_detail</code></td>
+<td>Extra fields for experiences (duration, languages, meeting point).</td>
+</tr>
+<tr>
+<td><code>room_type</code></td>
+<td>A kind of room or bed in a hotel or hostel, with how many exist. Can be imported from the hotel system.</td>
+</tr>
+<tr>
+<td><code>listing_amenity</code></td>
+<td>Which amenities a listing has.</td>
+</tr>
+<tr>
+<td><code>room_type_amenity</code></td>
+<td>Which amenities a room type has.</td>
+</tr>
+<tr>
+<td><code>listing_photo</code></td>
+<td>Photos of listings, room types and trips, in order, with a cover.</td>
+</tr>
+<tr>
+<td><code>featured_placement</code></td>
+<td>Listings or trips the admin features on the home page for a period.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s32-6-inventory-and-calendar">6. Inventory and Calendar</h3><figure><img src="../diagrams/rendered/erd-06-inventory-and-calendar.svg" alt="Inventory and Calendar"></figure></div>
+<p>What is free and at which price, per day (homes, vehicles), per night and room type (hotels, hostels) or per time slot (experiences). Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing_day</code></td>
+<td>For a home or vehicle: a day the host blocked or priced differently.</td>
+</tr>
+<tr>
+<td><code>room_type_night</code></td>
+<td>For one room type and one night: units existing, held and booked. The database refuses overselling.</td>
+</tr>
+<tr>
+<td><code>experience_slot</code></td>
+<td>A dated time slot of an experience with its seats.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s33-7-trips-agency-only">7. Trips (agency only)</h3><figure><img src="../diagrams/rendered/erd-07-trips-agency-only.svg" alt="Trips (agency only)"></figure></div>
+<p>Multi-day trips sold by agencies, with a day by day programme and dated departures. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>trip</code></td>
+<td>A multi-day agency trip with type, price per person and policy.</td>
+</tr>
+<tr>
+<td><code>trip_itinerary_day</code></td>
+<td>Day by day programme of a trip.</td>
+</tr>
+<tr>
+<td><code>trip_departure</code></td>
+<td>A dated departure of a trip with seats and status.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s34-8-pricing">8. Pricing</h3><figure><img src="../diagrams/rendered/erd-08-pricing.svg" alt="Pricing"></figure></div>
+<p>Prices are always calculated by the server and stored as a quote. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>quote</code></td>
+<td>A price calculated by the server for chosen dates, valid 30 minutes.</td>
+</tr>
+<tr>
+<td><code>tax_rate</code></td>
+<td>Tourist tax and VAT rates with validity dates (used later).</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s35-9-bookings">9. Bookings</h3><figure><img src="../diagrams/rendered/erd-09-bookings.svg" alt="Bookings"></figure></div>
+<p>Reservations and their history. A booking points to exactly one target: a listing, a room type, an experience slot or a trip departure. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>booking</code></td>
+<td>One reservation with frozen prices, commission and cancellation rules. The database refuses overlapping stays.</td>
+</tr>
+<tr>
+<td><code>booking_event</code></td>
+<td>Every status change of a booking, in order.</td>
+</tr>
+<tr>
+<td><code>refund</code></td>
+<td>Amounts owed back to the guest after a cancellation.</td>
+</tr>
+<tr>
+<td><code>dispute</code></td>
+<td>A disagreement about a stay and how it was resolved (later release).</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s36-10-money-ledger-wallet-dormant-payments">10. Money: Ledger, Wallet, Dormant Payments</h3><figure><img src="../diagrams/rendered/erd-10-money-ledger-wallet-dormant-payments.svg" alt="Money: Ledger, Wallet, Dormant Payments"></figure></div>
+<p>Host deposits and BLADUS commission, written as balanced lines that are never edited. The payment, payout and gateway tables exist but are not used until online payment is added. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ledger_account</code></td>
+<td>Money accounts: one deposit wallet per host, BLADUS cash, BLADUS commission.</td>
+</tr>
+<tr>
+<td><code>ledger_transaction</code></td>
+<td>One money event (top-up, commission, commission returned). Never edited.</td>
+</tr>
+<tr>
+<td><code>ledger_entry</code></td>
+<td>The lines of a money event; they always add up to zero.</td>
+</tr>
+<tr>
+<td><code>account_balance</code></td>
+<td>Current balance of each account (always equals the sum of its lines).</td>
+</tr>
+<tr>
+<td><code>wallet_topup</code></td>
+<td>A host deposit recorded by the admin with its receipt reference.</td>
+</tr>
+<tr>
+<td><code>gateway_event</code></td>
+<td>Messages from a payment gateway. Not used until online payment exists.</td>
+</tr>
+<tr>
+<td><code>payment</code></td>
+<td>Guest payments by card. Not used until online payment exists.</td>
+</tr>
+<tr>
+<td><code>payout</code></td>
+<td>Money sent to hosts. Not used until online payment exists (except returning unused deposit).</td>
+</tr>
+<tr>
+<td><code>invoice</code></td>
+<td>Commission invoices to hosts (later release).</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s37-11-reviews">11. Reviews</h3><figure><img src="../diagrams/rendered/erd-11-reviews.svg" alt="Reviews"></figure></div>
+<p>Ratings and comments after completed stays, the host reply and reports. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>review</code></td>
+<td>Rating and comment after a completed booking.</td>
+</tr>
+<tr>
+<td><code>review_reply</code></td>
+<td>The host&#39;s single public reply to a review.</td>
+</tr>
+<tr>
+<td><code>review_report</code></td>
+<td>A report against a review, for the admin to check.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s38-12-messaging-and-notifications">12. Messaging and Notifications</h3><figure><img src="../diagrams/rendered/erd-12-messaging-and-notifications.svg" alt="Messaging and Notifications"></figure></div>
+<p>Message threads, notifications and the reliable sending of emails and SMS. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>conversation</code></td>
+<td>A message thread between a guest and a host.</td>
+</tr>
+<tr>
+<td><code>conversation_participant</code></td>
+<td>Who is in a thread and what they have read.</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>One message; contact details are masked before a booking is confirmed.</td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td>In-app notifications.</td>
+</tr>
+<tr>
+<td><code>notification_preference</code></td>
+<td>Which notifications a user wants by email, SMS or push.</td>
+</tr>
+<tr>
+<td><code>outbox_event</code></td>
+<td>Things to send after a change is saved (email, SMS, search refresh), so nothing is lost.</td>
+</tr>
+<tr>
+<td><code>delivery_log</code></td>
+<td>Result and cost of each email or SMS sent.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s39-13-media">13. Media</h3><figure><img src="../diagrams/rendered/erd-13-media.svg" alt="Media"></figure></div>
+<p>Uploaded files. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>media_asset</code></td>
+<td>Every uploaded file: public photos and private documents.</td>
+</tr>
+</tbody></table>
+<div class="keep"><h3 id="s40-14-moderation-config-audit-privacy-system">14. Moderation, Config, Audit, Privacy, System</h3><figure><img src="../diagrams/rendered/erd-14-moderation-config-audit-privacy-system.svg" alt="Moderation, Config, Audit, Privacy, System"></figure></div>
+<p>Admin work (queues, decisions), settings, onboarding forms, the audit log, privacy requests, hotel system connections and technical helpers. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>reason_code</code></td>
+<td>Preset reasons (reject, decline, cancel, report) in three languages.</td>
+</tr>
+<tr>
+<td><code>moderation_case</code></td>
+<td>One item in the admin queue: a host to verify, a listing to review, a report.</td>
+</tr>
+<tr>
+<td><code>moderation_decision</code></td>
+<td>What the admin decided on a case and why.</td>
+</tr>
+<tr>
+<td><code>change_request_item</code></td>
+<td>The list of changes the admin asks a host to make.</td>
+</tr>
+<tr>
+<td><code>platform_settings</code></td>
+<td>Platform settings by version: commission rates, reply window, switches.</td>
+</tr>
+<tr>
+<td><code>onboarding_flow_version</code></td>
+<td>The steps of the become-a-host forms, by host type and version.</td>
+</tr>
+<tr>
+<td><code>onboarding_draft</code></td>
+<td>A host application in progress, saved on the server.</td>
+</tr>
+<tr>
+<td><code>coupon</code></td>
+<td>Discount codes (later release).</td>
+</tr>
+<tr>
+<td><code>coupon_redemption</code></td>
+<td>Use of a coupon on a booking (later release).</td>
+</tr>
+<tr>
+<td><code>audit_event</code></td>
+<td>Who did what and when. Cannot be edited or deleted.</td>
+</tr>
+<tr>
+<td><code>export_job</code></td>
+<td>CSV exports requested by the admin.</td>
+</tr>
+<tr>
+<td><code>data_subject_request</code></td>
+<td>Requests from users to see, fix or delete their data.</td>
+</tr>
+<tr>
+<td><code>idempotency_record</code></td>
+<td>Protects against a request being executed twice after a retry.</td>
+</tr>
+<tr>
+<td><code>incident_record</code></td>
+<td>Register of security incidents with the 5-day notification clock.</td>
+</tr>
+<tr>
+<td><code>calendar_feed</code></td>
+<td>iCal calendar links for importing or exporting availability (later release).</td>
+</tr>
+<tr>
+<td><code>otp_send_log</code></td>
+<td>Log of every SMS code sent (for cost control and fraud detection).</td>
+</tr>
+<tr>
+<td><code>property_integration</code></td>
+<td>Connection to a hotel&#39;s own system: which system, encrypted access key, what to sync, status.</td>
+</tr>
+<tr>
+<td><code>integration_sync_log</code></td>
+<td>One line per sync run with what changed or why it failed.</td>
+</tr>
+<tr>
+<td><code>property_service</code></td>
+<td>Services of a hotel or hostel (restaurant, spa, parking...), typed by hand or imported.</td>
+</tr>
+<tr>
+<td><code>listing_search_doc</code></td>
+<td>One ready-to-search line per published listing; makes search fast.</td>
+</tr>
+</tbody></table>
+<h3 id="s41-rules-the-database-enforces-by-itself">Rules the database enforces by itself</h3><p>These rules are inside PostgreSQL, so even a bug in the code cannot break them: no overlapping stays, no overselling, exactly one owner per organisation, money lines that always balance, and logs that cannot be edited.</p>
+<pre><code class="language-sql">-- Extensions
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS btree_gist;   -- equality inside exclusion constraints
+CREATE EXTENSION IF NOT EXISTS pg_trgm;      -- fuzzy text search
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- BR-AVL-01: no overlapping stays on a single unit
+ALTER TABLE booking ADD CONSTRAINT booking_no_overlap
+  EXCLUDE USING gist (listing_id WITH =, stay WITH &amp;&amp;)
+  WHERE (inventory_kind = &#39;single&#39;
+         AND status IN (&#39;pending&#39;,&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;));
+
+-- ADR-003: targets match the inventory kind
+ALTER TABLE booking ADD CONSTRAINT booking_target_matches_kind CHECK (
+  (inventory_kind = &#39;single&#39;    AND listing_id IS NOT NULL AND room_type_id IS NULL AND experience_slot_id IS NULL AND trip_departure_id IS NULL) OR
+  (inventory_kind = &#39;room_pool&#39; AND listing_id IS NOT NULL AND room_type_id IS NOT NULL AND experience_slot_id IS NULL AND trip_departure_id IS NULL) OR
+  (inventory_kind = &#39;slot&#39;      AND listing_id IS NOT NULL AND experience_slot_id IS NOT NULL AND room_type_id IS NULL AND trip_departure_id IS NULL) OR
+  (inventory_kind = &#39;departure&#39; AND trip_departure_id IS NOT NULL AND listing_id IS NULL AND room_type_id IS NULL AND experience_slot_id IS NULL));
+
+ALTER TABLE booking ADD CONSTRAINT booking_money_ok CHECK (
+  subtotal_minor &gt;= 0 AND discount_minor &gt;= 0 AND cleaning_fee_minor &gt;= 0 AND taxes_minor &gt;= 0
+  AND total_minor = subtotal_minor - discount_minor + cleaning_fee_minor + taxes_minor
+  AND refund_due_minor BETWEEN 0 AND total_minor
+  AND commission_rate_bp BETWEEN 0 AND 10000 AND commission_minor &gt;= 0
+  AND NOT isempty(stay) AND lower_inc(stay) AND NOT upper_inc(stay));
+
+-- BR-AVL-02: pooled inventory never oversold
+ALTER TABLE room_type_night ADD CONSTRAINT rtn_capacity
+  CHECK (held &gt;= 0 AND booked &gt;= 0 AND total &gt;= 0 AND held + booked &lt;= total);
+ALTER TABLE trip_departure ADD CONSTRAINT dep_capacity
+  CHECK (seats_held &gt;= 0 AND seats_booked &gt;= 0 AND seats_held + seats_booked &lt;= seats_total AND ends_on &gt;= starts_on);
+ALTER TABLE experience_slot ADD CONSTRAINT slot_capacity
+  CHECK (seats_held &gt;= 0 AND seats_booked &gt;= 0 AND seats_held + seats_booked &lt;= seats_total AND ends_at &gt; starts_at);
+
+-- Reserving 2 rooms for nights [2026-12-10, 2026-12-13): one statement, all nights or nothing
+UPDATE room_type_night SET booked = booked + 2
+ WHERE room_type_id = :rt AND night &gt;= &#39;2026-12-10&#39; AND night &lt; &#39;2026-12-13&#39;
+   AND held + booked + 2 &lt;= total;
+-- the service checks that the updated row count = number of nights, else rolls back (409)
+
+-- ADR-001: host account is exactly one of user or organisation
+ALTER TABLE host_account ADD CONSTRAINT host_account_one_owner CHECK (
+  (kind = &#39;individual&#39;   AND user_id IS NOT NULL AND organization_id IS NULL) OR
+  (kind = &#39;organization&#39; AND organization_id IS NOT NULL AND user_id IS NULL));
+
+-- BR-ORG-04: exactly one active owner
+CREATE UNIQUE INDEX membership_one_owner ON membership (organization_id)
+  WHERE role = &#39;owner&#39; AND is_active;
+CREATE UNIQUE INDEX membership_active_unique ON membership (organization_id, user_id) WHERE is_active;
+
+-- BR-ACC-01
+CREATE UNIQUE INDEX user_email_ci ON &quot;user&quot; (lower(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX user_phone ON &quot;user&quot; (phone_e164) WHERE phone_e164 IS NOT NULL;
+
+-- BR-PAY-02: balanced, insert-only ledger
+CREATE FUNCTION ledger_tx_balanced() RETURNS trigger AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM ledger_entry WHERE transaction_id = NEW.transaction_id
+             GROUP BY currency HAVING sum(amount_minor) &lt;&gt; 0) THEN
+    RAISE EXCEPTION &#39;ledger transaction % is not balanced&#39;, NEW.transaction_id;
+  END IF;
+  RETURN NULL;
+END $$ LANGUAGE plpgsql;
+CREATE CONSTRAINT TRIGGER ledger_entry_balanced AFTER INSERT ON ledger_entry
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ledger_tx_balanced();
+ALTER TABLE ledger_entry ADD CONSTRAINT ledger_entry_nonzero CHECK (amount_minor &lt;&gt; 0);
+REVOKE UPDATE, DELETE ON ledger_entry, ledger_transaction, audit_event, booking_event FROM bladus_app;
+
+-- BR-PAY-04: commission posted once per booking
+CREATE UNIQUE INDEX ledger_one_commission ON ledger_transaction (booking_id) WHERE kind = &#39;commission&#39;;
+
+-- BR-LST-02, BR-CFG-02, BR-MOD: one open item at a time
+CREATE UNIQUE INDEX listing_one_pending_revision ON listing_revision (listing_id) WHERE status = &#39;pending_review&#39;;
+CREATE UNIQUE INDEX flow_one_draft ON onboarding_flow_version (host_type) WHERE status = &#39;draft&#39;;
+CREATE UNIQUE INDEX flow_one_published ON onboarding_flow_version (host_type) WHERE status = &#39;published&#39;;
+CREATE UNIQUE INDEX case_one_open ON moderation_case (kind, subject_id) WHERE status &lt;&gt; &#39;resolved&#39;;
+CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE is_current;
+</code></pre>
+<h2 id="s42-11-api-design">11. API design</h2><p><strong>Conventions.</strong> All addresses start with <code>/api/v1</code>. Data is JSON with <code>snake_case</code> names. Money is <code>{&quot;amount_minor&quot;: 5950000, &quot;currency&quot;: &quot;DZD&quot;}</code> (centimes). Dates are ISO 8601. Errors always have the same shape: a stable <code>code</code>, a message in the user&#39;s language (en, fr, ar) and field errors. Lists are paginated. Creating a booking or recording money needs an <code>Idempotency-Key</code> header, so a retry never creates a duplicate. Requests are rate limited.</p>
+<p><strong>Access.</strong> Four areas: public (no login), <code>me</code> (signed-in guest), <code>host</code> (the active workspace: the user as solo host or one of their organisations, re-checked on every call), and <code>admin</code> (staff only, two-step login). The website and admin never call Django from the browser: their Next.js server does, with the session kept in an httpOnly cookie.</p>
+<p><strong>Example: create a booking</strong></p>
+<pre><code class="language-http">POST /api/v1/me/bookings
+Idempotency-Key: 6f1c2a9e-...
+{ &quot;quote_id&quot;: &quot;0192f3a1-...&quot; }
+
+201 Created
+{ &quot;reference&quot;: &quot;BLD-2026-7K2M9Q&quot;, &quot;status&quot;: &quot;confirmed&quot;,
+  &quot;total&quot;: {&quot;amount_minor&quot;: 5950000, &quot;currency&quot;: &quot;DZD&quot;},
+  &quot;payment_status&quot;: &quot;not_collected&quot; }
+
+409 Conflict (someone booked these dates first)
+{ &quot;code&quot;: &quot;dates_unavailable&quot;, &quot;message&quot;: &quot;Ces dates ne sont plus disponibles.&quot; }
+</code></pre>
+<h3 id="s43-endpoint-list">Endpoint list</h3><p>The contract has 272 operations; 8 of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is <code>openapi.yaml</code>.</p>
+<h4 id="s44-sign-up-and-sign-in-15">Sign-up and sign-in (15)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/auth/signup</code></td>
+<td>Sign up with email or Algerian phone</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/login</code></td>
+<td>Sign in with email or phone and password</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/code/request</code></td>
+<td>Send a one-time login code by SMS (phone OTP)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/code/confirm</code></td>
+<td>Confirm the one-time login code</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/auth/session</code></td>
+<td>Read the current session</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/auth/session</code></td>
+<td>Sign out (revoke the session token)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/phone/verify</code></td>
+<td>Verify a phone number with the SMS code</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/email/verify</code></td>
+<td>Verify an email address with the emailed key</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/password/request</code></td>
+<td>Ask for a password reset (email link or SMS code)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/password/reset</code></td>
+<td>Set a new password with the reset key</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/password/change</code></td>
+<td>Change password (signed in)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/2fa/authenticate</code></td>
+<td>Second step of login: TOTP or recovery code</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/auth/authenticators</code></td>
+<td>List my second factors</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/auth/authenticators/totp</code></td>
+<td>Get a TOTP secret to enrol</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/authenticators/totp</code></td>
+<td>Enrol a TOTP authenticator</td>
+</tr>
+</tbody></table>
+<h4 id="s45-public-no-login-needed-23">Public (no login needed) (23)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/geo/wilayas</code></td>
+<td>List the 69 wilayas</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/geo/wilayas/{wilaya_code}/communes</code></td>
+<td>List the communes of one wilaya</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/geo/communes</code></td>
+<td>Autocomplete communes by name (fr, ar, en)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/reference</code></td>
+<td>All shared lists (types, amenities, policies, offer rules)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/reference/reasons</code></td>
+<td>Reason catalogue for an action</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/onboarding-flows/{host_type}</code></td>
+<td>Get the published onboarding flow for a host type</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings</code></td>
+<td>Search listings</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings/facets</code></td>
+<td>Facet counts for the current search</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings/map</code></td>
+<td>Map pins for the current search (max 500)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings/{listing_id}</code></td>
+<td>Public listing page</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings/{listing_id}/availability</code></td>
+<td>Free nights, units or slots for a period</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings/{listing_id}/reviews</code></td>
+<td>Published reviews of a listing</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/quotes</code></td>
+<td>Get a server price quote</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/quotes/{quote_id}</code></td>
+<td>Read a quote again</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/trips</code></td>
+<td>Search agency trips</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/trips/{trip_id}</code></td>
+<td>Public trip page (path accepts the trip id or its slug)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/trips/{trip_id}/departures</code></td>
+<td>Upcoming departures with seats left</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/trips/{trip_id}/reviews</code></td>
+<td>Published reviews of a trip</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/organizations</code></td>
+<td>List verified organisations (sitemap, directory)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/organizations/{org_slug}</code></td>
+<td>Public organisation profile</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/users/{user_id}</code></td>
+<td>Public user profile</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/users/{user_id}/reviews</code></td>
+<td>Reviews written by a user or received as a host</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/listings/{listing_id}/services</code></td>
+<td>Services of a hotel or hostel (restaurants, spa, parking...)</td>
+</tr>
+</tbody></table>
+<h4 id="s46-signed-in-guest-25">Signed-in guest (25)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/me</code></td>
+<td>My profile</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/me</code></td>
+<td>Update my profile</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/me/phone</code></td>
+<td>Start a phone change (sends an SMS code)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/consents</code></td>
+<td>My current consents</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/consents</code></td>
+<td>Accept or withdraw a consent (terms, privacy, marketing)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/data-requests</code></td>
+<td>My data protection requests</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/data-requests</code></td>
+<td>Ask for my data, a correction or deletion</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/favorites</code></td>
+<td>My favourites</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/me/favorites/{target_type}/{target_id}</code></td>
+<td>Add a listing or trip to favourites</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/me/favorites/{target_type}/{target_id}</code></td>
+<td>Remove from favourites</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/notifications</code></td>
+<td>My notifications, newest first</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/notifications/{notification_id}/read</code></td>
+<td>Mark one notification as read</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/notifications/read-all</code></td>
+<td>Mark all my notifications as read</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/notification-preferences</code></td>
+<td>My notification preferences</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/me/notification-preferences</code></td>
+<td>Change my notification preferences</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/bookings</code></td>
+<td>Book from a quote (instant or request)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/bookings</code></td>
+<td>My bookings (trips page)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/bookings/{booking_id}</code></td>
+<td>One of my bookings</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/bookings/{booking_id}/cancellation-preview</code></td>
+<td>What I would get back if I cancel now</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/bookings/{booking_id}/cancel</code></td>
+<td>Cancel my booking or withdraw my request</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/bookings/{booking_id}/review</code></td>
+<td>Review a completed stay</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/bookings/{booking_id}/dispute</code></td>
+<td>Open a dispute about a booking</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/reviews</code></td>
+<td>Reviews I wrote</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/reviews/{review_id}/reports</code></td>
+<td>Report a review</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/invitations/accept</code></td>
+<td>Accept an organisation invitation</td>
+</tr>
+</tbody></table>
+<h4 id="s47-messages-7">Messages (7)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/conversations</code></td>
+<td>My conversations</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/conversations</code></td>
+<td>Start (or find) a conversation about a listing, trip or booking</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/conversations/sync</code></td>
+<td>Changes since a cursor (polling)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/conversations/{conversation_id}</code></td>
+<td>One conversation</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/conversations/{conversation_id}/messages</code></td>
+<td>Messages of a conversation</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/conversations/{conversation_id}/messages</code></td>
+<td>Send a message</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/conversations/{conversation_id}/read</code></td>
+<td>Move my read pointer</td>
+</tr>
+</tbody></table>
+<h4 id="s48-file-uploads-4">File uploads (4)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/media/uploads</code></td>
+<td>Get a presigned upload URL</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/media/{media_id}/complete</code></td>
+<td>Tell the server the upload finished</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/media/{media_id}</code></td>
+<td>Upload status and renditions</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/media/{media_id}/url</code></td>
+<td>Short-lived URL for a private file</td>
+</tr>
+</tbody></table>
+<h4 id="s49-host-workspace-75">Host workspace (75)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/me/workspaces</code></td>
+<td>Host accounts I can act for (workspace switcher)</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/me/workspaces/active</code></td>
+<td>Switch the active host account</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/account</code></td>
+<td>The active host account</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/account</code></td>
+<td>Change the default approval mode</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/onboarding/drafts</code></td>
+<td>My onboarding drafts</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/onboarding/drafts/{host_type}</code></td>
+<td>My draft for one host type</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/host/onboarding/drafts/{host_type}</code></td>
+<td>Save my draft (create or replace)</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/onboarding/drafts/{host_type}</code></td>
+<td>Abandon my draft</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/onboarding/drafts/{host_type}/submit</code></td>
+<td>Finish onboarding: create the host account</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/documents</code></td>
+<td>Verification documents of the active host account</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/documents</code></td>
+<td>Attach an uploaded document</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/documents/{document_id}</code></td>
+<td>Remove a pending or rejected document</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/verification/submit</code></td>
+<td>Send the host account for review (or resubmit)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/change-requests</code></td>
+<td>What moderators asked me to fix</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/payout-accounts</code></td>
+<td>Refund and payout account details</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/payout-accounts</code></td>
+<td>Add a CCP, bank or BaridiMob account</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/payout-accounts/{payout_account_id}</code></td>
+<td>Remove an account</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/integrations</code></td>
+<td>Connections to the hotel&#39;s own system</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/integrations</code></td>
+<td>Connect a channel manager, PMS, iCal feed or CSV import</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/integrations/{integration_id}</code></td>
+<td>Disconnect the hotel system (imported data stays, becomes editable)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/integrations/{integration_id}/sync</code></td>
+<td>Import rooms, availability, prices and services now</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/integrations/{integration_id}/runs</code></td>
+<td>History of sync runs</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/organization</code></td>
+<td>The active organisation (private view)</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/organization</code></td>
+<td>Edit the organisation</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/organization</code></td>
+<td>Delete the organisation (soft)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/organization/members</code></td>
+<td>Team members</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/organization/members/{membership_id}</code></td>
+<td>Change a member&#39;s role</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/organization/members/{membership_id}</code></td>
+<td>Remove a member</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/organization/transfer-ownership</code></td>
+<td>Make another member the owner</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/organization/invitations</code></td>
+<td>Pending and past invitations</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/organization/invitations</code></td>
+<td>Invite someone by email or phone</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/organization/invitations/{invitation_id}</code></td>
+<td>Revoke an invitation</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/listings</code></td>
+<td>Listings of the active host account (all statuses)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/listings</code></td>
+<td>Create a listing (draft)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/listings/{listing_id}</code></td>
+<td>One listing with private fields</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/listings/{listing_id}</code></td>
+<td>Edit a listing</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/listings/{listing_id}</code></td>
+<td>Delete a listing (soft)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/listings/{listing_id}/status</code></td>
+<td>Submit, withdraw, pause, resume or archive</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/host/listings/{listing_id}/photos</code></td>
+<td>Order photos and choose the cover</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/listings/{listing_id}/room-types</code></td>
+<td>Room types of a hotel or hostel</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/listings/{listing_id}/room-types</code></td>
+<td>Add a room type</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/listings/{listing_id}/room-types/{room_type_id}</code></td>
+<td>Edit a room type</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/listings/{listing_id}/room-types/{room_type_id}</code></td>
+<td>Remove a room type (soft)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/listings/{listing_id}/slots</code></td>
+<td>Time slots of an experience</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/listings/{listing_id}/slots</code></td>
+<td>Add a time slot</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/listings/{listing_id}/slots/{slot_id}</code></td>
+<td>Edit or cancel a slot</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/calendar</code></td>
+<td>Calendar of several listings</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/listings/{listing_id}/calendar</code></td>
+<td>Calendar of one listing or room type</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/host/listings/{listing_id}/calendar/blocks</code></td>
+<td>Block or unblock days</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/host/listings/{listing_id}/calendar/prices</code></td>
+<td>Set or clear per-day prices</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/trips</code></td>
+<td>Trips of the active agency (all statuses)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/trips</code></td>
+<td>Create a trip (draft)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/trips/{trip_id}</code></td>
+<td>One trip with private fields</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/trips/{trip_id}</code></td>
+<td>Edit a trip</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/host/trips/{trip_id}</code></td>
+<td>Delete a trip (soft)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/trips/{trip_id}/status</code></td>
+<td>Submit, withdraw, pause, resume or archive a trip</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/trips/{trip_id}/departures</code></td>
+<td>Departures of a trip</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/trips/{trip_id}/departures</code></td>
+<td>Add a departure</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/host/trips/{trip_id}/departures/{departure_id}</code></td>
+<td>Edit a departure</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/trips/{trip_id}/departures/{departure_id}/cancel</code></td>
+<td>Cancel a departure and all its bookings</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/bookings</code></td>
+<td>Bookings of the active host account</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/bookings/{booking_id}</code></td>
+<td>One booking of the active host account</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/bookings/{booking_id}/accept</code></td>
+<td>Accept a pending request</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/bookings/{booking_id}/decline</code></td>
+<td>Decline a pending request</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/bookings/{booking_id}/cancellation-preview</code></td>
+<td>What a host cancellation means</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/bookings/{booking_id}/cancel</code></td>
+<td>Cancel a confirmed booking as host</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/bookings/{booking_id}/guest-review</code></td>
+<td>Review the guest</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/bookings/{booking_id}/dispute</code></td>
+<td>Open a dispute as host</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/reviews</code></td>
+<td>Reviews received by the active host account</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/host/reviews/{review_id}/reply</code></td>
+<td>Write or edit the public reply</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/wallet</code></td>
+<td>Commission wallet of the active host account</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/wallet/entries</code></td>
+<td>Wallet history</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/host/wallet/topups</code></td>
+<td>Top up the wallet online (CIB, Edahabia)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/earnings</code></td>
+<td>Earnings dashboard</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/host/invoices</code></td>
+<td>Commission invoices</td>
+</tr>
+</tbody></table>
+<h4 id="s50-admin-115">Admin (115)</h4><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/admin/auth/login</code></td>
+<td>Staff sign in (step 1: password)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/auth/2fa/authenticate</code></td>
+<td>Staff sign in (step 2: second factor)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/auth/session</code></td>
+<td>Current staff session and permissions</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/auth/session</code></td>
+<td>Staff sign out</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/auth/invitations/accept</code></td>
+<td>Accept a staff invitation and set a password</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/auth/authenticators/totp</code></td>
+<td>Enrol TOTP (required before any admin endpoint)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/auth/password/change</code></td>
+<td>Change my staff password</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/moderation/counts</code></td>
+<td>Queue sizes, oldest waiting, high priority</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/dashboard/attention</code></td>
+<td>Dashboard: what needs attention now</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/moderation/cases</code></td>
+<td>Moderation queue</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/moderation/cases/{case_id}</code></td>
+<td>One case with its history</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/moderation/cases/{case_id}/assign</code></td>
+<td>Take or assign a case</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/moderation/cases/{case_id}/decisions</code></td>
+<td>Decide a case (approve, reject, request changes...)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/moderation/bulk-decisions</code></td>
+<td>Same decision on many cases</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/reason-codes</code></td>
+<td>Reason catalogue (all actions)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/hosts</code></td>
+<td>Host accounts (individuals and organisations)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/hosts/{host_account_id}</code></td>
+<td>One host account with documents, team and cases</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/hosts/{host_account_id}</code></td>
+<td>Soft-delete a host account</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/approve</code></td>
+<td>Approve a host account</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/request-changes</code></td>
+<td>Ask the host for changes</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/reject</code></td>
+<td>Reject a host account</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/suspend</code></td>
+<td>Suspend a host account (cascade)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/unsuspend</code></td>
+<td>Lift a suspension</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/ban</code></td>
+<td>Ban a host account (final)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/hosts/{host_account_id}/restore</code></td>
+<td>Restore a soft-deleted host account</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/admin/hosts/{host_account_id}/commission-override</code></td>
+<td>Set a commission rate for this host</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/hosts/{host_account_id}/commission-override</code></td>
+<td>Go back to the host-type default rate</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/admin/hosts/{host_account_id}/credit-limit-override</code></td>
+<td>Set the credit floor for this host</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/documents/{document_id}/url</code></td>
+<td>View a KYC document (signed URL, audited)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/documents/{document_id}/approve</code></td>
+<td>Approve one document</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/documents/{document_id}/reject</code></td>
+<td>Reject one document</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/listings</code></td>
+<td>All listings, every status, with facets</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/listings/{listing_id}</code></td>
+<td>One listing (with pending revision and cases)</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/listings/{listing_id}</code></td>
+<td>Soft-delete a listing</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/listings/{listing_id}/approve</code></td>
+<td>Approve and publish (or approve the pending revision)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/listings/{listing_id}/reject</code></td>
+<td>Reject a listing</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/listings/{listing_id}/request-changes</code></td>
+<td>Ask the host for changes</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/listings/{listing_id}/suspend</code></td>
+<td>Suspend a published listing</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/listings/{listing_id}/restore</code></td>
+<td>Restore a soft-deleted listing to its previous status</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/listings/{listing_id}/status</code></td>
+<td>Any other allowed status change</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/admin/listings/{listing_id}/featured</code></td>
+<td>Feature or unfeature a listing</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/trips</code></td>
+<td>All trips, every status</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/trips/{trip_id}</code></td>
+<td>One trip</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/trips/{trip_id}/status</code></td>
+<td>Approve, reject, suspend, restore a trip</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/bookings</code></td>
+<td>All bookings with facets</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/bookings/{booking_id}</code></td>
+<td>One booking with its event history</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/bookings/{booking_id}/cancel</code></td>
+<td>Cancel a booking as staff</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/bookings/{booking_id}/refunds</code></td>
+<td>Record a full or partial refund</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/bookings/{booking_id}/dispute/resolve</code></td>
+<td>Resolve a dispute</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/refunds</code></td>
+<td>All refunds</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/users</code></td>
+<td>Users (guests and hosts as people)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/users/{user_id}</code></td>
+<td>One user</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/users/{user_id}</code></td>
+<td>Soft-delete a user (anonymisation follows)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/users/{user_id}/suspend</code></td>
+<td>Suspend a user</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/users/{user_id}/unsuspend</code></td>
+<td>Lift a user suspension</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/users/{user_id}/ban</code></td>
+<td>Ban a user</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/users/{user_id}/restore</code></td>
+<td>Restore a soft-deleted user</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/data-requests</code></td>
+<td>Data protection requests with deadlines</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/data-requests/{data_request_id}/complete</code></td>
+<td>Close a data protection request</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/reviews</code></td>
+<td>Reviews with reports</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/reviews/{review_id}/hide</code></td>
+<td>Hide a review</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/reviews/{review_id}/restore</code></td>
+<td>Publish a hidden or flagged review again</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/reviews/{review_id}/dismiss-reports</code></td>
+<td>Dismiss open reports and keep the review</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/reviews/{review_id}</code></td>
+<td>Remove a review (status removed)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/finance/summary</code></td>
+<td>Finance overview</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/wallets</code></td>
+<td>Host wallets</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/wallets/{host_account_id}</code></td>
+<td>One host wallet</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/ledger/transactions</code></td>
+<td>Ledger transactions with their entries</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/ledger/adjustments</code></td>
+<td>Correct a wallet with an adjustment transaction</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/wallets/{host_account_id}/topups</code></td>
+<td>Record a manual wallet top-up</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/topups</code></td>
+<td>Top-ups (e.g. waiting for a second approval)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/topups/{topup_id}/approve</code></td>
+<td>Second approval of a large top-up (four-eyes)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/topups/{topup_id}/reject</code></td>
+<td>Reject a pending top-up</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/commission-rates</code></td>
+<td>Default commission rates per host type</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/admin/commission-rates</code></td>
+<td>Change default commission rates</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/invoices</code></td>
+<td>Commission invoices</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/settings</code></td>
+<td>Current platform settings</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/settings</code></td>
+<td>Change settings (creates a new version)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/settings/versions</code></td>
+<td>Settings history</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/onboarding-flows</code></td>
+<td>Onboarding flows per host type</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/onboarding-flows/{host_type}/versions</code></td>
+<td>All versions of one flow</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/onboarding-flows/{host_type}/versions/{version}</code></td>
+<td>One version (published versions never change)</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/admin/onboarding-flows/{host_type}/draft</code></td>
+<td>Save the draft flow</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/onboarding-flows/{host_type}/publish</code></td>
+<td>Publish the draft as the next version</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/onboarding-flows/{host_type}/versions/{version}/republish</code></td>
+<td>Roll back: republish an older version</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/categories</code></td>
+<td>List categories</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/categories</code></td>
+<td>Create one of the categories</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/categories/{category_id}</code></td>
+<td>Edit, reorder, activate or deactivate one of the categories</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/categories/{category_id}</code></td>
+<td>Delete one of the categories if never used</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/amenities</code></td>
+<td>List amenities</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/amenities</code></td>
+<td>Create one of the amenities</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/amenities/{amenity_id}</code></td>
+<td>Edit, reorder, activate or deactivate one of the amenities</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/amenities/{amenity_id}</code></td>
+<td>Delete one of the amenities if never used</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/property-types</code></td>
+<td>List property types</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/property-types</code></td>
+<td>Create one of the property types</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/property-types/{property_type_id}</code></td>
+<td>Edit, reorder, activate or deactivate one of the property types</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/property-types/{property_type_id}</code></td>
+<td>Delete one of the property types if never used</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/coupons</code></td>
+<td>Coupons</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/coupons</code></td>
+<td>Create a coupon</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/coupons/{coupon_id}</code></td>
+<td>Edit, enable or disable a coupon</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/admin/coupons/{coupon_id}</code></td>
+<td>Delete an unused coupon</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/staff</code></td>
+<td>Staff members</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/staff/roles</code></td>
+<td>Roles and their permissions</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/staff/invitations</code></td>
+<td>Invite a staff member</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/staff/{staff_id}</code></td>
+<td>Change a staff role</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/staff/{staff_id}/deactivate</code></td>
+<td>Deactivate (revokes sessions at once)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/staff/{staff_id}/activate</code></td>
+<td>Reactivate a staff member</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/staff/{staff_id}/reset-mfa</code></td>
+<td>Reset a lost second factor</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/audit-events</code></td>
+<td>Audit log</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/exports</code></td>
+<td>Export a filtered dataset as CSV</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/exports</code></td>
+<td>My recent exports</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/exports/{export_id}</code></td>
+<td>Export status and download link</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/analytics/kpis</code></td>
+<td>KPIs with the previous period</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/analytics/charts</code></td>
+<td>Chart series</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/search</code></td>
+<td>Command palette search</td>
+</tr>
+</tbody></table>
+<h2 id="s51-12-build-plan">12. Build plan</h2><p>Assumed team: 2 backend developers and 1 part-time frontend developer. The apps switch from demo data to the API one module at a time.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What is delivered</th>
+<th>Weeks</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>M0 Foundations</td>
+<td>Project, automatic checks, sign-up and sign-in with phone codes, wilayas and communes, settings</td>
+<td>3</td>
+</tr>
+<tr>
+<td>M1 Accounts and hosts</td>
+<td>Profiles, organisations and teams, become-a-host forms, documents, admin sign-in, host verification</td>
+<td>5</td>
+</tr>
+<tr>
+<td>M2 Catalogue</td>
+<td>Listings, room types, hotel system connection, trips and departures, experience and trip types, admin review</td>
+<td>4</td>
+</tr>
+<tr>
+<td>M3 Search</td>
+<td>Search with filters and map, availability, prices</td>
+<td>3</td>
+</tr>
+<tr>
+<td>M4 Bookings and deposit</td>
+<td>Instant and request bookings, cancellations, host deposit, commission, admin top-ups</td>
+<td>5</td>
+</tr>
+<tr>
+<td>M5 Messages and reviews</td>
+<td>Conversations, notifications, reviews</td>
+<td>3</td>
+</tr>
+<tr>
+<td>M6 Hardening</td>
+<td>Reports, exports, privacy requests, security and load tests</td>
+<td>3</td>
+</tr>
+<tr>
+<td>M7 Launch</td>
+<td>Production hosting in Algeria, closed test with real hosts, public launch</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Later</td>
+<td>Online payment by card, invoices, coupons, disputes, calendar links</td>
+<td>after launch</td>
+</tr>
+</tbody></table>
+<p>Before real customers use the platform, a lawyer must confirm two points: hosting in Algeria with a <code>.com.dz</code> name, and the rules for personal data.</p>
+<h2 id="s52-appendix-database-sql">Appendix: database SQL</h2><p>The tables as PostgreSQL statements, generated from the schema (<code>schema.dbml</code>). Column comments are left out to keep this short; they are in the data dictionary of the full blueprint. The special rules of section 10 are added on top of these statements.</p>
+<div class="sql"><pre><code class="language-sql">-- Generated from schema.dbml with @dbml/cli (dbml2sql --postgres). Documentation artifact, not a migration.
+-- Exclusion constraints, partial indexes and triggers are in 05-database-schema.md section 6.
+-- SQL dump generated using DBML (dbml.dbdiagram.io)
+-- Database: PostgreSQL
+-- Generated at: 2026-11-11T10:47:04.909Z
+
+CREATE TYPE &quot;user_status&quot; AS ENUM (
+  &#39;active&#39;,
+  &#39;suspended&#39;,
+  &#39;banned&#39;,
+  &#39;deleted&#39;
+);
+
+CREATE TYPE &quot;staff_role_code&quot; AS ENUM (
+  &#39;admin&#39;
+);
+
+CREATE TYPE &quot;staff_status&quot; AS ENUM (
+  &#39;invited&#39;,
+  &#39;active&#39;,
+  &#39;deactivated&#39;
+);
+
+CREATE TYPE &quot;host_account_kind&quot; AS ENUM (
+  &#39;individual&#39;,
+  &#39;organization&#39;
+);
+
+CREATE TYPE &quot;business_category&quot; AS ENUM (
+  &#39;agency&#39;,
+  &#39;hotel&#39;,
+  &#39;hostel&#39;
+);
+
+CREATE TYPE &quot;verification_status&quot; AS ENUM (
+  &#39;applied&#39;,
+  &#39;under_review&#39;,
+  &#39;changes_requested&#39;,
+  &#39;approved&#39;,
+  &#39;rejected&#39;,
+  &#39;suspended&#39;,
+  &#39;banned&#39;
+);
+
+CREATE TYPE &quot;membership_role&quot; AS ENUM (
+  &#39;owner&#39;,
+  &#39;admin&#39;,
+  &#39;manager&#39;,
+  &#39;agent&#39;,
+  &#39;guide&#39;
+);
+
+CREATE TYPE &quot;invitation_status&quot; AS ENUM (
+  &#39;pending&#39;,
+  &#39;accepted&#39;,
+  &#39;revoked&#39;,
+  &#39;expired&#39;
+);
+
+CREATE TYPE &quot;document_type&quot; AS ENUM (
+  &#39;national_id&#39;,
+  &#39;passport&#39;,
+  &#39;property_proof&#39;,
+  &#39;lease_authorisation&#39;,
+  &#39;apc_declaration&#39;,
+  &#39;insurance&#39;,
+  &#39;auto_entrepreneur_card&#39;,
+  &#39;commercial_register&#39;,
+  &#39;tax_card_nif&#39;,
+  &#39;statistics_nis&#39;,
+  &#39;tourism_licence&#39;,
+  &#39;hotel_classification&#39;,
+  &#39;operating_authorisation&#39;,
+  &#39;vehicle_registration&#39;,
+  &#39;vehicle_insurance&#39;,
+  &#39;technical_inspection&#39;,
+  &#39;driving_licence&#39;
+);
+
+CREATE TYPE &quot;document_status&quot; AS ENUM (
+  &#39;pending&#39;,
+  &#39;approved&#39;,
+  &#39;rejected&#39;,
+  &#39;expired&#39;
+);
+
+CREATE TYPE &quot;approval_mode&quot; AS ENUM (
+  &#39;instant&#39;,
+  &#39;request&#39;
+);
+
+CREATE TYPE &quot;vertical&quot; AS ENUM (
+  &#39;home&#39;,
+  &#39;hotel&#39;,
+  &#39;hostel&#39;,
+  &#39;experience&#39;,
+  &#39;vehicle&#39;
+);
+
+CREATE TYPE &quot;experience_type&quot; AS ENUM (
+  &#39;excursion&#39;,
+  &#39;guided_tour&#39;,
+  &#39;nature_adventure&#39;,
+  &#39;desert&#39;,
+  &#39;sport&#39;,
+  &#39;culture_workshop&#39;,
+  &#39;gastronomy&#39;,
+  &#39;wellness&#39;
+);
+
+CREATE TYPE &quot;trip_type&quot; AS ENUM (
+  &#39;group_tour&#39;,
+  &#39;private_trip&#39;,
+  &#39;adventure&#39;,
+  &#39;desert_expedition&#39;,
+  &#39;cultural&#39;,
+  &#39;hiking&#39;,
+  &#39;relaxation&#39;,
+  &#39;religious&#39;
+);
+
+CREATE TYPE &quot;listing_status&quot; AS ENUM (
+  &#39;draft&#39;,
+  &#39;pending_review&#39;,
+  &#39;changes_requested&#39;,
+  &#39;published&#39;,
+  &#39;paused&#39;,
+  &#39;rejected&#39;,
+  &#39;suspended&#39;,
+  &#39;archived&#39;,
+  &#39;deleted&#39;
+);
+
+CREATE TYPE &quot;booking_unit&quot; AS ENUM (
+  &#39;room&#39;,
+  &#39;bed&#39;
+);
+
+CREATE TYPE &quot;inventory_kind&quot; AS ENUM (
+  &#39;single&#39;,
+  &#39;room_pool&#39;,
+  &#39;slot&#39;,
+  &#39;departure&#39;
+);
+
+CREATE TYPE &quot;booking_status&quot; AS ENUM (
+  &#39;awaiting_payment&#39;,
+  &#39;pending&#39;,
+  &#39;confirmed&#39;,
+  &#39;declined&#39;,
+  &#39;expired&#39;,
+  &#39;cancelled&#39;,
+  &#39;completed&#39;,
+  &#39;disputed&#39;
+);
+
+CREATE TYPE &quot;payment_status&quot; AS ENUM (
+  &#39;not_collected&#39;,
+  &#39;awaiting&#39;,
+  &#39;paid&#39;,
+  &#39;partially_refunded&#39;,
+  &#39;refunded&#39;,
+  &#39;failed&#39;
+);
+
+CREATE TYPE &quot;actor_role&quot; AS ENUM (
+  &#39;guest&#39;,
+  &#39;host&#39;,
+  &#39;staff&#39;,
+  &#39;system&#39;
+);
+
+CREATE TYPE &quot;departure_status&quot; AS ENUM (
+  &#39;scheduled&#39;,
+  &#39;guaranteed&#39;,
+  &#39;cancelled&#39;,
+  &#39;completed&#39;
+);
+
+CREATE TYPE &quot;ledger_account_kind&quot; AS ENUM (
+  &#39;host_wallet&#39;,
+  &#39;platform_cash&#39;,
+  &#39;commission_revenue&#39;,
+  &#39;vat_payable&#39;,
+  &#39;guest_receivable&#39;,
+  &#39;escrow&#39;,
+  &#39;host_payable&#39;,
+  &#39;payout_clearing&#39;,
+  &#39;adjustments&#39;
+);
+
+CREATE TYPE &quot;ledger_tx_kind&quot; AS ENUM (
+  &#39;wallet_topup&#39;,
+  &#39;commission&#39;,
+  &#39;commission_reversal&#39;,
+  &#39;adjustment&#39;,
+  &#39;guest_payment&#39;,
+  &#39;refund&#39;,
+  &#39;payout&#39;
+);
+
+CREATE TYPE &quot;topup_method&quot; AS ENUM (
+  &#39;ccp_transfer&#39;,
+  &#39;bank_transfer&#39;,
+  &#39;baridimob&#39;,
+  &#39;cash_office&#39;,
+  &#39;gateway&#39;
+);
+
+CREATE TYPE &quot;topup_status&quot; AS ENUM (
+  &#39;pending_approval&#39;,
+  &#39;approved&#39;,
+  &#39;rejected&#39;
+);
+
+CREATE TYPE &quot;review_status&quot; AS ENUM (
+  &#39;submitted&#39;,
+  &#39;published&#39;,
+  &#39;flagged&#39;,
+  &#39;hidden&#39;,
+  &#39;removed&#39;
+);
+
+CREATE TYPE &quot;conversation_kind&quot; AS ENUM (
+  &#39;inquiry&#39;,
+  &#39;booking&#39;,
+  &#39;support&#39;
+);
+
+CREATE TYPE &quot;media_status&quot; AS ENUM (
+  &#39;quarantined&#39;,
+  &#39;ready&#39;,
+  &#39;rejected&#39;,
+  &#39;deleted&#39;
+);
+
+CREATE TYPE &quot;media_bucket&quot; AS ENUM (
+  &#39;public&#39;,
+  &#39;private&#39;
+);
+
+CREATE TYPE &quot;case_kind&quot; AS ENUM (
+  &#39;host_verification&#39;,
+  &#39;listing_review&#39;,
+  &#39;listing_revision&#39;,
+  &#39;trip_review&#39;,
+  &#39;document&#39;,
+  &#39;review_report&#39;,
+  &#39;dispute&#39;,
+  &#39;risk_flag&#39;,
+  &#39;legal_change&#39;,
+  &#39;host_cancellations&#39;
+);
+
+CREATE TYPE &quot;case_status&quot; AS ENUM (
+  &#39;open&#39;,
+  &#39;in_progress&#39;,
+  &#39;resolved&#39;
+);
+
+CREATE TYPE &quot;case_priority&quot; AS ENUM (
+  &#39;low&#39;,
+  &#39;normal&#39;,
+  &#39;high&#39;
+);
+
+CREATE TYPE &quot;flow_status&quot; AS ENUM (
+  &#39;draft&#39;,
+  &#39;published&#39;,
+  &#39;archived&#39;
+);
+
+CREATE TYPE &quot;outbox_status&quot; AS ENUM (
+  &#39;pending&#39;,
+  &#39;sent&#39;,
+  &#39;failed&#39;
+);
+
+CREATE TYPE &quot;dsr_kind&quot; AS ENUM (
+  &#39;access&#39;,
+  &#39;rectification&#39;,
+  &#39;deletion&#39;,
+  &#39;opposition&#39;
+);
+
+CREATE TABLE &quot;user&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;email&quot; varchar(254),
+  &quot;email_verified_at&quot; timestamptz,
+  &quot;phone_e164&quot; varchar(16),
+  &quot;phone_verified_at&quot; timestamptz,
+  &quot;password&quot; varchar(255),
+  &quot;first_name_latin&quot; varchar(80),
+  &quot;last_name_latin&quot; varchar(80),
+  &quot;full_name_ar&quot; varchar(160),
+  &quot;avatar_media_id&quot; uuid,
+  &quot;bio&quot; text,
+  &quot;spoken_languages&quot; varchar(2)[],
+  &quot;home_commune_id&quot; int,
+  &quot;address_line&quot; varchar(255),
+  &quot;preferred_locale&quot; varchar(2) NOT NULL DEFAULT &#39;fr&#39;,
+  &quot;nationality_iso2&quot; char(2),
+  &quot;status&quot; user_status NOT NULL DEFAULT &#39;active&#39;,
+  &quot;is_staff&quot; boolean NOT NULL DEFAULT false,
+  &quot;date_joined&quot; timestamptz NOT NULL,
+  &quot;last_login_at&quot; timestamptz,
+  &quot;deleted_at&quot; timestamptz,
+  &quot;anonymised_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;staff_profile&quot; (
+  &quot;user_id&quot; uuid PRIMARY KEY,
+  &quot;role&quot; staff_role_code NOT NULL,
+  &quot;status&quot; staff_status NOT NULL DEFAULT &#39;invited&#39;,
+  &quot;invited_by_id&quot; uuid,
+  &quot;invited_at&quot; timestamptz,
+  &quot;activated_at&quot; timestamptz,
+  &quot;deactivated_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;staff_permission&quot; (
+  &quot;code&quot; varchar(64) PRIMARY KEY,
+  &quot;description&quot; text
+);
+
+CREATE TABLE &quot;staff_role_permission&quot; (
+  &quot;role&quot; staff_role_code,
+  &quot;permission_code&quot; varchar(64),
+  PRIMARY KEY (&quot;role&quot;, &quot;permission_code&quot;)
+);
+
+CREATE TABLE &quot;consent_record&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;document&quot; varchar(32) NOT NULL,
+  &quot;version&quot; varchar(32) NOT NULL,
+  &quot;accepted&quot; boolean NOT NULL,
+  &quot;ip&quot; inet,
+  &quot;user_agent&quot; text,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;favorite&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;listing_id&quot; uuid,
+  &quot;trip_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;wilaya&quot; (
+  &quot;code&quot; smallint PRIMARY KEY,
+  &quot;name_fr&quot; varchar(80) NOT NULL,
+  &quot;name_ar&quot; varchar(80) NOT NULL,
+  &quot;name_en&quot; varchar(80) NOT NULL,
+  &quot;legacy_code_58&quot; smallint,
+  &quot;region&quot; varchar(16),
+  &quot;boundary&quot; &quot;geometry(MultiPolygon,4326)&quot;,
+  &quot;centroid&quot; &quot;geography(Point,4326)&quot;,
+  &quot;source&quot; varchar(64) NOT NULL,
+  &quot;valid_from&quot; date NOT NULL
+);
+
+CREATE TABLE &quot;daira&quot; (
+  &quot;id&quot; int PRIMARY KEY,
+  &quot;wilaya_code&quot; smallint NOT NULL,
+  &quot;name_fr&quot; varchar(80) NOT NULL,
+  &quot;name_ar&quot; varchar(80) NOT NULL
+);
+
+CREATE TABLE &quot;commune&quot; (
+  &quot;id&quot; int PRIMARY KEY,
+  &quot;wilaya_code&quot; smallint NOT NULL,
+  &quot;daira_id&quot; int,
+  &quot;name_fr&quot; varchar(100) NOT NULL,
+  &quot;name_ar&quot; varchar(100) NOT NULL,
+  &quot;name_en&quot; varchar(100) NOT NULL,
+  &quot;postal_code&quot; varchar(5),
+  &quot;centroid&quot; &quot;geography(Point,4326)&quot;,
+  &quot;source&quot; varchar(64) NOT NULL,
+  &quot;valid_from&quot; date NOT NULL
+);
+
+CREATE TABLE &quot;host_account&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;kind&quot; host_account_kind NOT NULL,
+  &quot;user_id&quot; uuid UNIQUE,
+  &quot;organization_id&quot; uuid UNIQUE,
+  &quot;verification_status&quot; verification_status NOT NULL DEFAULT &#39;applied&#39;,
+  &quot;status_before_delete&quot; verification_status,
+  &quot;default_approval_mode&quot; approval_mode NOT NULL DEFAULT &#39;request&#39;,
+  &quot;commission_rate_override_bp&quot; int,
+  &quot;credit_limit_override_minor&quot; bigint,
+  &quot;host_cancellations_12m&quot; int NOT NULL DEFAULT 0,
+  &quot;rating_avg&quot; numeric(3,2),
+  &quot;review_count&quot; int NOT NULL DEFAULT 0,
+  &quot;submitted_at&quot; timestamptz,
+  &quot;approved_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;organization&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;business_category&quot; business_category NOT NULL,
+  &quot;display_name&quot; varchar(120) NOT NULL,
+  &quot;legal_name&quot; varchar(160),
+  &quot;slug&quot; varchar(140) UNIQUE NOT NULL,
+  &quot;description&quot; text,
+  &quot;source_language&quot; varchar(2) NOT NULL DEFAULT &#39;fr&#39;,
+  &quot;logo_media_id&quot; uuid,
+  &quot;cover_media_id&quot; uuid,
+  &quot;business_email&quot; varchar(254),
+  &quot;business_phone_e164&quot; varchar(16),
+  &quot;commune_id&quot; int,
+  &quot;address_line&quot; varchar(255),
+  &quot;rc_number&quot; varchar(32),
+  &quot;nif&quot; varchar(20),
+  &quot;nis&quot; varchar(20),
+  &quot;article_imposition&quot; varchar(20),
+  &quot;tourism_licence_number&quot; varchar(40),
+  &quot;star_rating&quot; smallint,
+  &quot;check_in_time&quot; time,
+  &quot;check_out_time&quot; time,
+  &quot;policies&quot; jsonb,
+  &quot;team_size_range&quot; varchar(16),
+  &quot;created_by_id&quot; uuid NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;membership&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;organization_id&quot; uuid NOT NULL,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;role&quot; membership_role NOT NULL,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true,
+  &quot;joined_at&quot; timestamptz NOT NULL,
+  &quot;removed_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;invitation&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;organization_id&quot; uuid NOT NULL,
+  &quot;email&quot; varchar(254),
+  &quot;phone_e164&quot; varchar(16),
+  &quot;role&quot; membership_role NOT NULL,
+  &quot;token_hash&quot; char(64) UNIQUE NOT NULL,
+  &quot;status&quot; invitation_status NOT NULL DEFAULT &#39;pending&#39;,
+  &quot;invited_by_id&quot; uuid NOT NULL,
+  &quot;expires_at&quot; timestamptz NOT NULL,
+  &quot;accepted_by_id&quot; uuid,
+  &quot;accepted_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;host_document&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;listing_id&quot; uuid,
+  &quot;doc_type&quot; document_type NOT NULL,
+  &quot;media_id&quot; uuid NOT NULL,
+  &quot;status&quot; document_status NOT NULL DEFAULT &#39;pending&#39;,
+  &quot;number_hash&quot; char(64),
+  &quot;expires_on&quot; date,
+  &quot;reviewed_by_id&quot; uuid,
+  &quot;reviewed_at&quot; timestamptz,
+  &quot;rejection_reason_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;payout_account&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;kind&quot; varchar(16) NOT NULL,
+  &quot;holder_name&quot; varchar(160) NOT NULL,
+  &quot;number_encrypted&quot; bytea NOT NULL,
+  &quot;number_last4&quot; char(4) NOT NULL,
+  &quot;is_default&quot; boolean NOT NULL DEFAULT false,
+  &quot;hold_until&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;category&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;vertical&quot; vertical NOT NULL,
+  &quot;slug&quot; varchar(60) NOT NULL,
+  &quot;name_en&quot; varchar(80) NOT NULL,
+  &quot;name_fr&quot; varchar(80) NOT NULL,
+  &quot;name_ar&quot; varchar(80) NOT NULL,
+  &quot;icon&quot; varchar(40),
+  &quot;sort_order&quot; int NOT NULL DEFAULT 0,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE &quot;property_type&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;vertical&quot; vertical NOT NULL,
+  &quot;slug&quot; varchar(60) NOT NULL,
+  &quot;name_en&quot; varchar(80) NOT NULL,
+  &quot;name_fr&quot; varchar(80) NOT NULL,
+  &quot;name_ar&quot; varchar(80) NOT NULL,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE &quot;amenity&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;slug&quot; varchar(60) UNIQUE NOT NULL,
+  &quot;group_code&quot; varchar(20) NOT NULL,
+  &quot;name_en&quot; varchar(80) NOT NULL,
+  &quot;name_fr&quot; varchar(80) NOT NULL,
+  &quot;name_ar&quot; varchar(80) NOT NULL,
+  &quot;icon&quot; varchar(40),
+  &quot;applies_to&quot; vertical[] NOT NULL,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE &quot;cancellation_policy&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;code&quot; varchar(20) NOT NULL,
+  &quot;version&quot; int NOT NULL,
+  &quot;name_en&quot; varchar(60) NOT NULL,
+  &quot;name_fr&quot; varchar(60) NOT NULL,
+  &quot;name_ar&quot; varchar(60) NOT NULL,
+  &quot;windows&quot; jsonb NOT NULL,
+  &quot;is_current&quot; boolean NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;listing&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;reference&quot; varchar(16) UNIQUE NOT NULL,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;vertical&quot; vertical NOT NULL,
+  &quot;status&quot; listing_status NOT NULL DEFAULT &#39;draft&#39;,
+  &quot;status_before_delete&quot; listing_status,
+  &quot;inventory_kind&quot; inventory_kind NOT NULL,
+  &quot;experience_type&quot; experience_type,
+  &quot;title&quot; varchar(120) NOT NULL,
+  &quot;description&quot; text NOT NULL,
+  &quot;source_language&quot; varchar(2) NOT NULL,
+  &quot;category_id&quot; uuid,
+  &quot;property_type_id&quot; uuid,
+  &quot;commune_id&quot; int NOT NULL,
+  &quot;address_line&quot; varchar(255),
+  &quot;location_exact&quot; &quot;geography(Point,4326)&quot; NOT NULL,
+  &quot;location_public&quot; &quot;geography(Point,4326)&quot; NOT NULL,
+  &quot;capacity_guests&quot; smallint NOT NULL,
+  &quot;bedrooms&quot; smallint,
+  &quot;beds&quot; smallint,
+  &quot;bathrooms&quot; numeric(3,1),
+  &quot;surface_m2&quot; int,
+  &quot;currency&quot; char(3) NOT NULL DEFAULT &#39;DZD&#39;,
+  &quot;base_price_minor&quot; bigint NOT NULL,
+  &quot;cleaning_fee_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;weekly_discount_bp&quot; int NOT NULL DEFAULT 0,
+  &quot;monthly_discount_bp&quot; int NOT NULL DEFAULT 0,
+  &quot;min_nights&quot; smallint NOT NULL DEFAULT 1,
+  &quot;max_nights&quot; smallint NOT NULL DEFAULT 90,
+  &quot;advance_notice_days&quot; smallint NOT NULL DEFAULT 0,
+  &quot;available_from&quot; date,
+  &quot;available_until&quot; date,
+  &quot;check_in_time&quot; time,
+  &quot;check_out_time&quot; time,
+  &quot;approval_mode&quot; approval_mode,
+  &quot;cancellation_policy_id&quot; uuid NOT NULL,
+  &quot;house_rules&quot; jsonb,
+  &quot;rating_avg&quot; numeric(3,2),
+  &quot;review_count&quot; int NOT NULL DEFAULT 0,
+  &quot;submitted_at&quot; timestamptz,
+  &quot;published_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;listing_revision&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid NOT NULL,
+  &quot;payload&quot; jsonb NOT NULL,
+  &quot;status&quot; varchar(16) NOT NULL,
+  &quot;submitted_by_id&quot; uuid NOT NULL,
+  &quot;submitted_at&quot; timestamptz NOT NULL,
+  &quot;decided_by_id&quot; uuid,
+  &quot;decided_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;vehicle_detail&quot; (
+  &quot;listing_id&quot; uuid PRIMARY KEY,
+  &quot;make&quot; varchar(40) NOT NULL,
+  &quot;model&quot; varchar(60) NOT NULL,
+  &quot;year&quot; smallint NOT NULL,
+  &quot;seats&quot; smallint NOT NULL,
+  &quot;transmission&quot; varchar(12) NOT NULL,
+  &quot;fuel&quot; varchar(12) NOT NULL,
+  &quot;daily_km_limit&quot; int,
+  &quot;driver_min_age&quot; smallint NOT NULL DEFAULT 25,
+  &quot;licence_min_years&quot; smallint NOT NULL DEFAULT 2,
+  &quot;security_deposit_minor&quot; bigint
+);
+
+CREATE TABLE &quot;experience_detail&quot; (
+  &quot;listing_id&quot; uuid PRIMARY KEY,
+  &quot;duration_minutes&quot; int NOT NULL,
+  &quot;languages&quot; varchar(2)[] NOT NULL,
+  &quot;meeting_point&quot; &quot;geography(Point,4326)&quot;,
+  &quot;meeting_point_text&quot; varchar(255),
+  &quot;max_group&quot; smallint NOT NULL,
+  &quot;includes&quot; jsonb
+);
+
+CREATE TABLE &quot;room_type&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid NOT NULL,
+  &quot;name&quot; varchar(80) NOT NULL,
+  &quot;description&quot; text,
+  &quot;booking_unit&quot; booking_unit NOT NULL,
+  &quot;unit_count&quot; smallint NOT NULL,
+  &quot;capacity_per_unit&quot; smallint NOT NULL,
+  &quot;base_price_minor&quot; bigint NOT NULL,
+  &quot;beds_description&quot; varchar(120),
+  &quot;external_id&quot; varchar(80),
+  &quot;integration_id&quot; uuid,
+  &quot;sort_order&quot; int NOT NULL DEFAULT 0,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;listing_amenity&quot; (
+  &quot;listing_id&quot; uuid,
+  &quot;amenity_id&quot; uuid,
+  PRIMARY KEY (&quot;listing_id&quot;, &quot;amenity_id&quot;)
+);
+
+CREATE TABLE &quot;room_type_amenity&quot; (
+  &quot;room_type_id&quot; uuid,
+  &quot;amenity_id&quot; uuid,
+  PRIMARY KEY (&quot;room_type_id&quot;, &quot;amenity_id&quot;)
+);
+
+CREATE TABLE &quot;listing_photo&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid,
+  &quot;room_type_id&quot; uuid,
+  &quot;trip_id&quot; uuid,
+  &quot;media_id&quot; uuid NOT NULL,
+  &quot;sort_order&quot; int NOT NULL,
+  &quot;caption&quot; varchar(160),
+  &quot;is_cover&quot; boolean NOT NULL DEFAULT false
+);
+
+CREATE TABLE &quot;featured_placement&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid,
+  &quot;trip_id&quot; uuid,
+  &quot;placement&quot; varchar(24) NOT NULL,
+  &quot;position&quot; smallint NOT NULL DEFAULT 0,
+  &quot;starts_at&quot; timestamptz NOT NULL,
+  &quot;ends_at&quot; timestamptz,
+  &quot;created_by_id&quot; uuid NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;listing_day&quot; (
+  &quot;listing_id&quot; uuid,
+  &quot;day&quot; date,
+  &quot;is_blocked&quot; boolean NOT NULL DEFAULT false,
+  &quot;price_override_minor&quot; bigint,
+  &quot;note&quot; varchar(120),
+  PRIMARY KEY (&quot;listing_id&quot;, &quot;day&quot;)
+);
+
+CREATE TABLE &quot;room_type_night&quot; (
+  &quot;room_type_id&quot; uuid,
+  &quot;night&quot; date,
+  &quot;total&quot; smallint NOT NULL,
+  &quot;held&quot; smallint NOT NULL DEFAULT 0,
+  &quot;booked&quot; smallint NOT NULL DEFAULT 0,
+  &quot;price_override_minor&quot; bigint,
+  PRIMARY KEY (&quot;room_type_id&quot;, &quot;night&quot;)
+);
+
+CREATE TABLE &quot;experience_slot&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid NOT NULL,
+  &quot;starts_at&quot; timestamptz NOT NULL,
+  &quot;ends_at&quot; timestamptz NOT NULL,
+  &quot;seats_total&quot; smallint NOT NULL,
+  &quot;seats_held&quot; smallint NOT NULL DEFAULT 0,
+  &quot;seats_booked&quot; smallint NOT NULL DEFAULT 0,
+  &quot;price_override_minor&quot; bigint,
+  &quot;is_cancelled&quot; boolean NOT NULL DEFAULT false
+);
+
+CREATE TABLE &quot;trip&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;reference&quot; varchar(16) UNIQUE NOT NULL,
+  &quot;slug&quot; varchar(160) UNIQUE NOT NULL,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;status&quot; listing_status NOT NULL DEFAULT &#39;draft&#39;,
+  &quot;status_before_delete&quot; listing_status,
+  &quot;trip_type&quot; trip_type NOT NULL,
+  &quot;title&quot; varchar(140) NOT NULL,
+  &quot;description&quot; text NOT NULL,
+  &quot;source_language&quot; varchar(2) NOT NULL,
+  &quot;duration_days&quot; smallint NOT NULL,
+  &quot;group_min&quot; smallint NOT NULL DEFAULT 1,
+  &quot;group_max&quot; smallint NOT NULL,
+  &quot;currency&quot; char(3) NOT NULL DEFAULT &#39;DZD&#39;,
+  &quot;price_per_person_minor&quot; bigint NOT NULL,
+  &quot;inclusions&quot; jsonb NOT NULL,
+  &quot;exclusions&quot; jsonb NOT NULL,
+  &quot;start_commune_id&quot; int NOT NULL,
+  &quot;meeting_point&quot; &quot;geography(Point,4326)&quot;,
+  &quot;meeting_point_text&quot; varchar(255),
+  &quot;cancellation_policy_id&quot; uuid NOT NULL,
+  &quot;approval_mode&quot; approval_mode,
+  &quot;rating_avg&quot; numeric(3,2),
+  &quot;review_count&quot; int NOT NULL DEFAULT 0,
+  &quot;submitted_at&quot; timestamptz,
+  &quot;published_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;trip_itinerary_day&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;trip_id&quot; uuid NOT NULL,
+  &quot;day_number&quot; smallint NOT NULL,
+  &quot;title&quot; varchar(120) NOT NULL,
+  &quot;description&quot; text,
+  &quot;overnight_commune_id&quot; int
+);
+
+CREATE TABLE &quot;trip_departure&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;trip_id&quot; uuid NOT NULL,
+  &quot;starts_on&quot; date NOT NULL,
+  &quot;ends_on&quot; date NOT NULL,
+  &quot;seats_total&quot; smallint NOT NULL,
+  &quot;seats_held&quot; smallint NOT NULL DEFAULT 0,
+  &quot;seats_booked&quot; smallint NOT NULL DEFAULT 0,
+  &quot;price_per_person_minor&quot; bigint,
+  &quot;status&quot; departure_status NOT NULL DEFAULT &#39;scheduled&#39;,
+  &quot;guide_membership_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;quote&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;guest_id&quot; uuid,
+  &quot;listing_id&quot; uuid,
+  &quot;room_type_id&quot; uuid,
+  &quot;experience_slot_id&quot; uuid,
+  &quot;trip_departure_id&quot; uuid,
+  &quot;stay&quot; daterange,
+  &quot;guests&quot; smallint NOT NULL,
+  &quot;units&quot; smallint NOT NULL DEFAULT 1,
+  &quot;currency&quot; char(3) NOT NULL,
+  &quot;lines&quot; jsonb NOT NULL,
+  &quot;subtotal_minor&quot; bigint NOT NULL,
+  &quot;discount_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;cleaning_fee_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;taxes_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;total_minor&quot; bigint NOT NULL,
+  &quot;expires_at&quot; timestamptz NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;tax_rate&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;kind&quot; varchar(16) NOT NULL,
+  &quot;star_rating&quot; smallint,
+  &quot;rate_bp&quot; int,
+  &quot;amount_per_person_night_minor&quot; bigint,
+  &quot;valid_from&quot; date NOT NULL,
+  &quot;valid_to&quot; date
+);
+
+CREATE TABLE &quot;booking&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;reference&quot; varchar(20) UNIQUE NOT NULL,
+  &quot;guest_id&quot; uuid NOT NULL,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;inventory_kind&quot; inventory_kind NOT NULL,
+  &quot;listing_id&quot; uuid,
+  &quot;room_type_id&quot; uuid,
+  &quot;experience_slot_id&quot; uuid,
+  &quot;trip_departure_id&quot; uuid,
+  &quot;stay&quot; daterange NOT NULL,
+  &quot;check_in_at&quot; timestamptz NOT NULL,
+  &quot;check_out_at&quot; timestamptz NOT NULL,
+  &quot;guests_adults&quot; smallint NOT NULL,
+  &quot;guests_children&quot; smallint NOT NULL DEFAULT 0,
+  &quot;units&quot; smallint NOT NULL DEFAULT 1,
+  &quot;status&quot; booking_status NOT NULL,
+  &quot;payment_status&quot; payment_status NOT NULL DEFAULT &#39;not_collected&#39;,
+  &quot;approval_mode_applied&quot; approval_mode NOT NULL,
+  &quot;request_expires_at&quot; timestamptz,
+  &quot;confirmed_at&quot; timestamptz,
+  &quot;completed_at&quot; timestamptz,
+  &quot;cancelled_at&quot; timestamptz,
+  &quot;cancelled_by_role&quot; actor_role,
+  &quot;cancelled_by_id&quot; uuid,
+  &quot;cancel_reason_id&quot; uuid,
+  &quot;decline_reason_id&quot; uuid,
+  &quot;currency&quot; char(3) NOT NULL,
+  &quot;subtotal_minor&quot; bigint NOT NULL,
+  &quot;discount_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;cleaning_fee_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;taxes_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;total_minor&quot; bigint NOT NULL,
+  &quot;commission_base_minor&quot; bigint NOT NULL,
+  &quot;commission_rate_bp&quot; int NOT NULL,
+  &quot;commission_minor&quot; bigint NOT NULL,
+  &quot;refund_due_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;price_lines&quot; jsonb NOT NULL,
+  &quot;cancellation_windows&quot; jsonb NOT NULL,
+  &quot;listing_snapshot&quot; jsonb NOT NULL,
+  &quot;quote_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;booking_event&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;booking_id&quot; uuid NOT NULL,
+  &quot;from_status&quot; booking_status,
+  &quot;to_status&quot; booking_status NOT NULL,
+  &quot;actor_role&quot; actor_role NOT NULL,
+  &quot;actor_id&quot; uuid,
+  &quot;reason_id&quot; uuid,
+  &quot;note&quot; text,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;refund&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;booking_id&quot; uuid NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;kind&quot; varchar(20) NOT NULL,
+  &quot;settlement&quot; varchar(20) NOT NULL DEFAULT &#39;owed_by_host&#39;,
+  &quot;reason&quot; text,
+  &quot;created_by_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;dispute&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;booking_id&quot; uuid UNIQUE NOT NULL,
+  &quot;opened_by_id&quot; uuid NOT NULL,
+  &quot;opened_by_role&quot; actor_role NOT NULL,
+  &quot;reason_id&quot; uuid,
+  &quot;guest_statement&quot; text,
+  &quot;host_statement&quot; text,
+  &quot;outcome&quot; varchar(16),
+  &quot;refund_minor&quot; bigint,
+  &quot;resolution_note&quot; text,
+  &quot;resolved_by_id&quot; uuid,
+  &quot;resolved_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;ledger_account&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;code&quot; varchar(80) UNIQUE NOT NULL,
+  &quot;kind&quot; ledger_account_kind NOT NULL,
+  &quot;host_account_id&quot; uuid,
+  &quot;currency&quot; char(3) NOT NULL,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;ledger_transaction&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;kind&quot; ledger_tx_kind NOT NULL,
+  &quot;booking_id&quot; uuid,
+  &quot;topup_id&quot; uuid,
+  &quot;reverses_id&quot; uuid,
+  &quot;description&quot; varchar(255) NOT NULL,
+  &quot;created_by_id&quot; uuid,
+  &quot;occurred_at&quot; timestamptz NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;ledger_entry&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;transaction_id&quot; uuid NOT NULL,
+  &quot;account_id&quot; uuid NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;currency&quot; char(3) NOT NULL
+);
+
+CREATE TABLE &quot;account_balance&quot; (
+  &quot;account_id&quot; uuid PRIMARY KEY,
+  &quot;balance_minor&quot; bigint NOT NULL,
+  &quot;last_entry_id&quot; bigint NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;wallet_topup&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;method&quot; topup_method NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;receipt_reference&quot; varchar(200) NOT NULL,
+  &quot;status&quot; topup_status NOT NULL,
+  &quot;requested_by_id&quot; uuid NOT NULL,
+  &quot;approved_by_id&quot; uuid,
+  &quot;approved_at&quot; timestamptz,
+  &quot;rejection_reason&quot; text,
+  &quot;gateway_event_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;gateway_event&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;provider&quot; varchar(20) NOT NULL,
+  &quot;event_id&quot; varchar(100) NOT NULL,
+  &quot;signature_valid&quot; boolean NOT NULL,
+  &quot;payload&quot; jsonb NOT NULL,
+  &quot;received_at&quot; timestamptz NOT NULL,
+  &quot;processed_at&quot; timestamptz,
+  &quot;error&quot; text
+);
+
+CREATE TABLE &quot;payment&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;booking_id&quot; uuid,
+  &quot;provider&quot; varchar(20) NOT NULL,
+  &quot;provider_checkout_id&quot; varchar(100) NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;currency&quot; char(3) NOT NULL,
+  &quot;status&quot; varchar(16) NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;payout&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;payout_account_id&quot; uuid NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;status&quot; varchar(16) NOT NULL,
+  &quot;approved_by_id&quot; uuid,
+  &quot;ledger_transaction_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;invoice&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;year&quot; smallint NOT NULL,
+  &quot;number&quot; int NOT NULL,
+  &quot;period_start&quot; date NOT NULL,
+  &quot;period_end&quot; date NOT NULL,
+  &quot;amount_ht_minor&quot; bigint NOT NULL,
+  &quot;vat_minor&quot; bigint NOT NULL,
+  &quot;amount_ttc_minor&quot; bigint NOT NULL,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;pdf_media_id&quot; uuid,
+  &quot;credit_note_of_id&quot; uuid,
+  &quot;issued_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;review&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;booking_id&quot; uuid NOT NULL,
+  &quot;author_id&quot; uuid NOT NULL,
+  &quot;author_role&quot; actor_role NOT NULL,
+  &quot;listing_id&quot; uuid,
+  &quot;trip_id&quot; uuid,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;rating_overall&quot; smallint NOT NULL,
+  &quot;rating_cleanliness&quot; smallint,
+  &quot;rating_accuracy&quot; smallint,
+  &quot;rating_communication&quot; smallint,
+  &quot;rating_location&quot; smallint,
+  &quot;rating_value&quot; smallint,
+  &quot;comment&quot; text NOT NULL,
+  &quot;language&quot; varchar(2) NOT NULL,
+  &quot;status&quot; review_status NOT NULL DEFAULT &#39;submitted&#39;,
+  &quot;submitted_at&quot; timestamptz NOT NULL,
+  &quot;published_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;review_reply&quot; (
+  &quot;review_id&quot; uuid PRIMARY KEY,
+  &quot;author_id&quot; uuid NOT NULL,
+  &quot;body&quot; text NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;editable_until&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;review_report&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;review_id&quot; uuid NOT NULL,
+  &quot;reporter_id&quot; uuid NOT NULL,
+  &quot;reason_id&quot; uuid NOT NULL,
+  &quot;note&quot; text,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;conversation&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;kind&quot; conversation_kind NOT NULL,
+  &quot;guest_id&quot; uuid,
+  &quot;host_account_id&quot; uuid,
+  &quot;listing_id&quot; uuid,
+  &quot;trip_id&quot; uuid,
+  &quot;booking_id&quot; uuid,
+  &quot;last_message_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;conversation_participant&quot; (
+  &quot;conversation_id&quot; uuid,
+  &quot;user_id&quot; uuid,
+  &quot;role&quot; varchar(12) NOT NULL,
+  &quot;last_read_message_id&quot; bigint,
+  &quot;muted&quot; boolean NOT NULL DEFAULT false,
+  &quot;joined_at&quot; timestamptz NOT NULL,
+  PRIMARY KEY (&quot;conversation_id&quot;, &quot;user_id&quot;)
+);
+
+CREATE TABLE &quot;message&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;conversation_id&quot; uuid NOT NULL,
+  &quot;sender_id&quot; uuid,
+  &quot;kind&quot; varchar(12) NOT NULL,
+  &quot;body&quot; text NOT NULL,
+  &quot;body_masked&quot; text,
+  &quot;contains_contact_info&quot; boolean NOT NULL DEFAULT false,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;notification&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;kind&quot; varchar(48) NOT NULL,
+  &quot;params&quot; jsonb NOT NULL,
+  &quot;link&quot; varchar(255),
+  &quot;read_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;notification_preference&quot; (
+  &quot;user_id&quot; uuid,
+  &quot;kind&quot; varchar(48),
+  &quot;channel&quot; varchar(8),
+  &quot;enabled&quot; boolean NOT NULL,
+  PRIMARY KEY (&quot;user_id&quot;, &quot;kind&quot;, &quot;channel&quot;)
+);
+
+CREATE TABLE &quot;outbox_event&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;topic&quot; varchar(64) NOT NULL,
+  &quot;aggregate_type&quot; varchar(32) NOT NULL,
+  &quot;aggregate_id&quot; uuid NOT NULL,
+  &quot;payload&quot; jsonb NOT NULL,
+  &quot;status&quot; outbox_status NOT NULL DEFAULT &#39;pending&#39;,
+  &quot;attempts&quot; smallint NOT NULL DEFAULT 0,
+  &quot;next_attempt_at&quot; timestamptz NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;sent_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;delivery_log&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;outbox_event_id&quot; bigint,
+  &quot;channel&quot; varchar(8) NOT NULL,
+  &quot;provider&quot; varchar(20) NOT NULL,
+  &quot;recipient_hash&quot; char(64) NOT NULL,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;provider_message_id&quot; varchar(100),
+  &quot;cost_minor&quot; bigint,
+  &quot;error&quot; text,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;media_asset&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;owner_user_id&quot; uuid,
+  &quot;host_account_id&quot; uuid,
+  &quot;purpose&quot; varchar(20) NOT NULL,
+  &quot;bucket&quot; media_bucket NOT NULL,
+  &quot;storage_key&quot; varchar(255) UNIQUE NOT NULL,
+  &quot;mime_type&quot; varchar(64) NOT NULL,
+  &quot;size_bytes&quot; bigint NOT NULL,
+  &quot;width&quot; int,
+  &quot;height&quot; int,
+  &quot;sha256&quot; char(64) NOT NULL,
+  &quot;phash&quot; bigint,
+  &quot;status&quot; media_status NOT NULL DEFAULT &#39;quarantined&#39;,
+  &quot;scan_result&quot; varchar(32),
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;deleted_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;reason_code&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;action&quot; varchar(32) NOT NULL,
+  &quot;code&quot; varchar(48) NOT NULL,
+  &quot;label_en&quot; varchar(120) NOT NULL,
+  &quot;label_fr&quot; varchar(120) NOT NULL,
+  &quot;label_ar&quot; varchar(120) NOT NULL,
+  &quot;host_text_en&quot; text,
+  &quot;host_text_fr&quot; text,
+  &quot;host_text_ar&quot; text,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true
+);
+
+CREATE TABLE &quot;moderation_case&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;kind&quot; case_kind NOT NULL,
+  &quot;subject_type&quot; varchar(24) NOT NULL,
+  &quot;subject_id&quot; uuid NOT NULL,
+  &quot;status&quot; case_status NOT NULL DEFAULT &#39;open&#39;,
+  &quot;priority&quot; case_priority NOT NULL DEFAULT &#39;normal&#39;,
+  &quot;submitted_at&quot; timestamptz NOT NULL,
+  &quot;assigned_to_id&quot; uuid,
+  &quot;resolved_by_id&quot; uuid,
+  &quot;resolved_at&quot; timestamptz,
+  &quot;outcome&quot; varchar(24),
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;moderation_decision&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;case_id&quot; uuid NOT NULL,
+  &quot;decision&quot; varchar(24) NOT NULL,
+  &quot;reason_id&quot; uuid,
+  &quot;note&quot; text,
+  &quot;actor_id&quot; uuid NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;change_request_item&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;case_id&quot; uuid NOT NULL,
+  &quot;checklist_code&quot; varchar(48) NOT NULL,
+  &quot;message&quot; text,
+  &quot;resolved_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;platform_settings&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;version&quot; int UNIQUE NOT NULL,
+  &quot;data&quot; jsonb NOT NULL,
+  &quot;is_current&quot; boolean NOT NULL,
+  &quot;created_by_id&quot; uuid NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;onboarding_flow_version&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_type&quot; varchar(12) NOT NULL,
+  &quot;version&quot; int NOT NULL,
+  &quot;status&quot; flow_status NOT NULL,
+  &quot;schema&quot; jsonb NOT NULL,
+  &quot;published_by_id&quot; uuid,
+  &quot;published_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;onboarding_draft&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;host_type&quot; varchar(12) NOT NULL,
+  &quot;flow_version_id&quot; uuid NOT NULL,
+  &quot;current_step&quot; varchar(48) NOT NULL,
+  &quot;answers&quot; jsonb NOT NULL,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;host_account_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;coupon&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;code&quot; varchar(32) NOT NULL,
+  &quot;discount_type&quot; varchar(12) NOT NULL,
+  &quot;discount_value&quot; bigint NOT NULL,
+  &quot;min_spend_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;funded_by&quot; varchar(8) NOT NULL,
+  &quot;host_account_id&quot; uuid,
+  &quot;scope_verticals&quot; vertical[],
+  &quot;usage_limit&quot; int,
+  &quot;per_user_limit&quot; int NOT NULL DEFAULT 1,
+  &quot;valid_from&quot; timestamptz NOT NULL,
+  &quot;valid_to&quot; timestamptz,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true,
+  &quot;created_by_id&quot; uuid NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;coupon_redemption&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;coupon_id&quot; uuid NOT NULL,
+  &quot;booking_id&quot; uuid UNIQUE NOT NULL,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;released_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;audit_event&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;occurred_at&quot; timestamptz NOT NULL,
+  &quot;actor_id&quot; uuid,
+  &quot;actor_kind&quot; varchar(8) NOT NULL,
+  &quot;actor_role&quot; varchar(16),
+  &quot;action&quot; varchar(48) NOT NULL,
+  &quot;object_type&quot; varchar(24) NOT NULL,
+  &quot;object_id&quot; varchar(64) NOT NULL,
+  &quot;host_account_id&quot; uuid,
+  &quot;before&quot; jsonb,
+  &quot;after&quot; jsonb,
+  &quot;ip&quot; inet,
+  &quot;user_agent&quot; varchar(255),
+  &quot;request_id&quot; varchar(36),
+  &quot;prev_hash&quot; char(64) NOT NULL,
+  &quot;hash&quot; char(64) NOT NULL
+);
+
+CREATE TABLE &quot;export_job&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;requested_by_id&quot; uuid NOT NULL,
+  &quot;dataset&quot; varchar(32) NOT NULL,
+  &quot;filters&quot; jsonb NOT NULL,
+  &quot;row_count&quot; int,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;media_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;completed_at&quot; timestamptz
+);
+
+CREATE TABLE &quot;data_subject_request&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;kind&quot; dsr_kind NOT NULL,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;due_at&quot; timestamptz NOT NULL,
+  &quot;handled_by_id&quot; uuid,
+  &quot;completed_at&quot; timestamptz,
+  &quot;notes&quot; text,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;idempotency_record&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;user_id&quot; uuid NOT NULL,
+  &quot;endpoint&quot; varchar(80) NOT NULL,
+  &quot;key&quot; varchar(80) NOT NULL,
+  &quot;request_hash&quot; char(64) NOT NULL,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;response_code&quot; smallint,
+  &quot;response_body&quot; jsonb,
+  &quot;locked_until&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;expires_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;incident_record&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;kind&quot; varchar(24) NOT NULL,
+  &quot;severity&quot; varchar(8) NOT NULL,
+  &quot;detected_at&quot; timestamptz NOT NULL,
+  &quot;personal_data_involved&quot; boolean NOT NULL,
+  &quot;anpdp_deadline_at&quot; timestamptz,
+  &quot;anpdp_notified_at&quot; timestamptz,
+  &quot;users_notified_at&quot; timestamptz,
+  &quot;summary&quot; text NOT NULL,
+  &quot;actions_taken&quot; text,
+  &quot;owner_id&quot; uuid NOT NULL,
+  &quot;closed_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;calendar_feed&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid NOT NULL,
+  &quot;room_type_id&quot; uuid,
+  &quot;direction&quot; varchar(8) NOT NULL,
+  &quot;url_encrypted&quot; bytea,
+  &quot;export_token_hash&quot; char(64),
+  &quot;last_synced_at&quot; timestamptz,
+  &quot;last_error&quot; text,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;otp_send_log&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;phone_hash&quot; char(64) NOT NULL,
+  &quot;ip&quot; inet,
+  &quot;purpose&quot; varchar(16) NOT NULL,
+  &quot;provider&quot; varchar(20) NOT NULL,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;cost_minor&quot; bigint,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;property_integration&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;organization_id&quot; uuid NOT NULL,
+  &quot;listing_id&quot; uuid,
+  &quot;kind&quot; varchar(20) NOT NULL,
+  &quot;system_name&quot; varchar(60) NOT NULL,
+  &quot;base_url&quot; varchar(255),
+  &quot;credentials_encrypted&quot; bytea,
+  &quot;status&quot; varchar(12) NOT NULL DEFAULT &#39;pending&#39;,
+  &quot;sync_rooms&quot; boolean NOT NULL DEFAULT true,
+  &quot;sync_availability&quot; boolean NOT NULL DEFAULT true,
+  &quot;sync_services&quot; boolean NOT NULL DEFAULT true,
+  &quot;last_synced_at&quot; timestamptz,
+  &quot;last_error&quot; text,
+  &quot;created_by_id&quot; uuid NOT NULL,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;integration_sync_log&quot; (
+  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;integration_id&quot; uuid NOT NULL,
+  &quot;started_at&quot; timestamptz NOT NULL,
+  &quot;finished_at&quot; timestamptz,
+  &quot;status&quot; varchar(12) NOT NULL,
+  &quot;rooms_changed&quot; int NOT NULL DEFAULT 0,
+  &quot;nights_changed&quot; int NOT NULL DEFAULT 0,
+  &quot;services_changed&quot; int NOT NULL DEFAULT 0,
+  &quot;error&quot; text
+);
+
+CREATE TABLE &quot;property_service&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;listing_id&quot; uuid NOT NULL,
+  &quot;kind&quot; varchar(24) NOT NULL,
+  &quot;name&quot; varchar(120) NOT NULL,
+  &quot;description&quot; text,
+  &quot;opening_hours&quot; jsonb,
+  &quot;price_minor&quot; bigint,
+  &quot;external_id&quot; varchar(80),
+  &quot;source&quot; varchar(12) NOT NULL DEFAULT &#39;manual&#39;,
+  &quot;is_active&quot; boolean NOT NULL DEFAULT true,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;listing_search_doc&quot; (
+  &quot;listing_id&quot; uuid PRIMARY KEY,
+  &quot;vertical&quot; vertical NOT NULL,
+  &quot;wilaya_code&quot; smallint NOT NULL,
+  &quot;commune_id&quot; int NOT NULL,
+  &quot;location_public&quot; &quot;geography(Point,4326)&quot; NOT NULL,
+  &quot;price_from_minor&quot; bigint NOT NULL,
+  &quot;capacity_guests&quot; smallint NOT NULL,
+  &quot;rating_avg&quot; numeric(3,2),
+  &quot;review_count&quot; int NOT NULL,
+  &quot;instant_bookable&quot; boolean NOT NULL,
+  &quot;host_type&quot; varchar(12) NOT NULL,
+  &quot;experience_type&quot; experience_type,
+  &quot;property_type_id&quot; uuid,
+  &quot;amenity_ids&quot; uuid[] NOT NULL,
+  &quot;tsv_fr&quot; tsvector,
+  &quot;tsv_en&quot; tsvector,
+  &quot;tsv_ar&quot; tsvector,
+  &quot;search_text&quot; text,
+  &quot;published_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL
+);
+
+CREATE UNIQUE INDEX ON &quot;category&quot; (&quot;vertical&quot;, &quot;slug&quot;);
+
+CREATE UNIQUE INDEX ON &quot;property_type&quot; (&quot;vertical&quot;, &quot;slug&quot;);
+
+CREATE UNIQUE INDEX ON &quot;cancellation_policy&quot; (&quot;code&quot;, &quot;version&quot;);
+
+CREATE UNIQUE INDEX ON &quot;experience_slot&quot; (&quot;listing_id&quot;, &quot;starts_at&quot;);
+
+CREATE UNIQUE INDEX ON &quot;trip_itinerary_day&quot; (&quot;trip_id&quot;, &quot;day_number&quot;);
+
+CREATE UNIQUE INDEX ON &quot;trip_departure&quot; (&quot;trip_id&quot;, &quot;starts_on&quot;);
+
+CREATE INDEX ON &quot;booking&quot; (&quot;host_account_id&quot;, &quot;status&quot;, &quot;check_in_at&quot;);
+
+CREATE INDEX ON &quot;booking&quot; (&quot;guest_id&quot;, &quot;created_at&quot;);
+
+CREATE INDEX ON &quot;booking&quot; (&quot;request_expires_at&quot;);
+
+CREATE INDEX ON &quot;booking&quot; (&quot;check_out_at&quot;);
+
+CREATE UNIQUE INDEX ON &quot;wallet_topup&quot; (&quot;method&quot;, &quot;receipt_reference&quot;);
+
+CREATE UNIQUE INDEX ON &quot;gateway_event&quot; (&quot;provider&quot;, &quot;event_id&quot;);
+
+CREATE UNIQUE INDEX ON &quot;invoice&quot; (&quot;year&quot;, &quot;number&quot;);
+
+CREATE UNIQUE INDEX ON &quot;review&quot; (&quot;booking_id&quot;, &quot;author_role&quot;);
+
+CREATE UNIQUE INDEX ON &quot;review_report&quot; (&quot;review_id&quot;, &quot;reporter_id&quot;);
+
+CREATE INDEX ON &quot;message&quot; (&quot;conversation_id&quot;, &quot;id&quot;);
+
+CREATE INDEX ON &quot;notification&quot; (&quot;user_id&quot;, &quot;read_at&quot;, &quot;id&quot;);
+
+CREATE INDEX ON &quot;outbox_event&quot; (&quot;status&quot;, &quot;next_attempt_at&quot;);
+
+CREATE INDEX ON &quot;media_asset&quot; (&quot;phash&quot;);
+
+CREATE UNIQUE INDEX ON &quot;reason_code&quot; (&quot;action&quot;, &quot;code&quot;);
+
+CREATE INDEX ON &quot;moderation_case&quot; (&quot;status&quot;, &quot;kind&quot;, &quot;submitted_at&quot;);
+
+CREATE UNIQUE INDEX ON &quot;onboarding_flow_version&quot; (&quot;host_type&quot;, &quot;version&quot;);
+
+CREATE INDEX ON &quot;audit_event&quot; (&quot;object_type&quot;, &quot;object_id&quot;, &quot;occurred_at&quot;);
+
+CREATE INDEX ON &quot;audit_event&quot; (&quot;actor_id&quot;, &quot;occurred_at&quot;);
+
+CREATE UNIQUE INDEX ON &quot;idempotency_record&quot; (&quot;user_id&quot;, &quot;endpoint&quot;, &quot;key&quot;);
+
+CREATE INDEX ON &quot;otp_send_log&quot; (&quot;phone_hash&quot;, &quot;created_at&quot;);
+
+CREATE INDEX ON &quot;otp_send_log&quot; (&quot;ip&quot;, &quot;created_at&quot;);
+
+ALTER TABLE &quot;user&quot; ADD FOREIGN KEY (&quot;avatar_media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;user&quot; ADD FOREIGN KEY (&quot;home_commune_id&quot;) REFERENCES &quot;commune&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;staff_profile&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;staff_profile&quot; ADD FOREIGN KEY (&quot;invited_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;staff_role_permission&quot; ADD FOREIGN KEY (&quot;permission_code&quot;) REFERENCES &quot;staff_permission&quot; (&quot;code&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;consent_record&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;favorite&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;favorite&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;favorite&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;daira&quot; ADD FOREIGN KEY (&quot;wilaya_code&quot;) REFERENCES &quot;wilaya&quot; (&quot;code&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;commune&quot; ADD FOREIGN KEY (&quot;wilaya_code&quot;) REFERENCES &quot;wilaya&quot; (&quot;code&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;commune&quot; ADD FOREIGN KEY (&quot;daira_id&quot;) REFERENCES &quot;daira&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_account&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_account&quot; ADD FOREIGN KEY (&quot;organization_id&quot;) REFERENCES &quot;organization&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;organization&quot; ADD FOREIGN KEY (&quot;logo_media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;organization&quot; ADD FOREIGN KEY (&quot;cover_media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;organization&quot; ADD FOREIGN KEY (&quot;commune_id&quot;) REFERENCES &quot;commune&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;organization&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;membership&quot; ADD FOREIGN KEY (&quot;organization_id&quot;) REFERENCES &quot;organization&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;membership&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;invitation&quot; ADD FOREIGN KEY (&quot;organization_id&quot;) REFERENCES &quot;organization&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;invitation&quot; ADD FOREIGN KEY (&quot;invited_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;invitation&quot; ADD FOREIGN KEY (&quot;accepted_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_document&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_document&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_document&quot; ADD FOREIGN KEY (&quot;media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_document&quot; ADD FOREIGN KEY (&quot;reviewed_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;host_document&quot; ADD FOREIGN KEY (&quot;rejection_reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;payout_account&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing&quot; ADD FOREIGN KEY (&quot;category_id&quot;) REFERENCES &quot;category&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing&quot; ADD FOREIGN KEY (&quot;property_type_id&quot;) REFERENCES &quot;property_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing&quot; ADD FOREIGN KEY (&quot;commune_id&quot;) REFERENCES &quot;commune&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing&quot; ADD FOREIGN KEY (&quot;cancellation_policy_id&quot;) REFERENCES &quot;cancellation_policy&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_revision&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_revision&quot; ADD FOREIGN KEY (&quot;submitted_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_revision&quot; ADD FOREIGN KEY (&quot;decided_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;vehicle_detail&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;experience_detail&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;room_type&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;room_type&quot; ADD FOREIGN KEY (&quot;integration_id&quot;) REFERENCES &quot;property_integration&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_amenity&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_amenity&quot; ADD FOREIGN KEY (&quot;amenity_id&quot;) REFERENCES &quot;amenity&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;room_type_amenity&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;room_type_amenity&quot; ADD FOREIGN KEY (&quot;amenity_id&quot;) REFERENCES &quot;amenity&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_photo&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_photo&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_photo&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_photo&quot; ADD FOREIGN KEY (&quot;media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;featured_placement&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;featured_placement&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;featured_placement&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_day&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;room_type_night&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;experience_slot&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip&quot; ADD FOREIGN KEY (&quot;start_commune_id&quot;) REFERENCES &quot;commune&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip&quot; ADD FOREIGN KEY (&quot;cancellation_policy_id&quot;) REFERENCES &quot;cancellation_policy&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip_itinerary_day&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip_itinerary_day&quot; ADD FOREIGN KEY (&quot;overnight_commune_id&quot;) REFERENCES &quot;commune&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip_departure&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;trip_departure&quot; ADD FOREIGN KEY (&quot;guide_membership_id&quot;) REFERENCES &quot;membership&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;quote&quot; ADD FOREIGN KEY (&quot;guest_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;quote&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;quote&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;quote&quot; ADD FOREIGN KEY (&quot;experience_slot_id&quot;) REFERENCES &quot;experience_slot&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;quote&quot; ADD FOREIGN KEY (&quot;trip_departure_id&quot;) REFERENCES &quot;trip_departure&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;guest_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;experience_slot_id&quot;) REFERENCES &quot;experience_slot&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;trip_departure_id&quot;) REFERENCES &quot;trip_departure&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;cancelled_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;cancel_reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;decline_reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking&quot; ADD FOREIGN KEY (&quot;quote_id&quot;) REFERENCES &quot;quote&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking_event&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking_event&quot; ADD FOREIGN KEY (&quot;actor_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;booking_event&quot; ADD FOREIGN KEY (&quot;reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;dispute&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;dispute&quot; ADD FOREIGN KEY (&quot;opened_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;dispute&quot; ADD FOREIGN KEY (&quot;reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;dispute&quot; ADD FOREIGN KEY (&quot;resolved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_account&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_transaction&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_transaction&quot; ADD FOREIGN KEY (&quot;topup_id&quot;) REFERENCES &quot;wallet_topup&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_transaction&quot; ADD FOREIGN KEY (&quot;reverses_id&quot;) REFERENCES &quot;ledger_transaction&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_transaction&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_entry&quot; ADD FOREIGN KEY (&quot;transaction_id&quot;) REFERENCES &quot;ledger_transaction&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;ledger_entry&quot; ADD FOREIGN KEY (&quot;account_id&quot;) REFERENCES &quot;ledger_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;account_balance&quot; ADD FOREIGN KEY (&quot;account_id&quot;) REFERENCES &quot;ledger_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;requested_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;approved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;gateway_event_id&quot;) REFERENCES &quot;gateway_event&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;payment&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;payout&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;payout&quot; ADD FOREIGN KEY (&quot;payout_account_id&quot;) REFERENCES &quot;payout_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;payout&quot; ADD FOREIGN KEY (&quot;approved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;payout&quot; ADD FOREIGN KEY (&quot;ledger_transaction_id&quot;) REFERENCES &quot;ledger_transaction&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;invoice&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;invoice&quot; ADD FOREIGN KEY (&quot;pdf_media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;invoice&quot; ADD FOREIGN KEY (&quot;credit_note_of_id&quot;) REFERENCES &quot;invoice&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review&quot; ADD FOREIGN KEY (&quot;author_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review_reply&quot; ADD FOREIGN KEY (&quot;review_id&quot;) REFERENCES &quot;review&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review_reply&quot; ADD FOREIGN KEY (&quot;author_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review_report&quot; ADD FOREIGN KEY (&quot;review_id&quot;) REFERENCES &quot;review&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review_report&quot; ADD FOREIGN KEY (&quot;reporter_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;review_report&quot; ADD FOREIGN KEY (&quot;reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation&quot; ADD FOREIGN KEY (&quot;guest_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation&quot; ADD FOREIGN KEY (&quot;trip_id&quot;) REFERENCES &quot;trip&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation_participant&quot; ADD FOREIGN KEY (&quot;conversation_id&quot;) REFERENCES &quot;conversation&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;conversation_participant&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;message&quot; ADD FOREIGN KEY (&quot;conversation_id&quot;) REFERENCES &quot;conversation&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;message&quot; ADD FOREIGN KEY (&quot;sender_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;notification&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;notification_preference&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;delivery_log&quot; ADD FOREIGN KEY (&quot;outbox_event_id&quot;) REFERENCES &quot;outbox_event&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;media_asset&quot; ADD FOREIGN KEY (&quot;owner_user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;media_asset&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;moderation_case&quot; ADD FOREIGN KEY (&quot;assigned_to_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;moderation_case&quot; ADD FOREIGN KEY (&quot;resolved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;moderation_decision&quot; ADD FOREIGN KEY (&quot;case_id&quot;) REFERENCES &quot;moderation_case&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;moderation_decision&quot; ADD FOREIGN KEY (&quot;reason_id&quot;) REFERENCES &quot;reason_code&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;moderation_decision&quot; ADD FOREIGN KEY (&quot;actor_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;change_request_item&quot; ADD FOREIGN KEY (&quot;case_id&quot;) REFERENCES &quot;moderation_case&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;platform_settings&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;onboarding_flow_version&quot; ADD FOREIGN KEY (&quot;published_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;onboarding_draft&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;onboarding_draft&quot; ADD FOREIGN KEY (&quot;flow_version_id&quot;) REFERENCES &quot;onboarding_flow_version&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;onboarding_draft&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;coupon&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;coupon&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;coupon_redemption&quot; ADD FOREIGN KEY (&quot;coupon_id&quot;) REFERENCES &quot;coupon&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;coupon_redemption&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;coupon_redemption&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;audit_event&quot; ADD FOREIGN KEY (&quot;actor_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;audit_event&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;export_job&quot; ADD FOREIGN KEY (&quot;requested_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;export_job&quot; ADD FOREIGN KEY (&quot;media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;data_subject_request&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;data_subject_request&quot; ADD FOREIGN KEY (&quot;handled_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;idempotency_record&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;incident_record&quot; ADD FOREIGN KEY (&quot;owner_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;calendar_feed&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;calendar_feed&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;property_integration&quot; ADD FOREIGN KEY (&quot;organization_id&quot;) REFERENCES &quot;organization&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;property_integration&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;property_integration&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;integration_sync_log&quot; ADD FOREIGN KEY (&quot;integration_id&quot;) REFERENCES &quot;property_integration&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;property_service&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;listing_search_doc&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+</code></pre>
+</div>
+</body></html>

@@ -1,0 +1,125 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Click-through observations (website, dev server, 2026-11-04) · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="on" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="click-through-observations-website-dev-server-2026-11-04">Click-through observations (website, dev server, 2026-11-04)</h1>
+<p>Signed in with the documented demo accounts (password from <code>frontend/lib/data/auth.ts</code> DEMO_PASSWORD).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Flow</th>
+<th>What happened</th>
+<th>Backend implication</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>O1</td>
+<td>Guest login (<a href="mailto:yacine.traveler@bladus.dz">yacine.traveler@bladus.dz</a>)</td>
+<td>Works, redirects home.</td>
+<td>Email + password login exists; no OTP, no email verification step observed.</td>
+</tr>
+<tr>
+<td>O2</td>
+<td>Instant book, Tipaza villa, Dec 10 to 13</td>
+<td>Confirmed immediately. Card: 18,500 DZD/night x 3 = 55,500 + cleaning 4,000 = 59,500 DZD, &quot;No BLADUS fees&quot;.</td>
+<td>No payment step exists at all: a booking becomes &quot;confirmed&quot; with no money moving. Real flow needs payment intent before confirmation.</td>
+</tr>
+<tr>
+<td>O3</td>
+<td>Same link carried <code>guestCount=2</code></td>
+<td>Booking card showed &quot;1 guest&quot;.</td>
+<td>URL param name mismatch (<code>guestCount</code> vs <code>guests</code>); API must define one name.</td>
+</tr>
+<tr>
+<td>O4</td>
+<td>Overlap: Dec 12 to 14 on same villa</td>
+<td>Blocked: &quot;Some of the selected dates are no longer available&quot;. Reserve disabled.</td>
+<td>Overlap check exists in app code; must move to a database-level guarantee.</td>
+</tr>
+<tr>
+<td>O5</td>
+<td>Back-to-back: Dec 13 to 15</td>
+<td>Allowed.</td>
+<td>Confirms half-open date ranges [check-in, check-out).</td>
+</tr>
+<tr>
+<td>O6</td>
+<td>Request to book, Constantine residence, Dec 20 to 23</td>
+<td>&quot;Request sent, host usually replies within 24 hours, you are not charged until then&quot;, status Awaiting approval, total 36,000 DZD.</td>
+<td>Request mode with pending status; expiry job needed (24 h).</td>
+</tr>
+<tr>
+<td>O7</td>
+<td>Trips page</td>
+<td>Lists both new bookings. Every card says &quot;Payment: CIB / Edahabia Card, Total paid&quot;, including the pending request where nothing was paid.</td>
+<td>Payment method and paid status are not modelled; UI fakes them. Need payments table and booking payment status.</td>
+</tr>
+<tr>
+<td>O8</td>
+<td>Messages</td>
+<td>Threads per listing with read receipts and unread count.</td>
+<td>Conversations, messages, read state needed.</td>
+</tr>
+<tr>
+<td>O9</td>
+<td>Become a host</td>
+<td>4 host types: Individual, Agency/Fleet, Hotel &amp; Resort, Hostel &amp; Community; each starts a guided flow with draft saving and live preview.</td>
+<td>Onboarding drafts must be persisted per user; flow content per host type.</td>
+</tr>
+<tr>
+<td>O10</td>
+<td>Host mode as Karim (agency owner, also owns 2 hotels)</td>
+<td>Today page shows &quot;Agency command centre&quot;, rating 4.96 across 159 reviews but &quot;No guest reviews yet&quot;, prepaid wallet 145,000 DZD, &quot;Prepaid commission deposit ledger (platform take rate 15%)&quot;, &quot;Deducted per confirmed booking (agency rate)&quot;.</td>
+<td>Wallet model = PREPAID COMMISSION DEPOSIT: host tops up, BLADUS deducts commission per confirmed booking. Different from Airbnb&#39;s payout model; must be a ledger. Rating aggregates inconsistent with review rows. A user can own several organizations: active-organization context needed.</td>
+</tr>
+<tr>
+<td>O11</td>
+<td>Gross host earnings show 0 DZD while there is an active confirmed booking</td>
+<td>Earnings only count completed stays?</td>
+<td>Define earnings recognition rule (at check-in, check-out, or confirmation).</td>
+</tr>
+</tbody></table>
+<div class="pager"><span><a href="work-spec-vs-code.html">&larr; BLADUS: spec vs code (raw analysis for the backend blueprint)</a></span><span><a href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem &rarr;</a></span></div></main></div></body></html>

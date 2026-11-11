@@ -1,0 +1,900 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>01. System inventory: what BLADUS does today · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="on" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 1 and 2: discovery and research</div><h1 id="01-system-inventory-what-bladus-does-today">01. System inventory: what BLADUS does today</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>BLADUS has two web apps and no real backend yet. Everything is kept in memory and resets when the server restarts.<br>This document lists what each kind of user can do, what data exists, and which functions the future Django API must replace.<br>It also lists the rules hidden in the code and every place where the two apps, or the original spec, disagree.<br>The disagreements matter most: a few of them (money model, statuses, who is a host) must be decided before any table is designed.<br>Raw, line-by-line notes are kept in the appendices so nothing is lost.</p>
+</blockquote>
+<p>Date: 2026-11-04. Scope: <code>frontend/</code> (guest and host website) and <code>admin/</code> (back office). Method: reading the code, comparing it with the recovered spec (<code>_sources/darna_spec.md</code>), and clicking through the main flows on a local dev server.</p>
+<p><strong>Terms used in this document</strong> (all also in <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Mock store</strong>: data kept in a JavaScript object in server memory (<code>globalThis</code>). It disappears on restart and is not shared between servers.</li>
+<li><strong><code>lib/data</code> seam</strong>: the folder of functions every page calls to read or write data. It is the bridge: each function there becomes one API call later.</li>
+<li><strong>Server action</strong>: a Next.js function that runs on the server when a form or button is used. It returns <code>ActionResult</code> (success, or an error code).</li>
+<li><strong>Host type</strong>: <code>individual</code>, <code>agency</code>, <code>hotel</code> or <code>hostel</code>.</li>
+<li><strong>Vertical</strong>: a product family: homes, hotels, experiences, vehicles, trips.</li>
+<li><strong>Ledger</strong>: a list of money movements that is only ever added to; a balance is the sum of its lines.</li>
+</ul>
+<hr>
+<h2 id="1-the-system-at-a-glance">1. The system at a glance</h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>What it is</th>
+<th>Users</th>
+<th>Session</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Website (<code>frontend/</code>)</td>
+<td>Next.js 14 App Router, next-intl (en, fr, ar with right-to-left), Tailwind</td>
+<td>Visitors, guests, hosts (individual and organisation teams)</td>
+<td>Signed cookie <code>darna_session</code> (HMAC)</td>
+</tr>
+<tr>
+<td>Admin (<code>admin/</code>)</td>
+<td>Same stack, separate app</td>
+<td>Staff with 5 roles: super_admin, moderator, support, finance, analyst</td>
+<td>JWT cookie <code>darna_admin_session</code>, 8 hours, HS256</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td><strong>None.</strong> Each app has its own in-memory mock store with its own seed data</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>The two apps do <strong>not</strong> share data. A booking made on the website never appears in the admin, and an approval in the admin never reaches the website. The Django backend will become the one shared source of truth.</p>
+<hr>
+<h2 id="2-features-per-actor">2. Features per actor</h2>
+<p>Status: <strong>built</strong> (works end to end on mock data), <strong>partial</strong> (some parts real, some hardcoded), <strong>mocked</strong> (screen only, nothing saved), <strong>missing</strong>.</p>
+<h3 id="21-visitor-not-signed-in">2.1 Visitor (not signed in)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Backend need</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home feed: homes, experiences, trips, hotels and hostels, vehicles, featured, wilaya tiles</td>
+<td>built</td>
+<td>Public listing and trip queries, featured flag</td>
+</tr>
+<tr>
+<td>Search bar (where, when, who) and results page with left filter sidebar, facet counts, map (Leaflet + OpenFreeMap), vertical tabs</td>
+<td>built</td>
+<td>Search endpoint with filters, facets, map bounds</td>
+</tr>
+<tr>
+<td>Listing detail (home, vehicle, experience): gallery, amenities, rules, policies, reviews, map, booking card</td>
+<td>built</td>
+<td>Listing detail, availability, price quote</td>
+</tr>
+<tr>
+<td>Hotel and hostel detail with room-type cards (per room or per bed)</td>
+<td>built</td>
+<td>Room types and per-night inventory</td>
+</tr>
+<tr>
+<td>Trip detail (itinerary, agency card, per-person price)</td>
+<td>built</td>
+<td>Trips and departures</td>
+</tr>
+<tr>
+<td>Organisation profile pages (agency, hotel, hostel) and individual host profile</td>
+<td>built</td>
+<td>Public organisation and host projections</td>
+</tr>
+<tr>
+<td>Sign up, sign in</td>
+<td>built (email + password only)</td>
+<td>Accounts, phone OTP, verification</td>
+</tr>
+</tbody></table>
+<h3 id="22-guest-signed-in-traveller">2.2 Guest (signed-in traveller)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Backend need</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Book instantly</td>
+<td>built, <strong>no payment step</strong></td>
+<td>Payment before confirmation</td>
+</tr>
+<tr>
+<td>Request to book (24 h host reply window)</td>
+<td>built, expiry applied only when data is read</td>
+<td>Scheduled expiry job</td>
+</tr>
+<tr>
+<td>My reservations (&quot;Trips&quot; page), cancel with policy refund</td>
+<td>built, shows fake &quot;Total paid by CIB/Edahabia&quot;</td>
+<td>Payments, refunds</td>
+</tr>
+<tr>
+<td>Favourites</td>
+<td>built</td>
+<td>Favourites table</td>
+</tr>
+<tr>
+<td>Messages with hosts (threads, read state, unread count)</td>
+<td>built</td>
+<td>Conversations, messages</td>
+</tr>
+<tr>
+<td>Notifications</td>
+<td>built (seeded only, nothing produces new ones)</td>
+<td>Notification producers</td>
+</tr>
+<tr>
+<td>Write a review</td>
+<td><strong>missing</strong> (reviews are read-only seeds)</td>
+<td>Review write path tied to a completed stay</td>
+</tr>
+<tr>
+<td>Profile, change password</td>
+<td>built</td>
+<td>Account endpoints</td>
+</tr>
+</tbody></table>
+<h3 id="23-host-individual">2.3 Host, individual</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Backend need</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Become a host: 12-step guided flow with draft and preview</td>
+<td>built, draft in browser only</td>
+<td>Persisted onboarding drafts</td>
+</tr>
+<tr>
+<td>&quot;My listings&quot; (2-page solo interface) and edit modal</td>
+<td>partial</td>
+<td>Listing CRUD</td>
+</tr>
+<tr>
+<td>Bookings list with Accept / Decline, mini calendar</td>
+<td>built</td>
+<td>Respond to requests</td>
+</tr>
+<tr>
+<td>Calendar: block dates, set nightly prices</td>
+<td>built (not hidden from solo hosts)</td>
+<td>Availability overrides</td>
+</tr>
+<tr>
+<td>Prepaid commission wallet widget</td>
+<td>built</td>
+<td>Ledger</td>
+</tr>
+<tr>
+<td>Settings: default approval mode</td>
+<td>partial: does not affect existing or new listings</td>
+<td>Approval-mode resolution rule</td>
+</tr>
+</tbody></table>
+<h3 id="24-host-organisation-agency-hotel-hostel-team-member">2.4 Host organisation (agency, hotel, hostel team member)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Backend need</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Onboarding: agency 5 steps, hotel 7, hostel 7</td>
+<td>built (agency never asks the approval mode)</td>
+<td>Organisation creation, verification</td>
+</tr>
+<tr>
+<td>Today page (command centre), bookings, calendar per room type, listings with room-type manager</td>
+<td>built / partial</td>
+<td>Org-scoped queries</td>
+</tr>
+<tr>
+<td>Trips (agency only): 5-step creation, list, pause, delete</td>
+<td>built</td>
+<td>Trips and departures</td>
+</tr>
+<tr>
+<td>Team: invite, change role, transfer ownership, remove</td>
+<td>partial: <strong>invites can never be accepted</strong></td>
+<td>Invitations with tokens</td>
+</tr>
+<tr>
+<td>Organisation settings, legal fields</td>
+<td>built</td>
+<td>Re-verification when legal fields change</td>
+</tr>
+<tr>
+<td>Switch between own organisations</td>
+<td><strong>missing</strong> (active org is fixed per session)</td>
+<td>Organisation switcher</td>
+</tr>
+</tbody></table>
+<h3 id="25-staff-admin-app">2.5 Staff (admin app)</h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+<th>Roles that can act</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sign in / out, login rate limit</td>
+<td>built (no MFA, no password reset, invites cannot sign in)</td>
+<td>all</td>
+</tr>
+<tr>
+<td>Dashboard KPIs and &quot;needs attention&quot;</td>
+<td>partial (trends and charts hardcoded)</td>
+<td>all view</td>
+</tr>
+<tr>
+<td>Approvals inbox: hosts, listings, documents, reviews, disputes</td>
+<td>partial (document approve approves the whole host; undo is a toast)</td>
+<td>SA, MO</td>
+</tr>
+<tr>
+<td>Provider (host) validation</td>
+<td>partial (&quot;request changes&quot; not saved)</td>
+<td>SA, MO</td>
+</tr>
+<tr>
+<td>Hosts directory, commission override, wallet recharge</td>
+<td>built</td>
+<td>SA, MO, FI</td>
+</tr>
+<tr>
+<td>Users (guests) suspend, ban, delete, restore</td>
+<td>built (reset password mocked)</td>
+<td>SA, MO, SU</td>
+</tr>
+<tr>
+<td>Listings across verticals: approve, request changes, feature, suspend, delete, restore, bulk approve, CSV</td>
+<td>built</td>
+<td>SA, MO</td>
+</tr>
+<tr>
+<td>Listing create wizards, change requests, featured placements</td>
+<td><strong>mocked</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Bookings: cancel, refund, resolve dispute, CSV</td>
+<td>built</td>
+<td>SA, SU, FI (refund)</td>
+</tr>
+<tr>
+<td>Finance: wallets, ledger, payouts approve/reject, default commission rates</td>
+<td>built</td>
+<td>SA, FI</td>
+</tr>
+<tr>
+<td>Reviews: hide, restore, dismiss flag, delete</td>
+<td>built</td>
+<td>SA, MO</td>
+</tr>
+<tr>
+<td>Coupons create, toggle, delete</td>
+<td>built (no checkout uses them)</td>
+<td>SA, MO</td>
+</tr>
+<tr>
+<td>Messages, notifications, templates, broadcast</td>
+<td><strong>mocked</strong>, and no permission check at all</td>
+<td>anyone signed in</td>
+</tr>
+<tr>
+<td>Stats</td>
+<td>partial (mostly hardcoded)</td>
+<td>SA, MO, FI, AN</td>
+</tr>
+<tr>
+<td>Settings, team and roles, audit log, onboarding configurator</td>
+<td>built / partial</td>
+<td>SA (audit: all view)</td>
+</tr>
+</tbody></table>
+<p>Roles: SA super_admin (34 permissions), MO moderator (17), SU support (10), FI finance (10), AN analyst (8). The full permission matrix is in <a href="work-admin-inventory.html">Appendix B section 1.1</a>.</p>
+<hr>
+<h2 id="3-data-inventory">3. Data inventory</h2>
+<h3 id="31-entities-that-exist-today">3.1 Entities that exist today</h3>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Website</th>
+<th>Admin</th>
+<th>Notes for the backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>User</td>
+<td><code>User</code> with <code>role guest/host/admin</code>, one <code>hostType</code>, <code>organizationId</code></td>
+<td><code>GuestUser</code> and <code>Host</code> are <strong>separate, unlinked tables</strong></td>
+<td>One <code>users</code> table plus host profile and memberships</td>
+</tr>
+<tr>
+<td>Organisation</td>
+<td><code>Organization</code> with <code>businessCategory</code>, verification <code>pending/verified/rejected</code>, hotel and hostel policy fields</td>
+<td><code>Organization</code> type never seeded; flattened into <code>Host</code> + metadata blobs</td>
+<td>Real table; verification as a state machine</td>
+</tr>
+<tr>
+<td>Membership</td>
+<td>owner, admin, manager, guide, agent (6 seeds)</td>
+<td>type only</td>
+<td>Role per organisation</td>
+</tr>
+<tr>
+<td>Listing</td>
+<td><code>Listing</code> with <code>ownerType</code>, <code>latlng</code>, <code>commune</code>, <code>cleaningFee</code>, <code>cancellationPolicy</code>, <code>minNights/maxNights</code>, vehicle and experience fields</td>
+<td><code>Listing</code> with <code>wilayaCode</code>, <code>coordinates</code>, <code>propertyType</code> free text, 8 statuses</td>
+<td>Admin cannot see cleaning fee, policy or stay rules today</td>
+</tr>
+<tr>
+<td>RoomType</td>
+<td><code>bookingUnit room/bed</code>, <code>totalInventory</code>, price, capacity</td>
+<td>same idea</td>
+<td>One inventory column; availability computed</td>
+</tr>
+<tr>
+<td>Reservation / Booking</td>
+<td><code>Reservation</code> (<code>res_*</code>), statuses incl. <code>declined</code>, <code>expired</code></td>
+<td><code>Booking</code> (<code>BLD-2026-NNNN</code>), statuses incl. <code>disputed</code>, <code>refunded</code></td>
+<td>Union state machine needed</td>
+</tr>
+<tr>
+<td>Trip</td>
+<td>Separate <code>Trip</code> with itinerary and <code>departureDates: string[]</code></td>
+<td>A <code>Listing</code> with <code>category: trip</code></td>
+<td>Decide: own tables with departures</td>
+</tr>
+<tr>
+<td>Conversation, Message</td>
+<td>built</td>
+<td>mocked</td>
+<td></td>
+</tr>
+<tr>
+<td>Notification</td>
+<td>built (4 seeds)</td>
+<td>mocked</td>
+<td></td>
+</tr>
+<tr>
+<td>Review</td>
+<td>5 sub-ratings, no status, read-only module constant</td>
+<td>single rating, status, flags, host reply</td>
+<td>Merge both shapes</td>
+</tr>
+<tr>
+<td>Calendar override</td>
+<td>blocked days and price per day per listing</td>
+<td>none</td>
+<td>Per listing and per room type</td>
+</tr>
+<tr>
+<td>Wallet, Transaction</td>
+<td><strong>prepaid commission</strong> wallet per user or org</td>
+<td>wallet per host mixing guest money and payouts</td>
+<td>Fundamental decision (D-16)</td>
+</tr>
+<tr>
+<td>Payout request</td>
+<td>none</td>
+<td>built</td>
+<td></td>
+</tr>
+<tr>
+<td>Coupon</td>
+<td><code>Coupon</code></td>
+<td><code>PromotionCoupon</code> (different field names)</td>
+<td>One shape</td>
+</tr>
+<tr>
+<td>Category, Amenity</td>
+<td>i18n keys</td>
+<td><code>{en,fr,ar}</code> names; amenities stored as free strings</td>
+<td>Reference tables</td>
+</tr>
+<tr>
+<td>Onboarding config</td>
+<td>4 flows in code plus browser <code>localStorage</code></td>
+<td>in-memory versioned config, different schema</td>
+<td>One versioned schema served by the API</td>
+</tr>
+<tr>
+<td>Audit entry</td>
+<td>own <code>AuditLogEntry</code> type</td>
+<td>append-only, 53 logged actions</td>
+<td>Append-only table</td>
+</tr>
+<tr>
+<td>Platform settings</td>
+<td>commission rates store</td>
+<td><code>PlatformSettings</code> (field-name mismatches)</td>
+<td>One settings row</td>
+</tr>
+<tr>
+<td><strong>Payment, Refund, Invoice, Payout to bank</strong></td>
+<td><strong>none</strong></td>
+<td>refund is a number on the booking</td>
+<td>Must be designed from scratch</td>
+</tr>
+</tbody></table>
+<h3 id="32-enums-that-disagree">3.2 Enums that disagree</h3>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Website</th>
+<th>Admin</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Booking status</td>
+<td>pending, confirmed, cancelled, completed, declined, expired</td>
+<td>pending, confirmed, cancelled, completed, disputed, refunded</td>
+</tr>
+<tr>
+<td>Listing status</td>
+<td>active, pending, suspended, draft</td>
+<td>draft, pending_review, approved, changes_requested, rejected, suspended, archived, deleted (+ 3 legacy aliases)</td>
+</tr>
+<tr>
+<td>Payment status</td>
+<td>paid, pending, refunded, partially_refunded, voided</td>
+<td>paid, partially_refunded, refunded, pending, failed</td>
+</tr>
+<tr>
+<td>Transaction type</td>
+<td>recharge, commission_deduction, payout, adjustment</td>
+<td>wallet_recharge, booking_payment, commission_deduction, host_payout, booking_refund, adjustment</td>
+</tr>
+<tr>
+<td>Onboarding field type</td>
+<td>text, number, textarea, select, multi-select, image-upload, toggle</td>
+<td>text, textarea, number, select, multiselect, radio, file, location, amenities, boolean</td>
+</tr>
+<tr>
+<td>Wilayas</td>
+<td>58, numeric codes</td>
+<td>68, string codes &quot;01&quot;..&quot;68&quot; (UI text says 69)</td>
+</tr>
+<tr>
+<td>Verticals</td>
+<td>5 (hotel created as <code>home</code> + business category)</td>
+<td>5 with <code>hotel</code> a real vertical</td>
+</tr>
+</tbody></table>
+<p>Algeria today has <strong>69 wilayas and 1,541 communes</strong> (see <a href="02-research.html">02-research.md</a> section C.4). Neither app is correct yet.</p>
+<p>Full field lists: website in <a href="work-frontend-inventory.html">Appendix A section 2</a>, admin in <a href="work-admin-inventory.html">Appendix B section 2</a>.</p>
+<hr>
+<h2 id="4-the-libdata-function-inventory-the-bridge-to-the-api">4. The <code>lib/data</code> function inventory (the bridge to the API)</h2>
+<p>Every page calls these functions. When the backend exists, each function body becomes one HTTP call and the page code stays the same. This is the most useful part of this inventory for the build: it is the list of endpoints the apps already need.</p>
+<h3 id="41-website-frontendlibdata-and-appactions">4.1 Website (<code>frontend/lib/data/*</code> and <code>app/actions/*</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Functions</th>
+<th>Proposed endpoint family</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>auth.ts</code></td>
+<td><code>verifyCredentials</code>, <code>registerUser</code>, <code>changePassword</code>, <code>getUserById</code>, <code>updateUserProfile</code>, <code>updateUserHostStatus</code>, <code>setUserFavorite</code></td>
+<td><code>/api/v1/auth/*</code>, <code>/api/v1/me</code>, <code>/api/v1/me/favorites/{id}</code></td>
+</tr>
+<tr>
+<td><code>listings.ts</code></td>
+<td><code>getListings</code> (search + availability overlap), <code>getPublicListingById</code>, <code>getFeaturedListings</code>, <code>getHostListings</code>, <code>createListing</code>, <code>updateListing</code>, <code>deleteListing</code></td>
+<td><code>GET /listings</code>, <code>GET /listings/{id}</code>, <code>/host/listings</code> CRUD</td>
+</tr>
+<tr>
+<td><code>reservations.ts</code></td>
+<td><code>getReservations</code>, <code>getReservationById</code>, <code>getListingAvailability</code>, <code>createListingReservation</code>, <code>createTripReservation</code>, <code>cancelReservation</code>, <code>respondToRequest</code>, <code>seatsSoldByDeparture</code></td>
+<td><code>POST /reservations</code>, <code>/reservations/{id}/cancel</code>, `/host/reservations/{id}/accept</td>
+</tr>
+<tr>
+<td><code>calendar.ts</code></td>
+<td><code>getAvailabilityOverrides</code>, <code>setDatesBlocked</code>, <code>setDatePrice</code></td>
+<td><code>/host/listings/{id}/calendar/*</code></td>
+</tr>
+<tr>
+<td><code>conversations.ts</code></td>
+<td><code>getConversations</code>, <code>getMessages</code>, <code>sendMessage</code>, <code>markConversationAsRead</code>, <code>findOrCreateConversation</code></td>
+<td><code>/conversations/*</code></td>
+</tr>
+<tr>
+<td><code>notifications.ts</code>, <code>favorites.ts</code>, <code>reviews.ts</code>, <code>experiences.ts</code>, <code>vehicles.ts</code></td>
+<td>list and mark-read; favourites list; reviews by listing or user; vertical lists</td>
+<td><code>/me/notifications/*</code>, <code>/me/favorites</code>, <code>/listings/{id}/reviews</code></td>
+</tr>
+<tr>
+<td><code>organizations.ts</code></td>
+<td><code>createOrganization</code>, <code>updateOrganization</code>, <code>deleteOrganization</code>, <code>getOrganizationMembers</code>, <code>addOrganizationMember</code>, <code>updateOrganizationMemberRole</code>, <code>transferOrganizationOwnership</code>, <code>removeOrganizationMember</code>, <code>updateOrganizationVerification</code></td>
+<td><code>/organizations</code>, <code>/host/organization/*</code>, admin verification</td>
+</tr>
+<tr>
+<td><code>trips.ts</code></td>
+<td><code>getTrips</code>, <code>getPublicTripById</code>, <code>createTrip</code>, <code>updateTrip</code>, <code>deleteTrip</code></td>
+<td><code>/trips</code>, <code>/host/trips</code></td>
+</tr>
+<tr>
+<td><code>wallet.ts</code></td>
+<td><code>getWalletByOwner</code>, <code>rechargeWallet</code>, <code>deductBookingCommission</code>, <code>reverseBookingCommission</code>, <code>getCommissionRates</code>, <code>saveCommissionRates</code></td>
+<td><code>/host/wallet</code>, admin wallets; deduction as an internal service</td>
+</tr>
+<tr>
+<td>Server actions (29)</td>
+<td>thin wrappers over the above, each with session and ownership checks</td>
+<td>same endpoints</td>
+</tr>
+</tbody></table>
+<h3 id="42-admin-adminlibdata-and-libactions">4.2 Admin (<code>admin/lib/data/*</code> and <code>lib/actions/*</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Main functions</th>
+<th>Proposed endpoint family</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>hosts.ts</code></td>
+<td>list, get, approve, reject, suspend, unsuspend, ban, delete, restore, overrideCommission, export</td>
+<td><code>/api/v1/admin/hosts/*</code></td>
+</tr>
+<tr>
+<td><code>listings.ts</code></td>
+<td>list with facets, get, approve, reject, requestChanges, updateStatus, feature, delete, restore, export</td>
+<td><code>/api/v1/admin/listings/*</code></td>
+</tr>
+<tr>
+<td><code>bookings.ts</code></td>
+<td>list, cancel, refund, resolveDispute, export</td>
+<td><code>/api/v1/admin/bookings/*</code></td>
+</tr>
+<tr>
+<td><code>finance.ts</code>, <code>ledger.ts</code></td>
+<td>summary, wallets, transactions, recharge, payouts approve/reject, refunds, commission rates, exports</td>
+<td><code>/api/v1/admin/finance/*</code></td>
+</tr>
+<tr>
+<td><code>users.ts</code></td>
+<td>list, suspend, unsuspend, ban, delete, restore, updateStatus</td>
+<td><code>/api/v1/admin/users/*</code></td>
+</tr>
+<tr>
+<td><code>reviews.ts</code></td>
+<td>list, hide, restore, dismissFlag, delete</td>
+<td><code>/api/v1/admin/reviews/*</code></td>
+</tr>
+<tr>
+<td><code>approvals.ts</code></td>
+<td>inbox of 5 queues with waiting time and priority</td>
+<td><code>/api/v1/admin/moderation/queues</code></td>
+</tr>
+<tr>
+<td><code>categories.ts</code>, <code>promotions.ts</code>, <code>onboarding.ts</code>, <code>settings.ts</code>, <code>team.ts</code>, <code>audit.ts</code>, <code>analytics.ts</code>, <code>search.ts</code></td>
+<td>CRUD, publish, settings, staff, audit list/export, KPIs, global search</td>
+<td><code>/api/v1/admin/...</code></td>
+</tr>
+</tbody></table>
+<p>Seven admin actions have no caller in the UI, and many features are missing entirely (document approve/reject, amenity CRUD, coupon edit, payout &quot;processed&quot;, staff password reset and MFA). The complete table with file and line for every function is in <a href="work-frontend-inventory.html">Appendix A section 3</a> and <a href="work-admin-inventory.html">Appendix B section 3</a>.</p>
+<hr>
+<h2 id="5-business-rules-found-in-the-code">5. Business rules found in the code</h2>
+<p>These rules are real today, even though no one wrote them down. The backend must keep them or change them on purpose.</p>
+<h3 id="51-money">5.1 Money</h3>
+<ol>
+<li>All amounts are <strong>whole Algerian dinars (DZD)</strong> in the apps. The backend will store centimes (see <a href="02-research.html">02-research.md</a> B.10).</li>
+<li><strong>Guests pay no platform fee.</strong> Both apps set the guest service fee to 0. BLADUS earns only the host commission. (<code>admin/docs/DATA-MODEL.md</code> still says 7%: stale.)</li>
+<li>Default commission by host type: <strong>individual 12%, agency 15%, hotel 18%, hostel 10%</strong>. The admin also allows a per-host override.</li>
+<li>Commission base differs: website uses the <strong>accommodation subtotal</strong> (no cleaning fee, no taxes); admin uses the <strong>base price</strong>. Spec says &quot;booking total&quot;.</li>
+<li>The commission rate is copied onto the booking when it is created (snapshot), so later rate changes do not reprice old bookings.</li>
+<li>Website price = nights x nightly price (with per-day overrides) + cleaning fee + taxes; weekly 10% and monthly discounts exist for display.</li>
+<li>Website wallet: the host <strong>pre-pays</strong> a commission deposit; BLADUS deducts the commission on every confirmed booking and gives it back on decline or cancel. The balance may go negative; the host then sees a warning banner.</li>
+<li>Admin wallet recharge needs a receipt reference and an amount between 1 and 10,000,000 DZD. The same receipt can be credited twice (no duplicate check).</li>
+<li>Payout approval debits the wallet and refuses when the balance is too low. There is no &quot;money actually sent&quot; step.</li>
+<li>Refunds: partial refunds add up; a refund takes back the host share proportionally; the platform keeps its commission on refunds.</li>
+</ol>
+<h3 id="52-bookings-and-availability">5.2 Bookings and availability</h3>
+<ol start="11">
+<li>Date ranges are <strong>half-open</strong>: check-in day is booked, check-out day is free. Back-to-back stays are allowed (confirmed in the click-through, O5).</li>
+<li>Overlapping stays on the same single unit are refused (O4). For hotels and hostels, the room type&#39;s inventory is counted per night; a hostel bed counts one per guest.</li>
+<li>Search keeps a listing when its availability <strong>overlaps</strong> the searched dates and shows &quot;Available X to Y within your dates&quot; for partial matches.</li>
+<li>Stay rules: minimum and maximum nights per listing; guest count up to capacity.</li>
+<li>Approval mode per listing: <code>instant</code> confirms at once; <code>request</code> creates a pending booking that expires after <strong>24 hours</strong>.</li>
+<li>Website booking statuses move: pending to confirmed, declined, expired or cancelled; confirmed to completed or cancelled. Completion and expiry are applied <strong>when the data is read</strong>, not by a timer.</li>
+<li>Cancellation policies (flexible, moderate, strict) decide the refund by days before check-in.</li>
+</ol>
+<h3 id="53-moderation-and-accounts">5.3 Moderation and accounts</h3>
+<ol start="18">
+<li>Host lifecycle (admin): applied, under review, approved, rejected, suspended, banned, deleted (with restore). Suspending a host does <strong>not</strong> pause its listings or bookings.</li>
+<li>Listing lifecycle (admin): 8 statuses; a reason of at least 3 characters is required to reject, suspend or request changes. On the website, new listings and trips go <strong>live at once</strong> without review.</li>
+<li>Moderation waiting time and priority: hosts high after 3 days, listings after 4, documents after 3; flagged reviews and disputes always high.</li>
+<li>Organisation roles: owner, admin, manager, guide, agent. Any active member may accept or decline a booking request.</li>
+<li>Changing an organisation&#39;s legal fields should trigger re-verification.</li>
+<li>Admin login: 5 failures in 15 minutes lock for 60 seconds, per email and per IP; same error for every failure; scrypt password hashing.</li>
+<li>Admin audit log is append-only and records 53 kinds of action with actor, IP, before and after.</li>
+<li>CSV exports protect against spreadsheet formula injection and are themselves audited.</li>
+</ol>
+<p>The full numbered rule lists with file and line are in <a href="work-frontend-inventory.html">Appendix A section 4</a> and <a href="work-admin-inventory.html">Appendix B section 4</a>. They are rewritten as testable rules in <code>04-business-rules.md</code> (Phase 3).</p>
+<hr>
+<h2 id="6-what-we-saw-when-clicking-through-website-2026-11-04">6. What we saw when clicking through (website, 2026-11-04)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Flow</th>
+<th>Observation</th>
+<th>What the backend must do</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>O1</td>
+<td>Guest sign-in</td>
+<td>Email and password only, no verification</td>
+<td>Add phone OTP and email verification</td>
+</tr>
+<tr>
+<td>O2</td>
+<td>Instant booking, 3 nights</td>
+<td>Confirmed at once: 55,500 + 4,000 cleaning = 59,500 DZD, &quot;No BLADUS fees&quot;</td>
+<td>Take payment (or a decision on payment) before confirming</td>
+</tr>
+<tr>
+<td>O3</td>
+<td>Link with <code>guestCount=2</code></td>
+<td>Booking card showed 1 guest</td>
+<td>One parameter name in the API contract</td>
+</tr>
+<tr>
+<td>O4</td>
+<td>Overlapping dates</td>
+<td>Correctly blocked</td>
+<td>Move the guarantee into the database</td>
+</tr>
+<tr>
+<td>O5</td>
+<td>Back-to-back dates</td>
+<td>Allowed</td>
+<td>Half-open ranges confirmed</td>
+</tr>
+<tr>
+<td>O6</td>
+<td>Request to book</td>
+<td>Pending, &quot;reply within 24 hours&quot;</td>
+<td>Real expiry job</td>
+</tr>
+<tr>
+<td>O7</td>
+<td>Trips page</td>
+<td>Every card says &quot;Total paid by CIB / Edahabia&quot;, even unpaid requests</td>
+<td>Payment records and honest payment status</td>
+</tr>
+<tr>
+<td>O8</td>
+<td>Messages</td>
+<td>Threads, read receipts, unread count</td>
+<td>Conversations API</td>
+</tr>
+<tr>
+<td>O9</td>
+<td>Become a host</td>
+<td>4 host types with guided flows</td>
+<td>Persisted drafts, published flow config</td>
+</tr>
+<tr>
+<td>O10</td>
+<td>Host mode as an agency owner who also owns 2 hotels</td>
+<td>Rating 4.96 from 159 reviews next to &quot;No guest reviews yet&quot;; prepaid wallet 145,000 DZD at 15%</td>
+<td>Ratings derived from reviews; active-organisation context</td>
+</tr>
+<tr>
+<td>O11</td>
+<td>Host earnings</td>
+<td>0 DZD while a confirmed booking exists</td>
+<td>Define when earnings are recognised</td>
+</tr>
+</tbody></table>
+<p>Source: <a href="work-click-through.html">Appendix D</a>.</p>
+<hr>
+<h2 id="7-gaps-and-inconsistencies">7. Gaps and inconsistencies</h2>
+<h3 id="71-the-decisions-that-block-the-data-model">7.1 The decisions that block the data model</h3>
+<p>These come from comparing the spec, the website and the admin (<a href="work-spec-vs-code.html">Appendix C</a>, items D-1 to D-22). The most important:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Topic</th>
+<th>The conflict</th>
+<th>Why it blocks</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D-16</td>
+<td><strong>Money model</strong></td>
+<td>Spec section 9 and the website: host pre-pays commission, guest pays the host directly. Admin seed: BLADUS collects guest money and pays hosts out. Spec section 3 says &quot;the moment a guest completes payment&quot;.</td>
+<td>Decides payment integration, ledger accounts, payouts and legal licensing</td>
+</tr>
+<tr>
+<td>D-1</td>
+<td>Who is a host</td>
+<td>Website: user plus organisations, one person can be both. Admin: one flat <code>Host</code> row</td>
+<td>Decides the keys for wallets, listings, commission, moderation</td>
+</tr>
+<tr>
+<td>D-3, D-5</td>
+<td>Commission base and override</td>
+<td>subtotal vs base vs total; override only in admin</td>
+<td>Ledger posting rules</td>
+</tr>
+<tr>
+<td>D-9</td>
+<td>Booking statuses</td>
+<td>two different sets of six</td>
+<td>State machine and payments</td>
+</tr>
+<tr>
+<td>D-10</td>
+<td>Publish requires approval?</td>
+<td>website: live at once; admin: review queue</td>
+<td>Listing status flow</td>
+</tr>
+<tr>
+<td>D-11</td>
+<td>Trips</td>
+<td>own table vs listing subtype; departures as strings</td>
+<td>Booking target model</td>
+</tr>
+<tr>
+<td>D-12</td>
+<td>Is &quot;hotel&quot; a vertical?</td>
+<td>yes in admin, no in spec</td>
+<td>Search filters and analytics</td>
+</tr>
+<tr>
+<td>D-14, D-15</td>
+<td>Onboarding</td>
+<td>12 steps vs admin cap of 2; schemas differ; config in browser storage</td>
+<td>Config tables</td>
+</tr>
+<tr>
+<td>D-6, D-7, D-8</td>
+<td>Approval mode and request expiry</td>
+<td>stored in 3 places; any member may respond; expiry lazy</td>
+<td>Settings and scheduler</td>
+</tr>
+</tbody></table>
+<h3 id="72-mock-shortcuts-that-will-not-survive-production">7.2 Mock shortcuts that will not survive production</h3>
+<ol>
+<li>Safety against double booking and double debit relies on JavaScript running one thing at a time. A real server needs database transactions, row locks and constraints.</li>
+<li>No idempotency keys (a protection that makes a retried request harmless) on recharge, refund, payout or booking.</li>
+<li>IDs from <code>Date.now()</code> and <code>Math.random()</code>; collisions are possible.</li>
+<li>Rate limits live in process memory.</li>
+<li>Admin logout only deletes the cookie; the token stays valid until it expires.</li>
+<li>Staff are recorded by <strong>name</strong>, not ID, in the ledger, payouts, onboarding and disputes.</li>
+<li>Names, ratings and counters are copied into many rows and will drift.</li>
+<li>Expiry and completion happen only when someone reads the data.</li>
+<li>All images are two placeholder files; there is no upload, storage or virus scan.</li>
+<li>The demo password ships in the website&#39;s code.</li>
+<li>No payments, refunds as records, invoices, tax lines or payouts to banks.</li>
+<li>No review writing, no notification producers, no invitation acceptance, no organisation switcher.</li>
+<li>Three amenity vocabularies, free-text property types and cities where references are needed.</li>
+<li>Messages and broadcast in the admin need no permission.</li>
+</ol>
+<h3 id="73-things-that-are-fine-and-should-be-kept">7.3 Things that are fine and should be kept</h3>
+<p>Server-side permission checks in both apps, signed sessions, half-open date logic, commission snapshot on booking, append-only audit with before/after, CSV formula protection, generic login errors with constant-time comparison, soft delete with restore in the admin.</p>
+<hr>
+<h2 id="appendices-raw-notes-kept-unchanged">Appendices (raw notes, kept unchanged)</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>File</th>
+<th>Lines</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A</td>
+<td><a href="work-frontend-inventory.html">_work/frontend-inventory.md</a></td>
+<td>913</td>
+<td>Website: features, every enum and entity, every function with proposed endpoint, rules 4.1 to 4.18, gaps, 34 routes</td>
+</tr>
+<tr>
+<td>B</td>
+<td><a href="work-admin-inventory.html">_work/admin-inventory.md</a></td>
+<td>830</td>
+<td>Admin: permission matrix, 35 features, types, functions, rules, onboarding contract, gaps, 80 routes</td>
+</tr>
+<tr>
+<td>C</td>
+<td><a href="work-spec-vs-code.html">_work/spec-vs-code.md</a></td>
+<td>235</td>
+<td>Requirements R1 to R69 with status, disagreements D-1 to D-22, usability findings U1 to U16</td>
+</tr>
+<tr>
+<td>D</td>
+<td><a href="work-click-through.html">_work/click-through.md</a></td>
+<td>17</td>
+<td>Observations O1 to O11</td>
+</tr>
+<tr>
+<td>E</td>
+<td><a href="files/_sources">_sources/</a></td>
+<td></td>
+<td>Recovered original spec and usability reports</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Can you name the two apps and say why they do not share data today?</li>
+<li><input disabled="" type="checkbox"> Which four host types exist, and what is each one&#39;s default commission?</li>
+<li><input disabled="" type="checkbox"> Does a guest pay any BLADUS fee? Who pays BLADUS?</li>
+<li><input disabled="" type="checkbox"> What does &quot;half-open date range&quot; mean for a check-out day?</li>
+<li><input disabled="" type="checkbox"> Why is D-16 (money model) the first decision to make?</li>
+<li><input disabled="" type="checkbox"> Name three mock shortcuts that would cause real bugs with two servers running.</li>
+<li><input disabled="" type="checkbox"> Where would you look to find the endpoint that replaces <code>createListingReservation</code>?</li>
+</ul>
+<div class="pager"><span><a href="glossary.html">&larr; Glossary</a></span><span><a href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires &rarr;</a></span></div></main></div></body></html>

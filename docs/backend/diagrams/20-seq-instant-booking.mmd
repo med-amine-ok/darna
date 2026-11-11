@@ -1,5 +1,5 @@
 ---
-title: Instant booking (model M1, prepaid commission)
+title: Instant booking
 ---
 sequenceDiagram
     autonumber
@@ -15,7 +15,7 @@ sequenceDiagram
     W->>A: POST /bookings with quote_id and Idempotency-Key
     A->>DB: BEGIN, lock idempotency key
     A->>DB: INSERT booking (confirmed, snapshot)
-    Note over DB: exclusion constraint refuses any overlap
+    Note over A,DB: the database refuses overlapping dates
     A->>DB: INSERT ledger transaction (wallet debit 6,660, revenue credit 6,660)
     A->>DB: INSERT booking_event and outbox events
     A->>DB: COMMIT

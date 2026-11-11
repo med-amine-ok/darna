@@ -80,6 +80,7 @@ erDiagram
     cancellation_policy {
         uuid id PK
     }
+    commune ||--o{ user : "home_commune_id"
     wilaya ||--o{ commune : "wilaya_code"
     user ||--o| host_account : "user_id"
     organization ||--o| host_account : "organization_id"

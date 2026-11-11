@@ -4,7 +4,7 @@ title: BLADUS system context
 flowchart LR
     guest(["Guest / visitor"])
     host(["Host: individual or organisation member"])
-    staff(["BLADUS staff"])
+    admin(["BLADUS admin"])
     subgraph BLADUS["BLADUS platform"]
         web["Website (Next.js)<br/>guest + host mode"]
         admin["Admin app (Next.js)"]
@@ -12,17 +12,19 @@ flowchart LR
     end
     sms["SMS provider<br/>(local aggregator, fallback Twilio)"]
     mail["Email provider"]
-    gw["Payment gateway<br/>(Chargily, release R2)"]
+    gw["Payment gateway<br/>(later, not in first release)"]
     maps["OpenFreeMap tiles<br/>Nominatim (server side, cached)"]
     store["Object storage<br/>(photos, private documents)"]
+    hotelsys["Hotel systems<br/>(channel manager, PMS)"]
+    api <--> hotelsys
     guest --> web
     host --> web
-    staff --> admin
+    admin --> admin
     web --> api
     admin --> api
     api --> sms
     api --> mail
-    api -. "R2: wallet top-up" .-> gw
+    api -. "later" .-> gw
     gw -. "signed webhooks" .-> api
     web --> maps
     api --> store

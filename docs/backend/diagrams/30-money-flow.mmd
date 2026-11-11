@@ -1,16 +1,11 @@
 ---
-title: Money flow at launch (M1) and later (M4)
+title: Money flow in the first release (no online payment)
 ---
 flowchart LR
-    subgraph M1["M1 prepaid commission (launch)"]
-        g1(["Guest"]) -- "pays the stay directly (cash, transfer)" --> h1(["Host"])
-        h1 -- "deposit by CCP or bank" --> b1["BLADUS account"]
-        b1 -- "recorded as top-up" --> w1[("host_wallet ledger")]
-        w1 -- "commission per confirmed booking" --> r1[("commission_revenue")]
-    end
-    subgraph M4["M4 full collection (needs licence, dormant)"]
-        g4(["Guest"]) -- "card via gateway" --> e4[("escrow")]
-        e4 -- "after check-in" --> hp4[("host_payable")]
-        e4 -- "commission" --> r4[("commission_revenue")]
-        hp4 -- "payout batch" --> h4(["Host bank or CCP"])
-    end
+    g1(["Guest"]) -- "pays the stay directly (cash or transfer)" --> h1(["Host"])
+    h1 -- "deposit by CCP or bank transfer" --> b1["BLADUS account"]
+    b1 -- "admin records the top-up" --> w1[("Host deposit (wallet)")]
+    w1 -- "commission when a booking is confirmed" --> r1[("BLADUS commission")]
+    r1 -. "full commission back if the booking is cancelled" .-> w1
+    later["Later: online payment by CIB / Edahabia card through a gateway (needs legal and bank decisions)"]
+    style later stroke-dasharray: 5 5

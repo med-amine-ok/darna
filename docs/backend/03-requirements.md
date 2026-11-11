@@ -32,7 +32,7 @@
 
 ## 2. Product decisions (approved 2026-11-04)
 
-The product owner accepted the proposed defaults for all open product questions.
+The product owner accepted the proposed defaults for all open product questions (DEC-001 to DEC-013) and later asked for two more rules, already built in the apps (DEC-014, DEC-015).
 
 | ID | Question | Decision | Consequence for the design |
 |---|---|---|---|
@@ -48,6 +48,12 @@ The product owner accepted the proposed defaults for all open product questions.
 | DEC-010 | When earnings count | **At completion** (after check-out). | Reporting rule |
 | DEC-011 | Cancellation policies | **Flexible, moderate, strict**, stored as time windows. | `cancellation_policy` table |
 | DEC-012 | Guest phone verification | **Required before the first booking.** | Phone OTP in MVP |
+| DEC-014 | What each host type may publish (2026-11-04) | **Individual: homes and vehicles. Agency: experiences and trips. Hotel and hostel: their property.** | `HST-07`, `BR-HST-05`; demo data moved accordingly |
+| DEC-015 | Experience and trip types (2026-11-04) | **8 experience types and 8 trip types, one shared list** used everywhere | `LST-12`, `TRP-07`, `BR-LST-05`; enums in the schema |
+| DEC-016 | Staff roles (2026-11-11) | **One role: admin**, with every permission | `BR-STF-01`; `staff_role_code` enum has one value; the permission tables stay for later |
+| DEC-017 | Hotel onboarding (2026-11-11) | **Connect directly to the hotel's own system** to import rooms, availability, prices and services | `HST-08`, `BR-HST-06`; tables `property_integration`, `integration_sync_log`, `property_service` |
+| DEC-018 | Commission on cancellation (2026-11-11) | **The host always recovers the full commission** when a confirmed booking is cancelled | `BR-PAY-05`, examples 8a and 9a |
+| DEC-019 | Online payment (2026-11-11) | **No online payment in the first release**; it comes later | Payment, payout and gateway tables stay unused |
 | DEC-013 | Wilaya count shown | **69** (codes 59 to 69 to be confirmed against the official journal). | Geography seed |
 
 Legal and accounting questions (L1 to L7, F1 to F4 in [14-open-questions.md](14-open-questions.md)) are still open. Every requirement that depends on them carries "VERIFY" in its source.
@@ -62,7 +68,7 @@ Legal and accounting questions (L1 to L7, F1 to F4 in [14-open-questions.md](14-
 | Guest | Signed-in traveller | Website |
 | Host | Individual host, or a member of an organisation acting for it | Website (host mode) |
 | Org owner / admin / manager / agent / guide | Roles inside an agency, hotel or hostel | Website (host mode) |
-| Moderator, Support, Finance, Analyst, Super admin | BLADUS staff roles | Admin |
+| Admin | BLADUS staff (one role, DEC-016) | Admin |
 | System | Scheduled jobs and automatic checks | Backend |
 
 ---
@@ -74,10 +80,10 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 <!-- BEGIN GENERATED REQUIREMENTS -->
 | Priority | MVP | R2 | Later | Total |
 |---|---|---|---|---|
-| Must | 106 | 0 | 0 | 106 |
+| Must | 110 | 0 | 0 | 110 |
 | Should | 17 | 12 | 0 | 29 |
 | Could | 0 | 7 | 2 | 9 |
-| **Total** | 123 | 19 | 2 | **144** |
+| **Total** | 127 | 19 | 2 | **148** |
 
 ### ACC: Accounts and sign-in (9)
 
@@ -98,14 +104,14 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
 | ORG-01 | Create an organisation (agency, hotel, hostel) | Host | Must | MVP | Creating an organisation makes the creator its owner; status starts pending_verification | Built (frontend) | R3, R7-R9 | BR-ORG-02 |
-| ORG-02 | Active-organisation switcher | Host | Must | MVP | A user with several memberships picks the active one; every host request carries it and is checked | Missing (fixed per session) | DEC-004, INV-F gaps | BR-ORG-01 |
+| ORG-02 | Active-organisation switcher | Host | Must | MVP | A user with several memberships picks the active one; every host request carries it and is checked | Built in website 2026-11-04 (host menu, membership checked server-side) | DEC-004, INV-F gaps | BR-ORG-01 |
 | ORG-03 | Invite a team member | Org owner/admin | Must | MVP | Invite by email or phone with a role; invite token expires in 7 days; invitee accepts after signing in | Invites cannot be accepted | INV-F 3.8, gap | BR-ORG-03 |
 | ORG-04 | Change role, remove member, transfer ownership | Org owner/admin | Must | MVP | Only owner transfers ownership; an organisation always has exactly one owner; audited | Built | INV-F 3.8 | BR-ORG-04 |
 | ORG-05 | Per-role permissions inside an organisation | Org members | Must | MVP | Permissions per role (owner, admin, manager, agent, guide) incl. bookings.respond for owner/admin/manager only | Any member can do anything operational | DEC-009, D-7 | BR-ORG-05 |
 | ORG-06 | Re-verification on legal field change | Org owner | Should | MVP | Changing legal name, RC, NIF or licence number moves verification back to pending and notifies staff | Field list exists | INV-F 3.8 | BR-ORG-06 |
 | ORG-07 | Public organisation profile | Visitor | Must | MVP | Public page shows name, logo, verified badge, listings, trips, rating; never legal numbers or staff phones | Built | INV-F 1.1 |  |
 
-### HST: Becoming a host and verification (6)
+### HST: Becoming a host and verification (8)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
@@ -114,9 +120,11 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | HST-03 | Upload verification documents | Host | Must | MVP | Required document list depends on host type; files go to a private bucket; each document has its own review status | Placeholder images only | RES C3.5 | BR-HST-03 |
 | HST-04 | Host verification lifecycle | Host, Moderator | Must | MVP | Statuses applied, under_review, approved, changes_requested, rejected, suspended, banned; moves only along the allowed transitions with reasons | Admin only, not linked to website | INV-A 4.6 | BR-HST-04 |
 | HST-05 | Payout or refund account details | Host | Should | MVP | Host stores CCP (RIP) or bank RIB in own name; changing it needs 2FA and holds payouts 72 h | Missing | RES C1, D4 | BR-PAY-09 |
+| HST-08 | Connect a hotel's own system | Hotel, Hostel | Must | MVP | A hotel or hostel connects its channel manager, PMS, iCal feed or CSV file; room types, availability, prices and services (restaurants, spa, parking) are imported and kept in sync; manual entry stays possible | Missing (rooms hardcoded at onboarding) | DEC-017 | BR-HST-06 |
+| HST-07 | What each host type may publish | Host | Must | MVP | Individual: homes and vehicles; agency: experiences and trips; hotel and hostel: their property with room types; enforced by API and database, create-listing flow offers only allowed choices | Built in website 2026-11-04 (UI + server actions) | DEC-014 | BR-HST-05 |
 | HST-06 | Default approval mode per host or organisation | Host | Must | MVP | Owner default applies to new listings; a listing may override; platform switch can force request mode | Stored in 3 places, not applied | R20, D-6 | BR-BKG-02 |
 
-### LST: Listings and catalogue (11)
+### LST: Listings and catalogue (12)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
@@ -130,9 +138,10 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | LST-08 | Pause and soft delete | Host | Must | MVP | Host can pause or delete; delete is soft and keeps bookings; staff can restore | Hard delete on website | U7 | BR-LST-03 |
 | LST-09 | Featured listings | Staff | Could | R2 | Staff feature a published listing with optional start and end dates and position | Boolean only | INV-A 4.7 |  |
 | LST-10 | Vehicle listing specifics | Host | Should | MVP | Make, model, year, seats, gearbox, fuel, pickup points, driver age and licence rules | Built (website) | INV-F 2.2 |  |
+| LST-12 | Canonical experience types | Agency, Guest | Must | MVP | Every experience has one of 8 types (excursion, guided tour, nature and adventure, desert, sport, workshops and culture, gastronomy, wellness); search filters, cards, creation forms and admin use the same list | Built in both apps 2026-11-04 (frontend/lib/catalog-types.ts) | DEC-015 | BR-LST-05 |
 | LST-11 | Experience listing specifics | Host | Should | MVP | Duration, languages, meeting point, time slots with seats | Built partly | INV-F 2.2 |  |
 
-### TRP: Agency trips and departures (6)
+### TRP: Agency trips and departures (7)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
@@ -141,6 +150,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | TRP-03 | Departures with seats and price | Agency | Must | MVP | Each departure has dates, seats total, price per person, minimum group, status (scheduled, guaranteed, cancelled, completed) | Array of dates | R36, DEC-006 | BR-TRP-02 |
 | TRP-04 | Trips go through review | Agency, Moderator | Must | MVP | Same review flow as listings | Live at once | DEC-003 | BR-LST-02 |
 | TRP-05 | Search trips by date | Guest | Should | MVP | Trip search filters departures overlapping the searched dates | Missing | R43 |  |
+| TRP-07 | Canonical trip types | Agency, Guest | Must | MVP | Every trip has one of 8 types (group tour, private trip, adventure, Saharan expedition, cultural, hiking, relaxation, religious); used by trip creation, search filters, cards and admin | Built in both apps 2026-11-04 | DEC-015 | BR-LST-05 |
 | TRP-06 | Cancel a departure under minimum group | Agency | Should | R2 | Agency cancels a departure; all its bookings are cancelled with full refund and notifications | Missing | RES A.4 | BR-TRP-03 |
 
 ### AVL: Availability and calendar (6)
@@ -272,7 +282,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
-| STF-01 | Staff roles and permissions in the database | Super admin | Must | MVP | 5 roles, 34+ permissions stored and enforced by the API, deny by default | Code constants | U16, INV-A 1.1 | BR-STF-01 |
+| STF-01 | Staff roles and permissions in the database | Super admin | Must | MVP | One staff role (admin) with every permission, stored and enforced by the API, deny by default (DEC-016) | Code constants | U16, INV-A 1.1 | BR-STF-01 |
 | STF-02 | Staff invitation and activation | Super admin | Must | MVP | Invite sends a one-time link; staff sets password and MFA; deactivation revokes sessions immediately | No acceptance | INV-A 4.15 |  |
 | STF-03 | Append-only audit log | System | Must | MVP | Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; no update or delete | Admin memory only | U13 | BR-STF-02 |
 | STF-04 | Actors by id, not name | System | Must | MVP | Ledger, payouts, disputes, config publishes reference staff user ids | Names | INV-A 6.1-6 | BR-STF-03 |

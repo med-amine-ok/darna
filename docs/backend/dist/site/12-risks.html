@@ -1,0 +1,540 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>12. Risks: what could go wrong, and what we do about it · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="on" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="12-risks-what-could-go-wrong-and-what-we-do-about-it">12. Risks: what could go wrong, and what we do about it</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This is the list of things that could hurt BLADUS while we build and launch the backend: legal, money, fraud, technical, operations, team and scope.<br>Each risk gets two marks from 1 to 5: how likely it is, and how bad it would be. Multiplied, they give a score from 1 to 25.<br>Each risk has an owner (a role, not a name), what we do to reduce it, and the early sign that tells us it is happening.<br>The heat map at the end shows the dangerous corner at a glance. We review this list at every milestone review (<a href="11-roadmap.html">11-roadmap.md</a>).<br>Legal and tax points are engineering reading, not advice: VERIFY WITH A PROFESSIONAL.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Risk register</strong>: a table of risks, kept up to date, with owners and actions.</li>
+<li><strong>Likelihood (L)</strong>: 1 rare, 2 unlikely, 3 possible, 4 likely, 5 almost certain (during the MVP build and first 6 months after launch).</li>
+<li><strong>Impact (I)</strong>: 1 small annoyance, 2 a few days lost, 3 a feature late or a few unhappy users, 4 launch delayed or money lost, 5 legal stop, data breach or loss of trust.</li>
+<li><strong>Score</strong>: L x I. <strong>15 to 25 high</strong>, <strong>8 to 14 medium</strong>, <strong>1 to 7 low</strong>.</li>
+<li><strong>Mitigation</strong>: what we do now to make the risk smaller or less harmful.</li>
+<li><strong>Trigger / early signal</strong>: what we would see first if the risk starts to happen.</li>
+<li><strong>SMS pumping</strong>: fraud where bots request many one-time codes to numbers that earn the attacker money.</li>
+<li><strong>SIM swap</strong>: a criminal gets a victim&#39;s phone number moved to a new SIM card and receives their codes.</li>
+<li><strong>Exclusion constraint</strong>: a PostgreSQL rule that refuses two rows whose ranges overlap (used against double booking).</li>
+<li><strong>PSP</strong>: payment service provider, a licensed company allowed to hold and move other people&#39;s money.</li>
+</ul>
+<p>Owner roles: <strong>PO</strong> product owner, <strong>TL</strong> tech lead, <strong>BE</strong> backend developers, <strong>FE</strong> frontend developer, <strong>LAW</strong> external lawyer, <strong>ACC</strong> external accountant, <strong>FIN</strong> BLADUS finance staff, <strong>MOD</strong> moderation lead, <strong>SUP</strong> support lead.</p>
+<hr>
+<h2 id="1-risk-register">1. Risk register</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Risk</th>
+<th>L</th>
+<th>I</th>
+<th>Score</th>
+<th>Owner</th>
+<th>Mitigation</th>
+<th>Trigger / early signal</th>
+<th>Linked</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>K-01</td>
+<td><strong>Legal: hosting.</strong> Law 18-05 art. 8 requires the e-commerce site to be hosted in Algeria with <code>.com.dz</code>; production abroad could be unlawful (VERIFY WITH A PROFESSIONAL)</td>
+<td>3</td>
+<td>5</td>
+<td><strong>15</strong></td>
+<td>PO + LAW</td>
+<td>Plan production in Algeria from day one (R-5); staging with demo data only; ask L1 early; keep the deployment portable (containers, no cloud-only services)</td>
+<td>Lawyer says the API server is covered too; Algerian provider cannot give a date</td>
+<td>PRV-03, BR-PRV-04, R-5, R-6, L1, T1</td>
+</tr>
+<tr>
+<td>K-02</td>
+<td><strong>Legal: data transfer abroad</strong> through foreign services (email, SMS fallback, error tracking, CI logs, backups) without ANPDP authorisation under Law 18-07 / 25-11 (VERIFY WITH A PROFESSIONAL)</td>
+<td>4</td>
+<td>4</td>
+<td><strong>16</strong></td>
+<td>TL + LAW</td>
+<td>List every processor (T8); self-host error tracking; keep personal data out of logs; local SMS aggregator first; no backups abroad; ask L2 and L10</td>
+<td>A new SaaS appears in the stack; personal data found in logs or error reports</td>
+<td>PRV-03, NFR-09, BR-PRV-04, L2, L10, T8</td>
+</tr>
+<tr>
+<td>K-03</td>
+<td><strong>Legal: PSP licence.</strong> Collecting guest money (M2 to M4), or even refunding host deposits, may be a payment service under Règlement 25-02 (VERIFY WITH A PROFESSIONAL)</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>PO + LAW</td>
+<td>Launch with M1 only (DEC-001); M2 to M4 switched off by setting (BR-PAY-11); deposit withdrawals only after L3</td>
+<td>Pressure to &quot;just take card payments&quot;; a host asks for a refund of deposit</td>
+<td>PAY-10, BR-PAY-11, DEC-001, Q18, L3</td>
+</tr>
+<tr>
+<td>K-04</td>
+<td><strong>Legal: KYC.</strong> Wrong document list per host type, or storing ID images longer than allowed, or without the required declaration (VERIFY WITH A PROFESSIONAL)</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>PO + LAW</td>
+<td>Document types as data (change without code); private bucket, 5-minute signed URLs, every view audited; delete ID images after 90 days (BR-PRV-05) pending L7</td>
+<td>Moderators ask for documents not on the list; L4 answer differs from the draft</td>
+<td>HST-03, MED-02, MOD-08, BR-HST-03, BR-PRV-05, L4, L7</td>
+</tr>
+<tr>
+<td>K-05</td>
+<td><strong>Legal: tourism rules.</strong> Agencies need a licence; &quot;chez l&#39;habitant&quot; has room and guest caps; whole-home rental by individuals has no clear frame; BLADUS itself might need a tourism registration to sell trips (VERIFY WITH A PROFESSIONAL)</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>PO + LAW</td>
+<td>Agency licence number required at verification (BR-TRP-01); verticals and host types switchable by setting; ask L5 and L9</td>
+<td>Ministry or wilaya warning; a competitor shut down; lawyer flags L9</td>
+<td>TRP-01, HST-07, LST-01, BR-TRP-01, BR-HST-05, L5, L9</td>
+</tr>
+<tr>
+<td>K-06</td>
+<td><strong>Tax and invoices.</strong> Wrong VAT rate on commission (19% or 9%), no receipts for deposits at launch, missing tourist tax handling (VERIFY WITH A PROFESSIONAL)</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>ACC + FIN</td>
+<td>Invoices in R2 behind F1 and F4; ask F5 now about receipts at launch; keep every ledger line with host NIF so invoices can be issued backwards</td>
+<td>Accountant asks for documents we cannot produce; a host asks for an invoice</td>
+<td>PAY-11, PRC-04, BR-PAY-12, BR-PRC-04, F1, F2, F4, F5</td>
+</tr>
+<tr>
+<td>K-07</td>
+<td><strong>Payments: manual top-ups.</strong> Typing errors, the same receipt credited twice, fake bank or CCP receipts</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>FIN</td>
+<td>Receipt reference unique per method; four-eyes above a threshold (Q15); daily reconciliation against the bank or CCP statement (F7); audit of every top-up</td>
+<td>Reconciliation mismatch; a top-up reversed by the bank</td>
+<td>PAY-05, BR-PAY-07, STF-03, Q15, F7</td>
+</tr>
+<tr>
+<td>K-08</td>
+<td><strong>Payments: gateway (R2).</strong> Chargily contract slow; amount units (dinars or centimes) misread; webhooks missed or replayed</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>TL + FIN</td>
+<td>Start paperwork in M6; contract test on amount units (F3); store raw webhook, verify signature, dedupe by event id (BR-SYS-02); second gateway (SlickPay) as fallback</td>
+<td>Contract not signed 4 weeks before R2-A; sandbox amounts off by 100</td>
+<td>PAY-06, PAY-09, BR-PAY-08, BR-SYS-02, R-7, F3</td>
+</tr>
+<tr>
+<td>K-09</td>
+<td><strong>Fraud: off-platform payment scams and fake listings.</strong> Fake host asks for a CCP transfer before arrival; stolen photos</td>
+<td>4</td>
+<td>4</td>
+<td><strong>16</strong></td>
+<td>MOD + SUP</td>
+<td>Review before publication (DEC-003); contact masking until confirmation (BR-MSG-01); perceptual photo hash for duplicates (BR-MED-01); risk flags in R2 (MOD-07); guest safety tips in the UI</td>
+<td>Reports mentioning &quot;paid by CCP, host vanished&quot;; duplicate photo hashes across hosts</td>
+<td>LST-02, MSG-04, MED-01, MOD-07, BR-MSG-01, BR-MOD-04</td>
+</tr>
+<tr>
+<td>K-10</td>
+<td><strong>Fraud: SMS pumping and OTP abuse</strong> driving SMS cost up</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>TL</td>
+<td>Limits per phone, IP and device (BR-ACC-02); daily SMS budget alarm (NFR-11); block premium and foreign ranges unless Q22 allows; email OTP where possible</td>
+<td>SMS spend per day above budget; many codes to one prefix</td>
+<td>ACC-02, NFR-11, BR-ACC-02, Q22</td>
+</tr>
+<tr>
+<td>K-11</td>
+<td><strong>Fraud: account takeover</strong> of hosts or staff (SIM swap, password reuse)</td>
+<td>2</td>
+<td>4</td>
+<td>8</td>
+<td>TL</td>
+<td>2FA for staff and for hosts before payout detail changes (BR-ACC-04); 72 h hold after a change (BR-PAY-09); notify old email and phone</td>
+<td>Payout account changes followed by support complaints</td>
+<td>ACC-05, HST-05, BR-ACC-04, BR-PAY-09</td>
+</tr>
+<tr>
+<td>K-12</td>
+<td><strong>Technical: double booking</strong> if the database guarantees are built wrong (exclusion constraint, inventory rows, holds)</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>BE</td>
+<td>Constraints in the database, not only in Python (ADR-002); concurrency tests on real PostgreSQL in CI (M4 exit); idempotency keys on create (BKG-10)</td>
+<td>Any concurrency test flaky; support ticket &quot;two guests same night&quot;</td>
+<td>AVL-01, AVL-02, AVL-05, BKG-10, BR-AVL-01, BR-AVL-02, BR-SYS-01</td>
+</tr>
+<tr>
+<td>K-13</td>
+<td><strong>Technical: mock-to-API switch</strong> breaks pages: different IDs, enum names, field names (58 vs 69 wilayas, statuses), behaviour the mock did silently</td>
+<td>4</td>
+<td>3</td>
+<td>12</td>
+<td>FE + TL</td>
+<td>One module at a time behind a flag (roadmap section 2); demo cast seeded with stable IDs (T3); enum mapping from <a href="05-database-schema.html">05-database-schema.md</a> section 8; typed client (NFR-08); 5 days on staging before a module counts as switched</td>
+<td>A module is rolled back twice; contract tests fail after an API change</td>
+<td>NFR-08, NFR-13, T3, T9, schema section 8</td>
+</tr>
+<tr>
+<td>K-14</td>
+<td><strong>Technical: performance.</strong> Search with facets, availability and map is slow on small Algerian VPS sizes</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>BE</td>
+<td>Search table <code>listing_search_doc</code> (ADR-011); indexes from schema section 7; load test from M3, enforced in M6; cache facet counts briefly</td>
+<td>Search p95 above 500 ms on staging data</td>
+<td>NFR-01, NFR-02, SRC-01, SRC-02</td>
+</tr>
+<tr>
+<td>K-15</td>
+<td><strong>Technical: Arabic search quality.</strong> Spelling variants (alef forms, ta marbuta), Latin transliterations (Tizi Ouzou, Tizi-Ouzou), Darija names; PostgreSQL trigram works less well on Arabic</td>
+<td>4</td>
+<td>3</td>
+<td>12</td>
+<td>BE</td>
+<td>Normalise Arabic text before indexing; alias table for place names in three scripts from the geography seed; test set of 50 real queries (T7)</td>
+<td>Zero-result rate above 10% for Arabic queries</td>
+<td>SRC-03, SRC-04, T7</td>
+</tr>
+<tr>
+<td>K-16</td>
+<td><strong>Operations: SMS deliverability and cost.</strong> Codes not arriving on some operators (Mobilis, Djezzy, Ooredoo), sender ID registration delays, about USD 0.27 per SMS abroad</td>
+<td>4</td>
+<td>4</td>
+<td><strong>16</strong></td>
+<td>TL + PO</td>
+<td><code>SmsProvider</code> interface with a local aggregator first and a fallback (R2 C.2); email and WhatsApp codes where possible; measure delivery per operator from the beta; budget alarm</td>
+<td>Code verification rate below 85%; complaints &quot;no code received&quot;</td>
+<td>ACC-01, ACC-02, NTF-02, BR-NTF-02, DEC-012</td>
+</tr>
+<tr>
+<td>K-17</td>
+<td><strong>Operations: internet restrictions during the baccalaureate exams</strong> (usually June; mobile data and social networks cut or slowed nationwide) during launch or high season</td>
+<td>4</td>
+<td>3</td>
+<td>12</td>
+<td>PO</td>
+<td>Do not launch in the exam weeks (Q23); SMS (not internet) for critical alerts; job schedules tolerate delays (expiry at deadline even if nobody is online); communicate in advance</td>
+<td>Official exam calendar published; cuts announced</td>
+<td>NFR-03, BKG-03, Q23</td>
+</tr>
+<tr>
+<td>K-18</td>
+<td><strong>Operations: single hosting provider in Algeria.</strong> Outage, slow support, few managed services (no managed PostgreSQL or object storage), contract lead time</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>TL</td>
+<td>Choose provider by end of M5 (T1); infrastructure as code so we can move; self-managed PostgreSQL with streaming replica; MinIO for files (T6); status page</td>
+<td>Provider cannot give a date; repeated incidents on staging trial</td>
+<td>NFR-03, NFR-04, PRV-03, T1, T6, R-5</td>
+</tr>
+<tr>
+<td>K-19</td>
+<td><strong>Operations: backups.</strong> No second Algerian location, or restores never tested</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>TL</td>
+<td>Second Algerian data centre or provider for encrypted dumps (T10); monthly restore drill (NFR-04); point-in-time recovery 7 days</td>
+<td>A restore drill fails or is skipped</td>
+<td>NFR-04, PRV-03, T10</td>
+</tr>
+<tr>
+<td>K-20</td>
+<td><strong>Team and skills.</strong> Two backend developers: bus factor of 1 on ledger and availability; PostGIS, Celery and allauth headless new to the team; half-time frontend developer is the bottleneck for switches</td>
+<td>4</td>
+<td>4</td>
+<td><strong>16</strong></td>
+<td>PO + TL</td>
+<td>Pair on ledger and booking code; written ADRs; code review by the other developer always; spike weeks in M0 for allauth and PostGIS; frontend switch tasks planned in the chart; budget for a second frontend half-time in M4</td>
+<td>Switch tasks slip twice; one developer is the only reviewer of a module</td>
+<td>NFR-10, roadmap A1</td>
+</tr>
+<tr>
+<td>K-21</td>
+<td><strong>Scope creep.</strong> R2 items (online payment, coupons, realtime chat, disputes) or new admin wishes pulled into the MVP</td>
+<td>4</td>
+<td>3</td>
+<td>12</td>
+<td>PO</td>
+<td>New ideas go to R2 by default; any MVP addition must remove something of equal size; milestone reviews check the scope list</td>
+<td>Requirements count in MVP grows above 126; milestone slips by more than a week</td>
+<td><a href="03-requirements.html">03-requirements.md</a> section 5, DEC-001</td>
+</tr>
+<tr>
+<td>K-22</td>
+<td><strong>Moderation backlog at launch.</strong> Listings stuck in <code>pending_review</code>, hosts give up</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>MOD</td>
+<td>Queues with waiting time and priority (MOD-01); reason catalogue (MOD-03); staffing decision (Q24); fast track for good hosts later (DEC-003)</td>
+<td>Oldest item in the listing queue older than 2 days</td>
+<td>MOD-01, MOD-03, LST-02, BR-MOD-01, Q24</td>
+</tr>
+<tr>
+<td>K-23</td>
+<td><strong>Legal answers arrive late</strong> (L1, L2, L4, L5, L9, L11) and block production</td>
+<td>4</td>
+<td>4</td>
+<td><strong>16</strong></td>
+<td>PO</td>
+<td>Engage the lawyer in M0; give the lawyer this blueprint&#39;s questions in writing; dated gates in the roadmap; design so that a negative answer is a setting, not a rewrite</td>
+<td>No written answer to L1 or L2 by mid-M5</td>
+<td>L1 to L12, roadmap section 6</td>
+</tr>
+<tr>
+<td>K-24</td>
+<td><strong>Calendar slip</strong> from Ramadan, Eids and year-end holidays</td>
+<td>4</td>
+<td>2</td>
+<td>8</td>
+<td>PO + TL</td>
+<td>Longer M3 and M4; 2-week buffer; no launch in Ramadan</td>
+<td>Velocity in M3 lower than 70% of M2</td>
+<td>roadmap A3</td>
+</tr>
+<tr>
+<td>K-25</td>
+<td><strong>Business: hosts do not pay back negative balances</strong> under model M1</td>
+<td>3</td>
+<td>2</td>
+<td>6</td>
+<td>FIN</td>
+<td>Credit floor per host type (BR-PAY-10, Q14); below 0 instant booking switches to request; dashboard of negative wallets (PAY-07)</td>
+<td>Total negative balance grows month over month</td>
+<td>PAY-07, BR-PAY-10, Q14, Q25</td>
+</tr>
+<tr>
+<td>K-26</td>
+<td><strong>Security breach</strong>, especially of KYC documents, with a 5-day ANPDP notification duty</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>TL</td>
+<td>OWASP API Top 10 controls (NFR-05); private documents with short signed URLs (MED-02); breach runbook and drill (PRV-05); external review in M6</td>
+<td>Unusual document view counts in the audit log; dependency alert</td>
+<td>NFR-05, MED-02, PRV-05, STF-03, BR-MED-02</td>
+</tr>
+<tr>
+<td>K-27</td>
+<td><strong>Geography data wrong</strong> for the new wilayas 59 to 69</td>
+<td>3</td>
+<td>2</td>
+<td>6</td>
+<td>BE</td>
+<td>Seed with <code>source</code> and <code>valid_from</code> (BR-SRC-02); check against the official journal before M7; correction is a data migration</td>
+<td>Hosts in new wilayas report the wrong name or commune</td>
+<td>SRC-04, BR-SRC-02, DEC-013</td>
+</tr>
+<tr>
+<td>K-28</td>
+<td><strong>Diaspora and foreign guests cannot verify</strong> because phone OTP accepts only Algerian mobiles (DEC-012)</td>
+<td>4</td>
+<td>3</td>
+<td>12</td>
+<td>PO</td>
+<td>Decide Q22 in M0 (email or international number verification for non-Algerian numbers, with stricter limits)</td>
+<td>Sign-up drop-off from abroad; support requests from France and Canada</td>
+<td>ACC-01, ACC-02, BR-ACC-01, DEC-012, Q22</td>
+</tr>
+<tr>
+<td>K-29</td>
+<td><strong>Email deliverability</strong> (spam folders) and low email use by some hosts</td>
+<td>3</td>
+<td>2</td>
+<td>6</td>
+<td>TL</td>
+<td>SPF, DKIM, DMARC on the sending domain; SMS for critical events (BR-NTF-02); in-app notifications always</td>
+<td>Bounce or complaint rate above 2%</td>
+<td>NTF-02, ACC-04, BR-NTF-02</td>
+</tr>
+<tr>
+<td>K-30</td>
+<td><strong>Map and geocoding services</strong> (OpenFreeMap tiles, Nominatim 1 request per second) limit or change terms</td>
+<td>2</td>
+<td>2</td>
+<td>4</td>
+<td>BE</td>
+<td>Server-side geocoding with cache; commune plus pin, no autocomplete on public Nominatim; self-host tiles if needed</td>
+<td>Tile errors or 429 responses</td>
+<td>SRC-02, LST-06</td>
+</tr>
+<tr>
+<td>K-31</td>
+<td><strong>Money rounding errors</strong> between centimes and whole dinars, or between quote and booking</td>
+<td>2</td>
+<td>4</td>
+<td>8</td>
+<td>BE</td>
+<td>Centimes everywhere (BR-PAY-01); one rounding helper; property tests and the worked examples in <a href="04-business-rules.html">04-business-rules.md</a> as tests</td>
+<td>Ledger reconciliation off by a few centimes</td>
+<td>PAY-12, PRC-05, PAY-03, BR-PAY-01, BR-PAY-04</td>
+</tr>
+<tr>
+<td>K-32</td>
+<td><strong>Business: hosts refuse to pre-pay</strong> a commission deposit (model M1), so supply stays low</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>PO</td>
+<td>Credit floor so hosts can start before paying (Q14, Q25); simple top-up by CCP or BaridiMob; online top-up in R2-A; clear commission rates</td>
+<td>Few top-ups during the beta; hosts stay in request mode</td>
+<td>PAY-02, PAY-05, PAY-07, DEC-001, Q25</td>
+</tr>
+</tbody></table>
+<p><strong>32 risks</strong>: 6 high, 22 medium, 4 low.</p>
+<h2 id="2-heat-map-likelihood-x-impact">2. Heat map (likelihood x impact)</h2>
+<p>Cells list risk IDs. Bold cells are high (score 15 or more).</p>
+<table>
+<thead>
+<tr>
+<th>Likelihood \ Impact</th>
+<th>1 small</th>
+<th>2 days lost</th>
+<th>3 feature late</th>
+<th>4 launch late or money lost</th>
+<th>5 legal stop or breach</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>5 almost certain</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>4 likely</strong></td>
+<td></td>
+<td>K-24</td>
+<td>K-13, K-15, K-17, K-21, K-28</td>
+<td><strong>K-02, K-09, K-16, K-20, K-23</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>3 possible</strong></td>
+<td></td>
+<td>K-25, K-27, K-29</td>
+<td>K-06, K-07, K-08, K-10, K-14, K-22</td>
+<td>K-04, K-05, K-18, K-19, K-32</td>
+<td><strong>K-01</strong></td>
+</tr>
+<tr>
+<td><strong>2 unlikely</strong></td>
+<td></td>
+<td>K-30</td>
+<td></td>
+<td>K-11, K-31</td>
+<td>K-03, K-12, K-26</td>
+</tr>
+<tr>
+<td><strong>1 rare</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="3-the-six-high-risks-and-what-to-watch-first">3. The six high risks, and what to watch first</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>First action</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>K-01 Hosting in Algeria</td>
+<td>Send L1 to the lawyer; shortlist ICOSNET and Djezzy Cloud (T1)</td>
+<td>M0</td>
+</tr>
+<tr>
+<td>K-02 Data transfer abroad</td>
+<td>Processor list (T8) reviewed by the lawyer (L10)</td>
+<td>M0, then M6</td>
+</tr>
+<tr>
+<td>K-09 Off-platform scams</td>
+<td>Contact masking and review before publication ship in the MVP</td>
+<td>M2, M5</td>
+</tr>
+<tr>
+<td>K-16 SMS deliverability</td>
+<td>Contract a local aggregator and test all three operators on staging</td>
+<td>M0</td>
+</tr>
+<tr>
+<td>K-20 Team and skills</td>
+<td>Pairing rule and review rule written in the contributing guide</td>
+<td>M0</td>
+</tr>
+<tr>
+<td>K-23 Late legal answers</td>
+<td>Written question list to the lawyer with the roadmap dates</td>
+<td>M0</td>
+</tr>
+</tbody></table>
+<p>Medium risks with the highest impact on dates: K-13 (switch breaks), K-18 (hosting set-up), K-21 (scope creep), K-17 (exam period).</p>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> How is the score calculated, and which band is &quot;high&quot;?</li>
+<li><input disabled="" type="checkbox"> Which two risks are about where data lives, and what single decision reduces both?</li>
+<li><input disabled="" type="checkbox"> Why is double booking (K-12) only &quot;unlikely&quot; even though its impact is 5?</li>
+<li><input disabled="" type="checkbox"> What is the early signal that SMS pumping (K-10) is happening?</li>
+<li><input disabled="" type="checkbox"> Which risk explains why the launch should not fall in the baccalaureate exam weeks?</li>
+<li><input disabled="" type="checkbox"> Name two ways we keep the mock-to-API switch (K-13) from breaking the apps.</li>
+<li><input disabled="" type="checkbox"> Who owns the scope creep risk, and what rule do they apply to new ideas?</li>
+</ul>
+<div class="pager"><span><a href="11-roadmap.html">&larr; 11. Roadmap: how we build the BLADUS backend</a></span><span><a href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when &rarr;</a></span></div></main></div></body></html>

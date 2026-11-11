@@ -1,0 +1,1299 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>04. Business rules · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="on" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 3: requirements and rules</div><h1 id="04-business-rules">04. Business rules</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>A business rule is a sentence like &quot;a guest cannot book nights that are already booked&quot; or &quot;BLADUS takes 12% from an individual host&quot;.<br>Each rule has an ID (<code>BR-PAY-04</code>), says <strong>where</strong> it is enforced (the database, the backend code, or a scheduled job) and how to test it.<br>Rules enforced by the database are the strongest: even a bug in the code cannot break them.<br>The statuses each object can have, and the allowed moves between them, are written as tables (state machines).<br>Money examples are worked out in full so anyone can check the arithmetic.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Enforced by DB</strong>: a constraint inside PostgreSQL (unique, check, exclusion, foreign key). Cannot be bypassed.</li>
+<li><strong>Enforced by service</strong>: a check in the Django service function that performs the action, inside a database transaction.</li>
+<li><strong>Enforced by job</strong>: a scheduled background task (Celery) that applies the rule at a given time.</li>
+<li><strong>Basis points (bp)</strong>: hundredths of a percent. 12% = 1,200 bp. Used to store rates without decimals.</li>
+<li><strong>Half-open range</strong> <code>[a, b)</code>: includes <code>a</code>, excludes <code>b</code>.</li>
+</ul>
+<p>Sources: website code (<a href="work-frontend-inventory.html">Appendix A section 4</a>), admin code (<a href="work-admin-inventory.html">Appendix B section 4</a>), decisions DEC-001 to DEC-013 (<a href="03-requirements.html">03-requirements.md</a> section 2). &quot;Today&quot; says what the apps do now.</p>
+<hr>
+<h2 id="1-accounts-acc">1. Accounts (ACC)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-ACC-01</td>
+<td>Email is unique case-insensitively; phone is unique in E.164 form and must match <code>^\+213[5-7]\d{8}$</code> for Algerian mobiles (foreign numbers allowed for diaspora, flagged). A guest must have a verified phone before the first booking (DEC-012).</td>
+<td>DB unique on <code>lower(email)</code> and <code>phone_e164</code>; service</td>
+<td>email only</td>
+<td>sign up twice with <code>A@x.dz</code> / <code>a@x.dz</code> fails</td>
+</tr>
+<tr>
+<td>BR-ACC-02</td>
+<td>One-time codes: 6 digits, valid 10 minutes, 5 wrong attempts invalidate the code, max 3 sends per phone per hour and 10 per IP per hour. Every failure returns the same error.</td>
+<td>service + Redis</td>
+<td>none</td>
+<td>6th attempt with right code fails</td>
+</tr>
+<tr>
+<td>BR-ACC-03</td>
+<td>Sessions: website session 30 days sliding; staff session 8 hours absolute and 30 minutes idle (setting). Logout, password change and deactivation revoke server-side immediately.</td>
+<td>service</td>
+<td>admin token not revocable</td>
+<td>token rejected right after logout</td>
+</tr>
+<tr>
+<td>BR-ACC-04</td>
+<td>Staff must have two-factor enabled before any admin endpoint works. Hosts must have it before changing payout or refund account details.</td>
+<td>service (permission class)</td>
+<td>flag only</td>
+<td>staff without MFA gets 403 <code>mfa_required</code></td>
+</tr>
+<tr>
+<td>BR-ACC-05</td>
+<td>Login lock: 5 failures in 15 minutes lock 60 seconds, counted per account and per IP, shared by all servers.</td>
+<td>Redis</td>
+<td>in-process</td>
+<td>two servers share the counter</td>
+</tr>
+</tbody></table>
+<h2 id="2-organisations-org">2. Organisations (ORG)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-ORG-01</td>
+<td>A <strong>host account</strong> is either a user (individual host) or an organisation. One user can be an individual host and a member of several organisations (DEC-004). Each host request names the active host account and the user must hold it.</td>
+<td>service + permission</td>
+<td>single hostType</td>
+<td>request with someone else&#39;s org id gets 404</td>
+</tr>
+<tr>
+<td>BR-ORG-02</td>
+<td>Organisation <code>business_category</code> is <code>agency</code>, <code>hotel</code> or <code>hostel</code> and never changes after creation.</td>
+<td>DB check + service</td>
+<td>same</td>
+<td>update category refused</td>
+</tr>
+<tr>
+<td>BR-ORG-03</td>
+<td>An invitation is for one email or phone, one role, expires after 7 days, can be accepted once by a signed-in user whose verified email or phone matches.</td>
+<td>DB unique (org, invitee, pending) + service</td>
+<td>not acceptable</td>
+<td>accept twice fails</td>
+</tr>
+<tr>
+<td>BR-ORG-04</td>
+<td>Exactly one active <code>owner</code> per organisation. Only the owner can transfer ownership, which demotes them to <code>admin</code>. The owner cannot be removed.</td>
+<td>DB partial unique index <code>(org) WHERE role=&#39;owner&#39; AND active</code> + service</td>
+<td>built</td>
+<td>two owners impossible</td>
+</tr>
+<tr>
+<td>BR-ORG-05</td>
+<td>Organisation role permissions: see table 2a. Agents and guides never see money.</td>
+<td>service (django-rules)</td>
+<td>any member does anything</td>
+<td>agent accept request gets 403</td>
+</tr>
+<tr>
+<td>BR-ORG-06</td>
+<td>Changing legal name, RC, NIF, NIS or tourism licence number sets verification back to <code>pending</code> and creates a moderation case. Listings stay published meanwhile.</td>
+<td>service</td>
+<td>field list exists</td>
+<td>change NIF, status becomes pending</td>
+</tr>
+</tbody></table>
+<p><strong>Table 2a: organisation permissions</strong></p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>owner</th>
+<th>admin</th>
+<th>manager</th>
+<th>agent</th>
+<th>guide</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>org.edit, org.delete, members.manage</td>
+<td>X</td>
+<td>X (no delete, no ownership)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>listings.manage, trips.manage, calendar.manage</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>bookings.view</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X (own departures)</td>
+</tr>
+<tr>
+<td>bookings.respond (accept, decline) DEC-009</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>bookings.cancel_as_host</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>messages.reply</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>wallet.view, invoices.view</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>payout_details.edit</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="3-becoming-a-host-hst">3. Becoming a host (HST)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-HST-01</td>
+<td>Onboarding steps come from the published config for the host type: individual 12, agency 5, hotel 7, hostel 7 (DEC-007). Every flow contains the approval-mode step.</td>
+<td>service (config)</td>
+<td>hardcoded; agency missing step</td>
+<td>agency draft without approval mode cannot submit</td>
+</tr>
+<tr>
+<td>BR-HST-02</td>
+<td>A draft records the config version it started from. Submitted answers are validated against that version; custom answers are stored as JSON keyed by field id.</td>
+<td>service</td>
+<td>browser storage</td>
+<td>answer with unknown field id rejected</td>
+</tr>
+<tr>
+<td>BR-HST-03</td>
+<td>Required documents per host type (table 3a). A host is approved only when every required document is <code>approved</code>. Each document is reviewed on its own.</td>
+<td>service</td>
+<td>whole host approved</td>
+<td>approve with a pending document fails</td>
+</tr>
+<tr>
+<td>BR-HST-05</td>
+<td>What each host account may publish (DEC-014): individual: home, vehicle; agency: experience, trip; hotel and hostel: their property (hotel or hostel vertical with room types). Checked when creating or changing the vertical of a listing and when creating a trip.</td>
+<td>service + DB trigger</td>
+<td>built in website</td>
+<td>individual creating an experience gets 403 <code>host_offer_not_allowed</code></td>
+</tr>
+<tr>
+<td>BR-HST-04</td>
+<td>Host verification state machine: table 3b. Reasons of at least 10 characters for reject, request changes, suspend, ban.</td>
+<td>service</td>
+<td>admin only</td>
+<td>approved to applied refused</td>
+</tr>
+</tbody></table>
+<p><strong>Table 3a: required documents (proposal, VERIFY WITH A PROFESSIONAL)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Host type</th>
+<th>Required</th>
+<th>Optional</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Individual</td>
+<td>National ID or passport, proof of ownership or lease with owner&#39;s permission</td>
+<td>APC declaration (&quot;chez l&#39;habitant&quot;), insurance, auto-entrepreneur card</td>
+</tr>
+<tr>
+<td>Agency</td>
+<td>Representative ID, RC, NIF, NIS, Ministry of Tourism licence</td>
+<td></td>
+</tr>
+<tr>
+<td>Hotel</td>
+<td>Manager ID, RC, NIF, NIS, classification decision or operating authorisation</td>
+<td></td>
+</tr>
+<tr>
+<td>Hostel</td>
+<td>Manager ID, RC or association status, operating authorisation</td>
+<td></td>
+</tr>
+<tr>
+<td>Vehicle rental (agency)</td>
+<td>Representative ID, RC with rental activity, NIF, NIS; per vehicle: carte grise, insurance, contrôle technique</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>Table 3b: host (user or organisation) verification states</strong></p>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>Allowed next</th>
+<th>Who</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>applied</td>
+<td>under_review</td>
+<td>host submits</td>
+</tr>
+<tr>
+<td>under_review</td>
+<td>approved, changes_requested, rejected</td>
+<td>staff</td>
+</tr>
+<tr>
+<td>changes_requested</td>
+<td>under_review (resubmit) or rejected</td>
+<td>host / staff</td>
+</tr>
+<tr>
+<td>approved</td>
+<td>under_review (legal change, BR-ORG-06), suspended</td>
+<td>system / staff</td>
+</tr>
+<tr>
+<td>rejected</td>
+<td>applied (after 30 days)</td>
+<td>host</td>
+</tr>
+<tr>
+<td>suspended</td>
+<td>approved (unsuspend)</td>
+<td>staff</td>
+</tr>
+<tr>
+<td>any of the above</td>
+<td>banned</td>
+<td>staff with <code>hosts.ban</code></td>
+</tr>
+<tr>
+<td>banned</td>
+<td>(final)</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Soft delete is separate: any state can be soft-deleted by a super admin and restored to the previous state.</p>
+<h2 id="4-listings-and-trips-lst-trp">4. Listings and trips (LST, TRP)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-LST-01</td>
+<td>A listing belongs to exactly one host account. It has one vertical: <code>home</code>, <code>hotel</code>, <code>hostel</code>, <code>experience</code>, <code>vehicle</code> (trips are separate, DEC-006). Hotels and hostels must have at least one room type to be submitted.</td>
+<td>DB FK + service</td>
+<td>built</td>
+<td>hotel without room type cannot submit</td>
+</tr>
+<tr>
+<td>BR-LST-02</td>
+<td>Publishing needs staff approval (DEC-003). Editing title, description, photos, location, vertical, capacity or room types of a published listing creates a revision that goes to review while the published version stays visible. Price, calendar and rules changes do not need review.</td>
+<td>service</td>
+<td>live at once</td>
+<td>edit title, public page unchanged until approved</td>
+</tr>
+<tr>
+<td>BR-LST-03</td>
+<td>Listing state machine: table 4a. Only published listings appear in search or accept bookings. Paused, suspended and archived listings keep existing bookings.</td>
+<td>service + DB check on enum</td>
+<td>two sets</td>
+<td>booking on paused listing refused</td>
+</tr>
+<tr>
+<td>BR-LST-04</td>
+<td>Amenities, property types and categories are reference rows. A reference row in use cannot be hard-deleted; it is deactivated.</td>
+<td>DB FK <code>ON DELETE RESTRICT</code></td>
+<td>free text</td>
+<td>delete used amenity fails</td>
+</tr>
+<tr>
+<td>BR-LST-05</td>
+<td>Experience and trip types come from one fixed list each (DEC-015): 8 experience types and 8 trip types with en/fr/ar labels. An experience listing must have exactly one experience type; a trip exactly one trip type. Changing the lists is a product change made in one place (backend enum, served to both apps).</td>
+<td>DB enum + check + service</td>
+<td>built in both apps (shared list file)</td>
+<td>experience without type refused</td>
+</tr>
+<tr>
+<td>BR-TRP-01</td>
+<td>Only an organisation with <code>business_category = agency</code> and verification <code>approved</code> can create trips.</td>
+<td>service</td>
+<td>built</td>
+<td>hotel creates trip, 403</td>
+</tr>
+<tr>
+<td>BR-TRP-02</td>
+<td>A departure has <code>seats_total</code>; held + booked seats never exceed it. Price is per person and snapshot on the booking.</td>
+<td>DB check on departure counters</td>
+<td>per date by maxGroupSize</td>
+<td>concurrent last-seat bookings: one wins</td>
+</tr>
+<tr>
+<td>BR-TRP-03</td>
+<td>Cancelling a departure cancels every booking on it with a full refund obligation and commission reversal, and notifies guests.</td>
+<td>service</td>
+<td>missing</td>
+<td>all bookings cancelled</td>
+</tr>
+</tbody></table>
+<p><strong>Table 4a: listing states</strong> (same for trips)</p>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>Allowed next</th>
+<th>Who</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>draft</td>
+<td>pending_review, deleted</td>
+<td>host</td>
+</tr>
+<tr>
+<td>pending_review</td>
+<td>published, changes_requested, rejected (staff); draft (host withdraws)</td>
+<td></td>
+</tr>
+<tr>
+<td>changes_requested</td>
+<td>pending_review</td>
+<td>host</td>
+</tr>
+<tr>
+<td>published</td>
+<td>paused, archived (host); suspended, changes_requested (staff)</td>
+<td></td>
+</tr>
+<tr>
+<td>paused</td>
+<td>published (host, no review unless key fields changed)</td>
+<td></td>
+</tr>
+<tr>
+<td>rejected</td>
+<td>draft</td>
+<td>host</td>
+</tr>
+<tr>
+<td>suspended</td>
+<td>published, rejected</td>
+<td>staff</td>
+</tr>
+<tr>
+<td>archived</td>
+<td>draft</td>
+<td>host</td>
+</tr>
+<tr>
+<td>any except deleted</td>
+<td>deleted (soft); staff restore to previous state</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="5-availability-avl">5. Availability (AVL)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-AVL-01</td>
+<td>For a single unit (home, vehicle), two bookings in a blocking state (<code>pending</code>, <code>confirmed</code>, <code>completed</code>, <code>disputed</code>) cannot have overlapping half-open ranges. Back-to-back is allowed (check-out day = next check-in).</td>
+<td><strong>DB exclusion constraint</strong> <code>(unit WITH =, stay WITH &amp;&amp;) WHERE status IN (...)</code></td>
+<td>app check</td>
+<td>50 parallel requests for the same nights: exactly 1 succeeds</td>
+</tr>
+<tr>
+<td>BR-AVL-02</td>
+<td>For pooled units (room types, hostel beds, experience slots, trip departures), each night or slot has <code>total</code>, <code>held</code>, <code>booked</code>, with <code>held + booked &lt;= total</code> and all values <code>&gt;= 0</code>. Reserving is one atomic <code>UPDATE ... WHERE held + booked + n &lt;= total</code>.</td>
+<td><strong>DB check</strong> + service</td>
+<td>in process</td>
+<td>inventory never negative</td>
+</tr>
+<tr>
+<td>BR-AVL-03</td>
+<td>A hostel bed room type books one unit per guest; a hotel room type books one unit per room requested. Capacity per unit limits guests per unit.</td>
+<td>service</td>
+<td>built</td>
+<td>3 guests in a dorm use 3 units</td>
+</tr>
+<tr>
+<td>BR-AVL-04</td>
+<td>A night is unavailable if blocked by the host, booked, outside the listing&#39;s availability window, inside the advance notice period, or the listing is not published. Blocks may be per listing or per room type.</td>
+<td>service + DB</td>
+<td>per listing only</td>
+<td>blocked night not bookable</td>
+</tr>
+<tr>
+<td>BR-AVL-05</td>
+<td>Search keeps a listing whose availability overlaps the searched dates and returns the largest free sub-range; booking is allowed only on fully free nights with stay length between min and max nights (defaults 1 and 90).</td>
+<td>service</td>
+<td>built</td>
+<td>partial match shows sub-range</td>
+</tr>
+<tr>
+<td>BR-AVL-06</td>
+<td>A hold lasts 15 minutes. Expired holds are released by a job every minute and ignored on read.</td>
+<td>job + service</td>
+<td>none</td>
+<td>hold released after 15 min</td>
+</tr>
+</tbody></table>
+<h2 id="6-pricing-prc">6. Pricing (PRC)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-PRC-01</td>
+<td>The server computes every price. A quote lists per-night prices (base or day override), length-of-stay discount, subtotal, cleaning fee, taxes, total. A quote expires after 30 minutes and is re-validated at booking; if anything changed the guest sees the new price.</td>
+<td>service</td>
+<td>client and server both</td>
+<td>tampered price ignored</td>
+</tr>
+<tr>
+<td>BR-PRC-02</td>
+<td>Guests pay no BLADUS fee. Guest total = subtotal + cleaning fee + taxes.</td>
+<td>service</td>
+<td>built</td>
+<td>quote has no fee line</td>
+</tr>
+<tr>
+<td>BR-PRC-03</td>
+<td>Discount: weekly (7+ nights) and monthly (28+ nights) percentages set by the host, 0 to 90%; only the larger applies; applied to the subtotal before commission.</td>
+<td>service + DB check</td>
+<td>display only</td>
+<td>30 nights uses monthly only</td>
+</tr>
+<tr>
+<td>BR-PRC-04</td>
+<td>Taxes (R2): taxe de séjour per person per night by star rating from settings; VAT shown only if the host is VAT-registered. Rates live in settings with validity dates. VERIFY WITH A PROFESSIONAL.</td>
+<td>service</td>
+<td>free number</td>
+<td>rate change does not alter old quotes</td>
+</tr>
+</tbody></table>
+<h2 id="7-bookings-bkg">7. Bookings (BKG)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-BKG-01</td>
+<td>Instant booking confirms immediately if the listing resolves to instant mode, the guest has a verified phone, the dates are free, and the host&#39;s wallet is above its credit floor (BR-PAY-10). Otherwise it becomes a request.</td>
+<td>service</td>
+<td>confirmed at once</td>
+<td>host below floor: becomes pending</td>
+</tr>
+<tr>
+<td>BR-BKG-02</td>
+<td>Approval mode resolution: if the platform switch forces request mode, request; else the listing&#39;s own mode if set; else the host account default; else <code>request</code>.</td>
+<td>service</td>
+<td>listing only</td>
+<td>org default applied to new listing</td>
+</tr>
+<tr>
+<td>BR-BKG-03</td>
+<td>A request blocks the dates (BR-AVL-01) until accepted, declined, cancelled or expired. Only users with <code>bookings.respond</code> may accept or decline. Decline needs a reason code.</td>
+<td>service + DB</td>
+<td>any member</td>
+<td>agent cannot accept</td>
+</tr>
+<tr>
+<td>BR-BKG-04</td>
+<td>A pending request expires <code>request_ttl_hours</code> (default 24, DEC-008) after creation, or at check-in time if sooner. A job runs every 5 minutes.</td>
+<td>job</td>
+<td>lazy</td>
+<td>expired after 24 h without any read</td>
+</tr>
+<tr>
+<td>BR-BKG-05</td>
+<td>A confirmed booking becomes completed at check-out time + 2 hours (Africa/Algiers) by a job; this opens the review window and counts host earnings (DEC-010).</td>
+<td>job</td>
+<td>lazy</td>
+<td>completion without page view</td>
+</tr>
+<tr>
+<td>BR-BKG-06</td>
+<td>Booking state machine: table 7a. Payment state is a separate field (M1: <code>not_collected</code>).</td>
+<td>DB enum + service</td>
+<td>two sets</td>
+<td>confirmed to pending refused</td>
+</tr>
+<tr>
+<td>BR-BKG-07</td>
+<td>At creation the booking stores a snapshot: price lines, nights, guests, cancellation policy windows, commission rate (bp) and base, listing title, host account, address (revealed to the guest only once confirmed). Later edits to the listing never change it.</td>
+<td>service</td>
+<td>partial</td>
+<td>listing price change keeps booking total</td>
+</tr>
+</tbody></table>
+<p><strong>Table 7a: booking states</strong></p>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>To</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(new)</td>
+<td>pending</td>
+<td>request mode</td>
+</tr>
+<tr>
+<td>(new)</td>
+<td>confirmed</td>
+<td>instant mode (BR-BKG-01)</td>
+</tr>
+<tr>
+<td>pending</td>
+<td>confirmed</td>
+<td>host accepts</td>
+</tr>
+<tr>
+<td>pending</td>
+<td>declined</td>
+<td>host declines</td>
+</tr>
+<tr>
+<td>pending</td>
+<td>expired</td>
+<td>job (BR-BKG-04)</td>
+</tr>
+<tr>
+<td>pending</td>
+<td>cancelled</td>
+<td>guest withdraws</td>
+</tr>
+<tr>
+<td>confirmed</td>
+<td>cancelled</td>
+<td>guest, host or staff cancels (section 8)</td>
+</tr>
+<tr>
+<td>confirmed</td>
+<td>completed</td>
+<td>job (BR-BKG-05)</td>
+</tr>
+<tr>
+<td>confirmed, completed</td>
+<td>disputed</td>
+<td>guest or host opens a dispute (R2), until 14 days after check-out</td>
+</tr>
+<tr>
+<td>disputed</td>
+<td>completed or cancelled</td>
+<td>support resolves</td>
+</tr>
+</tbody></table>
+<p>Final states: declined, expired, cancelled, completed (once the dispute window has passed).</p>
+<h2 id="8-cancellations-and-refunds-can">8. Cancellations and refunds (CAN)</h2>
+<p>Under DEC-001 the guest paid the host directly, so a &quot;refund&quot; is an amount the <strong>host owes the guest</strong>. BLADUS records it, shows it to both sides, and adjusts its commission. When BLADUS collects payments later (M2 to M4), the same amounts drive real refunds.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-CAN-01</td>
+<td>Policy templates (DEC-011); &quot;days before&quot; = calendar days in Algeria between today and check-in: <strong>flexible</strong> 100% if 1+ days before, 50% on arrival day; <strong>moderate</strong> 100% if 5+ days, 50% from 4 to 1 day, 0% on arrival day; <strong>strict</strong> 100% if 14+ days, 50% from 13 to 7, 0% within 6 days. Percentages apply to the accommodation subtotal; cleaning fee and its taxes are always refunded before check-in. Guests cannot cancel after check-in time on arrival day (support can).</td>
+<td>service (pure function, property tests)</td>
+<td>built (same values)</td>
+<td>table-driven tests per day</td>
+</tr>
+<tr>
+<td>BR-CAN-02</td>
+<td>Guest cancellation: refund = policy % x subtotal + cleaning fee + matching taxes.</td>
+<td>service</td>
+<td>built</td>
+<td>example 8a</td>
+</tr>
+<tr>
+<td>BR-CAN-03</td>
+<td>Host cancellation of a confirmed booking: full refund owed to the guest, full commission reversal, host cancellation counter +1; 3 in 12 months open a moderation case.</td>
+<td>service</td>
+<td>partly</td>
+<td>example 8a</td>
+</tr>
+<tr>
+<td>BR-CAN-04</td>
+<td>Staff refunds: amount between 1 centime and (total minus already refunded); partial refunds add up; reason required; audited.</td>
+<td>DB check <code>refunded &lt;= total</code> + service</td>
+<td>admin built</td>
+<td>over-refund refused</td>
+</tr>
+<tr>
+<td>BR-CAN-05</td>
+<td>Disputes (R2): opened until 14 days after check-out by guest or host; resolution <code>refund_full</code>, <code>refund_partial</code> or <code>declined</code>; resolution note required.</td>
+<td>service</td>
+<td>admin only</td>
+<td>dispute after 15 days refused</td>
+</tr>
+</tbody></table>
+<p><strong>Example 8a</strong> (Tipaza villa from the click-through, individual host, 12%):</p>
+<ul>
+<li>3 nights x 18,500 = <strong>55,500 DZD</strong> subtotal; cleaning 4,000; total <strong>59,500 DZD</strong>.</li>
+<li>Commission at confirmation: 12% x 55,500 = <strong>6,660 DZD</strong> deducted from the host&#39;s wallet.</li>
+<li>Guest cancels 3 days before, moderate policy: 50% of 55,500 = 27,750 + cleaning 4,000 = <strong>31,750 DZD</strong> owed back to the guest.</li>
+<li>BLADUS keeps commission only on the part the host keeps: 12% x 27,750 = 3,330, so <strong>3,330 DZD</strong> goes back to the wallet.</li>
+<li>If the host cancels instead: the guest is owed 59,500 and all 6,660 goes back to the wallet.</li>
+</ul>
+<h2 id="9-money-wallet-and-ledger-pay">9. Money, wallet and ledger (PAY)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-PAY-01</td>
+<td>Amounts are stored as whole centimes (<code>BIGINT</code>) with a currency code (<code>DZD</code>). Prices shown to people are whole dinars. Rates are basis points. Rounding: half up at each line; a total is always the sum of its rounded lines.</td>
+<td>DB types + Money type</td>
+<td>integer DZD</td>
+<td>property test: sum of lines == total</td>
+</tr>
+<tr>
+<td>BR-PAY-02</td>
+<td>Ledger: every posting is one <code>ledger_transaction</code> with 2+ entries; entries of a transaction sum to 0 per currency; entries are never updated or deleted (corrections are new reversing transactions).</td>
+<td>DB deferred constraint trigger + no UPDATE/DELETE grant</td>
+<td>single-sided</td>
+<td>unbalanced insert fails at commit</td>
+</tr>
+<tr>
+<td>BR-PAY-03</td>
+<td>Each host account has one commission wallet account in the ledger. Balance = sum of its entries (cached in a balance row updated in the same transaction).</td>
+<td>DB + service</td>
+<td>built (website)</td>
+<td>cache equals sum</td>
+</tr>
+<tr>
+<td>BR-PAY-04</td>
+<td>Commission = round_half_up(commission_base x rate_bp / 10,000); base per DEC-002 (subtotal after discount; trips and experiences: seats x price). Posted once per booking at confirmation (unique key booking + kind).</td>
+<td>DB unique + service</td>
+<td>built (website)</td>
+<td>confirm twice posts once</td>
+</tr>
+<tr>
+<td>BR-PAY-05</td>
+<td>Commission reversal: decline and expiry (nothing was posted); host cancel and staff cancel without guest fault: full; guest cancel: reverse the commission on the refunded subtotal share.</td>
+<td>service</td>
+<td>built (website)</td>
+<td>example 8a</td>
+</tr>
+<tr>
+<td>BR-PAY-06</td>
+<td>Rate resolution: host account override (if set) else host-type default from settings (individual 1,200 bp, agency 1,500, hotel 1,800, hostel 1,000). Changing defaults affects new bookings only. Overrides can be cleared.</td>
+<td>service</td>
+<td>two sources</td>
+<td>clearing an override returns to the default</td>
+</tr>
+<tr>
+<td>BR-PAY-07</td>
+<td>Manual top-up: amount 1 to 10,000,000 DZD; method in <code>ccp_transfer</code>, <code>bank_transfer</code>, <code>baridimob</code>, <code>cash_office</code>; receipt reference unique per method; top-ups over 500,000 DZD need a second finance user to approve (four-eyes).</td>
+<td>DB unique + service</td>
+<td>duplicates allowed</td>
+<td>same receipt twice fails</td>
+</tr>
+<tr>
+<td>BR-PAY-08</td>
+<td>Online top-up (R2): credited only from a verified gateway webhook, once per gateway event id.</td>
+<td>DB unique <code>(provider, event_id)</code></td>
+<td>none</td>
+<td>replayed webhook ignored</td>
+</tr>
+<tr>
+<td>BR-PAY-09</td>
+<td>Changing payout or refund account details requires 2FA, notifies the old email and phone, and blocks payouts for 72 hours.</td>
+<td>service</td>
+<td>none</td>
+<td>payout during hold refused</td>
+</tr>
+<tr>
+<td>BR-PAY-10</td>
+<td>Credit floor: a host wallet may go below zero down to <code>-credit_limit</code> (setting per host type, default 20,000 DZD). Below 0: banner and admin flag. Below the floor: instant bookings become requests and the host cannot accept new requests until topped up.</td>
+<td>service</td>
+<td>banner only</td>
+<td>accept refused below floor</td>
+</tr>
+<tr>
+<td>BR-PAY-11</td>
+<td>Models M2 to M4 (guest payments, escrow, payouts) are switched off by a setting until legal approval; their ledger accounts exist from day one.</td>
+<td>settings</td>
+<td>admin mock</td>
+<td>endpoints return 404 when off</td>
+</tr>
+<tr>
+<td>BR-PAY-12</td>
+<td>Commission invoices (R2): monthly per host account, sequential numbers without gaps per year, never deleted (cancelled by a credit note). VERIFY WITH A PROFESSIONAL.</td>
+<td>DB sequence + service</td>
+<td>none</td>
+<td>numbers continuous</td>
+</tr>
+</tbody></table>
+<p><strong>Ledger accounts</strong></p>
+<table>
+<thead>
+<tr>
+<th>Account</th>
+<th>Type</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>host_wallet:{host_account}</code></td>
+<td>liability (BLADUS holds the host&#39;s deposit)</td>
+<td>M1</td>
+</tr>
+<tr>
+<td><code>platform_cash:{method}</code></td>
+<td>asset (money received by BLADUS)</td>
+<td>top-ups</td>
+</tr>
+<tr>
+<td><code>platform_commission_revenue</code></td>
+<td>revenue</td>
+<td>commission</td>
+</tr>
+<tr>
+<td><code>vat_payable</code></td>
+<td>liability</td>
+<td>R2</td>
+</tr>
+<tr>
+<td><code>guest_receivable</code>, <code>escrow</code>, <code>host_payable</code>, <code>payout_clearing</code></td>
+<td>various</td>
+<td>M2 to M4 (switched off)</td>
+</tr>
+</tbody></table>
+<p><strong>Example 9a: postings</strong></p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Debit</th>
+<th>Credit</th>
+<th>Amount (DZD)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Finance records a CCP top-up</td>
+<td>platform_cash:ccp</td>
+<td>host_wallet:H</td>
+<td>50,000</td>
+</tr>
+<tr>
+<td>Booking confirmed</td>
+<td>host_wallet:H</td>
+<td>platform_commission_revenue</td>
+<td>6,660</td>
+</tr>
+<tr>
+<td>Guest cancels (example 8a)</td>
+<td>platform_commission_revenue</td>
+<td>host_wallet:H</td>
+<td>3,330</td>
+</tr>
+</tbody></table>
+<p>Wallet balance after: 50,000 - 6,660 + 3,330 = <strong>46,670 DZD</strong>.</p>
+<h2 id="10-reviews-rev">10. Reviews (REV)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-REV-01</td>
+<td>A guest review needs a <code>completed</code> booking of that guest, within 14 days after check-out, one per booking. Ratings 1 to 5: overall plus cleanliness, accuracy, communication, location, value.</td>
+<td>DB unique <code>(booking, author_role)</code> + check + service</td>
+<td>read only</td>
+<td>second review refused</td>
+</tr>
+<tr>
+<td>BR-REV-02</td>
+<td>Double-blind (R2): both reviews published when both are submitted or when the 14 days end. No edits after publication.</td>
+<td>job + service</td>
+<td>none</td>
+<td>hidden until both</td>
+</tr>
+<tr>
+<td>BR-REV-03</td>
+<td>Review states: <code>submitted</code> (waiting), <code>published</code>, <code>flagged</code>, <code>hidden</code>, <code>removed</code>. Moderator moves need a reason; <code>removed</code> only by super admin.</td>
+<td>service</td>
+<td>no state machine</td>
+<td>restoring a removed review refused</td>
+</tr>
+<tr>
+<td>BR-REV-04</td>
+<td>Ratings and counts on listing, host account and organisation are computed from published reviews by a job after each change; never typed in.</td>
+<td>job</td>
+<td>stored numbers</td>
+<td>rating equals average</td>
+</tr>
+</tbody></table>
+<h2 id="11-messaging-and-notifications-msg-ntf">11. Messaging and notifications (MSG, NTF)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-MSG-01</td>
+<td>Before a booking is confirmed, phone numbers, emails, CCP/RIP numbers and messaging-app links in messages are masked for the other side; repeated attempts flag the thread for trust review.</td>
+<td>service</td>
+<td>none</td>
+<td><code>0555 12 34 56</code> shown masked</td>
+</tr>
+<tr>
+<td>BR-NTF-01</td>
+<td>Every booking state change, verification decision, review publication and wallet going below 0 creates an in-app notification for the people concerned.</td>
+<td>service via outbox</td>
+<td>seeds</td>
+<td>decline notifies guest</td>
+</tr>
+<tr>
+<td>BR-NTF-02</td>
+<td>Critical events (booking confirmed, declined, expired, cancelled; one-time codes; verification result) also go by email or SMS in the user&#39;s language. Non-critical events respect preferences.</td>
+<td>job</td>
+<td>none</td>
+<td>SMS sent once per event</td>
+</tr>
+</tbody></table>
+<h2 id="12-search-and-geography-src">12. Search and geography (SRC)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-SRC-01</td>
+<td>Search returns only published listings of approved, non-suspended host accounts. Facet counts are computed on the filtered set without the facet&#39;s own filter.</td>
+<td>service</td>
+<td>in memory</td>
+<td>suspended host hidden</td>
+</tr>
+<tr>
+<td>BR-SRC-02</td>
+<td>Geography: 69 wilayas, 1,541 communes (DEC-013). Every listing references a commune; the wilaya derives from it. Legacy 58-wilaya codes kept for mapping.</td>
+<td>DB FK</td>
+<td>58 / 68</td>
+<td>listing without commune refused</td>
+</tr>
+<tr>
+<td>BR-SRC-03</td>
+<td>The exact point is shown only to the guest of a confirmed booking and to the host; everyone else gets the public point (random offset up to 500 m, fixed per listing).</td>
+<td>service</td>
+<td>exact point public</td>
+<td>anonymous response has no exact point</td>
+</tr>
+<tr>
+<td>BR-SRC-04</td>
+<td><code>hotel</code> is a search vertical; analytics group <code>home</code>, <code>hotel</code>, <code>hostel</code> as &quot;stays&quot; (DEC-005).</td>
+<td>service</td>
+<td>inconsistent</td>
+<td>counts add up</td>
+</tr>
+</tbody></table>
+<h2 id="13-files-med">13. Files (MED)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-MED-01</td>
+<td>Photos: JPEG, PNG, WebP, HEIC; max 15 MB; re-encoded; metadata (incl. GPS) stripped; min 5 photos for homes and 3 per room type; duplicates detected by perceptual hash.</td>
+<td>job</td>
+<td>placeholders</td>
+<td>GPS removed</td>
+</tr>
+<tr>
+<td>BR-MED-02</td>
+<td>Documents: PDF, JPEG, PNG; max 10 MB; virus scanned; private; signed URL valid 5 minutes; each view audited.</td>
+<td>job + service</td>
+<td>placeholders</td>
+<td>URL fails after 5 min</td>
+</tr>
+</tbody></table>
+<h2 id="14-moderation-mod">14. Moderation (MOD)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-MOD-01</td>
+<td>Queue priority: hosts high after 3 days waiting, listings and trips after 2 days, documents after 3 days; flagged reviews and disputes always high. Waiting time counts from the last submission, not creation.</td>
+<td>service</td>
+<td>creation time used</td>
+<td>resubmission resets the clock</td>
+</tr>
+<tr>
+<td>BR-MOD-02</td>
+<td>A change request lists items (from a checklist) and a note; the host sees exactly those; the resubmission links to the request.</td>
+<td>service</td>
+<td>mocked</td>
+<td>items visible to host</td>
+</tr>
+<tr>
+<td>BR-MOD-03</td>
+<td>Suspending or banning a host account pauses all its listings and trips, blocks new bookings, and opens a support case for future confirmed bookings. Unsuspending does not republish automatically.</td>
+<td>service</td>
+<td>no cascade</td>
+<td>listings paused</td>
+</tr>
+<tr>
+<td>BR-MOD-04</td>
+<td>Risk flags (R2) open a case; they never silently block a user.</td>
+<td>service</td>
+<td>none</td>
+<td>flag creates case</td>
+</tr>
+</tbody></table>
+<h2 id="15-staff-and-audit-stf">15. Staff and audit (STF)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-STF-01</td>
+<td>Staff permissions come from the role (5 roles, matrix in Appendix B section 1.1) stored in the database; checked on every admin endpoint; deny by default.</td>
+<td>service</td>
+<td>code constants</td>
+<td>analyst refund gets 403</td>
+</tr>
+<tr>
+<td>BR-STF-02</td>
+<td>Audit log is insert-only (no UPDATE or DELETE grant for the app&#39;s database role); each row stores actor id, actor role, action, object type and id, before/after (personal data minimised), IP, request id, and a hash of the previous row.</td>
+<td>DB grants + trigger</td>
+<td>memory</td>
+<td>update fails</td>
+</tr>
+<tr>
+<td>BR-STF-03</td>
+<td>Every record of who did something stores a user id (foreign key), never a display name.</td>
+<td>DB FK</td>
+<td>names</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-STF-04</td>
+<td>Exports: values starting with <code>= + - @ TAB CR</code> are prefixed with <code>&#39;</code>; need <code>reports.export</code> plus the view permission of the dataset; audited with filters and row count.</td>
+<td>service</td>
+<td>built</td>
+<td>formula neutralised</td>
+</tr>
+</tbody></table>
+<h2 id="16-settings-and-config-cfg">16. Settings and config (CFG)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-CFG-01</td>
+<td>Settings are one versioned record; each change creates a new version with author and time; only whitelisted keys with validated values.</td>
+<td>service</td>
+<td>shallow merge</td>
+<td>unknown key refused</td>
+</tr>
+<tr>
+<td>BR-CFG-02</td>
+<td>Onboarding config: one draft and many immutable published versions per host type; publishing copies the draft into the next version number for that host type.</td>
+<td>DB unique <code>(host_type, version)</code></td>
+<td>global counter</td>
+<td>old version still readable</td>
+</tr>
+<tr>
+<td>BR-CFG-03</td>
+<td>Field types are canonical: <code>text, textarea, number, select, multi_select, image_upload, file_upload, toggle, location, amenities</code>. Core steps and fields cannot be removed or have their type changed.</td>
+<td>service</td>
+<td>two schemas</td>
+<td>removing a core step refused</td>
+</tr>
+</tbody></table>
+<h2 id="17-promotions-prm-reports-rpt-privacy-prv-system-sys">17. Promotions (PRM), reports (RPT), privacy (PRV), system (SYS)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Today</th>
+<th>Test</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-PRM-01</td>
+<td>Coupon (R2): unique code (case-insensitive), valid dates, total and per-user limits; redemption counted when the booking is confirmed, released if cancelled before check-in.</td>
+<td>DB unique + service</td>
+<td>not used</td>
+<td>limit reached refused</td>
+</tr>
+<tr>
+<td>BR-PRM-02</td>
+<td>Coupon funding: BLADUS-funded reduces the commission (never below 0); host-funded reduces the subtotal. Recorded in the ledger.</td>
+<td>service</td>
+<td>n/a</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-RPT-01</td>
+<td>KPIs use real date windows in Africa/Algiers; gross booking value = sum of totals of confirmed and completed bookings by check-in date; revenue = net commission.</td>
+<td>service</td>
+<td>hardcoded</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-RPT-02</td>
+<td>Host earnings = subtotal + cleaning fee - commission - refunds owed, counted when completed (DEC-010).</td>
+<td>service</td>
+<td>shows 0</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-PRV-01</td>
+<td>Store the accepted terms and privacy versions with time and IP; marketing only with explicit opt-in, withdrawable any time.</td>
+<td>DB</td>
+<td>none</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-PRV-02</td>
+<td>Deletion request: anonymise the profile (name, contacts, photos, ID files) within 30 days; keep bookings, ledger and invoices with a pseudonymous id for the legal period. VERIFY WITH A PROFESSIONAL.</td>
+<td>job</td>
+<td>none</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-PRV-03</td>
+<td>Notification preferences cannot switch off critical messages (BR-NTF-02).</td>
+<td>service</td>
+<td>none</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-PRV-04</td>
+<td>Personal data and its backups stay in Algerian data centres unless an ANPDP authorisation is recorded. VERIFY WITH A PROFESSIONAL.</td>
+<td>operations</td>
+<td>n/a</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-PRV-05</td>
+<td>Retention: ID images deleted 90 days after the verification decision (keep the decision, document type and a hash of the number); messages 3 years after last activity; accounting 10 years. VERIFY WITH A PROFESSIONAL.</td>
+<td>job</td>
+<td>none</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-SYS-01</td>
+<td>Every create or money endpoint accepts an <code>Idempotency-Key</code>; same key and same body returns the stored response; same key with a different body returns 422; a concurrent request with the same key returns 409. Keys kept 24 h.</td>
+<td>DB unique + service</td>
+<td>none</td>
+<td>retry returns the same booking</td>
+</tr>
+<tr>
+<td>BR-SYS-02</td>
+<td>Incoming webhooks are stored raw before processing, signature checked, processed once.</td>
+<td>DB unique</td>
+<td>none</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-SYS-03</td>
+<td>Side effects (notifications, emails, search refresh) are written to an outbox in the same transaction and sent after commit with retries and backoff.</td>
+<td>DB + job</td>
+<td>none</td>
+<td>a rolled-back change sends nothing</td>
+</tr>
+<tr>
+<td>BR-SYS-04</td>
+<td>API errors have a stable code, a field (if any) and a message in the requested language (en, fr, ar).</td>
+<td>service</td>
+<td>ActionResult codes</td>
+<td></td>
+</tr>
+<tr>
+<td>BR-SYS-05</td>
+<td>Timestamps in UTC (<code>timestamptz</code>); stay dates as <code>date</code> in Africa/Algiers; week starts Sunday; Friday and Saturday are the weekend for pricing rules.</td>
+<td>DB types</td>
+<td>mixed</td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Which rules are guaranteed by the database itself, and why does that matter for BR-AVL-01?</li>
+<li><input disabled="" type="checkbox"> Recompute example 8a for a strict-policy guest who cancels 10 days before check-in.</li>
+<li><input disabled="" type="checkbox"> What happens to a host&#39;s instant bookings when the wallet is below the credit floor?</li>
+<li><input disabled="" type="checkbox"> Which organisation roles can accept a booking request?</li>
+<li><input disabled="" type="checkbox"> Why is the exact address hidden until a booking is confirmed?</li>
+<li><input disabled="" type="checkbox"> Why does a correction in the ledger add a new transaction instead of editing the old one?</li>
+</ul>
+<div class="pager"><span><a href="03-requirements.html">&larr; 03. Requirements: what the backend must do</a></span><span><a href="diagrams-readme.html">Diagrams &rarr;</a></span></div></main></div></body></html>

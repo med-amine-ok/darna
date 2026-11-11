@@ -1,0 +1,393 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>14. Open questions (running list) · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="on" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="14-open-questions-running-list">14. Open questions (running list)</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Questions the code, the spec and the research could not answer. Some need you, some need a lawyer or accountant.<br>This list is kept up to date after each phase. The ones that block design are marked <strong>blocking</strong>.</p>
+</blockquote>
+<p><strong>Status (2026-11-09, Phase 8):</strong></p>
+<ul>
+<li>Q1 to Q13: decided (DEC-001 to DEC-013); DEC-014 and DEC-015 were added later by the product owner.</li>
+<li><strong>Moved to <a href="13-decisions-needed.html">13-decisions-needed.md</a></strong> with options, recommendation, deadline (roadmap milestone) and the default if nobody decides: <strong>Q14 to Q20</strong>, <strong>L1 to L7</strong>, <strong>F1 to F4</strong>, and the new items below (<strong>Q21 to Q28</strong>, <strong>L8 to L12</strong>, <strong>F5 to F7</strong>). The tables on this page stay as the running record; answers are written here and in 13 when they arrive.</li>
+<li>New technical decisions for the tech lead (<strong>T1 to T10</strong>: hosting provider, mock-to-API switch, session model, storage, search, processors, backups) are listed only in <a href="13-decisions-needed.html">13-decisions-needed.md</a> section 6.</li>
+<li>Deadlines refer to the milestones in <a href="11-roadmap.html">11-roadmap.md</a>. The most urgent outside answers are <strong>L1 and L2, needed by the end of M5</strong>.</li>
+</ul>
+<p>Started 2026-11-04 (end of Phase 2). On 2026-11-04 the product owner accepted all defaults for Q1 to Q13; they are recorded as decisions DEC-001 to DEC-013 in <code>03-requirements.md</code> section 2.</p>
+<h2 id="for-you-product-owner">For you (product owner)</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Question</th>
+<th>Blocking?</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q1</td>
+<td>Money model: does BLADUS only take a commission (host pre-pays a deposit, guest pays host), or collect guest payments and pay hosts out?</td>
+<td><strong>blocking</strong></td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> M1 prepaid commission, ledger ready for later models</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>Commission base: accommodation subtotal (website today), base price (admin), or full total incl. cleaning fee?</td>
+<td><strong>blocking</strong></td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Subtotal (nights x price), excluding cleaning fee and taxes</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>Must new listings and trips be approved by staff before going live?</td>
+<td><strong>blocking</strong></td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Yes: <code>pending_review</code> first; hosts with a good history can be fast-tracked later</td>
+</tr>
+<tr>
+<td>Q4</td>
+<td>Can one person be an individual host and also a member of organisations at the same time?</td>
+<td><strong>blocking</strong></td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Yes, with an active-organisation switcher</td>
+</tr>
+<tr>
+<td>Q5</td>
+<td>Is &quot;hotel&quot; its own vertical or a kind of home?</td>
+<td><strong>blocking</strong></td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Own vertical in search, <code>home</code> family in analytics</td>
+</tr>
+<tr>
+<td>Q6</td>
+<td>Trips: own tables with departures (seats, price, status per date)?</td>
+<td><strong>blocking</strong></td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Yes</td>
+</tr>
+<tr>
+<td>Q7</td>
+<td>Is the admin&#39;s 2-step cap on the individual onboarding intended?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> No: keep the 12 steps</td>
+</tr>
+<tr>
+<td>Q8</td>
+<td>Request-to-book reply window: keep 24 hours? configurable?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> 24 h, platform setting</td>
+</tr>
+<tr>
+<td>Q9</td>
+<td>Who in an organisation may accept or decline a booking request?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> owner, admin, manager</td>
+</tr>
+<tr>
+<td>Q10</td>
+<td>When are host earnings counted: at confirmation, check-in or check-out?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> At check-out (completed)</td>
+</tr>
+<tr>
+<td>Q11</td>
+<td>Cancellation policies: keep flexible / moderate / strict, or add more?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Keep three, stored as windows</td>
+</tr>
+<tr>
+<td>Q12</td>
+<td>Do guests need phone verification before their first booking?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> Yes, phone OTP</td>
+</tr>
+<tr>
+<td>Q13</td>
+<td>Which wilaya count do the apps show until the official codes 59 to 69 are confirmed?</td>
+<td>no</td>
+<td><strong>Decided 2026-11-04 (default accepted):</strong> 69</td>
+</tr>
+</tbody></table>
+<h3 id="raised-by-the-schema-phase-5-open-moved-to-13-decisions-neededmd-on-2026-11-09">Raised by the schema (Phase 5), open (moved to 13-decisions-needed.md on 2026-11-09)</h3>
+<p>These are proposals built into the schema and rules. Each one can be changed without a redesign.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Blocking?</th>
+<th>Proposal in the schema</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q14</td>
+<td>How far below zero may a host&#39;s commission deposit go before instant booking is switched off?</td>
+<td>no</td>
+<td>20,000 DZD, per host type in settings (BR-PAY-10)</td>
+</tr>
+<tr>
+<td>Q15</td>
+<td>Above which top-up amount must a second finance person approve?</td>
+<td>no</td>
+<td>500,000 DZD (BR-PAY-07)</td>
+</tr>
+<tr>
+<td>Q16</td>
+<td>Hostels: their own vertical, shown under the &quot;Hotels&quot; search tab?</td>
+<td>no</td>
+<td>Yes (ADR-005)</td>
+</tr>
+<tr>
+<td>Q17</td>
+<td>One room type per booking at launch (several rooms of the same type allowed)?</td>
+<td>no</td>
+<td>Yes; mixed room types later (ADR-003)</td>
+</tr>
+<tr>
+<td>Q18</td>
+<td>Can a host withdraw unused deposit money, and how fast?</td>
+<td>no</td>
+<td>Yes, on request, paid by finance within 7 days, after the 72 h hold rule</td>
+</tr>
+<tr>
+<td>Q19</td>
+<td>Minimum number of photos</td>
+<td>no</td>
+<td>5 for homes, 3 per room type (BR-MED-01)</td>
+</tr>
+<tr>
+<td>Q20</td>
+<td>Host cancellation penalty</td>
+<td>no</td>
+<td>Moderation case after 3 host cancellations in 12 months; no fee (BR-CAN-03)</td>
+</tr>
+</tbody></table>
+<h2 id="for-a-lawyer-verify-with-a-professional">For a lawyer (VERIFY WITH A PROFESSIONAL)</h2>
+<p>L1 to L7 moved to <a href="13-decisions-needed.html">13-decisions-needed.md</a> section 4 on 2026-11-09 (still open).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L1</td>
+<td>Does Law 18-05 art. 8 (&quot;hosted in Algeria&quot;, <code>.com.dz</code>) apply to BLADUS as an intermediary, and to the API server as well as the website?</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>Does storing personal data or backups abroad need ANPDP authorisation under Law 18-07 as amended by Law 25-11? Which declarations must BLADUS file before launch?</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>Is collecting guest money and paying hosts a payment service under Règlement 25-02? Is the prepaid commission deposit model safe?</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>Which documents must each host type provide (individual home, &quot;chez l&#39;habitant&quot;, agency, hotel, hostel, vehicle rental, guide)?</td>
+</tr>
+<tr>
+<td>L5</td>
+<td>Is whole-home short-term rental legal for individuals, and what must BLADUS check?</td>
+</tr>
+<tr>
+<td>L6</td>
+<td>Duty to declare foreign guests (Law 08-11 art. 29): whose duty, and what must BLADUS store?</td>
+</tr>
+<tr>
+<td>L7</td>
+<td>Data retention periods for IDs, bookings, messages and invoices. Is a DPO required?</td>
+</tr>
+</tbody></table>
+<h2 id="for-an-accountant-or-bank">For an accountant or bank</h2>
+<p>F1 to F4 moved to <a href="13-decisions-needed.html">13-decisions-needed.md</a> section 5 on 2026-11-09 (still open).</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F1</td>
+<td>VAT on BLADUS commission: 19% or 9% (tourism)? Who issues which invoice?</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>Taxe de séjour: does BLADUS collect it or only show it?</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>Chargily or SlickPay contract terms, settlement delays, amount units in their APIs.</td>
+</tr>
+<tr>
+<td>F4</td>
+<td>Invoice numbering and retention rules for commission invoices to hosts.</td>
+</tr>
+</tbody></table>
+<h2 id="added-2026-11-09-phase-8-roadmap-risks-decisions">Added 2026-11-09 (Phase 8: roadmap, risks, decisions)</h2>
+<p>Found while planning the build. All are open and listed with options and deadlines in <a href="13-decisions-needed.html">13-decisions-needed.md</a>.</p>
+<h3 id="for-you-product-owner-1">For you (product owner)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Blocking?</th>
+<th>Deadline</th>
+<th>Proposal</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q21</td>
+<td>Launch geography: all 69 wilayas or a few pilot wilayas?</td>
+<td>no</td>
+<td>M7</td>
+<td>All open, beta hosts recruited in pilot wilayas</td>
+</tr>
+<tr>
+<td>Q22</td>
+<td>How do guests without an Algerian mobile (diaspora, foreigners) verify? DEC-012 and BR-ACC-01 only accept <code>+213[5-7]</code> numbers</td>
+<td><strong>blocking</strong> (sign-up)</td>
+<td>M0</td>
+<td>Email code for non-Algerian numbers, stricter booking limits</td>
+</tr>
+<tr>
+<td>Q23</td>
+<td>Public launch date relative to the baccalaureate exams (internet cuts, usually June) and the summer season</td>
+<td>no</td>
+<td>M6</td>
+<td>Closed beta May to June, public launch early July 2027</td>
+</tr>
+<tr>
+<td>Q24</td>
+<td>Who moderates at launch, and what review time do we promise hosts?</td>
+<td>no</td>
+<td>M2</td>
+<td>2 moderators, 1 working day</td>
+</tr>
+<tr>
+<td>Q25</td>
+<td>Must a host top up a first deposit before going live or before instant booking?</td>
+<td>no</td>
+<td>M4</td>
+<td>No, the credit floor (Q14) is enough</td>
+</tr>
+<tr>
+<td>Q26</td>
+<td>Is the 24 h request reply window right for agencies whose trips depart weeks later?</td>
+<td>no</td>
+<td>M4</td>
+<td>24 h default, 48 h for agencies (setting per host type)</td>
+</tr>
+<tr>
+<td>Q27</td>
+<td>Support channels and hours at launch</td>
+<td>no</td>
+<td>M7</td>
+<td>WhatsApp Business + email + in-app, office hours Sunday to Thursday</td>
+</tr>
+<tr>
+<td>Q28</td>
+<td>Which verticals open at launch?</td>
+<td>no</td>
+<td>M2</td>
+<td>All six, unless a legal answer (L4, L5, L9) closes one; closed by setting</td>
+</tr>
+</tbody></table>
+<h3 id="for-a-lawyer-verify-with-a-professional-1">For a lawyer (VERIFY WITH A PROFESSIONAL)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L8</td>
+<td>Terms of use, host terms and privacy notice texts in ar/fr/en, versioned for consent records (PRV-01). Who drafts, who signs off?</td>
+</tr>
+<tr>
+<td>L9</td>
+<td>Does BLADUS itself need a tourism registration or travel agency licence (Law 99-06, Décret 17-161) because it lists and books agency trips and experiences?</td>
+</tr>
+<tr>
+<td>L10</td>
+<td>Do foreign service providers that touch personal data (transactional email, international SMS fallback, error tracking, uptime monitoring) count as a transfer abroad needing ANPDP authorisation?</td>
+</tr>
+<tr>
+<td>L11</td>
+<td>Company formalities before launch: commerce register activity code for an online marketplace, CNRC e-commerce registration, holder of the <code>.com.dz</code> domain.</td>
+</tr>
+<tr>
+<td>L12</td>
+<td>Does the booking flow (instant and request) meet Law 18-05 art. 10 to 13 (offer content, 3-step order: review, confirm, contract)?</td>
+</tr>
+</tbody></table>
+<h3 id="for-an-accountant-or-bank-1">For an accountant or bank</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F5</td>
+<td>Before commission invoices (PAY-11, R2), what must BLADUS give a host at launch for each top-up and each commission deducted: a receipt, a monthly statement, or a full invoice?</td>
+</tr>
+<tr>
+<td>F6</td>
+<td>Accounting treatment of the prepaid deposit: customer advance (liability) until commission is deducted, then revenue? When is VAT due?</td>
+</tr>
+<tr>
+<td>F7</td>
+<td>Which bank or CCP account receives host top-ups, and can we get statements in a format fit for daily reconciliation?</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Which product questions were decided on 2026-11-04, and where are they recorded?</li>
+<li><input disabled="" type="checkbox"> Where do the open questions go once they become decisions to make?</li>
+<li><input disabled="" type="checkbox"> Which questions need a lawyer, and which need an accountant or bank?</li>
+<li><input disabled="" type="checkbox"> What is the default if a product question is not answered in time?</li>
+</ul>
+<div class="pager"><span><a href="13-decisions-needed.html">&larr; 13. Decisions needed: who must decide what, and by when</a></span><span><a href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone &rarr;</a></span></div></main></div></body></html>

@@ -5,9 +5,11 @@ erDiagram
     trip {
         uuid id PK
         varchar_16 reference UK
+        varchar_160 slug UK
         uuid host_account_id FK
         listing_status status
         listing_status status_before_delete
+        trip_type trip_type
         varchar_140 title
         text description
         varchar_2 source_language

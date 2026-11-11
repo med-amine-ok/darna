@@ -1,0 +1,1082 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BLADUS: spec vs code (raw analysis for the backend blueprint) · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="on" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="bladus-spec-vs-code-raw-analysis-for-the-backend-blueprint">BLADUS: spec vs code (raw analysis for the backend blueprint)</h1>
+<p>Working note, 2026-11-04. Read-only comparison of the recovered specs with the current code in <code>frontend/</code> (guest + host app) and <code>admin/</code> (back-office). Paths are relative to the repo root <code>C:\Users\OASIS\Documents\darna\</code>. Line numbers were checked against the working tree on this date.</p>
+<p>Status legend: <strong>implemented</strong> (behaviour present end to end on mock data), <strong>partial</strong> (present but incomplete or only in one app), <strong>missing</strong>, <strong>different</strong> (built, but with a rule that contradicts the spec).</p>
+<h2 id="0-source-notes-read-first">0. Source notes (read first)</h2>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>What it actually contains</th>
+<th>Caveat</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>docs/backend/_sources/darna_spec.md</code></td>
+<td>The real spec: sections 0 to 10 plus Rules (lines 1-179).</td>
+<td>Lines 180-692 are not spec: they are a pasted IDE context dump (an unrelated <code>senior-frontend</code> SKILL.md). Ignore them.</td>
+</tr>
+<tr>
+<td><code>docs/backend/_sources/clean_user_spec.md</code></td>
+<td>Same text as <code>darna_spec.md</code> lines 1-179, prefixed by &quot;using this skill @[...]&quot;.</td>
+<td>Not an independent source. Cited below only as &quot;same as darna_spec&quot;.</td>
+</tr>
+<tr>
+<td><code>docs/backend/_sources/usability-report.md</code> and <code>admin-usability-report.md</code></td>
+<td>Byte-identical (<code>cmp</code> returns no difference). Both are the <strong>admin</strong> usability report; each file also repeats its own content twice (lines 1-127 and 128-254).</td>
+<td>No guest/host usability report was recovered.</td>
+</tr>
+<tr>
+<td><code>frontend/DARNA-AUDIT-REPORT.md</code> (2026-10-28)</td>
+<td>Security/correctness audit.</td>
+<td>Many findings are now fixed (server actions, signed session, availability engine). Treat its line numbers as stale.</td>
+</tr>
+<tr>
+<td><code>frontend/AUDIT.md</code> (2026-10-16)</td>
+<td>Older audit.</td>
+<td>Mostly superseded; refers to an in-frontend <code>/admin</code> that no longer exists.</td>
+</tr>
+<tr>
+<td><code>admin/docs/DATA-MODEL.md</code></td>
+<td>Admin canonical enums, transitions, money rules.</td>
+<td>Section 6 still says guest service fee 7 % and frontend 10 %/8 %; both apps now use 0 (see section 3 below).</td>
+</tr>
+<tr>
+<td><code>frontend/README.md</code>, <code>admin/README.md</code></td>
+<td>Current architecture notes.</td>
+<td><code>admin/README.md</code> section 6 describes an individual onboarding flow capped at 2 steps, which contradicts the spec (see D-14).</td>
+</tr>
+</tbody></table>
+<p>Internal numbering bug in the spec: section 1 cross-references are off by one or two (&quot;Section 8&quot; = wallet, really 9; &quot;Section 7&quot; = analytics, really 8; &quot;Section 6&#39;s step-editor&quot;, really 7; &quot;Section 4 in my numbering&quot; = search fix, really 6). This document uses the real headings.</p>
+<hr>
+<h2 id="1-requirements-extracted-from-the-specs-with-code-status">1. Requirements extracted from the specs, with code status</h2>
+<p>Spec file is <code>darna_spec.md</code> (abbreviated <strong>DS</strong>) unless stated. <code>clean_user_spec.md</code> carries the same requirements at the same line numbers +0.</p>
+<h3 id="11-host-types-and-organizations-ds-section-21-22">1.1 Host types and organizations (DS section 2.1, 2.2)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence in code</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1</td>
+<td>DS 2 (l.28)</td>
+<td>Host-type selection offers 4 single-select cards: Individual, Agency, Hotel, Hostel (icon, label, one-line description).</td>
+<td>implemented</td>
+<td><code>frontend/components/host/onboarding/HostTypeStep.tsx:18,40-47</code></td>
+</tr>
+<tr>
+<td>R2</td>
+<td>DS 2.1 (l.31)</td>
+<td><code>hostType = &quot;individual&quot; | &quot;agency&quot; | &quot;hotel&quot; | &quot;hostel&quot;</code>.</td>
+<td>implemented</td>
+<td><code>frontend/types.ts:2</code>; <code>admin/lib/types/index.ts:235,258</code></td>
+</tr>
+<tr>
+<td>R3</td>
+<td>DS 2.1 (l.32)</td>
+<td>Hotel and Hostel reuse <code>Organization</code>/<code>Membership</code>; <code>Organization.businessCategory = &quot;agency&quot; | &quot;hotel&quot; | &quot;hostel&quot;</code>.</td>
+<td>implemented (frontend), different (admin)</td>
+<td><code>frontend/types.ts:297-326,361-376</code>; <code>frontend/lib/host-types.ts:5</code>. Admin models a single <code>Host</code> row (with optional <code>organizationId</code>) instead: <code>admin/lib/types/index.ts:255-280</code></td>
+</tr>
+<tr>
+<td>R4</td>
+<td>DS 2.1 (l.33)</td>
+<td><code>RoomType</code> child of a property <code>Listing</code>, with own price, capacity, amenities, photos, inventory count and availability; search shows one card per property.</td>
+<td>implemented</td>
+<td><code>frontend/types.ts:92-108,149</code>; per-room inventory in <code>frontend/lib/data/reservations.ts:167-210</code>; search card <code>frontend/components/listing/ListingCard.tsx:165-194</code></td>
+</tr>
+<tr>
+<td>R5</td>
+<td>DS 2.1 (l.34)</td>
+<td><code>RoomType.bookingUnit = &quot;room&quot; | &quot;bed&quot;</code> for per-bed hostel dorms.</td>
+<td>implemented</td>
+<td><code>frontend/types.ts:90,99</code>; bed = one per guest <code>frontend/app/actions/bookings.ts:115-119</code>; pricing <code>frontend/lib/booking/pricing.ts:212-231</code></td>
+</tr>
+<tr>
+<td>R6</td>
+<td>DS 2.2 (l.37)</td>
+<td>Individual goes straight into the listing-creation flow.</td>
+<td>implemented</td>
+<td><code>frontend/app/actions/host.ts:74-100</code></td>
+</tr>
+<tr>
+<td>R7</td>
+<td>DS 2.2 (l.38)</td>
+<td>Agency flow: basics, details, team size, invites, review (5 steps).</td>
+<td>implemented</td>
+<td><code>frontend/components/host/BecomeHostFlow.tsx:103,1706-1862</code></td>
+</tr>
+<tr>
+<td>R8</td>
+<td>DS 2.2 (l.39)</td>
+<td>Hotel flow: property name, optional star rating, room count, check-in/out policy, hotel amenities, business details, team invites; creates Org <code>businessCategory: &quot;hotel&quot;</code>, redirects to workspace.</td>
+<td>implemented</td>
+<td><code>BecomeHostFlow.tsx:101,709-790,1864-2090</code>; server <code>frontend/app/actions/host.ts:102-168</code>; redirect <code>BecomeHostFlow.tsx:553,583</code></td>
+</tr>
+<tr>
+<td>R9</td>
+<td>DS 2.2 (l.40)</td>
+<td>Hostel flow: dorm/private mix, shared facilities, optional age and curfew policy; Org <code>businessCategory: &quot;hostel&quot;</code>.</td>
+<td>implemented</td>
+<td><code>BecomeHostFlow.tsx:102,854-872,2320-2340</code>; <code>frontend/types.ts:322-324</code></td>
+</tr>
+<tr>
+<td>R10</td>
+<td>DS 2.2 (implied)</td>
+<td>New organizations go through verification before trust.</td>
+<td>partial</td>
+<td>Org starts <code>pending</code> (<code>frontend/app/actions/host.ts:60-64</code>), but its listings are created <code>status: &quot;active&quot;</code> immediately (<code>frontend/lib/data/listings.ts:309</code>). Admin has a full host lifecycle (<code>admin/docs/DATA-MODEL.md</code> section 2) that the frontend never reads.</td>
+</tr>
+<tr>
+<td>R11</td>
+<td>DS 1 (l.17)</td>
+<td>Remove every place that reads <code>hostType</code> as binary individual/agency.</td>
+<td>partial</td>
+<td>Fixed for commission owner (<code>frontend/lib/data/reservations.ts:370-371</code>) and host layout. Remaining binaries: trips only for <code>hostType === &quot;agency&quot;</code> (correct by spec, <code>frontend/app/actions/trips.ts:73</code>); org pages still live under <code>/host/agency/*</code> for hotels and hostels (<code>frontend/components/host/HostNavbar.tsx:84-85</code>).</td>
+</tr>
+<tr>
+<td>R12</td>
+<td>(not in spec, but forced by data)</td>
+<td>A user can hold several roles (Karim is individual host, agency owner and hotel owner per <code>frontend/README.md</code>).</td>
+<td>different</td>
+<td><code>User.hostType</code> is a single value (<code>frontend/types.ts:10</code>); active org chosen per session (<code>frontend/lib/server/session.ts:68-75</code>, <code>frontend/lib/server/active-org.ts:15</code>). Karim also has an individual wallet <code>frontend/lib/data/wallet.ts</code> (<code>wal_karim</code>). See D-1.</td>
+</tr>
+</tbody></table>
+<h3 id="12-hotelhostel-workspace-ds-23">1.2 Hotel/Hostel workspace (DS 2.3)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R13</td>
+<td>DS 2.3 (l.43)</td>
+<td>Hotel/Hostel get the full Host Mode (Today, Bookings, Calendar, Listings, Messages, Team, Settings) with org identity.</td>
+<td>implemented</td>
+<td><code>frontend/components/host/HostNavbar.tsx:59-62,82-97</code>; layout guard <code>frontend/app/[locale]/host/layout.tsx:25-28</code></td>
+</tr>
+<tr>
+<td>R14</td>
+<td>DS 2.3 (l.44)</td>
+<td>Listings page is a property + room-type manager with per-room status/price/availability quick-edit.</td>
+<td>partial</td>
+<td>Room-type manager modal <code>frontend/components/host/HostListingsClient.tsx:103-118,207-209</code>. No per-room status field on <code>RoomType</code> (<code>frontend/types.ts:92-108</code>, only <code>isAvailable?</code>).</td>
+</tr>
+<tr>
+<td>R15</td>
+<td>DS 2.3 (l.45)</td>
+<td>Calendar drills into per-room-type (and per-bed) availability.</td>
+<td>partial</td>
+<td>Room-type selector <code>frontend/components/host/HostCalendarClient.tsx:139,1108-1120</code>. Blocks and price overrides are per listing, not per room type (<code>frontend/app/actions/calendar.ts:40,60</code>; <code>frontend/lib/data/reservations.ts:232-234</code>).</td>
+</tr>
+<tr>
+<td>R16</td>
+<td>DS 2.3 (l.46)</td>
+<td>Public card shows &quot;multiple room types, from lowest price&quot;; detail page booking widget is a room-type picker.</td>
+<td>implemented</td>
+<td><code>ListingCard.tsx:165-166,188-194</code>; <code>frontend/components/listing/HotelHostelDetailClient.tsx:113-116</code></td>
+</tr>
+</tbody></table>
+<h3 id="13-booking-approval-mode-ds-3">1.3 Booking approval mode (DS 3)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R17</td>
+<td>DS 3 (l.52)</td>
+<td>Explicit &quot;How do you want to handle booking requests?&quot; step in <strong>all four</strong> onboarding flows.</td>
+<td>partial</td>
+<td>Individual: <code>BecomeHostFlow.tsx:1600-1624</code> (toggle + <code>approval_mode</code> config step). Hotel: step 5 <code>BecomeHostFlow.tsx:2072-2080</code>. Hostel: step 5 <code>:2320-2328</code>. <strong>Agency: missing in the UI</strong>; the config defines <code>agency_approval</code> (<code>frontend/lib/onboarding-config.ts:559-575</code>) but the hardcoded agency flow never renders it and <code>handleRegisterAgency</code> sends no mode (<code>BecomeHostFlow.tsx:690-703</code>), so the server defaults to <code>&quot;instant&quot;</code> (<code>frontend/app/actions/host.ts:151</code>).</td>
+</tr>
+<tr>
+<td>R18</td>
+<td>DS 3 (l.55)</td>
+<td>Instant Book = auto-approved &quot;the moment a guest completes payment&quot;.</td>
+<td>different</td>
+<td>No payment step exists; instant bookings are written <code>confirmed</code> + <code>paymentStatus: &quot;paid&quot;</code> directly (<code>frontend/lib/data/reservations.ts:273,291</code>).</td>
+</tr>
+<tr>
+<td>R19</td>
+<td>DS 3 (l.56)</td>
+<td>Request to Book: host, or for orgs &quot;any team member with permission&quot;, approves/declines &quot;within a reasonable window&quot;.</td>
+<td>partial</td>
+<td>Any active member of any role can approve (<code>frontend/lib/server/authz.ts:25-35</code>, <code>frontend/lib/host-types.ts:19</code> <code>canManageOperations</code> = any role). Window = 24 h (<code>frontend/lib/booking/config.ts:55</code>), enforced lazily on read (<code>frontend/lib/booking/lifecycle.ts:12-16,34</code>; <code>reservations.ts:51-62</code>).</td>
+</tr>
+<tr>
+<td>R20</td>
+<td>DS 3 (l.57)</td>
+<td><code>bookingApprovalMode</code> stored on <code>User</code> (individual) or <code>Organization</code> (org) as the <strong>default for new listings</strong>.</td>
+<td>different</td>
+<td>Fields exist (<code>frontend/types.ts:12,325</code>). But the individual&#39;s User value is <strong>derived from</strong> the first listing (<code>frontend/app/actions/host.ts:92-95</code>), and neither User nor Org value is applied to listings created later (<code>frontend/lib/data/listings.ts:280-322</code> defaults <code>instantBook: true</code>). At booking time only the listing is read (<code>frontend/lib/booking/pricing.ts:276-282</code>, <code>frontend/app/actions/bookings.ts:155</code>). Trips read the org value (<code>bookings.ts:190-193</code>).</td>
+</tr>
+<tr>
+<td>R21</td>
+<td>DS 3 (l.57)</td>
+<td>Optional per-listing override (&quot;state whether you did&quot;).</td>
+<td>implemented (de facto)</td>
+<td>Per-listing <code>instantBook</code> toggle <code>frontend/components/host/HostListingsClient.tsx:171,191,670</code>; <code>Listing.bookingApprovalMode</code> + <code>instantBook</code> both exist (<code>frontend/types.ts:150</code> and <code>instantBook?</code>). Two fields encode one fact (see D-6).</td>
+</tr>
+<tr>
+<td>R22</td>
+<td>DS 3 (l.58)</td>
+<td>Request mode creates <code>pending</code> and surfaces on Today and Bookings with Accept/Decline.</td>
+<td>implemented</td>
+<td><code>reservations.ts:273</code>; action <code>frontend/app/actions/bookings.ts:253-306</code>; UI <code>frontend/components/host/HostTodayClient.tsx</code>, <code>HostBookingsClient.tsx</code></td>
+</tr>
+</tbody></table>
+<h3 id="14-solo-individual-host-interface-ds-4">1.4 Solo (individual) host interface (DS 4)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R23</td>
+<td>DS 4.1 (l.67)</td>
+<td>Page 1 &quot;My listings&quot; = landing page; thumbnail, title, Live/Paused, price, plain-language upcoming count; tap opens the creation form for edit; &quot;+ Add a new place&quot;.</td>
+<td>partial</td>
+<td>Landing redirect <code>frontend/app/[locale]/host/page.tsx:20-21</code>. Edit opens a <strong>modal</strong>, not the creation step form (<code>HostListingsClient.tsx:171-191,670</code>).</td>
+</tr>
+<tr>
+<td>R24</td>
+<td>DS 4.1 (l.68)</td>
+<td>Page 2 &quot;Bookings&quot;: chronological list, Accept/Decline on card; no Today, Calendar, KPI or analytics pages for solo.</td>
+<td>partial</td>
+<td>Solo nav = My listings + Bookings (<code>HostNavbar.tsx:54-56</code>). <code>/host/calendar</code> is not guarded for individuals (<code>frontend/app/[locale]/host/calendar/page.tsx:14-31</code>). Mobile bottom nav has 3 tabs incl. Messages (<code>HostBottomNav.tsx:48-51</code>).</td>
+</tr>
+<tr>
+<td>R25</td>
+<td>DS 4.1 (l.69)</td>
+<td>Optional read-only month mini-calendar at the top of Bookings.</td>
+<td>implemented</td>
+<td><code>HostBookingsClient.tsx:98,110-111,413-429</code></td>
+</tr>
+<tr>
+<td>R26</td>
+<td>DS 4.1 (l.70)</td>
+<td>Messages through the shared Messages system, not a third page.</td>
+<td>implemented</td>
+<td><code>frontend/app/[locale]/host/messages/page.tsx</code> (shared component)</td>
+</tr>
+<tr>
+<td>R27</td>
+<td>DS 4.2 (l.74)</td>
+<td>Solo settings (payout method, approval toggle) in one simple section reachable from My listings.</td>
+<td>partial</td>
+<td>Wallet widget on listings page (<code>HostListingsClient.tsx:28</code>); approval toggle lives on a separate <code>/host/settings</code> page (<code>HostSettingsClient.tsx:99-100,158,373</code>) and does not change existing listings (see R20).</td>
+</tr>
+<tr>
+<td>R28</td>
+<td>DS 4.3 (l.78)</td>
+<td>&quot;Switch to hosting&quot; routes solo to 2-page UI, orgs to full UI, based on hostType/businessCategory.</td>
+<td>implemented</td>
+<td><code>frontend/lib/server/host-context.ts:26-36,57</code>; <code>frontend/middleware.ts:79</code></td>
+</tr>
+</tbody></table>
+<h3 id="15-trips-agency-only-multi-day-product-and-departures-ds-5">1.5 Trips (agency-only multi-day product) and departures (DS 5)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R29</td>
+<td>DS 5.1 (l.87)</td>
+<td><code>Trip</code>: title, cover + gallery, day-by-day itinerary, duration, group size limits, per-person price, inclusions/exclusions, meeting point, cancellation policy, <code>organizationId</code> of an Agency.</td>
+<td>implemented</td>
+<td><code>frontend/types.ts:252-293</code></td>
+</tr>
+<tr>
+<td>R30</td>
+<td>DS 5.1 (l.87)</td>
+<td>Enforce agency-only at creation; hotels/hostels do not see the option.</td>
+<td>implemented</td>
+<td><code>frontend/app/actions/trips.ts:73-78,97,110</code>; nav <code>HostNavbar.tsx:82,94,117</code></td>
+</tr>
+<tr>
+<td>R31</td>
+<td>DS 5.2 (l.90)</td>
+<td>6-step creation: basics, itinerary, logistics, inclusions, <strong>cancellation policy</strong>, review &amp; publish.</td>
+<td>partial</td>
+<td>5 steps (<code>frontend/components/host/agency/TripCreationClient.tsx:56-58</code>); cancellation policy not a step of its own.</td>
+</tr>
+<tr>
+<td>R32</td>
+<td>DS 5.2 (l.91)</td>
+<td>Trips list with view/edit/pause/delete; publish = live immediately.</td>
+<td>implemented</td>
+<td><code>frontend/components/host/agency/AgencyTripsClient.tsx:8,90,108</code>. &quot;Pause&quot; = <code>status: &quot;draft&quot;</code> (<code>frontend/types.ts:288</code>). No moderation (admin moderates trips as listings, see D-9).</td>
+</tr>
+<tr>
+<td>R33</td>
+<td>DS 5.3 (l.94)</td>
+<td>&quot;Trips&quot; as the <strong>4th</strong> segment of the hero switcher (Homes / Experiences / Vehicles / Trips).</td>
+<td>different</td>
+<td>5 segments: Homes, Hotels, Experiences, Vehicles, Trips (<code>frontend/components/home/HomeHero.tsx:33-41</code>).</td>
+</tr>
+<tr>
+<td>R34</td>
+<td>DS 5.3 (l.95-96)</td>
+<td>Trips feed and detail page (itinerary, agency card, group size + per-person widget).</td>
+<td>implemented</td>
+<td><code>frontend/app/[locale]/page.tsx:60-68,96</code>; <code>frontend/components/trips/TripDetailClient.tsx</code></td>
+</tr>
+<tr>
+<td>R35</td>
+<td>DS 5.3 (l.97)</td>
+<td>Booking a Trip creates a reservation against the Trip, respects the agency approval mode, shows in guest reservations and agency Bookings.</td>
+<td>implemented</td>
+<td><code>frontend/app/actions/bookings.ts:163-199</code>; <code>frontend/lib/data/reservations.ts:340-355</code>; owner scoping <code>:75-92</code></td>
+</tr>
+<tr>
+<td>R36</td>
+<td>(implied by &quot;bookable&quot; + group size)</td>
+<td>Departures with seat capacity.</td>
+<td>partial</td>
+<td><code>Trip.departureDates: string[]</code> only (<code>frontend/types.ts:286</code>); capacity = <code>maxGroupSize</code> per date (<code>reservations.ts:243-251,346-348</code>). No departure entity (no per-departure price, status, guide, min-group go/no-go).</td>
+</tr>
+<tr>
+<td>R37</td>
+<td>(naming)</td>
+<td>Guest &quot;Trips&quot; page.</td>
+<td>different</td>
+<td><code>/trips</code> = guest&#39;s own reservations (<code>frontend/app/[locale]/trips/page.tsx:6,29</code>) while <code>/trips/[tripId]</code> = agency Trip product. Same word, two resources (D-11).</td>
+</tr>
+</tbody></table>
+<h3 id="16-search-and-date-overlap-ds-6">1.6 Search and date overlap (DS 6)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R38</td>
+<td>DS 6 (l.103)</td>
+<td>Listing appears when its availability window <strong>intersects</strong> the searched window (not containment).</td>
+<td>implemented</td>
+<td><code>frontend/lib/data/listings.ts:147-183</code></td>
+</tr>
+<tr>
+<td>R39</td>
+<td>DS 6 (l.105)</td>
+<td>Partial matches show &quot;Available X-Y within your dates&quot; on card and detail.</td>
+<td>implemented</td>
+<td>Card <code>ListingCard.tsx:354-361</code>; detail <code>frontend/components/listing/ListingReservation.tsx:78-101</code></td>
+</tr>
+<tr>
+<td>R40</td>
+<td>DS 6 (l.105)</td>
+<td>Booking widget only allows the true sub-range; server must not allow booking outside availability.</td>
+<td>implemented</td>
+<td>Client clamp <code>ListingReservation.tsx:71-106</code>; server <code>frontend/lib/booking/availability.ts:88-120</code> (<code>OUTSIDE_WINDOW</code>, <code>DATES_UNAVAILABLE</code>)</td>
+</tr>
+<tr>
+<td>R41</td>
+<td>DS 6 (l.103)</td>
+<td>Same logic for hotel/hostel room types.</td>
+<td>partial</td>
+<td>Property kept if at least one room type is free on every night of the overlap (<code>reservations.ts:226-241</code>); no per-room-type partial badge.</td>
+</tr>
+<tr>
+<td>R42</td>
+<td>DS 6 (l.106)</td>
+<td>Same logic for Vehicles and Experiences.</td>
+<td>implemented</td>
+<td>They are <code>Listing</code> rows and go through the same filter (<code>listings.ts:147-213</code>). Experiences are single-date; quote uses start only (<code>:200</code>).</td>
+</tr>
+<tr>
+<td>R43</td>
+<td>DS 6 (l.106)</td>
+<td>Same logic for <strong>Trips</strong>.</td>
+<td>missing</td>
+<td><code>getTrips</code> has no date parameter (<code>frontend/lib/data/trips.ts:11-59</code>).</td>
+</tr>
+<tr>
+<td>R44</td>
+<td>(audit)</td>
+<td>Exclude booked/blocked nights, back-to-back allowed, timezone-safe date keys.</td>
+<td>implemented</td>
+<td><code>listings.ts:186-192</code>; <code>frontend/lib/booking/dates.ts</code></td>
+</tr>
+</tbody></table>
+<h3 id="17-admin-onboarding-step-editor-ds-7">1.7 Admin onboarding-step editor (DS 7)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R45</td>
+<td>DS 7.1 (l.115)</td>
+<td><code>OnboardingStepConfig</code> per hostType: ordered steps, id, title, fields (id, label per locale, type text/number/select/multi-select/image-upload/toggle, required, options), active flag.</td>
+<td>different</td>
+<td>Two incompatible schemas: frontend <code>frontend/types.ts:507-572</code> (spec field names) vs admin <code>admin/lib/types/index.ts:602-650</code> (<code>multiselect</code>, <code>file</code>, <code>boolean</code>, <code>radio</code>, <code>location</code>, <code>amenities</code>; <code>name</code>/<code>title</code>, <code>order</code>/<code>stepNumber</code>, <code>key</code>/<code>id</code>).</td>
+</tr>
+<tr>
+<td>R46</td>
+<td>DS 7.1 (l.116)</td>
+<td>Seed from real flows: Individual 12 steps, Agency 5, Hotel and Hostel equivalents.</td>
+<td>partial</td>
+<td>Frontend seed matches (individual 12 ids, agency 5, hotel 7, hostel 7: <code>frontend/lib/onboarding-config.ts:7-1045</code>). Admin seed has <strong>2</strong> individual steps and a hard cap (<code>admin/lib/mock-data/store.ts:108-140</code>).</td>
+</tr>
+<tr>
+<td>R47</td>
+<td>DS 7.2 (l.119)</td>
+<td>Admin UI: tab per host type.</td>
+<td>implemented</td>
+<td><code>admin/app/[locale]/(panel)/settings/onboarding/OnboardingClient.tsx</code> (canonical route; <code>/onboarding</code> redirects, <code>admin/app/[locale]/(panel)/onboarding/page.tsx</code>)</td>
+</tr>
+<tr>
+<td>R48</td>
+<td>DS 7.2 (l.120)</td>
+<td>Reorder steps; add/remove/reorder/edit <strong>fields</strong> (label, type, required); add/remove steps.</td>
+<td>partial</td>
+<td>Steps: move up/down, add, remove, toggle required (<code>OnboardingClient.tsx:95-154</code>). Fields: count only, no field editor (<code>:329</code>).</td>
+</tr>
+<tr>
+<td>R49</td>
+<td>DS 7.2 (l.121)</td>
+<td>Live onboarding flows <strong>read</strong> the admin config (config-driven renderer).</td>
+<td>missing</td>
+<td>Frontend reads its own defaults or <code>localStorage</code> key <code>darna_onboarding_config_*</code> (<code>frontend/lib/onboarding-config.ts:1064-1091</code>); admin publishes to its own in-memory store (<code>admin/lib/data/onboarding.ts:15-56</code>). Only non-core extra fields of the individual flow are rendered dynamically (<code>BecomeHostFlow.tsx:192-205</code>) and their values are <strong>never submitted</strong> (<code>customFieldsData</code> only goes to the local draft, <code>:175,423,506</code>).</td>
+</tr>
+<tr>
+<td>R50</td>
+<td>DS 7.2 (l.122)</td>
+<td>Guard removal of core steps/fields with confirmation; warn on zero steps or removing &quot;price&quot;.</td>
+<td>missing</td>
+<td><code>handleRemoveStep</code> removes with no dialog (<code>OnboardingClient.tsx:150-154</code>); server only checks the solo cap (<code>admin/lib/data/onboarding.ts:23-26</code>). <code>isCore</code> flags exist but are not enforced.</td>
+</tr>
+<tr>
+<td>R51</td>
+<td>(admin)</td>
+<td>Versioned publish with audit.</td>
+<td>implemented</td>
+<td><code>admin/lib/data/onboarding.ts:28-53</code></td>
+</tr>
+</tbody></table>
+<h3 id="18-admin-analytics-ds-8">1.8 Admin analytics (DS 8)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R52</td>
+<td>DS 8 (l.130)</td>
+<td>Every major KPI (revenue, bookings, active listings, avg booking value, growth) filterable by host type, plus 4-way comparison.</td>
+<td>partial</td>
+<td>Per-host-type table and revenue series <code>admin/lib/data/analytics.ts:69-120</code>. Growth rates are hardcoded strings (<code>:43-50</code>); headline KPIs are not filterable by type.</td>
+</tr>
+<tr>
+<td>R53</td>
+<td>DS 8 (l.131)</td>
+<td>Same KPIs by vertical (Homes / Vehicles / Experiences / Trips).</td>
+<td>partial</td>
+<td>&quot;revenueByVertical&quot; counts <strong>listings</strong>, not revenue (<code>analytics.ts:123-130</code>); 5 verticals incl. Hotels.</td>
+</tr>
+<tr>
+<td>R54</td>
+<td>DS 8 (l.132)</td>
+<td>Cross-tab host type x vertical, impossible cells shown as a placeholder, not 0.</td>
+<td>missing</td>
+<td>No matrix/heatmap in <code>admin/app</code> or <code>admin/lib</code> (grep).</td>
+</tr>
+<tr>
+<td>R55</td>
+<td>DS 8 (l.134)</td>
+<td>New KPIs: total commission, avg commission rate by type, host growth by type, Trips metrics (bookings, revenue, avg group size), Hotel/Hostel occupancy and avg nightly rate.</td>
+<td>partial</td>
+<td>Commission total and effective rate per type present (<code>analytics.ts:20-22,88-95</code>). Occupancy is a constant 78.4 (<code>:41</code>); no group size or nightly-rate metrics; period filter is a multiplier, not a date window (<code>:14</code>).</td>
+</tr>
+<tr>
+<td>R56</td>
+<td>DS 8 (l.135)</td>
+<td>Organised as Overview / By Host Type / By Vertical / Financial tabs.</td>
+<td>different</td>
+<td>Tabs are overview / providers / services / wilayas / revenue / reports (<code>admin/app/[locale]/(panel)/stats/StatsClient.tsx:36,130-160</code>).</td>
+</tr>
+</tbody></table>
+<h3 id="19-wallet-commission-payouts-ledger-ds-9">1.9 Wallet, commission, payouts, ledger (DS 9)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R57</td>
+<td>DS 9.1 (l.144)</td>
+<td><code>Wallet</code> per User (individual) or Organization, DZD.</td>
+<td>implemented (frontend), different (admin)</td>
+<td><code>frontend/types.ts:592-603</code>; admin wallets keyed by <code>hostId</code> (<code>admin/lib/types/index.ts:526-543</code>).</td>
+</tr>
+<tr>
+<td>R58</td>
+<td>DS 9.1 (l.145)</td>
+<td><code>Transaction</code>: type recharge / commission_deduction / payout (+ others), signed amount, <code>relatedBookingId</code>, <code>adminUserId</code>, note, timestamp.</td>
+<td>different</td>
+<td>Frontend: <code>recharge</code>, <code>commission_deduction</code>, <code>payout</code>, <code>adjustment</code> (<code>frontend/types.ts:574-590</code>). Admin: <code>wallet_recharge</code>, <code>booking_payment</code>, <code>commission_deduction</code>, <code>host_payout</code>, <code>booking_refund</code>, <code>adjustment</code>, with <code>balanceAfter</code>, <code>reference</code>, <code>receiptReference</code>, <code>adminActor</code> name (<code>admin/lib/types/index.ts:499-520</code>).</td>
+</tr>
+<tr>
+<td>R59</td>
+<td>DS 9.1 (l.145)</td>
+<td>Append-only ledger; balance derived from the sum.</td>
+<td>partial</td>
+<td>Frontend recomputes on each append (<code>frontend/lib/data/wallet.ts:243-245,370-380</code>) but seed rows carry a literal <code>balance</code> (consistent today: e.g. <code>wal_amina</code> 50000-8400-9600 = 32000). Admin derives on every read (<code>admin/lib/data/ledger.ts:21-56</code>). Neither is a real append-only store.</td>
+</tr>
+<tr>
+<td>R60</td>
+<td>DS 9.2 (l.148)</td>
+<td>Admin &quot;Recharge balance&quot; on host/org detail: amount + optional note, confirm dialog, creates recharge.</td>
+<td>different</td>
+<td><code>admin/lib/data/finance.ts:205-245</code>: receipt reference is <strong>required</strong>, amount integer 1..10,000,000 DZD, audited. UI <code>admin/app/[locale]/(panel)/hosts/HostsClient.tsx:160-163,397-410</code>.</td>
+</tr>
+<tr>
+<td>R61</td>
+<td>DS 9.2 (l.149)</td>
+<td>Balance and transaction history on the admin detail view.</td>
+<td>implemented</td>
+<td><code>admin/lib/data/finance.ts:82-160</code>; Hosts drawer Money tab.</td>
+</tr>
+<tr>
+<td>R62</td>
+<td>DS 9.3 (l.152)</td>
+<td>Platform Settings: 4 commission rates, one per host type, editable.</td>
+<td>implemented</td>
+<td><code>admin/lib/data/finance.ts:247-280</code> (validated, audited); defaults 12/15/18/10 in <code>admin/lib/pricing.ts:19</code> and <code>frontend/lib/booking/config.ts:15-20</code>.</td>
+</tr>
+<tr>
+<td>R63</td>
+<td>DS 9.3 (l.153)</td>
+<td>On every confirmed booking, auto <code>commission_deduction</code> = <strong>booking total</strong> x host-type rate.</td>
+<td>different</td>
+<td>Frontend charges on <strong>subtotal</strong> (no cleaning, fee, taxes) (<code>frontend/lib/data/reservations.ts:376-396</code>; <code>wallet.ts:405-439</code>), idempotent, reversed on decline/cancel (<code>reservations.ts:417-423,447</code>; <code>wallet.ts:446-476</code>). Admin never deducts on confirm; seed data only (<code>admin/lib/mock-data/generator.ts:494-501</code>).</td>
+</tr>
+<tr>
+<td>R64</td>
+<td>DS 9.3 (l.154)</td>
+<td>Host sees balance and recent transactions read-only.</td>
+<td>implemented</td>
+<td><code>frontend/components/host/HostWalletWidget.tsx</code>; <code>frontend/app/actions/wallet.ts:12</code></td>
+</tr>
+<tr>
+<td>R65</td>
+<td>DS 9.3 (l.155)</td>
+<td>Negative balance: banner for host, flag for admin incl. dashboard &quot;action needed&quot;.</td>
+<td>partial</td>
+<td>Host banner <code>HostWalletWidget.tsx:94,127-129</code>. Admin: negative filter/count (<code>admin/lib/data/finance.ts:42,61,103,417</code>; <code>HostsClient.tsx:249-268</code>) but <strong>not</strong> in dashboard attention items (<code>admin/lib/data/analytics.ts:161-203</code>).</td>
+</tr>
+<tr>
+<td>R66</td>
+<td>DS 9.1 (l.145)</td>
+<td><code>payout</code> transaction type.</td>
+<td>partial</td>
+<td>Admin payout requests: approve debits wallet, reject needs reason (<code>admin/lib/data/finance.ts:283-390</code>). Frontend has the type but no payout request flow (<code>frontend/app/actions/wallet.ts</code> has only <code>getMyWalletAction</code>).</td>
+</tr>
+<tr>
+<td>R67</td>
+<td>(admin, beyond spec)</td>
+<td>Per-host commission override.</td>
+<td>different (extra)</td>
+<td><code>admin/lib/data/hosts.ts:332-364</code>; frontend ignores it (rate by type only, <code>frontend/lib/data/wallet.ts:262-266</code>).</td>
+</tr>
+</tbody></table>
+<h3 id="110-cross-cutting-rules-ds-rules">1.10 Cross-cutting rules (DS Rules)</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Spec ref</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R68</td>
+<td>DS Rules (l.177)</td>
+<td>Every string in en/fr/ar, RTL-correct.</td>
+<td>partial</td>
+<td>Audit: frontend largely unwired (<code>frontend/DARNA-AUDIT-REPORT.md</code> section 5). Backend impact: localized fields (onboarding labels) must be stored as <code>{en,fr,ar}</code>.</td>
+</tr>
+<tr>
+<td>R69</td>
+<td>DS Rules (l.178)</td>
+<td>Money formatted with DZD convention.</td>
+<td>partial</td>
+<td>Integer DZD rule <code>frontend/lib/booking/pricing.ts:55-58</code>; admin <code>formatDzd</code>. Seed notes still use <code>toLocaleString(&quot;fr-DZ&quot;)</code> (<code>frontend/lib/data/wallet.ts:434</code>).</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="2-disagreements-spec-vs-frontend-vs-admin">2. Disagreements (spec vs frontend vs admin)</h2>
+<p>No winner is picked. &quot;Impact&quot; = what the backend has to decide.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Topic</th>
+<th>Spec says</th>
+<th>Frontend does</th>
+<th>Admin does</th>
+<th>Impact on backend design</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D-1</td>
+<td>Who is a host</td>
+<td><code>hostType</code> on User; org types use Organization (DS 2.1)</td>
+<td>Single <code>User.hostType</code> + active org in session; same person can own an individual wallet and orgs (<code>frontend/types.ts:10</code>, <code>frontend/lib/server/session.ts:68-75</code>)</td>
+<td>One <code>Host</code> row per provider with <code>hostType</code>, optional <code>organizationId</code> (<code>admin/lib/types/index.ts:255-280</code>)</td>
+<td>Need a canonical &quot;host account&quot; (user-as-host vs organization) that both apps key wallets, listings, commission and moderation on. Decide whether one user can be individual host and org member at once.</td>
+</tr>
+<tr>
+<td>D-2</td>
+<td>Commission default rates</td>
+<td>Per type, values not given (DS 9.3)</td>
+<td>12 / 15 / 18 / 10 (<code>frontend/lib/booking/config.ts:15-20</code>)</td>
+<td>Same values, duplicated (<code>admin/lib/pricing.ts:19</code>, plus hardcoded <code>defaultRate</code> in <code>admin/lib/data/analytics.ts:69-74</code>)</td>
+<td>One <code>platform_settings</code> row; analytics must read it, not constants.</td>
+</tr>
+<tr>
+<td>D-3</td>
+<td>Commission base</td>
+<td>&quot;booking total x rate&quot; (DS 9.3 l.153)</td>
+<td>Accommodation subtotal only, excl. cleaning and taxes (<code>frontend/lib/data/reservations.ts:376-379</code>)</td>
+<td><code>base x rate</code> where base = price before fees (<code>admin/lib/pricing.ts:76-90</code>); no cleaning fee concept</td>
+<td>Pick one base; store <code>commissionBase</code>, <code>commissionRate</code>, <code>commissionAmount</code> on the booking at confirmation time.</td>
+</tr>
+<tr>
+<td>D-4</td>
+<td>Commission timing and reversal</td>
+<td>On every confirmed booking (DS 9.3)</td>
+<td>On confirm; reversed fully on decline, pro-rata on guest cancel, fully on host cancel (<code>reservations.ts:417-447</code>, <code>wallet.ts:446-476</code>)</td>
+<td>No automatic deduction; refunds write a proportional negative <code>booking_refund</code> (<code>admin/docs/DATA-MODEL.md</code> section 3)</td>
+<td>Ledger posting rules per booking event (confirm, cancel, refund, dispute) must be specified once.</td>
+</tr>
+<tr>
+<td>D-5</td>
+<td>Per-host commission override</td>
+<td>Not specified (per type only)</td>
+<td>Not supported</td>
+<td>Supported, audited (<code>admin/lib/data/hosts.ts:332-364</code>)</td>
+<td>Rate resolution order needed: host override, then type rate. Snapshot the rate on the booking.</td>
+</tr>
+<tr>
+<td>D-6</td>
+<td>Approval-mode storage</td>
+<td>Default on User/Org, optional per-listing override (DS 3)</td>
+<td>Listing decides (<code>bookingApprovalMode</code> and legacy <code>instantBook</code>, <code>pricing.ts:276-282</code>); User value derived from first listing; Org value used only for Trips (<code>bookings.ts:190-193</code>)</td>
+<td><code>Host.bookingApprovalMode</code> (<code>admin/lib/types/index.ts:274</code>) plus a platform switch <code>instantBookingPlatformWide</code> (<code>admin/lib/mock-data/store.ts:102</code>) the frontend never reads</td>
+<td>Define resolution: platform switch, then listing override, then owner default. Drop one of <code>instantBook</code> / <code>bookingApprovalMode</code>.</td>
+</tr>
+<tr>
+<td>D-7</td>
+<td>Who can approve a request</td>
+<td>Host, or org member &quot;with permission&quot; (DS 3)</td>
+<td>Any active member, any role (<code>frontend/lib/host-types.ts:19</code>, <code>frontend/lib/server/authz.ts:25-35</code>)</td>
+<td>Admin can move <code>pending -&gt; confirmed</code> (<code>admin/lib/domain/transitions.ts:11</code>)</td>
+<td>Need an explicit permission (e.g. <code>bookings.respond</code>) per org role, and whether staff may confirm on behalf of a host.</td>
+</tr>
+<tr>
+<td>D-8</td>
+<td>Request expiry</td>
+<td>&quot;within a reasonable window&quot; (DS 3)</td>
+<td>24 h TTL, lazy expiry on read, payment <code>voided</code> (<code>frontend/lib/booking/config.ts:55</code>, <code>lifecycle.ts:12-16</code>)</td>
+<td>No <code>expired</code> status at all (<code>admin/lib/types/index.ts:413-419</code>)</td>
+<td>Need a scheduled job (not lazy-on-read) so expiries also fire notifications and appear in admin. TTL should be a setting.</td>
+</tr>
+<tr>
+<td>D-9</td>
+<td>Booking statuses</td>
+<td><code>pending</code>, <code>confirmed</code> (DS 3)</td>
+<td><code>pending, confirmed, cancelled, completed, declined, expired</code> (<code>frontend/types.ts:198-204</code>)</td>
+<td><code>pending, confirmed, cancelled, completed, disputed, refunded</code> (<code>admin/lib/types/index.ts:413-419</code>)</td>
+<td>Union state machine needed: e.g. keep <code>declined</code>/<code>expired</code>, add <code>disputed</code>; model <code>refunded</code> as payment status, not booking status (the frontend already does).</td>
+</tr>
+<tr>
+<td>D-10</td>
+<td>Listing statuses and moderation</td>
+<td>Not specified; trips &quot;live immediately&quot; (DS 5.2)</td>
+<td><code>active, pending, suspended, draft</code>; new listings and trips go live at once (<code>frontend/lib/data/listings.ts:309</code>, <code>frontend/app/actions/trips.ts:67</code>)</td>
+<td>8 canonical statuses with review queue (<code>admin/docs/DATA-MODEL.md</code> section 1)</td>
+<td>Decide if publish requires approval. If yes, frontend create must write <code>pending_review</code>.</td>
+</tr>
+<tr>
+<td>D-11</td>
+<td>Trips model</td>
+<td>Separate <code>Trip</code> type owned by an agency (DS 5.1)</td>
+<td>Separate <code>Trip</code> table; reservation has <code>tripId</code> and reuses <code>listingId = trip.id</code> (<code>reservations.ts:349</code>); departures are a string array</td>
+<td>Trips are <code>Listing</code> rows with <code>category: &quot;trip&quot;</code> moderated like listings (<code>admin/app/[locale]/(panel)/trips/TripsListClient.tsx:82,155</code>)</td>
+<td>Choose: dedicated <code>trips</code> + <code>trip_departures</code> tables, or listings with a trip subtype. Reservation needs a proper polymorphic target (listing / room type / trip departure). Also rename the guest <code>/trips</code> page or the API resource to avoid the &quot;Trips&quot; collision.</td>
+</tr>
+<tr>
+<td>D-12</td>
+<td>Verticals</td>
+<td>4: Homes, Experiences, Vehicles, Trips; hotels are &quot;Homes-like&quot; (DS 5.3, 8)</td>
+<td>5 including <code>hotel</code> in the type, but hotels are created as <code>category: &quot;home&quot;</code> with <code>businessCategory</code> (<code>frontend/types.ts:47-52</code>; <code>BecomeHostFlow.tsx:759,860</code>)</td>
+<td>5 with <code>hotel</code> as a real vertical (<code>admin/lib/types/index.ts:300</code>)</td>
+<td>Analytics &quot;by vertical&quot; will double-count or miss hotels unless one rule is fixed.</td>
+</tr>
+<tr>
+<td>D-13</td>
+<td>Onboarding field types and schema</td>
+<td><code>text, number, select, multi-select, image-upload, toggle</code> (DS 7.1)</td>
+<td>Same as spec + <code>textarea</code> (<code>frontend/types.ts:507-514</code>)</td>
+<td><code>multiselect, file, boolean, radio, location, amenities</code> + others; different key names (<code>admin/lib/types/index.ts:603-650</code>)</td>
+<td>One JSON schema for <code>onboarding_flows</code> with versioning; mapping table already in <code>admin/docs/DATA-MODEL.md</code> section 5.</td>
+</tr>
+<tr>
+<td>D-14</td>
+<td>Individual onboarding length</td>
+<td>12 steps; &quot;2 pages&quot; applies to the <strong>host interface</strong>, not onboarding (DS 4.1, 7.1)</td>
+<td>12 steps (<code>frontend/lib/onboarding-config.ts</code>)</td>
+<td>Capped at 2 steps, enforced on save (<code>admin/lib/data/onboarding.ts:23-26</code>, <code>admin/README.md</code> section 6)</td>
+<td>Admin rule likely misreads DS 4. If kept, the frontend flow cannot be config-driven from admin without losing 10 steps.</td>
+</tr>
+<tr>
+<td>D-15</td>
+<td>Onboarding config source of truth</td>
+<td>Admin config drives live flows (DS 7.2)</td>
+<td>Defaults + browser <code>localStorage</code> (<code>frontend/lib/onboarding-config.ts:1064-1091</code>)</td>
+<td>In-memory store, versioned (<code>admin/lib/data/onboarding.ts</code>)</td>
+<td>Backend must serve the published flow per host type; custom field answers need storage (e.g. JSONB on listing/org application).</td>
+</tr>
+<tr>
+<td>D-16</td>
+<td>Wallet model</td>
+<td>Prepaid: host pays platform offline, admin recharges, commission deducted (DS 9.2)</td>
+<td>Prepaid commission wallet only (<code>frontend/lib/data/wallet.ts</code>)</td>
+<td>Mixed: also <code>booking_payment</code> credits (host earnings) and <code>host_payout</code> debits (<code>admin/lib/mock-data/generator.ts:492-501</code>), i.e. an escrow/payout wallet</td>
+<td>Fundamental: does BLADUS collect guest money (escrow, payouts) or not (prepaid commission)? Determines payment integration, ledger accounts and payout flow. The spec itself is mixed: DS 3 &quot;guest completes payment&quot; vs DS 9.2 offline recharge.</td>
+</tr>
+<tr>
+<td>D-17</td>
+<td>Recharge input</td>
+<td>Amount + optional note (DS 9.2)</td>
+<td><code>rechargeWallet</code> takes amount + note, any amount (<code>frontend/lib/data/wallet.ts:290-327</code>, admin-only, no caller)</td>
+<td>Receipt reference required; integer 1..10,000,000; method field (<code>admin/lib/data/finance.ts:205-219</code>)</td>
+<td>Adopt admin validation; keep <code>adminUserId</code> as an id, not a display name (admin stores <code>adminActor</code> name).</td>
+</tr>
+<tr>
+<td>D-18</td>
+<td>Transaction type names</td>
+<td><code>recharge / commission_deduction / payout</code> (DS 9.1)</td>
+<td>Same + <code>adjustment</code></td>
+<td><code>wallet_recharge / host_payout / booking_payment / booking_refund</code> + <code>commission_deduction</code>, <code>adjustment</code></td>
+<td>Single enum; commission reversal is <code>adjustment</code> in frontend vs <code>booking_refund</code> share in admin.</td>
+</tr>
+<tr>
+<td>D-19</td>
+<td>Room type fields</td>
+<td>&quot;inventory count and availability&quot; (DS 2.1)</td>
+<td><code>totalInventory</code>, <code>inventoryCount</code>, <code>availableInventory</code>, <code>basePrice</code>, <code>price</code> (<code>frontend/types.ts:92-108</code>)</td>
+<td><code>totalInventory</code>, <code>availableInventory</code> (<code>admin/lib/types/index.ts:316-329</code>)</td>
+<td>Keep one inventory column; availability is computed from bookings and blocks, not stored.</td>
+</tr>
+<tr>
+<td>D-20</td>
+<td>Hero switcher</td>
+<td>4 segments (DS 5.3)</td>
+<td>5 (Hotels added)</td>
+<td>n/a</td>
+<td>Search API must support a <code>hotel</code> vertical filter or a <code>businessCategory</code> filter consistently.</td>
+</tr>
+<tr>
+<td>D-21</td>
+<td>Trip creation steps</td>
+<td>6 incl. cancellation step (DS 5.2)</td>
+<td>5 (<code>TripCreationClient.tsx:56-58</code>)</td>
+<td>Admin trip wizard separate</td>
+<td>Minor; affects only validation order.</td>
+</tr>
+<tr>
+<td>D-22</td>
+<td>Analytics tabs</td>
+<td>Overview / By Host Type / By Vertical / Financial (DS 8)</td>
+<td>n/a</td>
+<td>overview / providers / services / wilayas / revenue / reports (<code>StatsClient.tsx:36</code>)</td>
+<td>Reporting API should expose dimensions (host type, vertical, wilaya, period) rather than fixed pages.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-policy-change-no-guest-service-fee-brand-bladus">3. Policy change: no guest service fee, brand BLADUS</h2>
+<p>Current policy (confirmed in code): guests pay <strong>no</strong> platform fee; BLADUS earns only the host commission. Evidence: <code>frontend/lib/booking/config.ts:22-34</code> (<code>SERVICE_FEE_RATES</code> all 0), <code>frontend/lib/booking/pricing.ts:125-130</code> (per-listing override ignored), <code>admin/lib/pricing.ts:14-16</code> (<code>GUEST_SERVICE_FEE_PERCENT = 0</code>). Brand is BLADUS; internal <code>darna</code> identifiers are intentionally kept (cookies <code>darna_session</code>, env <code>DARNA_SESSION_SECRET</code>, storage key <code>darna_onboarding_config_</code>, global store keys <code>__darna_wallets__</code>).</p>
+<h3 id="31-spec-and-doc-items-made-obsolete-or-changed">3.1 Spec and doc items made obsolete or changed</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Where</th>
+<th>Why obsolete / what changes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;Commission = booking total x rate&quot;</td>
+<td>DS 9.3 l.153</td>
+<td>With no guest fee, &quot;total&quot; = subtotal + cleaning + taxes. Code uses subtotal only. The spec wording no longer identifies a unique base (D-3).</td>
+</tr>
+<tr>
+<td>Guest service fee 7 % (admin) and 10 % / 8 % (frontend)</td>
+<td><code>admin/docs/DATA-MODEL.md</code> section 6; <code>frontend/DARNA-AUDIT-REPORT.md</code> section 9 table</td>
+<td>Both apps are 0 now; the doc is stale.</td>
+</tr>
+<tr>
+<td>Audit &quot;serviceFee: 0 becomes 10 %&quot; and &quot;commission charged on total incl. BLADUS service fee&quot;</td>
+<td><code>frontend/DARNA-AUDIT-REPORT.md</code> section 4</td>
+<td>No longer applicable.</td>
+</tr>
+<tr>
+<td><code>platformSettings.guestServiceFeePercent</code></td>
+<td><code>admin/lib/mock-data/store.ts:100</code>; <code>admin/lib/types/index.ts:690</code></td>
+<td>Dead setting; do not carry into the schema (or keep locked at 0).</td>
+</tr>
+<tr>
+<td>&quot;Net platform revenue = commission + service fees&quot;</td>
+<td><code>admin/lib/data/analytics.ts:23-26</code></td>
+<td>Service-fee term is always 0; platform revenue = commission only.</td>
+</tr>
+<tr>
+<td><code>Listing.serviceFeeRate</code> admin override</td>
+<td><code>frontend/types.ts:164</code></td>
+<td>Ignored on purpose (<code>pricing.ts:125</code>). Drop from schema.</td>
+</tr>
+<tr>
+<td>Reservation <code>serviceFee</code> / admin <code>serviceFeeDzd</code> columns and their UI lines</td>
+<td><code>frontend/types.ts:222</code>; <code>frontend/components/trips/TripsClient.tsx:458-472</code>; <code>admin/app/[locale]/(panel)/bookings/BookingsClient.tsx:581-584</code>; CSV export <code>admin/lib/data/bookings.ts:150</code></td>
+<td>Always 0; keep only if historic bookings need it.</td>
+</tr>
+<tr>
+<td>Usability KPI &quot;Money paid by guests&quot; vs &quot;DARNA earnings&quot;</td>
+<td><code>usability-report.md</code> section 3 and 4.2</td>
+<td>Label must read &quot;BLADUS earnings&quot;; with no guest fee, earnings = commission only, and the &quot;paid by guests&quot; figure equals what hosts are owed before commission.</td>
+</tr>
+<tr>
+<td>Audit &quot;Total price incl. fees on cards&quot; gap</td>
+<td><code>frontend/DARNA-AUDIT-REPORT.md</code> section 10</td>
+<td>Reduced to price + cleaning + taxes; no BLADUS fee line.</td>
+</tr>
+<tr>
+<td>Brand strings &quot;DARNA&quot; in all spec documents and the usability report</td>
+<td>all sources</td>
+<td>Read as BLADUS. The usability report&#39;s language audit term &quot;DARNA earnings&quot; is now wrong UI copy.</td>
+</tr>
+<tr>
+<td>Wallet model ambiguity</td>
+<td>DS 3 vs DS 9.2 (D-16)</td>
+<td>With no guest fee, a prepaid-commission wallet is coherent only if hosts collect guest money themselves; if BLADUS collects payments, commission can be netted from payouts instead and recharges become optional. Needs a product decision.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="4-usability-report-findings-that-imply-backend-requirements">4. Usability-report findings that imply backend requirements</h2>
+<p>Source: <code>docs/backend/_sources/usability-report.md</code> (identical to <code>admin-usability-report.md</code>). The report describes the admin console as tested; several claims are UI-only in the code, so each one becomes a backend requirement.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Report claim (section)</th>
+<th>Current code</th>
+<th>Backend requirement</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>U1</td>
+<td>&quot;Needs your attention&quot; cards with counts and &quot;oldest item has been waiting 2 days&quot; (section 3)</td>
+<td>Counts are real (<code>admin/lib/data/analytics.ts:161-203</code>); oldest-waiting values are hardcoded 3/2/1 days (<code>admin/app/[locale]/(panel)/DashboardClient.tsx:177-216</code>)</td>
+<td>Queue endpoint returning count + <code>oldestCreatedAt</code> per queue (hosts, listings, flagged reviews, disputes, negative wallets, expiring requests). SLA timers need indexed <code>submittedAt</code> on each moderated entity.</td>
+</tr>
+<tr>
+<td>U2</td>
+<td>8-second Undo toast after approve / hide review (sections 2.1 task 7, 4.3)</td>
+<td>Undo only shows a toast &quot;undo requested&quot; (<code>admin/app/[locale]/(panel)/approvals/ApprovalsClient.tsx:286-290</code>)</td>
+<td>Reversible actions: either a delayed commit window or an inverse transition endpoint, both audited. Transition tables must allow the reverse move.</td>
+</tr>
+<tr>
+<td>U3</td>
+<td>Bulk approvals with progress &quot;Approving 4 of 12&quot; (section 4.3)</td>
+<td>Sequential client loop, no progress, partial failure leaves mixed state (<code>ApprovalsClient.tsx:342-358</code>)</td>
+<td>Bulk endpoint with per-item results, idempotency keys, and one audit entry per item.</td>
+</tr>
+<tr>
+<td>U4</td>
+<td>Live result counts &quot;14 listings match in Oran&quot;; hotels by wilaya (tasks 11, 12)</td>
+<td>Admin list functions return <code>{rows,total,facets}</code> from in-memory filtering (<code>admin/lib/data/listings.ts:68-210</code>, <code>admin/README.md</code> section 4)</td>
+<td>Server-side filtering, pagination and facet counts (wilaya, host type, status, price range) on indexed columns. Exports must cover the full filtered set (already the rule, <code>admin/docs/DATA-MODEL.md</code> section 8).</td>
+</tr>
+<tr>
+<td>U5</td>
+<td>Reject host with pre-set reasons; host &quot;notified politely&quot; (task 2)</td>
+<td>Reason required (&gt;= 3 chars) per DATA-MODEL section 1-2; no notification is sent from admin to frontend (<code>admin/lib/data/hosts.ts</code> has no notify call)</td>
+<td>Reason catalogue table, and a notification/outbox service shared by both apps (email/SMS/in-app).</td>
+</tr>
+<tr>
+<td>U6</td>
+<td>Request changes on a listing with checkbox templates (task 4)</td>
+<td><code>changes_requested</code> exists only in admin; frontend shows it as <code>pending</code> (<code>admin/docs/DATA-MODEL.md</code> section 1)</td>
+<td>Host-facing change-request object (items + notes) readable by the frontend, plus resubmission transition.</td>
+</tr>
+<tr>
+<td>U7</td>
+<td>Restore a deleted item (task 6)</td>
+<td>Soft delete with <code>statusBeforeDelete</code> in admin; frontend hard-deletes listings (<code>frontend/lib/data/listings.ts:343-347</code>)</td>
+<td>Soft delete everywhere (<code>deletedAt</code>, <code>statusBeforeDelete</code>), since admin restore cannot work on hard-deleted rows.</td>
+</tr>
+<tr>
+<td>U8</td>
+<td>Booking dispute with guest claim and host response side by side (task 8)</td>
+<td>Admin <code>disputed</code> state and outcomes; frontend has no dispute state or way to file one (D-9)</td>
+<td>Dispute entity with both parties&#39; statements and attachments, created from the guest/host app.</td>
+</tr>
+<tr>
+<td>U9</td>
+<td>Recharge modal shows current and new balance (task 9)</td>
+<td>Admin computes from ledger (<code>admin/lib/data/finance.ts:221-244</code>)</td>
+<td>Balance read must be consistent with the write (transactional ledger insert with <code>balanceAfter</code>), and the frontend wallet must be the same ledger.</td>
+</tr>
+<tr>
+<td>U10</td>
+<td>Change commission rate in &quot;Money &gt; Commission tiers&quot; (task 10)</td>
+<td>Admin store only; frontend has its own rates store (<code>frontend/lib/data/wallet.ts:239-266</code>)</td>
+<td>One shared settings table; rate snapshot on each booking.</td>
+</tr>
+<tr>
+<td>U11</td>
+<td>Edit onboarding steps with toggles and drag handles (task 13)</td>
+<td>Admin-only effect (R49)</td>
+<td>Published onboarding flow served to the frontend; versioned (see D-15).</td>
+</tr>
+<tr>
+<td>U12</td>
+<td>4 KPI cards with % change vs last month (section 3)</td>
+<td>Trends are hardcoded strings (<code>admin/lib/data/analytics.ts:43-50</code>)</td>
+<td>Period-over-period aggregates over real date ranges (materialized views or nightly rollups).</td>
+</tr>
+<tr>
+<td>U13</td>
+<td>&quot;History of actions&quot; (audit log) trusted (section 4.2)</td>
+<td>Server-side actor and IP, frozen entries (<code>admin/docs/DATA-MODEL.md</code> section 8; <code>admin/lib/data/audit.ts</code>)</td>
+<td>Persist the audit log append-only in the database (no update/delete grants); include host-side sensitive actions (org role changes, payouts) too.</td>
+</tr>
+<tr>
+<td>U14</td>
+<td>Filter chip &quot;Suspended/Deleted&quot; (task 6)</td>
+<td>Facets by status exist in admin</td>
+<td>Status filters must include soft-deleted rows only for permitted roles.</td>
+</tr>
+<tr>
+<td>U15</td>
+<td>Arabic with Latin digits; Sunday first day; Algerian weekend Fri-Sat (section 5.2)</td>
+<td>Formatting rule in <code>admin/lib/utils/format.ts</code></td>
+<td>Store dates as date keys / UTC timestamps with Africa/Algiers business timezone; week-based reports start Sunday.</td>
+</tr>
+<tr>
+<td>U16</td>
+<td>Novice moderator vs power users (Nadia, Karim, Samir)</td>
+<td>RBAC roles in <code>admin/lib/permissions.ts</code></td>
+<td>Role/permission model in the database with server enforcement (already intended in <code>admin/README.md</code> section 3).</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="5-quick-list-of-open-questions-for-the-blueprint">5. Quick list of open questions for the blueprint</h2>
+<ol>
+<li>Wallet model: prepaid commission (DS 9) vs escrow with payouts (admin seed). Drives payments, ledger accounts and payout flow (D-16).</li>
+<li>Commission base and rate resolution order, including per-host override (D-3, D-5).</li>
+<li>Approval mode resolution and who may respond to requests; request TTL as a setting with a real scheduler (D-6, D-7, D-8).</li>
+<li>Unified booking, listing and host status machines (D-9, D-10, admin <code>docs/DATA-MODEL.md</code>).</li>
+<li>Trips as their own table with departures vs listings subtype, and the <code>/trips</code> naming collision (D-11).</li>
+<li>Vertical taxonomy: is <code>hotel</code> a vertical or a business category of <code>home</code> (D-12, D-20)?</li>
+<li>Onboarding config schema and whether the 2-step individual cap is intended (D-13, D-14, D-15).</li>
+<li>Moderation before publish for listings and trips (D-10).</li>
+</ol>
+<div class="pager"><span><a href="work-admin-inventory.html">&larr; BLADUS admin back-office: raw inventory for the backend blueprint</a></span><span><a href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04) &rarr;</a></span></div></main></div></body></html>

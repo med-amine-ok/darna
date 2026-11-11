@@ -1,0 +1,897 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>10. Testing and quality · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="on" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="10-testing-and-quality">10. Testing and quality</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This page says how we prove the backend does what the rules say, before every deployment.<br>Most tests are small and fast; fewer are big and slow (the &quot;test pyramid&quot;). Money, refunds and dates are tested with thousands of random examples, not only a few hand-picked ones.<br>Double booking is tested by firing many requests at the same time against a real PostgreSQL database.<br>The API contract is checked automatically so the website and admin never break silently; speed is measured against the targets in NFR-01 and NFR-02.<br>Every business rule (<code>BR-...</code>) must have at least one test whose name contains the rule ID; the build fails if one is missing.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see also <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Unit test</strong>: tests one small function alone, in milliseconds, often without a database.</li>
+<li><strong>Service test / integration test</strong>: tests a service function with a real database, inside a transaction that is rolled back afterwards.</li>
+<li><strong>API test</strong>: sends an HTTP request to an endpoint and checks the response (status, body, permissions).</li>
+<li><strong>End-to-end (E2E) test</strong>: drives a real browser through the website or admin (Playwright).</li>
+<li><strong>Test pyramid</strong>: many unit tests, fewer service and API tests, very few E2E tests.</li>
+<li><strong>pytest / pytest-django</strong>: the Python test runner and its Django plugin.</li>
+<li><strong>Factory (factory_boy)</strong>: code that creates realistic test rows (a user, a listing, a booking) with one line.</li>
+<li><strong>Property-based test (hypothesis)</strong>: instead of one example, you state a rule that must always hold (&quot;refund never exceeds the total&quot;), and the tool tries hundreds of random inputs, then shrinks any failure to the simplest example.</li>
+<li><strong>Concurrency test</strong>: starts many requests at the same moment to check that locks and constraints hold.</li>
+<li><strong>Contract test (schemathesis)</strong>: reads <code>openapi.yaml</code> and sends many generated requests to every endpoint, checking the answers match the contract and the server never crashes.</li>
+<li><strong>Load / performance test (k6)</strong>: simulates many users to measure response times.</li>
+<li><strong>Coverage</strong>: the share of code lines (or branches) executed by tests.</li>
+<li><strong>Mutation testing</strong>: the tool makes small bugs in the code on purpose; good tests should fail. Measures test strength.</li>
+<li><strong>Quality gate</strong>: a check in CI that must pass before code can be merged or deployed.</li>
+<li><strong>Definition of Done (DoD)</strong>: the checklist a change must satisfy before it counts as finished.</li>
+<li><strong>Traceability</strong>: being able to go from a rule to its test and back.</li>
+</ul>
+<p>Inputs: <a href="03-requirements.html">03-requirements.md</a> (NFR-01, 02, 06, 08, 10, 13), <a href="04-business-rules.html">04-business-rules.md</a>, <a href="05-database-schema.html">05-database-schema.md</a> sections 6 and 7, <a href="07-architecture.html">07-architecture.md</a>, <a href="08-security-privacy.html">08-security-privacy.md</a>, <a href="09-devops-hosting.html">09-devops-hosting.md</a> section 7, research B.14.</p>
+<hr>
+<h2 id="1-test-strategy-pyramid">1. Test strategy (pyramid)</h2>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Share of tests</th>
+<th>Tools</th>
+<th>Database</th>
+<th>Runs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Unit (pure functions: money, policies, date ranges, masking, transitions)</td>
+<td>about 45%</td>
+<td>pytest, hypothesis</td>
+<td>none</td>
+<td>every push, seconds</td>
+</tr>
+<tr>
+<td>Service (one service or selector with real PostgreSQL + PostGIS)</td>
+<td>about 35%</td>
+<td>pytest-django, factory_boy, time-machine (frozen clock)</td>
+<td>real PostgreSQL in a rolled-back transaction</td>
+<td>every push</td>
+</tr>
+<tr>
+<td>API (endpoint, permissions, serializers, error codes)</td>
+<td>about 15%</td>
+<td>pytest-django + DRF <code>APIClient</code></td>
+<td>real PostgreSQL</td>
+<td>every push</td>
+</tr>
+<tr>
+<td>Concurrency (parallel requests)</td>
+<td>small set, critical</td>
+<td>pytest with <code>transaction=True</code>, threads, barrier</td>
+<td>real PostgreSQL, committed</td>
+<td>every push (short) + nightly (repeated)</td>
+</tr>
+<tr>
+<td>Contract</td>
+<td>all endpoints</td>
+<td>schemathesis, drf-spectacular, oasdiff, <code>tsc</code> in both apps</td>
+<td>seeded API</td>
+<td>every pull request</td>
+</tr>
+<tr>
+<td>E2E (key journeys through the Next.js apps)</td>
+<td>about 5% (around 20 journeys)</td>
+<td>Playwright (admin already uses it)</td>
+<td>staging-like stack</td>
+<td>before deploy to production</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>scenarios in section 7</td>
+<td>k6</td>
+<td>staging with 20,000 listings</td>
+<td>weekly and before major releases</td>
+</tr>
+</tbody></table>
+<p>Principles:</p>
+<ul>
+<li><strong>Real PostgreSQL always.</strong> No SQLite: exclusion constraints, <code>daterange</code>, PostGIS, partial indexes and triggers are part of the rules (BR-AVL-01, BR-PAY-02).</li>
+<li><strong>Test the rule where it is enforced.</strong> A DB-enforced rule is tested by trying to break it with raw ORM writes (bypassing the service) and expecting the database to refuse.</li>
+<li><strong>Frozen time.</strong> Services receive <code>now</code> from <code>core.clock</code>; tests freeze it in Africa/Algiers for date rules (BR-SYS-05).</li>
+<li><strong>No network.</strong> SMS, email, storage and gateway calls go to fakes that record what was sent; one contract test per provider runs against recorded responses.</li>
+</ul>
+<h2 id="2-what-to-test-per-app">2. What to test per app</h2>
+<table>
+<thead>
+<tr>
+<th>App</th>
+<th>Must test</th>
+<th>Key rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>core</code></td>
+<td><code>Money</code> arithmetic and rounding; idempotency (same key same body, different body 422, concurrent 409, expiry 24 h); error format and translation; UUIDv7 ordering</td>
+<td>BR-PAY-01, BR-SYS-01, BR-SYS-04, NFR-12</td>
+</tr>
+<tr>
+<td><code>geo</code></td>
+<td>Seed completeness (69 wilayas, 1,541 communes, codes unique, <code>legacy_code_58</code> mapping); autocomplete with accents and Arabic</td>
+<td>BR-SRC-02</td>
+</tr>
+<tr>
+<td><code>config</code></td>
+<td>Unknown settings key refused; new version per change; publish creates immutable version; core steps not removable; old version readable</td>
+<td>BR-CFG-01 to 03</td>
+</tr>
+<tr>
+<td><code>audit</code></td>
+<td>Insert-only (UPDATE refused by DB); hash chain correct; chain break detected; export formula neutralisation; export audited with filters and count</td>
+<td>BR-STF-02, BR-STF-04</td>
+</tr>
+<tr>
+<td><code>media</code></td>
+<td>Presign limits; magic bytes; EXIF/GPS removed (fixture photo with GPS); decompression bomb refused; virus test file (EICAR) rejected; signed URL expiry; KYC view audited</td>
+<td>BR-MED-01, 02</td>
+</tr>
+<tr>
+<td><code>notifications</code></td>
+<td>Outbox written in the same transaction; rolled-back change sends nothing; retry and backoff; idempotent sending (one SMS per event); language of recipient; critical messages ignore opt-out</td>
+<td>BR-SYS-03, BR-NTF-01, 02, BR-PRV-03</td>
+</tr>
+<tr>
+<td><code>accounts</code></td>
+<td>Email unique case-insensitive; phone format; OTP limits and expiry; lockout shared via Redis; session revocation on logout and password change; staff MFA required; consent records; deletion anonymises and keeps legal records</td>
+<td>BR-ACC-01 to 05, BR-PRV-01, 02</td>
+</tr>
+<tr>
+<td><code>hosts</code></td>
+<td>Host account is user XOR organisation; one owner; invitations (7 days, once, matching contact); role permissions matrix; legal field change resets verification; verification transitions; documents all approved before host approval; publish rights per host type; payout change needs MFA and sets 72 h hold</td>
+<td>BR-ORG-01 to 06, BR-HST-01 to 05, BR-PAY-09</td>
+</tr>
+<tr>
+<td><code>catalog</code></td>
+<td>Listing state machine (every allowed and every forbidden move); revision under review keeps live version; hotel without room type cannot submit; reference rows cannot be hard-deleted; experience and trip types</td>
+<td>BR-LST-01 to 05</td>
+</tr>
+<tr>
+<td><code>inventory</code></td>
+<td>Counter check constraint; atomic multi-night reservation all-or-nothing; holds expire; host block vs booking race; horizon job creates 18 months</td>
+<td>BR-AVL-02 to 06</td>
+</tr>
+<tr>
+<td><code>trips</code></td>
+<td>Only approved agencies; seats never oversold; cancelling a departure cancels all bookings with refunds owed</td>
+<td>BR-TRP-01 to 03</td>
+</tr>
+<tr>
+<td><code>pricing</code></td>
+<td>Quote lines and totals; weekly vs monthly discount; no guest fee; quote expiry and re-validation; tampered price ignored; tax rates by validity date (R2)</td>
+<td>BR-PRC-01 to 04</td>
+</tr>
+<tr>
+<td><code>ledger</code></td>
+<td>Balanced transactions only (DB trigger); no UPDATE/DELETE; commission once per booking; reversal amounts; rate resolution; top-up limits, unique receipt, four-eyes; credit floor; balance cache equals sum; dormant models return 404</td>
+<td>BR-PAY-01 to 12</td>
+</tr>
+<tr>
+<td><code>bookings</code></td>
+<td>Instant vs request resolution; snapshot frozen; state machine; expiry and completion jobs; cancellation by guest, host, staff with refunds; refunds never exceed total; disputes window (R2); references unique</td>
+<td>BR-BKG-01 to 07, BR-CAN-01 to 05</td>
+</tr>
+<tr>
+<td><code>reviews</code></td>
+<td>Eligibility (completed, 14 days, one per booking); states and reasons; ratings recomputed; double-blind (R2)</td>
+<td>BR-REV-01 to 04</td>
+</tr>
+<tr>
+<td><code>messaging</code></td>
+<td>Cursor sync returns only newer messages; unread counts; masking of phones, emails, CCP/RIP, WhatsApp links before confirmation and unmasked after; repeated attempts flag the thread</td>
+<td>BR-MSG-01</td>
+</tr>
+<tr>
+<td><code>trust</code></td>
+<td>Queue priority by waiting time since last submission; change request items visible to host; suspension cascade pauses listings and flags future bookings; risk flags open cases, never block</td>
+<td>BR-MOD-01 to 04</td>
+</tr>
+<tr>
+<td><code>search</code></td>
+<td>Only published listings of approved hosts; facet counts exclude own filter; public point only for anonymous users; partial availability sub-range; map pin cap; hotel and hostel under &quot;Hotels&quot;; search doc refreshed by outbox</td>
+<td>BR-SRC-01 to 04, BR-AVL-05</td>
+</tr>
+</tbody></table>
+<p>Security tests (from <a href="08-security-privacy.html">08-security-privacy.md</a> section 6) live in each app as <code>test_api1_*</code> to <code>test_api10_*</code>, plus one matrix test that calls every <code>/api/v1/admin</code> endpoint with each of the 5 staff roles and checks allow or deny against the permission table.</p>
+<h2 id="3-property-based-tests-hypothesis">3. Property-based tests (hypothesis)</h2>
+<p>Pure functions for money, refunds and dates are written so they can be tested without a database. Example properties (the tests will name the rule they protect):</p>
+<h3 id="31-money">3.1 Money</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>For any list of price lines, <code>total == sum(rounded lines)</code>; never a float anywhere</td>
+<td>BR-PAY-01</td>
+</tr>
+<tr>
+<td><code>commission(base, rate_bp)</code> is between <code>floor(base x rate / 10,000)</code> and that value + 1 centime, and <code>0 &lt;= commission &lt;= base</code></td>
+<td>BR-PAY-04</td>
+</tr>
+<tr>
+<td>Commission is monotonic: a bigger base or rate never gives a smaller commission</td>
+<td>BR-PAY-04</td>
+</tr>
+<tr>
+<td>Applying the discount: only the larger of weekly and monthly applies; result <code>&gt;= 0</code>; 30 nights never uses the weekly rate</td>
+<td>BR-PRC-03</td>
+</tr>
+<tr>
+<td>For any sequence of postings, every ledger transaction sums to zero per currency, and the wallet balance equals the sum of its entries</td>
+<td>BR-PAY-02, 03</td>
+</tr>
+<tr>
+<td>Displayed whole dinars: <code>display(amount)</code> rounds half up and <code>display(a) + display(b)</code> may differ from <code>display(a + b)</code> by at most 1 DZD, which is why totals are summed from lines</td>
+<td>BR-PAY-01</td>
+</tr>
+</tbody></table>
+<p>Example (illustration only, no code files are created in this phase):</p>
+<pre><code class="lang-python">@given(base=st.integers(0, 10**12), rate_bp=st.integers(0, 10_000))
+def test_br_pay_04_commission_bounds(base, rate_bp):
+    c = commission_minor(base, rate_bp)
+    exact_floor = base * rate_bp // 10_000
+    assert exact_floor &lt;= c &lt;= exact_floor + 1
+    assert 0 &lt;= c &lt;= base</code></pre><h3 id="32-refunds-and-cancellations">3.2 Refunds and cancellations</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0 &lt;= refund &lt;= total - already_refunded</code> for any policy, any day, any amounts</td>
+<td>BR-CAN-04</td>
+</tr>
+<tr>
+<td>Refund is non-decreasing with days before check-in (cancelling earlier never refunds less)</td>
+<td>BR-CAN-01</td>
+</tr>
+<tr>
+<td>Before check-in, the cleaning fee and its taxes are always fully refunded</td>
+<td>BR-CAN-01, 02</td>
+</tr>
+<tr>
+<td>Host cancellation: refund owed == total paid; commission reversal == commission posted</td>
+<td>BR-CAN-03, BR-PAY-05</td>
+</tr>
+<tr>
+<td>Guest cancellation: commission kept == <code>round(rate x non-refunded subtotal)</code>; kept + reversed == posted</td>
+<td>BR-PAY-05</td>
+</tr>
+<tr>
+<td>Several partial staff refunds in any order: their sum never exceeds the total; the last one that would exceed is refused</td>
+<td>BR-CAN-04</td>
+</tr>
+<tr>
+<td>Worked example 8a reproduces exactly: 31,750 DZD owed, 3,330 DZD back to the wallet</td>
+<td>BR-CAN-02</td>
+</tr>
+</tbody></table>
+<pre><code class="lang-python">@given(policy=st.sampled_from(POLICIES), b=bookings(), d1=st.integers(-2, 400), d2=st.integers(-2, 400))
+def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1, d2):
+    early, late = max(d1, d2), min(d1, d2)
+    assert refund_for(policy, b, days_before=early) &gt;= refund_for(policy, b, days_before=late)</code></pre><h3 id="33-date-ranges">3.3 Date ranges</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>For <code>[a, b)</code>, nights == <code>b - a</code> in days; <code>a &lt; b</code> always; an empty range is refused</td>
+<td>BR-SYS-05, BR-AVL-01</td>
+</tr>
+<tr>
+<td>Overlap is symmetric: <code>overlaps(x, y) == overlaps(y, x)</code>; back-to-back ranges (<code>x.end == y.start</code>) never overlap</td>
+<td>BR-AVL-01</td>
+</tr>
+<tr>
+<td>The Python overlap function agrees with PostgreSQL <code>&amp;&amp;</code> on <code>daterange</code> for any pair (tested against the database)</td>
+<td>BR-AVL-01</td>
+</tr>
+<tr>
+<td><code>largest_free_subrange(request, busy)</code> is inside the request, contains no busy night, and no longer free sub-range exists</td>
+<td>BR-AVL-05</td>
+</tr>
+<tr>
+<td>Day counting for policies uses Africa/Algiers calendar days; around midnight UTC (00:00 to 01:00 Algiers) the day count is still correct</td>
+<td>BR-CAN-01, BR-SYS-05</td>
+</tr>
+<tr>
+<td>Weekend detection: Friday and Saturday only; week starts on Sunday</td>
+<td>BR-SYS-05</td>
+</tr>
+<tr>
+<td>Pool reservation of <code>n</code> units over <code>k</code> nights changes exactly <code>k</code> counter rows or none</td>
+<td>BR-AVL-02</td>
+</tr>
+</tbody></table>
+<p>Hypothesis settings: <code>max_examples = 200</code> on every push, <code>2,000</code> in the nightly run; the example database is kept in CI cache so a found failure is replayed until fixed.</p>
+<h2 id="4-concurrency-tests-on-real-postgresql">4. Concurrency tests on real PostgreSQL</h2>
+<p>How: <code>@pytest.mark.django_db(transaction=True)</code> (real commits), a <code>ThreadPoolExecutor</code> where each thread opens its own database connection, and a <code>threading.Barrier</code> so all threads call the service at the same instant. Each scenario runs 5 times on every push and 200 times in the nightly run. CI uses the same PostgreSQL and PostGIS versions as production.</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Setup</th>
+<th>Expected</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Same nights, single unit</td>
+<td>50 guests book the same home for the same nights</td>
+<td>Exactly 1 booking created; 49 get <code>409 dates_unavailable</code>; no 500</td>
+<td>BR-AVL-01</td>
+</tr>
+<tr>
+<td>Back-to-back</td>
+<td>2 guests book <code>[1, 4)</code> and <code>[4, 6)</code> at the same time</td>
+<td>Both succeed</td>
+<td>BR-AVL-01</td>
+</tr>
+<tr>
+<td>Last hotel room</td>
+<td>Room type with 1 unit left; 20 parallel requests for 1 room</td>
+<td>Exactly 1 success; counters <code>held + booked &lt;= total</code></td>
+<td>BR-AVL-02</td>
+</tr>
+<tr>
+<td>Last seats on a departure</td>
+<td>3 seats left; 10 requests for 2 seats each</td>
+<td>Exactly 1 success; seats booked = 2</td>
+<td>BR-TRP-02</td>
+</tr>
+<tr>
+<td>Host blocks while guest books</td>
+<td>Host blocks night N while a guest books a stay including N</td>
+<td>One wins; never both</td>
+<td>BR-AVL-04</td>
+</tr>
+<tr>
+<td>Same idempotency key</td>
+<td>10 identical requests with one key</td>
+<td>1 booking; others get the same response or <code>409 request_in_progress</code></td>
+<td>BR-SYS-01</td>
+</tr>
+<tr>
+<td>Double confirmation</td>
+<td>Host clicks accept twice; job tries to expire at the same time</td>
+<td>One transition wins; commission posted once</td>
+<td>BR-PAY-04, BR-BKG-06</td>
+</tr>
+<tr>
+<td>Credit floor race</td>
+<td>Wallet just above the floor; 2 instant bookings at once whose commissions together cross the floor</td>
+<td>Second one becomes <code>pending</code>, never both confirmed below the floor</td>
+<td>BR-PAY-10</td>
+</tr>
+<tr>
+<td>Duplicate top-up receipt</td>
+<td>2 finance users record the same receipt at once</td>
+<td>1 succeeds, 1 refused</td>
+<td>BR-PAY-07</td>
+</tr>
+<tr>
+<td>Outbox workers</td>
+<td>3 dispatchers on the same pending events</td>
+<td>Each event handled once (<code>SKIP LOCKED</code>); one SMS per event</td>
+<td>BR-SYS-03</td>
+</tr>
+<tr>
+<td>Expiry vs accept</td>
+<td>Request accepted at the exact second the expiry job runs</td>
+<td>Final status is either <code>confirmed</code> or <code>expired</code>, consistent with ledger and counters</td>
+<td>BR-BKG-04</td>
+</tr>
+<tr>
+<td>Ownership transfer</td>
+<td>Two owners-to-be at once</td>
+<td>Exactly one active owner</td>
+<td>BR-ORG-04</td>
+</tr>
+</tbody></table>
+<p>A scenario passes only if the database ends in a consistent state: a final check runs the ledger reconciliation and counter sums after each run.</p>
+<h2 id="5-contract-tests">5. Contract tests</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>How</th>
+<th>Fails when</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Schema is valid</td>
+<td><code>manage.py spectacular --validate --fail-on-warn</code></td>
+<td>An endpoint has no documented serializer, an enum is unnamed, a response is undocumented</td>
+</tr>
+<tr>
+<td>No accidental breaking change</td>
+<td><code>oasdiff breaking main.yaml pr.yaml</code></td>
+<td>A field is removed or renamed, a type changes, a required parameter is added, an enum value disappears, without the <code>api-breaking</code> label and a version plan</td>
+</tr>
+<tr>
+<td>API matches its contract</td>
+<td><code>schemathesis run openapi.yaml --checks all --stateful=links</code> against the API with seed data, authenticated as guest, host and each staff role</td>
+<td>A response does not match the schema, a 500 occurs, an undocumented status code appears, a response is slower than 5 s</td>
+</tr>
+<tr>
+<td>Error format</td>
+<td>Custom schemathesis check</td>
+<td>Any 4xx body without <code>code</code> and <code>message</code> (BR-SYS-04)</td>
+</tr>
+<tr>
+<td>Frontend compile check</td>
+<td><code>openapi-typescript</code> generates <code>schema.d.ts</code>; <code>tsc --noEmit</code> in <code>frontend/</code> and <code>admin/</code></td>
+<td>A Next.js call uses a removed field or a wrong type</td>
+</tr>
+<tr>
+<td>Adapter parity</td>
+<td>For each migrated <code>lib/data</code> module, a test feeds the same fixture through the mock and the API adapter and compares DTO shapes</td>
+<td>The website or admin would render different data after the switch (<a href="07-architecture.html">07-architecture.md</a> section 10.4)</td>
+</tr>
+<tr>
+<td>Provider contracts</td>
+<td>Recorded responses (SMS, email, later Chargily) replayed against our client code</td>
+<td>Our parser or signature check breaks</td>
+</tr>
+</tbody></table>
+<h2 id="6-migration-tests">6. Migration tests</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>When</th>
+<th>Tool</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>No missing migrations</td>
+<td>every push</td>
+<td><code>makemigrations --check --dry-run</code></td>
+</tr>
+<tr>
+<td>Migrate from zero</td>
+<td>every push</td>
+<td>fresh database, <code>migrate</code>, then load production seeds 1 to 8 (<a href="05-database-schema.html">05-database-schema.md</a> section 9)</td>
+</tr>
+<tr>
+<td>Dangerous operations</td>
+<td>every push</td>
+<td>migration linter: refuses column drops or renames in the same release as code changes, non-concurrent index creation on large tables, <code>NOT NULL</code> without default on existing tables</td>
+</tr>
+<tr>
+<td>Data migrations</td>
+<td>per data migration</td>
+<td><code>django-test-migrations</code>: build the old state, insert rows, migrate forward, assert the new state; run twice to prove it is safe to repeat</td>
+</tr>
+<tr>
+<td>Old code on new schema</td>
+<td>before release</td>
+<td>run the previous release&#39;s API test suite against the new schema (expand-then-contract proof, <a href="09-devops-hosting.html">09-devops-hosting.md</a> section 8.1)</td>
+</tr>
+<tr>
+<td>Duration on realistic size</td>
+<td>before release with a <code>risky</code> migration</td>
+<td>apply on the performance dataset (section 7) and record the time and locks taken; above 10 s of locking needs a different plan</td>
+</tr>
+<tr>
+<td>Constraints exist</td>
+<td>every push</td>
+<td>test queries <code>pg_constraint</code> and <code>pg_indexes</code> for the constraints in <a href="05-database-schema.html">05-database-schema.md</a> section 6 (exclusion, partial unique, checks, triggers, grants)</td>
+</tr>
+</tbody></table>
+<h2 id="7-performance-tests">7. Performance tests</h2>
+<p>Tool: <strong>k6</strong> (scripts in <code>tests/performance/</code>). Locust is an acceptable alternative if the team prefers Python. Dataset: generated by factories at the scale in <a href="05-database-schema.html">05-database-schema.md</a> section 7: 20,000 listings across 69 wilayas, 2,000 room types with 18 months of nights, 1 million booking rows, 5 million messages. Run against staging (same server size as production app node), never production.</p>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Mix</th>
+<th>Load</th>
+<th>Pass criteria</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>S1 Browse and search</td>
+<td>search with filters (60%), search with dates (25%), map box (15%)</td>
+<td>ramp to 50 requests/s, hold 10 min</td>
+<td>p95 &lt; 500 ms, errors &lt; 0.5% (NFR-02)</td>
+</tr>
+<tr>
+<td>S2 Listing detail and calendar</td>
+<td>detail + 90-day calendar</td>
+<td>50 requests/s</td>
+<td>p95 &lt; 300 ms (NFR-01)</td>
+</tr>
+<tr>
+<td>S3 Booking create</td>
+<td>quote then book on random free dates (some collisions on purpose)</td>
+<td>10 bookings/s for 5 min</td>
+<td>p95 &lt; 600 ms; zero double bookings; conflicts return 409 (NFR-01, BR-AVL-01)</td>
+</tr>
+<tr>
+<td>S4 Message polling</td>
+<td>2,000 open conversations polling every 10 s</td>
+<td>about 200 requests/s</td>
+<td>p95 &lt; 100 ms (query Q7)</td>
+</tr>
+<tr>
+<td>S5 Notifications badge</td>
+<td>5,000 signed-in users polling every 30 s</td>
+<td>about 170 requests/s</td>
+<td>p95 &lt; 50 ms (query Q8)</td>
+</tr>
+<tr>
+<td>S6 Mixed day</td>
+<td>70% S1/S2, 20% S4/S5, 5% S3, 5% host and admin lists</td>
+<td>50 requests/s for 30 min</td>
+<td>all targets above; no growth in outbox lag</td>
+</tr>
+<tr>
+<td>S7 Abuse</td>
+<td>OTP request flood, oversized page sizes, deep pagination</td>
+<td>as fast as possible from 5 IPs</td>
+<td>limits return 429; API latency for normal users unchanged</td>
+</tr>
+</tbody></table>
+<p>Also: <code>EXPLAIN (ANALYZE, BUFFERS)</code> snapshots for queries Q1 to Q16 on the dataset, stored with the results and compared release to release; <code>django-assert-num-queries</code> style assertions in API tests to stop N+1 queries (each list endpoint has a fixed maximum number of queries).</p>
+<h2 id="8-accessibility-and-i18n-checks-for-api-messages">8. Accessibility and i18n checks for API messages</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>How</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Every error code has text in en, fr, ar</td>
+<td>A test lists every <code>DomainError</code> code from a registry and checks a translation exists in each <code>.po</code> file</td>
+<td>NFR-06, BR-SYS-04</td>
+</tr>
+<tr>
+<td>No missing translations</td>
+<td>CI runs <code>makemessages</code> and fails on a diff; <code>compilemessages</code> with errors as failures; no empty <code>msgstr</code></td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Stable codes</td>
+<td>Snapshot test of the error code list: removing or renaming a code is a breaking change (the apps map codes to text)</td>
+<td>NFR-13</td>
+</tr>
+<tr>
+<td>Language selection</td>
+<td>API tests with <code>Accept-Language: ar</code>, <code>fr</code>, <code>en</code>, unknown, and none: correct language or <code>fr</code> fallback</td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Latin digits</td>
+<td>Messages and notifications with numbers in Arabic contain digits 0 to 9, never Arabic-Indic digits</td>
+<td>NFR-06, research C.7</td>
+</tr>
+<tr>
+<td>Arabic plurals</td>
+<td>Messages with counts use plural forms (Arabic has 6); test values 0, 1, 2, 3, 11, 100</td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Templates render</td>
+<td>Every notification template renders in the 3 languages with sample data, no missing variables, no raw HTML in SMS</td>
+<td>BR-NTF-02</td>
+</tr>
+<tr>
+<td>SMS length</td>
+<td>SMS texts measured: Arabic texts use UCS-2 (70 characters per segment); critical SMS must fit in 2 segments</td>
+<td>cost, NFR-11</td>
+</tr>
+<tr>
+<td>Bidirectional text</td>
+<td>Mixed Arabic text with Latin values (booking reference, amounts) wrapped with Unicode isolation marks in SMS and email</td>
+<td>NFR-06</td>
+</tr>
+<tr>
+<td>Plain language</td>
+<td>Host-facing reason texts (<code>reason_code.host_text_*</code>) reviewed by a native speaker per language before release</td>
+<td>MOD-03</td>
+</tr>
+<tr>
+<td>Apps</td>
+<td>The website and admin keep their Playwright + axe checks for screen readers and right-to-left layout; API messages are shown inside those flows</td>
+<td>NFR-13</td>
+</tr>
+</tbody></table>
+<h2 id="9-test-data-and-factories">9. Test data and factories</h2>
+<ul>
+<li>One <code>tests/factories.py</code> per app with factory_boy factories: <code>UserFactory</code>, <code>HostAccountFactory</code> (traits <code>individual</code>, <code>agency</code>, <code>hotel</code>, <code>hostel</code>, <code>approved</code>), <code>ListingFactory</code> (traits per vertical, <code>published</code>), <code>RoomTypeFactory</code> (with nights), <code>TripDepartureFactory</code>, <code>BookingFactory</code> (traits <code>pending</code>, <code>confirmed</code>, <code>completed</code>), <code>WalletFactory</code> (with a top-up posted through the ledger service, never by inserting balance rows).</li>
+<li>Factories that involve money or inventory call <strong>services</strong>, so test data always satisfies the rules (no impossible states created by shortcuts).</li>
+<li>Algerian realism: custom Faker providers for <code>+213</code> mobiles (<code>^\+213[5-7]\d{8}$</code>), wilaya and commune ids from the geo seed, Arabic and Latin names, DZD amounts in centimes.</li>
+<li>Determinism: fixed random seed per test run (printed in the output); time frozen with time-machine; UUIDv7 generated from the frozen clock.</li>
+<li>Demo data for staging (website demo users Yacine, Amina, Karim; admin staff Nadia; 18 listings, 4 trips) is a separate <code>seed_demo</code> command built on the same factories; it refuses to run when <code>BLADUS_ENV=production</code> (<a href="05-database-schema.html">05-database-schema.md</a> section 9).</li>
+<li>Never production data in tests. Bugs found in production are reproduced with factories.</li>
+</ul>
+<h2 id="10-definition-of-done">10. Definition of Done</h2>
+<p>A change is done when:</p>
+<ul>
+<li><input disabled="" type="checkbox"> The requirement ID (<code>BKG-03</code>) and rule IDs (<code>BR-BKG-04</code>) are in the pull request description.</li>
+<li><input disabled="" type="checkbox"> Logic is in services or selectors, not in views, serializers or signals; import-linter passes.</li>
+<li><input disabled="" type="checkbox"> Every new or changed business rule has a test named <code>test_br_&lt;area&gt;_&lt;nn&gt;_...</code> (section 13).</li>
+<li><input disabled="" type="checkbox"> Money, refund or date logic has property tests; booking, inventory or ledger changes have a concurrency test.</li>
+<li><input disabled="" type="checkbox"> Database rules are in constraints where possible, with a test that bypasses the service and expects the database to refuse.</li>
+<li><input disabled="" type="checkbox"> Permissions: tests for allowed and denied roles (guest, other guest, host, other host, each org role or staff role concerned).</li>
+<li><input disabled="" type="checkbox"> API: OpenAPI updated (generated), no unplanned breaking change, error codes translated in en, fr, ar.</li>
+<li><input disabled="" type="checkbox"> Migrations follow the expand-then-contract policy and pass the migration checks.</li>
+<li><input disabled="" type="checkbox"> Audit events and outbox events written where the rules require them.</li>
+<li><input disabled="" type="checkbox"> No personal data in logs; new personal data fields added to the register of processing and the retention table (<a href="08-security-privacy.html">08-security-privacy.md</a> section 12).</li>
+<li><input disabled="" type="checkbox"> Coverage gates pass (section 11); CI fully green.</li>
+<li><input disabled="" type="checkbox"> Docs updated if behaviour changed (rules, requirements, this blueprint); no em dash characters in docs.</li>
+<li><input disabled="" type="checkbox"> Reviewed and approved by one other developer (two for ledger, security or migrations marked <code>risky</code>).</li>
+<li><input disabled="" type="checkbox"> Deployed to staging and checked there; flag state documented if behind a feature flag.</li>
+</ul>
+<h2 id="11-coverage-targets">11. Coverage targets</h2>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Line coverage</th>
+<th>Branch coverage</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>services.py</code> in all apps</td>
+<td><strong>90%</strong></td>
+<td>85%</td>
+<td>NFR-10</td>
+</tr>
+<tr>
+<td><code>ledger</code>, <code>pricing</code>, <code>bookings</code> (money and availability)</td>
+<td>95%</td>
+<td>90%</td>
+<td>Plus mutation testing (mutmut) on <code>core.money</code>, <code>pricing</code>, cancellation policy functions each quarter: target 80% of mutants killed</td>
+</tr>
+<tr>
+<td><code>selectors.py</code></td>
+<td>85%</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>apis.py</code> and permissions</td>
+<td>85%</td>
+<td></td>
+<td>Every endpoint has at least one allow and one deny test</td>
+</tr>
+<tr>
+<td>Whole backend</td>
+<td>85%</td>
+<td></td>
+<td>Trend must not go down more than 0.5 point per pull request</td>
+</tr>
+<tr>
+<td>Migrations, settings, admin.py</td>
+<td>excluded</td>
+<td></td>
+<td>Covered by migration and smoke tests</td>
+</tr>
+</tbody></table>
+<p>Coverage is a floor, not a goal: a test without meaningful assertions does not count in review.</p>
+<h2 id="12-quality-gates-in-ci">12. Quality gates in CI</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Tool</th>
+<th>Blocks merge</th>
+<th>Blocks deploy</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Lint and format</td>
+<td>ruff</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Types</td>
+<td>mypy (strict on <code>core</code>, <code>ledger</code>, <code>pricing</code>, <code>bookings</code>)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>App boundaries</td>
+<td>import-linter</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Migrations</td>
+<td><code>makemigrations --check</code>, migration linter, migrate from zero</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Unit, service, API tests</td>
+<td>pytest with PostGIS</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Concurrency tests (short)</td>
+<td>pytest</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>coverage.py thresholds (section 11)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Rule traceability</td>
+<td><code>tests/traceability/check_rules.py</code> (section 13)</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>i18n completeness</td>
+<td>makemessages diff, compilemessages, error code registry test</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>OpenAPI valid + no unplanned breaking change</td>
+<td>spectacular, oasdiff</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Contract fuzzing</td>
+<td>schemathesis</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Frontend compile against API types</td>
+<td><code>tsc --noEmit</code> in both apps</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Dependency and secret scanning</td>
+<td>pip-audit, npm audit, gitleaks, bandit</td>
+<td>yes for high/critical</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Image scan</td>
+<td>Trivy</td>
+<td></td>
+<td>yes for critical</td>
+</tr>
+<tr>
+<td>Test mode off in production build</td>
+<td>build script check</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Nightly: long concurrency, full hypothesis, full schemathesis</td>
+<td>scheduled</td>
+<td>opens an issue</td>
+<td>blocks the next production deploy until fixed</td>
+</tr>
+<tr>
+<td>Weekly / pre-release: k6 performance</td>
+<td>scheduled on staging</td>
+<td></td>
+<td>yes before a major release if a target is missed</td>
+</tr>
+</tbody></table>
+<h2 id="13-traceability-every-rule-has-a-test">13. Traceability: every rule has a test</h2>
+<p><strong>Naming convention</strong>: the test function name starts with the rule ID in lower case with underscores, then a short description:</p>
+<pre><code class="lang-text">BR-PAY-04  -&gt;  test_br_pay_04_commission_posted_once_per_booking
+BR-AVL-01  -&gt;  test_br_avl_01_parallel_same_nights_only_one_succeeds
+BR-CAN-01  -&gt;  test_br_can_01_moderate_policy_half_refund_from_4_to_1_days
+BR-ACC-02  -&gt;  test_br_acc_02_sixth_attempt_with_right_code_fails</code></pre><p>A test that covers several rules carries extra markers: <code>@pytest.mark.rules(&quot;BR-PAY-05&quot;, &quot;BR-CAN-03&quot;)</code>. Requirements can be tagged the same way (<code>@pytest.mark.req(&quot;BKG-10&quot;)</code>) for the NFR and requirement report.</p>
+<p><strong>Checker</strong> (<code>tests/traceability/check_rules.py</code>, run in CI):</p>
+<ol>
+<li>Reads every rule ID from <a href="04-business-rules.html">04-business-rules.md</a> (pattern <code>BR-[A-Z]+-\d{2}</code>).</li>
+<li>Collects test names and <code>rules</code> markers with <code>pytest --collect-only</code>.</li>
+<li>Fails if a rule has no test, unless the rule is marked R2 or Later and listed in an allowlist file with a target release.</li>
+<li>Writes <code>traceability.csv</code> (rule, tests, files) as a CI artifact, so the product owner can see which tests protect which rule.</li>
+</ol>
+<p>Example of the report:</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Tests</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-AVL-01</td>
+<td><code>test_br_avl_01_exclusion_constraint_refuses_overlap_in_raw_sql</code>, <code>test_br_avl_01_parallel_same_nights_only_one_succeeds</code>, <code>test_br_avl_01_back_to_back_allowed</code></td>
+<td>DB, concurrency</td>
+</tr>
+<tr>
+<td>BR-PAY-02</td>
+<td><code>test_br_pay_02_unbalanced_transaction_fails_at_commit</code>, <code>test_br_pay_02_app_role_cannot_update_entries</code>, <code>test_br_pay_02_any_posting_sequence_balances</code></td>
+<td>DB, property</td>
+</tr>
+<tr>
+<td>BR-CAN-02</td>
+<td><code>test_br_can_02_example_8a_moderate_three_days_before</code></td>
+<td>service</td>
+</tr>
+<tr>
+<td>BR-SYS-01</td>
+<td><code>test_br_sys_01_same_key_same_body_returns_same_booking</code>, <code>test_br_sys_01_same_key_other_body_422</code>, <code>test_br_sys_01_concurrent_same_key_409</code></td>
+<td>API, concurrency</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Why do we never use SQLite for backend tests?</li>
+<li><input disabled="" type="checkbox"> Give one property that must hold for every refund, whatever the policy and dates.</li>
+<li><input disabled="" type="checkbox"> In the &quot;same nights&quot; concurrency test, what exactly must happen to the 49 losing requests?</li>
+<li><input disabled="" type="checkbox"> What does schemathesis do that hand-written API tests do not?</li>
+<li><input disabled="" type="checkbox"> How does the frontend find out at build time that an API field was removed?</li>
+<li><input disabled="" type="checkbox"> What must a test for rule BR-REV-01 be called, at minimum?</li>
+<li><input disabled="" type="checkbox"> Which performance scenario checks NFR-02, and what is its pass criterion?</li>
+<li><input disabled="" type="checkbox"> Name three items from the Definition of Done that concern personal data or languages.</li>
+</ul>
+<div class="pager"><span><a href="09-devops-hosting.html">&larr; 09. DevOps and hosting: where BLADUS runs and how we operate it</a></span><span><a href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend &rarr;</a></span></div></main></div></body></html>

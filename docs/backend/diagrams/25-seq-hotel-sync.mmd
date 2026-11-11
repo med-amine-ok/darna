@@ -1,0 +1,28 @@
+---
+title: Connecting a hotel's own system (DEC-017)
+---
+sequenceDiagram
+    autonumber
+    actor O as Hotel owner
+    participant W as Website (host mode)
+    participant A as Django API
+    participant X as Hotel system (channel manager or PMS)
+    participant J as Sync job
+    participant DB as PostgreSQL
+    O->>W: Chooses "Connect my hotel system", enters system and access key
+    W->>A: POST /host/integrations
+    A->>X: test call with the key
+    X-->>A: ok, property found
+    A->>DB: save connection (key encrypted), status active
+    A-)J: first import
+    J->>X: read room types, prices, availability, services
+    X-->>J: data
+    J->>DB: create or update room types, nights, services (marked as imported)
+    J->>DB: write sync log (what changed)
+    A-->>W: connection active, rooms and services listed
+    loop every 15 minutes
+        J->>X: read changes
+        J->>DB: update availability and prices
+    end
+    Note over A,X: a booking made on BLADUS lowers BLADUS availability at once and is sent to the hotel system when it accepts reservations
+    Note over J,DB: if a sync fails, the last good data stays and the connection is flagged for the hotel and the admin

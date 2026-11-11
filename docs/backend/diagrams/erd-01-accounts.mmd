@@ -13,6 +13,10 @@ erDiagram
         varchar_80 last_name_latin
         varchar_160 full_name_ar
         uuid avatar_media_id FK
+        text bio
+        varchar_2 spoken_languages
+        int home_commune_id FK
+        varchar_255 address_line
         varchar_2 preferred_locale
         char_2 nationality_iso2
         user_status status
@@ -56,6 +60,9 @@ erDiagram
         uuid trip_id FK
         timestamptz created_at
     }
+    commune {
+        uuid id PK
+    }
     listing {
         uuid id PK
     }
@@ -66,6 +73,7 @@ erDiagram
         uuid id PK
     }
     media_asset ||--o{ user : "avatar_media_id"
+    commune ||--o{ user : "home_commune_id"
     user ||--o| staff_profile : "user_id"
     user ||--o{ staff_profile : "invited_by_id"
     staff_permission ||--o{ staff_role_permission : "permission_code"

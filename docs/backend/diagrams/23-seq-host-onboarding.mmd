@@ -7,7 +7,7 @@ sequenceDiagram
     participant W as Website
     participant A as Django API
     participant S as Object storage
-    actor M as Moderator
+    actor M as Admin
     W->>A: GET /onboarding/flows/{host_type}
     U->>W: Fills the steps (draft saved on the server)
     W->>A: PUT /me/onboarding-drafts/{host_type}

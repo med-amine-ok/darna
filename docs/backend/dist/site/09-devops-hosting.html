@@ -1,0 +1,1161 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>09. DevOps and hosting: where BLADUS runs and how we operate it · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="on" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="09-devops-and-hosting-where-bladus-runs-and-how-we-operate-it">09. DevOps and hosting: where BLADUS runs and how we operate it</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>BLADUS runs in three places: your laptop (dev), a test copy with fake data (staging), and the real site (production).<br>Production and every copy of personal data live in Algerian data centres (ICOSNET or Djezzy Cloud), with backups in a second Algerian site. This follows our reading of Law 18-05 art. 8 and Law 18-07/25-11: <strong>VERIFY WITH A PROFESSIONAL</strong>.<br>We start simple: a few servers running Docker Compose. Every code change is checked automatically on GitHub (tests, types, API contract) before it can be deployed.<br>We can lose at most 15 minutes of data (RPO) and be back within 4 hours (RTO); a restore is practised every month.<br>This page also gives a rough monthly cost, step-by-step runbooks (deploy, rollback, incident, restore), and the list of settings each program needs.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see also <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Environment</strong>: one complete copy of the system (dev, staging, production) with its own data and secrets.</li>
+<li><strong>Container / image</strong>: an image is a packaged program with everything it needs; a container is a running copy of it. <strong>Docker Compose</strong> starts several containers from one file.</li>
+<li><strong>Reverse proxy</strong>: the front door server (Caddy) that receives HTTPS traffic and passes it to the right program.</li>
+<li><strong>TLS certificate</strong>: the file that makes <code>https://</code> work and proves the site&#39;s identity.</li>
+<li><strong>CDN</strong>: content delivery network, servers in many places that keep copies of static files close to users.</li>
+<li><strong>CI/CD</strong>: continuous integration (check every change automatically) and continuous delivery (deploy automatically after checks).</li>
+<li><strong>GitHub Actions</strong>: GitHub&#39;s service that runs these checks and deployments.</li>
+<li><strong>Migration</strong>: a versioned script that changes the database structure.</li>
+<li><strong>WAL / PITR</strong>: PostgreSQL writes every change first into a log (write-ahead log). Keeping that log lets us restore the database to any minute in the past: point-in-time recovery.</li>
+<li><strong>Replica</strong>: a second database server that continuously copies the main one.</li>
+<li><strong>RPO / RTO</strong>: recovery point objective (how much recent data we accept to lose) / recovery time objective (how long we accept to be down).</li>
+<li><strong>Observability</strong>: logs (what happened), metrics (numbers over time), traces and error reports, so we see problems before users report them.</li>
+<li><strong>Health check</strong>: a small URL that says &quot;I am alive&quot; (liveness) or &quot;I can serve requests&quot; (readiness).</li>
+<li><strong>Runbook</strong>: a written step-by-step procedure for an operation or an emergency.</li>
+<li><strong>Environment variable (env var)</strong>: a named setting given to a program when it starts (for example <code>DATABASE_URL</code>).</li>
+</ul>
+<p>Inputs: <a href="02-research.html">02-research.md</a> sections B.16, C.3, C.6; <a href="03-requirements.html">03-requirements.md</a> NFR-01 to NFR-13; <a href="05-database-schema.html">05-database-schema.md</a> section 7; <a href="07-architecture.html">07-architecture.md</a>; <a href="08-security-privacy.html">08-security-privacy.md</a>; diagram <a href="diagrams/rendered/02-containers.svg">02-containers</a>.</p>
+<hr>
+<h2 id="1-environments">1. Environments</h2>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Purpose</th>
+<th>Where</th>
+<th>Data</th>
+<th>Deploys</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>dev</strong></td>
+<td>Developer laptops</td>
+<td>Local Docker Compose</td>
+<td>Factories and demo seed only</td>
+<td>Manual</td>
+<td>Developer</td>
+</tr>
+<tr>
+<td><strong>ci</strong></td>
+<td>Automatic checks on every pull request</td>
+<td>GitHub Actions runners (temporary)</td>
+<td>Synthetic test data created by tests</td>
+<td>Every push</td>
+<td>Automatic</td>
+</tr>
+<tr>
+<td><strong>staging</strong></td>
+<td>Final check before production; demos; shadow-read migration of the apps (<a href="07-architecture.html">07-architecture.md</a> section 10.4)</td>
+<td>One server in Algeria (same provider as production, for parity)</td>
+<td>Synthetic data from the demo seed; <strong>never a copy of production</strong></td>
+<td>Automatic on merge to <code>main</code></td>
+<td>Team, testers, product owner</td>
+</tr>
+<tr>
+<td><strong>production</strong></td>
+<td>Real users</td>
+<td>Algerian data centre A (primary) + data centre B (backups, replica)</td>
+<td>Real personal data</td>
+<td>On a release tag, after manual approval</td>
+<td>Two named operators; staff use the admin app only</td>
+</tr>
+</tbody></table>
+<p>Rules: staging has its own secrets, own SMS sandbox (or a capped real account), and its email sends only to an allowlist of team addresses. Production data is never copied to dev, ci or staging (OWASP API9). For a bug that needs production data, a person with production access investigates inside production.</p>
+<h2 id="2-hosting-plan-algeria-first">2. Hosting plan (Algeria first)</h2>
+<p>All legal points: <strong>VERIFY WITH A PROFESSIONAL</strong> (L1, L2, L10 in <a href="13-decisions-needed.html">13-decisions-needed.md</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Site</th>
+<th>Provider (candidates)</th>
+<th>What runs there</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Data centre A</strong> (primary)</td>
+<td>ICOSNET Algiers (recommended in research C.6), or Djezzy Cloud</td>
+<td>Everything in production: proxy, Next.js apps, Django API, workers, PostgreSQL primary, Redis, object storage, ClamAV, monitoring</td>
+<td>Law 18-05 art. 8 points to hosting in Algeria; Law 18-07/25-11 restricts personal data transfers abroad</td>
+</tr>
+<tr>
+<td><strong>Data centre B</strong> (second site)</td>
+<td>ICOSNET Oran if A is ICOSNET Algiers; or Djezzy Cloud Béjaïa; ideally a different provider from A</td>
+<td>PostgreSQL streaming replica (warm standby), pgBackRest repository (PITR archive), nightly encrypted dumps, object storage replica of private and public buckets, audit anchors</td>
+<td>Survive the loss of site A; backups must also stay in Algeria (BR-PRV-04)</td>
+</tr>
+<tr>
+<td><strong>Staging</strong></td>
+<td>Same provider as A, separate account or project</td>
+<td>All-in-one server</td>
+<td>Parity of network, OS and latency</td>
+</tr>
+<tr>
+<td><strong>Outside Algeria</strong> (optional, flagged)</td>
+<td>Cloudflare or a European CDN; Hetzner for build caches</td>
+<td>Only non-personal assets: Next.js static JS/CSS, fonts, maybe public photo renditions without people. <strong>No API, no HTML pages with personal data, no backups</strong></td>
+<td>Faster static files; only after the lawyer answers L1 and L2. <strong>VERIFY</strong></td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td>GitHub (USA)</td>
+<td>Source code, CI on synthetic data, container images (no data, no secrets)</td>
+<td>Standard tooling; no personal data involved</td>
+</tr>
+</tbody></table>
+<p>Questions to ask the Algerian providers before signing (record answers in the ops repository): available VPS sizes and prices; dedicated servers; private network between servers; disk encryption; snapshots; S3-compatible object storage offer (if none, we run MinIO or Garage ourselves); bandwidth limits and international transit quality; IPv6; DDoS protection; SLA; support hours; site B availability with the same provider; data processing contract with data protection clauses.</p>
+<h2 id="3-container-layout-docker-compose-to-start">3. Container layout (Docker Compose to start)</h2>
+<p>One Docker image for the backend (<code>bladus-api</code>) used by the API, workers and beat with different commands; one image per Next.js app. Kubernetes is <strong>not</strong> needed at launch; revisit when we run more than about 6 servers or need automatic scaling.</p>
+<table>
+<thead>
+<tr>
+<th>Container</th>
+<th>Image / program</th>
+<th>Command or role</th>
+<th>Server (launch)</th>
+<th>Replicas</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>caddy</code></td>
+<td>Caddy 2</td>
+<td>TLS, HTTP/2 and HTTP/3, reverse proxy, coarse rate limits, security headers, access logs</td>
+<td>app</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>website</code></td>
+<td>Next.js (frontend)</td>
+<td><code>next start</code>; BFF for guests and hosts</td>
+<td>app</td>
+<td>2 (rolling deploys)</td>
+</tr>
+<tr>
+<td><code>admin</code></td>
+<td>Next.js (admin)</td>
+<td><code>next start</code>; staff BFF; reachable only from allowlisted IPs or VPN</td>
+<td>app</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td><code>bladus-api</code></td>
+<td><code>gunicorn config.wsgi</code> with sync workers (2 x CPU + 1), 30 s timeout</td>
+<td>app</td>
+<td>2</td>
+</tr>
+<tr>
+<td><code>worker-critical</code></td>
+<td><code>bladus-api</code></td>
+<td><code>celery worker -Q critical,default</code> (OTP, booking notifications, outbox)</td>
+<td>worker</td>
+<td>1 (concurrency 8)</td>
+</tr>
+<tr>
+<td><code>worker-media</code></td>
+<td><code>bladus-api</code></td>
+<td><code>celery worker -Q media</code> (images, documents), memory limit 2 GB</td>
+<td>worker</td>
+<td>1 (concurrency 2)</td>
+</tr>
+<tr>
+<td><code>worker-reports</code></td>
+<td><code>bladus-api</code></td>
+<td><code>celery worker -Q reports</code> (exports, invoices)</td>
+<td>worker</td>
+<td>1 (concurrency 1)</td>
+</tr>
+<tr>
+<td><code>beat</code></td>
+<td><code>bladus-api</code></td>
+<td><code>celery beat</code>; <strong>exactly one</strong> in the whole system</td>
+<td>worker</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>clamav</code></td>
+<td>ClamAV daemon</td>
+<td><code>clamd</code> + <code>freshclam</code> hourly</td>
+<td>worker</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>postgres</code></td>
+<td>PostgreSQL 17 + PostGIS 3.5</td>
+<td>Primary database, <code>pg_stat_statements</code> on</td>
+<td>db</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>pgbouncer</code></td>
+<td>PgBouncer</td>
+<td>Connection pooling, transaction mode</td>
+<td>db</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>pgbackrest</code></td>
+<td>pgBackRest</td>
+<td>WAL archiving and backups to site B</td>
+<td>db</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>postgres-replica</code></td>
+<td>PostgreSQL 17 + PostGIS</td>
+<td>Streaming replica, read-only reports</td>
+<td>site B</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>redis</code></td>
+<td>Redis 7</td>
+<td>db 0 broker, db 1 cache, db 2 limits and OTP; AOF on; password; TLS</td>
+<td>app (move to its own server when needed)</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>minio</code> (or <code>garage</code>)</td>
+<td>S3-compatible storage</td>
+<td>Buckets <code>public</code>, <code>private</code>, <code>quarantine</code>, <code>exports</code>; only if the provider has no S3 offer in Algeria</td>
+<td>storage</td>
+<td>1 (+ replica at site B)</td>
+</tr>
+<tr>
+<td><code>prometheus</code>, <code>alertmanager</code>, <code>grafana</code></td>
+<td>Monitoring</td>
+<td>Metrics, alerts, dashboards</td>
+<td>monitoring</td>
+<td>1 each</td>
+</tr>
+<tr>
+<td><code>node-exporter</code>, <code>postgres-exporter</code>, <code>redis-exporter</code>, <code>celery-exporter</code>, <code>caddy</code> metrics</td>
+<td>Exporters</td>
+<td>Expose metrics</td>
+<td>every server</td>
+<td>1 each</td>
+</tr>
+<tr>
+<td><code>glitchtip</code> (+ its own Postgres and Redis)</td>
+<td>Sentry-compatible error tracking, self-hosted</td>
+<td>Errors from Django, Celery, both Next.js apps</td>
+<td>monitoring</td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>loki</code> + <code>promtail</code> (or <code>vector</code>)</td>
+<td>Log storage and shipping</td>
+<td>JSON logs searchable 90 days</td>
+<td>monitoring</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>Servers at launch (production): <strong>app</strong>, <strong>worker</strong>, <strong>db</strong>, <strong>storage</strong>, <strong>monitoring</strong> at site A; <strong>backup/replica</strong> at site B. Staging runs all containers on one server with smaller limits. The dev <code>compose.yaml</code> runs <code>postgres</code>, <code>redis</code>, <code>minio</code>, <code>clamav</code>, <code>api</code>, one worker, <code>beat</code> and Mailpit (fake email inbox).</p>
+<h2 id="4-domains-and-dns">4. Domains and DNS</h2>
+<table>
+<thead>
+<tr>
+<th>Name (proposal)</th>
+<th>Points to</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bladus.com.dz</code> and <code>www.bladus.com.dz</code></td>
+<td>Caddy at site A</td>
+<td>Website (guests and hosts)</td>
+</tr>
+<tr>
+<td><code>admin.bladus.com.dz</code></td>
+<td>Caddy at site A, IP allowlist</td>
+<td>Admin app</td>
+</tr>
+<tr>
+<td><code>hooks.bladus.com.dz</code></td>
+<td>Caddy, routes only <code>/api/v1/webhooks/*</code> to Django</td>
+<td>Payment gateway webhooks (R2)</td>
+</tr>
+<tr>
+<td><code>media.bladus.com.dz</code></td>
+<td>Storage (public bucket) through Caddy or CDN</td>
+<td>Public photo renditions</td>
+</tr>
+<tr>
+<td><code>static.bladus.com.dz</code></td>
+<td>Caddy or CDN</td>
+<td>Next.js static files (optional; Next.js can serve them itself)</td>
+</tr>
+<tr>
+<td><code>console.bladus.com.dz</code></td>
+<td>Caddy, VPN only</td>
+<td>Django admin console (staff, MFA, read-mostly)</td>
+</tr>
+<tr>
+<td><code>status.bladus.com.dz</code></td>
+<td>Outside the main infrastructure</td>
+<td>Public status page</td>
+</tr>
+</tbody></table>
+<ul>
+<li><code>.com.dz</code> registration goes through the Algerian registry (NIC.dz, run by CERIST) and normally requires a registered company (RC). Law 18-05 art. 8 mentions <code>.com.dz</code> for e-commerce. <strong>VERIFY WITH A PROFESSIONAL</strong> (L1, L11 in <a href="13-decisions-needed.html">13-decisions-needed.md</a>). Also register <code>bladus.dz</code> if available and <code>bladus.com</code> to protect the brand; redirect them to the main name.</li>
+<li>The Django API has <strong>no public host name</strong>: only the Next.js servers reach it on the private network (BFF, <a href="07-architecture.html">07-architecture.md</a> section 10).</li>
+<li>Email: send from <code>notify.bladus.com.dz</code> with SPF, DKIM and DMARC (<code>p=quarantine</code>, then <code>reject</code>).</li>
+<li>DNS with two providers or a provider with anycast; low TTL (300 s) on records we may switch during an incident.</li>
+</ul>
+<h2 id="5-tls">5. TLS</h2>
+<ul>
+<li>Caddy obtains and renews certificates automatically with ACME (Let&#39;s Encrypt; ZeroSSL as fallback). If the <code>.com.dz</code> registry or provider requires another certificate authority, use that one (VERIFY).</li>
+<li>TLS 1.2 and 1.3 only; HSTS on after two weeks of stable HTTPS, then <code>includeSubDomains</code> and <code>preload</code>.</li>
+<li>Internal traffic: TLS from Caddy to Next.js is optional on the same server; <strong>required</strong> between servers (Django to PostgreSQL with <code>verify-full</code>, Redis TLS, storage HTTPS) using a small internal certificate authority (step-ca) or provider private network plus TLS.</li>
+</ul>
+<h2 id="6-cdn">6. CDN</h2>
+<ul>
+<li><strong>Launch without a foreign CDN.</strong> Next.js serves its static files with long cache headers (<code>immutable</code>), Caddy compresses (zstd, gzip), public photos are served from the storage server through Caddy with <code>Cache-Control: public, max-age=31536000, immutable</code> (keys are random and never reused).</li>
+<li>If measurements show slow images or static files for users far from site A, options in order: (1) a second Caddy cache in another Algerian city; (2) Cloudflare or another CDN <strong>only</strong> for <code>static.</code> and <code>media.</code>, after the lawyer confirms public photos and static files are not personal data subject to residency (VERIFY). Never route the website HTML, the admin or the API through a foreign CDN, because the CDN would decrypt personal data.</li>
+</ul>
+<h2 id="7-cicd-on-github-actions">7. CI/CD on GitHub Actions</h2>
+<h3 id="71-pipelines">7.1 Pipelines</h3>
+<table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>Trigger</th>
+<th>Jobs (in order)</th>
+<th>Blocks merge or deploy?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>backend-ci.yml</code></td>
+<td>Every pull request and push</td>
+<td>1. <strong>Lint</strong>: <code>ruff check</code>, <code>ruff format --check</code>. 2. <strong>Types</strong>: <code>mypy</code> with django-stubs and djangorestframework-stubs. 3. <strong>Architecture</strong>: <code>lint-imports</code> (import-linter layer contracts). 4. <strong>Migrations</strong>: <code>makemigrations --check --dry-run</code>, migration linter, migrate from zero. 5. <strong>Tests</strong>: <code>pytest</code> with a <strong>PostGIS service container</strong> (<code>postgis/postgis:17-3.5</code>) and Redis service; coverage gates (<a href="10-testing-quality.html">10-testing-quality.md</a> section 11). 6. <strong>Traceability</strong>: every BR rule has a test. 7. <strong>Security</strong>: <code>pip-audit</code>, <code>bandit</code>, <code>gitleaks</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>contract.yml</code></td>
+<td>Every pull request</td>
+<td>1. Generate <code>openapi.yaml</code> with <code>spectacular --validate --fail-on-warn</code>. 2. <strong>OpenAPI diff</strong> against <code>main</code> with <code>oasdiff breaking</code>; a breaking change fails unless the PR has the <code>api-breaking</code> label and a <code>/v2</code> plan. 3. Start the API with seed data and run <strong>schemathesis</strong> (all endpoints, stateful links). 4. Generate TypeScript types and run <code>tsc --noEmit</code> in <code>frontend/</code> and <code>admin/</code> against them</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>frontend-ci.yml</code> / <code>admin-ci.yml</code></td>
+<td>Changes under <code>frontend/</code> or <code>admin/</code></td>
+<td><code>npm ci</code>, <code>next lint</code>, <code>tsc --noEmit</code>, unit tests, Playwright smoke tests (admin already has Playwright), <code>npm audit --omit=dev</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>build.yml</code></td>
+<td>Merge to <code>main</code>, tags</td>
+<td>Build images (<code>bladus-api</code>, <code>bladus-website</code>, <code>bladus-admin</code>) with build args; <strong>refuse the website production build unless <code>NEXT_PUBLIC_BLADUS_TEST_MODE=0</code></strong>; Trivy image scan (fail on critical); SBOM; push to GitHub Container Registry with the commit SHA tag</td>
+<td>Yes for deploy</td>
+</tr>
+<tr>
+<td><code>deploy-staging.yml</code></td>
+<td>After <code>build.yml</code> on <code>main</code></td>
+<td>Deploy to staging (runbook 11.1), run smoke tests, run k6 smoke (1 minute)</td>
+<td>Yes for production</td>
+</tr>
+<tr>
+<td><code>deploy-prod.yml</code></td>
+<td>Release tag <code>vYYYY.MM.DD.N</code></td>
+<td>Manual approval by one of two named approvers (GitHub environment protection), then runbook 11.1 on production, smoke tests, automatic rollback on failure</td>
+<td></td>
+</tr>
+<tr>
+<td><code>nightly.yml</code></td>
+<td>Every night</td>
+<td>Concurrency test suite with repeats, full schemathesis run, dependency scan, k6 performance run against staging (weekly)</td>
+<td>Opens an issue on failure</td>
+</tr>
+</tbody></table>
+<h3 id="72-how-deployment-reaches-algeria">7.2 How deployment reaches Algeria</h3>
+<p>The deploy job runs on a <strong>self-hosted GitHub Actions runner</strong> inside the private network at site A (one for staging, one for production, separate machines). It only pulls signed images and runs Compose commands; it holds no database passwords (those are on the servers, decrypted from the secret store at deploy time). Alternative: a bastion host with SSH deploy keys restricted to one command.</p>
+<h2 id="8-database-operations">8. Database operations</h2>
+<h3 id="81-migrations-policy">8.1 Migrations policy</h3>
+<ol>
+<li><strong>Expand, then contract.</strong> A release may only add things (columns nullable or with a constant default, new tables, new indexes). Removing or renaming happens in a later release, after no running code uses the old name. This keeps the previous app version working, so rollback never needs a down-migration.</li>
+<li>Large indexes use <code>AddIndexConcurrently</code> in a non-atomic migration; constraints on large tables are added <code>NOT VALID</code> then validated separately.</li>
+<li>Every migration sets <code>lock_timeout = 5s</code>; if it cannot get the lock it fails instead of freezing the site.</li>
+<li>Data migrations are separate from schema migrations and must be safe to run twice; big backfills run as Celery jobs in batches, not inside migrations.</li>
+<li>Migrations run as a <strong>one-off container</strong> (<code>manage.py migrate</code>) before the new app containers start, using the <code>bladus_migrate</code> role. The app role cannot change the schema.</li>
+<li>A pgBackRest incremental backup is taken right before any release that contains a migration flagged <code>risky</code> in review.</li>
+<li>Squash migrations only once a year, never across a release still deployed somewhere.</li>
+</ol>
+<h3 id="82-backups-pitr-and-replica">8.2 Backups, PITR and replica</h3>
+<table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Tool</th>
+<th>Frequency</th>
+<th>Kept</th>
+<th>Target (NFR-04)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>WAL archive</td>
+<td>pgBackRest, <code>archive_timeout = 60 s</code>, repository at site B, encrypted (<code>repo-cipher-type = aes-256-cbc</code>)</td>
+<td>continuous</td>
+<td>7 days of PITR</td>
+<td>RPO 15 min (expected: about 1 min)</td>
+</tr>
+<tr>
+<td>Full + differential backups</td>
+<td>pgBackRest</td>
+<td>full weekly (Sunday 02:00), differential daily</td>
+<td>2 full cycles</td>
+<td>base for PITR</td>
+</tr>
+<tr>
+<td>Streaming replica</td>
+<td>PostgreSQL physical replication to site B</td>
+<td>continuous</td>
+<td>live</td>
+<td>fast failover, RTO 4 h</td>
+</tr>
+<tr>
+<td>Logical dump</td>
+<td><code>pg_dump -Fc</code>, encrypted with <strong>age</strong> before leaving the server</td>
+<td>nightly 01:00</td>
+<td>35 daily, 12 monthly</td>
+<td>protection against logical mistakes and tool bugs</td>
+</tr>
+<tr>
+<td>Object storage</td>
+<td>MinIO bucket replication (or provider replication) to site B; versioning on private buckets</td>
+<td>continuous</td>
+<td>30 days of versions</td>
+<td>documents and photos</td>
+</tr>
+<tr>
+<td>Secrets and keys</td>
+<td>Offline copies of the backup decryption key and field encryption master key, held by two people</td>
+<td>on change</td>
+<td>always</td>
+<td>without them backups are useless</td>
+</tr>
+</tbody></table>
+<p>All backup copies stay in Algeria (BR-PRV-04). Backup jobs report a &quot;last success&quot; metric; an alert fires if older than 26 hours (dumps) or 10 minutes (WAL archive).</p>
+<h3 id="83-monthly-restore-drill">8.3 Monthly restore drill</h3>
+<p>On the first Tuesday of each month: restore the latest full backup plus WAL to a scratch server at site B to a chosen time 1 hour earlier; run <code>manage.py check</code>, row counts, <code>ledger.reconcile_balances</code> and <code>audit.verify_hash_chain</code> on the copy; open 3 random private documents from the storage replica; record the time taken (must be under 4 hours) and the result in the drill log; destroy the scratch server. A failed drill is a high-priority incident.</p>
+<h3 id="84-routine-care">8.4 Routine care</h3>
+<p><code>pg_stat_statements</code> reviewed weekly (top 20 queries by total time, compared with the query plan targets in <a href="05-database-schema.html">05-database-schema.md</a> section 7); autovacuum tuned for hot tables (<code>room_type_night</code>, <code>outbox_event</code>, <code>notification</code>); minor PostgreSQL updates monthly, major upgrades yearly with a rehearsal in staging; disk alerts at 70% and 85%.</p>
+<h2 id="9-observability">9. Observability</h2>
+<h3 id="91-logs">9.1 Logs</h3>
+<ul>
+<li><strong>structlog</strong> writes one JSON object per line to stdout; Promtail or Vector ships them to Loki (in Algeria), searchable 90 days, archived 1 year.</li>
+<li>Fields on every API log line: <code>ts</code>, <code>level</code>, <code>event</code>, <code>request_id</code>, <code>user_id</code>, <code>host_account_id</code>, <code>staff</code> (boolean), <code>method</code>, <code>route</code> (pattern, not raw path), <code>status</code>, <code>duration_ms</code>, <code>db_queries</code>, <code>db_ms</code>, <code>ip_prefix</code> (IPv4 /24 for analytics; full IP only in the audit log), <code>app_version</code>. Celery lines add <code>task</code>, <code>task_id</code>, <code>queue</code>, <code>attempt</code>.</li>
+<li><strong>Never logged</strong>: passwords, OTP codes, session tokens, <code>Authorization</code> or <code>X-Session-Token</code> headers, ID numbers, payout numbers, message bodies, full phone numbers or emails (masked as <code>+213 5** ** ** 12</code>). A scrubbing processor enforces this and has its own tests.</li>
+</ul>
+<h3 id="92-errors">9.2 Errors</h3>
+<p>GlitchTip (Sentry-compatible, self-hosted in Algeria) with the Sentry SDKs in Django, Celery and both Next.js apps; <code>send_default_pii = False</code>; request bodies and headers scrubbed; release and environment tags; source maps uploaded for the Next.js apps but not served publicly.</p>
+<h3 id="93-metrics">9.3 Metrics</h3>
+<p>Prometheus scrapes every 15 s. Key metrics:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Source</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>http_request_duration_seconds{route,method,status}</code> (histogram)</td>
+<td>django-prometheus</td>
+<td>NFR-01, NFR-02 latency</td>
+</tr>
+<tr>
+<td><code>bladus_booking_create_total{result}</code> (<code>confirmed</code>, <code>pending</code>, <code>conflict</code>, <code>price_changed</code>, <code>error</code>)</td>
+<td>app</td>
+<td>Booking health, double-booking attempts</td>
+</tr>
+<tr>
+<td><code>bladus_outbox_pending</code>, <code>bladus_outbox_oldest_age_seconds</code>, <code>bladus_outbox_failed</code></td>
+<td>app (scraped from DB by a collector)</td>
+<td>Notifications delayed</td>
+</tr>
+<tr>
+<td><code>celery_queue_length{queue}</code>, <code>celery_task_failed_total{task}</code></td>
+<td>celery-exporter</td>
+<td>Background work</td>
+</tr>
+<tr>
+<td><code>bladus_beat_heartbeat_timestamp</code></td>
+<td><code>core.heartbeat</code> task every minute</td>
+<td>Beat is alive</td>
+</tr>
+<tr>
+<td><code>bladus_otp_sent_total{channel,provider}</code>, <code>bladus_sms_spend_dzd_today</code></td>
+<td>app</td>
+<td>SMS pumping, budget</td>
+</tr>
+<tr>
+<td><code>bladus_login_failures_total</code>, <code>bladus_lockouts_total</code></td>
+<td>app</td>
+<td>Attacks</td>
+</tr>
+<tr>
+<td><code>bladus_ledger_reconcile_mismatch</code></td>
+<td><code>ledger.reconcile_balances</code></td>
+<td>Money correctness</td>
+</tr>
+<tr>
+<td><code>bladus_audit_chain_ok</code></td>
+<td><code>audit.verify_hash_chain</code></td>
+<td>Tamper evidence</td>
+</tr>
+<tr>
+<td><code>bladus_backup_last_success_timestamp{kind}</code></td>
+<td>backup scripts</td>
+<td>NFR-04</td>
+</tr>
+<tr>
+<td><code>pg_replication_lag_seconds</code>, <code>pg_stat_activity_count</code>, <code>pg_database_size_bytes</code></td>
+<td>postgres-exporter</td>
+<td>Database health</td>
+</tr>
+<tr>
+<td><code>redis_memory_used_bytes</code>, evictions</td>
+<td>redis-exporter</td>
+<td>Cache and limits</td>
+</tr>
+<tr>
+<td>Node CPU, memory, disk, network</td>
+<td>node-exporter</td>
+<td>Capacity</td>
+</tr>
+</tbody></table>
+<h3 id="94-health-checks">9.4 Health checks</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Checks</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/internal/healthz</code> (Django)</td>
+<td>Process answers</td>
+<td>Container restart policy</td>
+</tr>
+<tr>
+<td><code>/internal/readyz</code> (Django)</td>
+<td><code>SELECT 1</code> on PostgreSQL through PgBouncer, Redis <code>PING</code>, storage bucket reachable, no unapplied migrations</td>
+<td>Caddy upstream health, deploy smoke test</td>
+</tr>
+<tr>
+<td><code>/api/health</code> (each Next.js app)</td>
+<td>Process answers and can reach Django <code>readyz</code></td>
+<td>Caddy, deploy</td>
+</tr>
+<tr>
+<td>Celery</td>
+<td><code>celery inspect ping</code> + beat heartbeat age</td>
+<td>Monitoring</td>
+</tr>
+<tr>
+<td>External</td>
+<td>Uptime probe from outside the provider (website home, login page, one search) every minute</td>
+<td>Status page, alerts</td>
+</tr>
+</tbody></table>
+<h3 id="95-alerts">9.5 Alerts</h3>
+<table>
+<thead>
+<tr>
+<th>Alert</th>
+<th>Condition</th>
+<th>Severity</th>
+<th>First action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Site down</td>
+<td>External probe fails 3 times in a row</td>
+<td>critical</td>
+<td>Incident runbook 11.3</td>
+</tr>
+<tr>
+<td>API slow</td>
+<td>p95 read latency &gt; 300 ms or booking create &gt; 600 ms for 10 min (NFR-01)</td>
+<td>high</td>
+<td>Check DB, recent deploy</td>
+</tr>
+<tr>
+<td>Search slow</td>
+<td>p95 search &gt; 500 ms for 10 min (NFR-02)</td>
+<td>high</td>
+<td><code>pg_stat_statements</code>, indexes</td>
+</tr>
+<tr>
+<td>Error rate</td>
+<td>5xx &gt; 1% of requests for 5 min</td>
+<td>critical</td>
+<td>GlitchTip, rollback if after a deploy</td>
+</tr>
+<tr>
+<td>Outbox stuck</td>
+<td>Oldest pending event &gt; 5 min, or any <code>failed</code></td>
+<td>high</td>
+<td>Worker logs, provider status</td>
+</tr>
+<tr>
+<td>Beat stopped</td>
+<td>Heartbeat older than 3 min</td>
+<td>critical</td>
+<td>Restart beat (only one!)</td>
+</tr>
+<tr>
+<td>Queue backlog</td>
+<td><code>critical</code> queue &gt; 100 for 5 min</td>
+<td>high</td>
+<td>Scale worker, check provider</td>
+</tr>
+<tr>
+<td>SMS spend</td>
+<td>80% of daily budget</td>
+<td>high</td>
+<td>Check for pumping; at 100% non-critical SMS stop automatically</td>
+</tr>
+<tr>
+<td>Login attack</td>
+<td>Lockouts &gt; 50 in 10 min</td>
+<td>high</td>
+<td>Block IP ranges at Caddy</td>
+</tr>
+<tr>
+<td>Ledger mismatch</td>
+<td><code>bladus_ledger_reconcile_mismatch &gt; 0</code></td>
+<td>critical</td>
+<td>Freeze top-ups; finance and tech lead investigate</td>
+</tr>
+<tr>
+<td>Audit chain broken</td>
+<td><code>bladus_audit_chain_ok == 0</code></td>
+<td>critical</td>
+<td>Security incident; preserve evidence</td>
+</tr>
+<tr>
+<td>Backup late</td>
+<td>WAL archive &gt; 10 min or nightly dump &gt; 26 h</td>
+<td>critical</td>
+<td>Fix before anything else (RPO at risk)</td>
+</tr>
+<tr>
+<td>Replica lag</td>
+<td>&gt; 60 s for 10 min</td>
+<td>high</td>
+<td>Network to site B, disk</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>&gt; 85% on any server</td>
+<td>high</td>
+<td>Expand or clean</td>
+</tr>
+<tr>
+<td>Certificate</td>
+<td>Expires in &lt; 14 days</td>
+<td>high</td>
+<td>Check Caddy renewal</td>
+</tr>
+<tr>
+<td>Restore drill</td>
+<td>Not recorded this month by day 10</td>
+<td>medium</td>
+<td>Schedule it</td>
+</tr>
+</tbody></table>
+<p>Alerts go to a team chat channel and, for critical ones, by SMS to the on-call person (through a different provider than the user SMS, so a provider outage does not hide its own alert).</p>
+<h2 id="10-capacity-and-cost-rough-verify-with-quotes">10. Capacity and cost (rough, VERIFY WITH QUOTES)</h2>
+<p><strong>Capacity basis</strong>: NFR-01 (50 requests per second on one app node, p95 300 ms reads), NFR-02 (search p95 500 ms with 20,000 listings), and the two-year growth estimate in <a href="05-database-schema.html">05-database-schema.md</a> section 7 (fits one PostgreSQL primary with 8 vCPU / 32 GB). Expected launch traffic is far below these numbers; the sizes below leave headroom and can start smaller.</p>
+<p><strong>Prices are rough planning numbers, not quotes.</strong> Only &quot;ICOSNET from 2,800 DZD/month per VPS&quot; comes from research (C.6, [secondary]); other lines are estimates by analogy. Exchange rate assumed <strong>1 EUR = 150 DZD</strong> (official rate order of magnitude; VERIFY at the time of purchase).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Size (launch)</th>
+<th>DZD per month</th>
+<th>EUR per month</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>App server (Caddy, 2 x website, admin, 2 x API, Redis)</td>
+<td>8 vCPU, 16 GB RAM, 160 GB SSD</td>
+<td>25,000 to 45,000</td>
+<td>165 to 300</td>
+</tr>
+<tr>
+<td>Worker server (Celery queues, beat, ClamAV)</td>
+<td>4 vCPU, 8 GB, 80 GB</td>
+<td>12,000 to 25,000</td>
+<td>80 to 165</td>
+</tr>
+<tr>
+<td>Database server (PostgreSQL primary, PgBouncer, pgBackRest)</td>
+<td>8 vCPU, 32 GB, 500 GB SSD</td>
+<td>40,000 to 80,000</td>
+<td>265 to 535</td>
+</tr>
+<tr>
+<td>Storage server (MinIO, if no provider S3)</td>
+<td>2 vCPU, 4 GB, 2 TB disk</td>
+<td>15,000 to 35,000</td>
+<td>100 to 235</td>
+</tr>
+<tr>
+<td>Monitoring server (Prometheus, Grafana, Loki, GlitchTip)</td>
+<td>4 vCPU, 8 GB, 200 GB</td>
+<td>10,000 to 20,000</td>
+<td>65 to 135</td>
+</tr>
+<tr>
+<td>Site B: replica + backup repository + storage replica</td>
+<td>8 vCPU, 32 GB, 3 TB</td>
+<td>35,000 to 70,000</td>
+<td>235 to 465</td>
+</tr>
+<tr>
+<td>Staging (all-in-one)</td>
+<td>8 vCPU, 16 GB, 200 GB</td>
+<td>15,000 to 30,000</td>
+<td>100 to 200</td>
+</tr>
+<tr>
+<td>SMS (assume 10,000 per month; local aggregator 3 to 8 DZD each, prices not published, VERIFY; Twilio about USD 0.27)</td>
+<td></td>
+<td>30,000 to 80,000</td>
+<td>200 to 535</td>
+</tr>
+<tr>
+<td>Email (transactional, provider in Algeria or self-hosted relay, VERIFY)</td>
+<td></td>
+<td>0 to 5,000</td>
+<td>0 to 35</td>
+</tr>
+<tr>
+<td>Domains (<code>.com.dz</code>, <code>.dz</code>, <code>.com</code>), yearly cost spread</td>
+<td></td>
+<td>500 to 1,500</td>
+<td>3 to 10</td>
+</tr>
+<tr>
+<td>GitHub (Team plan, about 5 users)</td>
+<td></td>
+<td>2,500 to 4,000</td>
+<td>17 to 27</td>
+</tr>
+<tr>
+<td>TLS certificates (ACME)</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>Total per month</strong></td>
+<td></td>
+<td><strong>about 185,000 to 395,000</strong></td>
+<td><strong>about 1,230 to 2,640</strong></td>
+</tr>
+<tr>
+<td>One-off: external penetration test before launch</td>
+<td></td>
+<td>600,000 to 1,500,000</td>
+<td>4,000 to 10,000</td>
+</tr>
+<tr>
+<td>One-off: legal review (privacy, e-commerce, hosting)</td>
+<td></td>
+<td>quote needed</td>
+<td>quote needed</td>
+</tr>
+</tbody></table>
+<p>Ways to start cheaper: merge worker and monitoring onto the app server for the first months (saves about 25,000 DZD); use email or WhatsApp codes before SMS where users accept it (SMS is the largest variable cost); keep staging off outside working hours.</p>
+<p>When to grow: second API server when CPU &gt; 60% at peak for a week; Redis on its own server when memory &gt; 2 GB; read replica for search when DB CPU &gt; 60% at peak; external search only per <a href="07-architecture.html">07-architecture.md</a> section 7.</p>
+<h2 id="11-runbooks">11. Runbooks</h2>
+<h3 id="111-deploy">11.1 Deploy</h3>
+<ol>
+<li>Check: CI green on the commit; release notes list migrations and flags; no open critical alert; not Thursday evening or Friday (Algerian weekend starts Friday; avoid deploying before it).</li>
+<li>Announce in the team channel with the release tag.</li>
+<li>Runner pulls images for the tag and verifies their digests.</li>
+<li>If the release has a <code>risky</code> migration: trigger a pgBackRest incremental backup and wait for success.</li>
+<li>Run the migration container (<code>manage.py migrate --noinput</code>) with the <code>bladus_migrate</code> role. On failure: stop here (nothing else changed); open an incident if the site is affected.</li>
+<li>Rolling update of <code>api</code>: start the new container, wait for <code>/internal/readyz</code>, remove one old container from Caddy, stop it gracefully (30 s), repeat.</li>
+<li>Restart workers with warm shutdown (<code>SIGTERM</code>, tasks finish), then start new ones. Restart <code>beat</code> last, making sure only one runs.</li>
+<li>Rolling update of <code>website</code> and <code>admin</code> the same way.</li>
+<li>Smoke tests: home page in 3 languages, search with dates, listing detail, login, host dashboard (staging account), admin login with MFA (staging only), <code>/internal/readyz</code>.</li>
+<li>Watch dashboards 15 minutes (error rate, latency, outbox). Announce success.</li>
+</ol>
+<h3 id="112-rollback">11.2 Rollback</h3>
+<ol>
+<li>Decide fast: a new error rate above 1% or a broken key flow after a deploy means rollback first, analysis later.</li>
+<li>Redeploy the previous image tag with steps 6 to 9 of 11.1. <strong>Do not</strong> run down-migrations: the expand-then-contract rule keeps the previous code compatible with the new schema.</li>
+<li>If the bad release changed data (wrong postings, wrong statuses), stop the affected jobs (feature flag or scale the worker to 0), then write correcting transactions through services (ledger: reversing transactions). Never edit rows by hand.</li>
+<li>If a migration itself destroyed data (should be impossible under the policy): restore to a scratch server with PITR to the minute before the migration and copy back the affected rows with a reviewed script (runbook 11.4).</li>
+<li>Write a short incident note.</li>
+</ol>
+<h3 id="113-incident">11.3 Incident</h3>
+<ol>
+<li><strong>Detect</strong>: alert or user report. The on-call person acknowledges within 15 minutes (business hours) or 30 minutes (night).</li>
+<li><strong>Declare</strong>: open an entry in the incident register with severity (SEV1 site down or data at risk; SEV2 key feature broken; SEV3 degraded). Name one incident lead.</li>
+<li><strong>Communicate</strong>: status page updated within 30 minutes for SEV1/SEV2 in en, fr, ar; staff informed in the admin app banner.</li>
+<li><strong>Stabilise</strong>: rollback (11.2), switch off a feature flag, block abusive traffic at Caddy, scale workers, or fail over (step 5).</li>
+<li><strong>Failover to site B</strong> (site A lost or database primary lost for more than 30 minutes): promote the replica at site B; switch DNS (TTL 300 s) to site B&#39;s proxy; start app, worker and beat containers there from the same images; verify <code>readyz</code>, the ledger reconcile and the audit chain; keep site A isolated until repaired, then rebuild it as the new replica. Target total time under 4 hours (RTO).</li>
+<li><strong>Personal data involved?</strong> Start the breach runbook in <a href="08-security-privacy.html">08-security-privacy.md</a> section 12.7 at once: the 5-day ANPDP clock starts at discovery.</li>
+<li><strong>Close</strong>: when stable for 1 hour. Within 5 working days: blameless review (timeline, cause, what worked, actions with owners and dates).</li>
+</ol>
+<h3 id="114-restore-data-loss-or-corruption">11.4 Restore (data loss or corruption)</h3>
+<ol>
+<li>Freeze writes if corruption is spreading: put the platform in maintenance mode (<code>maintenance_mode</code> setting; the website shows a notice; staff read-only).</li>
+<li>Identify the target time (just before the bad event) from logs, <code>booking_event</code>, <code>audit_event</code>.</li>
+<li>Restore with pgBackRest to a <strong>scratch</strong> server at site B to that time (<code>--type=time --target=...</code>). Never restore over the live primary first.</li>
+<li>Verify on the scratch copy: row counts, ledger reconcile, audit chain up to the target time, sample bookings.</li>
+<li>Choose: (a) <strong>partial repair</strong>: export the affected rows from the scratch copy and re-apply them through a reviewed script or services (preferred, keeps later good data); (b) <strong>full restore</strong>: replace the primary with the restored copy (loses everything after the target time; users must be told; bookings after that time must be rebuilt from emails and logs).</li>
+<li>For object storage: restore object versions from the site B replica.</li>
+<li>Lift maintenance mode, monitor, record the restore in the drill/incident log. If personal data was lost or exposed, apply the breach runbook.</li>
+</ol>
+<h2 id="12-environment-variables-names-and-purpose-only">12. Environment variables (names and purpose only)</h2>
+<p>No values here. Real values live in the secret store (<a href="08-security-privacy.html">08-security-privacy.md</a> section 7). Typed and validated at start by pydantic-settings (<code>config/env.py</code>); a missing required value stops the program.</p>
+<h3 id="121-django-api-workers-and-beat">12.1 Django API, workers and beat</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>BLADUS_ENV</code></td>
+<td><code>dev</code>, <code>ci</code>, <code>staging</code> or <code>production</code>; selects defaults and safety checks</td>
+</tr>
+<tr>
+<td><code>DJANGO_SETTINGS_MODULE</code></td>
+<td>Settings module for the environment</td>
+</tr>
+<tr>
+<td><code>DJANGO_SECRET_KEY</code> / <code>DJANGO_SECRET_KEY_FALLBACKS</code></td>
+<td>Django signing key, and old keys accepted during rotation</td>
+</tr>
+<tr>
+<td><code>DJANGO_ALLOWED_HOSTS</code></td>
+<td>Host names Django answers to (private names only)</td>
+</tr>
+<tr>
+<td><code>TRUSTED_PROXY_IPS</code></td>
+<td>Addresses allowed to set <code>X-Forwarded-For</code> (Caddy, BFFs)</td>
+</tr>
+<tr>
+<td><code>BFF_SERVICE_KEY_WEBSITE</code> / <code>BFF_SERVICE_KEY_ADMIN</code></td>
+<td>Service keys checked on requests from each Next.js server</td>
+</tr>
+<tr>
+<td><code>DATABASE_URL</code></td>
+<td>PostgreSQL connection through PgBouncer, app role</td>
+</tr>
+<tr>
+<td><code>DATABASE_MIGRATE_URL</code></td>
+<td>Connection with the migration role (migration container only)</td>
+</tr>
+<tr>
+<td><code>DATABASE_REPLICA_URL</code></td>
+<td>Read-only replica for reports and exports</td>
+</tr>
+<tr>
+<td><code>DB_STATEMENT_TIMEOUT_MS</code> / <code>DB_LOCK_TIMEOUT_MS</code></td>
+<td>Database time limits (<a href="07-architecture.html">07-architecture.md</a> section 3)</td>
+</tr>
+<tr>
+<td><code>REDIS_URL</code></td>
+<td>Redis for cache (db 1)</td>
+</tr>
+<tr>
+<td><code>CELERY_BROKER_URL</code></td>
+<td>Redis for Celery (db 0)</td>
+</tr>
+<tr>
+<td><code>RATELIMIT_REDIS_URL</code></td>
+<td>Redis for rate limits, OTP counters, locks (db 2)</td>
+</tr>
+<tr>
+<td><code>S3_ENDPOINT_URL</code></td>
+<td>Object storage address (in Algeria)</td>
+</tr>
+<tr>
+<td><code>S3_ACCESS_KEY_ID</code> / <code>S3_SECRET_ACCESS_KEY</code></td>
+<td>Object storage credentials</td>
+</tr>
+<tr>
+<td><code>S3_BUCKET_PUBLIC</code> / <code>S3_BUCKET_PRIVATE</code> / <code>S3_BUCKET_QUARANTINE</code> / <code>S3_BUCKET_EXPORTS</code></td>
+<td>Bucket names</td>
+</tr>
+<tr>
+<td><code>MEDIA_PUBLIC_BASE_URL</code></td>
+<td>Base URL for public photo renditions</td>
+</tr>
+<tr>
+<td><code>PRESIGNED_URL_TTL_SECONDS</code></td>
+<td>Lifetime of upload and private download links (300)</td>
+</tr>
+<tr>
+<td><code>CLAMAV_HOST</code> / <code>CLAMAV_PORT</code></td>
+<td>Antivirus daemon address</td>
+</tr>
+<tr>
+<td><code>FIELD_ENCRYPTION_KEYS</code></td>
+<td>Versioned master keys for envelope encryption of payout numbers</td>
+</tr>
+<tr>
+<td><code>ID_HASH_PEPPER</code></td>
+<td>Secret for HMAC of ID numbers and recipient hashes</td>
+</tr>
+<tr>
+<td><code>SMS_PROVIDER</code> / <code>SMS_API_KEY</code> / <code>SMS_SENDER_ID</code></td>
+<td>Main SMS provider (local aggregator)</td>
+</tr>
+<tr>
+<td><code>SMS_FALLBACK_PROVIDER</code> / <code>SMS_FALLBACK_API_KEY</code></td>
+<td>Fallback SMS provider (transfer abroad: VERIFY)</td>
+</tr>
+<tr>
+<td><code>SMS_DAILY_BUDGET_DZD</code> / <code>SMS_MONTHLY_BUDGET_DZD</code></td>
+<td>SMS spending caps (NFR-11)</td>
+</tr>
+<tr>
+<td><code>EMAIL_BACKEND</code> / <code>EMAIL_HOST</code> / <code>EMAIL_PORT</code> / <code>EMAIL_HOST_USER</code> / <code>EMAIL_HOST_PASSWORD</code> / <code>EMAIL_USE_TLS</code></td>
+<td>Outgoing email</td>
+</tr>
+<tr>
+<td><code>DEFAULT_FROM_EMAIL</code></td>
+<td>Sender address (<code>no-reply@notify.bladus.com.dz</code>)</td>
+</tr>
+<tr>
+<td><code>STAGING_EMAIL_ALLOWLIST</code></td>
+<td>Staging only: addresses allowed to receive email</td>
+</tr>
+<tr>
+<td><code>SENTRY_DSN</code> / <code>SENTRY_ENVIRONMENT</code> / <code>SENTRY_RELEASE</code></td>
+<td>Error tracking (GlitchTip)</td>
+</tr>
+<tr>
+<td><code>LOG_LEVEL</code> / <code>LOG_JSON</code></td>
+<td>Logging level and format</td>
+</tr>
+<tr>
+<td><code>PROMETHEUS_MULTIPROC_DIR</code></td>
+<td>Shared folder for metrics from several Gunicorn workers</td>
+</tr>
+<tr>
+<td><code>GUNICORN_WORKERS</code> / <code>GUNICORN_TIMEOUT</code></td>
+<td>API process tuning</td>
+</tr>
+<tr>
+<td><code>CELERY_WORKER_CONCURRENCY</code></td>
+<td>Worker tuning per container</td>
+</tr>
+<tr>
+<td><code>NOMINATIM_URL</code> / <code>NOMINATIM_USER_AGENT</code></td>
+<td>Address lookup service (server-side, cached, 1 request per second)</td>
+</tr>
+<tr>
+<td><code>MONEY_MODEL</code></td>
+<td><code>M1</code> at launch; other models stay off until legal approval (BR-PAY-11)</td>
+</tr>
+<tr>
+<td><code>CHARGILY_API_KEY</code> / <code>CHARGILY_WEBHOOK_SECRET</code></td>
+<td>Payment gateway (R2 only)</td>
+</tr>
+<tr>
+<td><code>AUDIT_ANCHOR_EMAILS</code></td>
+<td>Who receives the daily audit hash anchor</td>
+</tr>
+<tr>
+<td><code>TIME_ZONE_BUSINESS</code></td>
+<td><code>Africa/Algiers</code> (business dates; storage stays UTC)</td>
+</tr>
+</tbody></table>
+<p>Business settings (commission rates, request TTL, credit limits, maintenance mode, feature flags) are <strong>not</strong> environment variables: they live in the versioned <code>platform_settings</code> table (BR-CFG-01).</p>
+<h3 id="122-website-nextjs">12.2 Website (Next.js)</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>BLADUS_API_URL</code></td>
+<td>Private address of the Django API (server-only)</td>
+</tr>
+<tr>
+<td><code>BFF_SERVICE_KEY</code></td>
+<td>This app&#39;s service key for Django (server-only)</td>
+</tr>
+<tr>
+<td><code>BLADUS_SESSION_COOKIE_KEY</code> / <code>BLADUS_SESSION_COOKIE_KEY_PREVIOUS</code></td>
+<td>Encryption key for the session cookie, and the previous key during rotation (replaces <code>DARNA_SESSION_SECRET</code>)</td>
+</tr>
+<tr>
+<td><code>BLADUS_API_MODULES</code></td>
+<td>Server-only list of <code>lib/data</code> modules served by the API instead of mock data (migration flag)</td>
+</tr>
+<tr>
+<td><code>BLADUS_SHADOW_MODULES</code></td>
+<td>Staging: modules running in shadow-read mode</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_SITE_URL</code></td>
+<td>Public origin for canonical URLs, sitemap, Open Graph</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_BLADUS_TEST_MODE</code></td>
+<td>Demo test mode. <strong>Must be <code>0</code> in production and any environment with real data</strong>; the build refuses otherwise</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_MEDIA_BASE_URL</code></td>
+<td>Base URL of public photos</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_MAP_TILES_URL</code></td>
+<td>Map tiles (OpenFreeMap, with attribution)</td>
+</tr>
+<tr>
+<td><code>SENTRY_DSN</code> / <code>NEXT_PUBLIC_SENTRY_DSN</code></td>
+<td>Error tracking, server and browser (browser DSN is not a secret)</td>
+</tr>
+</tbody></table>
+<h3 id="123-admin-nextjs">12.3 Admin (Next.js)</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>BLADUS_API_URL</code></td>
+<td>Private address of the Django API</td>
+</tr>
+<tr>
+<td><code>BFF_SERVICE_KEY</code></td>
+<td>Admin service key for Django</td>
+</tr>
+<tr>
+<td><code>ADMIN_SESSION_COOKIE_KEY</code> / <code>ADMIN_SESSION_COOKIE_KEY_PREVIOUS</code></td>
+<td>Encryption key for the staff cookie (replaces <code>ADMIN_AUTH_SECRET</code>)</td>
+</tr>
+<tr>
+<td><code>ADMIN_IDLE_TIMEOUT_MINUTES</code></td>
+<td>Fallback idle timeout if settings are unreachable (30)</td>
+</tr>
+<tr>
+<td><code>BLADUS_API_MODULES</code></td>
+<td>Migration flag, as for the website</td>
+</tr>
+<tr>
+<td><code>NEXT_PUBLIC_FRONTEND_URL</code></td>
+<td>Public website origin (for &quot;view public page&quot; links)</td>
+</tr>
+<tr>
+<td><code>SENTRY_DSN</code></td>
+<td>Error tracking</td>
+</tr>
+</tbody></table>
+<p>The current <code>ADMIN_SEED_*</code> variables (mock staff passwords) disappear when the admin <code>auth</code> module moves to the API; staff accounts are then created by invitation (STF-02).</p>
+<h3 id="124-operations">12.4 Operations</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PGBACKREST_REPO1_HOST</code> / <code>PGBACKREST_REPO1_CIPHER_PASS</code></td>
+<td>Backup repository at site B and its encryption passphrase</td>
+</tr>
+<tr>
+<td><code>BACKUP_AGE_RECIPIENT</code></td>
+<td>Public key used to encrypt nightly dumps (the private key is offline)</td>
+</tr>
+<tr>
+<td><code>REPLICATION_PASSWORD</code></td>
+<td>Password of the replication role</td>
+</tr>
+<tr>
+<td><code>MINIO_ROOT_USER</code> / <code>MINIO_ROOT_PASSWORD</code></td>
+<td>Storage administrator (if self-hosted)</td>
+</tr>
+<tr>
+<td><code>GRAFANA_ADMIN_PASSWORD</code></td>
+<td>Monitoring administrator</td>
+</tr>
+<tr>
+<td><code>ALERT_SMS_PROVIDER_KEY</code> / <code>ALERT_CHAT_WEBHOOK_URL</code></td>
+<td>Where alerts are sent</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Why is staging never filled with a copy of production data?</li>
+<li><input disabled="" type="checkbox"> Which data may live outside Algeria, under which condition, and who must confirm it?</li>
+<li><input disabled="" type="checkbox"> Which container must run exactly once, and what happens if two run?</li>
+<li><input disabled="" type="checkbox"> A release removes a column. Why must the removal wait for a later release?</li>
+<li><input disabled="" type="checkbox"> What gives us an RPO of 15 minutes, and what gives us an RTO of 4 hours?</li>
+<li><input disabled="" type="checkbox"> What do we check during the monthly restore drill?</li>
+<li><input disabled="" type="checkbox"> Which pipeline step refuses a website build with test mode on?</li>
+<li><input disabled="" type="checkbox"> Where do commission rates live: environment variables or the database? Why?</li>
+</ul>
+<div class="pager"><span><a href="08-security-privacy.html">&larr; 08. Security and privacy</a></span><span><a href="10-testing-quality.html">10. Testing and quality &rarr;</a></span></div></main></div></body></html>

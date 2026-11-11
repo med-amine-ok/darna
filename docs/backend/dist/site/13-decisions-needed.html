@@ -1,0 +1,646 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>13. Decisions needed: who must decide what, and by when · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="on" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="13-decisions-needed-who-must-decide-what-and-by-when">13. Decisions needed: who must decide what, and by when</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Building the backend needs some answers we cannot invent: product choices, legal checks, tax rules and technical picks.<br>This page lists every decision still open, grouped by who decides: you (product owner), a lawyer, an accountant or bank, and the tech lead.<br>For each one: the options, our recommendation, the milestone it blocks, and what happens if nobody decides.<br>Decisions already taken (DEC-001 to DEC-015) are repeated first so you can see the whole picture.<br>Legal and tax items are questions, not advice: VERIFY WITH A PROFESSIONAL.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Decision</strong>: a choice that changes what we build. Once taken it gets a DEC number in <a href="03-requirements.html">03-requirements.md</a> section 2.</li>
+<li><strong>Deadline (blocks)</strong>: the roadmap milestone (<a href="11-roadmap.html">11-roadmap.md</a>) that cannot finish without the answer.</li>
+<li><strong>Default</strong>: what we build if nobody answers by the deadline. Every default here can be changed later by a setting or a data change unless marked &quot;costly to change&quot;.</li>
+<li><strong>Setting</strong>: a value in <code>platform_settings</code> that staff can change without new code.</li>
+<li><strong>PSP</strong>: payment service provider (a licensed company allowed to move other people&#39;s money).</li>
+<li><strong>ANPDP</strong>: Algeria&#39;s personal data protection authority.</li>
+</ul>
+<p>IDs: Q (product) and L (legal) and F (finance) come from <a href="14-open-questions.html">14-open-questions.md</a>. T (tech lead) items are new on this page.</p>
+<hr>
+<h2 id="1-decisions-already-made-for-reference">1. Decisions already made (for reference)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DEC-001</td>
+<td>Money model M1: prepaid commission; guests pay hosts directly; ledger ready for M2 to M4</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-002</td>
+<td>Commission base = accommodation subtotal (nights x price after discount), no cleaning fee or taxes; trips and experiences: seats x price</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-003</td>
+<td>New listings and trips need staff review before publication</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-004</td>
+<td>One person can be an individual host and an organisation member, with an active-organisation switcher</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-005</td>
+<td>Hotel is its own search vertical, counted in the home family for analytics</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-006</td>
+<td>Trips are their own tables with departures</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-007</td>
+<td>Keep the 12-step individual onboarding</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-008</td>
+<td>Request-to-book reply window 24 h, as a setting</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-009</td>
+<td>In an organisation, owner, admin and manager may answer requests</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-010</td>
+<td>Host earnings count at completion</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-011</td>
+<td>Three cancellation policies (flexible, moderate, strict) stored as time windows</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-012</td>
+<td>Guests verify their phone before the first booking</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-013</td>
+<td>Show 69 wilayas (codes 59 to 69 to confirm)</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-014</td>
+<td>Individuals publish homes and vehicles; agencies experiences and trips; hotels and hostels their property</td>
+<td>2026-11-04</td>
+</tr>
+<tr>
+<td>DEC-015</td>
+<td>8 experience types and 8 trip types, one shared list</td>
+<td>2026-11-04</td>
+</tr>
+</tbody></table>
+<p>Technical choices already taken in research: R-1 to R-11 in <a href="02-research.html">02-research.md</a> section E (Django 6.1 + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless; database-enforced availability; centimes and double-entry ledger; polling for messages; PostgreSQL search).</p>
+<hr>
+<h2 id="2-summary">2. Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Who decides</th>
+<th>Count</th>
+<th>Earliest deadline</th>
+<th>Most urgent</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Product owner</td>
+<td>15 (Q14 to Q28)</td>
+<td>M0</td>
+<td>Q22 foreign phone numbers, Q28 verticals at launch</td>
+</tr>
+<tr>
+<td>Lawyer</td>
+<td>16 (L1 to L16)</td>
+<td>end of M5 (L1, L2)</td>
+<td><strong>L1, L2</strong> hosting and data transfer</td>
+</tr>
+<tr>
+<td>Accountant or bank</td>
+<td>7 (F1 to F7)</td>
+<td>M4 (F5 to F7)</td>
+<td>F5 to F7 how to record and receipt deposits</td>
+</tr>
+<tr>
+<td>Tech lead</td>
+<td>11 (T1 to T11, T5 already closed)</td>
+<td>M0</td>
+<td>T1 hosting, T3 mock-to-API switch</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>49 (48 still open)</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-product-owner">3. Product owner</h2>
+<p>Q14 to Q20 are the proposals already built into the schema (Phase 5); the default is the proposal. Q21 to Q28 are new (found while planning).</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Options</th>
+<th>Recommendation</th>
+<th>Deadline (blocks)</th>
+<th>If no decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q14</td>
+<td>How far below zero may a host&#39;s commission deposit go before instant booking switches off?</td>
+<td>(a) 0 DZD; (b) 20,000 DZD for every host type; (c) per host type (e.g. individual 10,000, agency/hotel/hostel 50,000)</td>
+<td>(c), starting at 20,000 for all, per host type in settings (BR-PAY-10)</td>
+<td>M4</td>
+<td>20,000 DZD for all; changeable by setting</td>
+</tr>
+<tr>
+<td>Q15</td>
+<td>Above which top-up amount must a second finance person approve?</td>
+<td>(a) never; (b) 500,000 DZD; (c) every top-up</td>
+<td>(b) 500,000 DZD (BR-PAY-07)</td>
+<td>M4</td>
+<td>500,000 DZD; changeable by setting</td>
+</tr>
+<tr>
+<td>Q16</td>
+<td>Hostels: own vertical shown under the &quot;Hotels&quot; search tab?</td>
+<td>(a) own vertical under Hotels tab; (b) a hotel subtype; (c) own tab</td>
+<td>(a) (ADR-005)</td>
+<td>M2</td>
+<td>(a); changing later needs a data migration (costly to change)</td>
+</tr>
+<tr>
+<td>Q17</td>
+<td>One room type per booking at launch (several rooms of that type allowed)?</td>
+<td>(a) one type per booking; (b) mixed types in one booking</td>
+<td>(a); mixed in a later release (ADR-003)</td>
+<td>M3</td>
+<td>(a)</td>
+</tr>
+<tr>
+<td>Q18</td>
+<td>Can a host withdraw unused deposit money, and how fast?</td>
+<td>(a) no withdrawals; (b) on request, paid within 7 days after the 72 h hold; (c) only when the host leaves BLADUS</td>
+<td>(c) at launch, (b) after L3 confirms it is not a payment service</td>
+<td>M4 (withdrawal flow only)</td>
+<td>(c): withdrawal only on closing the host account, handled manually by finance</td>
+</tr>
+<tr>
+<td>Q19</td>
+<td>Minimum number of photos</td>
+<td>(a) 5 for homes, 3 per room type; (b) 3 for all; (c) none</td>
+<td>(a) (BR-MED-01)</td>
+<td>M2</td>
+<td>(a); a setting</td>
+</tr>
+<tr>
+<td>Q20</td>
+<td>Penalty when a host cancels</td>
+<td>(a) none; (b) moderation case after 3 cancellations in 12 months; (c) fee</td>
+<td>(b), no fee (BR-CAN-03)</td>
+<td>M4</td>
+<td>(b)</td>
+</tr>
+<tr>
+<td>Q21</td>
+<td><strong>New.</strong> Launch geography: all 69 wilayas or a few pilot wilayas?</td>
+<td>(a) all 69; (b) pilot (e.g. Algiers, Oran, Constantine, Béjaïa, Tizi Ouzou, Ghardaïa, Tamanrasset); (c) all, but marketing in pilots only</td>
+<td>(c): no code limit, beta hosts recruited in pilot wilayas</td>
+<td>M7 (beta recruitment)</td>
+<td>(a) with no focus; beta harder to staff</td>
+</tr>
+<tr>
+<td>Q22</td>
+<td><strong>New.</strong> How do guests without an Algerian mobile verify (diaspora, foreigners)? DEC-012 and BR-ACC-01 only accept <code>+213[5-7]</code></td>
+<td>(a) Algerian mobile only; (b) any international mobile by SMS (higher cost and fraud); (c) email code for non-Algerian numbers plus stricter booking limits</td>
+<td>(c)</td>
+<td>M0 (sign-up)</td>
+<td>(a): diaspora guests cannot book (risk K-28)</td>
+</tr>
+<tr>
+<td>Q23</td>
+<td><strong>New.</strong> Public launch date relative to the baccalaureate exams (internet cuts, usually June) and the summer season</td>
+<td>(a) first week of June 2027, before the exams; (b) early July 2027, after the exams; (c) September</td>
+<td>(b): closed beta in late May and June, public launch early July at the start of the summer season</td>
+<td>M6 (to plan beta and marketing)</td>
+<td>Launch falls in exam weeks; poor first impression (risk K-17)</td>
+</tr>
+<tr>
+<td>Q24</td>
+<td><strong>New.</strong> Who moderates at launch, and what review time do we promise hosts?</td>
+<td>(a) 1 moderator, 2 working days; (b) 2 moderators, 1 working day; (c) outsourced</td>
+<td>(b) during the beta and first 3 months</td>
+<td>M2</td>
+<td>Queues grow, hosts give up (risk K-22)</td>
+</tr>
+<tr>
+<td>Q25</td>
+<td><strong>New.</strong> Must a host top up a first deposit before going live, or before instant booking?</td>
+<td>(a) no, credit floor only; (b) first deposit before instant booking; (c) first deposit before publishing</td>
+<td>(a) to grow supply, with the credit floor of Q14</td>
+<td>M4</td>
+<td>(a)</td>
+</tr>
+<tr>
+<td>Q26</td>
+<td><strong>New.</strong> Is a short request reply window (24 h) right for agencies whose trips depart weeks later?</td>
+<td>(a) 24 h for all; (b) per host type setting; (c) per listing</td>
+<td>(b): keep 24 h default, allow 48 h for agencies</td>
+<td>M4</td>
+<td>(a) for all</td>
+</tr>
+<tr>
+<td>Q27</td>
+<td><strong>New.</strong> Support channels and hours at launch</td>
+<td>(a) email and in-app only; (b) plus phone line; (c) plus WhatsApp Business</td>
+<td>(c) WhatsApp Business with templates, office hours 9:00 to 18:00 Sunday to Thursday, on-call for safety issues</td>
+<td>M7</td>
+<td>No clear channel; scams handled late</td>
+</tr>
+<tr>
+<td>Q28</td>
+<td><strong>New.</strong> Which verticals open at launch?</td>
+<td>(a) all six (homes, hotels, hostels, experiences, vehicles, trips); (b) stays and trips first, vehicles and experiences later; (c) homes only</td>
+<td>(a) if L5 and the vehicle rules (L4) allow; otherwise switch the blocked vertical off by setting</td>
+<td>M2</td>
+<td>(a), with a legal risk for verticals whose rules are unclear</td>
+</tr>
+</tbody></table>
+<h2 id="4-lawyer-verify-with-a-professional">4. Lawyer (VERIFY WITH A PROFESSIONAL)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Options</th>
+<th>Recommendation (engineering view)</th>
+<th>Deadline (blocks)</th>
+<th>If no decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L1</td>
+<td>Does Law 18-05 art. 8 (&quot;hosted in Algeria&quot;, <code>.com.dz</code>) apply to BLADUS as an intermediary, and to the API server too?</td>
+<td>(a) yes, everything in Algeria; (b) only the public website; (c) does not apply</td>
+<td>Plan for (a)</td>
+<td><strong>End of M5</strong> (hosting contract), hard gate M7</td>
+<td>We host everything in Algeria anyway (safe default, higher ops cost)</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>Does storing personal data or backups abroad need ANPDP authorisation (Law 18-07 / 25-11)? Which declarations before launch?</td>
+<td>(a) all data and backups in Algeria; (b) abroad with authorisation</td>
+<td>(a), and file the declarations before M7</td>
+<td><strong>End of M5</strong>, hard gate M7</td>
+<td>No real personal data can be processed: launch blocked</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>Is collecting guest money and paying hosts a payment service (Règlement 25-02)? Is the prepaid deposit model safe, including deposit withdrawals?</td>
+<td>(a) M1 safe, withdrawals safe; (b) M1 safe, withdrawals only on closure; (c) partner bank or PSP needed</td>
+<td>Confirm (a) or (b) for MVP; (c) for M2 to M4</td>
+<td>M4 for withdrawals (Q18); LATER for PAY-10</td>
+<td>Withdrawals only on account closure; PAY-10 stays off</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>Which documents must each host type provide (individual home, chez l&#39;habitant, agency, hotel, hostel, vehicle rental, guide)?</td>
+<td>List per host type</td>
+<td>Draft list from <a href="02-research.html">02-research.md</a> C3.5, confirmed by the lawyer</td>
+<td>Draft by end of M1, final before M7</td>
+<td>Draft list used for real hosts: compliance risk (K-04)</td>
+</tr>
+<tr>
+<td>L5</td>
+<td>Is whole-home short-term rental legal for individuals, and what must BLADUS check?</td>
+<td>(a) legal with checks; (b) only &quot;chez l&#39;habitant&quot;; (c) not allowed</td>
+<td>Ask for the list of checks</td>
+<td>M7</td>
+<td>Individual home vertical may need to be switched off by setting</td>
+</tr>
+<tr>
+<td>L6</td>
+<td>Duty to declare foreign guests (Law 08-11 art. 29): whose duty, what must BLADUS store?</td>
+<td>(a) host&#39;s duty, BLADUS reminds; (b) BLADUS must store and transmit</td>
+<td>(a) with nationality captured only when needed</td>
+<td>R2-B (PRV-06); earlier if (b)</td>
+<td>Host reminder text only</td>
+</tr>
+<tr>
+<td>L7</td>
+<td>Retention periods for IDs, bookings, messages, invoices. Is a DPO required?</td>
+<td>Periods per data type</td>
+<td>ID images 90 days after decision; accounting 10 years; messages 2 years after last booking</td>
+<td>M6 (retention jobs)</td>
+<td>Proposed periods used (BR-PRV-05)</td>
+</tr>
+<tr>
+<td>L8</td>
+<td><strong>New.</strong> Terms of use, host terms and privacy notice texts in ar/fr/en, versioned for consent records</td>
+<td>Lawyer drafts or reviews our draft</td>
+<td>Lawyer reviews our draft</td>
+<td>M6 (consent versions live before beta)</td>
+<td>No valid terms at beta: launch blocked</td>
+</tr>
+<tr>
+<td>L9</td>
+<td><strong>New.</strong> Does BLADUS itself need a tourism registration or travel agency licence (Law 99-06, Décret 17-161) because it sells agency trips and experiences?</td>
+<td>(a) no, pure intermediary; (b) licence needed; (c) only if BLADUS takes payment</td>
+<td>Ask; keep BLADUS out of the money flow for trips (M1)</td>
+<td>M7</td>
+<td>Trips vertical may need to be switched off at launch</td>
+</tr>
+<tr>
+<td>L10</td>
+<td><strong>New.</strong> Do foreign service providers that touch personal data (transactional email, international SMS fallback, error tracking, uptime monitoring) count as transfer abroad?</td>
+<td>(a) yes, all need authorisation; (b) allowed with contract clauses; (c) allowed for some data types</td>
+<td>Assume (a); use Algerian or self-hosted services where possible (T8)</td>
+<td>M6</td>
+<td>We self-host or use Algerian providers only (higher cost)</td>
+</tr>
+<tr>
+<td>L11</td>
+<td><strong>New.</strong> Company formalities before launch: commerce register activity code for an online marketplace, CNRC e-commerce registration, <code>.com.dz</code> domain holder</td>
+<td>Checklist</td>
+<td>Lawyer provides the checklist in M0</td>
+<td>M7</td>
+<td>Launch blocked by missing registration</td>
+</tr>
+<tr>
+<td>L12</td>
+<td><strong>New.</strong> Does the booking flow meet Law 18-05 art. 10 to 13 (offer content, 3-step order: review, confirm, contract) for both instant and request bookings?</td>
+<td>(a) current flow is enough; (b) changes needed</td>
+<td>Ask with screenshots of the flow</td>
+<td>M6</td>
+<td>Risk of a non-compliant checkout; late UI changes</td>
+</tr>
+<tr>
+<td>L13</td>
+<td><strong>New (from 08).</strong> Exact content, addressee and start of the 5-day breach notification clock; duty to inform affected users</td>
+<td>(a) clock starts at detection; (b) at confirmation</td>
+<td>Ask for the official ANPDP procedure and template</td>
+<td>M6</td>
+<td>Runbook timing may be wrong in a real breach</td>
+</tr>
+<tr>
+<td>L14</td>
+<td><strong>New (from 08).</strong> Legal basis for each processing in the register (contract, consent, legal obligation, legitimate interest as recognised by Law 18-07)</td>
+<td>per processing line in 08 section 12.2</td>
+<td>Lawyer reviews the register table line by line</td>
+<td>M6</td>
+<td>Register incomplete at the ANPDP declaration</td>
+</tr>
+<tr>
+<td>L15</td>
+<td><strong>New (from 08).</strong> Deadlines to answer access, correction and deletion requests, and which identity checks are allowed first</td>
+<td>(a) 30 days; (b) shorter legal deadline</td>
+<td>Use 30 days until confirmed</td>
+<td>M6</td>
+<td>Requests answered late</td>
+</tr>
+<tr>
+<td>L16</td>
+<td><strong>New (from 08).</strong> May BLADUS publish a reviewer&#39;s first name and the host&#39;s name without separate consent?</td>
+<td>(a) yes under the terms; (b) separate consent; (c) initials only</td>
+<td>(c) initials until answered</td>
+<td>M6</td>
+<td>Possible complaint from a reviewer</td>
+</tr>
+</tbody></table>
+<h2 id="5-accountant-or-bank-verify-with-a-professional">5. Accountant or bank (VERIFY WITH A PROFESSIONAL)</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Options</th>
+<th>Recommendation (engineering view)</th>
+<th>Deadline (blocks)</th>
+<th>If no decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F1</td>
+<td>VAT on BLADUS commission: 19% or 9% (tourism)? Who issues which invoice?</td>
+<td>19%; 9% until end of 2027; depends on host type</td>
+<td>Store the VAT rate per invoice line so either works</td>
+<td>R2-A (PAY-11)</td>
+<td>Invoices not issued; R2-A blocked</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>Taxe de séjour: does BLADUS collect it or only show it?</td>
+<td>(a) show only, host pays; (b) BLADUS collects</td>
+<td>(a) for M1</td>
+<td>R2-A (PRC-04)</td>
+<td>Tax lines stay hidden</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>Chargily or SlickPay: contract terms, settlement delays, amount units in their APIs</td>
+<td>Chargily first, SlickPay second (R-7)</td>
+<td>Sign Chargily; test amount units in sandbox</td>
+<td>R2-A (PAY-06); paperwork starts M6</td>
+<td>Online top-up delayed</td>
+</tr>
+<tr>
+<td>F4</td>
+<td>Invoice numbering and retention for commission invoices</td>
+<td>Yearly sequence without gaps; 10 years</td>
+<td>As BR-PAY-12</td>
+<td>R2-A (PAY-11)</td>
+<td>Invoices not issued</td>
+</tr>
+<tr>
+<td>F5</td>
+<td><strong>New.</strong> Before PAY-11 (R2), what must BLADUS give a host at launch for each top-up and each commission deducted: a receipt, a monthly statement, or a full invoice?</td>
+<td>(a) receipt per top-up and monthly statement; (b) invoice from day one</td>
+<td>Ask; (b) would move PAY-11 into the MVP</td>
+<td>M4</td>
+<td>Hosts get only the wallet history (PAY-08); possible non-compliance</td>
+</tr>
+<tr>
+<td>F6</td>
+<td><strong>New.</strong> Accounting treatment of the prepaid deposit: customer advance (liability) until commission is deducted, then revenue? When is VAT due?</td>
+<td>(a) liability then revenue at deduction; (b) revenue at top-up</td>
+<td>(a), which matches the ledger accounts (BR-PAY-03)</td>
+<td>M4</td>
+<td>Ledger accounts may need renaming; reports wrong</td>
+</tr>
+<tr>
+<td>F7</td>
+<td><strong>New.</strong> Which bank or CCP account receives host top-ups, and in what format can we get statements for daily reconciliation?</td>
+<td>Bank account; CCP account; both</td>
+<td>Both, with CSV statements</td>
+<td>M4 (account opened before M7)</td>
+<td>Manual reconciliation only (risk K-07)</td>
+</tr>
+</tbody></table>
+<h2 id="6-tech-lead">6. Tech lead</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Decision</th>
+<th>Options</th>
+<th>Recommendation</th>
+<th>Deadline (blocks)</th>
+<th>If no decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>T1</td>
+<td>Production hosting provider in Algeria (staging can be anywhere with demo data)</td>
+<td>ICOSNET; Djezzy Cloud; another Algerian data centre</td>
+<td>Trial ICOSNET and Djezzy Cloud on staging in M1 to M4; sign by end of M5</td>
+<td>Staging: M0. Production: end of M5 (blocks M7)</td>
+<td>No production environment in time; launch slips</td>
+</tr>
+<tr>
+<td>T2</td>
+<td>Where the backend code lives</td>
+<td>(a) <code>backend/</code> folder in this repository (monorepo); (b) separate repository</td>
+<td>(a): one pull request can change API and both apps; shared CI</td>
+<td>M0</td>
+<td>Developers start in different places; merge pain</td>
+</tr>
+<tr>
+<td>T3</td>
+<td>Mock-to-API switch mechanism and demo data identity</td>
+<td>(a) per-module env flag <code>DATA_SOURCE_&lt;MODULE&gt;</code> on the Next.js server + API seeded with the same demo cast and a map from old IDs to UUIDs; (b) big-bang switch; (c) per-function flags</td>
+<td>(a)</td>
+<td>M0</td>
+<td>Big-bang switch late in the plan (risk K-13)</td>
+</tr>
+<tr>
+<td>T4</td>
+<td>How the two Next.js servers hold the Django session</td>
+<td>(a) allauth headless app tokens stored in an httpOnly cookie on the Next.js server; (b) Django session cookie shared on a common domain; (c) JWT</td>
+<td>(a): revocable server-side (ACC-03)</td>
+<td>M0</td>
+<td>Sign-in cannot ship</td>
+</tr>
+<tr>
+<td>T5</td>
+<td>Small schema gaps found while planning</td>
+<td><strong>Closed on 2026-11-09</strong>: <code>incident_record</code>, <code>calendar_feed</code> and <code>otp_send_log</code> were added to <code>schema.dbml</code></td>
+<td>Done</td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>T6</td>
+<td>Object storage and virus scanning in Algeria</td>
+<td>(a) MinIO self-hosted + ClamAV; (b) provider S3-compatible storage if offered</td>
+<td>(a) unless the chosen provider offers (b) in Algeria</td>
+<td>M1 (documents)</td>
+<td>KYC upload blocked</td>
+</tr>
+<tr>
+<td>T7</td>
+<td>Text search in Arabic, French and English</td>
+<td>(a) PostgreSQL unaccent + trigram + Arabic normalisation + place-name alias table; (b) self-hosted Meilisearch</td>
+<td>(a) (R-11), with a 50-query test set; revisit (b) if the zero-result rate stays high</td>
+<td>M3</td>
+<td>Weak Arabic search (risk K-15)</td>
+</tr>
+<tr>
+<td>T8</td>
+<td>Third-party processors that see personal data</td>
+<td>Email: Algerian SMTP relay or self-hosted vs Resend/Brevo; SMS: local aggregator + fallback; errors: self-hosted GlitchTip/Sentry vs SaaS; uptime: self-hosted</td>
+<td>Prefer Algerian or self-hosted for anything with personal data; final list reviewed by the lawyer (L10)</td>
+<td>M0 (interfaces), M6 (final providers)</td>
+<td>Data transfer risk (K-02)</td>
+</tr>
+<tr>
+<td>T9</td>
+<td>Typed API client for both apps</td>
+<td>(a) openapi-typescript + openapi-fetch; (b) orval; (c) hand-written</td>
+<td>(a): small, no runtime magic</td>
+<td>M0</td>
+<td>Drift between API and apps</td>
+</tr>
+<tr>
+<td>T10</td>
+<td>Second location for backups and restore drills</td>
+<td>(a) second Algerian provider; (b) second data centre of the same provider; (c) abroad (needs L2)</td>
+<td>(a) for provider independence</td>
+<td>Decide in M6, running in M7</td>
+<td>Backups in one place only (risk K-19)</td>
+</tr>
+<tr>
+<td>T11</td>
+<td>Six new staff permissions proposed in 06 and 08: <code>kyc.view_documents</code>, <code>privacy.handle_requests</code>, <code>wallets.approve_large_topup</code>, <code>reports.view</code>, <code>ledger.adjust</code> (plus a later <code>privacy_officer</code> role)</td>
+<td>(a) add to the permission seed now; (b) reuse existing permissions</td>
+<td>(a): least privilege for ID documents, four-eyes top-ups, read-only reporting</td>
+<td>M1 (staff sign-in)</td>
+<td>Moderators keep broad access to ID documents</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Which two lawyer answers have the earliest hard deadline, and why that milestone?</li>
+<li><input disabled="" type="checkbox"> What happens by default if nobody answers Q22 (foreign phone numbers)?</li>
+<li><input disabled="" type="checkbox"> Which accountant question could move commission invoices (PAY-11) into the MVP, and with which answer?</li>
+<li><input disabled="" type="checkbox"> Why is Q18 (deposit withdrawals) linked to a legal question?</li>
+<li><input disabled="" type="checkbox"> Which decisions can be changed later by a setting, and which one is marked costly to change?</li>
+<li><input disabled="" type="checkbox"> Which tech decision makes &quot;one module at a time behind a flag&quot; possible?</li>
+<li><input disabled="" type="checkbox"> Find the decision that keeps BLADUS from needing a PSP licence at launch.</li>
+</ul>
+<div class="pager"><span><a href="12-risks.html">&larr; 12. Risks: what could go wrong, and what we do about it</a></span><span><a href="14-open-questions.html">14. Open questions (running list) &rarr;</a></span></div></main></div></body></html>

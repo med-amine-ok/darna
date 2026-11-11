@@ -23,11 +23,7 @@ Enum user_status {
   deleted
 }
 Enum staff_role_code {
-  super_admin
-  moderator
-  support
-  finance
-  analyst
+  admin
 }
 Enum staff_status {
   invited
@@ -100,6 +96,26 @@ Enum vertical {
   hostel
   experience
   vehicle
+}
+Enum experience_type {
+  excursion
+  guided_tour
+  nature_adventure
+  desert
+  sport
+  culture_workshop
+  gastronomy
+  wellness
+}
+Enum trip_type {
+  group_tour
+  private_trip
+  adventure
+  desert_expedition
+  cultural
+  hiking
+  relaxation
+  religious
 }
 Enum listing_status {
   draft
@@ -260,6 +276,10 @@ Table user {
   last_name_latin varchar(80)
   full_name_ar varchar(160) [note: 'Name in Arabic script, stored separately from the Latin form.']
   avatar_media_id uuid [ref: > media_asset.id]
+  bio text [note: 'Short public introduction (max 500 characters).']
+  spoken_languages "varchar(2)[]" [note: 'Languages the person speaks, ISO 639-1 codes, shown on host profiles.']
+  home_commune_id int [ref: > commune.id, note: 'Where the person lives (optional, private).']
+  address_line varchar(255) [note: 'Private postal address (optional); never shown publicly.']
   preferred_locale varchar(2) [not null, default: 'fr', note: 'en, fr or ar.']
   nationality_iso2 char(2) [note: 'Only when legally needed (foreign guest declaration, VERIFY).']
   status user_status [not null, default: 'active']
@@ -290,7 +310,7 @@ Table staff_permission {
 Table staff_role_permission {
   role staff_role_code [pk]
   permission_code varchar(64) [pk, ref: > staff_permission.code]
-  Note: 'Role to permission matrix (Appendix B section 1.1), editable data rather than code.'
+  Note: 'One staff role today: admin, with every permission (DEC-016). The table stays so more roles can be added later without a redesign.'
 }
 
 Table consent_record {
@@ -374,7 +394,7 @@ Table host_account {
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
   deleted_at timestamptz
-  Note: 'The single thing that hosts: either one user (individual) or one organisation. Owns listings, trips, wallet and commission (resolves disagreement D-1). Check: (kind = individual and user_id not null and organization_id is null) or (kind = organization and organization_id not null and user_id is null).'
+  Note: 'The single thing that hosts: either one user (individual) or one organisation. Owns listings, trips, wallet and commission (resolves disagreement D-1). The active host account of a request comes from the session and is re-checked against membership on every call (workspace switcher, ORG-02). Check: (kind = individual and user_id not null and organization_id is null) or (kind = organization and organization_id not null and user_id is null).'
 }
 
 Table organization {
@@ -537,6 +557,7 @@ Table listing {
   status listing_status [not null, default: 'draft']
   status_before_delete listing_status
   inventory_kind inventory_kind [not null, note: 'single (home, vehicle), room_pool (hotel, hostel), slot (experience).']
+  experience_type experience_type [note: 'Required when vertical = experience, null otherwise (DEC-015, BR-LST-05).']
   title varchar(120) [not null]
   description text [not null]
   source_language varchar(2) [not null]
@@ -573,7 +594,7 @@ Table listing {
   created_at timestamptz [not null]
   updated_at timestamptz [not null]
   deleted_at timestamptz
-  Note: 'Checks: capacity_guests > 0; base_price_minor > 0; min_nights <= max_nights; discount bp between 0 and 9000; inventory_kind matches vertical (home/vehicle single, hotel/hostel room_pool, experience slot).'
+  Note: 'Checks: capacity_guests > 0; base_price_minor > 0; min_nights <= max_nights; discount bp between 0 and 9000; inventory_kind matches vertical (home/vehicle single, hotel/hostel room_pool, experience slot); (vertical = experience) = (experience_type is not null). Host offer rule (DEC-014, BR-HST-05): individual host accounts publish home and vehicle, agencies experience, hotels and hostels hotel/hostel; enforced by service and a trigger that reads host_account.kind and organization.business_category.'
 }
 
 Table listing_revision {
@@ -622,6 +643,8 @@ Table room_type {
   capacity_per_unit smallint [not null]
   base_price_minor bigint [not null]
   beds_description varchar(120)
+  external_id varchar(80) [note: 'Id of this room type in the hotel system (DEC-017).']
+  integration_id uuid [ref: > property_integration.id, note: 'Set when the room type is managed by a hotel system connection.']
   sort_order int [not null, default: 0]
   is_active boolean [not null, default: true]
   created_at timestamptz [not null]
@@ -709,9 +732,11 @@ Table experience_slot {
 Table trip {
   id uuid [pk]
   reference varchar(16) [unique, not null]
+  slug varchar(160) [unique, not null, note: 'Public URL name, e.g. 5-day-grand-tassili (the website links trips by slug).']
   host_account_id uuid [not null, ref: > host_account.id, note: 'Must be an approved agency (BR-TRP-01).']
   status listing_status [not null, default: 'draft']
   status_before_delete listing_status
+  trip_type trip_type [not null, note: 'DEC-015.']
   title varchar(140) [not null]
   description text [not null]
   source_language varchar(2) [not null]
@@ -1381,6 +1406,100 @@ Table idempotency_record {
   }
 }
 
+Table incident_record {
+  id uuid [pk]
+  kind varchar(24) [not null, note: 'security_breach, data_leak, outage, fraud.']
+  severity varchar(8) [not null, note: 'low, medium, high, critical.']
+  detected_at timestamptz [not null]
+  personal_data_involved boolean [not null]
+  anpdp_deadline_at timestamptz [note: 'detected_at + 5 days when personal data is involved (Law 18-07 as amended, VERIFY WITH A PROFESSIONAL).']
+  anpdp_notified_at timestamptz
+  users_notified_at timestamptz
+  summary text [not null]
+  actions_taken text
+  owner_id uuid [not null, ref: > user.id]
+  closed_at timestamptz
+  created_at timestamptz [not null]
+  Note: 'Incident register and breach clock (PRV-05). Staff-only, audited.'
+}
+
+Table calendar_feed {
+  id uuid [pk]
+  listing_id uuid [not null, ref: > listing.id]
+  room_type_id uuid [ref: > room_type.id]
+  direction varchar(8) [not null, note: 'import or export.']
+  url_encrypted bytea [note: 'Import URL (other platform), encrypted; fetched through the egress proxy with private-IP blocking (SSRF control).']
+  export_token_hash char(64) [note: 'Hash of the secret token in the export URL.']
+  last_synced_at timestamptz
+  last_error text
+  is_active boolean [not null, default: true]
+  created_at timestamptz [not null]
+  Note: 'Later release (AVL-06): iCal import and export.'
+}
+
+Table otp_send_log {
+  id bigint [pk, increment]
+  phone_hash char(64) [not null, note: 'HMAC of the phone number.']
+  ip inet
+  purpose varchar(16) [not null, note: 'signup, login, phone_change, payout_change.']
+  provider varchar(20) [not null]
+  status varchar(12) [not null, note: 'sent, failed, blocked_rate_limit.']
+  cost_minor bigint
+  created_at timestamptz [not null]
+  indexes {
+    (phone_hash, created_at)
+    (ip, created_at)
+  }
+  Note: 'Record of every one-time code sent (codes themselves stay in Redis, never stored). Feeds SMS budget alarms and pumping-fraud detection (ACC-02, BR-ACC-02). Kept 90 days.'
+}
+
+Table property_integration {
+  id uuid [pk]
+  organization_id uuid [not null, ref: > organization.id]
+  listing_id uuid [ref: > listing.id, note: 'The hotel or hostel property this connection feeds.']
+  kind varchar(20) [not null, note: 'channel_manager, pms, ical, csv_import.']
+  system_name varchar(60) [not null, note: 'Name of the hotel system as the hotel gave it.']
+  base_url varchar(255)
+  credentials_encrypted bytea [note: 'API key or login of the hotel system, encrypted with a key outside the database.']
+  status varchar(12) [not null, default: 'pending', note: 'pending, active, error, disabled.']
+  sync_rooms boolean [not null, default: true]
+  sync_availability boolean [not null, default: true]
+  sync_services boolean [not null, default: true]
+  last_synced_at timestamptz
+  last_error text
+  created_by_id uuid [not null, ref: > user.id]
+  created_at timestamptz [not null]
+  Note: 'Direct connection to a hotel system (DEC-017, HST-08). Room types, per-night availability, prices and services are pulled from it. BLADUS stays the source of truth for bookings made on BLADUS and pushes them back when the system allows it.'
+}
+
+Table integration_sync_log {
+  id bigint [pk, increment]
+  integration_id uuid [not null, ref: > property_integration.id]
+  started_at timestamptz [not null]
+  finished_at timestamptz
+  status varchar(12) [not null, note: 'ok, partial, failed.']
+  rooms_changed int [not null, default: 0]
+  nights_changed int [not null, default: 0]
+  services_changed int [not null, default: 0]
+  error text
+  Note: 'One row per sync run, so the hotel and the admin can see what was imported and why a sync failed.'
+}
+
+Table property_service {
+  id uuid [pk]
+  listing_id uuid [not null, ref: > listing.id]
+  kind varchar(24) [not null, note: 'restaurant, cafe, spa, pool, gym, parking, conference_room, airport_transfer, other.']
+  name varchar(120) [not null]
+  description text
+  opening_hours jsonb
+  price_minor bigint [note: 'Null = included or price on request.']
+  external_id varchar(80) [note: 'Id of the service in the hotel system.']
+  source varchar(12) [not null, default: 'manual', note: 'manual or integration.']
+  is_active boolean [not null, default: true]
+  created_at timestamptz [not null]
+  Note: 'Services of a hotel or hostel (restaurants, spa, parking...), typed by the host or imported from the hotel system.'
+}
+
 Table listing_search_doc {
   listing_id uuid [pk, ref: - listing.id]
   vertical vertical [not null]
@@ -1393,6 +1512,7 @@ Table listing_search_doc {
   review_count int [not null]
   instant_bookable boolean [not null]
   host_type varchar(12) [not null]
+  experience_type experience_type [note: 'For the experience type filter and facet counts.']
   property_type_id uuid
   amenity_ids "uuid[]" [not null]
   tsv_fr tsvector

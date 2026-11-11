@@ -153,6 +153,84 @@ erDiagram
         timestamptz created_at
         timestamptz expires_at
     }
+    incident_record {
+        uuid id PK
+        varchar_24 kind
+        varchar_8 severity
+        timestamptz detected_at
+        boolean personal_data_involved
+        timestamptz anpdp_deadline_at
+        timestamptz anpdp_notified_at
+        timestamptz users_notified_at
+        text summary
+        text actions_taken
+        uuid owner_id FK
+        timestamptz closed_at
+        timestamptz created_at
+    }
+    calendar_feed {
+        uuid id PK
+        uuid listing_id FK
+        uuid room_type_id FK
+        varchar_8 direction
+        bytea url_encrypted
+        char_64 export_token_hash
+        timestamptz last_synced_at
+        text last_error
+        boolean is_active
+        timestamptz created_at
+    }
+    otp_send_log {
+        bigint id PK
+        char_64 phone_hash
+        inet ip
+        varchar_16 purpose
+        varchar_20 provider
+        varchar_12 status
+        bigint cost_minor
+        timestamptz created_at
+    }
+    property_integration {
+        uuid id PK
+        uuid organization_id FK
+        uuid listing_id FK
+        varchar_20 kind
+        varchar_60 system_name
+        varchar_255 base_url
+        bytea credentials_encrypted
+        varchar_12 status
+        boolean sync_rooms
+        boolean sync_availability
+        boolean sync_services
+        timestamptz last_synced_at
+        text last_error
+        uuid created_by_id FK
+        timestamptz created_at
+    }
+    integration_sync_log {
+        bigint id PK
+        uuid integration_id FK
+        timestamptz started_at
+        timestamptz finished_at
+        varchar_12 status
+        int rooms_changed
+        int nights_changed
+        int services_changed
+        text error
+    }
+    property_service {
+        uuid id PK
+        uuid listing_id FK
+        varchar_24 kind
+        varchar_120 name
+        text description
+        jsonb opening_hours
+        bigint price_minor
+        varchar_80 external_id
+        varchar_12 source
+        boolean is_active
+        timestamptz created_at
+    }
     listing_search_doc {
         uuid listing_id PK,FK
         vertical vertical
@@ -165,6 +243,7 @@ erDiagram
         int review_count
         boolean instant_bookable
         varchar_12 host_type
+        experience_type experience_type
         uuid property_type_id
         uuid amenity_ids
         tsvector tsv_fr
@@ -184,6 +263,12 @@ erDiagram
         uuid id PK
     }
     media_asset {
+        uuid id PK
+    }
+    organization {
+        uuid id PK
+    }
+    room_type {
         uuid id PK
     }
     user {
@@ -212,4 +297,12 @@ erDiagram
     user ||--o{ data_subject_request : "user_id"
     user ||--o{ data_subject_request : "handled_by_id"
     user ||--o{ idempotency_record : "user_id"
+    user ||--o{ incident_record : "owner_id"
+    listing ||--o{ calendar_feed : "listing_id"
+    room_type ||--o{ calendar_feed : "room_type_id"
+    organization ||--o{ property_integration : "organization_id"
+    listing ||--o{ property_integration : "listing_id"
+    user ||--o{ property_integration : "created_by_id"
+    property_integration ||--o{ integration_sync_log : "integration_id"
+    listing ||--o{ property_service : "listing_id"
     listing ||--o| listing_search_doc : "listing_id"

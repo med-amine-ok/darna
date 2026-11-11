@@ -1,0 +1,862 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>02. Research: what others do, which Django tools to use, and what Algeria requires · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="on" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 1 and 2: discovery and research</div><h1 id="02-research-what-others-do-which-django-tools-to-use-and-what-algeria-requires">02. Research: what others do, which Django tools to use, and what Algeria requires</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Before designing tables we looked at how Airbnb, Booking.com, Expedia and GetYourGuide solve the same problems, and which Django tools are best today.<br>We also checked Algerian realities: how online payment works, SMS costs, the laws on e-commerce and personal data, maps and hosting.<br>Big finding: Algerian law likely requires the site to be hosted in Algeria, and collecting guest money to pay hosts may need a payment licence.<br>So the safest first version is &quot;BLADUS takes only its commission&quot;, which matches what the website already does.<br>Every legal, tax or money point here is marked <strong>VERIFY WITH A PROFESSIONAL</strong>. This is engineering research, not legal advice.</p>
+</blockquote>
+<p>Research date: all sources accessed on <strong>2026-11-04</strong>. Labels: <strong>[verified]</strong> read on an official or primary page; <strong>[secondary]</strong> press, vendor or blog; <strong>[unverified]</strong> could not confirm. Full source lists with every URL: <a href="work-research-platforms-django.html">Appendix R1</a> and <a href="work-research-algeria-security.html">Appendix R2</a>.</p>
+<p><strong>Terms used here</strong> (also in <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Exclusion constraint</strong>: a database rule that refuses two rows whose date ranges overlap for the same unit. It makes double booking impossible even if the app has a bug.</li>
+<li><strong>Idempotency key</strong>: a unique ID the client sends with a payment request; if the request is retried, the server returns the first result instead of charging twice.</li>
+<li><strong>Double-entry ledger</strong>: every money movement is written as two or more lines that add up to zero (money leaves one account and enters another), so errors are visible.</li>
+<li><strong>PSP</strong>: payment service provider, a company licensed to hold and move other people&#39;s money.</li>
+<li><strong>KYC</strong>: &quot;know your customer&quot;, checking a host&#39;s identity and documents.</li>
+<li><strong>BFF</strong>: &quot;backend for frontend&quot;, here the Next.js server holding the login cookie and calling Django for the browser.</li>
+</ul>
+<hr>
+<h2 id="a-comparable-platforms">A. Comparable platforms</h2>
+<h3 id="a1-what-they-publish">A.1 What they publish</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Lesson for BLADUS</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Airbnb</td>
+<td>Started as one big app, split into services only when hundreds of engineers needed it</td>
+<td><a href="https://medium.com/airbnb-engineering/building-services-at-airbnb-part-1-c4c1d8fa811b">https://medium.com/airbnb-engineering/building-services-at-airbnb-part-1-c4c1d8fa811b</a></td>
+</tr>
+<tr>
+<td>Airbnb payments</td>
+<td>Idempotency keys with a row lock, always on the main database, to avoid double payments</td>
+<td><a href="https://medium.com/airbnb-engineering/avoiding-double-payments-in-a-distributed-payments-system-2981f6b070bb">https://medium.com/airbnb-engineering/avoiding-double-payments-in-a-distributed-payments-system-2981f6b070bb</a></td>
+</tr>
+<tr>
+<td>Airbnb finance</td>
+<td>Money modelled as accounting events in a double-entry ledger</td>
+<td><a href="https://medium.com/airbnb-engineering/tracking-the-money-scaling-financial-reporting-at-airbnb-6d742b80f040">https://medium.com/airbnb-engineering/tracking-the-money-scaling-financial-reporting-at-airbnb-6d742b80f040</a></td>
+</tr>
+<tr>
+<td>Airbnb messaging</td>
+<td>Clients fetch only what changed since their last sync</td>
+<td><a href="https://medium.com/airbnb-engineering/messaging-sync-scaling-mobile-messaging-at-airbnb-659142036f06">https://medium.com/airbnb-engineering/messaging-sync-scaling-mobile-messaging-at-airbnb-659142036f06</a></td>
+</tr>
+<tr>
+<td>Airbnb trust</td>
+<td>Extra checks only for risky users (&quot;targeted friction&quot;)</td>
+<td><a href="https://medium.com/airbnb-engineering/fighting-financial-fraud-with-targeted-friction-82d950d8900e">https://medium.com/airbnb-engineering/fighting-financial-fraud-with-targeted-friction-82d950d8900e</a></td>
+</tr>
+<tr>
+<td>Airbnb reviews</td>
+<td>14 days after checkout, both sides blind until both wrote or time ran out</td>
+<td><a href="https://www.airbnb.com/help/article/13">https://www.airbnb.com/help/article/13</a></td>
+</tr>
+<tr>
+<td>Booking.com</td>
+<td>Hotel inventory = room type x rate plan x date; &quot;rooms to sell&quot; per room type per date</td>
+<td><a href="https://developers.booking.com/connectivity/docs/ari.md">https://developers.booking.com/connectivity/docs/ari.md</a></td>
+</tr>
+<tr>
+<td>Booking.com reviews</td>
+<td>Only real bookers review; moderated; visible 36 months</td>
+<td><a href="https://partner.booking.com/en-us/help/guest-reviews/general/guest-review-process-and-conditions">https://partner.booking.com/en-us/help/guest-reviews/general/guest-review-process-and-conditions</a></td>
+</tr>
+<tr>
+<td>Expedia</td>
+<td>Cancellation policy is structured data (penalty windows), shown before booking</td>
+<td><a href="https://developers.expediagroup.com/rapid/lodging/shopping/constructing-cancellation-policies">https://developers.expediagroup.com/rapid/lodging/shopping/constructing-cancellation-policies</a></td>
+</tr>
+<tr>
+<td>GetYourGuide</td>
+<td>Activities sold as time slots with seats; flow is check, hold, confirm</td>
+<td><a href="https://www.getyourguide.careers/posts/scaling-the-inventory-parts-of-our-system-using-kafka-streams">https://www.getyourguide.careers/posts/scaling-the-inventory-parts-of-our-system-using-kafka-streams</a></td>
+</tr>
+<tr>
+<td>pretix (open source, Django)</td>
+<td>Best Django example of quota inventory with time-limited holds</td>
+<td><a href="https://docs.pretix.eu/dev/development/concepts.html">https://docs.pretix.eu/dev/development/concepts.html</a></td>
+</tr>
+<tr>
+<td>django-hordak</td>
+<td>Double-entry accounting in Django with database constraints</td>
+<td><a href="https://github.com/adamcharnock/django-hordak">https://github.com/adamcharnock/django-hordak</a></td>
+</tr>
+</tbody></table>
+<p>Not found: Airbnb&#39;s calendar architecture, Vrbo developer docs, Airbnb&#39;s current cancellation tiers from a primary page [unverified].</p>
+<h3 id="a2-one-idea-that-covers-all-six-products">A.2 One idea that covers all six products</h3>
+<p>Every bookable thing is <strong>a unit, a time shape and a capacity</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Vertical</th>
+<th>What is sold</th>
+<th>Time shape</th>
+<th>Capacity per slot</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home</td>
+<td>the whole place</td>
+<td>nights <code>[check-in, check-out)</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td>Hotel</td>
+<td>a room type (pool of N rooms)</td>
+<td>nights</td>
+<td>N per night</td>
+</tr>
+<tr>
+<td>Hostel</td>
+<td>a bed type or dorm (pool of beds)</td>
+<td>nights</td>
+<td>beds per night</td>
+</tr>
+<tr>
+<td>Experience</td>
+<td>an option at a start time</td>
+<td>time slot</td>
+<td>seats per slot</td>
+</tr>
+<tr>
+<td>Vehicle</td>
+<td>a vehicle</td>
+<td>pickup to return</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Agency trip</td>
+<td>a departure on fixed dates</td>
+<td>fixed departure</td>
+<td>seats per departure</td>
+</tr>
+</tbody></table>
+<h3 id="a3-hard-problems-and-our-decisions">A.3 Hard problems and our decisions</h3>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Double booking</td>
+<td>Capacity 1: date range column plus <strong>exclusion constraint</strong> in PostgreSQL. Pools (rooms, beds, seats): one <strong>inventory row per unit per day or slot</strong> with a rule <code>held + booked &lt;= total</code>, updated atomically inside a transaction. Holds expire by a scheduled job. Search results are re-checked inside the booking transaction.</td>
+</tr>
+<tr>
+<td>Search at Algeria scale</td>
+<td>PostgreSQL only at first (map box, filters, availability), with a small search table per listing. An external engine only when measured slow.</td>
+</tr>
+<tr>
+<td>Pricing</td>
+<td>Nightly prices stored per unit and date, built from rules (base, weekend, season, long stay). The server gives a <strong>quote</strong> with an ID and expiry, re-checked at booking.</td>
+</tr>
+<tr>
+<td>Money</td>
+<td>Idempotency key on every money endpoint; append-only double-entry ledger; balances computed from entries; gateway webhooks stored raw, verified and processed once.</td>
+</tr>
+<tr>
+<td>Cancellation</td>
+<td>Named policy templates stored as windows (hours before start, refund %); copied onto the booking at confirmation.</td>
+</tr>
+<tr>
+<td>Fake listings and fraud</td>
+<td>Listings go through review; host KYC before any payout; rule-based flags (new account + high value, duplicate photos, phone numbers in messages) that add friction, not blanket bans.</td>
+</tr>
+<tr>
+<td>Reviews</td>
+<td>Only after a completed booking, one per direction, 14-day window, double-blind, host can reply once.</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td><strong>Modular monolith</strong>: one Django project split into clear apps. Services later only if needed.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="b-django-ecosystem-two-or-more-options-per-decision">B. Django ecosystem (two or more options per decision)</h2>
+<p>Versions read from PyPI and npm on 2026-11-04.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Option 1</th>
+<th>Option 2</th>
+<th><strong>Choice</strong></th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>B.0</td>
+<td>Django version</td>
+<td>6.1.3 (supported to Dec 2027)</td>
+<td>5.2 LTS (to Apr 2028)</td>
+<td><strong>Django 6.1 on Python 3.13</strong>, move to 6.2 LTS in 2027</td>
+<td>6.x has built-in tasks API and CSP; 6.1 overlaps 6.2 LTS</td>
+</tr>
+<tr>
+<td>B.1</td>
+<td>Database and maps</td>
+<td>PostgreSQL + PostGIS (GeoDjango)</td>
+<td>Plain lat/lng numbers</td>
+<td><strong>PostGIS</strong></td>
+<td>Real distance and map-box queries, wilaya polygons, range types and exclusion constraints</td>
+</tr>
+<tr>
+<td>B.2</td>
+<td>API framework</td>
+<td>Django REST Framework 3.18.3</td>
+<td>Django Ninja 1.7.3</td>
+<td><strong>DRF</strong> (HackSoft style)</td>
+<td>Mature permissions, throttling, OpenAPI; most Algerian Django devs know it</td>
+</tr>
+<tr>
+<td>B.3</td>
+<td>Accounts and login</td>
+<td>django-allauth 65.21 headless</td>
+<td>dj-rest-auth + SimpleJWT</td>
+<td><strong>allauth headless</strong></td>
+<td>Phone OTP, MFA (TOTP, passkeys), rate limits built in; session tokens, not long-lived JWTs</td>
+</tr>
+<tr>
+<td>B.4</td>
+<td>Permissions</td>
+<td>django-rules (predicates)</td>
+<td>django-guardian (per-object rows)</td>
+<td><strong>Own <code>Membership</code> roles + django-rules</strong> + always filtering lists by the caller&#39;s organisations</td>
+<td>Rights come from membership, not per-object grants</td>
+</tr>
+<tr>
+<td>B.5</td>
+<td>Background jobs</td>
+<td>Celery 5.6 + Redis</td>
+<td>Django tasks (6.0+), Dramatiq, Huey</td>
+<td><strong>Celery + Redis</strong></td>
+<td>Retries, schedules, monitoring; tasks kept thin so moving to Django tasks later is easy</td>
+</tr>
+<tr>
+<td>B.6</td>
+<td>Live messaging</td>
+<td>Polling a &quot;changes since&quot; endpoint</td>
+<td>Centrifugo 6.10, Django Channels</td>
+<td><strong>Polling first, Centrifugo later</strong></td>
+<td>Simplest to run; Airbnb&#39;s sync idea</td>
+</tr>
+<tr>
+<td>B.7</td>
+<td>Search</td>
+<td>PostgreSQL full-text + pg_trgm + PostGIS</td>
+<td>Meilisearch 1.56, Typesense, OpenSearch</td>
+<td><strong>PostgreSQL first</strong></td>
+<td>One store, consistent with availability; Meilisearch only if Arabic typo search is needed</td>
+</tr>
+<tr>
+<td>B.8</td>
+<td>Files and images</td>
+<td>django-storages + Cloudflare R2 (S3 API)</td>
+<td>Cloudinary</td>
+<td><strong>S3-compatible storage</strong>, presigned uploads, Pillow renditions, ClamAV for documents</td>
+<td>Vendor-neutral. <strong>Location must respect Algerian law, see C.3</strong></td>
+</tr>
+<tr>
+<td>B.9</td>
+<td>Translations</td>
+<td>django-modeltranslation 0.20 (columns per language)</td>
+<td>django-parler 2.4 (translation tables)</td>
+<td><strong>modeltranslation</strong> for platform lists (amenities, wilayas); hosts write in one language with <code>source_language</code></td>
+<td>Fixed 3 languages, fast reads</td>
+</tr>
+<tr>
+<td>B.10</td>
+<td>Back office</td>
+<td>Existing Next.js admin</td>
+<td>Django admin + Unfold 0.110</td>
+<td><strong>Both</strong>: Next.js admin is the product; Django admin is a staff-only, MFA, mostly read-only console</td>
+<td>Fast internal tools without bypassing rules</td>
+</tr>
+<tr>
+<td>B.11</td>
+<td>History / audit</td>
+<td>django-pghistory 3.9 (database triggers)</td>
+<td>django-simple-history, django-auditlog (signals)</td>
+<td><strong>pghistory + a domain <code>AuditEvent</code> table</strong></td>
+<td>Triggers also catch bulk updates</td>
+</tr>
+<tr>
+<td>B.12</td>
+<td>Limits, cache, idempotency</td>
+<td>DRF throttles + Redis cache + in-house idempotency</td>
+<td>django-ratelimit (inactive since 2024), django-idempotency-key (inactive since 2023), django-cachalot</td>
+<td><strong>First option</strong></td>
+<td>Libraries in option 2 are unmaintained or unsuited to write-heavy tables</td>
+</tr>
+<tr>
+<td>B.13</td>
+<td>API contract</td>
+<td>drf-spectacular 0.30 + openapi-typescript/openapi-fetch</td>
+<td>orval 8.46, hey-api</td>
+<td><strong>spectacular + openapi-typescript</strong></td>
+<td>Small typed client that works in Next.js server components</td>
+</tr>
+<tr>
+<td>B.14</td>
+<td>Tests</td>
+<td>pytest-django + factory_boy + hypothesis + schemathesis</td>
+<td>model_bakery</td>
+<td><strong>First option</strong></td>
+<td>Readable factories; property tests for money and dates; contract fuzzing</td>
+</tr>
+<tr>
+<td>B.15</td>
+<td>Structure</td>
+<td>Modular monolith (HackSoft services/selectors), ideas from cookiecutter-django</td>
+<td>Many small services</td>
+<td><strong>Modular monolith</strong></td>
+<td>Small team, one database, clear boundaries</td>
+</tr>
+<tr>
+<td>B.16</td>
+<td>Ops tooling</td>
+<td>pydantic-settings, ruff, mypy + django-stubs, GitHub Actions, Sentry, structlog, Prometheus</td>
+<td>django-environ, black/isort</td>
+<td><strong>First option</strong></td>
+<td>Typed settings that fail fast; one fast linter</td>
+</tr>
+<tr>
+<td>B.17</td>
+<td>Money storage</td>
+<td>Whole numbers in centimes (<code>BigIntegerField</code>) + currency</td>
+<td>Decimal / django-money (repo archived, moving to Codeberg)</td>
+<td><strong>Centimes + currency code</strong> + small in-house <code>Money</code> type</td>
+<td>Exact sums; DZD has minor unit 2 in ISO 4217 even though prices are whole dinars</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="c-algeria">C. Algeria</h2>
+<h3 id="c1-payments">C.1 Payments</h3>
+<table>
+<thead>
+<tr>
+<th>Rail or provider</th>
+<th>What it is</th>
+<th>Facts</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CIB card</td>
+<td>Bank debit card through SATIM</td>
+<td>Merchant needs commerce register (RC), CNRC e-supplier filing, GIE Monétique authorisation and a bank contract</td>
+<td>[verified] cibweb.dz</td>
+</tr>
+<tr>
+<td>Edahabia card</td>
+<td>Algérie Poste card</td>
+<td>Accepted through the same SATIM gateway</td>
+<td>[verified]</td>
+</tr>
+<tr>
+<td>BaridiMob / CCP transfer</td>
+<td>Postal account transfers</td>
+<td>Limits and fees conflict across sources</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>BaridiPay QR</td>
+<td>Merchant QR since June 2025</td>
+<td>No public API found</td>
+<td>[unverified]</td>
+</tr>
+<tr>
+<td>Cash on arrival</td>
+<td>Very common</td>
+<td>Manual reconciliation</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Foreign cards</td>
+<td>Through BDL bank</td>
+<td>5% per transaction + 65,000 DA/month + 70,000 DA setup, companies only</td>
+<td>[verified] bdl.dz</td>
+</tr>
+<tr>
+<td><strong>Chargily Pay V2</strong></td>
+<td>Aggregator with API and webhooks</td>
+<td>Fees 0% (starter cap), 1.5%, 3%, 4.5% by plan; refunds 2%; payout holds 24 to 72 h; CIB, Edahabia</td>
+<td>[verified] dev.chargily.com</td>
+</tr>
+<tr>
+<td>SlickPay</td>
+<td>Aggregator</td>
+<td>1.4% to 2% by payout schedule</td>
+<td>[verified] slick-pay.com</td>
+</tr>
+<tr>
+<td>Guiddini</td>
+<td>Certified SATIM module, not an aggregator</td>
+<td>Merchant still needs its own bank contract</td>
+<td>[verified] cibweb.dz</td>
+</tr>
+</tbody></table>
+<p><strong>Key realities</strong> (VERIFY WITH A PROFESSIONAL):</p>
+<ol>
+<li><strong>No split payment product</strong> (no &quot;Stripe Connect&quot; for Algeria) was found [unverified: absence of evidence].</li>
+<li>Collecting guest money and paying it to hosts looks like a <strong>payment service</strong>. Banque d&#39;Algérie Règlement 25-02 (April 2025) sets PSP licensing with <strong>160 million DA</strong> minimum capital [secondary].</li>
+<li>Law 18-05 art. 27: electronic payment must go through platforms run by approved banks and Algérie Poste [verified, text read].</li>
+</ol>
+<p><strong>Payment models, from lowest to highest legal risk:</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Model</th>
+<th>Fits current website?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>M1</td>
+<td>Guest pays host directly (cash or transfer); host pre-pays commission to BLADUS; BLADUS invoices commission</td>
+<td><strong>Yes</strong>: this is the prepaid wallet the website already has</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Guest pays a deposit equal to BLADUS&#39;s commission through Chargily; rest paid to host on arrival</td>
+<td>Close</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Professional hosts use their own gateway accounts; BLADUS creates checkouts with their keys</td>
+<td>For hotels and agencies only</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>BLADUS collects everything and pays hosts out (Airbnb model)</td>
+<td>Needs a licensed PSP or bank partner: phase 2</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation for the blueprint:</strong> design the ledger so all four models fit, launch with <strong>M1 (plus optional M2)</strong>, and keep M4 behind a decision gate. This resolves disagreement D-16 in favour of the spec and the website, and makes the admin&#39;s &quot;booking payment / host payout&quot; flow a later phase. <strong>Decision needed from you</strong> (see <code>13-decisions-needed.md</code>).</p>
+<h3 id="c2-messaging-and-verification">C.2 Messaging and verification</h3>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Cost / fact</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Twilio SMS to Algeria</td>
+<td>about USD 0.27 per SMS, sender ID registration required</td>
+<td>[verified] twilio.com</td>
+</tr>
+<tr>
+<td>BulkGate</td>
+<td>EUR 0.08 to 0.24 by carrier</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Local aggregator (e.g. Sobersys)</td>
+<td>prices not published</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>WhatsApp Business</td>
+<td>paid per template message since July 2025; Algeria rate not found</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Email (Resend, SES, Brevo)</td>
+<td>free tiers 300/day to 3,000/month</td>
+<td>[secondary]</td>
+</tr>
+</tbody></table>
+<p>Decision: one <code>SmsProvider</code> interface, a local aggregator first with an international fallback; email and WhatsApp OTP where possible; strict limits per phone, IP and device against SMS pumping fraud.</p>
+<h3 id="c3-legal-all-points-verify-with-a-professional-not-legal-advice">C.3 Legal (all points: VERIFY WITH A PROFESSIONAL, not legal advice)</h3>
+<table>
+<thead>
+<tr>
+<th>Law</th>
+<th>What it says that matters</th>
+<th>Status</th>
+<th>Consequence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Law 18-05 (e-commerce), art. 8</strong></td>
+<td>E-commerce requires RC registration and <strong>a site hosted in Algeria with a <code>.com.dz</code> domain</strong></td>
+<td>[verified] JO n° 28, 2018</td>
+<td>Plan production hosting in Algeria</td>
+</tr>
+<tr>
+<td>Law 18-05 art. 10 to 13, 25, 31 to 33</td>
+<td>Mandatory offer content; order in 3 steps (review, confirm, contract); keep transaction records for CNRC; opt-in for marketing</td>
+<td>[verified]</td>
+<td>Booking flow and consent records</td>
+</tr>
+<tr>
+<td><strong>Law 18-07 on personal data, amended by Law 25-11 (July 2025)</strong></td>
+<td>Prior declaration or authorisation to ANPDP; <strong>transfer abroad needs ANPDP authorisation</strong>; breach notice within <strong>5 days</strong></td>
+<td>[secondary]</td>
+<td>Keep personal data in Algeria; register of processing; breach runbook</td>
+</tr>
+<tr>
+<td>Circular of 16 June 2012 (&quot;chez l&#39;habitant&quot;)</td>
+<td>Max 5 rooms, 15 guests, insurance, declaration at the APC</td>
+<td>[secondary]</td>
+<td>Individual host documents</td>
+</tr>
+<tr>
+<td>Law 08-11 art. 29</td>
+<td>Foreign guests must be declared to security services</td>
+<td>[secondary]</td>
+<td>Guest nationality field and host reminder</td>
+</tr>
+<tr>
+<td>Law 99-06, Décret 17-161</td>
+<td>Travel agencies need a Ministry of Tourism licence (A or B)</td>
+<td>[verified exists] mta.gov.dz</td>
+<td>Agency KYC</td>
+</tr>
+<tr>
+<td>Décret 19-158</td>
+<td>Hotel classification</td>
+<td>[secondary]</td>
+<td>Star rating drives tourist tax</td>
+</tr>
+<tr>
+<td>Vehicle rental rules</td>
+<td>No decree found</td>
+<td>[unverified]</td>
+<td>Ask a lawyer</td>
+</tr>
+<tr>
+<td>Whole-home short-term rental</td>
+<td>No specific framework found</td>
+<td>[unverified]</td>
+<td>Ask a lawyer</td>
+</tr>
+</tbody></table>
+<h3 id="c4-tax">C.4 Tax</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VAT standard / reduced</td>
+<td>19% / 9%</td>
+<td>[verified] PwC</td>
+</tr>
+<tr>
+<td>VAT for tourism, hotels, travel, tourist vehicle rental</td>
+<td>9% until 31 Dec 2027</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Taxe de séjour (tourist tax) per person per night</td>
+<td>5* 600 DA, 4* 500, 3* 300, 2* 200, 1* 100; 50 DA proposed for unclassified (draft)</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Invoice content (Décret 05-468)</td>
+<td>RC, NIF, NIS, article d&#39;imposition, sequential number, HT, VAT, TTC</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Accounting retention</td>
+<td>10 years commonly cited</td>
+<td>[secondary]</td>
+</tr>
+<tr>
+<td>Auto-entrepreneur</td>
+<td>Turnover cap 5M DA/year, IFU 0.5%</td>
+<td>[secondary]</td>
+</tr>
+</tbody></table>
+<h3 id="c5-geography">C.5 Geography</h3>
+<ul>
+<li><strong>69 wilayas and 1,541 communes</strong> since Loi 26-06 (JO n° 25, 5 April 2026) [secondary; JO not opened]. Codes 59 to 69 differ between sources.</li>
+<li>Seed data: <strong>el-amin-dev/algeria-wilayas-communes</strong> (CC0, names in ar/fr/en) + coordinates from <strong>ihahachi/Algeria-Cities</strong> (MIT). Keep <code>source</code> and <code>valid_from</code> so the next reform is a data migration; keep the old 58-wilaya codes too.</li>
+<li>Maps: OpenFreeMap tiles are free with attribution [verified]. Public <strong>Nominatim forbids autocomplete</strong> and allows 1 request per second [verified]: use it only server-side and cached. Addresses are often informal: commune + pin on the map.</li>
+</ul>
+<h3 id="c6-hosting">C.6 Hosting</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Price</th>
+<th>Fit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ICOSNET (Algiers, Oran)</td>
+<td>from 2,800 DZD/month per VPS</td>
+<td><strong>Recommended for production data</strong> [secondary]</td>
+</tr>
+<tr>
+<td>Djezzy Cloud (Béjaïa)</td>
+<td>quote</td>
+<td>Alternative [secondary]</td>
+</tr>
+<tr>
+<td>Hetzner (EU)</td>
+<td>raised prices in 2026; CX23 about EUR 5.49</td>
+<td>Dev and non-personal assets only [secondary]</td>
+</tr>
+<tr>
+<td>Cloudflare</td>
+<td>PoPs in Algiers, Oran, Constantine, Annaba, status varies</td>
+<td>Static assets [conflicting]</td>
+</tr>
+</tbody></table>
+<p>Backups: encrypted, second Algerian data centre, restore test monthly. Offsite backups abroad only after ANPDP analysis.</p>
+<h3 id="c7-culture-and-formats">C.7 Culture and formats</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Weekend</td>
+<td>Friday and Saturday; week starts Sunday</td>
+</tr>
+<tr>
+<td>Digits</td>
+<td>Latin digits even in Arabic (<code>ar-DZ</code> with <code>latn</code>)</td>
+</tr>
+<tr>
+<td>Phone</td>
+<td><code>+213</code> then 5, 6 or 7 and 8 digits: <code>^\+213[5-7]\d{8}$</code></td>
+</tr>
+<tr>
+<td>Time zone</td>
+<td>Africa/Algiers, UTC+1, no daylight saving</td>
+</tr>
+<tr>
+<td>Names</td>
+<td>Store Arabic and Latin forms separately</td>
+</tr>
+<tr>
+<td>ID</td>
+<td>Biometric ID card; NIN has 18 digits (different from card number)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="d-security">D. Security</h2>
+<h3 id="d1-owasp-api-top-10-2023-applied-to-bladus">D.1 OWASP API Top 10 (2023) applied to BLADUS</h3>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>BLADUS example</th>
+<th>Control</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API1 object access</td>
+<td><code>GET /bookings/{id}</code> of someone else</td>
+<td>Check ownership on every object; non-guessable IDs (UUIDv7)</td>
+</tr>
+<tr>
+<td>API2 authentication</td>
+<td>OTP brute force, SMS pumping</td>
+<td>6 digits, 5 tries, 10 min, limits per phone/IP/device; MFA for staff and hosts with payouts</td>
+</tr>
+<tr>
+<td>API3 property access</td>
+<td>Guest sees host phone before booking; mass-assigning <code>status</code> or <code>commission_rate</code></td>
+<td>Output fields per role; allowlist of writable fields</td>
+</tr>
+<tr>
+<td>API4 resource use</td>
+<td>Scraping, big uploads, SMS cost</td>
+<td>Page size caps, upload limits, SMS budget alarms</td>
+</tr>
+<tr>
+<td>API5 function access</td>
+<td>Host calling a staff refund endpoint</td>
+<td>Separate admin API, deny by default</td>
+</tr>
+<tr>
+<td>API6 business flows</td>
+<td>Holding calendars without paying, coupon abuse, fake reviews</td>
+<td>Hold expiry, velocity limits</td>
+</tr>
+<tr>
+<td>API7 SSRF</td>
+<td>Calendar import URL, image by URL</td>
+<td>Block private IPs, egress proxy</td>
+</tr>
+<tr>
+<td>API8 misconfiguration</td>
+<td>Open Redis, debug on, CORS <code>*</code></td>
+<td>Hardening checklist</td>
+</tr>
+<tr>
+<td>API9 inventory</td>
+<td>Old endpoints, prod data in staging</td>
+<td>OpenAPI inventory, no prod data in staging</td>
+</tr>
+<tr>
+<td>API10 unsafe APIs</td>
+<td>Trusting payment redirect instead of webhook</td>
+<td>Verify webhook signature, re-check status server-side</td>
+</tr>
+</tbody></table>
+<p>Source: <a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">https://owasp.org/API-Security/editions/2023/en/0x11-t10/</a> [verified].</p>
+<h3 id="d2-fraud-and-abuse">D.2 Fraud and abuse</h3>
+<ul>
+<li>Off-platform payment pushes (BaridiMob/CCP numbers, WhatsApp links in messages before confirmation): detect and warn.</li>
+<li>Fake listings with stolen photos: perceptual hash, proof of property for the first listing, delay on first payout.</li>
+<li>Duplicate accounts after a ban: phone, device and hashed NIN.</li>
+<li>Account takeover via SIM swap: re-verify before payout detail changes, hold payouts 48 to 72 h after such a change.</li>
+<li>Reviews only from completed bookings; watch for bursts and rings.</li>
+</ul>
+<h3 id="d3-data-rights-backups-audit">D.3 Data rights, backups, audit</h3>
+<ul>
+<li>Access, correction, deletion: deletion anonymises the person but keeps booking and invoice records for legal retention.</li>
+<li>Append-only audit log with actor, action, object, before/after hash, IP, request ID; hash-chained for tamper evidence. KYC file views always logged.</li>
+<li>Breach runbook with a 5-day ANPDP clock.</li>
+</ul>
+<hr>
+<h2 id="e-decisions-taken-in-this-phase-and-what-needs-a-professional">E. Decisions taken in this phase, and what needs a professional</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Confidence</th>
+<th>Needs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R-1</td>
+<td>Django 6.1 + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless</td>
+<td>High</td>
+<td>none</td>
+</tr>
+<tr>
+<td>R-2</td>
+<td>Exclusion constraints for single units, daily inventory rows for pools</td>
+<td>High</td>
+<td>none</td>
+</tr>
+<tr>
+<td>R-3</td>
+<td>Centimes + currency, double-entry ledger, idempotency keys</td>
+<td>High</td>
+<td>none</td>
+</tr>
+<tr>
+<td>R-4</td>
+<td>Launch money model M1 (prepaid commission), ledger ready for M2 to M4</td>
+<td>Medium</td>
+<td><strong>Your decision</strong> + <strong>lawyer / accountant</strong></td>
+</tr>
+<tr>
+<td>R-5</td>
+<td>Host production data in Algeria (ICOSNET or Djezzy Cloud)</td>
+<td>Medium</td>
+<td><strong>Lawyer</strong> (Law 18-05 art. 8, Law 18-07/25-11)</td>
+</tr>
+<tr>
+<td>R-6</td>
+<td><code>.com.dz</code> domain for the public site</td>
+<td>Medium</td>
+<td><strong>Lawyer</strong></td>
+</tr>
+<tr>
+<td>R-7</td>
+<td>Chargily as first gateway, SlickPay as second</td>
+<td>Medium</td>
+<td><strong>Accountant / bank</strong>: contract terms, amount units in API</td>
+</tr>
+<tr>
+<td>R-8</td>
+<td>KYC document list per host type (see R2 C3.5)</td>
+<td>Low</td>
+<td><strong>Lawyer</strong></td>
+</tr>
+<tr>
+<td>R-9</td>
+<td>VAT 9% and taxe de séjour handling per booking</td>
+<td>Low</td>
+<td><strong>Accountant</strong></td>
+</tr>
+<tr>
+<td>R-10</td>
+<td>69 wilayas from el-amin + ihahachi</td>
+<td>Medium</td>
+<td>Check official JO and ONS codes</td>
+</tr>
+<tr>
+<td>R-11</td>
+<td>Polling for messages, PostgreSQL search</td>
+<td>High</td>
+<td>none</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Why does an exclusion constraint matter more than a check in Python code?</li>
+<li><input disabled="" type="checkbox"> What are the four payment models, and which one does the website already use?</li>
+<li><input disabled="" type="checkbox"> Which Algerian law article points to hosting in Algeria, and why is it flagged &quot;verify&quot;?</li>
+<li><input disabled="" type="checkbox"> Why do we store money in centimes even though prices are whole dinars?</li>
+<li><input disabled="" type="checkbox"> Why polling before WebSockets for messages?</li>
+<li><input disabled="" type="checkbox"> Name two fraud patterns that are specific to Algeria&#39;s payment habits.</li>
+<li><input disabled="" type="checkbox"> How many wilayas and communes does Algeria have today, and which seed datasets will we use?</li>
+</ul>
+<div class="pager"><span><a href="01-system-inventory.html">&larr; 01. System inventory: what BLADUS does today</a></span><span><a href="03-requirements.html">03. Requirements: what the backend must do &rarr;</a></span></div></main></div></body></html>

@@ -1,0 +1,319 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Glossary · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="on" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Start here</div><h1 id="glossary">Glossary</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Every technical or business word used in the blueprint, explained in one or two sentences.<br>If a document uses a word you do not know, look here first. The list grows with each phase.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ActionResult</code></td>
+<td>What a Next.js server action returns today: success with data, or an error code.</td>
+</tr>
+<tr>
+<td><code>lib/data</code> seam</td>
+<td>The folder of data functions both apps call; each becomes an API call.</td>
+</tr>
+<tr>
+<td>ADR</td>
+<td>Architecture Decision Record: a short note saying what was decided, why, and what else was considered.</td>
+</tr>
+<tr>
+<td>Allauth (headless)</td>
+<td>A Django library for sign-up, login, phone codes and two-factor login, used through an API.</td>
+</tr>
+<tr>
+<td>ANPDP</td>
+<td>Algeria&#39;s personal data protection authority (Autorité nationale de protection des données à caractère personnel).</td>
+</tr>
+<tr>
+<td>API</td>
+<td>The set of web addresses (endpoints) the apps call to read and change data.</td>
+</tr>
+<tr>
+<td>Audit log</td>
+<td>A list of who did what and when; never edited, only added to.</td>
+</tr>
+<tr>
+<td>BFF</td>
+<td>Backend for frontend: the Next.js server keeps the login cookie and calls Django on the browser&#39;s behalf.</td>
+</tr>
+<tr>
+<td>Booking / Reservation</td>
+<td>One guest&#39;s purchase of a unit for a time. The admin calls it Booking, the website Reservation.</td>
+</tr>
+<tr>
+<td>Celery</td>
+<td>A Python tool that runs background jobs (expire requests, send SMS) outside the web request.</td>
+</tr>
+<tr>
+<td>Centimes</td>
+<td>Hundredths of a dinar. We store money as whole centimes to avoid rounding errors.</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>Continuous integration and delivery: every code change is automatically checked (tests, lint) and, if green, deployed to staging.</td>
+</tr>
+<tr>
+<td>CIB / Edahabia</td>
+<td>Algeria&#39;s bank card and postal card, accepted online through SATIM.</td>
+</tr>
+<tr>
+<td>Commission</td>
+<td>The percentage BLADUS earns on a booking, paid by the host. Guests pay no BLADUS fee.</td>
+</tr>
+<tr>
+<td>Cursor (pagination)</td>
+<td>A bookmark returned by the API (for example the last message id) so the next request asks only for what came after it.</td>
+</tr>
+<tr>
+<td>Double-entry ledger</td>
+<td>Money records where each movement has lines that add up to zero, so money is never created or lost by mistake.</td>
+</tr>
+<tr>
+<td>DPIA</td>
+<td>Data protection impact assessment: a written analysis of the risks of a sensitive processing (here: host ID documents).</td>
+</tr>
+<tr>
+<td>DRF</td>
+<td>Django REST Framework, the library that turns Django into an API.</td>
+</tr>
+<tr>
+<td>Endpoint</td>
+<td>One API address with one method, for example <code>POST /api/v1/bookings</code> (create a booking).</td>
+</tr>
+<tr>
+<td>ETag / If-Match</td>
+<td>A version tag returned with a record; sending it back with a change makes the API refuse the change if someone else edited the record meanwhile.</td>
+</tr>
+<tr>
+<td>Exclusion constraint</td>
+<td>A PostgreSQL rule that refuses overlapping date ranges for the same unit.</td>
+</tr>
+<tr>
+<td>Feature flag</td>
+<td>A setting that turns a feature on or off without changing code (for example the dormant payment endpoints).</td>
+</tr>
+<tr>
+<td>Gantt chart</td>
+<td>A timeline chart showing each milestone as a bar between its start and end dates.</td>
+</tr>
+<tr>
+<td>Gate</td>
+<td>A decision or legal answer that must exist before a milestone can finish.</td>
+</tr>
+<tr>
+<td>Half-open range</td>
+<td>A date range that includes the first day and excludes the last: <code>[check-in, check-out)</code>. Check-out day is free for the next guest.</td>
+</tr>
+<tr>
+<td>HMAC hash</td>
+<td>A one-way fingerprint made with a secret key; used to compare ID or phone numbers without storing them in clear.</td>
+</tr>
+<tr>
+<td>Hold</td>
+<td>A short reservation of inventory while a guest pays; it expires automatically.</td>
+</tr>
+<tr>
+<td>Host type</td>
+<td>individual, agency, hotel or hostel.</td>
+</tr>
+<tr>
+<td>Idempotency key</td>
+<td>A unique request ID; repeating the request with the same key does not repeat its effect.</td>
+</tr>
+<tr>
+<td>import-linter</td>
+<td>A tool that fails the build if one Django app imports another it is not allowed to use.</td>
+</tr>
+<tr>
+<td>k6</td>
+<td>A load-testing tool that simulates many users to check response times.</td>
+</tr>
+<tr>
+<td>KYC</td>
+<td>Know your customer: checking identity and business documents.</td>
+</tr>
+<tr>
+<td>MFA / TOTP / passkey</td>
+<td>Two-step login. TOTP is a 6-digit code from an authenticator app; a passkey uses the phone or computer&#39;s fingerprint or PIN.</td>
+</tr>
+<tr>
+<td>Milestone</td>
+<td>A block of work of 3 to 5 weeks with clear done criteria (M0 to M7, then R2).</td>
+</tr>
+<tr>
+<td>Mock store</td>
+<td>Data kept in server memory for demos; lost on restart.</td>
+</tr>
+<tr>
+<td>Modular monolith</td>
+<td>One application split internally into separate parts with clear rules about who talks to whom.</td>
+</tr>
+<tr>
+<td>OpenAPI</td>
+<td>A standard file (<code>openapi.yaml</code>) describing every endpoint, from which typed client code is generated.</td>
+</tr>
+<tr>
+<td>Organisation</td>
+<td>An agency, hotel or hostel business with team members.</td>
+</tr>
+<tr>
+<td>Outbox</td>
+<td>A table where the backend writes &#39;send this email&#39; or &#39;refresh search&#39; in the same save as the change; workers send them afterwards, so nothing is lost.</td>
+</tr>
+<tr>
+<td>OWASP API Top 10</td>
+<td>The ten most common security mistakes in APIs, published by the OWASP foundation; used as a checklist.</td>
+</tr>
+<tr>
+<td>PITR</td>
+<td>Point-in-time recovery: restoring the database to any minute in the past from continuous backups.</td>
+</tr>
+<tr>
+<td>PostGIS</td>
+<td>The map and geography extension for PostgreSQL.</td>
+</tr>
+<tr>
+<td>Presigned URL</td>
+<td>A temporary, signed web address that lets a browser upload or download one file directly from storage.</td>
+</tr>
+<tr>
+<td>Property-based test</td>
+<td>A test that checks a rule on thousands of random inputs (for example: lines of a price always add up to the total).</td>
+</tr>
+<tr>
+<td>PSP</td>
+<td>Payment service provider: a licensed company that holds and moves other people&#39;s money.</td>
+</tr>
+<tr>
+<td>RBAC</td>
+<td>Role-based access control: rights come from a role (owner, manager, moderator...).</td>
+</tr>
+<tr>
+<td>REST</td>
+<td>A common style of API where each address names a thing (<code>/bookings</code>) and the method says what to do (GET read, POST create, PATCH change, DELETE remove).</td>
+</tr>
+<tr>
+<td>Risk score</td>
+<td>Likelihood x impact (each 1 to 5); used to sort the risk register.</td>
+</tr>
+<tr>
+<td>Room type</td>
+<td>A kind of room or bed in a hotel or hostel, with a count of identical units.</td>
+</tr>
+<tr>
+<td>RPO / RTO</td>
+<td>Recovery point objective (how much data we may lose, here 15 minutes) and recovery time objective (how long until service is back, here 4 hours).</td>
+</tr>
+<tr>
+<td>SATIM</td>
+<td>The interbank company that runs card payments in Algeria.</td>
+</tr>
+<tr>
+<td>Schemathesis</td>
+<td>A tool that reads the OpenAPI file and sends many generated requests to check the API keeps its contract.</td>
+</tr>
+<tr>
+<td>Server action</td>
+<td>A Next.js function that runs on the server when a form is submitted.</td>
+</tr>
+<tr>
+<td>Snapshot</td>
+<td>A copy of a value (price, rate, policy) saved on a booking so later changes do not affect it.</td>
+</tr>
+<tr>
+<td>Soft delete</td>
+<td>Marking a row as deleted instead of removing it, so it can be restored.</td>
+</tr>
+<tr>
+<td>State machine</td>
+<td>The allowed list of statuses and the allowed moves between them.</td>
+</tr>
+<tr>
+<td>STRIDE</td>
+<td>A checklist of six threat kinds: spoofing, tampering, repudiation, information disclosure, denial of service, elevation of privilege.</td>
+</tr>
+<tr>
+<td>Taxe de séjour</td>
+<td>Tourist tax per person per night, depending on the hotel&#39;s star rating.</td>
+</tr>
+<tr>
+<td>Traceability matrix</td>
+<td>A table linking each requirement to its rules, tables, endpoints, tests and milestone, so nothing is forgotten.</td>
+</tr>
+<tr>
+<td>Vertical</td>
+<td>A product family: homes, hotels, experiences, vehicles, trips.</td>
+</tr>
+<tr>
+<td>Webhook</td>
+<td>A call that another service (for example a payment gateway) makes to our API to tell us something happened.</td>
+</tr>
+<tr>
+<td>Wilaya / commune</td>
+<td>Algerian province / municipality. Today 69 wilayas and 1,541 communes.</td>
+</tr>
+<tr>
+<td>Workspace (host)</td>
+<td>The host account a user is acting for right now: themselves as a solo host, or one of their organisations.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> What is the difference between an endpoint and an API?</li>
+<li><input disabled="" type="checkbox"> What do RPO and RTO mean for BLADUS (15 minutes, 4 hours)?</li>
+<li><input disabled="" type="checkbox"> Why does the outbox exist?</li>
+<li><input disabled="" type="checkbox"> What is a gate in the roadmap?</li>
+<li><input disabled="" type="checkbox"> What is a half-open date range, and why does it allow back-to-back stays?</li>
+</ul>
+<div class="pager"><span><a href="explain-like-im-new.html">&larr; Explain it like I'm new</a></span><span><a href="01-system-inventory.html">01. System inventory: what BLADUS does today &rarr;</a></span></div></main></div></body></html>

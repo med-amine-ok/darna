@@ -1,0 +1,1142 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>07. Architecture: how the Django backend is organised · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="on" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="07-architecture-how-the-django-backend-is-organised">07. Architecture: how the Django backend is organised</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>The backend is <strong>one Django application</strong> split into 17 small parts (&quot;apps&quot;), each owning its own tables and rules.<br>Parts may only call parts below them, so a change in bookings can never break accounts by accident.<br>Every write goes through a &quot;service&quot; function inside a database transaction; side effects (SMS, emails, search refresh) are queued in an &quot;outbox&quot; and sent after the save.<br>The two Next.js apps never talk to Django from the browser: their own server keeps the login cookie and calls the API (BFF).<br>We will move the apps from demo data to the real API <strong>one module at a time</strong>, each behind a switch, so we can always go back.<br>This page also lists every background job, the caching and search plan, the photo upload pipeline, and the future repository layout.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see also <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>App (Django app)</strong>: a folder inside the Django project with its own models (tables), logic and API views. Here one app = one business area (&quot;bounded context&quot;).</li>
+<li><strong>Modular monolith</strong>: one program, one database, deployed as one unit, but split inside into apps with strict rules about who may call whom.</li>
+<li><strong>Service</strong>: a Python function that changes data (create a booking, approve a host). It runs the checks and the transaction.</li>
+<li><strong>Selector</strong>: a Python function that only reads data (list my bookings). It never changes anything.</li>
+<li><strong>Transaction</strong>: a group of database changes that all succeed together or are all cancelled together.</li>
+<li><strong>Row lock</strong> (<code>SELECT ... FOR UPDATE</code>): while one transaction works on a row, others that want to change the same row wait.</li>
+<li><strong>Deadlock</strong>: two transactions each wait for a row the other has locked. PostgreSQL stops one of them. A fixed lock order prevents it.</li>
+<li><strong>Outbox</strong>: a table where a service writes &quot;things to do after saving&quot; in the same transaction; a worker reads it and does them.</li>
+<li><strong>Celery worker / Celery beat</strong>: a worker runs background jobs; beat is the clock that starts scheduled jobs.</li>
+<li><strong>Queue</strong>: a waiting line of jobs inside Redis. Different queues let slow jobs (images) not delay urgent ones (codes by SMS).</li>
+<li><strong>Cache</strong>: a fast copy of data kept in Redis memory to avoid asking the database again.</li>
+<li><strong>Presigned URL</strong>: a web address, valid a few minutes, that lets the browser upload or download one file directly to storage without seeing our keys.</li>
+<li><strong>BFF (backend for frontend)</strong>: the Next.js server keeps the login cookie and calls Django for the browser.</li>
+<li><strong>Typed client</strong>: TypeScript code generated from <code>openapi.yaml</code>, so the apps cannot call an endpoint with the wrong fields without a compile error.</li>
+<li><strong>Feature flag</strong>: a setting that turns one part on or off without a new deployment.</li>
+<li><strong>import-linter</strong>: a tool that fails the build if one app imports code it is not allowed to import.</li>
+</ul>
+<p>Inputs: <a href="02-research.html">02-research.md</a> (section B), <a href="03-requirements.html">03-requirements.md</a>, <a href="04-business-rules.html">04-business-rules.md</a>, <a href="05-database-schema.html">05-database-schema.md</a> (ADR-001 to ADR-014), <a href="files/schema.dbml">schema.dbml</a>, diagrams <a href="diagrams-readme.html">01-system-context</a>, <a href="files/02-containers.mmd">02-containers</a>, <a href="files/03-django-apps.mmd">03-django-apps</a>.</p>
+<hr>
+<h2 id="1-the-big-picture">1. The big picture</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What runs</th>
+<th>Where it is described</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>People</td>
+<td>Guests, hosts, organisation members, BLADUS staff</td>
+<td><a href="diagrams/rendered/01-system-context.svg">01-system-context</a></td>
+</tr>
+<tr>
+<td>Edge</td>
+<td>Reverse proxy (Caddy) with TLS and coarse rate limits; CDN only for non-personal static files</td>
+<td><a href="09-devops-hosting.html">09-devops-hosting.md</a></td>
+</tr>
+<tr>
+<td>Frontends</td>
+<td>Website (Next.js, guests and hosts) and Admin (Next.js, staff). Each has its own server (BFF)</td>
+<td>section 10</td>
+</tr>
+<tr>
+<td>API</td>
+<td>Django 6.1 + DRF, one process type, modular monolith, <code>/api/v1/...</code></td>
+<td>sections 2 to 6</td>
+</tr>
+<tr>
+<td>Background</td>
+<td>Celery workers (3 queues) and one Celery beat</td>
+<td>section 6</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>PostgreSQL 17 + PostGIS, Redis, S3-compatible object storage, all in Algeria</td>
+<td><a href="diagrams/rendered/02-containers.svg">02-containers</a></td>
+</tr>
+</tbody></table>
+<p>Decisions behind this shape are summarised as ADRs in section 12. The main ones: one Django project, not microservices (ADR-015); PostgreSQL for search at launch (ADR-020); polling for messages (ADR-021).</p>
+<hr>
+<h2 id="2-the-django-apps">2. The Django apps</h2>
+<p>Seventeen domain apps plus one shared kernel (<code>core</code>). Tables are the short names used in <a href="files/schema.dbml">schema.dbml</a>; Django will prefix them with the app name (<code>bookings_booking</code>). All 77 tables have exactly one owner.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>App</th>
+<th>Responsibility</th>
+<th>Owned tables</th>
+<th>Main rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td><code>core</code> (shared kernel)</td>
+<td>Base model (UUIDv7 id, timestamps), <code>Money</code> type, error codes, idempotency, request context (user, host account, locale, request id), pagination, clock</td>
+<td><code>idempotency_record</code></td>
+<td>BR-SYS-01, BR-SYS-04, BR-SYS-05, NFR-12</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>geo</code></td>
+<td>Wilayas, dairas, communes; distance and map helpers; commune autocomplete</td>
+<td><code>wilaya</code>, <code>daira</code>, <code>commune</code></td>
+<td>BR-SRC-02</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>config</code></td>
+<td>Versioned platform settings; versioned onboarding flows per host type; feature flags (inside settings JSON)</td>
+<td><code>platform_settings</code>, <code>onboarding_flow_version</code></td>
+<td>BR-CFG-01 to 03</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>audit</code></td>
+<td>Hash-chained audit log; audited CSV exports; incident register with the 5-day breach clock</td>
+<td><code>audit_event</code>, <code>export_job</code>, <code>incident_record</code></td>
+<td>BR-STF-02, BR-STF-04, PRV-05</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>media</code></td>
+<td>Upload slots, quarantine, scanning, re-encoding, renditions, signed download URLs</td>
+<td><code>media_asset</code></td>
+<td>BR-MED-01, BR-MED-02</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>notifications</code></td>
+<td>Outbox table and dispatcher, in-app notifications, email and SMS providers, preferences, delivery log</td>
+<td><code>outbox_event</code>, <code>delivery_log</code>, <code>notification</code>, <code>notification_preference</code></td>
+<td>BR-SYS-03, BR-NTF-01, BR-NTF-02</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>accounts</code></td>
+<td>Users, sign-up and login (allauth headless), phone OTP and its send log, MFA, staff profiles, staff roles and permissions, consents, favourites, data subject requests</td>
+<td><code>user</code>, <code>staff_profile</code>, <code>staff_permission</code>, <code>staff_role_permission</code>, <code>consent_record</code>, <code>favorite</code>, <code>data_subject_request</code>, <code>otp_send_log</code></td>
+<td>BR-ACC-01 to 05, BR-STF-01, BR-PRV-01, BR-PRV-02, ACC-02</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>hosts</code></td>
+<td>Host accounts, organisations, memberships and roles, invitations, onboarding drafts, KYC documents, payout accounts, host verification state machine</td>
+<td><code>host_account</code>, <code>organization</code>, <code>membership</code>, <code>invitation</code>, <code>host_document</code>, <code>payout_account</code>, <code>onboarding_draft</code></td>
+<td>BR-ORG-01 to 06, BR-HST-01 to 05, BR-PAY-09</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>catalog</code></td>
+<td>Listings of the 5 verticals, revisions under review, vehicle and experience details, room types, photos order, amenities, categories, property types, cancellation policies, featured placements</td>
+<td><code>listing</code>, <code>listing_revision</code>, <code>vehicle_detail</code>, <code>experience_detail</code>, <code>room_type</code>, <code>listing_amenity</code>, <code>room_type_amenity</code>, <code>listing_photo</code>, <code>featured_placement</code>, <code>category</code>, <code>property_type</code>, <code>amenity</code>, <code>cancellation_policy</code></td>
+<td>BR-LST-01 to 05, BR-HST-05</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>inventory</code></td>
+<td>Calendar per day (homes, vehicles), per night and room type (hotels, hostels), per time slot (experiences); holds; horizon generation; iCal import and export feeds (Later)</td>
+<td><code>listing_day</code>, <code>room_type_night</code>, <code>experience_slot</code>, <code>calendar_feed</code></td>
+<td>BR-AVL-01 to 06, AVL-06</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>trips</code></td>
+<td>Agency trips, itinerary days, departures with seats</td>
+<td><code>trip</code>, <code>trip_itinerary_day</code>, <code>trip_departure</code></td>
+<td>BR-TRP-01 to 03</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>pricing</code></td>
+<td>Quotes, length-of-stay discounts, tax rates, coupons (R2)</td>
+<td><code>quote</code>, <code>tax_rate</code>, <code>coupon</code>, <code>coupon_redemption</code></td>
+<td>BR-PRC-01 to 04, BR-PRM-01, 02</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>ledger</code></td>
+<td>Double-entry ledger, balances, commission posting and reversal, manual top-ups, gateway webhooks (R2), dormant payments, payouts, invoices</td>
+<td><code>ledger_account</code>, <code>ledger_transaction</code>, <code>ledger_entry</code>, <code>account_balance</code>, <code>wallet_topup</code>, <code>gateway_event</code>, <code>payment</code>, <code>payout</code>, <code>invoice</code></td>
+<td>BR-PAY-01 to 12, BR-SYS-02</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>bookings</code></td>
+<td>Booking creation (instant and request), state machine, snapshots, cancellations, refunds owed, disputes (R2)</td>
+<td><code>booking</code>, <code>booking_event</code>, <code>refund</code>, <code>dispute</code></td>
+<td>BR-BKG-01 to 07, BR-CAN-01 to 05</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>reviews</code></td>
+<td>Reviews, replies, reports, rating caches</td>
+<td><code>review</code>, <code>review_reply</code>, <code>review_report</code></td>
+<td>BR-REV-01 to 04</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>messaging</code></td>
+<td>Conversations, participants, messages, contact masking, cursor sync</td>
+<td><code>conversation</code>, <code>conversation_participant</code>, <code>message</code></td>
+<td>BR-MSG-01</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>trust</code></td>
+<td>Moderation queues and cases, decisions, change requests, reason catalogue, suspension cascade, risk flags (R2)</td>
+<td><code>moderation_case</code>, <code>moderation_decision</code>, <code>change_request_item</code>, <code>reason_code</code></td>
+<td>BR-MOD-01 to 04</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>search</code></td>
+<td>Denormalised search table, query building, facets, map pins, trip search</td>
+<td><code>listing_search_doc</code></td>
+<td>BR-SRC-01, 03, 04</td>
+</tr>
+</tbody></table>
+<p>Count check: 1 + 3 + 2 + 3 + 1 + 4 + 8 + 7 + 13 + 4 + 3 + 4 + 9 + 4 + 3 + 3 + 4 + 1 = 77 tables (74 from Phase 5 plus <code>incident_record</code>, <code>calendar_feed</code> and <code>otp_send_log</code> added on 2026-11-09).</p>
+<p>Differences from the Phase 4 diagram <a href="files/03-django-apps.mmd">03-django-apps</a>: it shows 16 apps. This page adds <code>search</code> (owner of <code>listing_search_doc</code>) and the <code>core</code> kernel. <code>onboarding_draft</code> sits in <code>hosts</code> (it becomes a host account on submit), <code>data_subject_request</code> in <code>accounts</code> (it acts on the user), coupons in <code>pricing</code> (they change a quote). The diagram will be updated in the next diagram pass; the table above wins if they differ.</p>
+<h3 id="21-allowed-dependencies">2.1 Allowed dependencies</h3>
+<p>Apps are placed in layers. <strong>An app may import only the public functions (<code>services.py</code>, <code>selectors.py</code>) of apps in a lower layer, or of an earlier app in the same layer as listed.</strong> Model foreign keys follow the same direction, with one exception: every app may hold a foreign key to <code>accounts.User</code> (the shared identity) and to <code>hosts.HostAccount</code>, because &quot;who did it&quot; and &quot;for which host&quot; are everywhere.</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Apps (in order)</th>
+<th>May import from</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>L0 kernel</td>
+<td><code>core</code></td>
+<td>nothing inside the project</td>
+</tr>
+<tr>
+<td>L1 platform</td>
+<td><code>geo</code>, <code>config</code>, <code>audit</code>, <code>media</code>, <code>notifications</code></td>
+<td><code>core</code></td>
+</tr>
+<tr>
+<td>L2 identity</td>
+<td><code>accounts</code>, then <code>hosts</code></td>
+<td>L0, L1; <code>hosts</code> may import <code>accounts</code></td>
+</tr>
+<tr>
+<td>L3 offer</td>
+<td><code>catalog</code>, then <code>inventory</code>, then <code>trips</code></td>
+<td>L0 to L2; <code>inventory</code> may import <code>catalog</code>; <code>trips</code> may import <code>catalog</code> (shared policies, statuses)</td>
+</tr>
+<tr>
+<td>L4 commerce</td>
+<td><code>pricing</code>, then <code>ledger</code>, then <code>bookings</code></td>
+<td>L0 to L3; <code>bookings</code> may import <code>pricing</code> and <code>ledger</code></td>
+</tr>
+<tr>
+<td>L5 after booking</td>
+<td><code>reviews</code>, <code>messaging</code></td>
+<td>L0 to L4</td>
+</tr>
+<tr>
+<td>L6 oversight and read models</td>
+<td><code>trust</code>, <code>search</code></td>
+<td>L0 to L5</td>
+</tr>
+</tbody></table>
+<p>How lower apps learn about higher events without importing them: through <strong>outbox topics</strong>. For example <code>bookings</code> writes <code>booking.confirmed</code>; <code>notifications</code> (L1) dispatches it to handlers that higher apps registered in their <code>apps.py</code> (<code>search</code> refreshes availability, <code>reviews</code> schedules the review window). The handler code lives in the higher app; the dispatcher only knows topic names.</p>
+<p>The rule is checked in CI by <strong>import-linter</strong> with one &quot;layers&quot; contract and one &quot;independence&quot; contract per layer (for example <code>reviews</code> and <code>messaging</code> may not import each other). A violation fails the build.</p>
+<h3 id="22-inside-one-app-services-and-selectors-pattern">2.2 Inside one app (services and selectors pattern)</h3>
+<p>Each app has the same files (HackSoft Django styleguide, research B.2 and B.15):</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Contains</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>models.py</code></td>
+<td>Tables, <code>Meta.constraints</code>, enums</td>
+<td>No business logic beyond <code>clean()</code> for single-field format checks</td>
+</tr>
+<tr>
+<td><code>services.py</code></td>
+<td>Every write: <code>booking_create(...)</code>, <code>host_approve(...)</code></td>
+<td>Keyword-only arguments; opens the transaction; checks permissions passed in by the API layer; raises <code>DomainError(code, field, params)</code>; writes <code>booking_event</code> / <code>audit_event</code> / <code>outbox_event</code></td>
+</tr>
+<tr>
+<td><code>selectors.py</code></td>
+<td>Every read used by APIs and other apps</td>
+<td>Always scoped by the caller (<code>bookings_for_guest(user)</code>, <code>bookings_for_host(host_account)</code>); returns querysets or plain data; no writes</td>
+</tr>
+<tr>
+<td><code>apis.py</code></td>
+<td>DRF views, one class per endpoint, with its input and output serializers inside</td>
+<td>Thin: parse input, call one service or selector, serialize output. Never <code>Model.objects.create</code> here</td>
+</tr>
+<tr>
+<td><code>permissions.py</code></td>
+<td>django-rules predicates (<code>is_member_with(perm)</code>, <code>is_staff_with(perm)</code>)</td>
+<td>Deny by default</td>
+</tr>
+<tr>
+<td><code>events.py</code></td>
+<td>Outbox topic names this app emits, handlers it registers</td>
+<td>Handlers are idempotent</td>
+</tr>
+<tr>
+<td><code>tasks.py</code></td>
+<td>Celery tasks</td>
+<td>Thin: load ids, call a service. No logic in the task itself, so moving to Django&#39;s built-in tasks later is easy (research B.5)</td>
+</tr>
+<tr>
+<td><code>admin.py</code></td>
+<td>Django admin console registrations</td>
+<td>Read-mostly; any write calls a service</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Factories, unit, service, API tests</td>
+<td>See <a href="10-testing-quality.html">10-testing-quality.md</a></td>
+</tr>
+</tbody></table>
+<p>Other conventions:</p>
+<ul>
+<li><strong>No Django signals for business logic.</strong> Signals run hidden and cannot be rolled back with the outbox; we use explicit service calls and outbox topics (ADR-017). <code>pghistory</code> triggers are the only automatic history.</li>
+<li><strong>Errors</strong>: services raise <code>DomainError(&quot;dates_unavailable&quot;)</code>; one DRF exception handler turns it into <code>{&quot;code&quot;, &quot;field&quot;, &quot;message&quot;, &quot;params&quot;}</code> with HTTP status from a fixed table (BR-SYS-04).</li>
+<li><strong>Time</strong>: services receive <code>now</code> from <code>core.clock</code> so tests can freeze it.</li>
+<li><strong>Money</strong>: only the <code>core.money.Money</code> type crosses function boundaries; raw integers only in models.</li>
+</ul>
+<h3 id="23-api-surfaces">2.3 API surfaces</h3>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Who</th>
+<th>Authentication</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/_allauth/app/v1/...</code></td>
+<td>Everyone</td>
+<td>allauth headless (app client, session token)</td>
+<td>Sign-up, login, phone code, MFA, password reset</td>
+</tr>
+<tr>
+<td><code>/api/v1/public/...</code></td>
+<td>Anyone</td>
+<td>none or session</td>
+<td>Search, listing detail, trip detail, organisation profile, geography, taxonomy</td>
+</tr>
+<tr>
+<td><code>/api/v1/me/...</code></td>
+<td>Signed-in user</td>
+<td>session token</td>
+<td>Profile, favourites, my bookings (<code>/me/bookings</code>, ADR-004), conversations, notifications, privacy requests</td>
+</tr>
+<tr>
+<td><code>/api/v1/host/...</code></td>
+<td>Host or organisation member</td>
+<td>session token + <code>X-Host-Account</code> header</td>
+<td>Every request is checked: the user must hold that host account (BR-ORG-01)</td>
+</tr>
+<tr>
+<td><code>/api/v1/admin/...</code></td>
+<td>Staff only</td>
+<td>staff session token with MFA done</td>
+<td>Separate URL module and permission classes; a guest or host token never reaches it (STF-05)</td>
+</tr>
+<tr>
+<td><code>/api/v1/webhooks/...</code></td>
+<td>Payment gateways (R2)</td>
+<td>signature check</td>
+<td>Only path exposed on the public webhook host name</td>
+</tr>
+<tr>
+<td><code>/internal/healthz</code>, <code>/internal/readyz</code>, <code>/internal/metrics</code></td>
+<td>Monitoring</td>
+<td>private network only</td>
+<td>Not routed by the public proxy</td>
+</tr>
+</tbody></table>
+<p>Common headers: <code>Accept-Language</code> (<code>en</code>, <code>fr</code>, <code>ar</code>), <code>Idempotency-Key</code> (required on create and money endpoints, BR-SYS-01), <code>X-Request-ID</code> (created by the BFF if missing, logged everywhere). Pagination: cursor based, page size 24 by default, maximum 50 (SRC-05). Versioning: breaking changes go to <code>/api/v2/</code> (NFR-08).</p>
+<hr>
+<h2 id="3-transactions-and-locking-rules">3. Transactions and locking rules</h2>
+<p>General rules:</p>
+<ol>
+<li><code>ATOMIC_REQUESTS</code> is <strong>off</strong>. Each service that writes decorates itself with <code>transaction.atomic()</code>. One service call = one transaction.</li>
+<li>Isolation level stays <strong>READ COMMITTED</strong> (PostgreSQL default). Correctness comes from constraints, conditional updates and row locks, not from SERIALIZABLE.</li>
+<li><strong>No network call inside a transaction</strong> (no SMS, no storage, no gateway). Those go to the outbox or to <code>transaction.on_commit</code>.</li>
+<li>Database time limits per connection: <code>statement_timeout = 5 s</code> for the API, <code>60 s</code> for workers; <code>lock_timeout = 2 s</code>; <code>idle_in_transaction_session_timeout = 30 s</code>.</li>
+<li>A <code>@retry_on_conflict</code> decorator retries a whole service up to 3 times on deadlock (<code>40P01</code>) or serialization failure (<code>40001</code>), with a short random wait. Constraint violations are <strong>not</strong> retried; they become clean <code>409</code> errors.</li>
+<li><strong>Global lock order</strong> (always take locks in this order, never the reverse, to prevent deadlocks):<ol>
+<li><code>idempotency_record</code> (by key)</li>
+<li><code>booking</code> row (state changes)</li>
+<li>inventory rows: <code>room_type_night</code> by (room type, night ascending), <code>experience_slot</code>, <code>trip_departure</code></li>
+<li><code>account_balance</code> row of the host wallet</li>
+<li>inserts only: <code>ledger_transaction</code>, <code>ledger_entry</code>, <code>booking_event</code>, <code>audit_event</code>, <code>outbox_event</code></li>
+</ol>
+</li>
+</ol>
+<h3 id="31-creating-a-booking-instant-or-request">3.1 Creating a booking (instant or request)</h3>
+<p>One transaction, in this order (matches <a href="diagrams/rendered/20-seq-instant-booking.svg">20-seq-instant-booking</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What</th>
+<th>Protects against</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Insert <code>idempotency_record (user, endpoint, key)</code> with <code>status = in_progress</code>. If it exists: same body hash and completed returns the stored response; still in progress returns <code>409 request_in_progress</code>; different body returns <code>422 idempotency_key_reused</code></td>
+<td>Double click, network retry</td>
+<td>BR-SYS-01</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Load and re-validate the quote (not expired, prices unchanged); recompute if changed and return <code>409 price_changed</code> with the new quote</td>
+<td>Stale or tampered price</td>
+<td>BR-PRC-01</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Resolve approval mode and check guest phone verified</td>
+<td>Wrong flow</td>
+<td>BR-BKG-01, 02, BR-ACC-01</td>
+</tr>
+<tr>
+<td>4a</td>
+<td><strong>Single unit</strong> (home, vehicle): insert the <code>booking</code> row. The exclusion constraint refuses overlap; catch SQLSTATE <code>23P01</code> and return <code>409 dates_unavailable</code></td>
+<td>Double booking under concurrency</td>
+<td>BR-AVL-01</td>
+</tr>
+<tr>
+<td>4b</td>
+<td><strong>Pool</strong> (room type, beds, slot, departure): one conditional <code>UPDATE ... SET booked = booked + n WHERE ... AND held + booked + n &lt;= total</code>; if updated rows differ from the number of nights (or 1 for slots and departures) the transaction is rolled back with <code>409 dates_unavailable</code></td>
+<td>Overselling</td>
+<td>BR-AVL-02, BR-TRP-02</td>
+</tr>
+<tr>
+<td>5</td>
+<td>If instant and confirmed: <code>SELECT ... FOR UPDATE</code> on the host wallet <code>account_balance</code>; check the credit floor; if below the floor the booking becomes <code>pending</code> instead</td>
+<td>Two confirmations spending the same deposit</td>
+<td>BR-PAY-10</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Post the commission transaction (2 entries), update the balance row</td>
+<td>Missing or double commission (unique <code>(booking_id) WHERE kind = commission</code>)</td>
+<td>BR-PAY-04</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Insert <code>booking_event</code>, <code>audit_event</code> (host money effect), <code>outbox_event</code> rows (<code>booking.created</code> or <code>booking.confirmed</code>)</td>
+<td>Lost notifications</td>
+<td>BR-SYS-03</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Mark <code>idempotency_record</code> completed with the response body</td>
+<td>Retry returns the same booking</td>
+<td>BR-SYS-01</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Commit. The deferred ledger trigger checks the balance of every transaction at this moment</td>
+<td>Unbalanced ledger</td>
+<td>BR-PAY-02</td>
+</tr>
+</tbody></table>
+<h3 id="32-changing-a-booking-status">3.2 Changing a booking status</h3>
+<p>Accept, decline, cancel, expire, complete: <code>SELECT booking FOR UPDATE</code>, check the transition table (BR-BKG-06, table 7a in <a href="04-business-rules.html">04-business-rules.md</a>), check the actor&#39;s permission (<code>bookings.respond</code> for accept and decline, DEC-009), then release or convert inventory (pool counters <code>booked - n</code>; single units are freed by the status change itself because the exclusion constraint only covers blocking statuses), post commission or reversal, insert <code>booking_event</code>, outbox. Jobs (expiry, completion) use the same service with <code>actor = system</code>, and process rows in small batches with <code>FOR UPDATE SKIP LOCKED</code> so two job runs never fight.</p>
+<h3 id="33-inventory-counters-and-holds">3.3 Inventory counters and holds</h3>
+<ul>
+<li>Holds (<code>held + n</code>) are used only when a payment step exists (R2 and later) or for the 15-minute checkout of pooled inventory (AVL-05). A hold has an expiry; the job <code>inventory.release_expired_holds</code> turns <code>held - n</code> back, and reads ignore expired holds (BR-AVL-06).</li>
+<li>Host calendar edits (block a night, change a price) lock the same counter rows in the same order, so a host cannot block a night while a guest books it: one of them waits, then sees the result.</li>
+<li>Reducing <code>total</code> on a room type below <code>held + booked</code> is refused by the check constraint; the host sees <code>409 inventory_in_use</code> with the nights in conflict.</li>
+</ul>
+<h3 id="34-ledger">3.4 Ledger</h3>
+<ul>
+<li>Only <code>ledger.services</code> writes ledger tables. Every posting function takes an <strong>idempotency source</strong> (<code>booking_id + kind</code>, <code>wallet_topup.id</code>, <code>gateway_event.id</code>) protected by a unique index, so a retried job never posts twice.</li>
+<li>The balance row is locked (<code>FOR UPDATE</code>) before any posting that can reduce it. Balance = cached sum, verified nightly against the real sum (<code>ledger.reconcile_balances</code>).</li>
+<li>Corrections are reversing transactions, never updates (BR-PAY-02). The app database role has no <code>UPDATE</code> or <code>DELETE</code> grant on ledger tables.</li>
+<li>Four-eyes top-ups (BR-PAY-07): the first finance user creates the top-up in <code>pending_approval</code>; nothing is posted until a different finance user approves. Approval and posting are one transaction.</li>
+</ul>
+<hr>
+<h2 id="4-outbox">4. Outbox</h2>
+<pre><code class="lang-text">service (one transaction) ──writes──&gt; business rows + outbox_event(topic, payload, next_attempt_at=now)
+                                      │
+transaction.on_commit ──nudges──&gt; Celery &quot;outbox.dispatch&quot; (also runs every 10 s as a safety net)
+                                      │
+dispatcher: SELECT ... FROM outbox_event WHERE status='pending' AND next_attempt_at &lt;= now
+            ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED
+            -&gt; for each registered handler of the topic: run it (idempotent)
+            -&gt; success: status='sent'; failure: attempts+1, next_attempt_at = now + backoff</code></pre><ul>
+<li><strong>Backoff</strong>: 30 s, 2 min, 10 min, 30 min, 1 h, then every hour; after 10 attempts the row becomes <code>failed</code> and an alert fires.</li>
+<li><strong>Idempotent handlers</strong>: email and SMS handlers check <code>delivery_log (outbox_event_id, channel)</code> before sending; search refresh is naturally idempotent (it rebuilds the row).</li>
+<li><strong>Payload</strong>: ids plus a small display snapshot (booking reference, listing title in the source language, amounts) so handlers rarely need to read other apps.</li>
+<li><strong>Retention</strong>: sent rows deleted after 14 days; failed rows kept until a person resolves them.</li>
+</ul>
+<p>Main topics: <code>booking.created</code>, <code>booking.confirmed</code>, <code>booking.declined</code>, <code>booking.expired</code>, <code>booking.cancelled</code>, <code>booking.completed</code>, <code>listing.published</code>, <code>listing.changed</code>, <code>listing.paused</code>, <code>host.verification_changed</code>, <code>review.published</code>, <code>wallet.below_zero</code>, <code>wallet.below_floor</code>, <code>wallet.topup_posted</code>, <code>message.created</code>, <code>media.uploaded</code>, <code>otp.requested</code>, <code>privacy.request_created</code>, <code>export.requested</code>.</p>
+<h2 id="5-background-jobs-celery">5. Background jobs (Celery)</h2>
+<p>Queues: <code>critical</code> (one-time codes and booking notifications, low latency), <code>default</code> (most jobs), <code>media</code> (image work, CPU heavy, its own worker), <code>reports</code> (exports, long). Beat runs as <strong>exactly one</strong> container. All schedules are in Africa/Algiers time. Every task is safe to run twice (<code>acks_late = True</code>, idempotent services).</p>
+<table>
+<thead>
+<tr>
+<th>Job</th>
+<th>Schedule</th>
+<th>What it does</th>
+<th>Rule / req</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>notifications.dispatch_outbox</code></td>
+<td>every 10 s + after each commit</td>
+<td>Sends pending outbox events to their handlers</td>
+<td>BR-SYS-03, NTF-04</td>
+</tr>
+<tr>
+<td><code>notifications.send_email</code> / <code>send_sms</code></td>
+<td>on event (<code>critical</code> queue)</td>
+<td>Renders the template in the user&#39;s language and sends via the provider interface; writes <code>delivery_log</code></td>
+<td>BR-NTF-02</td>
+</tr>
+<tr>
+<td><code>notifications.sms_budget_check</code></td>
+<td>every 15 min</td>
+<td>Sums SMS spend today and this month from <code>otp_send_log</code> and <code>delivery_log</code>; compares to budget; alerts at 80%; at 100% switches OTP to email or WhatsApp where possible; flags phone or IP ranges with abnormal OTP volume (pumping)</td>
+<td>NFR-11, ACC-02, research C.2</td>
+</tr>
+<tr>
+<td><code>inventory.release_expired_holds</code></td>
+<td>every 1 min</td>
+<td>Releases holds older than 15 minutes</td>
+<td>BR-AVL-06</td>
+</tr>
+<tr>
+<td><code>inventory.extend_calendar_horizon</code></td>
+<td>daily 02:00</td>
+<td>Creates <code>room_type_night</code> and recurring <code>experience_slot</code> rows up to 18 months ahead</td>
+<td>ADR-002</td>
+</tr>
+<tr>
+<td><code>bookings.expire_pending_requests</code></td>
+<td>every 5 min</td>
+<td>Pending requests past <code>request_expires_at</code> become <code>expired</code>; counters released; both sides notified</td>
+<td>BR-BKG-04, BKG-03</td>
+</tr>
+<tr>
+<td><code>bookings.complete_stays</code></td>
+<td>every 15 min</td>
+<td>Confirmed bookings past check-out + 2 h become <code>completed</code>; review window opens; earnings counted</td>
+<td>BR-BKG-05, BKG-04</td>
+</tr>
+<tr>
+<td><code>pricing.purge_expired_quotes</code></td>
+<td>hourly</td>
+<td>Deletes quotes expired more than 24 h ago and not linked to a booking</td>
+<td>BR-PRC-01</td>
+</tr>
+<tr>
+<td><code>reviews.recompute_ratings</code></td>
+<td>on <code>review.*</code> event + nightly 03:00 full pass</td>
+<td>Recomputes listing, host account and organisation ratings and counts</td>
+<td>BR-REV-04, REV-05</td>
+</tr>
+<tr>
+<td><code>reviews.publish_blind_reviews</code></td>
+<td>hourly (R2)</td>
+<td>Publishes double-blind reviews when both are in or 14 days passed</td>
+<td>BR-REV-02</td>
+</tr>
+<tr>
+<td><code>hosts.expire_invitations</code></td>
+<td>hourly</td>
+<td>Marks invitations past 7 days as expired</td>
+<td>BR-ORG-03</td>
+</tr>
+<tr>
+<td><code>hosts.recount_host_cancellations</code></td>
+<td>daily 01:00</td>
+<td>Recomputes <code>host_cancellations_12m</code>; opens a moderation case at 3</td>
+<td>BR-CAN-03</td>
+</tr>
+<tr>
+<td><code>ledger.reconcile_balances</code></td>
+<td>daily 01:30</td>
+<td>Checks every <code>account_balance</code> equals the sum of its entries and every transaction sums to zero; alerts on any difference</td>
+<td>BR-PAY-02, BR-PAY-03</td>
+</tr>
+<tr>
+<td><code>ledger.monthly_invoices</code></td>
+<td>1st of month 03:00 (R2)</td>
+<td>Builds commission invoices with gap-free numbers</td>
+<td>BR-PAY-12</td>
+</tr>
+<tr>
+<td><code>ledger.process_gateway_event</code></td>
+<td>on webhook (R2)</td>
+<td>Verifies and applies a stored gateway event once</td>
+<td>BR-PAY-08, BR-SYS-02</td>
+</tr>
+<tr>
+<td><code>media.process_photo</code></td>
+<td>on <code>media.uploaded</code> (<code>media</code> queue)</td>
+<td>Validates, re-encodes, strips metadata, makes renditions, computes perceptual hash</td>
+<td>BR-MED-01</td>
+</tr>
+<tr>
+<td><code>media.scan_document</code></td>
+<td>on <code>media.uploaded</code> (<code>media</code> queue)</td>
+<td>ClamAV scan, moves the file to the private bucket or rejects it</td>
+<td>BR-MED-02</td>
+</tr>
+<tr>
+<td><code>media.purge_orphans</code></td>
+<td>daily 04:00</td>
+<td>Deletes quarantined or unattached uploads older than 24 h</td>
+<td>BR-MED-01</td>
+</tr>
+<tr>
+<td><code>trust.refresh_queue_priority</code></td>
+<td>every 15 min</td>
+<td>Raises priority of cases waiting too long</td>
+<td>BR-MOD-01</td>
+</tr>
+<tr>
+<td><code>trust.evaluate_risk_rules</code></td>
+<td>on events (R2)</td>
+<td>Runs fraud rules, opens cases, never blocks silently</td>
+<td>BR-MOD-04</td>
+</tr>
+<tr>
+<td><code>search.refresh_listing_doc</code></td>
+<td>on <code>listing.*</code>, <code>review.published</code>, <code>host.verification_changed</code></td>
+<td>Rebuilds the listing&#39;s search row or removes it</td>
+<td>ADR-011, BR-SRC-01</td>
+</tr>
+<tr>
+<td><code>search.rebuild_all</code></td>
+<td>weekly, Sunday 04:00</td>
+<td>Full rebuild and comparison, alerts on drift</td>
+<td>ADR-011</td>
+</tr>
+<tr>
+<td><code>accounts.purge_expired_sessions</code></td>
+<td>daily 02:30</td>
+<td>Removes expired session tokens and OTP records</td>
+<td>BR-ACC-03</td>
+</tr>
+<tr>
+<td><code>accounts.process_deletion_requests</code></td>
+<td>daily 05:00</td>
+<td>Anonymises users whose deletion request is due; keeps legal records</td>
+<td>BR-PRV-02, PRV-02</td>
+</tr>
+<tr>
+<td><code>accounts.retention_sweep</code></td>
+<td>daily 03:30</td>
+<td>Deletes ID images 90 days after decision, old messages, <code>otp_send_log</code> rows older than 90 days, old logs per the retention table</td>
+<td>BR-PRV-05, PRV-04</td>
+</tr>
+<tr>
+<td><code>audit.incident_deadline_watch</code></td>
+<td>hourly</td>
+<td>For open <code>incident_record</code> rows with personal data involved and no <code>anpdp_notified_at</code>: alerts the owner and super admins at day 2, day 4 and 12 hours before <code>anpdp_deadline_at</code></td>
+<td>PRV-05</td>
+</tr>
+<tr>
+<td><code>inventory.sync_calendar_feeds</code></td>
+<td>every 3 h (Later)</td>
+<td>Fetches active iCal import feeds through the egress proxy (private IPs blocked), applies blocks, records <code>last_error</code></td>
+<td>AVL-06</td>
+</tr>
+<tr>
+<td><code>core.purge_idempotency_records</code></td>
+<td>hourly</td>
+<td>Deletes idempotency records older than 24 h</td>
+<td>BR-SYS-01</td>
+</tr>
+<tr>
+<td><code>audit.verify_hash_chain</code></td>
+<td>daily 00:30</td>
+<td>Recomputes the chain for yesterday, stores the day&#39;s last hash as an anchor, alerts on break</td>
+<td>BR-STF-02</td>
+</tr>
+<tr>
+<td><code>audit.create_next_partition</code></td>
+<td>monthly, 20th</td>
+<td>Creates next month&#39;s partitions of <code>audit_event</code> (and <code>message</code> once partitioned)</td>
+<td>ADR-012</td>
+</tr>
+<tr>
+<td><code>audit.run_export</code></td>
+<td>on request (<code>reports</code> queue)</td>
+<td>Builds a CSV export, formula-safe, stores it privately, audits it</td>
+<td>BR-STF-04, STF-06</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="6-caching-strategy">6. Caching strategy</h2>
+<p>Redis is used for three separate things, in separate logical databases so one cannot evict the other: <strong>db 0</strong> Celery broker, <strong>db 1</strong> cache, <strong>db 2</strong> rate limits, OTP counters and login locks (with <code>maxmemory-policy noeviction</code> on that instance, because losing a lock counter is a security hole).</p>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+<th>Lifetime</th>
+<th>Invalidation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Geography, taxonomy lists, experience and trip type lists</td>
+<td>Redis + HTTP <code>Cache-Control: public, max-age=3600</code></td>
+<td>24 h</td>
+<td>Version key bumped by the service that changes them</td>
+</tr>
+<tr>
+<td>Current platform settings and published onboarding flows</td>
+<td>Redis</td>
+<td>60 s</td>
+<td>Bumped on publish (BR-CFG-01, 02)</td>
+</tr>
+<tr>
+<td>Public listing detail (without availability)</td>
+<td>Redis</td>
+<td>5 min</td>
+<td>Outbox <code>listing.changed</code> deletes the key</td>
+</tr>
+<tr>
+<td>Search results</td>
+<td>not cached at launch</td>
+<td></td>
+<td>Measure first (NFR-02). If needed: 60 s cache on identical anonymous queries without dates</td>
+</tr>
+<tr>
+<td>Facet counts for the home page</td>
+<td>Redis</td>
+<td>5 min</td>
+<td>Time only</td>
+</tr>
+<tr>
+<td>Availability, prices in a booking, balances, permissions, anything personal</td>
+<td><strong>never cached</strong></td>
+<td></td>
+<td>Always read from PostgreSQL inside the transaction</td>
+</tr>
+</tbody></table>
+<p>HTTP rules: personal responses send <code>Cache-Control: private, no-store</code>. Public GET responses send an <code>ETag</code>; the Next.js BFF may cache them with tagged revalidation. The CDN caches only static files and public photo renditions (see <a href="09-devops-hosting.html">09-devops-hosting.md</a>), never API responses.</p>
+<h2 id="7-search-strategy">7. Search strategy</h2>
+<p>PostgreSQL only at launch (research B.7, ADR-011, ADR-020).</p>
+<ol>
+<li><strong>Candidate filter</strong> on <code>listing_search_doc</code>: vertical, wilaya or commune, guests (<code>capacity_guests &gt;= n</code>), price range, property type, experience type, amenities (<code>amenity_ids @&gt; {...}</code> with GIN), instant only, rating, map box (<code>location_public &amp;&amp; ST_MakeEnvelope(...)</code> with GiST). Only published listings of approved, non-suspended host accounts have a row (BR-SRC-01).</li>
+<li><strong>Text</strong>: <code>tsv_fr</code>, <code>tsv_en</code>, <code>tsv_ar</code> with the right dictionary for the request language, plus trigram similarity on <code>search_text</code> (unaccented title and place names) for typos and transliteration (&quot;Tipaza&quot;, &quot;Tipasa&quot;, &quot;تيبازة&quot;).</li>
+<li><strong>Availability</strong> (only when dates are given): for each candidate, a <code>NOT EXISTS</code> probe on the booking exclusion index (single units) or a range read on <code>room_type_night</code> (pools), plus host blocks from <code>listing_day</code>. Partial matches return the largest free sub-range (BR-AVL-05).</li>
+<li><strong>Facets</strong>: each facet count is computed on the filtered set without that facet&#39;s own filter (BR-SRC-01), with one <code>GROUP BY</code> per facet on the candidate set.</li>
+<li><strong>Sort and page</strong>: relevance, price, rating, newest; cursor pagination, 24 per page, max 50; map mode returns up to 500 pins with public points only (SRC-02, BR-SRC-03).</li>
+<li><strong>Trips</strong> are searched separately on <code>trip</code> + <code>trip_departure</code> (departures overlapping the dates, seats left) and shown in their own tab (ADR-004, TRP-05).</li>
+<li><strong>Place autocomplete</strong> uses <code>commune</code> with trigram indexes on French and Arabic names (Q15 in the schema). Free-text address lookup through Nominatim is server-side, cached, and at most 1 request per second (research C.5).</li>
+</ol>
+<p><strong>When to add an external engine</strong> (Meilisearch first): if search p95 stays above 500 ms with 20,000 listings after index tuning (NFR-02), or if Arabic typo tolerance is not good enough in user tests. The search table and outbox topics make this a new consumer, not a rewrite.</p>
+<h2 id="8-file-upload-pipeline">8. File upload pipeline</h2>
+<figure class="mermaid"><img src="assets/mermaid-1.svg" alt="Diagram"></figure><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Photos (listing, avatar, logo)</th>
+<th>Private documents (KYC, message attachments R2)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Allowed types</td>
+<td>JPEG, PNG, WebP, HEIC</td>
+<td>PDF, JPEG, PNG</td>
+</tr>
+<tr>
+<td>Max size</td>
+<td>15 MB</td>
+<td>10 MB</td>
+</tr>
+<tr>
+<td>Checks</td>
+<td>Magic bytes, Pillow decompression-bomb limit (50 megapixels), dimensions at least 1024 px wide for listing photos</td>
+<td>Magic bytes, ClamAV scan, PDF without JavaScript or embedded files</td>
+</tr>
+<tr>
+<td>Transform</td>
+<td>Re-encode to WebP and JPEG; renditions 320, 640, 1280, 1920 px; all metadata including GPS removed</td>
+<td>Images re-encoded and metadata removed; PDFs stored as uploaded after a clean scan</td>
+</tr>
+<tr>
+<td>Duplicates</td>
+<td>Perceptual hash compared with other hosts&#39; photos; a match opens a trust case (BR-MOD-04)</td>
+<td>SHA-256 stored</td>
+</tr>
+<tr>
+<td>Final bucket</td>
+<td><code>public</code> (served by CDN with random keys)</td>
+<td><code>private</code> (no public access, signed GET valid 5 minutes, every view audited)</td>
+</tr>
+<tr>
+<td>Rules</td>
+<td>BR-MED-01, MED-01, MED-03</td>
+<td>BR-MED-02, MED-02</td>
+</tr>
+</tbody></table>
+<p>The browser never receives storage keys, only presigned URLs. Storage keys are random UUIDs, never file names.</p>
+<h2 id="9-internationalisation-i18n">9. Internationalisation (i18n)</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Languages</td>
+<td><code>en</code>, <code>fr</code>, <code>ar</code>. Default <code>fr</code> (user column <code>preferred_locale</code>). Fallback order: requested, then <code>fr</code>, then <code>en</code></td>
+</tr>
+<tr>
+<td>How the API knows the language</td>
+<td>The BFF sends <code>Accept-Language</code> from the URL locale (<code>/ar/...</code>); Django <code>LocaleMiddleware</code> activates it. Background jobs use the recipient&#39;s <code>preferred_locale</code></td>
+</tr>
+<tr>
+<td>Platform lists (amenities, categories, property types, wilayas, communes, reason codes, experience and trip types)</td>
+<td>django-modeltranslation columns <code>name_en</code>, <code>name_fr</code>, <code>name_ar</code> (research B.9). The API returns the active language only, or all three on admin endpoints</td>
+</tr>
+<tr>
+<td>Host-written text (titles, descriptions, reviews, messages)</td>
+<td>Stored once with <code>source_language</code>; shown as written. Machine translation is a later option</td>
+</tr>
+<tr>
+<td>API errors</td>
+<td>Stable snake_case <code>code</code> (for example <code>dates_unavailable</code>) plus a translated <code>message</code>. The apps map the code to their own text (NFR-13, BR-SYS-04)</td>
+</tr>
+<tr>
+<td>Notifications, emails, SMS</td>
+<td>Django templates per language; SMS texts kept short (Arabic SMS has 70 characters per segment)</td>
+</tr>
+<tr>
+<td>Numbers and dates</td>
+<td>Latin digits in all languages (<code>ar-DZ</code> with <code>latn</code>); dates ISO 8601 in the API; display formatting is done by the apps</td>
+</tr>
+<tr>
+<td>Time zone</td>
+<td>Stored in UTC; stay dates and business days in Africa/Algiers; week starts Sunday; weekend Friday and Saturday (BR-SYS-05)</td>
+</tr>
+<tr>
+<td>Translation files</td>
+<td><code>.po</code> files in the repository; CI fails if a message is missing in one language (<a href="10-testing-quality.html">10-testing-quality.md</a> section 8)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="10-how-the-website-and-the-admin-will-use-the-api">10. How the website and the admin will use the API</h2>
+<h3 id="101-what-exists-today">10.1 What exists today</h3>
+<p>Both apps are Next.js 14. All data goes through <code>lib/data/*</code> functions that read and write <strong>in-memory mock stores</strong> on the Next.js server (<code>frontend/lib/data/_store.ts</code>, <code>admin/lib/mock-data/store</code>). Pages and server actions call only these functions; the comments say &quot;TODO: replace with Supabase&quot;, which this blueprint replaces with &quot;replace with the Django API&quot;. The website signs its own session cookie (<code>DARNA_SESSION_SECRET</code>); the admin signs a JWT (<code>ADMIN_AUTH_SECRET</code>). The website has a <strong>test mode</strong> (<code>NEXT_PUBLIC_BLADUS_TEST_MODE</code>, ON unless set to <code>0</code>) that allows one-click demo login, a built-in secret and non-Secure cookies. <strong>Test mode must be OFF (<code>0</code>) in every environment with real people&#39;s data</strong>; the deploy pipeline refuses a production build where it is not <code>0</code> (<a href="09-devops-hosting.html">09-devops-hosting.md</a> section 7).</p>
+<h3 id="102-target-bff">10.2 Target: BFF</h3>
+<figure class="mermaid"><img src="assets/mermaid-2.svg" alt="Diagram"></figure><ul>
+<li>The browser <strong>never</strong> holds the Django token in JavaScript. Next.js stores the allauth session token inside an encrypted, httpOnly cookie and sends it to Django in the <code>X-Session-Token</code> header from server code only (cookie flags in <a href="08-security-privacy.html">08-security-privacy.md</a> section 4).</li>
+<li>Django is reachable from the Next.js servers over the private network. The public internet reaches only the Next.js apps and, in R2, the webhook path.</li>
+<li>The BFF passes the real client IP in <code>X-Forwarded-For</code>; Django trusts that header only from the BFF and proxy addresses (<code>TRUSTED_PROXY_IPS</code>), so rate limits and audit logs see the real IP.</li>
+<li>Client-side components that need fresh data (message polling, notifications badge) call a <strong>Next.js route handler</strong> that forwards to Django; they never call Django directly.</li>
+</ul>
+<h3 id="103-typed-client">10.3 Typed client</h3>
+<ul>
+<li>Django generates <code>openapi.yaml</code> with drf-spectacular in CI (NFR-08). It is published as a build artifact and copied into both apps (<code>lib/api/schema.d.ts</code>) by <code>openapi-typescript</code>.</li>
+<li>A small <code>server-only</code> wrapper <code>lib/api/client.ts</code> built on <code>openapi-fetch</code> adds the headers, timeouts (5 s), one retry for idempotent GETs, and turns API errors into the existing <code>ActionResult</code> shape. API <code>code</code> values are mapped to the apps&#39; <code>ERROR_CODES</code> list (for example <code>dates_unavailable</code> to the website&#39;s existing date error codes); new codes are added to the <code>messages/*.json</code> files in en, fr and ar.</li>
+<li>Both apps run <code>tsc --noEmit</code> against the generated types in CI. An API change that breaks a call breaks the app build before deployment.</li>
+</ul>
+<h3 id="104-migration-from-mock-data-to-the-api-one-module-at-a-time">10.4 Migration from mock data to the API, one module at a time</h3>
+<p>Each <code>lib/data/&lt;module&gt;.ts</code> keeps its exported function names and return types. Inside, it chooses a source:</p>
+<pre><code class="lang-text">lib/data/listings.ts           (unchanged signatures, used by pages and actions)
+  ├─ lib/data/mock/listings.ts (today's code, moved)
+  └─ lib/api/listings.ts       (calls Django through the typed client, maps DTOs)
+switch: server-only env var BLADUS_API_MODULES=&quot;geo,taxonomy,listings&quot;</code></pre><p>The flag is a <strong>server-only</strong> variable (never <code>NEXT_PUBLIC_</code>), read at request time, so a module can be switched back without rebuilding. For each module: (1) build the Django endpoints and contract tests; (2) write the API adapter and a parity test (same fixture through mock and API gives the same DTO shape); (3) in staging, run in &quot;shadow&quot; mode for a few days (serve mock, call the API too, log differences); (4) switch staging, then production; (5) after two weeks without rollback, delete the mock code.</p>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Website module(s)</th>
+<th>Admin module(s)</th>
+<th>Why this order</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>geo</code> (via <code>lib/algeria.ts</code>), catalog type lists</td>
+<td><code>categories</code></td>
+<td>Read-only reference data, lowest risk; proves the client, headers and i18n</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>auth</code> (sessions, OTP, profile)</td>
+<td><code>auth</code>, <code>team</code> (staff login with MFA)</td>
+<td>Every personal module needs real users; removes the signed-cookie and JWT secrets</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>listings</code>, <code>experiences</code>, <code>vehicles</code>, <code>trips</code> (read: search, detail)</td>
+<td><code>listings</code> (read, moderation)</td>
+<td>Public pages; search performance can be measured</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>organizations</code> + onboarding, documents</td>
+<td><code>hosts</code>, <code>approvals</code>, <code>onboarding</code>, <code>settings</code></td>
+<td>Hosts must exist and be verified before they publish</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>listings</code> (write), <code>calendar</code></td>
+<td><code>listings</code> (write)</td>
+<td>Listing review flow (DEC-003)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>reservations</code>, <code>wallet</code></td>
+<td><code>bookings</code>, <code>finance</code>, <code>ledger</code></td>
+<td>The money and availability core; needs concurrency tests green</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>favorites</code>, <code>notifications</code>, <code>conversations</code></td>
+<td><code>users</code>, <code>network</code></td>
+<td>Personal features on top of bookings</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>reviews</code></td>
+<td><code>reviews</code>, <code>audit</code>, <code>analytics</code>, <code>promotions</code>, <code>command-palette</code></td>
+<td>Need real completed bookings and audit data</td>
+</tr>
+</tbody></table>
+<p>Rules during migration: a module switched to the API never writes to the mock store again; mixed states are allowed only between modules that do not share writes (for example <code>reservations</code> and <code>wallet</code> switch together because a booking posts commission).</p>
+<hr>
+<h2 id="11-future-django-repository-layout">11. Future Django repository layout</h2>
+<p>A separate repository (<code>bladus-api</code>), or a <code>backend/</code> folder in this monorepo; decided at build time. Nothing below is created in this phase.</p>
+<pre><code class="lang-text">bladus-api/
+├── pyproject.toml              # dependencies (uv), ruff, mypy, pytest, import-linter config
+├── uv.lock
+├── manage.py
+├── Dockerfile                  # one image for api, workers and beat
+├── compose.yaml                # dev stack (see 09-devops-hosting.md)
+├── compose.prod.yaml
+├── .github/workflows/          # ci.yml, contract.yml, deploy-staging.yml, deploy-prod.yml
+├── openapi/
+│   └── openapi.yaml            # generated, committed, diffed in CI
+├── config/                     # the Django project
+│   ├── settings/
+│   │   ├── base.py
+│   │   ├── dev.py
+│   │   ├── test.py
+│   │   ├── staging.py
+│   │   └── production.py
+│   ├── env.py                  # pydantic-settings: typed, fails fast on missing values
+│   ├── urls.py                 # /api/v1/public, /me, /host, /admin, /webhooks, /_allauth
+│   ├── celery.py               # queues, beat schedule (section 5)
+│   ├── asgi.py
+│   └── wsgi.py
+├── bladus/                     # all apps live in one package
+│   ├── core/                   # kernel: base model, money, errors, idempotency, clock, pagination
+│   ├── geo/
+│   ├── config/                 # app named &quot;platform_config&quot; in INSTALLED_APPS to avoid clashing with the project folder
+│   ├── audit/
+│   ├── media/
+│   ├── notifications/
+│   │   ├── providers/          # sms_local.py, sms_fallback.py, email.py (one interface)
+│   │   └── templates/          # en/, fr/, ar/
+│   ├── accounts/
+│   ├── hosts/
+│   ├── catalog/
+│   ├── inventory/
+│   ├── trips/
+│   ├── pricing/
+│   ├── ledger/
+│   ├── bookings/
+│   │   ├── models.py
+│   │   ├── services.py
+│   │   ├── selectors.py
+│   │   ├── apis.py
+│   │   ├── permissions.py
+│   │   ├── events.py
+│   │   ├── tasks.py
+│   │   ├── admin.py
+│   │   ├── migrations/
+│   │   └── tests/
+│   │       ├── factories.py
+│   │       ├── test_services.py
+│   │       ├── test_apis.py
+│   │       ├── test_properties.py      # hypothesis
+│   │       └── test_concurrency.py     # real PostgreSQL
+│   ├── reviews/
+│   ├── messaging/
+│   ├── trust/
+│   └── search/
+├── locale/                     # en, fr, ar .po files
+├── seeds/                      # wilayas, communes, permissions, taxonomy, settings v1 (production seeds 1 to 8)
+├── tests/
+│   ├── contract/               # schemathesis
+│   ├── performance/            # k6 scripts
+│   └── traceability/           # BR rule to test checker
+├── ops/
+│   ├── caddy/Caddyfile
+│   ├── postgres/               # postgresql.conf, pgbackrest.conf, init SQL (extensions, roles, grants)
+│   ├── prometheus/             # scrape config, alert rules
+│   └── runbooks/               # copies of the runbooks in 09
+└── docs/                       # links back to this blueprint</code></pre><hr>
+<h2 id="12-architecture-decisions-summary">12. Architecture decisions (summary)</h2>
+<p>Numbering continues from <a href="05-database-schema.html">05-database-schema.md</a> (ADR-001 to ADR-014).</p>
+<table>
+<thead>
+<tr>
+<th>ADR</th>
+<th>Decision</th>
+<th>Rejected options</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ADR-015</td>
+<td><strong>Modular monolith</strong>: one Django project, 17 apps + kernel, one database</td>
+<td>Microservices; one big app without boundaries</td>
+<td>Small team, one transaction for booking + inventory + ledger; Airbnb split only at hundreds of engineers (research A.1)</td>
+</tr>
+<tr>
+<td>ADR-016</td>
+<td><strong>Services and selectors</strong> (HackSoft style), thin DRF views</td>
+<td>Logic in serializers or models (&quot;fat models&quot;); Django Ninja</td>
+<td>Testable functions, one place per rule, known to Algerian Django developers (research B.2)</td>
+</tr>
+<tr>
+<td>ADR-017</td>
+<td><strong>Transactional outbox</strong> for all side effects</td>
+<td>Django signals; calling Celery directly inside the transaction</td>
+<td>A rolled-back change sends nothing; a crash after commit still sends (BR-SYS-03)</td>
+</tr>
+<tr>
+<td>ADR-018</td>
+<td><strong>Celery + Redis</strong> with 4 queues and one beat</td>
+<td>Django built-in tasks (6.x), Dramatiq, Huey</td>
+<td>Retries, schedules, monitoring today; thin tasks keep the door open to Django tasks (research B.5)</td>
+</tr>
+<tr>
+<td>ADR-019</td>
+<td><strong>BFF with allauth headless session tokens</strong> in encrypted httpOnly cookies</td>
+<td>JWT in browser storage; SimpleJWT; Django cookies shared across domains</td>
+<td>Tokens never reach JavaScript; revocable server-side (ACC-03); OTP, MFA and rate limits included (research B.3)</td>
+</tr>
+<tr>
+<td>ADR-020</td>
+<td><strong>PostgreSQL search</strong> (<code>listing_search_doc</code> + PostGIS + trigram)</td>
+<td>Meilisearch, Typesense, OpenSearch at launch</td>
+<td>One store, consistent with availability; external engine only when measured slow</td>
+</tr>
+<tr>
+<td>ADR-021</td>
+<td><strong>Polling</strong> a cursor endpoint for messages (5 to 15 s)</td>
+<td>WebSockets via Django Channels or Centrifugo at launch</td>
+<td>Simplest to run; Centrifugo later (research B.6)</td>
+</tr>
+<tr>
+<td>ADR-022</td>
+<td><strong>S3-compatible storage hosted in Algeria</strong>, presigned uploads, quarantine then process</td>
+<td>Uploads through Django; Cloudinary; Cloudflare R2 for personal files</td>
+<td>Data residency (BR-PRV-04), no large files in the API process, vendor-neutral</td>
+</tr>
+<tr>
+<td>ADR-023</td>
+<td><strong>OpenAPI + openapi-typescript + openapi-fetch</strong> typed client</td>
+<td>Hand-written fetch calls; orval; hey-api</td>
+<td>Small, works in server components; breaking changes fail compile (NFR-08)</td>
+</tr>
+<tr>
+<td>ADR-024</td>
+<td><strong>Module-by-module migration</strong> behind server-only flags with shadow reads</td>
+<td>Big-bang switch; keeping mock and API both writable</td>
+<td>Each step reversible without a rebuild; risk spread over time</td>
+</tr>
+<tr>
+<td>ADR-025</td>
+<td><strong>Layered app dependencies checked by import-linter</strong></td>
+<td>Convention only</td>
+<td>Boundaries stay real as the team grows</td>
+</tr>
+<tr>
+<td>ADR-026</td>
+<td><strong>READ COMMITTED + constraints + ordered row locks</strong></td>
+<td>SERIALIZABLE everywhere; Redis locks</td>
+<td>Constraints are the final guard (ADR-002); fewer retries; Redis locks are not transactional with the data</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Which app owns <code>onboarding_draft</code>, and why is it not in <code>config</code>?</li>
+<li><input disabled="" type="checkbox"> <code>notifications</code> is in layer L1. How can it send a &quot;booking confirmed&quot; email without importing <code>bookings</code>?</li>
+<li><input disabled="" type="checkbox"> Two guests book the last hotel room at the same second. Which step of section 3.1 stops the second one, and what error does it get?</li>
+<li><input disabled="" type="checkbox"> Why is no SMS ever sent from inside a database transaction?</li>
+<li><input disabled="" type="checkbox"> Which job releases inventory held for an unpaid checkout, and how often does it run?</li>
+<li><input disabled="" type="checkbox"> Which data is never cached, and why?</li>
+<li><input disabled="" type="checkbox"> What must be true before the website&#39;s <code>reservations</code> module is switched to the API, and which module switches with it?</li>
+<li><input disabled="" type="checkbox"> Where does a KYC document go after upload, and how long is a download link valid?</li>
+</ul>
+<div class="pager"><span><a href="api-reference.html">&larr; API reference</a></span><span><a href="08-security-privacy.html">08. Security and privacy &rarr;</a></span></div></main></div></body></html>

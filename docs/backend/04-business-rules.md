@@ -59,6 +59,8 @@ Sources: website code ([Appendix A section 4](_work/frontend-inventory.md)), adm
 | BR-HST-01 | Onboarding steps come from the published config for the host type: individual 12, agency 5, hotel 7, hostel 7 (DEC-007). Every flow contains the approval-mode step. | service (config) | hardcoded; agency missing step | agency draft without approval mode cannot submit |
 | BR-HST-02 | A draft records the config version it started from. Submitted answers are validated against that version; custom answers are stored as JSON keyed by field id. | service | browser storage | answer with unknown field id rejected |
 | BR-HST-03 | Required documents per host type (table 3a). A host is approved only when every required document is `approved`. Each document is reviewed on its own. | service | whole host approved | approve with a pending document fails |
+| BR-HST-05 | What each host account may publish (DEC-014): individual: home, vehicle; agency: experience, trip; hotel and hostel: their property (hotel or hostel vertical with room types). Checked when creating or changing the vertical of a listing and when creating a trip. | service + DB trigger | built in website | individual creating an experience gets 403 `host_offer_not_allowed` |
+| BR-HST-06 | Hotel system connection (DEC-017): a hotel or hostel may connect its own system (channel manager, PMS, iCal feed or CSV file). Room types, availability per night, prices and services are imported and refreshed on a schedule; imported fields are read-only on BLADUS while the connection is active; a failed sync never deletes data, it flags the connection. Hotels without a system type the same data by hand. | job + service | none | sync failure keeps last good data |
 | BR-HST-04 | Host verification state machine: table 3b. Reasons of at least 10 characters for reject, request changes, suspend, ban. | service | admin only | approved to applied refused |
 
 **Table 3a: required documents (proposal, VERIFY WITH A PROFESSIONAL)**
@@ -94,6 +96,7 @@ Soft delete is separate: any state can be soft-deleted by a super admin and rest
 | BR-LST-02 | Publishing needs staff approval (DEC-003). Editing title, description, photos, location, vertical, capacity or room types of a published listing creates a revision that goes to review while the published version stays visible. Price, calendar and rules changes do not need review. | service | live at once | edit title, public page unchanged until approved |
 | BR-LST-03 | Listing state machine: table 4a. Only published listings appear in search or accept bookings. Paused, suspended and archived listings keep existing bookings. | service + DB check on enum | two sets | booking on paused listing refused |
 | BR-LST-04 | Amenities, property types and categories are reference rows. A reference row in use cannot be hard-deleted; it is deactivated. | DB FK `ON DELETE RESTRICT` | free text | delete used amenity fails |
+| BR-LST-05 | Experience and trip types come from one fixed list each (DEC-015): 8 experience types and 8 trip types with en/fr/ar labels. An experience listing must have exactly one experience type; a trip exactly one trip type. Changing the lists is a product change made in one place (backend enum, served to both apps). | DB enum + check + service | built in both apps (shared list file) | experience without type refused |
 | BR-TRP-01 | Only an organisation with `business_category = agency` and verification `approved` can create trips. | service | built | hotel creates trip, 403 |
 | BR-TRP-02 | A departure has `seats_total`; held + booked seats never exceed it. Price is per person and snapshot on the booking. | DB check on departure counters | per date by maxGroupSize | concurrent last-seat bookings: one wins |
 | BR-TRP-03 | Cancelling a departure cancels every booking on it with a full refund obligation and commission reversal, and notifies guests. | service | missing | all bookings cancelled |
@@ -177,8 +180,8 @@ Under DEC-001 the guest paid the host directly, so a "refund" is an amount the *
 - 3 nights x 18,500 = **55,500 DZD** subtotal; cleaning 4,000; total **59,500 DZD**.
 - Commission at confirmation: 12% x 55,500 = **6,660 DZD** deducted from the host's wallet.
 - Guest cancels 3 days before, moderate policy: 50% of 55,500 = 27,750 + cleaning 4,000 = **31,750 DZD** owed back to the guest.
-- BLADUS keeps commission only on the part the host keeps: 12% x 27,750 = 3,330, so **3,330 DZD** goes back to the wallet.
-- If the host cancels instead: the guest is owed 59,500 and all 6,660 goes back to the wallet.
+- The host recovers the full commission (DEC-018): **6,660 DZD** goes back to the wallet.
+- If the host cancels instead: the guest is owed 59,500 and, again, all 6,660 goes back to the wallet.
 
 ## 9. Money, wallet and ledger (PAY)
 
@@ -188,9 +191,9 @@ Under DEC-001 the guest paid the host directly, so a "refund" is an amount the *
 | BR-PAY-02 | Ledger: every posting is one `ledger_transaction` with 2+ entries; entries of a transaction sum to 0 per currency; entries are never updated or deleted (corrections are new reversing transactions). | DB deferred constraint trigger + no UPDATE/DELETE grant | single-sided | unbalanced insert fails at commit |
 | BR-PAY-03 | Each host account has one commission wallet account in the ledger. Balance = sum of its entries (cached in a balance row updated in the same transaction). | DB + service | built (website) | cache equals sum |
 | BR-PAY-04 | Commission = round_half_up(commission_base x rate_bp / 10,000); base per DEC-002 (subtotal after discount; trips and experiences: seats x price). Posted once per booking at confirmation (unique key booking + kind). | DB unique + service | built (website) | confirm twice posts once |
-| BR-PAY-05 | Commission reversal: decline and expiry (nothing was posted); host cancel and staff cancel without guest fault: full; guest cancel: reverse the commission on the refunded subtotal share. | service | built (website) | example 8a |
+| BR-PAY-05 | Commission reversal (DEC-018): whenever a confirmed booking is cancelled, by the guest, the host or the admin, the host gets the **full commission back** in the wallet, whatever the refund percentage. Decline and expiry post nothing. BLADUS earns commission only on stays that are not cancelled. | service | partial reversal on guest cancel | example 8a |
 | BR-PAY-06 | Rate resolution: host account override (if set) else host-type default from settings (individual 1,200 bp, agency 1,500, hotel 1,800, hostel 1,000). Changing defaults affects new bookings only. Overrides can be cleared. | service | two sources | clearing an override returns to the default |
-| BR-PAY-07 | Manual top-up: amount 1 to 10,000,000 DZD; method in `ccp_transfer`, `bank_transfer`, `baridimob`, `cash_office`; receipt reference unique per method; top-ups over 500,000 DZD need a second finance user to approve (four-eyes). | DB unique + service | duplicates allowed | same receipt twice fails |
+| BR-PAY-07 | Manual top-up: amount 1 to 10,000,000 DZD; method in `ccp_transfer`, `bank_transfer`, `baridimob`, `cash_office`; receipt reference unique per method; top-ups over 500,000 DZD need a second admin user to approve (four-eyes). | DB unique + service | duplicates allowed | same receipt twice fails |
 | BR-PAY-08 | Online top-up (R2): credited only from a verified gateway webhook, once per gateway event id. | DB unique `(provider, event_id)` | none | replayed webhook ignored |
 | BR-PAY-09 | Changing payout or refund account details requires 2FA, notifies the old email and phone, and blocks payouts for 72 hours. | service | none | payout during hold refused |
 | BR-PAY-10 | Credit floor: a host wallet may go below zero down to `-credit_limit` (setting per host type, default 20,000 DZD). Below 0: banner and admin flag. Below the floor: instant bookings become requests and the host cannot accept new requests until topped up. | service | banner only | accept refused below floor |
@@ -213,9 +216,9 @@ Under DEC-001 the guest paid the host directly, so a "refund" is an amount the *
 |---|---|---|---|
 | Finance records a CCP top-up | platform_cash:ccp | host_wallet:H | 50,000 |
 | Booking confirmed | host_wallet:H | platform_commission_revenue | 6,660 |
-| Guest cancels (example 8a) | platform_commission_revenue | host_wallet:H | 3,330 |
+| Guest cancels (example 8a) | platform_commission_revenue | host_wallet:H | 6,660 |
 
-Wallet balance after: 50,000 - 6,660 + 3,330 = **46,670 DZD**.
+Wallet balance after: 50,000 - 6,660 + 6,660 = **50,000 DZD**.
 
 ## 10. Reviews (REV)
 
@@ -263,7 +266,7 @@ Wallet balance after: 50,000 - 6,660 + 3,330 = **46,670 DZD**.
 
 | ID | Rule | Enforced by | Today | Test |
 |---|---|---|---|---|
-| BR-STF-01 | Staff permissions come from the role (5 roles, matrix in Appendix B section 1.1) stored in the database; checked on every admin endpoint; deny by default. | service | code constants | analyst refund gets 403 |
+| BR-STF-01 | One staff role: **admin**, with every permission (DEC-016). The permission list stays in the database so roles can be split later. Checked on every admin endpoint; deny by default. Four-eyes actions need a second admin user. | service | 5 roles in code | non-staff calling an admin endpoint gets 403 |
 | BR-STF-02 | Audit log is insert-only (no UPDATE or DELETE grant for the app's database role); each row stores actor id, actor role, action, object type and id, before/after (personal data minimised), IP, request id, and a hash of the previous row. | DB grants + trigger | memory | update fails |
 | BR-STF-03 | Every record of who did something stores a user id (foreign key), never a display name. | DB FK | names | |
 | BR-STF-04 | Exports: values starting with `= + - @ TAB CR` are prefixed with `'`; need `reports.export` plus the view permission of the dataset; audited with filters and row count. | service | built | formula neutralised |

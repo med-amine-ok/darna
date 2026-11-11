@@ -1,0 +1,2065 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>API reference · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="on" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 6: API</div><h1 id="api-reference-generated-from-openapiyaml">API reference (generated from openapi.yaml)</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Every API address the backend will offer, grouped by area, with the requirements each one serves.<br>It is generated from <a href="files/openapi.yaml">openapi.yaml</a>, the machine-readable contract. 266 operations.</p>
+</blockquote>
+<p>Title: BLADUS API, version 1.0.0-draft.1.</p>
+<h2 id="auth">auth</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/auth/signup</code></td>
+<td>Sign up with email or Algerian phone</td>
+<td>ACC-01, PRV-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/login</code></td>
+<td>Sign in with email or phone and password</td>
+<td>ACC-02, ACC-03, ACC-07, NFR-11</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/code/request</code></td>
+<td>Send a one-time login code by SMS (phone OTP)</td>
+<td>ACC-02, ACC-07</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/code/confirm</code></td>
+<td>Confirm the one-time login code</td>
+<td>ACC-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/session</code></td>
+<td>Read the current session</td>
+<td>ACC-03</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/auth/session</code></td>
+<td>Sign out (revoke the session token)</td>
+<td>ACC-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/phone/verify</code></td>
+<td>Verify a phone number with the SMS code</td>
+<td>ACC-01, ACC-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/email/verify</code></td>
+<td>Verify an email address with the emailed key</td>
+<td>ACC-01, ACC-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/password/request</code></td>
+<td>Ask for a password reset (email link or SMS code)</td>
+<td>ACC-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/password/reset</code></td>
+<td>Set a new password with the reset key</td>
+<td>ACC-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/password/change</code></td>
+<td>Change password (signed in)</td>
+<td>ACC-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/2fa/authenticate</code></td>
+<td>Second step of login: TOTP or recovery code</td>
+<td>ACC-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/authenticators</code></td>
+<td>List my second factors</td>
+<td>ACC-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/auth/authenticators/totp</code></td>
+<td>Get a TOTP secret to enrol</td>
+<td>ACC-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/auth/authenticators/totp</code></td>
+<td>Enrol a TOTP authenticator</td>
+<td>ACC-05</td>
+</tr>
+</tbody></table>
+<h2 id="publicgeo">public.geo</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/geo/wilayas</code></td>
+<td>List the 69 wilayas</td>
+<td>SRC-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/geo/wilayas/{wilaya_code}/communes</code></td>
+<td>List the communes of one wilaya</td>
+<td>SRC-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/geo/communes</code></td>
+<td>Autocomplete communes by name (fr, ar, en)</td>
+<td>SRC-03, SRC-04</td>
+</tr>
+</tbody></table>
+<h2 id="publicreference">public.reference</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/reference</code></td>
+<td>All shared lists (types, amenities, policies, offer rules)</td>
+<td>LST-05, LST-12, TRP-07, CFG-05, HST-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/reference/reasons</code></td>
+<td>Reason catalogue for an action</td>
+<td>MOD-03, BKG-02, CAN-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/onboarding-flows/{host_type}</code></td>
+<td>Get the published onboarding flow for a host type</td>
+<td>CFG-04, HST-01</td>
+</tr>
+</tbody></table>
+<h2 id="publiccatalog">public.catalog</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/listings</code></td>
+<td>Search listings</td>
+<td>SRC-01, SRC-02, SRC-03, SRC-05, SRC-06, AVL-04, LST-12, NFR-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/listings/facets</code></td>
+<td>Facet counts for the current search</td>
+<td>SRC-01, LST-12</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/listings/map</code></td>
+<td>Map pins for the current search (max 500)</td>
+<td>SRC-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/listings/{listing_id}</code></td>
+<td>Public listing page</td>
+<td>LST-06, LST-10, LST-11, SRC-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/listings/{listing_id}/availability</code></td>
+<td>Free nights, units or slots for a period</td>
+<td>AVL-04, AVL-02, LST-11</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/listings/{listing_id}/reviews</code></td>
+<td>Published reviews of a listing</td>
+<td>REV-05, REV-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/quotes</code></td>
+<td>Get a server price quote</td>
+<td>PRC-01, PRC-02, PRC-03, PRC-04, PRC-05, PAY-12, AVL-04, BKG-09</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/quotes/{quote_id}</code></td>
+<td>Read a quote again</td>
+<td>PRC-01</td>
+</tr>
+</tbody></table>
+<h2 id="publictrips">public.trips</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/trips</code></td>
+<td>Search agency trips</td>
+<td>TRP-05, TRP-07, SRC-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/trips/{trip_id}</code></td>
+<td>Public trip page (path accepts the trip id or its slug)</td>
+<td>TRP-02, TRP-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/trips/{trip_id}/departures</code></td>
+<td>Upcoming departures with seats left</td>
+<td>TRP-03, BKG-09</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/trips/{trip_id}/reviews</code></td>
+<td>Published reviews of a trip</td>
+<td>REV-05</td>
+</tr>
+</tbody></table>
+<h2 id="publicprofiles">public.profiles</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/organizations</code></td>
+<td>List verified organisations (sitemap, directory)</td>
+<td>ORG-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/organizations/{org_slug}</code></td>
+<td>Public organisation profile</td>
+<td>ORG-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/users/{user_id}</code></td>
+<td>Public user profile</td>
+<td>ACC-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/users/{user_id}/reviews</code></td>
+<td>Reviews written by a user or received as a host</td>
+<td>REV-05</td>
+</tr>
+</tbody></table>
+<h2 id="meprofile">me.profile</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/me</code></td>
+<td>My profile</td>
+<td>ACC-06, ACC-08</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/me</code></td>
+<td>Update my profile</td>
+<td>ACC-06</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/me/phone</code></td>
+<td>Start a phone change (sends an SMS code)</td>
+<td>ACC-06, ACC-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/consents</code></td>
+<td>My current consents</td>
+<td>PRV-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/consents</code></td>
+<td>Accept or withdraw a consent (terms, privacy, marketing)</td>
+<td>PRV-01, NTF-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/data-requests</code></td>
+<td>My data protection requests</td>
+<td>PRV-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/data-requests</code></td>
+<td>Ask for my data, a correction or deletion</td>
+<td>PRV-02</td>
+</tr>
+</tbody></table>
+<h2 id="mefavorites">me.favorites</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/me/favorites</code></td>
+<td>My favourites</td>
+<td>ACC-09</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/me/favorites/{target_type}/{target_id}</code></td>
+<td>Add a listing or trip to favourites</td>
+<td>ACC-09</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/me/favorites/{target_type}/{target_id}</code></td>
+<td>Remove from favourites</td>
+<td>ACC-09</td>
+</tr>
+</tbody></table>
+<h2 id="menotifications">me.notifications</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/me/notifications</code></td>
+<td>My notifications, newest first</td>
+<td>NTF-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/notifications/{notification_id}/read</code></td>
+<td>Mark one notification as read</td>
+<td>NTF-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/notifications/read-all</code></td>
+<td>Mark all my notifications as read</td>
+<td>NTF-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/notification-preferences</code></td>
+<td>My notification preferences</td>
+<td>NTF-03</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/me/notification-preferences</code></td>
+<td>Change my notification preferences</td>
+<td>NTF-03</td>
+</tr>
+</tbody></table>
+<h2 id="mebookings">me.bookings</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/me/bookings</code></td>
+<td>Book from a quote (instant or request)</td>
+<td>BKG-01, BKG-02, BKG-05, BKG-06, BKG-09, BKG-10, AVL-01, AVL-02, PAY-03, ACC-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/bookings</code></td>
+<td>My bookings (trips page)</td>
+<td>BKG-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/bookings/{booking_id}</code></td>
+<td>One of my bookings</td>
+<td>BKG-07, BKG-08, NFR-12</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/bookings/{booking_id}/cancellation-preview</code></td>
+<td>What I would get back if I cancel now</td>
+<td>CAN-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/bookings/{booking_id}/cancel</code></td>
+<td>Cancel my booking or withdraw my request</td>
+<td>CAN-01, CAN-04, BKG-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/bookings/{booking_id}/review</code></td>
+<td>Review a completed stay</td>
+<td>REV-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/bookings/{booking_id}/dispute</code></td>
+<td>Open a dispute about a booking</td>
+<td>BKG-11</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/bookings/{booking_id}/payments</code></td>
+<td>Pay a booking online (guest payment)</td>
+<td>PAY-10 (dormant)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/reviews</code></td>
+<td>Reviews I wrote</td>
+<td>REV-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/reviews/{review_id}/reports</code></td>
+<td>Report a review</td>
+<td>REV-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/invitations/accept</code></td>
+<td>Accept an organisation invitation</td>
+<td>ORG-03, ACC-08</td>
+</tr>
+</tbody></table>
+<h2 id="messaging">messaging</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/conversations</code></td>
+<td>My conversations</td>
+<td>MSG-01, MSG-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/conversations</code></td>
+<td>Start (or find) a conversation about a listing, trip or booking</td>
+<td>MSG-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/conversations/sync</code></td>
+<td>Changes since a cursor (polling)</td>
+<td>MSG-02, MSG-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/conversations/{conversation_id}</code></td>
+<td>One conversation</td>
+<td>MSG-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/conversations/{conversation_id}/messages</code></td>
+<td>Messages of a conversation</td>
+<td>MSG-01, MSG-02, MSG-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/conversations/{conversation_id}/messages</code></td>
+<td>Send a message</td>
+<td>MSG-01, MSG-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/conversations/{conversation_id}/read</code></td>
+<td>Move my read pointer</td>
+<td>MSG-03</td>
+</tr>
+</tbody></table>
+<h2 id="media">media</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/media/uploads</code></td>
+<td>Get a presigned upload URL</td>
+<td>MED-01, MED-02, MSG-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/media/{media_id}/complete</code></td>
+<td>Tell the server the upload finished</td>
+<td>MED-01, MED-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/media/{media_id}</code></td>
+<td>Upload status and renditions</td>
+<td>MED-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/media/{media_id}/url</code></td>
+<td>Short-lived URL for a private file</td>
+<td>MED-02</td>
+</tr>
+</tbody></table>
+<h2 id="hostworkspace">host.workspace</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/me/workspaces</code></td>
+<td>Host accounts I can act for (workspace switcher)</td>
+<td>ORG-02, ACC-08</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/me/workspaces/active</code></td>
+<td>Switch the active host account</td>
+<td>ORG-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/account</code></td>
+<td>The active host account</td>
+<td>ORG-02, HST-04, HST-06, HST-07</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/account</code></td>
+<td>Change the default approval mode</td>
+<td>HST-06</td>
+</tr>
+</tbody></table>
+<h2 id="hostonboarding">host.onboarding</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/onboarding/drafts</code></td>
+<td>My onboarding drafts</td>
+<td>HST-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/onboarding/drafts/{host_type}</code></td>
+<td>My draft for one host type</td>
+<td>HST-02</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/host/onboarding/drafts/{host_type}</code></td>
+<td>Save my draft (create or replace)</td>
+<td>HST-02, CFG-04</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/onboarding/drafts/{host_type}</code></td>
+<td>Abandon my draft</td>
+<td>HST-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/onboarding/drafts/{host_type}/submit</code></td>
+<td>Finish onboarding: create the host account</td>
+<td>HST-01, HST-02, ORG-01, HST-07, LST-01, CFG-04</td>
+</tr>
+</tbody></table>
+<h2 id="hostverification">host.verification</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/documents</code></td>
+<td>Verification documents of the active host account</td>
+<td>HST-03, MOD-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/documents</code></td>
+<td>Attach an uploaded document</td>
+<td>HST-03, MED-02</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/documents/{document_id}</code></td>
+<td>Remove a pending or rejected document</td>
+<td>HST-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/verification/submit</code></td>
+<td>Send the host account for review (or resubmit)</td>
+<td>HST-04, MOD-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/change-requests</code></td>
+<td>What moderators asked me to fix</td>
+<td>MOD-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/payout-accounts</code></td>
+<td>Refund and payout account details</td>
+<td>HST-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/payout-accounts</code></td>
+<td>Add a CCP, bank or BaridiMob account</td>
+<td>HST-05, ACC-05</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/payout-accounts/{payout_account_id}</code></td>
+<td>Remove an account</td>
+<td>HST-05</td>
+</tr>
+</tbody></table>
+<h2 id="hostorganization">host.organization</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/organization</code></td>
+<td>The active organisation (private view)</td>
+<td>ORG-01, ORG-06</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/organization</code></td>
+<td>Edit the organisation</td>
+<td>ORG-06, ORG-01</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/organization</code></td>
+<td>Delete the organisation (soft)</td>
+<td>ORG-04, LST-08</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/organization/members</code></td>
+<td>Team members</td>
+<td>ORG-04, ORG-05</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/organization/members/{membership_id}</code></td>
+<td>Change a member&#39;s role</td>
+<td>ORG-04, ORG-05</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/organization/members/{membership_id}</code></td>
+<td>Remove a member</td>
+<td>ORG-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/organization/transfer-ownership</code></td>
+<td>Make another member the owner</td>
+<td>ORG-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/organization/invitations</code></td>
+<td>Pending and past invitations</td>
+<td>ORG-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/organization/invitations</code></td>
+<td>Invite someone by email or phone</td>
+<td>ORG-03</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/organization/invitations/{invitation_id}</code></td>
+<td>Revoke an invitation</td>
+<td>ORG-03</td>
+</tr>
+</tbody></table>
+<h2 id="hostlistings">host.listings</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/listings</code></td>
+<td>Listings of the active host account (all statuses)</td>
+<td>LST-01, LST-03, BKG-07</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/listings</code></td>
+<td>Create a listing (draft)</td>
+<td>LST-01, HST-07, LST-04, LST-05, LST-06, LST-07, LST-10, LST-11, LST-12</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/listings/{listing_id}</code></td>
+<td>One listing with private fields</td>
+<td>LST-01</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/listings/{listing_id}</code></td>
+<td>Edit a listing</td>
+<td>LST-01, LST-02, LST-07, PRC-03, HST-07, LST-12</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/listings/{listing_id}</code></td>
+<td>Delete a listing (soft)</td>
+<td>LST-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/listings/{listing_id}/status</code></td>
+<td>Submit, withdraw, pause, resume or archive</td>
+<td>LST-02, LST-03, LST-08, BKG-02</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/host/listings/{listing_id}/photos</code></td>
+<td>Order photos and choose the cover</td>
+<td>MED-03, MED-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/listings/{listing_id}/room-types</code></td>
+<td>Room types of a hotel or hostel</td>
+<td>LST-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/listings/{listing_id}/room-types</code></td>
+<td>Add a room type</td>
+<td>LST-04</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/listings/{listing_id}/room-types/{room_type_id}</code></td>
+<td>Edit a room type</td>
+<td>LST-04</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/listings/{listing_id}/room-types/{room_type_id}</code></td>
+<td>Remove a room type (soft)</td>
+<td>LST-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/listings/{listing_id}/slots</code></td>
+<td>Time slots of an experience</td>
+<td>LST-11</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/listings/{listing_id}/slots</code></td>
+<td>Add a time slot</td>
+<td>LST-11</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/listings/{listing_id}/slots/{slot_id}</code></td>
+<td>Edit or cancel a slot</td>
+<td>LST-11</td>
+</tr>
+</tbody></table>
+<h2 id="hostcalendar">host.calendar</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/calendar</code></td>
+<td>Calendar of several listings</td>
+<td>AVL-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/listings/{listing_id}/calendar</code></td>
+<td>Calendar of one listing or room type</td>
+<td>AVL-03</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/host/listings/{listing_id}/calendar/blocks</code></td>
+<td>Block or unblock days</td>
+<td>AVL-03</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/host/listings/{listing_id}/calendar/prices</code></td>
+<td>Set or clear per-day prices</td>
+<td>AVL-03, PRC-01</td>
+</tr>
+</tbody></table>
+<h2 id="hosttrips">host.trips</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/trips</code></td>
+<td>Trips of the active agency (all statuses)</td>
+<td>TRP-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/trips</code></td>
+<td>Create a trip (draft)</td>
+<td>TRP-01, TRP-02, TRP-07, HST-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/trips/{trip_id}</code></td>
+<td>One trip with private fields</td>
+<td>TRP-02</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/trips/{trip_id}</code></td>
+<td>Edit a trip</td>
+<td>TRP-02, TRP-04, TRP-07</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/trips/{trip_id}</code></td>
+<td>Delete a trip (soft)</td>
+<td>TRP-01, LST-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/trips/{trip_id}/status</code></td>
+<td>Submit, withdraw, pause, resume or archive a trip</td>
+<td>TRP-04, LST-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/trips/{trip_id}/departures</code></td>
+<td>Departures of a trip</td>
+<td>TRP-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/trips/{trip_id}/departures</code></td>
+<td>Add a departure</td>
+<td>TRP-03</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/host/trips/{trip_id}/departures/{departure_id}</code></td>
+<td>Edit a departure</td>
+<td>TRP-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/trips/{trip_id}/departures/{departure_id}/cancel</code></td>
+<td>Cancel a departure and all its bookings</td>
+<td>TRP-06</td>
+</tr>
+</tbody></table>
+<h2 id="hostbookings">host.bookings</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/bookings</code></td>
+<td>Bookings of the active host account</td>
+<td>BKG-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/bookings/{booking_id}</code></td>
+<td>One booking of the active host account</td>
+<td>BKG-07, BKG-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/bookings/{booking_id}/accept</code></td>
+<td>Accept a pending request</td>
+<td>BKG-02, PAY-03, PAY-04, PAY-07, ORG-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/bookings/{booking_id}/decline</code></td>
+<td>Decline a pending request</td>
+<td>BKG-02, CAN-04, ORG-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/bookings/{booking_id}/cancellation-preview</code></td>
+<td>What a host cancellation means</td>
+<td>CAN-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/bookings/{booking_id}/cancel</code></td>
+<td>Cancel a confirmed booking as host</td>
+<td>CAN-02, CAN-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/bookings/{booking_id}/guest-review</code></td>
+<td>Review the guest</td>
+<td>REV-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/bookings/{booking_id}/dispute</code></td>
+<td>Open a dispute as host</td>
+<td>BKG-11</td>
+</tr>
+</tbody></table>
+<h2 id="hostreviews">host.reviews</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/reviews</code></td>
+<td>Reviews received by the active host account</td>
+<td>REV-03, REV-05</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/host/reviews/{review_id}/reply</code></td>
+<td>Write or edit the public reply</td>
+<td>REV-03</td>
+</tr>
+</tbody></table>
+<h2 id="hostwallet">host.wallet</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/wallet</code></td>
+<td>Commission wallet of the active host account</td>
+<td>PAY-02, PAY-07, PAY-08, PAY-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/wallet/entries</code></td>
+<td>Wallet history</td>
+<td>PAY-08, PAY-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/wallet/topups</code></td>
+<td>Top up the wallet online (CIB, Edahabia)</td>
+<td>PAY-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/earnings</code></td>
+<td>Earnings dashboard</td>
+<td>RPT-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/invoices</code></td>
+<td>Commission invoices</td>
+<td>PAY-11</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/payouts</code></td>
+<td>Payouts to the host</td>
+<td>PAY-10 (dormant)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/payouts</code></td>
+<td>Ask for a payout</td>
+<td>PAY-10, HST-05 (dormant)</td>
+</tr>
+</tbody></table>
+<h2 id="webhooks">webhooks</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/webhooks/gateway/{provider}</code></td>
+<td>Payment gateway callback</td>
+<td>PAY-09, PAY-06, PAY-10 (dormant)</td>
+</tr>
+</tbody></table>
+<h2 id="adminauth">admin.auth</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/api/v1/admin/auth/login</code></td>
+<td>Staff sign in (step 1: password)</td>
+<td>STF-05, ACC-07, ACC-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/auth/2fa/authenticate</code></td>
+<td>Staff sign in (step 2: second factor)</td>
+<td>ACC-05, STF-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/auth/session</code></td>
+<td>Current staff session and permissions</td>
+<td>STF-01, ACC-03</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/auth/session</code></td>
+<td>Staff sign out</td>
+<td>ACC-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/auth/invitations/accept</code></td>
+<td>Accept a staff invitation and set a password</td>
+<td>STF-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/auth/authenticators/totp</code></td>
+<td>Enrol TOTP (required before any admin endpoint)</td>
+<td>ACC-05, STF-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/auth/password/change</code></td>
+<td>Change my staff password</td>
+<td>ACC-04</td>
+</tr>
+</tbody></table>
+<h2 id="adminmoderation">admin.moderation</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/moderation/counts</code></td>
+<td>Queue sizes, oldest waiting, high priority</td>
+<td>MOD-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/dashboard/attention</code></td>
+<td>Dashboard: what needs attention now</td>
+<td>MOD-01, PAY-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/moderation/cases</code></td>
+<td>Moderation queue</td>
+<td>MOD-01, MOD-08</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/moderation/cases/{case_id}</code></td>
+<td>One case with its history</td>
+<td>MOD-01, MOD-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/moderation/cases/{case_id}/assign</code></td>
+<td>Take or assign a case</td>
+<td>MOD-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/moderation/cases/{case_id}/decisions</code></td>
+<td>Decide a case (approve, reject, request changes...)</td>
+<td>MOD-02, MOD-03, MOD-05, MOD-08, LST-02, TRP-04, HST-04, REV-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/moderation/bulk-decisions</code></td>
+<td>Same decision on many cases</td>
+<td>MOD-04</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/reason-codes</code></td>
+<td>Reason catalogue (all actions)</td>
+<td>MOD-03</td>
+</tr>
+</tbody></table>
+<h2 id="adminhosts">admin.hosts</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/hosts</code></td>
+<td>Host accounts (individuals and organisations)</td>
+<td>HST-04, MOD-01, PAY-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}</code></td>
+<td>One host account with documents, team and cases</td>
+<td>HST-04</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}</code></td>
+<td>Soft-delete a host account</td>
+<td>HST-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/approve</code></td>
+<td>Approve a host account</td>
+<td>HST-04, MOD-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/request-changes</code></td>
+<td>Ask the host for changes</td>
+<td>HST-04, MOD-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/reject</code></td>
+<td>Reject a host account</td>
+<td>HST-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/suspend</code></td>
+<td>Suspend a host account (cascade)</td>
+<td>HST-04, MOD-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/unsuspend</code></td>
+<td>Lift a suspension</td>
+<td>HST-04, MOD-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/ban</code></td>
+<td>Ban a host account (final)</td>
+<td>HST-04, MOD-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/restore</code></td>
+<td>Restore a soft-deleted host account</td>
+<td>HST-04</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/commission-override</code></td>
+<td>Set a commission rate for this host</td>
+<td>PAY-04</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/commission-override</code></td>
+<td>Go back to the host-type default rate</td>
+<td>PAY-04</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/hosts/{host_account_id}/credit-limit-override</code></td>
+<td>Set the credit floor for this host</td>
+<td>PAY-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/documents/{document_id}/url</code></td>
+<td>View a KYC document (signed URL, audited)</td>
+<td>MED-02, MOD-08, STF-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/documents/{document_id}/approve</code></td>
+<td>Approve one document</td>
+<td>MOD-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/documents/{document_id}/reject</code></td>
+<td>Reject one document</td>
+<td>MOD-08</td>
+</tr>
+</tbody></table>
+<h2 id="admincatalog">admin.catalog</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/listings</code></td>
+<td>All listings, every status, with facets</td>
+<td>LST-03, MOD-01, LST-12</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/listings/{listing_id}</code></td>
+<td>One listing (with pending revision and cases)</td>
+<td>LST-02</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/listings/{listing_id}</code></td>
+<td>Soft-delete a listing</td>
+<td>LST-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/listings/{listing_id}/approve</code></td>
+<td>Approve and publish (or approve the pending revision)</td>
+<td>LST-02, LST-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/listings/{listing_id}/reject</code></td>
+<td>Reject a listing</td>
+<td>LST-02, LST-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/listings/{listing_id}/request-changes</code></td>
+<td>Ask the host for changes</td>
+<td>LST-02, LST-03, MOD-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/listings/{listing_id}/suspend</code></td>
+<td>Suspend a published listing</td>
+<td>LST-02, LST-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/listings/{listing_id}/restore</code></td>
+<td>Restore a soft-deleted listing to its previous status</td>
+<td>LST-02, LST-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/listings/{listing_id}/status</code></td>
+<td>Any other allowed status change</td>
+<td>LST-03</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/listings/{listing_id}/featured</code></td>
+<td>Feature or unfeature a listing</td>
+<td>LST-09</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/trips</code></td>
+<td>All trips, every status</td>
+<td>TRP-04, TRP-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/trips/{trip_id}</code></td>
+<td>One trip</td>
+<td>TRP-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/trips/{trip_id}/status</code></td>
+<td>Approve, reject, suspend, restore a trip</td>
+<td>TRP-04</td>
+</tr>
+</tbody></table>
+<h2 id="adminbookings">admin.bookings</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/bookings</code></td>
+<td>All bookings with facets</td>
+<td>BKG-05, BKG-07, BKG-08</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/bookings/{booking_id}</code></td>
+<td>One booking with its event history</td>
+<td>BKG-05, BKG-06</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/bookings/{booking_id}/cancel</code></td>
+<td>Cancel a booking as staff</td>
+<td>CAN-03, CAN-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/bookings/{booking_id}/refunds</code></td>
+<td>Record a full or partial refund</td>
+<td>CAN-03, CAN-04, PAY-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/bookings/{booking_id}/dispute/resolve</code></td>
+<td>Resolve a dispute</td>
+<td>BKG-11</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/refunds</code></td>
+<td>All refunds</td>
+<td>CAN-03</td>
+</tr>
+</tbody></table>
+<h2 id="adminusers">admin.users</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/users</code></td>
+<td>Users (guests and hosts as people)</td>
+<td>ACC-08, MOD-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/users/{user_id}</code></td>
+<td>One user</td>
+<td>ACC-08</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/users/{user_id}</code></td>
+<td>Soft-delete a user (anonymisation follows)</td>
+<td>PRV-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/users/{user_id}/suspend</code></td>
+<td>Suspend a user</td>
+<td>ACC-03, STF-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/users/{user_id}/unsuspend</code></td>
+<td>Lift a user suspension</td>
+<td>ACC-03, STF-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/users/{user_id}/ban</code></td>
+<td>Ban a user</td>
+<td>ACC-03, STF-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/users/{user_id}/restore</code></td>
+<td>Restore a soft-deleted user</td>
+<td>ACC-03, STF-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/data-requests</code></td>
+<td>Data protection requests with deadlines</td>
+<td>PRV-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/data-requests/{data_request_id}/complete</code></td>
+<td>Close a data protection request</td>
+<td>PRV-02</td>
+</tr>
+</tbody></table>
+<h2 id="adminreviews">admin.reviews</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/reviews</code></td>
+<td>Reviews with reports</td>
+<td>REV-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/reviews/{review_id}/hide</code></td>
+<td>Hide a review</td>
+<td>REV-04, REV-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/reviews/{review_id}/restore</code></td>
+<td>Publish a hidden or flagged review again</td>
+<td>REV-04, REV-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/reviews/{review_id}/dismiss-reports</code></td>
+<td>Dismiss open reports and keep the review</td>
+<td>REV-04, REV-05</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/reviews/{review_id}</code></td>
+<td>Remove a review (status removed)</td>
+<td>REV-04</td>
+</tr>
+</tbody></table>
+<h2 id="adminfinance">admin.finance</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/finance/summary</code></td>
+<td>Finance overview</td>
+<td>PAY-02, PAY-07, RPT-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/wallets</code></td>
+<td>Host wallets</td>
+<td>PAY-02, PAY-07</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/wallets/{host_account_id}</code></td>
+<td>One host wallet</td>
+<td>PAY-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/ledger/transactions</code></td>
+<td>Ledger transactions with their entries</td>
+<td>PAY-01, PAY-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/ledger/adjustments</code></td>
+<td>Correct a wallet with an adjustment transaction</td>
+<td>PAY-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/wallets/{host_account_id}/topups</code></td>
+<td>Record a manual wallet top-up</td>
+<td>PAY-05, PAY-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/topups</code></td>
+<td>Top-ups (e.g. waiting for a second approval)</td>
+<td>PAY-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/topups/{topup_id}/approve</code></td>
+<td>Second approval of a large top-up (four-eyes)</td>
+<td>PAY-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/topups/{topup_id}/reject</code></td>
+<td>Reject a pending top-up</td>
+<td>PAY-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/commission-rates</code></td>
+<td>Default commission rates per host type</td>
+<td>PAY-04, CFG-01</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/commission-rates</code></td>
+<td>Change default commission rates</td>
+<td>PAY-04, CFG-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/invoices</code></td>
+<td>Commission invoices</td>
+<td>PAY-11</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/payouts</code></td>
+<td>Payout requests</td>
+<td>PAY-10 (dormant)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/payouts/{payout_id}/approve</code></td>
+<td>Approve a payout</td>
+<td>PAY-10 (dormant)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/payouts/{payout_id}/reject</code></td>
+<td>Reject a payout</td>
+<td>PAY-10 (dormant)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/payouts/{payout_id}/mark-sent</code></td>
+<td>Mark a payout as sent</td>
+<td>PAY-10 (dormant)</td>
+</tr>
+</tbody></table>
+<h2 id="adminsettings">admin.settings</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/settings</code></td>
+<td>Current platform settings</td>
+<td>CFG-01</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/settings</code></td>
+<td>Change settings (creates a new version)</td>
+<td>CFG-01, BKG-03</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/settings/versions</code></td>
+<td>Settings history</td>
+<td>CFG-01</td>
+</tr>
+</tbody></table>
+<h2 id="adminonboarding">admin.onboarding</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/onboarding-flows</code></td>
+<td>Onboarding flows per host type</td>
+<td>CFG-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/onboarding-flows/{host_type}/versions</code></td>
+<td>All versions of one flow</td>
+<td>CFG-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/onboarding-flows/{host_type}/versions/{version}</code></td>
+<td>One version (published versions never change)</td>
+<td>CFG-02</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/v1/admin/onboarding-flows/{host_type}/draft</code></td>
+<td>Save the draft flow</td>
+<td>CFG-02, CFG-03</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/onboarding-flows/{host_type}/publish</code></td>
+<td>Publish the draft as the next version</td>
+<td>CFG-02, CFG-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/onboarding-flows/{host_type}/versions/{version}/republish</code></td>
+<td>Roll back: republish an older version</td>
+<td>CFG-02</td>
+</tr>
+</tbody></table>
+<h2 id="admintaxonomy">admin.taxonomy</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/categories</code></td>
+<td>List categories</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/categories</code></td>
+<td>Create one of the categories</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/categories/{category_id}</code></td>
+<td>Edit, reorder, activate or deactivate one of the categories</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/categories/{category_id}</code></td>
+<td>Delete one of the categories if never used</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/amenities</code></td>
+<td>List amenities</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/amenities</code></td>
+<td>Create one of the amenities</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/amenities/{amenity_id}</code></td>
+<td>Edit, reorder, activate or deactivate one of the amenities</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/amenities/{amenity_id}</code></td>
+<td>Delete one of the amenities if never used</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/property-types</code></td>
+<td>List property types</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/property-types</code></td>
+<td>Create one of the property types</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/property-types/{property_type_id}</code></td>
+<td>Edit, reorder, activate or deactivate one of the property types</td>
+<td>CFG-05, LST-05</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/property-types/{property_type_id}</code></td>
+<td>Delete one of the property types if never used</td>
+<td>CFG-05, LST-05</td>
+</tr>
+</tbody></table>
+<h2 id="adminpromotions">admin.promotions</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/coupons</code></td>
+<td>Coupons</td>
+<td>PRM-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/coupons</code></td>
+<td>Create a coupon</td>
+<td>PRM-01, PRM-02</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/coupons/{coupon_id}</code></td>
+<td>Edit, enable or disable a coupon</td>
+<td>PRM-01</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/admin/coupons/{coupon_id}</code></td>
+<td>Delete an unused coupon</td>
+<td>PRM-01</td>
+</tr>
+</tbody></table>
+<h2 id="adminstaff">admin.staff</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/staff</code></td>
+<td>Staff members</td>
+<td>STF-01, STF-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/staff/roles</code></td>
+<td>Roles and their permissions</td>
+<td>STF-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/staff/invitations</code></td>
+<td>Invite a staff member</td>
+<td>STF-02</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/api/v1/admin/staff/{staff_id}</code></td>
+<td>Change a staff role</td>
+<td>STF-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/staff/{staff_id}/deactivate</code></td>
+<td>Deactivate (revokes sessions at once)</td>
+<td>STF-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/staff/{staff_id}/activate</code></td>
+<td>Reactivate a staff member</td>
+<td>STF-02</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/staff/{staff_id}/reset-mfa</code></td>
+<td>Reset a lost second factor</td>
+<td>ACC-05, STF-02</td>
+</tr>
+</tbody></table>
+<h2 id="adminaudit">admin.audit</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/audit-events</code></td>
+<td>Audit log</td>
+<td>STF-03, STF-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/exports</code></td>
+<td>Export a filtered dataset as CSV</td>
+<td>STF-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/exports</code></td>
+<td>My recent exports</td>
+<td>STF-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/exports/{export_id}</code></td>
+<td>Export status and download link</td>
+<td>STF-06</td>
+</tr>
+</tbody></table>
+<h2 id="adminanalytics">admin.analytics</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/analytics/kpis</code></td>
+<td>KPIs with the previous period</td>
+<td>RPT-01</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/analytics/charts</code></td>
+<td>Chart series</td>
+<td>RPT-01, RPT-02</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/search</code></td>
+<td>Command palette search</td>
+<td>STF-05</td>
+</tr>
+</tbody></table>
+<div class="pager"><span><a href="06-api-design.html">&larr; 06. API design: how the apps talk to the backend</a></span><span><a href="07-architecture.html">07. Architecture: how the Django backend is organised &rarr;</a></span></div></main></div></body></html>

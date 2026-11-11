@@ -1,17 +1,17 @@
 ---
-title: Host account verification (BR-HST-04)
+title: Host account verification
 ---
 stateDiagram-v2
     [*] --> applied
     applied --> under_review: host submits documents
     under_review --> approved: all required documents approved
-    under_review --> changes_requested: staff
-    under_review --> rejected: staff with reason
+    under_review --> changes_requested: admin
+    under_review --> rejected: admin with reason
     changes_requested --> under_review: host resubmits
     rejected --> applied: after 30 days
     approved --> under_review: legal field changed
-    approved --> suspended: staff with reason
-    suspended --> approved: staff unsuspends
-    approved --> banned: staff
-    suspended --> banned: staff
+    approved --> suspended: admin with reason
+    suspended --> approved: admin unsuspends
+    approved --> banned: admin
+    suspended --> banned: admin
     banned --> [*]

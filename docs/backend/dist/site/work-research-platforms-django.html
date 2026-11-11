@@ -1,0 +1,960 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BLADUS backend research: comparable platforms and Django ecosystem · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="on" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="bladus-backend-research-comparable-platforms-and-django-ecosystem">BLADUS backend research: comparable platforms and Django ecosystem</h1>
+<p>Status: working notes for the backend blueprint. Research date for every source: <strong>2026-11-04</strong> (all URLs accessed on that date).
+Scope: Airbnb-style marketplace for Algeria (homes, hotels with room types, hostels with per-bed booking, experiences, vehicle rentals, multi-day agency trips with departures). Two Next.js frontends (customer app, admin/partner app), backend Django + PostgreSQL.</p>
+<p>Conventions in this file:</p>
+<ul>
+<li>&quot;Verified&quot; means the fact was read from the cited page or from the package registry (PyPI, npm, GitHub API) on 2026-11-04.</li>
+<li>&quot;Unverified&quot; or &quot;secondary&quot; means the fact comes from a third-party summary, not a primary source. Treat those as hints.</li>
+<li>Version numbers come from the PyPI JSON API (<code>https://pypi.org/pypi/&lt;name&gt;/json</code>), the npm registry, or GitHub releases, queried on 2026-11-04.</li>
+</ul>
+<hr>
+<h2 id="part-a-how-comparable-platforms-are-built">Part A. How comparable platforms are built</h2>
+<h3 id="a1-airbnb-engineering">A.1 Airbnb engineering</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>What Airbnb published</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Monolith to SOA</td>
+<td>Airbnb moved from a Rails monolith (&quot;Monorail&quot;) to services starting around 2016. Services were defined in a Thrift-based IDL with generated clients; request context and deadlines are propagated; load shedding via request deadlines; schema-based mocks for tests to avoid a &quot;hidden monolith&quot;. InfoQ coverage notes a design rule: services own both reads and writes of their data, and the migration compared outputs between monolith and services by replaying traffic.</td>
+<td>Building Services at Airbnb, parts 1 to 4: <a href="https://medium.com/airbnb-engineering/building-services-at-airbnb-part-1-c4c1d8fa811b">https://medium.com/airbnb-engineering/building-services-at-airbnb-part-1-c4c1d8fa811b</a> , <a href="https://medium.com/airbnb-engineering/building-services-at-airbnb-part-2-142be1c5d506">https://medium.com/airbnb-engineering/building-services-at-airbnb-part-2-142be1c5d506</a> , <a href="https://medium.com/airbnb-engineering/building-services-at-airbnb-part-3-ac6d4972fc2d">https://medium.com/airbnb-engineering/building-services-at-airbnb-part-3-ac6d4972fc2d</a> , <a href="https://medium.com/airbnb-engineering/building-services-at-airbnb-part-4-23c95e428064">https://medium.com/airbnb-engineering/building-services-at-airbnb-part-4-23c95e428064</a> ; InfoQ: <a href="https://www.infoq.com/news/2019/02/airbnb-monolith-migration-soa/">https://www.infoq.com/news/2019/02/airbnb-monolith-migration-soa/</a></td>
+</tr>
+<tr>
+<td>Search and ranking</td>
+<td>Ranking started with gradient boosted decision trees, then moved to neural networks when gains plateaued; later papers cover diversity in ranking and embedding-based retrieval (2026).</td>
+<td>arXiv 1810.09591 <a href="https://arxiv.org/abs/1810.09591">https://arxiv.org/abs/1810.09591</a> ; blog <a href="https://medium.com/airbnb-engineering/applying-deep-learning-to-airbnb-search-7ebd7230891f">https://medium.com/airbnb-engineering/applying-deep-learning-to-airbnb-search-7ebd7230891f</a> ; follow-ups <a href="https://arxiv.org/pdf/2002.05515">https://arxiv.org/pdf/2002.05515</a> , <a href="https://arxiv.org/pdf/2210.07774">https://arxiv.org/pdf/2210.07774</a> , <a href="https://arxiv.org/pdf/2601.06873">https://arxiv.org/pdf/2601.06873</a></td>
+</tr>
+<tr>
+<td>Pricing</td>
+<td>Smart Pricing suggests a price for every check-in date from demand, supply and listing features, and models booking lead time per date and location.</td>
+<td><a href="https://medium.com/airbnb-engineering/learning-market-dynamics-for-optimal-pricing-97cffbcc53e3">https://medium.com/airbnb-engineering/learning-market-dynamics-for-optimal-pricing-97cffbcc53e3</a></td>
+</tr>
+<tr>
+<td>Availability / calendar</td>
+<td>No primary Airbnb engineering post describing the calendar/availability service architecture was found. Unverified, so not used.</td>
+<td>(none)</td>
+</tr>
+<tr>
+<td>Payments idempotency</td>
+<td>&quot;Orpheus&quot; idempotency library: client sends an idempotency key per new request and reuses it on retries; request split into pre-RPC, RPC, post-RPC phases with a row-level lock on the key; errors must be classified retryable vs non-retryable; idempotency data read and written on the primary DB (never replicas) to avoid duplicate payments.</td>
+<td><a href="https://medium.com/airbnb-engineering/avoiding-double-payments-in-a-distributed-payments-system-2981f6b070bb">https://medium.com/airbnb-engineering/avoiding-double-payments-in-a-distributed-payments-system-2981f6b070bb</a></td>
+</tr>
+<tr>
+<td>Ledger / financial reporting</td>
+<td>Financial data is modeled as accounting events producing a double-entry subledger (accounts such as receivables, payables/host liabilities, revenue, taxes). The old approach (reverse-engineering finance from audit trails and DB triggers) was error-prone.</td>
+<td><a href="https://medium.com/airbnb-engineering/tracking-the-money-scaling-financial-reporting-at-airbnb-6d742b80f040">https://medium.com/airbnb-engineering/tracking-the-money-scaling-financial-reporting-at-airbnb-6d742b80f040</a> ; <a href="https://medium.com/airbnb-engineering/scaling-airbnbs-payment-platform-43ebfc99b324">https://medium.com/airbnb-engineering/scaling-airbnbs-payment-platform-43ebfc99b324</a></td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>&quot;Messaging sync&quot;: clients fetch only changed threads/messages since last sync instead of full refetch; messaging is tightly coupled to the booking flow (status changes appear in threads).</td>
+<td><a href="https://medium.com/airbnb-engineering/messaging-sync-scaling-mobile-messaging-at-airbnb-659142036f06">https://medium.com/airbnb-engineering/messaging-sync-scaling-mobile-messaging-at-airbnb-659142036f06</a></td>
+</tr>
+<tr>
+<td>Trust and safety</td>
+<td>ML risk scores (e.g. chargeback model) drive <em>targeted friction</em>: only risky users get extra verification steps, so good users are not penalized; effect measured via experiments.</td>
+<td><a href="https://medium.com/airbnb-engineering/fighting-financial-fraud-with-targeted-friction-82d950d8900e">https://medium.com/airbnb-engineering/fighting-financial-fraud-with-targeted-friction-82d950d8900e</a></td>
+</tr>
+<tr>
+<td>Reviews</td>
+<td>Homes: both guest and host have 14 days after checkout; reviews are published when both submitted or when the 14 days end, whichever comes first (double-blind).</td>
+<td><a href="https://www.airbnb.com/help/article/13">https://www.airbnb.com/help/article/13</a> ; <a href="https://airbnb.com/help/article/995">https://airbnb.com/help/article/995</a></td>
+</tr>
+<tr>
+<td>Cancellation policies</td>
+<td>Third-party (secondary) sources report Airbnb restructured standard policies on 2025-10-01 to Flexible / Moderate / Limited / Firm with a 24 h grace period and optional non-refundable rate. Not verified on an Airbnb primary page.</td>
+<td>secondary: <a href="https://www.hostfully.com/blog/airbnb-cancellation-policy/">https://www.hostfully.com/blog/airbnb-cancellation-policy/</a></td>
+</tr>
+</tbody></table>
+<h3 id="a2-bookingcom-expedia-vrbo-getyourguide">A.2 Booking.com, Expedia, Vrbo, GetYourGuide</h3>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Pattern</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Booking.com</td>
+<td>Inventory model = <strong>room type</strong> x <strong>rate plan</strong> (&quot;roomrate&quot;). Rooms-to-sell is set per room type per date and shared across all rate plans of that room type; prices and most restrictions (min stay, closed to arrival, etc.) are per room-type + rate-plan + date. Child rate plans can derive from a parent. They recommend loading 12 months ahead.</td>
+<td><a href="https://developers.booking.com/connectivity/docs/ari.md">https://developers.booking.com/connectivity/docs/ari.md</a> ; <a href="https://developers.booking.com/connectivity/docs/b_xml-availability">https://developers.booking.com/connectivity/docs/b_xml-availability</a> ; <a href="https://developers.booking.com/connectivity/docs/room-type-and-rate-plan-management/managing-roomrates">https://developers.booking.com/connectivity/docs/room-type-and-rate-plan-management/managing-roomrates</a> ; <a href="https://developers.booking.com/connectivity/docs/room-type-and-rate-plan-management/managing-rate-plans">https://developers.booking.com/connectivity/docs/room-type-and-rate-plan-management/managing-rate-plans</a></td>
+</tr>
+<tr>
+<td>Booking.com reviews</td>
+<td>Only people who booked through the platform can review (includes no-shows and bookers for others); written reviews are moderated; reviews remain visible 36 months; removal conditions are enumerated.</td>
+<td><a href="https://partner.booking.com/en-us/help/guest-reviews/general/guest-review-process-and-conditions">https://partner.booking.com/en-us/help/guest-reviews/general/guest-review-process-and-conditions</a> ; <a href="https://www.booking.com/reviews_guidelines.html">https://www.booking.com/reviews_guidelines.html</a></td>
+</tr>
+<tr>
+<td>Expedia Rapid</td>
+<td>Cancellation policy is data, not text: each rate has <code>refundable</code> + <code>cancel_penalties[]</code> (time windows with amount/percent/nights) + <code>nonrefundable_date_ranges</code>; since Feb 2025 also <code>current_refundability</code> (refundable / non_refundable / partially_refundable). Booking page must show the policy before confirmation.</td>
+<td><a href="https://developers.expediagroup.com/rapid/lodging/shopping/constructing-cancellation-policies">https://developers.expediagroup.com/rapid/lodging/shopping/constructing-cancellation-policies</a> ; <a href="https://developers.expediagroup.com/rapid/setup/launch-requirements/lodging-launch-reqs">https://developers.expediagroup.com/rapid/setup/launch-requirements/lodging-launch-reqs</a></td>
+</tr>
+<tr>
+<td>GetYourGuide</td>
+<td>Activities inventory = time-slotted vacancies per product option; flow is availability then reserve (hold) then confirm; supplier systems push availability updates; they rebuilt inventory on Kafka Streams when DB tables and stale availability caused booking errors.</td>
+<td><a href="https://www.getyourguide.careers/posts/scaling-the-inventory-parts-of-our-system-using-kafka-streams">https://www.getyourguide.careers/posts/scaling-the-inventory-parts-of-our-system-using-kafka-streams</a> ; <a href="https://github.com/getyourguide/partner-api-spec">https://github.com/getyourguide/partner-api-spec</a> ; <a href="https://www.getyourguide.supply/connectivity/partners-faqs">https://www.getyourguide.supply/connectivity/partners-faqs</a></td>
+</tr>
+<tr>
+<td>Vrbo</td>
+<td>No primary engineering or API documentation could be retrieved (developer portal did not respond). Unverified; not used.</td>
+<td>(none)</td>
+</tr>
+</tbody></table>
+<h3 id="a3-open-source-projects-and-reference-models-worth-studying">A.3 Open-source projects and reference models worth studying</h3>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Stack</th>
+<th>What is useful for BLADUS</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>pretix</td>
+<td>Django</td>
+<td>Best Django reference for <strong>quota-based inventory</strong>: an item can belong to several quotas, all must be available; availability = limit minus paid orders, pending orders within payment period, unexpired cart holds, blocking vouchers, waiting list. Directly maps to experiences, trip departures and hostel beds. Active (pushed 2026-11-04).</td>
+<td><a href="https://github.com/pretix/pretix">https://github.com/pretix/pretix</a> ; <a href="https://docs.pretix.eu/dev/development/concepts.html">https://docs.pretix.eu/dev/development/concepts.html</a> ; <a href="https://docs.pretix.eu/dev/development/implementation/models.html">https://docs.pretix.eu/dev/development/implementation/models.html</a></td>
+</tr>
+<tr>
+<td>Saleor</td>
+<td>Django + GraphQL</td>
+<td>Order/payment state machines, checkout, channels, multi-currency, webhooks, permission groups. BSD-3.</td>
+<td><a href="https://github.com/saleor/saleor">https://github.com/saleor/saleor</a></td>
+</tr>
+<tr>
+<td>django-oscar</td>
+<td>Django</td>
+<td>Mature domain-driven e-commerce: baskets, offers, order/payment events, app overriding pattern.</td>
+<td><a href="https://github.com/django-oscar/django-oscar">https://github.com/django-oscar/django-oscar</a></td>
+</tr>
+<tr>
+<td>QloApps</td>
+<td>PHP (PrestaShop-based)</td>
+<td>Open-source hotel booking + channel manager concepts: hotel, room type, room, booking per date, demand-based pricing. Data model reference only. OSL-3.0.</td>
+<td><a href="https://github.com/Qloapps/QloApps">https://github.com/Qloapps/QloApps</a></td>
+</tr>
+<tr>
+<td>django-hordak</td>
+<td>Django</td>
+<td>Double-entry accounting models (accounts, transactions, legs) enforced with DB constraints; good reference for the payouts ledger. Last push 2026-04-02, small project.</td>
+<td><a href="https://github.com/adamcharnock/django-hordak">https://github.com/adamcharnock/django-hordak</a></td>
+</tr>
+<tr>
+<td>TigerBeetle</td>
+<td>Zig DB</td>
+<td>Purpose-built double-entry ledger DB; worth reading its design docs on debits/credits and pending (two-phase) transfers even if we do not adopt it.</td>
+<td><a href="https://github.com/tigerbeetle/tigerbeetle">https://github.com/tigerbeetle/tigerbeetle</a></td>
+</tr>
+<tr>
+<td>Modern Treasury &quot;Accounting for developers&quot;</td>
+<td>Article series</td>
+<td>Clear explanation of double-entry for engineers.</td>
+<td><a href="https://www.moderntreasury.com/journal/accounting-for-developers-part-i">https://www.moderntreasury.com/journal/accounting-for-developers-part-i</a></td>
+</tr>
+<tr>
+<td>Chargily Pay v2</td>
+<td>Algerian gateway</td>
+<td>EDAHABIA (Algerie Poste) and CIB (SATIM) checkouts; HMAC <code>signature</code> header on webhooks; test and live modes; Python SDK exists. Likely the first local payment integration.</td>
+<td><a href="https://dev.chargily.com/pay-v2/introduction">https://dev.chargily.com/pay-v2/introduction</a> ; <a href="https://dev.chargily.com/pay-v2/webhooks">https://dev.chargily.com/pay-v2/webhooks</a></td>
+</tr>
+</tbody></table>
+<h3 id="a4-domain-model-summary-for-bladus-derived">A.4 Domain model summary for BLADUS (derived)</h3>
+<p>Unifying idea: every bookable product reduces to <strong>an inventory unit + a time shape + a capacity</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Vertical</th>
+<th>Listing</th>
+<th>Sellable unit</th>
+<th>Time shape</th>
+<th>Capacity per slot</th>
+<th>Comparable model</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home</td>
+<td>Property</td>
+<td>the whole property</td>
+<td>nightly date range</td>
+<td>1</td>
+<td>Airbnb</td>
+</tr>
+<tr>
+<td>Hotel</td>
+<td>Property</td>
+<td>RoomType (pool of N physical Rooms) + RatePlan</td>
+<td>nightly date range</td>
+<td>N per date (rooms-to-sell)</td>
+<td>Booking.com roomrate</td>
+</tr>
+<tr>
+<td>Hostel</td>
+<td>Property</td>
+<td>BedType / Dorm (pool of beds), optionally specific Bed</td>
+<td>nightly date range</td>
+<td>beds per date</td>
+<td>Booking.com room type with count</td>
+</tr>
+<tr>
+<td>Experience</td>
+<td>Activity</td>
+<td>Option</td>
+<td>time slot (start datetime)</td>
+<td>seats per slot</td>
+<td>GetYourGuide, pretix quota</td>
+</tr>
+<tr>
+<td>Vehicle</td>
+<td>Vehicle (or vehicle class pool)</td>
+<td>Vehicle</td>
+<td>datetime range (pickup/return)</td>
+<td>1 per vehicle, N per class</td>
+<td>car rental</td>
+</tr>
+<tr>
+<td>Agency trip</td>
+<td>Trip</td>
+<td>Departure (fixed dates)</td>
+<td>fixed multi-day departure</td>
+<td>seats per departure</td>
+<td>pretix quota per departure</td>
+</tr>
+</tbody></table>
+<p>Core entities: <code>Organization</code> (host or agency, with members and roles), <code>Listing</code> (polymorphic by vertical), <code>InventoryUnit</code>, <code>RatePlan</code>, <code>DailyRate</code>/<code>PriceRule</code>, <code>AvailabilityBlock</code>, <code>CancellationPolicy</code> (structured), <code>Booking</code> + <code>BookingLine</code> + state machine, <code>Hold</code> (short TTL), <code>Payment</code>, <code>Refund</code>, <code>Payout</code>, <code>LedgerAccount</code> + <code>LedgerEntry</code>, <code>Review</code> (bound to a completed booking), <code>Thread</code> + <code>Message</code>, <code>Report</code>/<code>ModerationCase</code>, <code>AuditEvent</code>.</p>
+<h3 id="a5-hard-problems-and-what-we-decide">A.5 Hard problems and what we decide</h3>
+<table>
+<thead>
+<tr>
+<th>Hard problem</th>
+<th>What the platforms show</th>
+<th>BLADUS decision</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Double booking</strong></td>
+<td>Airbnb publishes nothing primary on calendars; Django/PostgreSQL offer native exclusion constraints on ranges (<code>ExclusionConstraint</code> + <code>RangeOperators.OVERLAPS</code>, requires <code>btree_gist</code>).</td>
+<td>For capacity-1 units (home, specific vehicle, specific room or bed when assigned): store <code>stay = DateRangeField</code> (half-open <code>[checkin, checkout)</code>) and add an <code>ExclusionConstraint(unit WITH =, stay WITH &amp;&amp;) WHERE status IN active states</code>. The DB is the last line of defense; the service layer catches <code>IntegrityError</code> and returns a 409. For pooled capacity (hotel room types, hostel beds, experience slots, trip departures): an <code>InventoryDay</code>/<code>SlotInventory</code> row per unit per date with <code>total</code>, <code>held</code>, <code>booked</code> and a <code>CHECK (held + booked &lt;= total)</code>; reserve with <code>UPDATE ... SET held = held + n WHERE ... AND held + booked + n &lt;= total</code> (atomic, row-locked) inside a transaction. Holds expire via a scheduled job (pretix cart-hold idea).</td>
+</tr>
+<tr>
+<td><strong>Availability search at scale</strong></td>
+<td>Booking.com precomputes ARI per date; GetYourGuide moved to streaming when DB-backed inventory became stale and slow.</td>
+<td>Phase 1: query PostgreSQL directly (PostGIS bounding box + filters + <code>NOT EXISTS</code> overlapping bookings / <code>InventoryDay</code> min availability over the range), with GiST and B-tree indexes. Keep a denormalized <code>ListingSearchDoc</code> row per listing updated by signals/tasks. Only add an external engine when measured latency demands it (Algeria-scale catalog is small). Never trust search results for booking: re-check inside the booking transaction.</td>
+</tr>
+<tr>
+<td><strong>Pricing</strong></td>
+<td>Booking.com: price per room-type x rate-plan x date; Airbnb: per-date suggestions.</td>
+<td>Store explicit nightly prices per unit/date (<code>DailyRate</code>) materialized from rules (base, weekend, season, length-of-stay discount). Price quote is computed server side, returned with a signed <code>quote_id</code> and expiry, and re-validated at booking.</td>
+</tr>
+<tr>
+<td><strong>Payments, escrow, payouts</strong></td>
+<td>Airbnb: idempotency keys with row lock on primary DB; double-entry subledger from accounting events.</td>
+<td>Every money-moving endpoint requires an <code>Idempotency-Key</code> header (IETF draft <a href="https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/">https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/</a> , Stripe pattern <a href="https://stripe.com/docs/api/idempotent_requests">https://stripe.com/docs/api/idempotent_requests</a> ). Immutable double-entry ledger in PostgreSQL: <code>LedgerTransaction</code> with <code>LedgerEntry</code> legs whose sum is zero per currency (enforced by a deferred constraint trigger or by service + check). Accounts: guest_receivable, platform_escrow (funds held until check-in + N hours), host_payable, platform_revenue (fees), tax_payable, refunds. Balances derived from entries, never edited. Payouts are batch jobs that move host_payable to paid. Gateway webhooks (Chargily HMAC) are stored raw, verified, deduplicated by event id, then processed idempotently.</td>
+</tr>
+<tr>
+<td><strong>Cancellation policies</strong></td>
+<td>Expedia models policies as penalty windows; Airbnb has named tiers.</td>
+<td>Store <code>CancellationPolicy</code> as named templates with structured <code>windows[] (hours_before_start, refund_percent, fee_nights)</code>; snapshot the policy onto the booking at confirmation (policy changes never affect existing bookings). Refund calculation is a pure function tested with hypothesis.</td>
+</tr>
+<tr>
+<td><strong>Fraud and fake listings</strong></td>
+<td>Airbnb: risk scores plus targeted friction; a single decision model applies to users, listings and reservations (secondary source <a href="https://dmitry.pt/2023/detecting-risk-in-real-time-technology">https://dmitry.pt/2023/detecting-risk-in-real-time-technology</a> ).</td>
+<td>Listing goes <code>draft -&gt; pending_review -&gt; published</code>; admin moderation queue in the back-office. KYC for hosts and agencies (ID + registre de commerce for agencies) before payout enablement. Rule-based risk flags (new account + high value, many failed payments, duplicate photo hashes via perceptual hash, off-platform contact info in messages) that trigger friction (phone OTP, manual review) instead of blanket blocks. All decisions recorded as <code>ModerationCase</code> with audit trail.</td>
+</tr>
+<tr>
+<td><strong>Review integrity</strong></td>
+<td>Booking.com: only bookers can review, moderation, fixed visibility window. Airbnb: 14-day window, double-blind reveal.</td>
+<td>Review requires a <code>Booking</code> in <code>completed</code> state, one review per booking per direction, window of 14 days after end, double-blind reveal (publish when both submitted or window closes), no edits after reveal, host may reply once, moderation for abuse with reasons logged. Aggregate ratings stored denormalized on the listing and recomputed by task.</td>
+</tr>
+<tr>
+<td><strong>Messaging</strong></td>
+<td>Airbnb sync model: only fetch changes.</td>
+<td>Thread per booking/inquiry; cursor-based &quot;changes since&quot; endpoint so polling is cheap; realtime push is an optimization layered on top (see B.6). Mask phone numbers/emails before booking confirmation.</td>
+</tr>
+<tr>
+<td><strong>Architecture</strong></td>
+<td>Airbnb SOA was a response to hundreds of engineers on one codebase.</td>
+<td>Start as a <strong>modular monolith</strong> (one Django project, bounded-context apps, services/selectors, no cross-app model writes). Services are a later option, not a starting point.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="part-b-django-ecosystem-decisions">Part B. Django ecosystem decisions</h2>
+<p>Baseline versions (PyPI, 2026-11-04): <strong>Django 6.1.3</strong> (latest), 6.0.10, <strong>5.2.19 LTS</strong> (extended support until April 2028); next LTS 6.2 scheduled April 2027 (<a href="https://www.djangoproject.com/download/">https://www.djangoproject.com/download/</a>). Django 6.0 (released 2025-12-03) added built-in Tasks framework and CSP support (<a href="https://www.djangoproject.com/weblog/2025/dec/03/django-60-released/">https://www.djangoproject.com/weblog/2025/dec/03/django-60-released/</a> , <a href="https://docs.djangoproject.com/en/6.0/releases/6.0/">https://docs.djangoproject.com/en/6.0/releases/6.0/</a>). psycopg 3.3.7.</p>
+<p><strong>Recommendation for baseline:</strong> Django 6.1 on Python 3.13, plan upgrade to 6.2 LTS in 2027. Rationale: 5.2 LTS lacks <code>django.tasks</code> and CSP; 6.1 is supported until December 2027, overlapping 6.2 LTS. Alternative if the team prefers fewer upgrades: 5.2 LTS + <code>django-tasks</code> backport. Note the user brief says the frontends are Next.js 14; npm <code>next</code> latest is 16.4.5, which matters for SSR auth patterns below.</p>
+<h3 id="b1-postgresql--postgis-range-types-and-exclusion-constraints">B.1 PostgreSQL + PostGIS, range types and exclusion constraints</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PostGIS + GeoDjango (<code>django.contrib.gis</code>)</td>
+<td>Real geography types, <code>ST_DWithin</code> distance queries with GiST index, bounding-box map search, polygon areas (wilayas, communes). First-class in Django ORM.</td>
+<td>Needs GDAL/GEOS/PROJ system libs in containers; managed PG must offer PostGIS.</td>
+</tr>
+<tr>
+<td>Plain lat/lng floats + Haversine or <code>earthdistance</code>/<code>cube</code></td>
+<td>No system libs.</td>
+<td>No polygon support, weaker indexing, reinventing GIS.</td>
+</tr>
+</tbody></table>
+<p>Range types + exclusion: <code>django.contrib.postgres.fields.DateRangeField</code> / <code>DateTimeRangeField</code>, <code>ExclusionConstraint</code> with <code>RangeOperators.OVERLAPS</code> and <code>RangeOperators.EQUAL</code>, optional <code>condition=Q(...)</code> (partial), <code>BtreeGistExtension</code> migration op required for the equality part (verified in docs: <a href="https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/constraints/">https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/constraints/</a> , <a href="https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/fields/">https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/fields/</a> , <a href="https://www.postgresql.org/docs/current/rangetypes.html">https://www.postgresql.org/docs/current/rangetypes.html</a> , <a href="https://www.postgresql.org/docs/current/btree-gist.html">https://www.postgresql.org/docs/current/btree-gist.html</a>).</p>
+<p><strong>Recommendation:</strong> PostGIS + GeoDjango (<a href="https://docs.djangoproject.com/en/6.0/ref/contrib/gis/">https://docs.djangoproject.com/en/6.0/ref/contrib/gis/</a> , <a href="https://postgis.net/">https://postgis.net/</a>). Store <code>location = PointField(geography=True, srid=4326)</code> and public &quot;fuzzed&quot; point for homes (exact address revealed after booking). Use <code>DateRangeField</code> + <code>ExclusionConstraint</code> for capacity-1 units and <code>CHECK</code>-constrained inventory counters for pooled units (see A.5). Note: violation of an exclusion constraint surfaces as <code>IntegrityError</code> on save; <code>violation_error_code</code> only applies to model validation.</p>
+<h3 id="b2-api-layer-drf-vs-django-ninja">B.2 API layer: DRF vs Django Ninja</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Django REST Framework</th>
+<th>Django Ninja</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>3.18.3 (2026-10-06)</td>
+<td>1.7.3 (2026-10-29)</td>
+</tr>
+<tr>
+<td>Activity</td>
+<td>Very active releases in 2026; maintainers state it is &quot;considered feature-complete&quot; (<a href="https://www.django-rest-framework.org/community/release-notes/">https://www.django-rest-framework.org/community/release-notes/</a>)</td>
+<td>Active (pushed 2026-11-04), 9.2k stars</td>
+</tr>
+<tr>
+<td>Pros</td>
+<td>Largest ecosystem (drf-spectacular, guardian/rules integration, throttling, filters, SimpleJWT, standardized errors); every Django dev knows it; browsable API.</td>
+<td>Pydantic schemas, type hints drive validation and OpenAPI automatically, fast, async-friendly, less boilerplate.</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Serializer verbosity, OpenAPI via add-on, sync-first.</td>
+<td>Smaller ecosystem: permissions, throttling, filtering patterns are thinner; fewer battle-tested auth/permission libs.</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> <strong>DRF</strong>, used in the HackSoft style (thin APIView + input/output serializers + services). Reason: the permission, throttling, audit and OpenAPI tooling we need is mature around DRF, and the hiring pool in Algeria will know DRF. Ninja is a fine choice if the team values Pydantic typing more; allauth headless supports both.</p>
+<h3 id="b3-auth">B.3 Auth</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>django-allauth (headless)</th>
+<th>dj-rest-auth + SimpleJWT</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>65.21.1 (2026-10-30), very active</td>
+<td>dj-rest-auth 7.2.0 (2026-03-15); SimpleJWT 5.5.1 (2025-07-21)</td>
+</tr>
+<tr>
+<td>Features</td>
+<td>Headless API for SPA/mobile with session tokens or JWT strategies, OpenAPI spec, email + <strong>phone login and SMS verification</strong> (adapter implements <code>send_verification_code_sms</code>), social login, built-in <strong>MFA</strong> (TOTP, recovery codes, WebAuthn/passkeys), rate limits.</td>
+<td>REST endpoints for login/registration/password reset, JWT or tokens; social via allauth underneath.</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Opinionated flow model; headless docs are spread across pages.</td>
+<td>Two libraries glued together, slower release cadence, no built-in MFA or phone OTP.</td>
+</tr>
+</tbody></table>
+<p>Sources: <a href="https://docs.allauth.org/en/latest/headless/index.html">https://docs.allauth.org/en/latest/headless/index.html</a> , <a href="https://docs.allauth.org/en/latest/headless/token-strategies/index.html">https://docs.allauth.org/en/latest/headless/token-strategies/index.html</a> , <a href="https://docs.allauth.org/en/latest/account/phone.html">https://docs.allauth.org/en/latest/account/phone.html</a> , <a href="https://docs.allauth.org/en/latest/mfa/index.html">https://docs.allauth.org/en/latest/mfa/index.html</a> , <a href="https://github.com/iMerica/dj-rest-auth">https://github.com/iMerica/dj-rest-auth</a> , <a href="https://github.com/jazzband/djangorestframework-simplejwt">https://github.com/jazzband/djangorestframework-simplejwt</a></p>
+<p>Phone OTP: allauth phone support needs us to provide phone storage and an SMS sender. SMS provider choice for Algeria (local aggregators vs Twilio/Vonage) was not researched here; unverified. Store numbers with <code>django-phonenumber-field</code> 9.0.0 (E.164).</p>
+<p>Sessions vs JWT for Next.js SSR: server components run on the Next.js server, so they cannot read browser <code>localStorage</code>; they can forward cookies. Next.js docs describe cookie-based session management for the App Router (<a href="https://nextjs.org/docs/app/guides/authentication">https://nextjs.org/docs/app/guides/authentication</a>). Two workable patterns:</p>
+<ol>
+<li>Same-site deployment (<code>app.bladus.dz</code> + <code>api.bladus.dz</code>): Django session cookie with <code>Domain=.bladus.dz</code>, <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code>, CSRF token for mutations. Server components forward the incoming <code>cookie</code> header to the API.</li>
+<li>Next.js as BFF: Next.js stores an encrypted httpOnly cookie containing the allauth session token (app client flow, <code>X-Session-Token</code>) and attaches it on server-side fetches.</li>
+</ol>
+<p><strong>Recommendation:</strong> <strong>django-allauth headless</strong> with session-token strategy, Next.js BFF pattern (2) for the customer app, short sessions plus mandatory MFA (allauth MFA TOTP/WebAuthn) for staff in the admin app. Avoid long-lived JWTs in the browser (revocation is hard). django-otp 1.7.5 is the alternative if we keep Django admin login separate; prefer one MFA system (allauth MFA) unless Django admin is exposed, in which case add <code>django-otp</code> on the admin site only.</p>
+<h3 id="b4-permissions-object-level-org-roles-owneradminmanager">B.4 Permissions (object-level, org roles owner/admin/manager)</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>DRF permissions (custom classes)</th>
+<th>django-guardian</th>
+<th>django-rules</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>built into DRF 3.18.3</td>
+<td>3.5.2 (2026-10-20), active</td>
+<td><code>rules</code> 3.5 (2024-09-02); repo pushed 2025-10</td>
+</tr>
+<tr>
+<td>Model</td>
+<td><code>has_permission</code> / <code>has_object_permission</code> per view</td>
+<td>per-object permission rows in DB (user/group x perm x object)</td>
+<td>predicates (Python functions) composed with <code>&amp;</code>, `</td>
+</tr>
+<tr>
+<td>Pros</td>
+<td>Simple, no deps</td>
+<td>Fine-grained grants, admin integration</td>
+<td>Expressive, testable, zero storage, integrates with Django&#39;s perm API and DRF</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Logic scattered per view</td>
+<td>Row explosion (every listing x member x perm), sync burden when memberships change</td>
+<td>Release cadence slow (stable, small codebase); queryset filtering must be written separately</td>
+</tr>
+</tbody></table>
+<p>Sources: <a href="https://www.django-rest-framework.org/api-guide/permissions/">https://www.django-rest-framework.org/api-guide/permissions/</a> , <a href="https://django-guardian.readthedocs.io/">https://django-guardian.readthedocs.io/</a> , <a href="https://github.com/dfunckt/django-rules">https://github.com/dfunckt/django-rules</a></p>
+<p><strong>Recommendation:</strong> Org-scoped RBAC in our own tables (<code>Membership(user, organization, role)</code>), predicates in <strong>django-rules</strong> (<code>is_org_owner</code>, <code>is_org_manager_of(listing)</code>), exposed through thin DRF permission classes; plus selectors that always filter querysets by the caller&#39;s organizations (permissions alone do not protect list endpoints). Skip guardian: our grants derive from org membership, not per-object ACLs.</p>
+<h3 id="b5-background-jobs">B.5 Background jobs</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Latest</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Celery + Redis/RabbitMQ</td>
+<td>celery 5.6.3 (2026-03-26)</td>
+<td>De facto standard; beat scheduler, retries, chords, Flower monitoring. Heavier config, many knobs. <a href="https://docs.celeryq.dev/en/stable/">https://docs.celeryq.dev/en/stable/</a></td>
+</tr>
+<tr>
+<td>Dramatiq</td>
+<td>2.2.1 (2026-09-02)</td>
+<td>Simpler, reliable defaults (acks late), LGPL. <a href="https://dramatiq.io/">https://dramatiq.io/</a></td>
+</tr>
+<tr>
+<td>Django-Q2</td>
+<td>1.11.1 (2026-08-26)</td>
+<td>Can use the DB as broker, admin integration; smaller community. <a href="https://django-q2.readthedocs.io/">https://django-q2.readthedocs.io/</a></td>
+</tr>
+<tr>
+<td>Huey</td>
+<td>3.5.4 (2026-11-01)</td>
+<td>Lightweight, Redis or SQLite, periodic tasks. <a href="https://huey.readthedocs.io/">https://huey.readthedocs.io/</a></td>
+</tr>
+<tr>
+<td>Django <code>django.tasks</code> (Django 6.0+)</td>
+<td>built-in</td>
+<td>DEP 14 &quot;Background workers&quot; status <strong>Accepted</strong>, implemented in 6.0. Django provides definition, queuing and results only; built-in backends (<code>ImmediateBackend</code>, <code>DummyBackend</code>) are for dev/test; production needs a third-party backend with a worker, e.g. <code>django-tasks-db</code> 0.13.0 (2026-08-28) or <code>django-tasks-rq</code> 0.12.0. Arguments must be JSON-serializable; enqueue inside <code>transaction.on_commit</code>. <a href="https://docs.djangoproject.com/en/6.0/topics/tasks/">https://docs.djangoproject.com/en/6.0/topics/tasks/</a> , <a href="https://raw.githubusercontent.com/django/deps/main/final/0014-background-workers.rst">https://raw.githubusercontent.com/django/deps/main/final/0014-background-workers.rst</a> , <a href="https://github.com/RealOrangeOne/django-tasks">https://github.com/RealOrangeOne/django-tasks</a></td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> <strong>Celery 5.6 + Redis</strong> for now (needs: hold expiry, payout batches, scheduled reminders, image processing, search doc refresh, webhooks retry with backoff). Write tasks as thin wrappers around services and enqueue via <code>transaction.on_commit</code>, so moving to <code>django.tasks</code> later is mechanical once its worker backends mature. Use <code>celery beat</code> with <code>django-celery-beat</code> (not version-checked here) or a code-defined schedule.</p>
+<h3 id="b6-realtime-messaging">B.6 Realtime messaging</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Django Channels + channels-redis</td>
+<td>Same codebase and auth; channels 4.3.2 (2025-11-20), channels-redis 4.3.0 (2025-07-22). <a href="https://channels.readthedocs.io/">https://channels.readthedocs.io/</a></td>
+<td>Needs ASGI servers and sticky long-lived connections managed by us; release cadence slowed in 2025.</td>
+</tr>
+<tr>
+<td>Centrifugo (self-hosted, Go)</td>
+<td>v6.10.2 (2026-10-23). Handles WebSocket/SSE/HTTP-streaming connections; Django only publishes over HTTP API and issues expiring JWT connection tokens; positions itself as a self-hosted alternative to Pusher/Ably. <a href="https://centrifugal.dev/docs/getting-started/comparisons">https://centrifugal.dev/docs/getting-started/comparisons</a></td>
+<td>Another service to run. Some features only in paid PRO.</td>
+</tr>
+<tr>
+<td>Pusher / Ably (managed)</td>
+<td>Zero ops</td>
+<td>Data leaves to foreign SaaS, per-message cost, not self-hostable. Pricing not researched here.</td>
+</tr>
+<tr>
+<td>Polling / SSE</td>
+<td>Simplest; works with &quot;changes since cursor&quot; endpoint (Airbnb messaging sync idea).</td>
+<td>Latency and wasted requests at scale.</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> Launch with <strong>cursor-based polling</strong> (every 5 to 15 s while a thread is open, slower in inbox) over a sync endpoint, plus push notifications/email. Add <strong>Centrifugo</strong> when realtime matters (keeps Django WSGI-only, simpler than running Channels). Channels is the fallback if we want everything in Python.</p>
+<h3 id="b7-search">B.7 Search</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Latest</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PostgreSQL FTS + pg_trgm + PostGIS</td>
+<td>built in</td>
+<td>One datastore, transactional consistency with availability, Django <code>SearchVector</code>, <code>TrigramSimilarity</code>, GiST/GIN indexes. <a href="https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/search/">https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/search/</a> , <a href="https://www.postgresql.org/docs/current/pgtrgm.html">https://www.postgresql.org/docs/current/pgtrgm.html</a></td>
+<td>Arabic stemming support in PostgreSQL FTS is limited (no built-in Arabic snowball config verified here); relevance tuning is manual.</td>
+</tr>
+<tr>
+<td>Meilisearch</td>
+<td>server v1.56.1 (2026-11-02), py client 0.43.0</td>
+<td>Typo tolerance, facets, geosearch (<code>_geoRadius</code>, <code>_geoBoundingBox</code>), easy ops. <a href="https://www.meilisearch.com/docs/learn/filtering_and_sorting/geosearch">https://www.meilisearch.com/docs/learn/filtering_and_sorting/geosearch</a></td>
+<td>Separate index to keep in sync; availability must still be checked in PG.</td>
+</tr>
+<tr>
+<td>Typesense</td>
+<td>v30.2 (2026-04-19), py client 2.1.1</td>
+<td>Similar feature set, geo search, in-memory speed. <a href="https://typesense.org/docs/guide/">https://typesense.org/docs/guide/</a></td>
+<td>Same sync burden; RAM-bound.</td>
+</tr>
+<tr>
+<td>OpenSearch</td>
+<td>3.9.0 (2026-09-29)</td>
+<td>Most powerful (analyzers incl. Arabic, aggregations).</td>
+<td>Heavy to operate for our scale.</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> <strong>PostgreSQL first</strong> (PostGIS distance/bbox + filters + <code>unaccent</code> + pg_trgm for place/title autocomplete, FTS for descriptions). Keep a <code>ListingSearchDoc</code> table that is engine-agnostic. Add <strong>Meilisearch</strong> later if multilingual typo-tolerant text search (especially Arabic and Latin transliterations like &quot;Tizi Ouzou&quot; vs &quot;تيزي وزو&quot;) becomes a product need. Availability filtering always stays in PostgreSQL.</p>
+<h3 id="b8-files-and-images">B.8 Files and images</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>django-storages + S3-compatible</th>
+<th>Cloudinary</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>django-storages 1.14.6 (2025-04-02; no release since, repo should be watched)</td>
+<td>(SaaS; Python SDK not version-checked)</td>
+</tr>
+<tr>
+<td>Pros</td>
+<td>Vendor-neutral; Cloudflare R2 has no egress fees for S3 API / public access (<a href="https://developers.cloudflare.com/r2/pricing/">https://developers.cloudflare.com/r2/pricing/</a>), supports presigned URLs (<a href="https://developers.cloudflare.com/r2/api/s3/presigned-urls/">https://developers.cloudflare.com/r2/api/s3/presigned-urls/</a>); B2, Scaleway, OVH also S3-compatible.</td>
+<td>On-the-fly transforms, CDN, moderation add-ons in one product.</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>We build the resize pipeline.</td>
+<td>Cost scales with transformations and bandwidth; lock-in.</td>
+</tr>
+</tbody></table>
+<p>Pipeline options: Pillow 13.0.0 in a Celery task (generate fixed renditions, strip EXIF/GPS), or <strong>imgproxy</strong> v4.0.21 (2026-11-02) / thumbor (active) as on-the-fly resizer behind the CDN with signed URLs (<a href="https://docs.imgproxy.net/">https://docs.imgproxy.net/</a> , <a href="https://github.com/thumbor/thumbor">https://github.com/thumbor/thumbor</a>). Virus scanning: ClamAV 1.5.4 (2026-08-07) via clamd in a worker for documents (KYC PDFs); images are re-encoded by Pillow, which neutralizes most payloads (<a href="https://docs.clamav.net/">https://docs.clamav.net/</a>).</p>
+<p><strong>Recommendation:</strong> <strong>django-storages (S3 backend) + Cloudflare R2</strong>, private bucket for KYC documents, public bucket behind CDN for listing photos. Uploads via <strong>presigned PUT</strong> from the browser to a <code>quarantine/</code> prefix, then a task validates MIME + size, re-encodes with Pillow to WebP/AVIF + JPEG fallback renditions, computes a perceptual hash (duplicate/fake listing detection), and moves to <code>public/</code>. Consider imgproxy later. Data residency for Algerian law on personal data (Law 18-07) was not researched here and must be checked before storing KYC abroad.</p>
+<h3 id="b9-content-translations-frenar">B.9 Content translations fr/en/ar</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>django-modeltranslation</th>
+<th>django-parler</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>0.20.6 (2026-09-07), active</td>
+<td>2.4 (2026-05-14), active</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>Extra columns per language on the same table (<code>title_fr</code>, <code>title_en</code>, <code>title_ar</code>)</td>
+<td>Separate translation table per model</td>
+</tr>
+<tr>
+<td>Pros</td>
+<td>Simple queries, easy indexing/FTS per language, no joins, works with admin.</td>
+<td>Unlimited languages without migrations, clean schema.</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Adding a language = migration; wide tables.</td>
+<td>Joins/prefetch on every read, harder filtering and ordering.</td>
+</tr>
+</tbody></table>
+<p>Sources: <a href="https://django-modeltranslation.readthedocs.io/">https://django-modeltranslation.readthedocs.io/</a> , <a href="https://django-parler.readthedocs.io/">https://django-parler.readthedocs.io/</a></p>
+<p><strong>Recommendation:</strong> <strong>django-modeltranslation</strong> for platform-owned taxonomy (amenities, categories, wilayas, policy names): fixed 3 languages, fast reads, per-language search columns. For user-generated text (listing titles/descriptions) store the host&#39;s original text + <code>source_language</code>, plus optional translated fields filled by humans or machine translation later; do not force hosts to write three versions.</p>
+<h3 id="b10-back-office">B.10 Back-office</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Custom Next.js admin (existing)</th>
+<th>Django admin + Unfold</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>existing app</td>
+<td>django-unfold 0.110.1 (2026-11-01), very active (<a href="https://unfoldadmin.com/">https://unfoldadmin.com/</a>)</td>
+</tr>
+<tr>
+<td>Pros</td>
+<td>Product-quality UX for partners and ops, same design system, same API (dogfooding).</td>
+<td>Free CRUD on every model, filters, actions, inline history; minutes to add a screen.</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Every internal tool must be built through the API.</td>
+<td>Not for partners/hosts; risk of bypassing service-layer rules if admins edit models directly.</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> Both, with clear roles. The <strong>Next.js admin</strong> is the product (partner dashboards, moderation queue, payouts review, support). <strong>Django admin + Unfold</strong> is a staff-only, MFA-protected, IP-restricted engineering/support console, mostly read-only for financial models (ledger entries never editable), with admin actions calling services.</p>
+<h3 id="b11-audit-logging">B.11 Audit logging</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>django-simple-history</th>
+<th>django-auditlog</th>
+<th>django-pghistory</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Latest</td>
+<td>3.13.0 (2026-07-22), django-commons</td>
+<td>3.4.1 (2025-12-18), jazzband</td>
+<td>3.9.2 (2026-02-17), AmbitionEng</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>Python signals, full historical table per model</td>
+<td>Python signals, single LogEntry table with JSON diffs</td>
+<td><strong>PostgreSQL triggers</strong> (django-pgtrigger), event tables, context (user, request) attached</td>
+</tr>
+<tr>
+<td>Pros</td>
+<td>Point-in-time snapshots, admin integration</td>
+<td>Simple, one table</td>
+<td>Captures bulk updates, raw SQL and <code>queryset.update()</code> that signals miss; reliable</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Misses <code>update()</code>/bulk ops</td>
+<td>Same; diffs only</td>
+<td>PostgreSQL only (fine for us), triggers in migrations</td>
+</tr>
+</tbody></table>
+<p>Sources: <a href="https://django-simple-history.readthedocs.io/en/stable/">https://django-simple-history.readthedocs.io/en/stable/</a> , <a href="https://django-auditlog.readthedocs.io/">https://django-auditlog.readthedocs.io/</a> , <a href="https://django-pghistory.readthedocs.io/">https://django-pghistory.readthedocs.io/</a></p>
+<p><strong>Recommendation:</strong> <strong>django-pghistory</strong> for bookings, payments, payouts, listings, memberships, policies (bulk updates in inventory and payouts would escape signal-based tools). Plus an explicit domain <code>AuditEvent</code>/activity log written by services for human-readable &quot;who did what&quot; in the back-office. The ledger is itself append-only and needs no history.</p>
+<h3 id="b12-rate-limiting-caching-idempotency">B.12 Rate limiting, caching, idempotency</h3>
+<ul>
+<li><strong>DRF throttling</strong> (built in; scoped throttles per endpoint, Redis cache backend) <a href="https://www.django-rest-framework.org/api-guide/throttling/">https://www.django-rest-framework.org/api-guide/throttling/</a> . <strong>django-ratelimit</strong> 4.1.0 is from 2023-07-24 with repo last pushed 2024-07: stable but inactive. allauth has its own rate limits for auth endpoints. Recommendation: DRF scoped throttles for API, allauth limits for auth, plus edge limits at the reverse proxy/CDN.</li>
+<li><strong>Caching:</strong> Redis via Django&#39;s built-in <code>RedisCache</code>. <strong>django-cachalot</strong> 2.9.1 (2026-08-10) auto-caches ORM queries and invalidates per table; on write-heavy tables (inventory, bookings) invalidation is constant, so value is low. Recommendation: explicit caching of computed results (search facets, listing detail, quote) with versioned keys; no cachalot.</li>
+<li><strong>Idempotency keys:</strong> <code>django-idempotency-key</code> 1.3.0 last released 2023-05-02 (inactive). Recommendation: small in-house implementation following Airbnb Orpheus and the IETF draft: <code>IdempotencyRecord(key, user, endpoint, request_hash, status, response, locked_at, expires_at)</code> on the primary DB, <code>SELECT ... FOR UPDATE</code>, replay the stored response for repeats, 409 for concurrent in-flight, 422 for same key different body.</li>
+</ul>
+<h3 id="b13-api-docs-and-typed-ts-client">B.13 API docs and typed TS client</h3>
+<ul>
+<li><strong>drf-spectacular</strong> 0.30.0 (2026-07-06), OpenAPI 3 generation for DRF, active (<a href="https://drf-spectacular.readthedocs.io/">https://drf-spectacular.readthedocs.io/</a>). Add <strong>drf-standardized-errors</strong> 0.16.0 for a uniform error schema.</li>
+<li>TS generators (npm, 2026-11-04):</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Latest</th>
+<th>Output</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>openapi-typescript + openapi-fetch</td>
+<td>7.13.0 / 0.17.0 (2026-02-11)</td>
+<td>Types only + tiny typed fetch</td>
+<td>Minimal runtime, works in server components</td>
+</tr>
+<tr>
+<td>orval</td>
+<td>8.46.0 (2026-10-30)</td>
+<td>Clients + TanStack Query hooks + MSW mocks + Zod</td>
+<td>Very active, heavier</td>
+</tr>
+<tr>
+<td>@hey-api/openapi-ts</td>
+<td>0.99.0 (2026-06-22)</td>
+<td>SDK, types, Zod, TanStack plugins</td>
+<td>Pre-1.0 (breaking changes possible)</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> drf-spectacular -&gt; <code>openapi.json</code> committed in CI -&gt; <strong>openapi-typescript + openapi-fetch</strong> shared package used by both Next.js apps (fits server components and route handlers; no hooks runtime required). Consider orval only if the apps standardize on TanStack Query in client components.</p>
+<h3 id="b14-testing">B.14 Testing</h3>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Latest</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>pytest-django</td>
+<td>4.14.0 (2026-08-10)</td>
+<td>test runner</td>
+</tr>
+<tr>
+<td>factory_boy</td>
+<td>3.3.3 (2025-02-03)</td>
+<td>explicit factories, traits, SubFactory</td>
+</tr>
+<tr>
+<td>model_bakery</td>
+<td>1.24.2 (2026-10-06)</td>
+<td>quick auto-filled instances</td>
+</tr>
+<tr>
+<td>hypothesis</td>
+<td>6.170.14 (2026-10-30)</td>
+<td>property tests: pricing, refunds, ledger balancing, overlap logic</td>
+</tr>
+<tr>
+<td>schemathesis</td>
+<td>4.33.0 (2026-11-01)</td>
+<td>contract/fuzz tests from the OpenAPI schema</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> pytest-django + <strong>factory_boy</strong> (explicit, readable domain factories) + hypothesis for money and date-range logic + schemathesis in CI against the generated schema. Concurrency tests for double booking using real PostgreSQL (<code>transaction=True</code> tests with threads), never SQLite.</p>
+<h3 id="b15-project-structure">B.15 Project structure</h3>
+<ul>
+<li><strong>HackSoft Django Styleguide</strong>: business logic in <code>services</code> (writes) and <code>selectors</code> (reads), thin APIs, models without heavy logic, explicit input/output serializers (<a href="https://github.com/HackSoftware/Django-Styleguide">https://github.com/HackSoftware/Django-Styleguide</a>). Last pushed 2025-09.</li>
+<li><strong>cookiecutter-django</strong>: production template (Docker, Celery, allauth, django-environ, Sentry, pytest), release 2026.11.3 on 2026-11-04, very active (<a href="https://github.com/cookiecutter/cookiecutter-django">https://github.com/cookiecutter/cookiecutter-django</a>).</li>
+<li>Two Scoops of Django: book; no current edition for Django 6 was verified, so treat as general guidance only.</li>
+</ul>
+<p><strong>Recommendation:</strong> Bootstrap from cookiecutter-django ideas (not necessarily the generator), organize as a <strong>modular monolith</strong> with apps per bounded context: <code>accounts</code>, <code>organizations</code>, <code>catalog</code> (listings, units, media, amenities), <code>inventory</code> (availability, holds), <code>pricing</code>, <code>bookings</code>, <code>payments</code> (gateway, ledger, payouts), <code>reviews</code>, <code>messaging</code>, <code>trust</code> (moderation, risk, KYC), <code>notifications</code>, <code>geo</code>, <code>search</code>, <code>audit</code>. Follow HackSoft services/selectors; cross-app calls go through services, never through another app&#39;s models directly. Enforce boundaries with <code>import-linter</code> (not version-checked here).</p>
+<h3 id="b16-settings-linting-cicd-observability">B.16 Settings, linting, CI/CD, observability</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Option A</th>
+<th>Option B</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Settings</td>
+<td>django-environ 0.14.0 (2026-06-18)</td>
+<td>pydantic-settings 2.16.2 (2026-10-28)</td>
+<td><strong>pydantic-settings</strong>: typed, validated at boot, fails fast. django-environ is fine and is what cookiecutter uses.</td>
+</tr>
+<tr>
+<td>Lint/format</td>
+<td>ruff 0.17.3 (2026-10-27)</td>
+<td>(black + isort + flake8)</td>
+<td><strong>ruff</strong> for lint + format.</td>
+</tr>
+<tr>
+<td>Typing</td>
+<td>mypy 2.4.1 + django-stubs 6.1.2 + djangorestframework-stubs 3.18.2</td>
+<td>pyright</td>
+<td><strong>mypy + django-stubs</strong> (plugin understands the ORM).</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions: ruff, mypy, pytest with PostGIS service container, schema diff, schemathesis, build image</td>
+<td></td>
+<td>GitHub Actions.</td>
+</tr>
+<tr>
+<td>Errors</td>
+<td>sentry-sdk 2.73.0</td>
+<td></td>
+<td>Sentry (Django + Celery integrations) <a href="https://docs.sentry.io/platforms/python/integrations/django/">https://docs.sentry.io/platforms/python/integrations/django/</a></td>
+</tr>
+<tr>
+<td>Logs</td>
+<td>django-structlog 11.0.0 / structlog 26.1.0</td>
+<td>std logging JSON formatter</td>
+<td><strong>structlog</strong> JSON logs with request_id, user_id, org_id.</td>
+</tr>
+<tr>
+<td>Tracing</td>
+<td>opentelemetry-instrumentation-django 0.66b2 (still beta versioning)</td>
+<td></td>
+<td>Add OTel when we have &gt;1 service; Sentry performance first.</td>
+</tr>
+<tr>
+<td>Metrics</td>
+<td>django-prometheus 2.5.0 (2026-05-26)</td>
+<td></td>
+<td>Prometheus metrics endpoint; plus django-health-check 4.11.4 for probes.</td>
+</tr>
+</tbody></table>
+<h3 id="b17-money-handling">B.17 Money handling</h3>
+<ul>
+<li>ISO 4217 List One gives <strong>DZD numeric 012, minor unit 2</strong> (verified via copies of List One: SAP documentation <a href="https://help.sap.com/doc/saphelp_pos22/2.2/en-US/4f/efa63a9bb04d94a0ae4c32fd6cd827/content.htm?no_cache=true">https://help.sap.com/doc/saphelp_pos22/2.2/en-US/4f/efa63a9bb04d94a0ae4c32fd6cd827/content.htm?no_cache=true</a> , Adyen currency table <a href="https://docs.adyen.com/development-resources/currency-codes">https://docs.adyen.com/development-resources/currency-codes</a> ; ISO&#39;s own page returned HTTP 403 to automated fetch; the maintenance agency is SIX <a href="https://www.six-group.com/en/products-services/financial-information/data-standards.html">https://www.six-group.com/en/products-services/financial-information/data-standards.html</a>). Wikipedia notes centimes rarely circulate (<a href="https://en.wikipedia.org/wiki/Algerian_dinar">https://en.wikipedia.org/wiki/Algerian_dinar</a>).</li>
+<li>Options:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Integer minor units (<code>BigIntegerField</code>, centimes)</th>
+<th><code>DecimalField(max_digits=14, decimal_places=2)</code> / django-money</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pros</td>
+<td>Exact, fast, matches gateway APIs that use minor units, trivial sums in ledger, no rounding surprises.</td>
+<td>Human-readable in DB; django-money 3.6.2 adds a <code>Money</code> type and currency field.</td>
+</tr>
+<tr>
+<td>Cons</td>
+<td>Must format at the edges.</td>
+<td>Decimal context/rounding discipline required; <strong>django-money&#39;s GitHub repo was archived and the project is migrating to Codeberg (notice dated 2026-06-07)</strong>, <a href="https://codeberg.org/django-money/django-money">https://codeberg.org/django-money/django-money</a> , so its maintenance path is in transition.</td>
+</tr>
+</tbody></table>
+<p><strong>Recommendation:</strong> Store <strong>integer minor units (centimes) in <code>BigIntegerField</code> + <code>currency CHAR(3)</code></strong> on every amount column, wrapped in a small in-house <code>Money</code> value object (amount_minor, currency) with explicit rounding rules. Business rule: prices shown and charged in whole dinars (amounts are multiples of 100 centimes), but fees, commissions and tax splits are computed in centimes and rounded with a documented rule (round half up at the line level, remainder assigned to platform), so the ledger always balances exactly. This keeps us ISO-correct (minor unit 2) while matching practical whole-dinar pricing. Chargily&#39;s amount unit (dinars vs centimes) must be confirmed against its API reference before integration; not verified here.</p>
+<hr>
+<h2 id="summary-table-of-recommendations">Summary table of recommendations</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Topic</th>
+<th>Choice</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>Framework</td>
+<td>Django 6.1 (Python 3.13), upgrade to 6.2 LTS in 2027</td>
+</tr>
+<tr>
+<td>1</td>
+<td>DB</td>
+<td>PostgreSQL + PostGIS; DateRange + ExclusionConstraint for capacity-1, CHECKed counters for pools</td>
+</tr>
+<tr>
+<td>2</td>
+<td>API</td>
+<td>DRF 3.18 + HackSoft style</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Auth</td>
+<td>allauth headless (session tokens, phone OTP, MFA), Next.js BFF cookie</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Permissions</td>
+<td>Own org RBAC + django-rules + queryset scoping</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Jobs</td>
+<td>Celery 5.6 + Redis, tasks as thin service wrappers</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Realtime</td>
+<td>Polling sync endpoint first, Centrifugo later</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Search</td>
+<td>PostgreSQL FTS + pg_trgm + PostGIS; Meilisearch only if needed</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Files</td>
+<td>django-storages + R2, presigned uploads, Pillow renditions, ClamAV for docs</td>
+</tr>
+<tr>
+<td>9</td>
+<td>i18n</td>
+<td>modeltranslation for taxonomy; original + translations for UGC</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Back-office</td>
+<td>Next.js admin for product; Django admin + Unfold for staff console</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Audit</td>
+<td>django-pghistory + domain AuditEvent</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Limits/cache/idempotency</td>
+<td>DRF throttles, Redis explicit caching, in-house idempotency</td>
+</tr>
+<tr>
+<td>13</td>
+<td>API docs</td>
+<td>drf-spectacular + openapi-typescript/openapi-fetch</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Tests</td>
+<td>pytest-django, factory_boy, hypothesis, schemathesis</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Structure</td>
+<td>Modular monolith, bounded-context apps</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Ops</td>
+<td>pydantic-settings, ruff, mypy+django-stubs, GitHub Actions, Sentry, structlog, Prometheus</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Money</td>
+<td>BigInteger centimes + currency code, in-house Money type, double-entry ledger</td>
+</tr>
+</tbody></table>
+<h2 id="not-verified--open-questions">Not verified / open questions</h2>
+<ul>
+<li>Airbnb calendar/availability architecture: no primary source found.</li>
+<li>Vrbo: no primary docs retrieved.</li>
+<li>Airbnb current cancellation tiers: only third-party sources.</li>
+<li>SMS OTP providers serving Algeria, pricing for Pusher/Ably, Cloudinary SDK version, django-celery-beat and import-linter versions: not checked.</li>
+<li>Algerian personal data law (Law 18-07) implications for hosting KYC files outside Algeria: needs legal review.</li>
+<li>Chargily amount units and payout (transfer to host) capabilities: confirm in their API reference.</li>
+<li>PostgreSQL FTS Arabic configuration availability: not verified.</li>
+</ul>
+<div class="pager"><span><a href="work-click-through.html">&larr; Click-through observations (website, dev server, 2026-11-04)</a></span><span><a href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security &rarr;</a></span></div></main></div></body></html>

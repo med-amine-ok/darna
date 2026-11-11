@@ -1,0 +1,4326 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BLADUS admin back-office: raw inventory for the backend blueprint · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="on" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Appendices (raw working notes)</div><h1 id="bladus-admin-back-office-raw-inventory-for-the-backend-blueprint">BLADUS admin back-office: raw inventory for the backend blueprint</h1>
+<p>Scope: <code>admin/</code> only (Next.js 14, next-intl, mock store). Read-only analysis, 2026-11-04.
+All paths are relative to <code>admin/</code> unless prefixed with <code>frontend/</code>. <code>L</code> = line number.
+Status legend: <strong>built</strong> = UI + server action + store mutation + audit; <strong>partial</strong> = some parts real, some hardcoded; <strong>mocked-only</strong> = UI state + toast, nothing persisted.</p>
+<p>Key sources: <code>lib/types/index.ts</code>, <code>lib/permissions.ts</code>, <code>lib/route-permissions.ts</code>, <code>lib/domain/transitions.ts</code>, <code>lib/pricing.ts</code>, <code>lib/data/*</code>, <code>lib/actions/*</code>, <code>lib/auth/*</code>, <code>lib/mock-data/{store,generator,admins}.ts</code>, <code>middleware.ts</code>, <code>docs/DATA-MODEL.md</code>, <code>README.md</code>.</p>
+<p>Note: <code>docs/DATA-MODEL.md</code> section 6 is stale: it still says <code>GUEST_SERVICE_FEE_PERCENT = 7</code>; code says <code>0</code> (<code>lib/pricing.ts:16</code>).</p>
+<hr>
+<h2 id="1-feature-inventory-per-role">1. Feature inventory per role</h2>
+<h3 id="11-permission-matrix-source-libpermissionsts3-93">1.1 Permission matrix (source: <code>lib/permissions.ts:3-93</code>)</h3>
+<p>34 permissions (<code>lib/types/index.ts:165-199</code>). <code>X</code> = granted.</p>
+<table>
+<thead>
+<tr>
+<th>Permission</th>
+<th>super_admin</th>
+<th>moderator</th>
+<th>support</th>
+<th>finance</th>
+<th>analyst</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>hosts.view</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>hosts.approve</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>hosts.reject</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>hosts.suspend</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>hosts.delete (also ban, restore)</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>hosts.commission_override</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>listings.view</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>listings.approve (also request changes, unsuspend, create wizards, change requests)</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>listings.reject</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>listings.suspend (also archive)</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>listings.delete (also restore)</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>listings.feature</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>users.view</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>users.suspend (also unsuspend, mark active/pending)</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>users.ban</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>users.delete (also restore)</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>bookings.view</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>bookings.cancel</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>bookings.refund</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>bookings.dispute</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>reviews.view</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>reviews.moderate</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>reviews.delete</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>wallets.view</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>wallets.recharge</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>commissions.manage</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>payouts.approve</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>onboarding.edit</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>categories.manage</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>promotions.manage</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>reports.export</td>
+<td>X</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>audit.view</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>team.manage</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>settings.manage</td>
+<td>X</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>count</strong></td>
+<td>34</td>
+<td>17</td>
+<td>10</td>
+<td>10</td>
+<td>8</td>
+</tr>
+</tbody></table>
+<p>Notes:</p>
+<ul>
+<li>Finance has <code>hosts.commission_override</code> but NOT <code>listings.view</code> or <code>users.view</code> (<code>lib/permissions.ts:71-82</code>).</li>
+<li>Support can refund and resolve disputes but cannot see wallets, so it cannot see the ledger effect of its own refunds.</li>
+<li><code>resolveDispute</code> with a refund outcome needs <code>bookings.dispute</code> AND <code>bookings.refund</code> (<code>lib/actions/bookings.ts:36-38</code>, <code>lib/data/bookings.ts:291-292</code>): only super_admin and support qualify.</li>
+<li>Role labels: <code>lib/permissions.ts:107-113</code>.</li>
+<li>Permissions are resolved from the CURRENT role in the store on every request (<code>lib/auth/current-admin.ts:44-59</code>), never from JWT claims. <code>AdminUser.permissions?</code> (<code>lib/types/index.ts:137</code>) exists but is unused (no per-user overrides).</li>
+</ul>
+<h3 id="12-route---permission-map-source-libroute-permissionsts12-63-longest-prefix-wins-null--any-signed-in-admin">1.2 Route -&gt; permission map (source: <code>lib/route-permissions.ts:12-63</code>, longest prefix wins, <code>null</code> = any signed-in admin)</h3>
+<table>
+<thead>
+<tr>
+<th>Route prefix</th>
+<th>Permission</th>
+<th>Route prefix</th>
+<th>Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code> (exact)</td>
+<td>null</td>
+<td><code>/categories</code></td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/help</code></td>
+<td>null</td>
+<td><code>/stays/categories</code>, <code>/experiences/categories</code>, <code>/trips/categories</code>, <code>/cars/categories</code></td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/messages</code></td>
+<td>null</td>
+<td><code>/stays/amenities</code>, <code>/experiences/amenities</code></td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/where-did-it-go</code></td>
+<td>null</td>
+<td><code>/bookings</code></td>
+<td>bookings.view</td>
+</tr>
+<tr>
+<td><code>/users</code></td>
+<td>users.view</td>
+<td><code>/trips/booking-requests</code></td>
+<td>bookings.view</td>
+</tr>
+<tr>
+<td><code>/hosts</code></td>
+<td>hosts.view</td>
+<td><code>/cars/rentals</code></td>
+<td>bookings.view</td>
+</tr>
+<tr>
+<td><code>/moderation</code></td>
+<td>hosts.view</td>
+<td><code>/cars/owners</code></td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/approvals</code></td>
+<td>hosts.view</td>
+<td><code>/payments</code></td>
+<td>wallets.view</td>
+</tr>
+<tr>
+<td><code>/listings</code>, <code>/network</code>, <code>/search</code></td>
+<td>listings.view</td>
+<td><code>/reviews</code></td>
+<td>reviews.view</td>
+</tr>
+<tr>
+<td><code>/stays</code>, <code>/experiences</code>, <code>/trips</code>, <code>/cars</code></td>
+<td>listings.view</td>
+<td><code>/promotions</code></td>
+<td>promotions.manage</td>
+</tr>
+<tr>
+<td><code>/stays/new</code>, <code>/experiences/new</code>, <code>/trips/new</code>, <code>/cars/new</code></td>
+<td>listings.approve</td>
+<td><code>/stats</code>, <code>/reports</code></td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stays/change-requests</code>, <code>/experiences/change-requests</code></td>
+<td>listings.approve</td>
+<td><code>/settings</code></td>
+<td>settings.manage</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td><code>/settings/onboarding</code></td>
+<td>onboarding.edit</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td><code>/settings/commissions</code></td>
+<td>commissions.manage</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td><code>/settings/team</code></td>
+<td>team.manage</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td><code>/settings/audit-log</code></td>
+<td>audit.view</td>
+</tr>
+</tbody></table>
+<p>This map is client-side only (sidebar, bottom nav, palette). The real gate is <code>guardPage(perm)</code> in each server page (<code>lib/auth/page-guard.tsx:19-28</code>) plus <code>runAction(perm)</code> in each server action (<code>lib/auth/run-action.ts:24-45</code>). Page guards mirror the map except: <code>/cars/insurance</code> and <code>/cars/pricing</code> pages use <code>listings.view</code> (map says <code>/cars</code> = listings.view, consistent), and <code>/payments/commissions</code> is <code>wallets.view</code> while <code>/settings/commissions</code> is <code>commissions.manage</code> (same component).</p>
+<h3 id="13-feature-table-role-access-derived-from-11--12">1.3 Feature table (role access derived from 1.1 + 1.2)</h3>
+<p>SA = super_admin, MO = moderator, SU = support, FI = finance, AN = analyst. &quot;view&quot; = can open, &quot;act&quot; = can mutate.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Route(s)</th>
+<th>Component(s)</th>
+<th>Status</th>
+<th>SA</th>
+<th>MO</th>
+<th>SU</th>
+<th>FI</th>
+<th>AN</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Sign-in / sign-out / session</td>
+<td><code>/login</code></td>
+<td><code>(auth)/login/LoginForm.tsx</code>, <code>lib/actions/auth.ts</code>, <code>components/layout/Header.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>JWT HS256 cookie, rate limit in memory, dev quick-fill buttons</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Dashboard KPIs, charts, attention list, recent audit</td>
+<td><code>/</code></td>
+<td><code>(panel)/page.tsx</code>, <code>DashboardClient.tsx</code></td>
+<td>partial</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>KPIs computed from store with fake period multipliers and hardcoded trends (<code>lib/data/analytics.ts:14,41-51</code>); monthly chart hardcoded (<code>:59-66</code>); page calls data layer directly so SU/MO see revenue though they lack <code>reports.export</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Approvals inbox (hosts, listings, documents, reviews, disputes)</td>
+<td><code>/approvals?tab=</code></td>
+<td><code>approvals/ApprovalsClient.tsx</code></td>
+<td>partial</td>
+<td>act</td>
+<td>act (no disputes refund)</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>hosts/listings/reviews/disputes real; document approve calls <code>approveHost</code> (wrong entity), document reject is toast only; &quot;undo&quot; is toast only (<code>ApprovalsClient.tsx:268-298,310-340</code>)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Provider validation (host KYC queue)</td>
+<td><code>/moderation/providers</code>, <code>/moderation</code> (redirect), <code>/providers</code> (legacy), <code>/cars/owners</code> (redirect)</td>
+<td><code>moderation/providers/ProvidersValidationClient.tsx</code></td>
+<td>partial</td>
+<td>act</td>
+<td>act</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>approve/reject/unsuspend real; &quot;request changes&quot; toast only (<code>:373-395</code>); documents tab hardcoded &quot;4/4&quot; (<code>:730</code>)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Hosts directory + detail drawer</td>
+<td><code>/hosts</code>, <code>/hosts/[id]</code></td>
+<td><code>hosts/HostsClient.tsx</code>, <code>hosts/[id]/page.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>approve/suspend</td>
+<td>view</td>
+<td>override+recharge</td>
+<td>view</td>
+<td>ban exists in data+action but no UI; reject not offered in HostsClient</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Host commission override</td>
+<td><code>/hosts</code> drawer</td>
+<td><code>HostsClient.tsx:377</code></td>
+<td>built</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td>act</td>
+<td></td>
+<td><code>overrideCommission</code>; no &quot;reset to default&quot;</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Host wallet recharge (from host drawer)</td>
+<td><code>/hosts</code></td>
+<td><code>HostsClient.tsx:397-426</code></td>
+<td>built</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td>act</td>
+<td></td>
+<td>method hardcoded <code>ccp_transfer</code>, reason hardcoded English</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Guests/users directory</td>
+<td><code>/users</code>, <code>/users/guests</code>, <code>/users?status=suspended,banned</code></td>
+<td><code>users/UsersClient.tsx</code></td>
+<td>partial</td>
+<td>act</td>
+<td>suspend</td>
+<td>suspend</td>
+<td></td>
+<td>view</td>
+<td>suspend/ban/delete/mark active/pending real; reset password toast only (<code>:287</code>); export toast only (<code>:567</code>)</td>
+</tr>
+<tr>
+<td>9</td>
+<td>All listings (cross-vertical)</td>
+<td><code>/listings</code></td>
+<td><code>listings/ListingsClient.tsx</code>, <code>components/features/listings/useListingStatusActions.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act (no delete)</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>approve, request changes, feature, status moves, delete/restore, bulk approve, CSV export</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Vertical lists</td>
+<td><code>/stays</code>, <code>/experiences</code>, <code>/trips</code>, <code>/cars</code></td>
+<td><code>StaysListClient</code>, <code>ExperiencesListClient</code>, <code>TripsListClient</code>, <code>CarsListClient</code></td>
+<td>partial</td>
+<td>act</td>
+<td>act</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>list + status actions real; detail panel content partly hardcoded (schedules, tiers, seats)</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Listing detail + decision</td>
+<td><code>/stays/[id]</code>, <code>/experiences/[id]</code>, <code>/trips/[id]</code>, <code>/cars/[id]</code></td>
+<td><code>stays/[id]/StayDetailClient.tsx</code> (shared)</td>
+<td>built</td>
+<td>act</td>
+<td>act</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>no vertical check: <code>/cars/lst_001</code> shows a home</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Listing review wizard (checklist)</td>
+<td><code>/x/[id]/review</code></td>
+<td><code>stays/[id]/review/StayReviewClient.tsx</code> (shared)</td>
+<td>partial</td>
+<td>act</td>
+<td>act</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>decision persisted; checklist + internal notes NOT persisted (<code>ModerationChecklist</code> type unused)</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Create listing wizards</td>
+<td><code>/stays/new</code>, <code>/experiences/new</code>, <code>/trips/new</code>, <code>/cars/new</code></td>
+<td><code>StayWizardClient.tsx</code>, <code>ExperienceWizardClient.tsx</code> (reused for trips and cars)</td>
+<td>mocked-only</td>
+<td>act</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td>prefilled demo data, &quot;save draft&quot; and &quot;create&quot; are toasts (<code>StayWizardClient.tsx:179-206</code>)</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Listing change requests</td>
+<td><code>/stays/change-requests</code>, <code>/experiences/change-requests</code></td>
+<td><code>components/management/ChangeRequestsClient.tsx</code></td>
+<td>mocked-only</td>
+<td>act</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td>3 hardcoded requests in <code>useState</code> (<code>:43-77</code>), approve/reject local only</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Trip booking requests</td>
+<td><code>/trips/booking-requests</code></td>
+<td>same <code>ChangeRequestsClient</code></td>
+<td>mocked-only</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>shows listing change requests, not bookings</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Categories (global)</td>
+<td><code>/categories</code></td>
+<td><code>categories/CategoriesClient.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td>create/toggle/delete, no edit, no reorder</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Per-vertical categories</td>
+<td><code>/stays/categories</code>, <code>/experiences/categories</code>, <code>/trips/categories</code>, <code>/cars/categories</code></td>
+<td><code>components/management/CategoriesManagerClient.tsx</code></td>
+<td>partial</td>
+<td>act</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td>list is NOT filtered by vertical; no delete</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Car pricing tiers, car insurance</td>
+<td><code>/cars/pricing</code>, <code>/cars/insurance</code></td>
+<td><code>CategoriesManagerClient</code></td>
+<td>mocked (misuse)</td>
+<td>act</td>
+<td>act</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>writes rows into the categories store; no pricing/insurance model; <code>Insurance</code>, <code>PricingTier</code> types unused</td>
+</tr>
+<tr>
+<td>19</td>
+<td>Amenities</td>
+<td><code>/stays/amenities</code>, <code>/experiences/amenities</code></td>
+<td>redirect to categories</td>
+<td>missing</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><code>Amenity</code> type exists, no store, no data function</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Bookings</td>
+<td><code>/bookings</code>, <code>/cars/rentals</code> (redirect <code>?vertical=cars</code>)</td>
+<td><code>bookings/BookingsClient.tsx</code>, <code>components/features/bookings/BookingMoneyDialogs.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td></td>
+<td>act</td>
+<td>refund</td>
+<td>view</td>
+<td>cancel, refund, dispute, CSV; vertical tab counts hardcoded (<code>:189-194</code>)</td>
+</tr>
+<tr>
+<td>21</td>
+<td>Finance overview + wallets + ledger + payouts + refunds</td>
+<td><code>/payments</code>, <code>/payments/{wallets,transactions,commissions,payouts,refunds}</code>, <code>/finance</code> (legacy)</td>
+<td><code>payments/PaymentsClient.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td>act</td>
+<td>view</td>
+<td>recharge, approve/reject payout, edit default rates, CSV exports</td>
+</tr>
+<tr>
+<td>22</td>
+<td>Default commission rates</td>
+<td><code>/payments/commissions</code>, <code>/settings/commissions</code></td>
+<td><code>PaymentsClient</code> initialTab=commissions</td>
+<td>built</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td>act</td>
+<td>view (payments)</td>
+<td>rates do not propagate to existing hosts</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Reviews moderation</td>
+<td><code>/reviews</code>, <code>/reviews?status=flagged</code></td>
+<td><code>reviews/ReviewsClient.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act (no delete)</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>hide, restore, dismiss flag, delete; export toast only (<code>:225</code>)</td>
+</tr>
+<tr>
+<td>24</td>
+<td>Review &quot;reports&quot; and &quot;disputes&quot; tabs</td>
+<td><code>/reviews/reports</code>, <code>/reviews/disputes</code></td>
+<td><code>ReviewsClient</code></td>
+<td>mocked-only</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>same review list unfiltered; no report or dispute entity behind it</td>
+</tr>
+<tr>
+<td>25</td>
+<td>Coupons</td>
+<td><code>/promotions</code></td>
+<td><code>promotions/PromotionsClient.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td>create/toggle/delete, no edit; not consumed by any checkout</td>
+</tr>
+<tr>
+<td>26</td>
+<td>Featured placements</td>
+<td><code>/promotions/featured</code></td>
+<td><code>PromotionsClient</code></td>
+<td>mocked-only</td>
+<td>act</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td>hardcoded <code>FEATURED_PLACEMENTS</code> (<code>:45-49</code>); the real flag is <code>Listing.isFeatured</code> via <code>/listings</code></td>
+</tr>
+<tr>
+<td>27</td>
+<td>Messages, sent notifications, templates, broadcast</td>
+<td><code>/messages</code>, <code>/messages/notifications</code>, <code>/messages/templates</code></td>
+<td><code>messages/MessagesClient.tsx</code></td>
+<td>mocked-only</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>threads in <code>useState</code> (<code>:93-163</code>), broadcast dialog is toast only (<code>:529-535</code>); no permission at all</td>
+</tr>
+<tr>
+<td>28</td>
+<td>Stats / reports</td>
+<td><code>/stats</code>, <code>/stats/{providers,services,wilayas,revenue,reports}</code>, <code>/reports</code></td>
+<td><code>stats/StatsClient.tsx</code></td>
+<td>partial</td>
+<td>view</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>view</td>
+<td>almost all figures hardcoded (<code>:44-79</code>); KPI CSV export is real and audited</td>
+</tr>
+<tr>
+<td>29</td>
+<td>Network explorer, search</td>
+<td><code>/network</code>, <code>/search?q=</code></td>
+<td><code>NetworkClient.tsx</code>, <code>SearchClient.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act</td>
+<td>view</td>
+<td></td>
+<td>view</td>
+<td>guest-style search over listings; quick approve / suspend</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Platform settings (general, languages, notifications, security)</td>
+<td><code>/settings</code>, <code>/settings/{languages,notifications,security}</code></td>
+<td><code>settings/SettingsClient.tsx</code></td>
+<td>partial</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>saves to store but with field-name mismatch; languages static; notifications toggles never saved; nothing enforces maintenance/2FA/timeout</td>
+</tr>
+<tr>
+<td>31</td>
+<td>Team &amp; roles</td>
+<td><code>/settings/team</code>, <code>/team</code> (legacy)</td>
+<td><code>settings/team/TeamClient.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>change role, activate/deactivate, invite (no email, no acceptance flow, no password set)</td>
+</tr>
+<tr>
+<td>32</td>
+<td>Audit log</td>
+<td><code>/settings/audit-log</code>, <code>/audit-log</code> (legacy)</td>
+<td><code>settings/audit-log/AuditLogClient.tsx</code></td>
+<td>built</td>
+<td>view+export</td>
+<td>view+export</td>
+<td>view</td>
+<td>view+export</td>
+<td>view+export</td>
+<td>export needs <code>reports.export</code> too</td>
+</tr>
+<tr>
+<td>33</td>
+<td>Onboarding configurator</td>
+<td><code>/settings/onboarding</code>, <code>/onboarding</code> (legacy)</td>
+<td><code>settings/onboarding/OnboardingClient.tsx</code></td>
+<td>partial</td>
+<td>act</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>add/remove/reorder steps, toggle required, publish; no field editor; guest site does not read it</td>
+</tr>
+<tr>
+<td>34</td>
+<td>Command palette</td>
+<td>global (Ctrl/Cmd+K)</td>
+<td><code>components/layout/CommandPalette.tsx</code></td>
+<td>built</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>act</td>
+<td>results filtered by permission; links to non-existent <code>/listings/{id}</code>, <code>/bookings/{id}</code>, <code>/users/{id}</code></td>
+</tr>
+<tr>
+<td>35</td>
+<td>Help, where-did-it-go, product tour, training mode, what-changed banner</td>
+<td><code>/help</code>, <code>/where-did-it-go</code></td>
+<td><code>HelpClient</code>, <code>WhereDidItGoClient</code>, <code>ProductTour</code>, <code>TrainingModeBanner</code>, <code>WhatChangedBanner</code></td>
+<td>UI only</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>view</td>
+<td>state in <code>localStorage</code> (<code>components/layout/AdminLayoutClient.tsx:39-92</code>); training mode does not block writes</td>
+</tr>
+</tbody></table>
+<h3 id="14-per-role-summary">1.4 Per-role summary</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Can do (real, persisted)</th>
+<th>Sees but cannot act</th>
+<th>Notably cannot</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>super_admin</td>
+<td>everything in 1.3</td>
+<td>n/a</td>
+<td>nothing gated; only role with onboarding, team, settings, listings.delete, users.ban/delete, reviews.delete, hosts.delete/ban</td>
+</tr>
+<tr>
+<td>moderator</td>
+<td>approve/reject/suspend hosts and listings, feature listings, request changes, review hide/restore/dismiss, categories, coupons, suspend guests, CSV exports (hosts, listings, audit, KPI)</td>
+<td>users, audit log, dashboard revenue</td>
+<td>bookings (no <code>bookings.view</code>), wallets, delete anything, ban</td>
+</tr>
+<tr>
+<td>support</td>
+<td>cancel/refund bookings, resolve disputes (incl. refunds), suspend/unsuspend guests, mark guest active/pending</td>
+<td>hosts, listings, reviews, audit</td>
+<td>wallets/ledger, any export (no <code>reports.export</code>), stats</td>
+</tr>
+<tr>
+<td>finance</td>
+<td>wallet recharge, payout approve/reject, default commission rates, host commission override, booking refunds (not disputes), ledger/wallet/booking/host exports</td>
+<td>hosts, bookings, audit</td>
+<td>listings, users, reviews (no <code>.view</code>), cancel bookings, resolve disputes</td>
+</tr>
+<tr>
+<td>analyst</td>
+<td>CSV exports of hosts, listings, bookings, wallets, ledger, audit, KPI</td>
+<td>hosts, listings, users, bookings, reviews, wallets, audit, stats</td>
+<td>any mutation</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="2-data-inventory">2. Data inventory</h2>
+<h3 id="21-types-in-libtypesindexts">2.1 Types in <code>lib/types/index.ts</code></h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Lines</th>
+<th>Fields (abridged where noted)</th>
+<th>Enums / relations</th>
+<th>Used by store?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>UserRole</code></td>
+<td>1</td>
+<td><code>&quot;guest&quot; | &quot;host&quot; | &quot;admin&quot;</code></td>
+<td>copied from frontend</td>
+<td>unused</td>
+</tr>
+<tr>
+<td><code>HostType</code></td>
+<td>2</td>
+<td><code>individual | agency | hotel | hostel</code></td>
+<td>key of commission rates, onboarding flows</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ProviderCategory</code></td>
+<td>4-9</td>
+<td><code>host | hotel_hostel | travel_agency | experience_company | rental_agency</code></td>
+<td>derived by <code>getProviderCategory</code> (<code>lib/data/hosts.ts:38-45</code>)</td>
+<td>derived only</td>
+</tr>
+<tr>
+<td><code>Document</code></td>
+<td>11-23</td>
+<td>id, type, title, fileName, fileSize, fileUrl, mimeType?, status <code>valid|to_check|missing|rejected</code>, reviewer?, reviewedAt?, rejectionReason?</td>
+<td></td>
+<td>unused</td>
+</tr>
+<tr>
+<td><code>ModerationChecklistItem</code> / <code>ModerationChecklist</code></td>
+<td>25-46</td>
+<td>items, internalNotes, decision <code>approve_publish|request_changes|reject</code>, decisionReason, decisionAt, decidedBy; entityType <code>stay|experience|trip|car|provider</code>; item status <code>valid|to_check|missing|rejected|conforme|verifiee|complete</code></td>
+<td></td>
+<td>unused</td>
+</tr>
+<tr>
+<td><code>ChangeRequest</code></td>
+<td>48-60</td>
+<td>id, entityType, entityId, entityTitle, requestedBy, requestedAt, status <code>pending|approved|rejected</code>, beforeState, afterState, reason?, adminResponse?</td>
+<td></td>
+<td>unused (UI has its own local type)</td>
+</tr>
+<tr>
+<td><code>WizardDraft</code></td>
+<td>62-68</td>
+<td>id, entityType, step, data, updatedAt</td>
+<td></td>
+<td>unused</td>
+</tr>
+<tr>
+<td><code>PointOfInterest</code>, <code>PickupPoint</code>, <code>ProgrammeItem</code>, <code>PricingTier</code>, <code>Insurance</code>, <code>HouseRules</code></td>
+<td>70-115</td>
+<td>listing sub-structures</td>
+<td><code>Listing.pointsOfInterest</code>, <code>.pickupPoints</code>, <code>.programme</code>, <code>.pricingTiers</code>, <code>.houseRules</code></td>
+<td>never seeded</td>
+</tr>
+<tr>
+<td><code>Amenity</code></td>
+<td>117-124</td>
+<td>id, name{en,fr,ar}, icon, category, order?, isFeatured?</td>
+<td></td>
+<td>unused</td>
+</tr>
+<tr>
+<td><code>AdminRole</code></td>
+<td>126</td>
+<td><code>super_admin | moderator | support | finance | analyst</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>AdminUser</code></td>
+<td>128-142</td>
+<td>id, name, email, role, avatar?, isActive, createdAt, lastLoginAt?, permissions?, status? <code>active|invited|deactivated</code>, invitedAt?, invitedBy?</td>
+<td><code>store.team</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>AdminActor</code></td>
+<td>149-155</td>
+<td>id, name, role, ip?</td>
+<td>server-derived</td>
+<td>runtime</td>
+</tr>
+<tr>
+<td><code>AuditActor</code></td>
+<td>158-163</td>
+<td>id, name, role <code>AdminRole|&quot;anonymous&quot;</code>, ip?</td>
+<td></td>
+<td>runtime</td>
+</tr>
+<tr>
+<td><code>Permission</code></td>
+<td>165-199</td>
+<td>34 values, see 1.1</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>HostStatus</code></td>
+<td>201-208</td>
+<td><code>applied | under_review | approved | rejected | suspended | banned | deleted</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>VerificationStatus</code></td>
+<td>210</td>
+<td><code>verified | pending | missing | expired</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>HostDocument</code></td>
+<td>212-221</td>
+<td>id, type <code>id_card|commercial_register|tax_card|tourism_licence|property_deed</code>, title, fileUrl, status <code>pending|approved|rejected</code>, rejectionReason?, uploadedAt, reviewedAt?</td>
+<td>embedded in <code>Host.documents</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>OrganizationMember</code></td>
+<td>223-230</td>
+<td>userId, name, email, role <code>owner|admin|manager|guide|agent</code>, phone?, avatar?</td>
+<td></td>
+<td>never seeded</td>
+</tr>
+<tr>
+<td><code>Organization</code></td>
+<td>232-250</td>
+<td>id, name, hostType, ownerUserId, description?, logo?, coverImage?, address?, wilayaCode, phone?, email?, tradeRegisterNumber?, taxNumber?, tourismLicenseNumber?, verificationStatus <strong>boolean</strong>, members[], createdAt</td>
+<td><code>Host.organization?</code>, <code>Host.organizationId?</code></td>
+<td>never seeded</td>
+</tr>
+<tr>
+<td><code>Host</code></td>
+<td>252-298</td>
+<td>id, ownerName, businessName?, email, phone, hostType, status, statusBeforeDelete?, verificationStatus, wilayaCode, city, address?, rating, reviewsCount, listingsCount, bookingsCount, walletBalance (derived), commissionRate (%), isCommissionOverridden?, joinedAt, lastActiveAt, bookingApprovalMode <code>instant|request</code>, verticalsOffered[], organizationId?, organization?, documents[], adminNotes[], providerCategory?, formattedId?, agencyMetadata{teamSize,hasTrips,licenseNumber}?, hotelMetadata{starRating,roomCount,amenities[]}?, hostelMetadata{bedCount,dormTypes[]}?</td>
+<td>no link to a <code>GuestUser</code>/user account</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ListingVertical</code></td>
+<td>300</td>
+<td><code>home | hotel | experience | vehicle | trip</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ListingStatus</code></td>
+<td>301-312</td>
+<td>canonical <code>draft|pending_review|approved|changes_requested|rejected|suspended|archived|deleted</code> + legacy aliases <code>pending|published|refused</code></td>
+<td><code>normalizeListingStatus</code> (<code>lib/domain/transitions.ts:73-78</code>)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>BookingUnit</code></td>
+<td>314</td>
+<td><code>room | bed | property | person | day</code></td>
+<td></td>
+<td>partially</td>
+</tr>
+<tr>
+<td><code>RoomType</code></td>
+<td>316-329</td>
+<td>id, propertyListingId, name, description?, price, bookingUnit <code>room|bed</code>, totalInventory, availableInventory?, capacity, bedsDescription?, amenities[], imageSrc[]</td>
+<td><code>Listing.rooms</code> (hotel/hostel hosts only)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>Listing</code></td>
+<td>331-386</td>
+<td>id, formattedId?, title, description, category (vertical), vertical? (dup), propertyType, hostId, hostName, hostType (denormalised), status, statusBeforeDelete?, price, priceDzd? (dup), originalPrice?, imageSrc[], images? (dup), createdAt, updatedAt, wilayaCode, city, address?, coordinates{lat,lng}, guestCapacity, bedroomCount?, bathroomCount?, surfaceM2?, constructionYear?, rating, reviewsCount, bookingsCount, amenities[] (free strings), bookingApprovalMode, isFeatured, isReported, adminNotes[], moderationChecklist{photosOk,locationAccurate,priceReasonable,policiesPresent,descriptionAppropriate}?, rooms?, houseRules?, pointsOfInterest?, pickupPoints?, programme?, pricingTiers?, specs?</td>
+<td><code>hostId -&gt; Host.id</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>GuestStatus</code></td>
+<td>388</td>
+<td><code>active | pending | suspended | banned | deleted</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>GuestUser</code></td>
+<td>390-411</td>
+<td>id, name, email, phone?, avatar?, status, role <code>guest|host|both</code>, emailVerified (bool), idVerified, wilayaCode?, preferredLanguage <code>en|fr|ar</code>, bookingsCount, totalSpentDzd, walletBalanceDzd, reviewsWrittenCount, favoritesCount, joinedAt, lastActiveAt, isFlagged, adminNotes[]</td>
+<td>counters are random, not derived</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>BookingStatus</code></td>
+<td>413-419</td>
+<td><code>pending | confirmed | cancelled | completed | disputed | refunded</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>Booking</code></td>
+<td>421-466</td>
+<td>id, reference (<code>BLD-2026-NNNN</code>), listingId, listingTitle, listingImage, vertical, hostId, hostName, hostType, guestId, guestName, guestEmail, guestPhone, wilayaCode, status, approvalMode, checkInDate, checkOutDate (YYYY-MM-DD), nightsCount, guestsCount, basePriceDzd, serviceFeeDzd (always 0), totalAmountDzd, commissionRate, commissionAmountDzd, hostPayoutDzd, paymentStatus, refundedAmountDzd?, refundedAt?, paymentMethod <code>cib_edahabia|ccp_transfer|baridimob|cash_on_arrival</code>, createdAt, cancelledAt?, disputeReason?, disputeResolution{outcome,refundAmountDzd,note,resolvedAt,resolvedBy}?, adminNotes[]</td>
+<td><code>listingId</code>, <code>hostId</code>, <code>guestId</code> (heavy denormalisation)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>BookingPaymentStatus</code></td>
+<td>468</td>
+<td><code>paid | partially_refunded | refunded | pending | failed</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>DisputeOutcome</code></td>
+<td>470</td>
+<td><code>refund_full | refund_partial | declined</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ReviewStatus</code></td>
+<td>472</td>
+<td><code>published | flagged | hidden | deleted</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ReviewItem</code></td>
+<td>474-497</td>
+<td>id, listingId, listingTitle, vertical, guestId, guestName, guestAvatar?, hostId, hostName, hostType, wilayaCode, rating 1-5, comment, status, flagReason?, flaggedBy?, createdAt, hostReply{comment,createdAt}?, adminNotes[]</td>
+<td>no <code>bookingId</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>TransactionType</code></td>
+<td>499-505</td>
+<td><code>booking_payment | commission_deduction | host_payout | wallet_recharge | booking_refund | adjustment</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>WalletTransaction</code></td>
+<td>507-523</td>
+<td>id, walletId (<code>wlt_&lt;hostId&gt;</code>), hostId, hostName, hostType, type, amount (signed int), amountDzd? (dup), balanceAfter, reference, description, bookingRef?, receiptReference?, adminActor? (name, not id), createdAt</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>HostWallet</code></td>
+<td>525-542</td>
+<td>id, hostId, ownerName, businessName?, hostName?, hostType, wilayaCode, balance (derived), balanceDzd?, totalEarned, totalCommissionsPaid, totalCommissionsPaidDzd?, totalPayouts, lastTransactionAt, isNegative, commissionRate?</td>
+<td>1:1 with Host</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>PayoutRequest</code></td>
+<td>544-565</td>
+<td>id, hostId, hostName, hostType, amountDzd, payoutMethod <code>ccp|bank_wire|baridimob</code>, accountDetails{ccpRip?,rib?,phone?}, status, requestedAt, processedAt?, processedBy? (name), rejectionReason?, transactionId?, adminNotes?</td>
+<td><code>transactionId -&gt; WalletTransaction.id</code></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>PayoutStatus</code></td>
+<td>567</td>
+<td><code>pending | approved | processed | rejected</code></td>
+<td><code>processed</code> never produced</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>AuditEntry</code></td>
+<td>569-584</td>
+<td>id, timestamp, actorId, actorName, actorRole, action (free string), entityType <code>host|listing|user|booking|review|wallet|payout|setting|onboarding|promotion|auth|export|team</code>, entityId, entityName? (never set), beforeState?, afterState?, details, ipAddress</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>ModerationCase</code></td>
+<td>586-600</td>
+<td>id, type <code>host|listing|document|review|dispute</code>, entityId, title, subtitle, submittedAt, waitingDays, priority <code>high|normal|low</code>, hostType?, vertical?, wilayaCode?, status, details (any)</td>
+<td>computed view</td>
+<td>computed</td>
+</tr>
+<tr>
+<td><code>OnboardingFieldType</code></td>
+<td>603-613</td>
+<td><code>text | textarea | number | select | multiselect | radio | file | location | amenities | boolean</code></td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>OnboardingFieldConfig</code></td>
+<td>615-626</td>
+<td>id?, key?, label{en,fr,ar}, type, required?, order?, placeholder?, helpText?, options?[{value,label}], isCore?</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>OnboardingStepConfig</code></td>
+<td>628-639</td>
+<td>id, stepNumber?, order?, isCore?, isActive?, isRequired?, title?, name? (dup of title), description, fields[]</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>OnboardingConfig</code></td>
+<td>641-649</td>
+<td>version (int, global), updatedAt, publishedBy (name), flows: Record&lt;HostType,{maxPagesAllowed?, steps[]}&gt;</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>CategoryItem</code></td>
+<td>651-661</td>
+<td>id, name{en,fr,ar}, vertical, slug?, iconName?, icon? (dup), listingCount, isActive, order</td>
+<td>not linked to listings (<code>Listing.propertyType</code> is free text)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>PromotionCoupon</code></td>
+<td>663-680</td>
+<td>id, code, discountType <code>percentage|fixed_dzd|fixed</code>, discountValue, minSpendDzd, maxUsage?/maxUses? (dup), usedCount/currentUses? (dup), startDate?/endDate?/expiresAt? (dup), status <code>active|expired|disabled</code>, scope? <code>all|ListingVertical</code>, targetWilayas?, targetHostTypes?</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>PlatformSettings</code></td>
+<td>682-701</td>
+<td>platformName, supportEmail, supportPhone, defaultLocale, enabledLocales[], primaryCurrency <code>DZD</code>, supportedCurrencies[], guestServiceFeePercent, serviceFeePercent? (dup), defaultCommissionRates, instantBookingPlatformWide, maintenanceMode, sessionTimeoutMinutes, twoFactorAuthEnabled, security{sessionTimeoutMinutes?,twoFactorRequired?}? (dup)</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>PaginatedResult&lt;T&gt;</code></td>
+<td>703-710</td>
+<td>rows, total, page, pageSize, totalPages, facets?</td>
+<td></td>
+<td>contract</td>
+</tr>
+<tr>
+<td><code>QueryParams</code></td>
+<td>712-719</td>
+<td>page, pageSize, search, sortBy, sortOrder, filters</td>
+<td></td>
+<td>unused</td>
+</tr>
+<tr>
+<td><code>NetworkSearchParams</code></td>
+<td>721-730</td>
+<td>vertical?, destination?, wilayaCode?, guests?, minPrice?, maxPrice?, hostType?, propertyType?</td>
+<td></td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>CommandPaletteResult</code></td>
+<td>732-739</td>
+<td>id, type <code>host|listing|user|booking|review|action</code>, title, subtitle, href, badge?</td>
+<td></td>
+<td>yes</td>
+</tr>
+</tbody></table>
+<p>Other types outside <code>lib/types</code>: <code>CurrentAdmin</code> (<code>lib/auth/current-admin.ts:28-35</code>), <code>SessionPayload</code> (<code>lib/auth/session.ts:20-26</code>), <code>ActionResult</code>/<code>ActionErrorCode</code> (<code>lib/actions/result.ts:8-12</code>), <code>FinanceSummary</code> (<code>lib/data/finance.ts:389-403</code>), <code>WalletAggregate</code> (<code>lib/data/ledger.ts:12-18</code>), filter param interfaces in each <code>lib/data/*.ts</code>, <code>Wilaya</code> (<code>lib/utils/wilayas.ts</code>, code string <code>&quot;01&quot;..&quot;68&quot;</code>, region <code>north|high_plateaus|south</code>).</p>
+<h3 id="22-mock-collections-libmock-datastorets30-211-seeded-by-libmock-datageneratorts">2.2 Mock collections (<code>lib/mock-data/store.ts:30-211</code>, seeded by <code>lib/mock-data/generator.ts</code>)</h3>
+<p>Seed RNG: LCG seed <code>20261020</code> (<code>generator.ts:25-34</code>), but dates use <code>Date.now()</code> so timestamps shift every boot.</p>
+<table>
+<thead>
+<tr>
+<th>Collection</th>
+<th>Rows</th>
+<th>Id format</th>
+<th>Seed distribution (generator lines)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>users</code> (GuestUser)</td>
+<td>320</td>
+<td><code>usr_001</code></td>
+<td>status: active 85%, suspended 9%, banned 4%, deleted 2% (<code>:84</code>); role <code>both</code> for i&lt;=80 else <code>guest</code> (<code>:95</code>); never <code>pending</code>; bookingsCount 0-18 random, totalSpent = count x 12k-65k, walletBalanceDzd 0-45k (<code>:85-102</code>)</td>
+</tr>
+<tr>
+<td><code>hosts</code> (Host)</td>
+<td>128 (32 per host type, round robin <code>:117</code>)</td>
+<td><code>hst_001</code></td>
+<td>status: approved 65%, under_review 13%, applied 10%, suspended 6%, rejected 4%, banned 2% (<code>:121-127</code>); verification verified 70%/pending 15%/missing 10%/expired 5% (<code>:129-131</code>); 15% commission overridden at default +2.5 or -2.0 (<code>:146-149</code>); docs: id_card always approved, non-individual also RC, tax card, tourism licence (approved if verified else pending) (<code>:157-194</code>); listingsCount/bookingsCount/rating random (<code>:208-211</code>); walletBalance overwritten from ledger (<code>:544-546</code>)</td>
+</tr>
+<tr>
+<td><code>listings</code> (Listing)</td>
+<td>430</td>
+<td><code>lst_001</code></td>
+<td>random host; vertical by host type: agency trip/experience/vehicle, hotel+hostel <code>hotel</code>, individual home/experience (<code>:278-282</code>); status approved 65%, pending_review 13%, changes_requested 8%, rejected 6%, suspended 4%, draft 2%, archived 2% (<code>:284-291</code>); price ranges per vertical (<code>:293-298</code>); 2 RoomTypes for hotel/hostel (<code>:300-327</code>); isFeatured 12%, isReported 4%; coordinates random box around 28.03,1.66 +/-4deg (<code>:347-350</code>)</td>
+</tr>
+<tr>
+<td><code>bookings</code> (Booking)</td>
+<td>840</td>
+<td><code>bkg_0001</code>, ref <code>BLD-2026-8001..8840</code></td>
+<td>status completed 50%, confirmed 25%, pending 10%, cancelled 7%, disputed 5%, refunded 3% (<code>:382-387</code>); nights 1-7, base = listing.price x nights, amounts via <code>computeBookingAmounts</code> (<code>:389-396</code>); payment refunded/pending/paid by status (<code>:429</code>); paymentMethod never <code>cash_on_arrival</code> (<code>:431</code>); check-in -120..+60 days</td>
+</tr>
+<tr>
+<td><code>reviews</code> (ReviewItem)</td>
+<td>330</td>
+<td><code>rev_001</code></td>
+<td>from a random booking; published 85%, flagged 9%, hidden 4%, deleted 2% (<code>:452-456</code>); flagged rating 1-2 else 4-5</td>
+</tr>
+<tr>
+<td><code>transactions</code> (WalletTransaction)</td>
+<td>1550</td>
+<td><code>tx_0001</code>, ref <code>TXN-DZ-10001..</code></td>
+<td>booking_payment 50% (+15k..85k), commission_deduction 25% (-2k..15k), host_payout 15% (-20k..100k), wallet_recharge 10% (+20k..150k) (<code>:492-512</code>); NOT linked to real bookings (random <code>BLD-2026-xxxx</code> refs <code>:496,522</code>); no <code>booking_refund</code> or <code>adjustment</code> seeded; sorted chronologically and <code>balanceAfter</code> computed (<code>:527-541</code>)</td>
+</tr>
+<tr>
+<td><code>wallets</code> (HostWallet)</td>
+<td>128</td>
+<td><code>wlt_&lt;hostId&gt;</code></td>
+<td>derived from transactions (<code>:549-570</code>)</td>
+</tr>
+<tr>
+<td><code>audit</code> (AuditEntry)</td>
+<td>215 seeded (frozen)</td>
+<td><code>aud_001</code>; runtime <code>aud_&lt;ms&gt;_&lt;rand&gt;</code></td>
+<td>all actor adm_01; 7 template actions incl. <code>COMMISSION_CHANGE</code>, <code>DISPUTE_RESOLVE</code> which no code path emits; entityId like <code>host_42</code> (not real ids) (<code>:574-598</code>)</td>
+</tr>
+<tr>
+<td><code>payouts</code> (PayoutRequest)</td>
+<td>14</td>
+<td><code>pay_001</code></td>
+<td>first 14 approved hosts; idx&lt;9 pending, 9-11 approved, 12-13 rejected (<code>:615</code>); pending idx%4==3 deliberately exceeds balance (<code>:616-620</code>); seeded approved ones have no <code>transactionId</code> and no matching ledger debit</td>
+</tr>
+<tr>
+<td><code>team</code> (AdminUser)</td>
+<td>5</td>
+<td><code>adm_01..adm_05</code>; invite <code>adm_inv_&lt;base36&gt;</code></td>
+<td>one per role (<code>lib/mock-data/admins.ts:14-65</code>); passwords from env vars with dev defaults (<code>:67-82</code>)</td>
+</tr>
+<tr>
+<td><code>categories</code> (CategoryItem)</td>
+<td>3</td>
+<td><code>cat_villas</code>, <code>cat_sahara</code>, <code>cat_4x4</code>; runtime <code>cat_&lt;ms&gt;</code></td>
+<td>listingCount hardcoded 48/42/28 (<code>store.ts:44-48</code>)</td>
+</tr>
+<tr>
+<td><code>promotions</code> (PromotionCoupon)</td>
+<td>3</td>
+<td><code>cpn_sahara2026</code>, <code>cpn_marhaban</code>, <code>cpn_oran_sea</code>; runtime <code>cpn_&lt;ms&gt;</code></td>
+<td>SAHARA2026 15% experience; MARHABAN 5000 DZD fixed all; ORANSEA 10% home expired (<code>store.ts:50-90</code>)</td>
+</tr>
+<tr>
+<td><code>platformSettings</code></td>
+<td>1</td>
+<td>n/a</td>
+<td><code>store.ts:92-106</code>: defaultLocale <code>fr</code>, currencies DZD/EUR/USD, guestServiceFeePercent 0, default rates, sessionTimeoutMinutes 480, twoFactorAuthEnabled false</td>
+</tr>
+<tr>
+<td><code>onboardingConfig</code></td>
+<td>1</td>
+<td>n/a</td>
+<td>version 1; individual 2 steps (5 fields), agency 1 step (2 fields), hotel 1 step (2), hostel 1 step (1) (<code>store.ts:108-191</code>)</td>
+</tr>
+<tr>
+<td><code>credentials</code></td>
+<td>Map adminId -&gt; <code>scrypt$salt$hash</code></td>
+<td>n/a</td>
+<td>lazily hashed on first login (<code>lib/data/credentials.ts:9-18</code>)</td>
+</tr>
+</tbody></table>
+<p>Generator file comments say &quot;&gt;= 125 hosts&quot;, &quot;&gt;= 420 listings&quot; etc. Actual loop bounds: 320 / 128 / 430 / 840 / 330 / 1550 / 215 / 14.</p>
+<hr>
+<h2 id="3-function-inventory-libdata-and-libactions">3. Function inventory: <code>lib/data/*</code> and <code>lib/actions/*</code></h2>
+<p>Conventions:</p>
+<ul>
+<li>Every <code>lib/data</code> function is <code>server-only</code>; every <code>lib/actions</code> function is <code>&quot;use server&quot;</code> and wraps the data call in <code>runAction(permission, fn)</code> (<code>lib/auth/run-action.ts:24-45</code>) which returns <code>{ok,data}|{ok:false,code}</code> with codes <code>unauthenticated|forbidden|invalid|conflict|failed</code>.</li>
+<li>Read functions in <code>lib/data</code> do NOT call <code>assertCan</code>; protection relies on the action or on <code>guardPage</code> in the calling server page. Mutations call <code>assertCan(actor.role, perm)</code> again (defense in depth).</li>
+<li>All mock functions <code>await delay(100..200ms)</code>.</li>
+<li>&quot;Audit&quot; column = calls <code>logAudit</code>/<code>logExport</code>.</li>
+</ul>
+<h3 id="31-analytics">3.1 analytics</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/analytics.ts:11</td>
+<td>getDashboardKPIs</td>
+<td>period <code>7d|30d|90d|1y</code></td>
+<td>net revenue, GMV, commission, counts, fixed occupancy 78.4/cancel 4.8/response 24, fake trends</td>
+<td>R</td>
+<td><code>(panel)/page.tsx</code> (direct), StatsClient via action</td>
+<td>page: none; action: reports.export</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/analytics/kpis?period=</code> (real time windows)</td>
+</tr>
+<tr>
+<td>data/analytics.ts:55</td>
+<td>getDashboardCharts</td>
+<td>period (ignored)</td>
+<td>monthlyRevenue (hardcoded), revenueByHostType, hostCategoryPerformance, revenueByVertical (listing counts), bookingsByWilaya top 10</td>
+<td>R</td>
+<td>dashboard page, StatsClient</td>
+<td>same</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/analytics/charts?period=</code></td>
+</tr>
+<tr>
+<td>data/analytics.ts:161</td>
+<td>getAttentionItems</td>
+<td>none</td>
+<td>counts of pending hosts/listings, flagged reviews, disputes + top items with hrefs</td>
+<td>R</td>
+<td>dashboard page</td>
+<td>none</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/attention</code> (or reuse moderation queue counts)</td>
+</tr>
+<tr>
+<td>data/analytics.ts:206</td>
+<td>exportKpiReport</td>
+<td>reportName, period, actor</td>
+<td>CsvExport</td>
+<td>R</td>
+<td>StatsClient</td>
+<td>reports.export</td>
+<td>yes DATA_EXPORT <code>kpi_report</code></td>
+<td><code>POST /api/v1/admin/reports/kpi/export</code> (async job)</td>
+</tr>
+<tr>
+<td>actions/analytics.ts:6,10,14</td>
+<td>getDashboardKPIs / getDashboardCharts / exportKpiReport</td>
+<td>as above</td>
+<td>ActionResult</td>
+<td></td>
+<td>StatsClient</td>
+<td>reports.export</td>
+<td>as data</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="32-approvals">3.2 approvals</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/approvals.ts:8</td>
+<td>getApprovalsInbox</td>
+<td>tab <code>hosts|listings|documents|reviews|disputes</code></td>
+<td><code>{items: ModerationCase[], counts}</code> oldest first</td>
+<td>R</td>
+<td><code>(panel)/layout.tsx</code> (count badge, if hosts.view), ApprovalsClient</td>
+<td>action: hosts.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/moderation/queue?type=&amp;page=</code> + <code>GET /api/v1/admin/moderation/counts</code></td>
+</tr>
+<tr>
+<td>actions/approvals.ts:6</td>
+<td>getApprovalsInbox</td>
+<td>tab</td>
+<td></td>
+<td></td>
+<td>ApprovalsClient</td>
+<td>hosts.view</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="33-audit">3.3 audit</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/audit.ts:20</td>
+<td>logAudit</td>
+<td>actor, action, entityType, entityId, details, before?, after?</td>
+<td>AuditEntry</td>
+<td>W (append)</td>
+<td>every mutating data fn, auth actions</td>
+<td>n/a</td>
+<td>is the audit</td>
+<td>DB insert in same transaction as the mutation (Django signal or service layer)</td>
+</tr>
+<tr>
+<td>data/audit.ts:48</td>
+<td>logExport</td>
+<td>actor, dataset, rowCount, filters</td>
+<td>void</td>
+<td>W</td>
+<td>all export fns</td>
+<td>n/a</td>
+<td><code>DATA_EXPORT</code></td>
+<td>same</td>
+</tr>
+<tr>
+<td>data/audit.ts:102</td>
+<td>listAuditLogs</td>
+<td>page, pageSize(20), actorRole, entityType, search</td>
+<td>Paginated<AuditEntry></td>
+<td>R</td>
+<td>dashboard page (pageSize 6, if audit.view), AuditLogClient</td>
+<td>audit.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/audit-logs?actor_role=&amp;entity_type=&amp;q=&amp;page=</code></td>
+</tr>
+<tr>
+<td>data/audit.ts:127</td>
+<td>exportAuditLogs</td>
+<td>filters, actor</td>
+<td>CsvExport</td>
+<td>R</td>
+<td>AuditLogClient</td>
+<td>audit.view + reports.export</td>
+<td>yes</td>
+<td><code>POST /api/v1/admin/audit-logs/export</code></td>
+</tr>
+<tr>
+<td>actions/audit.ts:8,13</td>
+<td>listAuditLogs / exportAuditLogs</td>
+<td></td>
+<td></td>
+<td></td>
+<td>AuditLogClient</td>
+<td>audit.view (+reports.export)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="34-auth--credentials--team-auth">3.4 auth / credentials / team-auth</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>actions/auth.ts:33</td>
+<td>loginAction</td>
+<td>FormData email, password, locale, returnTo</td>
+<td>redirect or <code>{error}</code></td>
+<td>W (cookie, lastLoginAt, rate-limit map)</td>
+<td>LoginForm</td>
+<td>public</td>
+<td>LOGIN_BLOCKED / LOGIN_FAILURE / LOGIN_SUCCESS</td>
+<td><code>POST /api/v1/admin/auth/login</code> (set httpOnly cookie or return token)</td>
+</tr>
+<tr>
+<td>actions/auth.ts:116</td>
+<td>logoutAction</td>
+<td>FormData locale</td>
+<td>redirect</td>
+<td>W (cookie delete)</td>
+<td>Header</td>
+<td>signed-in</td>
+<td>LOGOUT</td>
+<td><code>POST /api/v1/admin/auth/logout</code> (server-side session revocation)</td>
+</tr>
+<tr>
+<td>actions/auth.ts:137</td>
+<td>getDemoCredentials</td>
+<td>email</td>
+<td><code>{email,password}</code> or null (dev only)</td>
+<td>R</td>
+<td>LoginForm</td>
+<td>public, NODE_ENV=development</td>
+<td>no</td>
+<td>drop</td>
+</tr>
+<tr>
+<td>data/credentials.ts:9</td>
+<td>getAdminPasswordHash</td>
+<td>adminId</td>
+<td>hash or null</td>
+<td>R/W (lazy hash)</td>
+<td>lib/auth/credentials.ts</td>
+<td>n/a</td>
+<td>no</td>
+<td>Django auth <code>password</code> column</td>
+</tr>
+<tr>
+<td>data/credentials.ts:21</td>
+<td>listDevDemoAccounts</td>
+<td>none</td>
+<td>SA, MO, FI emails (dev)</td>
+<td>R</td>
+<td>login page</td>
+<td>public dev</td>
+<td>no</td>
+<td>drop</td>
+</tr>
+<tr>
+<td>data/credentials.ts:30</td>
+<td>getDevSeedPassword</td>
+<td>adminId</td>
+<td>string (dev)</td>
+<td>R</td>
+<td>getDemoCredentials</td>
+<td>dev</td>
+<td>no</td>
+<td>drop</td>
+</tr>
+<tr>
+<td>auth/credentials.ts:17</td>
+<td>verifyAdminCredentials</td>
+<td>email, password</td>
+<td>ok/unknown_account/bad_password/inactive</td>
+<td>R</td>
+<td>loginAction</td>
+<td>n/a</td>
+<td>no</td>
+<td>Django <code>authenticate()</code></td>
+</tr>
+<tr>
+<td>auth/current-admin.ts:44</td>
+<td>getCurrentAdmin (React cache)</td>
+<td>cookie</td>
+<td>CurrentAdmin or null</td>
+<td>R</td>
+<td>layout, guardPage, login page, dashboard, logout</td>
+<td>n/a</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/auth/me</code></td>
+</tr>
+<tr>
+<td>auth/current-admin.ts:66,73</td>
+<td>requireAdmin / requirePermission</td>
+<td>perm</td>
+<td>AdminActor</td>
+<td>R</td>
+<td>runAction</td>
+<td></td>
+<td></td>
+<td>DRF permission classes</td>
+</tr>
+</tbody></table>
+<h3 id="35-bookings">3.5 bookings</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/bookings.ts:93</td>
+<td>listBookings</td>
+<td>status, vertical, hostType, wilayaCode, paymentStatus, approvalMode, search, pendingOver24h, sortBy <code>created|checkIn|amount</code>, sortOrder, page, pageSize(12)</td>
+<td>Paginated<Booking> + facets status, vertical (global counts)</td>
+<td>R</td>
+<td>BookingsClient</td>
+<td>bookings.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/bookings?status=&amp;vertical=&amp;host_type=&amp;wilaya=&amp;payment_status=&amp;approval_mode=&amp;q=&amp;pending_over_24h=&amp;ordering=&amp;page=</code></td>
+</tr>
+<tr>
+<td>data/bookings.ts:138</td>
+<td>getBookingById</td>
+<td>id</td>
+<td>Booking or null</td>
+<td>R</td>
+<td>none (action unused)</td>
+<td>bookings.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/bookings/{id}</code></td>
+</tr>
+<tr>
+<td>data/bookings.ts:144</td>
+<td>exportBookings</td>
+<td>filters, actor</td>
+<td>CsvExport (19 cols)</td>
+<td>R</td>
+<td>BookingsClient</td>
+<td>reports.export + bookings.view</td>
+<td>yes DATA_EXPORT <code>bookings</code></td>
+<td><code>POST /api/v1/admin/bookings/export</code></td>
+</tr>
+<tr>
+<td>data/bookings.ts:165</td>
+<td>cancelBooking</td>
+<td>id, reason (&gt;=3), actor</td>
+<td>Booking</td>
+<td>W</td>
+<td>BookingsClient</td>
+<td>bookings.cancel</td>
+<td>BOOKING_CANCEL</td>
+<td><code>POST /api/v1/admin/bookings/{id}/cancel {reason}</code></td>
+</tr>
+<tr>
+<td>data/bookings.ts:205</td>
+<td>applyRefund (private)</td>
+<td>idx, amount, note, actor</td>
+<td>{prev,next}</td>
+<td>W + ledger</td>
+<td>refundBooking, resolveDispute</td>
+<td></td>
+<td>via caller</td>
+<td>service function inside a DB transaction with <code>SELECT ... FOR UPDATE</code> on booking + wallet</td>
+</tr>
+<tr>
+<td>data/bookings.ts:251</td>
+<td>refundBooking</td>
+<td>id, amount (int DZD), reason, actor</td>
+<td>Booking</td>
+<td>W + ledger <code>booking_refund</code></td>
+<td>BookingsClient (RefundDialog)</td>
+<td>bookings.refund</td>
+<td>BOOKING_REFUND / BOOKING_PARTIAL_REFUND</td>
+<td><code>POST /api/v1/admin/bookings/{id}/refunds {amount_dzd, reason, idempotency_key}</code></td>
+</tr>
+<tr>
+<td>data/bookings.ts:284</td>
+<td>resolveDispute</td>
+<td>id, outcome, note, actor, amount?</td>
+<td>Booking</td>
+<td>W + ledger</td>
+<td>BookingsClient (DisputeDialog), ApprovalsClient</td>
+<td>bookings.dispute (+bookings.refund unless declined)</td>
+<td>BOOKING_DISPUTE_RESOLVED / _DECLINED</td>
+<td><code>POST /api/v1/admin/bookings/{id}/dispute/resolve {outcome, note, amount_dzd?}</code></td>
+</tr>
+<tr>
+<td>actions/bookings.ts:11,15,19,24,30,50</td>
+<td>listBookings, getBookingById, cancelBooking, refundBooking, resolveDispute, exportBookings</td>
+<td>validated with <code>id</code>, <code>reason</code>, <code>dzd</code>, <code>oneOf</code></td>
+<td></td>
+<td></td>
+<td>as above</td>
+<td>as above</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="36-categories">3.6 categories</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/categories.ts:10</td>
+<td>listCategories</td>
+<td>none</td>
+<td>CategoryItem[] sorted by order</td>
+<td>R</td>
+<td>CategoriesClient, CategoriesManagerClient</td>
+<td>action: <strong>null</strong> (any admin)</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/categories?vertical=</code></td>
+</tr>
+<tr>
+<td>data/categories.ts:15</td>
+<td>createCategory</td>
+<td>item minus id/listingCount, actor</td>
+<td>CategoryItem</td>
+<td>W</td>
+<td>CategoriesClient, CategoriesManagerClient</td>
+<td>categories.manage</td>
+<td>CATEGORY_CREATE (entityType <code>setting</code>, no before/after)</td>
+<td><code>POST /api/v1/admin/categories</code></td>
+</tr>
+<tr>
+<td>data/categories.ts:33</td>
+<td>toggleCategoryStatus</td>
+<td>id, actor</td>
+<td>CategoryItem</td>
+<td>W</td>
+<td>both</td>
+<td>categories.manage</td>
+<td>CATEGORY_TOGGLE</td>
+<td><code>PATCH /api/v1/admin/categories/{id} {is_active}</code></td>
+</tr>
+<tr>
+<td>data/categories.ts:59</td>
+<td>deleteCategory</td>
+<td>id, actor</td>
+<td>true (hard delete, silent if unknown)</td>
+<td>W</td>
+<td>CategoriesClient</td>
+<td>categories.manage</td>
+<td>CATEGORY_DELETE</td>
+<td><code>DELETE /api/v1/admin/categories/{id}</code> (block if listings attached)</td>
+</tr>
+<tr>
+<td>actions/categories.ts:7,11,15,19</td>
+<td>same 4</td>
+<td><code>obj(item)</code> only, no field validation</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="37-command-palette">3.7 command palette</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/command-palette.ts:8</td>
+<td>searchGlobalCommandPalette</td>
+<td>query</td>
+<td>&lt;=12 results across hosts, listings, bookings, users (substring), or 5 default actions</td>
+<td>R</td>
+<td>CommandPalette</td>
+<td>action: null, then filters by per-type perm + <code>canAccessPath</code> (<code>actions/command-palette.ts:18-26</code>)</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/search?q=</code> (Postgres trigram / full-text)</td>
+</tr>
+</tbody></table>
+<h3 id="38-finance--ledger">3.8 finance + ledger</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/ledger.ts:21</td>
+<td>computeWalletAggregates</td>
+<td>none</td>
+<td>Map hostId -&gt; {balance, totalEarned, totalCommissionsPaid, totalPayouts, lastTransactionAt}</td>
+<td>R</td>
+<td>listWallets, getFinanceSummary, listHosts</td>
+<td>n/a</td>
+<td>no</td>
+<td>SQL <code>GROUP BY host_id</code> or materialised balance with ledger as source of truth</td>
+</tr>
+<tr>
+<td>data/ledger.ts:38</td>
+<td>getHostBalance</td>
+<td>hostId</td>
+<td>number</td>
+<td>R</td>
+<td>recharge, payouts, hosts</td>
+<td>n/a</td>
+<td>no</td>
+<td><code>SUM(amount)</code> under row lock</td>
+</tr>
+<tr>
+<td>data/ledger.ts:58</td>
+<td>appendLedgerEntry</td>
+<td>host, type, amount (non-zero int), description, bookingRef?, receiptReference?, adminActor?</td>
+<td>WalletTransaction (prefix ref <code>TXN-BKG/COM/PAY/REC/RFD/ADJ-&lt;base36&gt;</code>)</td>
+<td>W</td>
+<td>rechargeWallet, approvePayout, applyRefund</td>
+<td>n/a</td>
+<td>caller</td>
+<td><code>ledger_entries</code> insert, append-only</td>
+</tr>
+<tr>
+<td>data/finance.ts:82</td>
+<td>listWallets</td>
+<td>hostType, wilayaCode, onlyNegative, minBalance, maxBalance, search, page, pageSize(12)</td>
+<td>Paginated<HostWallet> sorted by balance desc, facets hostType, solvency</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>wallets.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/wallets?...</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:145</td>
+<td>listTransactions</td>
+<td>hostId, type, search, page, pageSize(15)</td>
+<td>Paginated<WalletTransaction> newest first</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>wallets.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/ledger?host=&amp;type=&amp;q=&amp;page=</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:160</td>
+<td>exportTransactions</td>
+<td>type, search, hostId, actor</td>
+<td>CsvExport</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>reports.export + wallets.view</td>
+<td>DATA_EXPORT <code>wallet_ledger</code></td>
+<td><code>POST /api/v1/admin/ledger/export</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:183</td>
+<td>exportWallets</td>
+<td>filters, actor</td>
+<td>CsvExport</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>reports.export + wallets.view</td>
+<td>DATA_EXPORT <code>wallets</code></td>
+<td><code>POST /api/v1/admin/wallets/export</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:205</td>
+<td>rechargeWallet</td>
+<td>hostId, amount 1..10,000,000, method (free string), reason (free, not min length), receiptReference (required), actor</td>
+<td>{transaction, newBalance}</td>
+<td>W ledger <code>wallet_recharge</code></td>
+<td>PaymentsClient, HostsClient</td>
+<td>wallets.recharge</td>
+<td>WALLET_RECHARGE (before/after balance, txId)</td>
+<td><code>POST /api/v1/admin/wallets/{hostId}/recharges {amount_dzd, method, reason, receipt_reference}</code> + unique constraint on receipt_reference + Idempotency-Key</td>
+</tr>
+<tr>
+<td>data/finance.ts:247</td>
+<td>getCommissionRates</td>
+<td>none</td>
+<td>Record&lt;HostType, number&gt;</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>wallets.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/commission-rates</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:252</td>
+<td>updateCommissionRates</td>
+<td>rates (each 0..100, 2 dp), actor</td>
+<td>rates</td>
+<td>W settings</td>
+<td>PaymentsClient</td>
+<td>commissions.manage</td>
+<td>COMMISSION_RATES_UPDATE</td>
+<td><code>PUT /api/v1/admin/commission-rates</code> (versioned, effective_from)</td>
+</tr>
+<tr>
+<td>data/finance.ts:283</td>
+<td>listPayouts</td>
+<td>status</td>
+<td>PayoutRequest[] pending first, no paging</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>wallets.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/payouts?status=&amp;page=</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:311</td>
+<td>approvePayout</td>
+<td>id, actor</td>
+<td>PayoutRequest</td>
+<td>W ledger <code>host_payout</code> + payout</td>
+<td>PaymentsClient</td>
+<td>payouts.approve</td>
+<td>PAYOUT_APPROVE</td>
+<td><code>POST /api/v1/admin/payouts/{id}/approve</code> (+ later <code>/mark-processed</code>)</td>
+</tr>
+<tr>
+<td>data/finance.ts:359</td>
+<td>rejectPayout</td>
+<td>id, reason (&gt;=3), actor</td>
+<td>PayoutRequest</td>
+<td>W</td>
+<td>PaymentsClient</td>
+<td>payouts.approve</td>
+<td>PAYOUT_REJECT</td>
+<td><code>POST /api/v1/admin/payouts/{id}/reject {reason}</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:406</td>
+<td>getFinanceSummary</td>
+<td>none</td>
+<td>FinanceSummary (wallet total, negatives, pending payouts, month commissions/payouts, refunds, escrow)</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>wallets.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/finance/summary</code></td>
+</tr>
+<tr>
+<td>data/finance.ts:468</td>
+<td>listRefunds</td>
+<td>page, pageSize(10)</td>
+<td>refunded bookings projection</td>
+<td>R</td>
+<td>PaymentsClient</td>
+<td>wallets.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/refunds?page=</code> (needs a <code>refunds</code> table, today only a cumulative field)</td>
+</tr>
+<tr>
+<td>actions/finance.ts:22-128</td>
+<td>12 wrappers</td>
+<td>validated with dzd/rate/reason/str</td>
+<td></td>
+<td></td>
+<td></td>
+<td>as above</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="39-hosts">3.9 hosts</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/hosts.ts:38</td>
+<td>getProviderCategory</td>
+<td>Host</td>
+<td>ProviderCategory</td>
+<td>R</td>
+<td>listHosts, exportHosts</td>
+<td></td>
+<td></td>
+<td>DB column or computed property</td>
+</tr>
+<tr>
+<td>data/hosts.ts:47</td>
+<td>listHosts</td>
+<td>category, hostType, status (comma list), verificationStatus, wilayaCode (str or array), search, approvalMode, vertical, minRating, minBookings, minListings, onlyNegativeBalance, minStars, hasTrips, sortBy <code>joined|rating|listings|bookings|balance</code>, sortOrder, page, pageSize(12) (minPrice/maxPrice declared but ignored)</td>
+<td>Paginated<Host> + facets category (filtered), hostType, status (global) + formattedId <code>#P00001</code></td>
+<td>R</td>
+<td><code>hosts/page.tsx</code> (direct SSR), HostsClient, ProvidersValidationClient</td>
+<td>hosts.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/hosts?...</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:199</td>
+<td>getHostById</td>
+<td>id</td>
+<td>Host with ledger balance</td>
+<td>R</td>
+<td><code>hosts/[id]/page.tsx</code> (direct); action unused</td>
+<td>hosts.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/hosts/{id}</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:206</td>
+<td>exportHosts</td>
+<td>filters, actor</td>
+<td>CsvExport (17 cols)</td>
+<td>R</td>
+<td>HostsClient</td>
+<td>reports.export + hosts.view</td>
+<td>DATA_EXPORT <code>hosts</code></td>
+<td><code>POST /api/v1/admin/hosts/export</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:249</td>
+<td>transitionHost (private)</td>
+<td>id, action, actor, reason?</td>
+<td>Host</td>
+<td>W</td>
+<td>7 wrappers below</td>
+<td>per action (<code>:221-229</code>)</td>
+<td>yes (<code>:231-239</code>)</td>
+<td>service + state machine</td>
+</tr>
+<tr>
+<td>data/hosts.ts:304</td>
+<td>approveHost</td>
+<td>id, actor</td>
+<td>Host (status approved, verification verified)</td>
+<td>W</td>
+<td>ApprovalsClient, HostsClient, ProvidersValidationClient</td>
+<td>hosts.approve</td>
+<td>HOST_APPROVE</td>
+<td><code>POST /api/v1/admin/hosts/{id}/approve</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:308</td>
+<td>rejectHost</td>
+<td>id, reason, actor</td>
+<td>Host</td>
+<td>W</td>
+<td>ApprovalsClient, ProvidersValidationClient</td>
+<td>hosts.reject</td>
+<td>HOST_REJECT</td>
+<td><code>POST /api/v1/admin/hosts/{id}/reject {reason}</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:312</td>
+<td>suspendHost</td>
+<td>id, reason, actor</td>
+<td>Host</td>
+<td>W</td>
+<td>HostsClient</td>
+<td>hosts.suspend</td>
+<td>HOST_SUSPEND</td>
+<td><code>POST /api/v1/admin/hosts/{id}/suspend {reason}</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:316</td>
+<td>unsuspendHost</td>
+<td>id, actor</td>
+<td>Host</td>
+<td>W</td>
+<td>HostsClient, ProvidersValidationClient</td>
+<td>hosts.suspend</td>
+<td>HOST_UNSUSPEND</td>
+<td><code>POST /api/v1/admin/hosts/{id}/unsuspend</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:320</td>
+<td>banHost</td>
+<td>id, reason, actor</td>
+<td>Host</td>
+<td>W</td>
+<td>none (no UI)</td>
+<td>hosts.delete</td>
+<td>HOST_BAN</td>
+<td><code>POST /api/v1/admin/hosts/{id}/ban {reason}</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:324</td>
+<td>deleteHost</td>
+<td>id, actor</td>
+<td>Host (soft)</td>
+<td>W</td>
+<td>HostsClient</td>
+<td>hosts.delete</td>
+<td>HOST_DELETE</td>
+<td><code>DELETE /api/v1/admin/hosts/{id}</code> (soft)</td>
+</tr>
+<tr>
+<td>data/hosts.ts:328</td>
+<td>restoreHost</td>
+<td>id, actor</td>
+<td>Host</td>
+<td>W</td>
+<td>HostsClient</td>
+<td>hosts.delete</td>
+<td>HOST_RESTORE</td>
+<td><code>POST /api/v1/admin/hosts/{id}/restore</code></td>
+</tr>
+<tr>
+<td>data/hosts.ts:332</td>
+<td>overrideCommission</td>
+<td>id, rate, actor</td>
+<td>Host</td>
+<td>W</td>
+<td>HostsClient</td>
+<td>hosts.commission_override</td>
+<td>HOST_COMMISSION_OVERRIDE</td>
+<td><code>PUT /api/v1/admin/hosts/{id}/commission {rate}</code> + <code>DELETE</code> to revert to default</td>
+</tr>
+<tr>
+<td>actions/hosts.ts:8-57</td>
+<td>11 wrappers</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="310-listings--network">3.10 listings + network</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/listings.ts:39</td>
+<td>matchListingStatus</td>
+<td>listingStatus, filterStatus (comma list, alias aware)</td>
+<td>bool</td>
+<td>R</td>
+<td>listListings</td>
+<td></td>
+<td></td>
+<td>drop once aliases are migrated</td>
+</tr>
+<tr>
+<td>data/listings.ts:68</td>
+<td>listListings</td>
+<td>status, vertical, hostType, wilayaCode, search, minPrice, maxPrice, approvalMode, isFeatured, isReported, minCapacity, minBedrooms, amenity, sortBy <code>created|price|rating|bookings</code>, sortOrder, page, pageSize(12)</td>
+<td>Paginated<Listing> + facets status (scoped to vertical, incl. alias keys), vertical; formattedId <code>#H/#EXP/#T/#V</code></td>
+<td>R</td>
+<td><code>listings/page.tsx</code> (direct), ListingsClient, Stays/Experiences/Trips/CarsListClient</td>
+<td>listings.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/listings?status=&amp;vertical=&amp;host_type=&amp;wilaya=&amp;min_price=&amp;max_price=&amp;approval_mode=&amp;featured=&amp;reported=&amp;min_capacity=&amp;min_bedrooms=&amp;amenity=&amp;q=&amp;ordering=&amp;page=</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:212</td>
+<td>getListingById</td>
+<td>id</td>
+<td>Listing</td>
+<td>R</td>
+<td>`stays</td>
+<td>experiences</td>
+<td>trips</td>
+<td>cars/[id]<code>and</code>/review` pages (direct); action unused</td>
+</tr>
+<tr>
+<td>data/listings.ts:219</td>
+<td>exportListings</td>
+<td>filters, actor</td>
+<td>CsvExport (17 cols)</td>
+<td>R</td>
+<td>ListingsClient, useListingStatusActions</td>
+<td>reports.export + listings.view</td>
+<td>DATA_EXPORT <code>listings</code></td>
+<td><code>POST /api/v1/admin/listings/export</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:252</td>
+<td>transitionListing (private)</td>
+<td>id, target, actor, {reason, auditAction, notePrefix}</td>
+<td>Listing</td>
+<td>W</td>
+<td>wrappers</td>
+<td><code>permissionForListingTarget</code> (<code>:233-245</code>)</td>
+<td>yes</td>
+<td>state machine service</td>
+</tr>
+<tr>
+<td>data/listings.ts:296</td>
+<td>approveListing</td>
+<td>id, actor</td>
+<td>Listing</td>
+<td>W</td>
+<td>Approvals, Listings, Stays, Experiences, Trips lists, StayDetail, StayReview, Network</td>
+<td>listings.approve</td>
+<td>LISTING_APPROVE</td>
+<td><code>POST /api/v1/admin/listings/{id}/approve</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:300</td>
+<td>rejectListing</td>
+<td>id, reason, actor</td>
+<td>Listing</td>
+<td>W</td>
+<td>Approvals, StayDetail, StayReview</td>
+<td>listings.reject</td>
+<td>LISTING_REJECT</td>
+<td><code>POST /api/v1/admin/listings/{id}/reject {reason}</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:304</td>
+<td>requestChangesListing</td>
+<td>id, notes, actor</td>
+<td>Listing</td>
+<td>W</td>
+<td>Listings, StayDetail, StayReview</td>
+<td>listings.approve</td>
+<td>LISTING_REQUEST_CHANGES</td>
+<td><code>POST /api/v1/admin/listings/{id}/request-changes {notes}</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:312</td>
+<td>suspendListing</td>
+<td>id, reason, actor</td>
+<td>Listing</td>
+<td>W</td>
+<td>NetworkClient</td>
+<td>listings.suspend</td>
+<td>LISTING_SUSPEND</td>
+<td><code>POST /api/v1/admin/listings/{id}/suspend {reason}</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:316</td>
+<td>deleteListing</td>
+<td>id, actor</td>
+<td>Listing (soft)</td>
+<td>W</td>
+<td>ListingsClient, useListingStatusActions</td>
+<td>listings.delete</td>
+<td>LISTING_DELETE</td>
+<td><code>DELETE /api/v1/admin/listings/{id}</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:321</td>
+<td>restoreListing</td>
+<td>id, actor</td>
+<td>Listing</td>
+<td>W</td>
+<td>StayDetail, useListingStatusActions</td>
+<td>listings.delete</td>
+<td>LISTING_RESTORE</td>
+<td><code>POST /api/v1/admin/listings/{id}/restore</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:348</td>
+<td>featureListing</td>
+<td>id, isFeatured, actor</td>
+<td>Listing</td>
+<td>W</td>
+<td>ListingsClient</td>
+<td>listings.feature</td>
+<td>LISTING_FEATURE / LISTING_UNFEATURE</td>
+<td><code>PUT /api/v1/admin/listings/{id}/featured {is_featured, placement?, until?}</code></td>
+</tr>
+<tr>
+<td>data/listings.ts:379</td>
+<td>updateListingStatus</td>
+<td>id, status, actor, reason?</td>
+<td>Listing</td>
+<td>W</td>
+<td>Stays/Experiences/Trips lists, StayDetail, useListingStatusActions</td>
+<td>by target status (<code>actions/listings.ts:25-37</code>)</td>
+<td>LISTING_STATUS_CHANGE</td>
+<td><code>POST /api/v1/admin/listings/{id}/status {status, reason?}</code></td>
+</tr>
+<tr>
+<td>data/network.ts:11</td>
+<td>searchNetwork</td>
+<td>NetworkSearchParams (vertical default <code>home</code>)</td>
+<td>{results (all statuses, unpaginated), total, vertical}</td>
+<td>R</td>
+<td>NetworkClient, SearchClient</td>
+<td>listings.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/listings/search?...</code> (or reuse guest search endpoint with admin scope)</td>
+</tr>
+<tr>
+<td>actions/listings.ts:39-95, actions/network.ts:7</td>
+<td>wrappers</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="311-onboarding">3.11 onboarding</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/onboarding.ts:10</td>
+<td>getOnboardingConfig</td>
+<td>none</td>
+<td>deep copy OnboardingConfig</td>
+<td>R</td>
+<td>OnboardingClient</td>
+<td>onboarding.edit</td>
+<td>no</td>
+<td>admin: <code>GET /api/v1/admin/onboarding-configs</code>; public: <code>GET /api/v1/onboarding-config/{hostType}</code> (published only)</td>
+</tr>
+<tr>
+<td>data/onboarding.ts:15</td>
+<td>updateOnboardingFlow</td>
+<td>hostType, steps (unvalidated array), actor</td>
+<td>OnboardingConfig (version+1)</td>
+<td>W</td>
+<td>OnboardingClient</td>
+<td>onboarding.edit</td>
+<td>ONBOARDING_CONFIG_PUBLISH (before/after flow)</td>
+<td><code>POST /api/v1/admin/onboarding-configs/{hostType}/versions</code> (draft) + <code>POST .../versions/{v}/publish</code></td>
+</tr>
+<tr>
+<td>actions/onboarding.ts:9,13</td>
+<td>wrappers</td>
+<td><code>oneOf(hostType)</code>, <code>Array.isArray(steps)</code> only</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="312-promotions">3.12 promotions</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/promotions.ts:10</td>
+<td>listPromotions</td>
+<td>none</td>
+<td>PromotionCoupon[]</td>
+<td>R</td>
+<td>PromotionsClient</td>
+<td>promotions.manage</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/coupons</code></td>
+</tr>
+<tr>
+<td>data/promotions.ts:15</td>
+<td>createPromotion</td>
+<td>coupon minus id/usedCount (no validation, no code uniqueness)</td>
+<td>coupon</td>
+<td>W</td>
+<td>PromotionsClient</td>
+<td>promotions.manage</td>
+<td>PROMOTION_CREATE</td>
+<td><code>POST /api/v1/admin/coupons</code></td>
+</tr>
+<tr>
+<td>data/promotions.ts:33</td>
+<td>togglePromotionStatus</td>
+<td>id</td>
+<td>coupon (<code>active</code> &lt;-&gt; <code>disabled</code>)</td>
+<td>W</td>
+<td>PromotionsClient</td>
+<td>promotions.manage</td>
+<td>PROMOTION_TOGGLE</td>
+<td><code>PATCH /api/v1/admin/coupons/{id}</code></td>
+</tr>
+<tr>
+<td>data/promotions.ts:60</td>
+<td>deletePromotion</td>
+<td>id</td>
+<td>true (hard delete)</td>
+<td>W</td>
+<td>PromotionsClient</td>
+<td>promotions.manage</td>
+<td>PROMOTION_DELETE</td>
+<td><code>DELETE /api/v1/admin/coupons/{id}</code> (soft if used)</td>
+</tr>
+</tbody></table>
+<h3 id="313-reviews">3.13 reviews</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/reviews.ts:20</td>
+<td>listReviews</td>
+<td>status, vertical, rating (exact), wilayaCode, search, page, pageSize(12)</td>
+<td>Paginated<ReviewItem> + facets status</td>
+<td>R</td>
+<td>ReviewsClient</td>
+<td>reviews.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/reviews?status=&amp;vertical=&amp;rating=&amp;wilaya=&amp;q=&amp;page=</code></td>
+</tr>
+<tr>
+<td>data/reviews.ts:82</td>
+<td>hideReview</td>
+<td>id</td>
+<td>ReviewItem</td>
+<td>W</td>
+<td>ReviewsClient, ApprovalsClient (reject)</td>
+<td>reviews.moderate</td>
+<td>REVIEW_HIDE (full object before/after)</td>
+<td><code>POST /api/v1/admin/reviews/{id}/hide {reason}</code></td>
+</tr>
+<tr>
+<td>data/reviews.ts:111</td>
+<td>restoreReview</td>
+<td>id</td>
+<td>ReviewItem (published)</td>
+<td>W</td>
+<td>ReviewsClient</td>
+<td>reviews.moderate</td>
+<td>REVIEW_RESTORE</td>
+<td><code>POST /api/v1/admin/reviews/{id}/restore</code></td>
+</tr>
+<tr>
+<td>data/reviews.ts:140</td>
+<td>deleteReview</td>
+<td>id</td>
+<td>ReviewItem (soft)</td>
+<td>W</td>
+<td>ReviewsClient</td>
+<td>reviews.delete</td>
+<td>REVIEW_DELETE</td>
+<td><code>DELETE /api/v1/admin/reviews/{id}</code></td>
+</tr>
+<tr>
+<td>data/reviews.ts:169</td>
+<td>dismissFlag</td>
+<td>id</td>
+<td>ReviewItem (published, flagReason cleared)</td>
+<td>W</td>
+<td>ReviewsClient, ApprovalsClient (approve)</td>
+<td>reviews.moderate</td>
+<td>REVIEW_FLAG_DISMISS</td>
+<td><code>POST /api/v1/admin/reviews/{id}/flags/dismiss</code></td>
+</tr>
+</tbody></table>
+<h3 id="314-settings">3.14 settings</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/settings.ts:10</td>
+<td>getPlatformSettings</td>
+<td>none</td>
+<td>PlatformSettings</td>
+<td>R</td>
+<td>SettingsClient</td>
+<td>settings.manage</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/settings</code></td>
+</tr>
+<tr>
+<td>data/settings.ts:15</td>
+<td>updatePlatformSettings</td>
+<td>Partial<PlatformSettings> (no field validation, shallow merge)</td>
+<td>PlatformSettings</td>
+<td>W</td>
+<td>SettingsClient</td>
+<td>settings.manage</td>
+<td>PLATFORM_SETTINGS_UPDATE</td>
+<td><code>PATCH /api/v1/admin/settings</code> with serializer whitelist</td>
+</tr>
+</tbody></table>
+<h3 id="315-team">3.15 team</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/team.ts:19</td>
+<td>listTeamMembers</td>
+<td>none</td>
+<td>AdminUser[]</td>
+<td>R</td>
+<td>TeamClient</td>
+<td>team.manage</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/staff</code></td>
+</tr>
+<tr>
+<td>data/team.ts:28</td>
+<td>getTeamMemberById</td>
+<td>id</td>
+<td>AdminUser</td>
+<td>R</td>
+<td>getCurrentAdmin</td>
+<td>internal</td>
+<td>no</td>
+<td>session lookup</td>
+</tr>
+<tr>
+<td>data/team.ts:33</td>
+<td>findTeamMemberByEmail</td>
+<td>email</td>
+<td>AdminUser</td>
+<td>R</td>
+<td>verifyAdminCredentials, getDemoCredentials</td>
+<td>internal</td>
+<td>no</td>
+<td></td>
+</tr>
+<tr>
+<td>data/team.ts:42</td>
+<td>recordTeamMemberLogin</td>
+<td>id</td>
+<td>void</td>
+<td>W lastLoginAt</td>
+<td>loginAction</td>
+<td>internal</td>
+<td>no (LOGIN_SUCCESS covers it)</td>
+<td><code>last_login</code></td>
+</tr>
+<tr>
+<td>data/team.ts:51</td>
+<td>updateMemberRole</td>
+<td>userId, role, actor</td>
+<td>AdminUser</td>
+<td>W</td>
+<td>TeamClient</td>
+<td>team.manage</td>
+<td>TEAM_ROLE_UPDATE (entityType <code>user</code>)</td>
+<td><code>PATCH /api/v1/admin/staff/{id} {role}</code></td>
+</tr>
+<tr>
+<td>data/team.ts:96</td>
+<td>toggleMemberActive</td>
+<td>userId, actor</td>
+<td>AdminUser</td>
+<td>W</td>
+<td>TeamClient</td>
+<td>team.manage</td>
+<td>TEAM_STATUS_TOGGLE (no before/after)</td>
+<td><code>POST /api/v1/admin/staff/{id}/activate</code> / <code>/deactivate</code></td>
+</tr>
+<tr>
+<td>data/team.ts:143</td>
+<td>inviteMember</td>
+<td>{name, email, role}, actor</td>
+<td>AdminUser (invited, inactive)</td>
+<td>W</td>
+<td>TeamClient</td>
+<td>team.manage</td>
+<td>TEAM_MEMBER_INVITE (entityType <code>team</code>)</td>
+<td><code>POST /api/v1/admin/staff/invitations</code> + <code>POST /api/v1/admin/auth/accept-invite {token, password}</code></td>
+</tr>
+</tbody></table>
+<h3 id="316-users-guests">3.16 users (guests)</h3>
+<table>
+<thead>
+<tr>
+<th>File:L</th>
+<th>Function</th>
+<th>Inputs</th>
+<th>Output</th>
+<th>R/W</th>
+<th>Callers</th>
+<th>Perm</th>
+<th>Audit</th>
+<th>Future backend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>data/users.ts:26</td>
+<td>listUsers</td>
+<td>status (comma list), role, emailVerified, idVerified, wilayaCode, search, minBookings, minSpend, isFlagged, sortBy <code>joined|bookings|spend|activity</code>, sortOrder, page, pageSize(12)</td>
+<td>Paginated<GuestUser> + facets status, role</td>
+<td>R</td>
+<td><code>users/page.tsx</code>, <code>users/guests/page.tsx</code> (direct), UsersClient</td>
+<td>users.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/users?...</code></td>
+</tr>
+<tr>
+<td>data/users.ts:127</td>
+<td>getUserById</td>
+<td>id</td>
+<td>GuestUser</td>
+<td>R</td>
+<td>none</td>
+<td>users.view</td>
+<td>no</td>
+<td><code>GET /api/v1/admin/users/{id}</code></td>
+</tr>
+<tr>
+<td>data/users.ts:133</td>
+<td>suspendUser</td>
+<td>id, reason (any string, may be empty), actor</td>
+<td>GuestUser</td>
+<td>W</td>
+<td>UsersClient</td>
+<td>users.suspend</td>
+<td>USER_SUSPEND (full user objects incl. PII in before/after)</td>
+<td><code>POST /api/v1/admin/users/{id}/suspend {reason}</code></td>
+</tr>
+<tr>
+<td>data/users.ts:164</td>
+<td>unsuspendUser</td>
+<td>id</td>
+<td>GuestUser</td>
+<td>W</td>
+<td>none</td>
+<td>users.suspend</td>
+<td>USER_UNSUSPEND</td>
+<td><code>POST /api/v1/admin/users/{id}/unsuspend</code></td>
+</tr>
+<tr>
+<td>data/users.ts:193</td>
+<td>banUser</td>
+<td>id, reason</td>
+<td>GuestUser</td>
+<td>W</td>
+<td>UsersClient</td>
+<td>users.ban</td>
+<td>USER_BAN</td>
+<td><code>POST /api/v1/admin/users/{id}/ban {reason}</code></td>
+</tr>
+<tr>
+<td>data/users.ts:224</td>
+<td>deleteUser</td>
+<td>id</td>
+<td>GuestUser (soft)</td>
+<td>W</td>
+<td>UsersClient</td>
+<td>users.delete</td>
+<td>USER_DELETE</td>
+<td><code>DELETE /api/v1/admin/users/{id}</code> (soft + anonymise)</td>
+</tr>
+<tr>
+<td>data/users.ts:253</td>
+<td>restoreUser</td>
+<td>id</td>
+<td>GuestUser (active)</td>
+<td>W</td>
+<td>none</td>
+<td>users.delete</td>
+<td>USER_RESTORE</td>
+<td><code>POST /api/v1/admin/users/{id}/restore</code></td>
+</tr>
+<tr>
+<td>data/users.ts:282</td>
+<td>updateUserStatus</td>
+<td>id, status (any GuestStatus), actor</td>
+<td>GuestUser</td>
+<td>W</td>
+<td>UsersClient (mark active / mark pending)</td>
+<td>NO assertCan in data; action maps status -&gt; perm (<code>actions/users.ts:12-16,46-51</code>)</td>
+<td>USER_STATUS_CHANGE</td>
+<td><code>POST /api/v1/admin/users/{id}/status {status, reason}</code> with state machine</td>
+</tr>
+</tbody></table>
+<h3 id="317-unused-exports-no-ui-caller">3.17 Unused exports (no UI caller)</h3>
+<p><code>actions/bookings.getBookingById</code>, <code>actions/hosts.getHostById</code>, <code>actions/hosts.banHost</code>, <code>actions/listings.getListingById</code>, <code>actions/users.getUserById</code>, <code>actions/users.unsuspendUser</code>, <code>actions/users.restoreUser</code>. Missing entirely: document approve/reject, host &quot;changes requested&quot;, amenity CRUD, category edit/reorder, coupon edit, review reply/report handling, payout <code>processed</code>, ledger <code>adjustment</code>, change-request CRUD, listing create/edit, messaging, notifications, templates, staff password reset/MFA.</p>
+<hr>
+<h2 id="4-business-rules-in-code">4. Business rules in code</h2>
+<h3 id="41-money-and-commissions">4.1 Money and commissions</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>All money integer DZD</td>
+<td><code>isValidDzdAmount</code> int in [min,max]</td>
+<td><code>lib/pricing.ts:54-66</code>, <code>lib/auth/run-action.ts:81-86</code></td>
+</tr>
+<tr>
+<td>Guest service fee</td>
+<td><strong>0%</strong> (&quot;BLADUS does not charge travellers&quot;)</td>
+<td><code>lib/pricing.ts:11-16</code>; frontend agrees (<code>frontend/lib/booking/config.ts:21-34</code>); <code>docs/DATA-MODEL.md</code> s6 still says 7 (stale)</td>
+</tr>
+<tr>
+<td>Default commission per host type</td>
+<td>individual 12, agency 15, hotel 18, hostel 10 (% of base)</td>
+<td><code>lib/pricing.ts:19-25</code>; copied into settings <code>store.ts:101</code>; hardcoded AGAIN in <code>lib/data/analytics.ts:69-74</code> and <code>StatsClient.tsx:61-66</code></td>
+</tr>
+<tr>
+<td>Commission rate validation</td>
+<td>0..100, max 2 decimals</td>
+<td><code>lib/pricing.ts:32-34,69-74</code>, <code>run-action.ts:89-94</code></td>
+</tr>
+<tr>
+<td>Change defaults</td>
+<td><code>updateCommissionRates</code> replaces <code>platformSettings.defaultCommissionRates</code>; does NOT update <code>Host.commissionRate</code> of non-overridden hosts and does NOT reprice existing bookings</td>
+<td><code>lib/data/finance.ts:252-279</code></td>
+</tr>
+<tr>
+<td>Per-host override</td>
+<td>sets <code>commissionRate</code> + <code>isCommissionOverridden=true</code>; no way to clear the override</td>
+<td><code>lib/data/hosts.ts:332-364</code></td>
+</tr>
+<tr>
+<td>Seed overrides</td>
+<td>15% of hosts, default +2.5 or -2.0</td>
+<td><code>generator.ts:146-149</code></td>
+</tr>
+<tr>
+<td>Booking amounts</td>
+<td><code>serviceFee = round(base*0/100)=0</code>, <code>total = base + serviceFee</code>, <code>commission = round(base*rate/100)</code>, <code>hostPayout = base - commission</code></td>
+<td><code>lib/pricing.ts:77-92</code>; base = listing.price x nights (<code>generator.ts:390</code>)</td>
+</tr>
+<tr>
+<td>Commission rate frozen on booking</td>
+<td><code>Booking.commissionRate</code> stored at creation</td>
+<td><code>generator.ts:426</code></td>
+</tr>
+<tr>
+<td>Display discounts</td>
+<td>weekly 10, biweekly 15, monthly 25, group 10; <code>applyDiscount</code></td>
+<td><code>lib/pricing.ts:37-51</code>; display only (ListingsClient, CarsListClient)</td>
+</tr>
+<tr>
+<td>Max manual recharge / generic max amount</td>
+<td>10,000,000 DZD</td>
+<td><code>lib/pricing.ts:28-30</code></td>
+</tr>
+</tbody></table>
+<h3 id="42-wallet-ledger">4.2 Wallet ledger</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Detail</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Balance = sum of ledger entries; <code>Host.walletBalance</code> and <code>HostWallet.balance</code> re-derived on every read</td>
+<td></td>
+<td><code>lib/data/ledger.ts:1-42</code>, <code>finance.ts:34-49</code>, <code>hosts.ts:62-63,202</code></td>
+</tr>
+<tr>
+<td>Entry types and signs</td>
+<td>booking_payment +, commission_deduction -, host_payout -, wallet_recharge +, booking_refund -, adjustment +/-</td>
+<td><code>lib/types/index.ts:499-505</code>, <code>docs/DATA-MODEL.md</code> s4</td>
+</tr>
+<tr>
+<td>Entry must be non-zero integer</td>
+<td>DomainError otherwise</td>
+<td><code>ledger.ts:67-69</code></td>
+</tr>
+<tr>
+<td><code>balanceAfter</code> = current sum + amount at write time</td>
+<td></td>
+<td><code>ledger.ts:71</code></td>
+</tr>
+<tr>
+<td>Reference prefixes</td>
+<td>TXN-BKG, TXN-COM, TXN-PAY, TXN-REC, TXN-RFD, TXN-ADJ + base36 time + random</td>
+<td><code>ledger.ts:44-51,72</code></td>
+</tr>
+<tr>
+<td>Atomicity</td>
+<td>&quot;no await between check and write&quot; (single-threaded mock)</td>
+<td><code>ledger.ts:53-57</code>; real DB needs transaction + <code>SELECT ... FOR UPDATE</code></td>
+</tr>
+<tr>
+<td>Who writes entries at runtime</td>
+<td>only recharge (+), payout approval (-), refund host share (-). Nothing writes <code>booking_payment</code> or <code>commission_deduction</code> when a booking is confirmed/completed.</td>
+<td><code>finance.ts:225</code>, <code>finance.ts:328</code>, <code>bookings.ts:229</code></td>
+</tr>
+<tr>
+<td>Negative balance allowed</td>
+<td>yes (seed has negatives; <code>isNegative</code> flag; refund clawback can go below 0)</td>
+<td><code>generator.ts:568</code>, <code>bookings.ts:226-237</code></td>
+</tr>
+</tbody></table>
+<h3 id="43-wallet-recharge-libdatafinancets205-245-libactionsfinancets46-66">4.3 Wallet recharge (<code>lib/data/finance.ts:205-245</code>, <code>lib/actions/finance.ts:46-66</code>)</h3>
+<ul>
+<li>Perm <code>wallets.recharge</code>; amount int 1..10,000,000; <code>receiptReference</code> required (trimmed, &lt;=200 chars); <code>method</code> free string &lt;=100 (UI sends values from PaymentsClient select or hardcoded <code>ccp_transfer</code> in HostsClient <code>:411</code>); <code>reason</code> free string, no minimum.</li>
+<li>Writes <code>wallet_recharge</code> entry with description <code>Admin manual recharge (&lt;method&gt;): &lt;reason&gt;</code>, <code>adminActor</code> = actor NAME.</li>
+<li><strong>No idempotency</strong>: same receipt reference can be credited twice; no duplicate check, no four-eyes approval.</li>
+<li>Audit <code>WALLET_RECHARGE</code> with balance before/after and txId.</li>
+</ul>
+<h3 id="44-payouts-libdatafinancets281-385">4.4 Payouts (<code>lib/data/finance.ts:281-385</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>List</td>
+<td>pending first then newest (<code>:287-291</code>), no paging</td>
+</tr>
+<tr>
+<td>Approve</td>
+<td>perm <code>payouts.approve</code>; only from <code>pending</code> (<code>findPendingPayout :295-303</code>); host must exist; amount positive int; refuse if <code>getHostBalance &lt; amount</code> with &quot;Insufficient wallet balance&quot; DomainError (<code>:322-327</code>); writes <code>host_payout</code> -amount; sets status <code>approved</code>, processedAt, processedBy (name), transactionId (<code>:335-342</code>)</td>
+</tr>
+<tr>
+<td>Double-debit protection</td>
+<td>status check + balance check + ledger write + status write in one synchronous block (<code>:315-343</code>); second call fails because status is no longer <code>pending</code>. No idempotency key, no DB lock (mock only).</td>
+</tr>
+<tr>
+<td>Confirmation UI</td>
+<td>confirm dialog <code>payoutToApprove</code>, busy flag prevents double click (<code>PaymentsClient.tsx:356-376</code>)</td>
+</tr>
+<tr>
+<td>Reject</td>
+<td>from <code>pending</code> only, reason &gt;=3 chars, no ledger movement (<code>:359-385</code>)</td>
+</tr>
+<tr>
+<td><code>processed</code></td>
+<td>type value exists; no code transitions approved -&gt; processed (no bank-confirmation step)</td>
+</tr>
+<tr>
+<td>Seed</td>
+<td>14 requests; 2 of the 9 pending deliberately exceed balance (<code>generator.ts:613-620</code>)</td>
+</tr>
+<tr>
+<td>Account display</td>
+<td>masked last 4 of ccpRip ?? rib ?? phone (DATA-MODEL s4)</td>
+</tr>
+</tbody></table>
+<h3 id="45-bookings-cancellations-refunds-disputes-libdomaintransitionsts13-51-libdatabookingsts">4.5 Bookings, cancellations, refunds, disputes (<code>lib/domain/transitions.ts:13-51</code>, <code>lib/data/bookings.ts</code>)</h3>
+<ul>
+<li><code>BOOKING_TRANSITIONS</code>: pending -&gt; confirmed|cancelled; confirmed -&gt; completed|cancelled|disputed|refunded; completed -&gt; disputed|refunded; disputed -&gt; confirmed|completed|refunded; cancelled -&gt; refunded; refunded -&gt; none (<code>transitions.ts:13-20</code>). Only cancel, refund and dispute-resolution transitions are reachable from the admin; confirm/complete/dispute-open are not.</li>
+<li>Cancel: allowed from pending/confirmed, reason &gt;=3; sets cancelledAt; <strong>no automatic refund, no ledger reversal</strong> (<code>bookings.ts:165-197</code>).</li>
+<li>Refundable statuses: confirmed, completed, cancelled, disputed; payment must be <code>paid</code> or <code>partially_refunded</code>; remaining = total - refundedSoFar (<code>transitions.ts:32-45</code>).</li>
+<li>Refund: int DZD, <code>0 &lt; amount &lt;= remaining</code>; cumulative <code>refundedAmountDzd</code>; full -&gt; status <code>refunded</code> + payment <code>refunded</code>, else payment <code>partially_refunded</code> (<code>bookings.ts:205-249</code>).</li>
+<li>Host clawback: <code>hostShare = round(amount * hostPayoutDzd / totalAmountDzd)</code> written as negative <code>booking_refund</code> (<code>bookings.ts:225-237</code>). Platform keeps the commission share of a refund implicitly (commission never reversed).</li>
+<li>Dispute resolve: only from <code>disputed</code>; note &gt;=3 required; <code>refund_full</code> refunds remaining -&gt; <code>refunded</code>; <code>refund_partial</code> requires amount &lt; remaining -&gt; back to <code>completed</code> if checkout passed else <code>confirmed</code>; <code>declined</code> no money -&gt; lifecycle status; stores <code>disputeResolution</code> (<code>bookings.ts:284-346</code>).</li>
+<li>Saved view &quot;pending &gt; 24h&quot;: <code>status=pending &amp;&amp; createdAt &lt; now-24h</code> (<code>bookings.ts:72-78</code>). Matches frontend <code>REQUEST_TO_BOOK_TTL_HOURS = 24</code> (<code>frontend/lib/booking/config.ts:55</code>) but admin never expires anything.</li>
+<li>Escrow (finance KPI): sum of total - refunded for confirmed/disputed paid bookings (<code>finance.ts:443-448</code>).</li>
+<li>No idempotency on refunds: two concurrent identical refund calls in a real DB would both pass without a lock.</li>
+</ul>
+<h3 id="46-host-state-machine-libdomaintransitionsts55-71-libdatahoststs221-302">4.6 Host state machine (<code>lib/domain/transitions.ts:55-71</code>, <code>lib/data/hosts.ts:221-302</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>From</th>
+<th>To</th>
+<th>Reason</th>
+<th>Perm</th>
+<th>Audit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>approve</td>
+<td>applied, under_review, rejected</td>
+<td>approved (+verification <code>verified</code>)</td>
+<td>no</td>
+<td>hosts.approve</td>
+<td>HOST_APPROVE</td>
+</tr>
+<tr>
+<td>reject</td>
+<td>applied, under_review</td>
+<td>rejected</td>
+<td>yes</td>
+<td>hosts.reject</td>
+<td>HOST_REJECT</td>
+</tr>
+<tr>
+<td>suspend</td>
+<td>approved</td>
+<td>suspended</td>
+<td>yes</td>
+<td>hosts.suspend</td>
+<td>HOST_SUSPEND</td>
+</tr>
+<tr>
+<td>unsuspend</td>
+<td>suspended</td>
+<td>approved</td>
+<td>no</td>
+<td>hosts.suspend</td>
+<td>HOST_UNSUSPEND</td>
+</tr>
+<tr>
+<td>ban</td>
+<td>approved, suspended, rejected, under_review, applied</td>
+<td>banned</td>
+<td>yes</td>
+<td>hosts.delete</td>
+<td>HOST_BAN</td>
+</tr>
+<tr>
+<td>delete</td>
+<td>any except deleted</td>
+<td>deleted, stores statusBeforeDelete</td>
+<td>no</td>
+<td>hosts.delete</td>
+<td>HOST_DELETE</td>
+</tr>
+<tr>
+<td>restore</td>
+<td>deleted</td>
+<td>statusBeforeDelete or under_review</td>
+<td>no</td>
+<td>hosts.delete</td>
+<td>HOST_RESTORE</td>
+</tr>
+</tbody></table>
+<ul>
+<li>No transition applied -&gt; under_review (no &quot;start review&quot; action). Banned is terminal except via delete/restore.</li>
+<li>Reasons appended to <code>Host.adminNotes</code> as text (<code>hosts.ts:269-278</code>).</li>
+<li>Approve sets verification to <code>verified</code> without touching <code>documents[].status</code>.</li>
+<li>Suspending/banning a host does NOT cascade to its listings or open bookings.</li>
+<li>A second, contradictory transition table exists in <code>lib/status.ts:58,68</code> (<code>HOST_TRANSITIONS</code>, <code>LISTING_TRANSITIONS</code>) that differs from <code>lib/domain/transitions.ts</code> (e.g. allows <code>deleted -&gt; approved|suspended</code>, <code>banned -&gt; suspended</code>). Only <code>lib/domain/transitions.ts</code> is enforced.</li>
+</ul>
+<h3 id="47-listing-state-machine-libdomaintransitionsts73-109-libdatalistingsts233-387">4.7 Listing state machine (<code>lib/domain/transitions.ts:73-109</code>, <code>lib/data/listings.ts:233-387</code>)</h3>
+<ul>
+<li>Transitions: draft -&gt; pending_review|deleted; pending_review -&gt; approved|changes_requested|rejected|deleted; changes_requested -&gt; pending_review|approved|rejected|deleted; approved -&gt; suspended|archived|changes_requested|pending_review|deleted; rejected -&gt; pending_review|deleted; suspended -&gt; approved|pending_review|deleted; archived -&gt; approved|deleted; deleted -&gt; only <code>restoreListing</code> (<code>:83-93</code>).</li>
+<li>Reason (&gt;=3 chars, <code>MIN_REASON_LENGTH</code>) required for rejected, suspended, changes_requested (<code>:102-112</code>); appended to <code>adminNotes</code>.</li>
+<li>Permission by target: rejected -&gt; listings.reject; suspended/archived -&gt; listings.suspend; deleted -&gt; listings.delete; anything else (approved, pending_review, changes_requested, draft) -&gt; listings.approve (<code>listings.ts:233-245</code>).</li>
+<li>Legacy aliases accepted on read and filter (<code>matchListingStatus :39-66</code>), folded on write.</li>
+<li>Feature: only <code>approved</code> listings can be featured; unfeature always allowed (<code>listings.ts:360-362</code>). Featuring is a boolean only (no placement, no period, no ordering, no price).</li>
+<li>Approval queue only picks literal <code>pending_review</code> (<code>approvals.ts:33</code>), not legacy <code>pending</code>.</li>
+</ul>
+<h3 id="48-reviews-libdatareviewsts">4.8 Reviews (<code>lib/data/reviews.ts</code>)</h3>
+<ul>
+<li>No state machine: hide/restore/delete/dismiss can be applied from any status (e.g. restore a deleted review to published). No reason captured. Flags are a single <code>flagReason</code> string on the review (no flag entity, no reporter list). <code>hostReply</code> is display only.</li>
+</ul>
+<h3 id="49-guests-libdatausersts">4.9 Guests (<code>lib/data/users.ts</code>)</h3>
+<ul>
+<li>No state machine; <code>updateUserStatus</code> can move any status to any status; reason optional/empty for suspend and ban (action uses <code>str</code>, not <code>reason</code>, <code>actions/users.ts:26-36</code>). <code>pending</code> status exists but nothing explains its meaning.</li>
+</ul>
+<h3 id="410-moderation-sla--waiting-time-libdataapprovalsts">4.10 Moderation SLA / waiting time (<code>lib/data/approvals.ts</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Queue</th>
+<th>Source rows</th>
+<th>waitingDays from</th>
+<th>Priority rule</th>
+<th>Line</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>hosts</td>
+<td>status applied or under_review</td>
+<td><code>joinedAt</code></td>
+<td>high if &gt;3 days</td>
+<td>12-30</td>
+</tr>
+<tr>
+<td>listings</td>
+<td>status <code>pending_review</code></td>
+<td><code>createdAt</code> (not submission time)</td>
+<td>high if &gt;4 days</td>
+<td>32-50</td>
+</tr>
+<tr>
+<td>documents</td>
+<td><code>Host.documents[].status == pending</code></td>
+<td><code>uploadedAt</code></td>
+<td>high if &gt;3 days</td>
+<td>52-72</td>
+</tr>
+<tr>
+<td>reviews</td>
+<td>status flagged</td>
+<td><code>createdAt</code> of review</td>
+<td>always high</td>
+<td>74-90</td>
+</tr>
+<tr>
+<td>disputes</td>
+<td>booking status disputed</td>
+<td>booking <code>createdAt</code> (not dispute time)</td>
+<td>always high</td>
+<td>92-108</td>
+</tr>
+</tbody></table>
+<p><code>waitingDays = max(1, floor((now - t)/1 day))</code>; sorted oldest first (<code>:126-127</code>). No <code>low</code> priority produced. No assignment/claiming, no SLA breach timestamps.</p>
+<h3 id="411-promotions">4.11 Promotions</h3>
+<ul>
+<li>Coupon toggle <code>active &lt;-&gt; disabled</code> (<code>promotions.ts:43</code>); <code>expired</code> is never computed from dates. No validation of code uniqueness, ranges, or dates. Create from UI sends <code>maxUses</code> + <code>expiresAt</code> (<code>PromotionsClient.tsx:120-129</code>) while seeds use <code>maxUsage</code> + <code>startDate/endDate</code>; <code>scope</code> not set on create. <code>usedCount</code> never incremented (no redemption path).</li>
+<li>Featured placements tab is static (<code>PromotionsClient.tsx:45-49</code>).</li>
+</ul>
+<h3 id="412-categories-taxonomy">4.12 Categories taxonomy</h3>
+<ul>
+<li>Flat list: <code>{id, name{en,fr,ar}, vertical, slug?, iconName?/icon?, listingCount, isActive, order}</code>. 3 seeds (home, experience, vehicle). <code>listingCount</code> hardcoded, not computed. No parent/child, no link from <code>Listing</code> (listing uses free-text <code>propertyType</code>, seeds per vertical in <code>generator.ts:267-273</code>). Hard delete. Car &quot;pricing&quot; and &quot;insurance&quot; pages also write into this list.</li>
+</ul>
+<h3 id="413-onboarding-config-versioning-libdataonboardingts">4.13 Onboarding config versioning (<code>lib/data/onboarding.ts</code>)</h3>
+<ul>
+<li>Single global <code>version</code> integer incremented on every publish of ANY host type (<code>:31</code>); <code>updatedAt</code>, <code>publishedBy</code> (name). No draft vs published, no history kept (previous flow only in the audit <code>beforeState</code>), no rollback.</li>
+<li>Only server rule: <code>individual</code> max 2 steps (<code>:24-26</code>, also UI <code>OnboardingClient.tsx:118,158</code>). <code>maxPagesAllowed</code> is preserved but not checked. Steps are not schema-validated.</li>
+<li>Audit <code>ONBOARDING_CONFIG_PUBLISH</code>, entityType <code>onboarding</code>, entityId = hostType.</li>
+</ul>
+<h3 id="414-audit-log-libdataauditts-libmock-datastorets240-254">4.14 Audit log (<code>lib/data/audit.ts</code>, <code>lib/mock-data/store.ts:240-254</code>)</h3>
+<ul>
+<li>Fields: id, timestamp, actorId, actorName, actorRole, action, entityType, entityId, details, beforeState?, afterState?, ipAddress (<code>types:569-584</code>). <code>entityName</code> never filled.</li>
+<li>Append-only: store has no setter; entries frozen (<code>store.ts:245-254</code>). Actor and IP from server session / headers (<code>client-ip.ts</code>: first X-Forwarded-For, then X-Real-IP, else <code>unknown</code>, max 64 chars).</li>
+<li>Logged actions (53 code paths, see list): BOOKING_CANCEL, BOOKING_REFUND, BOOKING_PARTIAL_REFUND, BOOKING_DISPUTE_RESOLVED, BOOKING_DISPUTE_DECLINED, CATEGORY_CREATE, CATEGORY_TOGGLE, CATEGORY_DELETE, COMMISSION_RATES_UPDATE, DATA_EXPORT, HOST_APPROVE, HOST_REJECT, HOST_SUSPEND, HOST_UNSUSPEND, HOST_BAN, HOST_DELETE, HOST_RESTORE, HOST_COMMISSION_OVERRIDE, LISTING_APPROVE, LISTING_REJECT, LISTING_REQUEST_CHANGES, LISTING_SUSPEND, LISTING_DELETE, LISTING_RESTORE, LISTING_FEATURE, LISTING_UNFEATURE, LISTING_STATUS_CHANGE, LOGIN_BLOCKED, LOGIN_FAILURE, LOGIN_SUCCESS, LOGOUT, ONBOARDING_CONFIG_PUBLISH, PAYOUT_APPROVE, PAYOUT_REJECT, PLATFORM_SETTINGS_UPDATE, PROMOTION_CREATE, PROMOTION_TOGGLE, PROMOTION_DELETE, REVIEW_HIDE, REVIEW_RESTORE, REVIEW_DELETE, REVIEW_FLAG_DISMISS, TEAM_ROLE_UPDATE, TEAM_STATUS_TOGGLE, TEAM_MEMBER_INVITE, USER_SUSPEND, USER_UNSUSPEND, USER_BAN, USER_DELETE, USER_RESTORE, USER_STATUS_CHANGE, WALLET_RECHARGE. Seed-only: COMMISSION_CHANGE, DISPUTE_RESOLVE.</li>
+<li>NOT logged: reads/views of PII, failed permission checks (ForbiddenError), approvals inbox views, mocked-only UI actions, login with empty fields (<code>auth.ts:56-59</code> records rate-limit failure but no audit).</li>
+<li>Inconsistent entityType: team role/toggle use <code>user</code> (<code>team.ts:86,130</code>) while invite uses <code>team</code>; categories use <code>setting</code>.</li>
+<li>before/after sizes vary: users/reviews/team store FULL objects (PII, <code>users.ts:157-158</code>), hosts/listings store only <code>{status}</code>.</li>
+<li>Export audit records active filters and row count (<code>audit.ts:48-68</code>).</li>
+</ul>
+<h3 id="415-auth-session-rate-limit-mfa">4.15 Auth, session, rate limit, MFA</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cookie</td>
+<td><code>darna_admin_session</code>, httpOnly, secure in prod, sameSite strict, path <code>/</code>, maxAge = TTL</td>
+<td><code>lib/auth/config.ts:8</code>, <code>lib/actions/auth.ts:96-102</code></td>
+</tr>
+<tr>
+<td>JWT</td>
+<td>HS256, iss <code>urn:darna:admin</code>, aud <code>urn:darna:admin-panel</code>, sub = userId, claims userId/email/name/role/avatar</td>
+<td><code>config.ts:11-12</code>, <code>session.ts:28-51</code></td>
+</tr>
+<tr>
+<td>Secret</td>
+<td><code>ADMIN_AUTH_SECRET</code> &gt;= 32 chars required in prod; dev fallback constant</td>
+<td><code>config.ts:14-35</code></td>
+</tr>
+<tr>
+<td>Session TTL</td>
+<td><strong>8 h</strong> absolute (no sliding, no refresh, no server-side revocation list)</td>
+<td><code>config.ts:9</code></td>
+</tr>
+<tr>
+<td><code>platformSettings.sessionTimeoutMinutes</code></td>
+<td>480 in store, UI writes <code>security.sessionTimeoutMinutes</code> (default 120 in UI); neither is read by auth</td>
+<td><code>store.ts:104</code>, <code>SettingsClient.tsx:125,147,166</code></td>
+</tr>
+<tr>
+<td>Revocation</td>
+<td>effective immediately for deactivation / role change because every request re-reads the store (<code>current-admin.ts:44-59</code>); logout only deletes the cookie (token still valid until exp)</td>
+<td></td>
+</tr>
+<tr>
+<td>Middleware</td>
+<td>edge check of JWT only; redirects to <code>/{locale}/login?returnTo=</code>; <code>/login</code> exact match exempt</td>
+<td><code>middleware.ts:19-56</code></td>
+</tr>
+<tr>
+<td>returnTo</td>
+<td>same-origin relative path only, no <code>//</code>, <code>\</code>, control chars, not the login page, &lt;=2048 chars</td>
+<td><code>lib/auth/return-to.ts:17-37</code></td>
+</tr>
+<tr>
+<td>Password hashing</td>
+<td>scrypt, 16-byte salt, 64-byte key, <code>scrypt$salt$hash</code>; constant-time compare; dummy hash for unknown emails</td>
+<td><code>lib/auth/password.ts:12-34</code>, <code>credentials.ts:17-27</code></td>
+</tr>
+<tr>
+<td>Login rate limit</td>
+<td>5 failures within 15 min window -&gt; 60 s lock, keyed separately by <code>email:&lt;lower&gt;</code> and <code>ip:&lt;ip&gt;</code>; success clears only the email key</td>
+<td><code>lib/auth/rate-limit.ts:9-77</code></td>
+</tr>
+<tr>
+<td>Generic error</td>
+<td>unknown email, bad password, inactive -&gt; same <code>invalidCredentials</code></td>
+<td><code>auth.ts:69-82</code></td>
+</tr>
+<tr>
+<td>Input caps</td>
+<td>email 254, password 256</td>
+<td><code>auth.ts:25-26</code></td>
+</tr>
+<tr>
+<td>MFA</td>
+<td><strong>none</strong>. Only boolean flags <code>twoFactorAuthEnabled</code> / <code>security.twoFactorRequired</code> in settings, never enforced</td>
+<td><code>types:696-700</code>, <code>store.ts:105</code></td>
+</tr>
+<tr>
+<td>Password reset / change for staff</td>
+<td>none</td>
+<td></td>
+</tr>
+<tr>
+<td>Invite acceptance</td>
+<td>none (invited accounts can never sign in)</td>
+<td><code>team.ts:138-186</code></td>
+</tr>
+</tbody></table>
+<h3 id="416-exports">4.16 Exports</h3>
+<ul>
+<li>CSV built server-side by <code>toCsv</code> (<code>lib/utils/csv.ts</code>): all cells quoted, <code>&quot;</code> doubled, cells starting with <code>= + - @ TAB CR</code> prefixed with <code>&#39;</code>. Exports cover the full filtered dataset, require <code>reports.export</code> plus the dataset view permission (<code>requireAlso</code>), and are audited as <code>DATA_EXPORT</code>. Filenames <code>darna_&lt;dataset&gt;_&lt;date&gt;.csv</code> (still &quot;darna&quot;).</li>
+</ul>
+<hr>
+<h2 id="5-onboarding-configurator-contract">5. Onboarding configurator contract</h2>
+<h3 id="51-admin-shape-what-settingsonboarding-edits-and-publishes">5.1 Admin shape (what <code>/settings/onboarding</code> edits and publishes)</h3>
+<pre><code class="lang-">OnboardingConfig {                         // lib/types/index.ts:641-649
+  version: number                          // global counter, +1 per publish of any flow
+  updatedAt: ISO string
+  publishedBy: string                      // admin NAME
+  flows: {
+    individual | agency | hotel | hostel: {
+      maxPagesAllowed?: number             // 2 for individual
+      steps: OnboardingStepConfig[]
+    }
+  }
+}
+OnboardingStepConfig {                     // :628-639
+  id: string
+  stepNumber?: number   order?: number     // seeds use stepNumber, UI-created steps use order
+  title?: {en,fr,ar}    name?: {en,fr,ar}  // seeds use title, UI-created steps use name
+  description: {en,fr,ar}
+  isCore?, isActive?, isRequired?: boolean // seeds: isCore+isActive; UI: isRequired
+  fields: OnboardingFieldConfig[]
+}
+OnboardingFieldConfig {                    // :615-626
+  id?: string  key?: string                // seeds use id, UI-created field uses key &quot;custom_notes&quot;
+  label: {en,fr,ar}
+  type: text|textarea|number|select|multiselect|radio|file|location|amenities|boolean
+  required?, order?, isCore?
+  placeholder?, helpText?: {en?,fr?,ar?}
+  options?: [{value, label{en,fr,ar}}]
+}</code></pre><h3 id="52-seeded-flows-libmock-datastorets108-191">5.2 Seeded flows (<code>lib/mock-data/store.ts:108-191</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Host type</th>
+<th>Step id</th>
+<th>Title (en)</th>
+<th>Fields (id: type, required)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>individual (max 2)</td>
+<td>step_ind_1</td>
+<td>Property Basics &amp; Space</td>
+<td>vertical: select (core, NO options), propertyType: text, wilaya: location (core)</td>
+</tr>
+<tr>
+<td>individual</td>
+<td>step_ind_2</td>
+<td>Pricing &amp; Photos</td>
+<td>priceDzd: number (core), photos: file (core)</td>
+</tr>
+<tr>
+<td>agency</td>
+<td>step_ag_1</td>
+<td>Agency Registration</td>
+<td>tradeRegister: text, tourismLicense: text</td>
+</tr>
+<tr>
+<td>hotel</td>
+<td>step_htl_1</td>
+<td>Hotel Classification</td>
+<td>starRating: number, roomCount: number</td>
+</tr>
+<tr>
+<td>hostel</td>
+<td>step_hst_1</td>
+<td>Hostel &amp; Dormitory Details</td>
+<td>bedCount: number</td>
+</tr>
+</tbody></table>
+<h3 id="53-editor-capabilities-applocalepanelsettingsonboardingonboardingclienttsx">5.3 Editor capabilities (<code>app/[locale]/(panel)/settings/onboarding/OnboardingClient.tsx</code>)</h3>
+<ul>
+<li>Switch host type; reorder steps (renumbers <code>order</code>, <code>:89-108</code>); toggle <code>isRequired</code> (<code>:110-114</code>); add step with fixed template <code>id: step_&lt;Date.now()&gt;</code>, <code>name</code>, one <code>custom_notes</code> text field (<code>:116-148</code>); remove step (no <code>isCore</code> guard, <code>:150-154</code>); publish whole step array for the active host type (<code>:156-176</code>); view/copy JSON of the full config (<code>:386-418</code>).</li>
+<li>Cannot: edit step titles/descriptions, add/edit/remove fields, set field types/options/placeholders, toggle <code>isActive</code>, preview, save a draft, see history, roll back.</li>
+</ul>
+<h3 id="54-guest-site-counterpart-frontendlibonboarding-configts-frontendtypests507-572">5.4 Guest-site counterpart (<code>frontend/lib/onboarding-config.ts</code>, <code>frontend/types.ts:507-572</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Admin</th>
+<th>Frontend</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Container</td>
+<td><code>OnboardingConfig.flows[hostType].steps</code> + global version</td>
+<td><code>Record&lt;HostType, OnboardingStepConfig[]&gt;</code>, optional <code>HostTypeOnboardingConfig {hostType, steps, updatedAt?}</code></td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>server mock store</td>
+<td>hardcoded defaults + browser <code>localStorage</code> key <code>darna_onboarding_config_&lt;hostType&gt;</code> (<code>onboarding-config.ts:1064-1091</code>)</td>
+</tr>
+<tr>
+<td>Step count</td>
+<td>individual 2, agency 1, hotel 1, hostel 1</td>
+<td>individual <strong>12</strong> (<code>:5-430</code>), agency 5 (<code>:433-605</code>), hotel 7 (<code>:607-840</code>), hostel 7 (<code>:842-1062</code>)</td>
+</tr>
+<tr>
+<td>Step ids</td>
+<td><code>step_ind_1</code>, <code>step_ag_1</code>, ... , UI <code>step_&lt;ms&gt;</code></td>
+<td><code>category_vertical</code>, <code>placement</code>, <code>location</code>, ..., <code>agency_basics</code>, <code>hotel_basics</code>, <code>hostel_basics</code>; custom steps must start with <code>custom_step_</code></td>
+</tr>
+<tr>
+<td>Step required props</td>
+<td><code>stepNumber?</code>, <code>title?</code>, <code>isActive?</code> optional</td>
+<td><code>stepNumber</code>, <code>title</code>, <code>isActive</code> required</td>
+</tr>
+<tr>
+<td>Field id</td>
+<td><code>id?</code> or <code>key?</code></td>
+<td><code>id</code> required, <code>order</code> and <code>required</code> required</td>
+</tr>
+<tr>
+<td>Field types</td>
+<td>text, textarea, number, select, multiselect, radio, file, location, amenities, boolean</td>
+<td>text, number, textarea, select, multi-select, image-upload, toggle</td>
+</tr>
+<tr>
+<td>Field <code>defaultValue</code></td>
+<td>absent</td>
+<td>present</td>
+</tr>
+<tr>
+<td>Consumption</td>
+<td>none</td>
+<td><code>BecomeHostFlow.tsx:189</code> calls <code>getOnboardingSteps(hostType)</code>; renders extra non-core fields of a step matched by step id (<code>:192-200</code>) and fully renders only custom steps whose id starts with <code>custom_step_</code> (<code>:2387-2389</code>); progress bar counts <code>isActive</code> steps (<code>:1035-1038</code>)</td>
+</tr>
+</tbody></table>
+<p>Consequences for a shared backend:</p>
+<ol>
+<li>Admin-published steps would not match any frontend step id, so the guest wizard would ignore them except for the progress count; admin-created steps (<code>step_&lt;ms&gt;</code>) are never rendered because the prefix is not <code>custom_step_</code>.</li>
+<li>The admin &quot;individual max 2 pages&quot; rule contradicts the frontend 12-step individual flow.</li>
+<li>Field types need a canonical enum + mapping (multiselect/multi-select, file/image-upload, boolean/toggle; radio, location, amenities have no frontend renderer). <code>docs/DATA-MODEL.md</code> s5 documents the mapping.</li>
+<li>Core vs custom fields: frontend skips <code>isCore</code> fields and <code>BUILT_IN_FIELD_IDS</code>, i.e. the config can only ADD custom fields to built-in steps; it cannot reorder/remove built-in steps. Admin UI implies it can.</li>
+<li>Recommended contract: <code>GET /api/v1/onboarding-config/{hostType}</code> returns <code>{hostType, version, publishedAt, steps:[{id, stepNumber, title{en,fr,ar}, description, isActive, isCore, fields:[{id, type, label, required, order, options?, placeholder?, helpText?, defaultValue?}]}]}</code> with a per-host-type version; custom answers stored as JSON on the host application (<code>custom_fields</code>), validated server-side against the published version id the host started with.</li>
+</ol>
+<hr>
+<h2 id="6-gaps-and-inconsistencies">6. Gaps and inconsistencies</h2>
+<h3 id="61-mock-shortcuts-that-will-not-survive-a-real-backend">6.1 Mock shortcuts that will not survive a real backend</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Issue</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Atomicity relies on &quot;no await&quot; in single-threaded JS; needs DB transactions + row locks on wallet/booking/payout</td>
+<td><code>ledger.ts:53-57</code>, <code>finance.ts:315-343</code>, <code>bookings.ts:199-204</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>No idempotency keys on recharge, refund, payout approval, dispute resolution</td>
+<td><code>finance.ts:205</code>, <code>bookings.ts:251,284</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Ids generated with <code>Date.now()</code> / <code>Math.random()</code> (collisions possible)</td>
+<td><code>audit.ts:30</code>, <code>ledger.ts:72-74</code>, <code>categories.ts:24</code>, <code>promotions.ts:24</code>, <code>team.ts:163</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Rate limiter in process memory (<code>globalThis</code>), lost on restart, not shared across instances</td>
+<td><code>rate-limit.ts:19-22</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Session not revocable server-side (logout only deletes cookie)</td>
+<td><code>auth.ts:116-130</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Audit actor/admin recorded by NAME in ledger (<code>adminActor</code>), payouts (<code>processedBy</code>), onboarding (<code>publishedBy</code>), disputes (<code>resolvedBy</code>), team (<code>invitedBy</code>); needs FK to staff id</td>
+<td><code>ledger.ts:65</code>, <code>finance.ts:339</code>, <code>onboarding.ts:33</code>, <code>bookings.ts:330</code>, <code>team.ts:171</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Denormalised names copied into bookings/reviews/transactions (hostName, guestName, listingTitle, hostType); will drift on rename</td>
+<td><code>types:421-466,474-497,507-523</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Counters stored, not derived: Host.listingsCount/bookingsCount/rating/reviewsCount, Listing.rating/reviewsCount/bookingsCount, GuestUser.bookingsCount/totalSpentDzd/walletBalanceDzd, CategoryItem.listingCount</td>
+<td><code>generator.ts:85-107,208-211,354-356</code>, <code>store.ts:45-47</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Seed ledger not linked to bookings (random refs); no booking lifecycle writes <code>booking_payment</code>/<code>commission_deduction</code></td>
+<td><code>generator.ts:492-524</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Hardcoded figures in UI: sidebar badges 186/46/24/42/8 (<code>Sidebar.tsx:100,116,132,149,186</code> + reviews), bookings tab counts 1248/642/... (<code>BookingsClient.tsx:189-194</code>), dashboard fallbacks `</td>
+<td></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Read functions without <code>assertCan</code>; server pages call data directly: dashboard shows revenue KPIs and attention items to every role (<code>(panel)/page.tsx:15-21</code>)</td>
+<td></td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>updatePlatformSettings</code> accepts any partial object, shallow merge, no whitelist</td>
+<td><code>settings.ts:15-39</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>updateOnboardingFlow</code> accepts any steps payload</td>
+<td><code>onboarding.ts:15-56</code>, <code>actions/onboarding.ts:13-17</code></td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>createCategory</code>, <code>createPromotion</code> accept unvalidated objects</td>
+<td><code>actions/categories.ts:11</code>, <code>actions/promotions.ts:11</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td>Hard deletes for categories and coupons</td>
+<td><code>categories.ts:59-73</code>, <code>promotions.ts:60-74</code></td>
+</tr>
+<tr>
+<td>16</td>
+<td>Files: every document/photo is <code>/assets/template.jpeg</code> or <code>/assets/house.png</code>; no upload, storage, virus scan, signed URLs</td>
+<td><code>generator.ts:162,312</code></td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>Date.now()</code>-based seed timestamps: data changes on every boot</td>
+<td>generator throughout</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Errors thrown as plain <code>Error</code> (not DomainError) in users/reviews/team/categories/promotions/onboarding become <code>code: &quot;failed&quot;</code> instead of <code>conflict</code>/<code>invalid</code></td>
+<td><code>users.ts:142</code>, <code>reviews.ts:90</code>, <code>team.ts:57,61,73,117</code>, <code>onboarding.ts:25</code></td>
+</tr>
+<tr>
+<td>19</td>
+<td>Commission default change not propagated to non-overridden hosts; no &quot;revert override&quot;</td>
+<td><code>finance.ts:252-279</code>, <code>hosts.ts:332-364</code></td>
+</tr>
+<tr>
+<td>20</td>
+<td>Payout <code>processed</code> state and bank/CCP confirmation missing; debit happens at approval</td>
+<td><code>finance.ts:311-356</code></td>
+</tr>
+<tr>
+<td>21</td>
+<td>Cancel does not trigger refund or ledger reversal; refund never reverses commission</td>
+<td><code>bookings.ts:165-197,225-237</code></td>
+</tr>
+</tbody></table>
+<h3 id="62-features-with-no-persistence-mocked-only">6.2 Features with no persistence (mocked-only)</h3>
+<p>Messages/conversations/broadcast/templates (<code>MessagesClient.tsx</code>), change requests and trip booking requests (<code>ChangeRequestsClient.tsx</code>), create wizards for all 4 verticals (<code>StayWizardClient.tsx</code>, <code>ExperienceWizardClient.tsx</code>), featured placements (<code>PromotionsClient.tsx:45-49,347</code>), review reports/disputes tabs (<code>ReviewsClient.tsx:90</code>), review CSV export (<code>:225</code>), guest password reset and guest export (<code>UsersClient.tsx:287,567</code>), document approve/reject (<code>ApprovalsClient.tsx:281-284</code>), approvals &quot;undo&quot; (<code>:289</code>), provider &quot;request changes&quot; (<code>ProvidersValidationClient.tsx:383-388</code>), listing review checklist + internal notes (<code>StayReviewClient.tsx:84-105</code>), settings notification toggles and languages tab (<code>SettingsClient.tsx:129-133,283-330</code>), maintenance mode / 2FA / session timeout (stored, not enforced), training mode (localStorage only), car pricing tiers and insurance (stored as categories), amenities (redirect, no model), team invitations (no email, no acceptance).</p>
+<h3 id="63-admin-vs-guest-site-model-mismatches-frontendtypests">6.3 Admin vs guest-site model mismatches (<code>frontend/types.ts</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Admin</th>
+<th>Frontend</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Users</td>
+<td><code>GuestUser</code> (<code>usr_001</code>) and <code>Host</code> (<code>hst_001</code>) are separate tables with no link</td>
+<td>single <code>User</code> with <code>role guest|host|admin</code>, <code>hostType</code>, <code>organizationId</code> (<code>frontend/types.ts:4-24</code>)</td>
+<td>backend needs one <code>users</code> table + host profile; admin <code>Host.organizationId</code>/<code>Organization.ownerUserId</code> never seeded</td>
+</tr>
+<tr>
+<td>Organization</td>
+<td><code>Organization.verificationStatus: boolean</code>, <code>hostType</code></td>
+<td><code>verificationStatus: pending|verified|rejected</code>, <code>businessCategory agency|hotel|hostel</code>, <code>businessRegistrationNumber</code>, <code>businessEmail/Phone</code>, hotel/hostel policy fields (<code>:292-326</code>)</td>
+<td>admin flattens org into Host + <code>agencyMetadata/hotelMetadata/hostelMetadata</code></td>
+</tr>
+<tr>
+<td>Listing status</td>
+<td>8 canonical + 3 aliases</td>
+<td><code>active|pending|suspended|draft</code> (<code>:54</code>)</td>
+<td>admin <code>approved</code> = frontend <code>active</code>; <code>changes_requested</code>, <code>rejected</code>, <code>archived</code>, <code>deleted</code> invisible on frontend</td>
+</tr>
+<tr>
+<td>Listing fields</td>
+<td><code>propertyType</code>, <code>hostId/hostName/hostType</code>, <code>wilayaCode</code>, <code>coordinates{lat,lng}</code>, <code>guestCapacity</code>, <code>isFeatured</code>, <code>reviewsCount</code>, <code>rooms</code>, <code>houseRules</code> object, <code>bookingApprovalMode</code>, duplicates <code>vertical/priceDzd/images</code></td>
+<td><code>type</code>, <code>ownerType</code> + <code>hostUserId</code>/<code>organizationId</code>, <code>locationValue</code>/<code>commune</code>/<code>country</code>, <code>latlng [lat,lng]</code>, <code>guestCount</code>, <code>featured</code>, <code>reviewCount</code>, <code>roomTypes</code>, <code>houseRules string[]</code>, <code>instantBook</code> + <code>bookingApprovalMode</code>, plus <code>cleaningFee</code>, <code>cancellationPolicy</code>, <code>minNights/maxNights</code>, <code>serviceFeeRate</code>, <code>taxRate</code>, vehicle and experience fields (<code>:110-196</code>)</td>
+<td>admin cannot see or moderate cleaning fee, cancellation policy, stay rules, vehicle/experience specifics</td>
+</tr>
+<tr>
+<td>Trips</td>
+<td>listing with <code>category: &quot;trip&quot;</code></td>
+<td>separate <code>Trip</code> entity (<code>trip_*</code> ids) with itinerary, departures, <code>organizationId</code> (<code>:261-290</code>)</td>
+<td>admin has no trip itinerary model</td>
+</tr>
+<tr>
+<td>Wilaya</td>
+<td>string code <code>&quot;01&quot;..&quot;68&quot;</code>, <strong>68</strong> entries (<code>lib/utils/wilayas.ts</code>, <code>{ code:</code> count = 68); README and UI strings say <strong>69</strong> (<code>messages/en.json:291,747,894,895,1417</code>, <code>HostsClient.tsx:905</code>)</td>
+<td>numeric code 1..58, <strong>58</strong> entries (<code>frontend/lib/algeria.ts</code>, header comment), footer &quot;58 wilayas&quot; (<code>frontend/messages/en/footer.json:32</code>); wilaya derived from <code>commune</code></td>
+<td>three different counts (58 / 68 / 69); codes 59-68 in admin (Aflou, Barika, ...) do not exist on the frontend; string vs number type</td>
+</tr>
+<tr>
+<td>Booking</td>
+<td><code>Booking</code>, ref <code>BLD-2026-NNNN</code>, <code>checkInDate/checkOutDate</code>, <code>basePriceDzd</code>, <code>totalAmountDzd</code>, <code>refundedAmountDzd</code>, statuses incl. <code>disputed</code>, <code>refunded</code></td>
+<td><code>Reservation</code> (<code>res_*</code>), <code>startDate/endDate</code>, <code>subtotal</code>, <code>totalPrice</code>, <code>cleaningFee</code>, <code>taxes</code>, <code>refundAmount</code>, <code>cancelledBy</code>, <code>expiresAt</code>, <code>declineReason</code>, <code>selectedRoomTypeId</code>, <code>unitCount</code>, statuses incl. <code>declined</code>, <code>expired</code> (<code>:198-250</code>)</td>
+<td>admin ignores cleaning fee in payout math; frontend payout = subtotal + cleaning - commission - refund (<code>frontend/lib/booking/payout.ts:17-34</code>), admin payout = base - commission</td>
+</tr>
+<tr>
+<td>Payment status</td>
+<td><code>paid|partially_refunded|refunded|pending|failed</code></td>
+<td><code>paid|pending|refunded|partially_refunded|voided</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Payment method</td>
+<td><code>cib_edahabia|ccp_transfer|baridimob|cash_on_arrival</code></td>
+<td>free string</td>
+<td></td>
+</tr>
+<tr>
+<td>Wallet model</td>
+<td>per host (<code>wlt_&lt;hostId&gt;</code>), mixes guest-money settlement (<code>booking_payment</code> credits, <code>host_payout</code> withdrawals, refunds)</td>
+<td>per owner <code>ownerType user|organization</code>, PREPAID COMMISSION wallet: <code>recharge</code>, <code>commission_deduction</code>, <code>payout</code>, <code>adjustment</code> (<code>:574-603</code>, <code>frontend/lib/data/wallet.ts</code>)</td>
+<td>fundamentally different money flow; must be decided before modelling the ledger</td>
+</tr>
+<tr>
+<td>Transaction</td>
+<td><code>amount</code>, <code>balanceAfter</code>, <code>reference</code>, <code>bookingRef</code>, <code>adminActor</code> name</td>
+<td><code>amount</code>, <code>currency</code>, <code>relatedBookingId</code>, <code>adminUserId</code>, <code>note</code>, <code>timestamp</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Commission</td>
+<td>on base price (<code>lib/pricing.ts:84</code>)</td>
+<td>on accommodation subtotal (excl. cleaning) (<code>frontend/lib/booking/config.ts:10-19</code>)</td>
+<td>same rates; frontend also stores live rates in its own server store (<code>frontend/lib/data/wallet.ts:250-266</code>), a second source of truth</td>
+</tr>
+<tr>
+<td>Review</td>
+<td><code>ReviewItem</code> with status/flags/hostReply, single rating</td>
+<td><code>Review</code> with 5 sub-ratings (cleanliness, accuracy, communication, location, value), no status (<code>:71-88</code>)</td>
+<td></td>
+</tr>
+<tr>
+<td>Coupon</td>
+<td><code>PromotionCoupon</code> (<code>discountType percentage|fixed_dzd|fixed</code>, <code>maxUsage/maxUses</code>, <code>usedCount/currentUses</code>, <code>startDate/endDate/expiresAt</code>, <code>status</code>, <code>scope</code>)</td>
+<td><code>Coupon</code> (<code>percentage|fixed</code>, <code>validFrom/validTo</code>, <code>usageLimit/usageCount</code>, <code>verticalScope</code>, <code>isActive</code>) (<code>:474-486</code>)</td>
+<td></td>
+</tr>
+<tr>
+<td>Category</td>
+<td><code>name{en,fr,ar}</code>, <code>iconName</code>, <code>listingCount</code>, <code>isActive</code>, <code>order</code></td>
+<td><code>labelKey</code>, <code>icon</code>, <code>descriptionKey</code> (i18n keys) (<code>:63-69</code>)</td>
+<td></td>
+</tr>
+<tr>
+<td>Amenity</td>
+<td><code>name{en,fr,ar}</code>, free <code>category</code></td>
+<td><code>nameKey</code>, <code>category essentials|features|location|safety</code></td>
+<td>admin listings store amenities as free strings (&quot;Fast WiFi&quot;)</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td><code>actorId/actorName/actorRole/entityType/entityId/before/after/ipAddress</code></td>
+<td><code>AuditLogEntry adminId/adminName/targetType/targetId</code> (<code>:457-472</code>)</td>
+<td>frontend has its own admin-ish audit type</td>
+</tr>
+<tr>
+<td>Ids</td>
+<td>sequential <code>usr_001</code>, <code>hst_001</code>, <code>lst_001</code>, <code>bkg_0001</code>, <code>rev_001</code>, <code>tx_0001</code>, <code>pay_001</code></td>
+<td>slug-like seeds (<code>lst_tipaza_villa</code>, <code>res_tipaza_01</code>, <code>usr_amina...</code>) and <code>prefix_&lt;uuid&gt;</code> at runtime (<code>frontend/lib/ids.ts:6-8</code>)</td>
+<td>pick UUIDs (or ULIDs) + human references</td>
+</tr>
+<tr>
+<td>Locale default</td>
+<td><code>i18n.ts</code> default <code>en</code>, root redirects <code>/en</code>; platformSettings.defaultLocale <code>fr</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Brand in identifiers</td>
+<td>cookie <code>darna_admin_session</code>, JWT iss <code>urn:darna:admin</code>, CSV <code>darna_*</code>, localStorage <code>darna_admin_*</code></td>
+<td><code>darna_onboarding_config_*</code></td>
+<td>intentional per project memory, but worth listing for the backend</td>
+</tr>
+</tbody></table>
+<h3 id="64-other-inconsistencies-inside-admin">6.4 Other inconsistencies inside admin</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Issue</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Settings field mismatch: UI writes <code>serviceFeePercent</code> and <code>security.{sessionTimeoutMinutes,twoFactorRequired}</code>, store/type primary fields are <code>guestServiceFeePercent</code>, <code>sessionTimeoutMinutes</code>, <code>twoFactorAuthEnabled</code>; UI always shows fee 0 and timeout default 120</td>
+<td><code>SettingsClient.tsx:141-172</code>, <code>store.ts:92-106</code>, <code>types:682-701</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Two transition tables (<code>lib/status.ts</code> vs <code>lib/domain/transitions.ts</code>)</td>
+<td><code>lib/status.ts:58-80</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Command palette and dashboard attention links to non-existent routes <code>/listings/{id}</code>, <code>/bookings/{id}</code>, <code>/users/{id}</code> (404 via <code>[...rest]</code>)</td>
+<td><code>command-palette.ts:56,76,92</code>, <code>analytics.ts:190,198</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Sidebar <code>/bookings?type=stay</code> ignored (client reads <code>vertical</code>); <code>/cars/rentals?status=in_progress</code> not a BookingStatus</td>
+<td><code>Sidebar.tsx:150-153,182-185</code>, <code>BookingsClient.tsx:73-74</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>/x/[id]</code> detail pages do not check vertical</td>
+<td><code>cars/[id]/page.tsx:18</code> etc.</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Trips and cars &quot;new&quot; pages reuse the experience wizard</td>
+<td><code>trips/new/page.tsx:2</code>, <code>cars/new/page.tsx:2</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Document approval approves the whole host</td>
+<td><code>ApprovalsClient.tsx:281-284</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Category manager per vertical shows all verticals</td>
+<td><code>CategoriesManagerClient.tsx:58-67</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>StatsClient provider type <code>carRental</code> is not a HostType</td>
+<td><code>StatsClient.tsx:61-66,73-77</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>listHosts</code> declares <code>minPrice/maxPrice</code> filters but ignores them</td>
+<td><code>hosts.ts:22-23</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Approvals queue ignores legacy <code>pending</code> listings; listing waiting time uses <code>createdAt</code></td>
+<td><code>approvals.ts:33,35</code></td>
+</tr>
+<tr>
+<td>12</td>
+<td>Many unused types (Document, ModerationChecklist, ChangeRequest, WizardDraft, Amenity, Insurance, PricingTier, Organization, QueryParams, UserRole)</td>
+<td><code>lib/types/index.ts</code></td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>docs/DATA-MODEL.md</code> says 7% service fee; README says &quot;Supabase Ready&quot; while target is Django</td>
+<td><code>docs/DATA-MODEL.md</code> s6, <code>README.md</code> s4</td>
+</tr>
+<tr>
+<td>14</td>
+<td>README &quot;Every mutation executes <code>assertCan(session, permission)</code>&quot;: false for <code>updateUserStatus</code></td>
+<td><code>users.ts:282-308</code></td>
+</tr>
+<tr>
+<td>15</td>
+<td>Messages area (incl. broadcast to all users) needs no permission</td>
+<td><code>messages/*/page.tsx</code> <code>guardPage(null)</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="7-page-routes-80-pagetsx-under-applocale--apppagetsx">7. Page routes (80 <code>page.tsx</code> under <code>app/[locale]</code> + <code>app/page.tsx</code>)</h2>
+<p>All panel pages also pass through <code>middleware.ts</code> (JWT) and <code>(panel)/layout.tsx</code> (store-backed admin check + approvals count via <code>getApprovalsInbox</code> when <code>hosts.view</code>). &quot;Data&quot; lists server-side data calls and client actions.</p>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Purpose</th>
+<th>Data / actions</th>
+<th>guardPage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code> (app/page.tsx)</td>
+<td>redirect to <code>/en</code></td>
+<td>none</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><code>/[locale]</code></td>
+<td>Dashboard</td>
+<td>data: getDashboardKPIs, getDashboardCharts, getAttentionItems, listAuditLogs (if audit.view)</td>
+<td>null</td>
+</tr>
+<tr>
+<td><code>/login</code></td>
+<td>Sign-in</td>
+<td>data: listDevDemoAccounts, getCurrentAdmin; actions: loginAction, getDemoCredentials</td>
+<td>public (redirects if signed in)</td>
+</tr>
+<tr>
+<td><code>/approvals</code></td>
+<td>Moderation inbox, 5 queues</td>
+<td>actions: getApprovalsInbox, approveHost, rejectHost, approveListing, rejectListing, hideReview, dismissFlag, resolveDispute</td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/audit-log</code></td>
+<td>legacy redirect -&gt; <code>/settings/audit-log</code></td>
+<td>none</td>
+<td>none (target guarded)</td>
+</tr>
+<tr>
+<td><code>/bookings</code></td>
+<td>Bookings list, cancel, refund, dispute, export</td>
+<td>actions: listBookings, cancelBooking, refundBooking, resolveDispute, exportBookings</td>
+<td>bookings.view</td>
+</tr>
+<tr>
+<td><code>/cars</code></td>
+<td>Vehicle listings list</td>
+<td>actions: listListings + useListingStatusActions (updateListingStatus, deleteListing, restoreListing, exportListings)</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/cars/[id]</code></td>
+<td>Listing detail (shared StayDetailClient)</td>
+<td>data: getListingById; actions: approve/reject/requestChanges/restore/updateListingStatus</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/cars/[id]/review</code></td>
+<td>Review wizard (shared StayReviewClient)</td>
+<td>data: getListingById; actions: approveListing, rejectListing, requestChangesListing</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/cars/categories</code></td>
+<td>Vehicle categories</td>
+<td>actions: listCategories, createCategory, toggleCategoryStatus</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/cars/insurance</code></td>
+<td>&quot;Insurance&quot; (category manager reuse)</td>
+<td>same as above</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/cars/new</code></td>
+<td>Add car (experience wizard reuse), mocked</td>
+<td>none</td>
+<td>listings.approve</td>
+</tr>
+<tr>
+<td><code>/cars/owners</code></td>
+<td>redirect <code>/moderation/providers?category=rental_agency&amp;status=all</code></td>
+<td>none</td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/cars/pricing</code></td>
+<td>&quot;Pricing tiers&quot; (category manager reuse)</td>
+<td>categories actions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/cars/rentals</code></td>
+<td>redirect <code>/bookings?vertical=cars[&amp;status=]</code></td>
+<td>none</td>
+<td>bookings.view</td>
+</tr>
+<tr>
+<td><code>/categories</code></td>
+<td>Global category management</td>
+<td>actions: listCategories, createCategory, toggleCategoryStatus, deleteCategory</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/experiences</code></td>
+<td>Experience listings</td>
+<td>listListings, approveListing, updateListingStatus + useListingStatusActions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/experiences/[id]</code></td>
+<td>Detail</td>
+<td>getListingById + listing actions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/experiences/[id]/review</code></td>
+<td>Review wizard</td>
+<td>getListingById + decisions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/experiences/amenities</code></td>
+<td>redirect <code>/experiences/categories</code></td>
+<td>none</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/experiences/categories</code></td>
+<td>Experience categories</td>
+<td>categories actions</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/experiences/change-requests</code></td>
+<td>Change requests, mocked</td>
+<td>none</td>
+<td>listings.approve</td>
+</tr>
+<tr>
+<td><code>/experiences/new</code></td>
+<td>Add experience wizard, mocked</td>
+<td>none</td>
+<td>listings.approve</td>
+</tr>
+<tr>
+<td><code>/finance</code></td>
+<td>legacy redirect -&gt; <code>/payments</code></td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>/help</code></td>
+<td>Help center (static)</td>
+<td>none</td>
+<td>null</td>
+</tr>
+<tr>
+<td><code>/hosts</code></td>
+<td>Hosts directory</td>
+<td>data: listHosts (SSR); actions: listHosts, approveHost, suspendHost, unsuspendHost, deleteHost, restoreHost, overrideCommission, rechargeWallet, exportHosts</td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/hosts/[id]</code></td>
+<td>Host profile (server rendered)</td>
+<td>data: getHostById</td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/listings</code></td>
+<td>All listings</td>
+<td>data: listListings (SSR); actions: listListings, approveListing, requestChangesListing, featureListing, deleteListing, exportListings + useListingStatusActions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/messages</code></td>
+<td>Conversations, mocked</td>
+<td>none</td>
+<td>null</td>
+</tr>
+<tr>
+<td><code>/messages/notifications</code></td>
+<td>Sent notifications, mocked</td>
+<td>none</td>
+<td>null</td>
+</tr>
+<tr>
+<td><code>/messages/templates</code></td>
+<td>Templates, mocked</td>
+<td>none</td>
+<td>null</td>
+</tr>
+<tr>
+<td><code>/moderation</code></td>
+<td>redirect <code>/moderation/providers</code></td>
+<td>none</td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/moderation/providers</code></td>
+<td>Provider (host) validation</td>
+<td>actions: listHosts, approveHost, rejectHost, unsuspendHost</td>
+<td>hosts.view</td>
+</tr>
+<tr>
+<td><code>/network</code></td>
+<td>Network explorer</td>
+<td>actions: searchNetwork, approveListing, suspendListing</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/onboarding</code></td>
+<td>legacy redirect -&gt; <code>/settings/onboarding</code></td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>/payments</code></td>
+<td>Finance overview tab</td>
+<td>actions: getFinanceSummary, listWallets, listTransactions, listPayouts, listRefunds, getCommissionRates, rechargeWallet, approvePayout, rejectPayout, updateCommissionRates, exportTransactions, exportWallets</td>
+<td>wallets.view</td>
+</tr>
+<tr>
+<td><code>/payments/commissions</code></td>
+<td>Commission defaults tab</td>
+<td>same</td>
+<td>wallets.view (save needs commissions.manage)</td>
+</tr>
+<tr>
+<td><code>/payments/payouts</code></td>
+<td>Payout requests tab</td>
+<td>same</td>
+<td>wallets.view</td>
+</tr>
+<tr>
+<td><code>/payments/refunds</code></td>
+<td>Refunds tab</td>
+<td>same</td>
+<td>wallets.view</td>
+</tr>
+<tr>
+<td><code>/payments/transactions</code></td>
+<td>Ledger tab</td>
+<td>same</td>
+<td>wallets.view</td>
+</tr>
+<tr>
+<td><code>/payments/wallets</code></td>
+<td>Wallets tab</td>
+<td>same</td>
+<td>wallets.view</td>
+</tr>
+<tr>
+<td><code>/promotions</code></td>
+<td>Coupons</td>
+<td>actions: listPromotions, createPromotion, togglePromotionStatus, deletePromotion</td>
+<td>promotions.manage</td>
+</tr>
+<tr>
+<td><code>/promotions/featured</code></td>
+<td>Featured placements, mocked</td>
+<td>same client, static data</td>
+<td>promotions.manage</td>
+</tr>
+<tr>
+<td><code>/providers</code></td>
+<td>legacy redirect -&gt; <code>/moderation/providers</code></td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>/reports</code></td>
+<td>Reports tab of stats</td>
+<td>actions: getDashboardKPIs, getDashboardCharts, exportKpiReport</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/reviews</code></td>
+<td>Reviews moderation</td>
+<td>actions: listReviews, hideReview, restoreReview, dismissFlag, deleteReview</td>
+<td>reviews.view</td>
+</tr>
+<tr>
+<td><code>/reviews/disputes</code></td>
+<td>&quot;Disputes&quot; tab (unfiltered reviews)</td>
+<td>same</td>
+<td>reviews.view</td>
+</tr>
+<tr>
+<td><code>/reviews/reports</code></td>
+<td>&quot;User reports&quot; tab (unfiltered reviews)</td>
+<td>same</td>
+<td>reviews.view</td>
+</tr>
+<tr>
+<td><code>/search</code></td>
+<td>Search results (<code>?q=</code>)</td>
+<td>actions: searchNetwork</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/settings</code></td>
+<td>General settings</td>
+<td>actions: getPlatformSettings, updatePlatformSettings</td>
+<td>settings.manage</td>
+</tr>
+<tr>
+<td><code>/settings/audit-log</code></td>
+<td>Audit trail</td>
+<td>actions: listAuditLogs, exportAuditLogs</td>
+<td>audit.view</td>
+</tr>
+<tr>
+<td><code>/settings/commissions</code></td>
+<td>Commission defaults (PaymentsClient)</td>
+<td>finance actions</td>
+<td>commissions.manage</td>
+</tr>
+<tr>
+<td><code>/settings/languages</code></td>
+<td>Languages tab (static)</td>
+<td>settings actions</td>
+<td>settings.manage</td>
+</tr>
+<tr>
+<td><code>/settings/notifications</code></td>
+<td>Notification prefs (not saved)</td>
+<td>settings actions</td>
+<td>settings.manage</td>
+</tr>
+<tr>
+<td><code>/settings/onboarding</code></td>
+<td>Onboarding configurator</td>
+<td>actions: getOnboardingConfig, updateOnboardingFlow</td>
+<td>onboarding.edit</td>
+</tr>
+<tr>
+<td><code>/settings/security</code></td>
+<td>Session timeout, 2FA flag (not enforced)</td>
+<td>settings actions</td>
+<td>settings.manage</td>
+</tr>
+<tr>
+<td><code>/settings/team</code></td>
+<td>Staff and roles</td>
+<td>actions: listTeamMembers, updateMemberRole, toggleMemberActive, inviteMember</td>
+<td>team.manage</td>
+</tr>
+<tr>
+<td><code>/stats</code></td>
+<td>Stats overview (mostly hardcoded)</td>
+<td>analytics actions</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stats/providers</code></td>
+<td>By provider type</td>
+<td>analytics actions</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stats/reports</code></td>
+<td>Report exports</td>
+<td>analytics actions + exportKpiReport</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stats/revenue</code></td>
+<td>Revenue</td>
+<td>analytics actions</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stats/services</code></td>
+<td>By vertical</td>
+<td>analytics actions</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stats/wilayas</code></td>
+<td>By wilaya (hardcoded 4 rows)</td>
+<td>analytics actions</td>
+<td>reports.export</td>
+</tr>
+<tr>
+<td><code>/stays</code></td>
+<td>Stay listings</td>
+<td>listListings, approveListing, updateListingStatus + useListingStatusActions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/stays/[id]</code></td>
+<td>Detail</td>
+<td>getListingById + listing actions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/stays/[id]/review</code></td>
+<td>Review wizard</td>
+<td>getListingById + decisions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/stays/amenities</code></td>
+<td>redirect <code>/stays/categories</code></td>
+<td>none</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/stays/categories</code></td>
+<td>Stay categories</td>
+<td>categories actions</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/stays/change-requests</code></td>
+<td>Change requests, mocked</td>
+<td>none</td>
+<td>listings.approve</td>
+</tr>
+<tr>
+<td><code>/stays/new</code></td>
+<td>Add stay wizard, mocked</td>
+<td>none</td>
+<td>listings.approve</td>
+</tr>
+<tr>
+<td><code>/team</code></td>
+<td>legacy redirect -&gt; <code>/settings/team</code></td>
+<td>none</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>/trips</code></td>
+<td>Trip listings</td>
+<td>listListings, approveListing, updateListingStatus + useListingStatusActions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/trips/[id]</code></td>
+<td>Detail</td>
+<td>getListingById + listing actions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/trips/[id]/review</code></td>
+<td>Review wizard</td>
+<td>getListingById + decisions</td>
+<td>listings.view</td>
+</tr>
+<tr>
+<td><code>/trips/booking-requests</code></td>
+<td>&quot;Booking requests&quot; (change-requests mock)</td>
+<td>none</td>
+<td>bookings.view</td>
+</tr>
+<tr>
+<td><code>/trips/categories</code></td>
+<td>Trip categories</td>
+<td>categories actions</td>
+<td>categories.manage</td>
+</tr>
+<tr>
+<td><code>/trips/new</code></td>
+<td>Add trip (experience wizard reuse), mocked</td>
+<td>none</td>
+<td>listings.approve</td>
+</tr>
+<tr>
+<td><code>/users</code></td>
+<td>Users (guests + both)</td>
+<td>data: listUsers (SSR); actions: listUsers, suspendUser, banUser, deleteUser, updateUserStatus</td>
+<td>users.view</td>
+</tr>
+<tr>
+<td><code>/users/guests</code></td>
+<td>Users filtered <code>role=guest</code></td>
+<td>same</td>
+<td>users.view</td>
+</tr>
+<tr>
+<td><code>/where-did-it-go</code></td>
+<td>Old-to-new navigation map (static)</td>
+<td>none</td>
+<td>none (layout auth only)</td>
+</tr>
+<tr>
+<td><code>/[...rest]</code></td>
+<td>Localised 404</td>
+<td>none</td>
+<td>n/a</td>
+</tr>
+</tbody></table>
+<p>Global (every panel page): <code>CommandPalette</code> -&gt; <code>searchGlobalCommandPalette</code>; <code>Header</code> -&gt; <code>logoutAction</code>; <code>AdminSessionProvider.useCan</code> hides buttons by permission.</p>
+<div class="pager"><span><a href="work-frontend-inventory.html">&larr; BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a></span><span><a href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint) &rarr;</a></span></div></main></div></body></html>

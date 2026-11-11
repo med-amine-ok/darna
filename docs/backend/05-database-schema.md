@@ -2,7 +2,7 @@
 
 > **In plain words**
 > This is the plan for the database: which tables exist, how they link, and which rules the database itself enforces.
-> It has 74 tables in 14 groups. The full column list is in [05b-data-dictionary.md](05b-data-dictionary.md) and the machine-readable version in [schema.dbml](schema.dbml).
+> It has 77 tables in 14 groups. The full column list is in [05b-data-dictionary.md](05b-data-dictionary.md) and the machine-readable version in [schema.dbml](schema.dbml).
 > The most important ideas: one "host account" for every kind of host; the database refuses double bookings; money is kept in a ledger that is never edited.
 > Each big choice is written as a short decision record (ADR) with the options we rejected.
 > At the end: how today's demo data maps onto the new tables, what to seed first, and how the busiest queries will run.
@@ -36,7 +36,7 @@ Inputs: [01-system-inventory.md](01-system-inventory.md), [03-requirements.md](0
 | reviews | review, review_reply, review_report | Reviews after stays |
 | messaging, notifications | conversation, conversation_participant, message, notification, notification_preference, outbox_event, delivery_log | Messages, alerts, reliable sending |
 | media | media_asset | Photos and private documents |
-| trust, config, audit, privacy, core | reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc | Staff work, settings, history, legal requests, system safety |
+| trust, config, audit, privacy, core | incident_record, otp_send_log, calendar_feed (inventory), reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc | Staff work, settings, history, legal requests, system safety |
 
 Diagrams: [diagrams/erd-00-overview](diagrams/README.md) shows the 26 core tables; one diagram per group follows (Phase 4).
 
@@ -350,6 +350,13 @@ The apps run on demo data only. Nothing real is migrated: the demo seeds are re-
 Production seeds are only steps 1 to 8. Demo passwords exist only in dev fixtures, never in the website bundle (fixes the current leak).
 
 ---
+
+## Additions on 2026-11-09
+
+- `experience_type` and `trip_type` enums with `listing.experience_type` and `trip.trip_type` (DEC-015, BR-LST-05).
+- Host offer rule (DEC-014, BR-HST-05) documented on `listing`: a trigger checks the vertical against the host account kind and organisation category.
+- `incident_record` (breach register and 5-day clock, PRV-05), `calendar_feed` (iCal, AVL-06), `otp_send_log` (one-time code sends, ACC-02). These closed decision T5.
+- [schema.sql](schema.sql): the PostgreSQL rendering of `schema.dbml` produced by the official DBML tool.
 
 ## Check yourself
 

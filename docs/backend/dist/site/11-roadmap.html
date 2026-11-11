@@ -1,0 +1,502 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>11. Roadmap: how we build the BLADUS backend · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="on" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="11-roadmap-how-we-build-the-bladus-backend">11. Roadmap: how we build the BLADUS backend</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This is the build plan, in eight steps (M0 to M7) up to the public launch, then Release 2 and &quot;Later&quot;.<br>Each step has a goal, the requirement IDs it delivers, a test to know it is finished, what it waits for, and a rough length in weeks.<br>The two apps keep working on demo data the whole time: in each step, a few of their data files switch to the real API, one at a time, behind a switch we can turn back.<br>Some steps cannot finish without an answer from a lawyer or an accountant. Those answers are shown as gates at the step that needs them.<br>With 2 backend developers and 1 part-time frontend developer, the MVP takes about 29 weeks of work plus 2 weeks of buffer (about 7 months).</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Milestone (M0 to M7)</strong>: a block of work that ends with a check anyone can run (&quot;exit criteria&quot;).</li>
+<li><strong>Exit criteria</strong>: the yes/no checks that say a milestone is done.</li>
+<li><strong>Gate</strong>: an outside answer (lawyer, accountant, bank, product owner) without which a milestone may not finish. Gate IDs (L1, F3, Q21...) come from <a href="14-open-questions.html">14-open-questions.md</a> and are explained in <a href="13-decisions-needed.html">13-decisions-needed.md</a>.</li>
+<li><strong><code>lib/data</code> module</strong>: a file in the website (<code>frontend/lib/data/</code>) or admin (<code>admin/lib/data/</code>) whose functions read and write demo data today. &quot;Switching&quot; it means its function bodies call the API instead.</li>
+<li><strong>Feature flag (data source flag)</strong>: a setting per module, for example <code>DATA_SOURCE_LISTINGS=mock|api</code>, read on the Next.js server. It lets us switch one module at a time and switch back in seconds if something breaks.</li>
+<li><strong>Staging</strong>: a copy of the system with demo data only, used for testing. <strong>Production</strong>: the real system with real people&#39;s data.</li>
+<li><strong>Closed beta</strong>: real hosts and guests, invited by us, before the public can sign up.</li>
+<li><strong>Gantt chart</strong>: a bar chart of tasks over time.</li>
+</ul>
+<p>Inputs: <a href="03-requirements.html">03-requirements.md</a> (147 requirements), <a href="04-business-rules.html">04-business-rules.md</a>, <a href="05-database-schema.html">05-database-schema.md</a>, <a href="01-system-inventory.html">01-system-inventory.md</a> section 4 (the <code>lib/data</code> bridge), <a href="02-research.html">02-research.md</a> section E. The API contract is written in parallel in <code>06-api-design.md</code> and <code>openapi.yaml</code>; operations, security and testing details in <code>07</code> to <code>10</code>. The full requirement-to-milestone list is in <a href="traceability.html">traceability.md</a>.</p>
+<hr>
+<h2 id="1-assumptions">1. Assumptions</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Assumption</th>
+<th>If it is wrong</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A1</td>
+<td><strong>Team: 2 backend developers full-time</strong> (Django, PostgreSQL), <strong>1 frontend developer half-time</strong> (Next.js, switches the <code>lib/data</code> modules), a product owner who answers within 3 working days, and one of the backend developers acting as tech lead.</td>
+<td>With 1 backend developer, multiply backend durations by about 1.8.</td>
+</tr>
+<tr>
+<td>A2</td>
+<td>Work starts <strong>Monday 2026-11-16</strong>. Dates in the chart are targets, not promises.</td>
+<td>Shift every date by the delay.</td>
+</tr>
+<tr>
+<td>A3</td>
+<td><strong>Ramadan 2027</strong> (about 8 February to 9 March, VERIFY the exact dates) and the two Eids lower capacity; M3 and M4 are planned a little longer for this.</td>
+<td>Add 1 week if the team works reduced hours.</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>The 147 requirements and DEC-001 to DEC-015 do not change much. New ideas go to R2 by default (risk K-21 in <a href="12-risks.html">12-risks.md</a>).</td>
+<td>Re-plan at each milestone review.</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>Staging runs on any cloud with <strong>demo data only</strong>. <strong>No real personal data exists anywhere until production is hosted in Algeria</strong> (gates L1, L2).</td>
+<td>Real data abroad may break Law 18-07 (VERIFY WITH A PROFESSIONAL).</td>
+</tr>
+<tr>
+<td>A6</td>
+<td>The money model stays <strong>M1 (prepaid commission)</strong> for the MVP (DEC-001). Collecting guest money (M2 to M4) is a separate project behind a licence gate.</td>
+<td>A different model adds 6 to 10 weeks and a legal track.</td>
+</tr>
+<tr>
+<td>A7</td>
+<td>Each milestone ends with a 1-hour review: demo on staging, exit criteria checked, next milestone confirmed.</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="2-how-the-apps-move-from-demo-data-to-the-api">2. How the apps move from demo data to the API</h2>
+<ol>
+<li>Every <code>lib/data</code> module gets one flag (<code>DATA_SOURCE_&lt;MODULE&gt;</code>), default <code>mock</code>. On staging we turn modules to <code>api</code> <strong>one at a time</strong>, in the order of section 4.</li>
+<li>The API is seeded with the <strong>same demo cast</strong> (Yacine, Amina, Karim, Nadia...) and the same IDs mapped to UUIDs (decision T3), so a module still on demo data can point at records that already live in the API.</li>
+<li>A module is &quot;switched&quot; when: its functions call the typed API client (NFR-08), every page that uses it passes the frontend smoke test, and the flag has been <code>api</code> on staging for 5 working days without a rollback.</li>
+<li>Once all modules of an app are switched and the launch is done, the demo store and flags are deleted (in M7 for production builds).</li>
+<li>The website&#39;s <code>listings.ts</code> switches as a whole in M2 against a simple search endpoint; M3 then upgrades that same endpoint (filters, facets, availability, map) <strong>without</strong> a frontend change. This keeps &quot;one module, one switch&quot;.</li>
+</ol>
+<hr>
+<h2 id="3-milestones-at-a-glance">3. Milestones at a glance</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Name</th>
+<th>Weeks</th>
+<th>Target dates</th>
+<th>Requirements</th>
+<th>Main gate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>M0</td>
+<td>Foundations</td>
+<td>3</td>
+<td>2026-11-16 to 2026-12-06</td>
+<td>18</td>
+<td>Q22, T1 to T4, T8, T9</td>
+</tr>
+<tr>
+<td>M1</td>
+<td>Accounts, staff and host verification</td>
+<td>5</td>
+<td>2026-12-07 to 2027-01-10</td>
+<td>28</td>
+<td>L4 (draft list), T6</td>
+</tr>
+<tr>
+<td>M2</td>
+<td>Catalogue, trips and moderation</td>
+<td>4</td>
+<td>2027-01-11 to 2027-02-07</td>
+<td>23</td>
+<td>Q16, Q19, Q24, Q28</td>
+</tr>
+<tr>
+<td>M3</td>
+<td>Search, availability and quotes</td>
+<td>3</td>
+<td>2027-02-08 to 2027-02-28</td>
+<td>11</td>
+<td>T7, Q17</td>
+</tr>
+<tr>
+<td>M4</td>
+<td>Bookings, cancellations and the commission wallet</td>
+<td>5</td>
+<td>2027-03-01 to 2027-04-04</td>
+<td>27</td>
+<td>Q14, Q15, Q18, Q20, Q25, Q26, F5, F6, F7, L3 (for Q18 only)</td>
+</tr>
+<tr>
+<td>M5</td>
+<td>Messaging and reviews</td>
+<td>3</td>
+<td>2027-04-05 to 2027-04-25</td>
+<td>8</td>
+<td><strong>L1, L2 answered</strong> (to sign the Algerian hosting contract), T1 final</td>
+</tr>
+<tr>
+<td>M6</td>
+<td>Reports, privacy and hardening</td>
+<td>3</td>
+<td>2027-04-26 to 2027-05-16</td>
+<td>8</td>
+<td>L7, L8, L10, L12, Q23</td>
+</tr>
+<tr>
+<td>M7</td>
+<td>Production in Algeria, closed beta, launch</td>
+<td>3</td>
+<td>2027-05-17 to 2027-06-06</td>
+<td>3</td>
+<td><strong>L1, L2, L4, L5, L9, L11 cleared</strong> before real data; Q21, Q27</td>
+</tr>
+<tr>
+<td>Buffer</td>
+<td>Contingency</td>
+<td>2</td>
+<td>2027-06-07 to 2027-06-20</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Launch</strong></td>
+<td>Public launch</td>
+<td></td>
+<td>target in the week of 2027-06-07, or early July after the baccalaureate exams (Q23)</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>R2-A</td>
+<td>Online money: gateway, invoices, taxes</td>
+<td>6</td>
+<td>about 2027-07 to 2027-08</td>
+<td>4</td>
+<td><strong>F1, F2, F3, F4</strong></td>
+</tr>
+<tr>
+<td>R2-B</td>
+<td>Trust and growth</td>
+<td>8</td>
+<td>about 2027-07 to 2027-09 (parallel to R2-A)</td>
+<td>15</td>
+<td>L6 (for PRV-06)</td>
+</tr>
+<tr>
+<td>LATER</td>
+<td>Behind a legal or business gate</td>
+<td>open</td>
+<td>not scheduled</td>
+<td>2</td>
+<td><strong>L3 + PSP licence</strong> for PAY-10</td>
+</tr>
+</tbody></table>
+<p>Total MVP: <strong>126 requirements</strong> in M0 to M7 (109 Must, 17 Should). Counts per milestone and module: <a href="traceability.html">traceability.md</a> sections 1 and 2.</p>
+<hr>
+<h2 id="4-milestones-in-detail">4. Milestones in detail</h2>
+<h3 id="m0-foundations-3-weeks">M0. Foundations (3 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: an empty but production-shaped backend: repository, CI, Django 6.1 + DRF + PostgreSQL/PostGIS + Redis + Celery (R-1), sign-up and sign-in that the website can use, the 69 wilayas, platform settings, and the shared conventions (money, time, IDs, errors, languages).</li>
+<li><strong>Scope</strong>: ACC-01, ACC-02, ACC-03, ACC-04, ACC-07, PAY-12, SRC-04, CFG-01, PRV-01, NFR-05, NFR-06, NFR-07, NFR-08, NFR-09, NFR-10, NFR-11, NFR-12, NFR-13.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>CI runs lint, type checks, tests with coverage gate, dependency scan and OpenAPI generation on every pull request; main branch deploys to staging automatically.</li>
+<li>A visitor signs up on the website (staging) with email or <code>+213</code> phone, gets a code, verifies, signs in, signs out; the session token is revoked on logout (ACC-03).</li>
+<li>69 wilayas and 1,541 communes are seeded with <code>source</code> and <code>valid_from</code> (BR-SRC-02); a test counts them.</li>
+<li><code>platform_settings</code> v1 holds the default commission rates (1,200 / 1,500 / 1,800 / 1,000 bp) and request TTL 24 h.</li>
+<li>Error envelope has stable codes and en/fr/ar messages; money helper and UUIDv7 helper have property tests.</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: decisions T1 (staging host only), T2, T3, T4, T8, T9; Q22 (foreign phone numbers) for ACC-01.</li>
+<li><strong><code>lib/data</code> switches</strong>: website <code>auth.ts</code> (sign-up, sign-in, profile read). Website <code>lib/algeria.ts</code> static wilaya list replaced by the geography endpoint (same flag pattern).</li>
+<li><strong>Gates</strong>: none blocking. Start the lawyer engagement now (L1, L2, L4, L5, L9, L11 take months).</li>
+</ul>
+<h3 id="m1-accounts-staff-and-host-verification-5-weeks">M1. Accounts, staff and host verification (5 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: staff can sign in to the admin with 2FA and the right permissions; a user can become a host (individual or organisation), upload documents, and be verified by a moderator; organisations have teams.</li>
+<li><strong>Scope</strong>: ACC-05, ACC-06, ACC-08, ORG-01 to ORG-07, HST-01, HST-02, HST-03, HST-04, HST-06, NTF-04, MED-02, MOD-01, MOD-02, MOD-03, MOD-08, STF-01 to STF-05, CFG-02, CFG-04.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>A staff member is invited, sets a password and TOTP, signs in; a guest session is refused on <code>/api/v1/admin/*</code> (STF-05).</li>
+<li>Every staff mutation writes one <code>audit_event</code>; the app&#39;s database role cannot UPDATE or DELETE that table (test).</li>
+<li>A user completes the 12-step individual flow and the 5-step agency flow served from the published config; the draft resumes on another browser.</li>
+<li>Documents go to the private bucket; a moderator approves them one by one; the host is approved only when all required documents are approved (BR-HST-03).</li>
+<li>Invitations can be accepted; an organisation always has exactly one owner (DB constraint test).</li>
+<li>The outbox sends the invitation email through the worker with retries.</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M0; T6 (object storage); a <strong>draft</strong> KYC document list per host type from L4 (the list is data, so the final list can change later without code).</li>
+<li><strong><code>lib/data</code> switches</strong> (in this order): admin <code>credentials.ts</code>, <code>team.ts</code>, <code>audit.ts</code>, <code>settings.ts</code>, <code>users.ts</code>, <code>onboarding.ts</code>, <code>hosts.ts</code>, <code>approvals.ts</code>; website <code>organizations.ts</code>, then the onboarding part of <code>auth.ts</code> (<code>updateUserHostStatus</code>).</li>
+<li><strong>Gates</strong>: L4 draft answer expected by the end of M1 (soft). KYC files on staging are fake files only (A5).</li>
+</ul>
+<h3 id="m2-catalogue-trips-and-moderation-4-weeks">M2. Catalogue, trips and moderation (4 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: approved hosts create listings of every vertical and agencies create trips with departures; everything goes through review before publication; photos are processed safely.</li>
+<li><strong>Scope</strong>: ACC-09, HST-07, LST-01 to LST-08, LST-10, LST-11, LST-12, TRP-01, TRP-02, TRP-03, TRP-04, TRP-07, AVL-03, MED-01, MED-03, MOD-06, CFG-05.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>An individual host can only create home and vehicle listings; an agency only experiences and trips; a hotel only its property (API and database trigger tests, DEC-014).</li>
+<li>A submitted listing is <code>pending_review</code>; it appears publicly only after approval; editing a key field returns it to review via <code>listing_revision</code>.</li>
+<li>Photos are uploaded directly to quarantine, re-encoded, stripped of GPS data; a home needs 5 photos (Q19).</li>
+<li>Suspending a host pauses all its listings and trips (MOD-06).</li>
+<li>The demo catalogue (18 listings, 4 trips) is re-created through the API on staging.</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M1 (host accounts, moderation queues); decisions Q16 (hostel vertical), Q19 (minimum photos), Q24 (moderation staffing), Q28 (verticals at launch).</li>
+<li><strong><code>lib/data</code> switches</strong>: admin <code>categories.ts</code>, <code>listings.ts</code>; website <code>favorites.ts</code>, <code>listings.ts</code> (as a whole, against a basic published-only search), <code>vehicles.ts</code>, <code>experiences.ts</code>, <code>trips.ts</code>, <code>calendar.ts</code>.</li>
+<li><strong>Gates</strong>: L5 (whole-home rental by individuals) should be answered before M7; if the answer is negative, the home vertical for individuals is switched off by setting, not by code.</li>
+</ul>
+<h3 id="m3-search-availability-and-quotes-3-weeks">M3. Search, availability and quotes (3 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: guests find what is free on their dates, in Arabic, French or English, on a list or a map, and get a server-computed price.</li>
+<li><strong>Scope</strong>: TRP-05, AVL-04, PRC-01, PRC-02, PRC-03, PRC-05, SRC-01, SRC-02, SRC-03, SRC-05, SRC-06.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>Search filters and facet counts match the mock&#39;s behaviour on the demo catalogue (the website&#39;s existing filter tests pass against the API).</li>
+<li>Searching &quot;تيزي وزو&quot;, &quot;Tizi Ouzou&quot; and &quot;tizi-ouzou&quot; returns the same top results (SRC-03, decision T7).</li>
+<li>A quote lists nights, per-day prices, discount, cleaning fee, total in whole dinars, has an ID and expires after 30 minutes.</li>
+<li>First performance run: search p95 measured on 20,000 generated listings (target 500 ms is enforced in M6).</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M2; T7 (Arabic search approach); Q17 (one room type per booking).</li>
+<li><strong><code>lib/data</code> switches</strong>: none new on the website (the <code>listings.ts</code> endpoint gets richer); admin <code>network.ts</code> and <code>command-palette.ts</code> (global search).</li>
+<li><strong>Gates</strong>: none.</li>
+</ul>
+<h3 id="m4-bookings-cancellations-and-the-commission-wallet-5-weeks">M4. Bookings, cancellations and the commission wallet (5 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: the heart of the product: instant and request bookings that can never double-book, cancellations by policy, and the prepaid commission wallet on a double-entry ledger (model M1).</li>
+<li><strong>Scope</strong>: HST-05, AVL-01, AVL-02, AVL-05, BKG-01 to BKG-10, CAN-01 to CAN-04, PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-07, PAY-08, NTF-01, NTF-02.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>Concurrency test on real PostgreSQL: 50 parallel requests for the same home and nights give exactly one booking; for a 3-room hotel room type, exactly 3 (AVL-01, AVL-02).</li>
+<li>Same <code>Idempotency-Key</code> twice returns the same booking (BKG-10).</li>
+<li>Expiry and completion jobs run on schedule, not on read (BKG-03, BKG-04).</li>
+<li>Ledger property test: every transaction sums to zero; the worked examples of <a href="04-business-rules.html">04-business-rules.md</a> section 9 give the exact centimes.</li>
+<li>A finance staff member records a top-up with a receipt; the same receipt is refused a second time; above the threshold a second person must approve (Q15).</li>
+<li>Booking confirmed, declined, expired and cancelled each produce an in-app notification and an email or SMS in the user&#39;s language.</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M3; decisions Q14 (credit floor), Q15 (four-eyes threshold), Q18 (deposit withdrawals), Q20 (host cancellation penalty), Q25 (minimum first deposit), Q26 (reply window for agencies); accountant answers F5, F6, F7 (how deposits and commissions are recorded and receipted); bank or CCP account opened for host top-ups.</li>
+<li><strong><code>lib/data</code> switches</strong> (in this order): website <code>wallet.ts</code>, <code>reservations.ts</code>, <code>notifications.ts</code>; admin <code>ledger.ts</code>, <code>finance.ts</code>, <code>bookings.ts</code>.</li>
+<li><strong>Gates</strong>: if Q18 says hosts may withdraw unused deposit, <strong>L3</strong> must confirm this is not a payment service before the withdrawal flow is switched on (VERIFY WITH A PROFESSIONAL). The rest of M4 does not wait.</li>
+</ul>
+<h3 id="m5-messaging-and-reviews-3-weeks">M5. Messaging and reviews (3 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: guests and hosts talk before and after booking, with contact details masked until confirmation; guests review completed stays; ratings come from real reviews.</li>
+<li><strong>Scope</strong>: REV-01, REV-03, REV-04, REV-05, MSG-01, MSG-02, MSG-03, MSG-04.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>Messages sync by cursor; a phone number or CCP number typed before confirmation is masked for the other side (MSG-04).</li>
+<li>A review is accepted only for a completed booking within 14 days, once (REV-01); listing rating changes after publication.</li>
+<li>The admin can hide and restore a reported review with a reason.</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M4 (completed bookings).</li>
+<li><strong><code>lib/data</code> switches</strong>: website <code>conversations.ts</code>, <code>reviews.ts</code>; admin <code>reviews.ts</code>.</li>
+<li><strong>Gates</strong>: <strong>L1 and L2 must be answered by the end of M5</strong> so the Algerian hosting contract (T1) can be signed and set up during M6. This is the most important date in the plan.</li>
+</ul>
+<h3 id="m6-reports-privacy-and-hardening-3-weeks">M6. Reports, privacy and hardening (3 weeks)</h3>
+<ul>
+<li><strong>Goal</strong>: the admin can run the business (KPIs, exports), users can exercise their data rights, and the system meets its speed and safety targets.</li>
+<li><strong>Scope</strong>: STF-06, RPT-01, RPT-03, PRV-02, PRV-04, PRV-05, NFR-01, NFR-02.</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>Load test: reads p95 under 300 ms and booking create under 600 ms at 50 requests per second on one app node; search p95 under 500 ms with 20,000 listings.</li>
+<li>A user downloads their data as JSON and asks for deletion; the profile is anonymised while bookings and ledger stay (BR-PRV-02).</li>
+<li>Retention job deletes ID images 90 days after a decision (period confirmed by L7).</li>
+<li>Breach runbook written and rehearsed once (5-day ANPDP clock), incident register exists (T5).</li>
+<li>External security review (OWASP API Top 10) with no open high findings.</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M5; L7 (retention periods), L8 (terms and privacy notice texts), L10 (foreign email/SMS providers), L12 (consumer-law checks on the booking flow); Q23 (launch date).</li>
+<li><strong><code>lib/data</code> switches</strong>: admin <code>analytics.ts</code>; the KPIs and exports read real data. All modules of both apps are now on <code>api</code> on staging.</li>
+<li><strong>Gates</strong>: L7, L8, L10, L12 answered. Production hosting (T1) provisioned in Algeria during this milestone.</li>
+</ul>
+<h3 id="m7-production-in-algeria-closed-beta-launch-3-weeks--2-weeks-buffer">M7. Production in Algeria, closed beta, launch (3 weeks + 2 weeks buffer)</h3>
+<ul>
+<li><strong>Goal</strong>: run in production in Algeria with real data, first with invited hosts and guests, then open to the public.</li>
+<li><strong>Scope</strong>: PRV-03, NFR-03, NFR-04 (plus the launch checklist below).</li>
+<li><strong>Exit criteria</strong>:<ul>
+<li>Production and its backups run in Algerian data centres; a restore drill from the second location meets RPO 15 min and RTO 4 h.</li>
+<li>Production builds of both apps have no mock store and no demo passwords (fixes the current leak).</li>
+<li>Closed beta: at least 30 real hosts (mix of the four host types, Q21 wilayas) verified, at least 50 real bookings, no double booking, no ledger mismatch in the daily reconciliation.</li>
+<li>Support channels and on-call rota ready (Q27); status page and uptime monitoring active.</li>
+<li>Legal checklist signed by the lawyer: L1, L2, L4, L5, L9, L11 cleared (VERIFY WITH A PROFESSIONAL).</li>
+</ul>
+</li>
+<li><strong>Dependencies</strong>: M6; Q21 (launch wilayas), Q23 (launch date), Q27 (support).</li>
+<li><strong><code>lib/data</code> switches</strong>: none new; flags and demo stores are removed from production builds.</li>
+<li><strong>Gates</strong>: <strong>no real personal data before L1 and L2 are cleared and production is in Algeria.</strong></li>
+</ul>
+<h3 id="r2-a-online-money-gateway-invoices-taxes-about-6-weeks-after-launch">R2-A. Online money: gateway, invoices, taxes (about 6 weeks, after launch)</h3>
+<ul>
+<li><strong>Goal</strong>: hosts top up online by CIB or Edahabia through Chargily; BLADUS issues monthly commission invoices; quotes show tourist tax and VAT where they apply.</li>
+<li><strong>Scope</strong>: PRC-04, PAY-06, PAY-09, PAY-11.</li>
+<li><strong>Exit criteria</strong>: a test-mode top-up is credited only after a verified webhook, once per event; invoice numbers have no gaps per year; tax lines match the rates in settings.</li>
+<li><strong>Dependencies</strong>: launch; Chargily contract signed (start the paperwork during M6, lead time is long).</li>
+<li><strong><code>lib/data</code> switches</strong>: website <code>wallet.ts</code> gets the top-up call (same flag); admin <code>finance.ts</code> invoices, <code>settings.ts</code> tax rates.</li>
+<li><strong>Gates</strong>: <strong>F1</strong> (VAT rate on commission), <strong>F2</strong> (taxe de séjour), <strong>F3</strong> (gateway contract and amount units), <strong>F4</strong> (invoice numbering and retention). VERIFY WITH A PROFESSIONAL.</li>
+</ul>
+<h3 id="r2-b-trust-and-growth-about-8-weeks-in-parallel-with-r2-a">R2-B. Trust and growth (about 8 weeks, in parallel with R2-A)</h3>
+<ul>
+<li><strong>Goal</strong>: disputes, host reviews of guests, risk flags, bulk moderation, coupons, featured listings, attachments, notification preferences, onboarding field editor, departure cancellation, foreign guest fields.</li>
+<li><strong>Scope</strong>: LST-09, TRP-06, BKG-11, REV-02, MSG-05, MSG-06, NTF-03, MOD-04, MOD-05, MOD-07, CFG-03, PRM-01, PRM-02, RPT-02, PRV-06.</li>
+<li><strong>Exit criteria</strong>: each requirement&#39;s acceptance sentence passes on staging; no MVP regression (full test suite green).</li>
+<li><strong>Dependencies</strong>: launch; one backend developer each for R2-A and R2-B.</li>
+<li><strong><code>lib/data</code> switches</strong>: admin <code>promotions.ts</code> (last mocked admin module); admin messages pages get a new <code>lib/data</code> module (none exists today).</li>
+<li><strong>Gates</strong>: L6 (foreign guest declaration) before PRV-06.</li>
+</ul>
+<h3 id="later-behind-a-legal-or-business-gate-not-scheduled">LATER. Behind a legal or business gate (not scheduled)</h3>
+<ul>
+<li><strong>Scope</strong>: PAY-10 (guest payments, escrow, host payouts: money models M2 to M4), AVL-06 (iCal sync).</li>
+<li><strong>Gate for PAY-10</strong>: <strong>L3</strong> (is it a payment service under Règlement 25-02?) and either a PSP licence (160 million DA minimum capital, <a href="02-research.html">02-research.md</a> C.1) or a licensed partner bank. VERIFY WITH A PROFESSIONAL. The ledger accounts already exist (BR-PAY-11); the work is mostly integration, reconciliation and payouts (estimate 8 to 12 weeks once the gate opens).</li>
+<li><strong>AVL-06</strong>: needs a new table and SSRF-safe fetching; schedule when hosts ask for channel managers.</li>
+</ul>
+<hr>
+<h2 id="5-gantt-chart">5. Gantt chart</h2>
+<figure class="mermaid"><img src="assets/mermaid-3.svg" alt="Diagram"></figure><p>The LATER bar is a placeholder only: nothing starts until the L3 gate opens.</p>
+<hr>
+<h2 id="6-gates-by-milestone-summary">6. Gates by milestone (summary)</h2>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Question (short)</th>
+<th>Blocks</th>
+<th>Why there</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q22</td>
+<td>Can foreign phone numbers verify?</td>
+<td>M0</td>
+<td>Sign-up rules</td>
+</tr>
+<tr>
+<td>L4 (draft)</td>
+<td>KYC documents per host type</td>
+<td>M1 (soft), M7 (hard)</td>
+<td>Document types are data; final list before real hosts</td>
+</tr>
+<tr>
+<td>Q16, Q19, Q24, Q28</td>
+<td>Hostel vertical, minimum photos, moderation staffing, verticals at launch</td>
+<td>M2</td>
+<td>Catalogue rules</td>
+</tr>
+<tr>
+<td>Q17</td>
+<td>One room type per booking</td>
+<td>M3</td>
+<td>Quote shape</td>
+</tr>
+<tr>
+<td>Q14, Q15, Q18, Q20, Q25, Q26</td>
+<td>Credit floor, four-eyes threshold, deposit withdrawal, host cancel penalty, first deposit, agency reply window</td>
+<td>M4</td>
+<td>Wallet and booking rules</td>
+</tr>
+<tr>
+<td>F5, F6, F7</td>
+<td>Receipts or invoices for deposits, accounting of deposits, collection account</td>
+<td>M4</td>
+<td>Before real top-ups in M7</td>
+</tr>
+<tr>
+<td>L3 (narrow)</td>
+<td>Are deposit withdrawals a payment service?</td>
+<td>M4 (withdrawal flow only)</td>
+<td>Q18</td>
+</tr>
+<tr>
+<td><strong>L1, L2</strong></td>
+<td>Hosting in Algeria, data transfer abroad</td>
+<td><strong>End of M5</strong></td>
+<td>Hosting contract lead time</td>
+</tr>
+<tr>
+<td>L7, L8, L10, L12</td>
+<td>Retention, terms text, foreign providers, consumer law</td>
+<td>M6</td>
+<td>Privacy jobs, consent versions</td>
+</tr>
+<tr>
+<td><strong>L4, L5, L9, L11</strong></td>
+<td>KYC, whole-home rental, agency licence for BLADUS, company formalities</td>
+<td><strong>M7</strong></td>
+<td>Before real hosts</td>
+</tr>
+<tr>
+<td>Q21, Q23, Q27</td>
+<td>Launch wilayas, launch date, support</td>
+<td>M7</td>
+<td>Beta and launch</td>
+</tr>
+<tr>
+<td><strong>F1 to F4</strong></td>
+<td>VAT, tourist tax, gateway contract, invoices</td>
+<td><strong>R2-A</strong></td>
+<td>Online money</td>
+</tr>
+<tr>
+<td>L6</td>
+<td>Foreign guest declaration</td>
+<td>R2-B</td>
+<td>PRV-06</td>
+</tr>
+<tr>
+<td><strong>L3 + licence</strong></td>
+<td>Collecting guest money</td>
+<td><strong>LATER</strong></td>
+<td>Models M2 to M4</td>
+</tr>
+</tbody></table>
+<p>All legal and tax gates: VERIFY WITH A PROFESSIONAL.</p>
+<h2 id="7-what-can-make-this-plan-slip">7. What can make this plan slip</h2>
+<p>The top schedule risks (full register in <a href="12-risks.html">12-risks.md</a>): late legal answers (K-23), the Algerian hosting set-up (K-18), the mock-to-API switch breaking pages (K-13), the half-time frontend developer becoming the bottleneck (K-20), scope creep from R2 into the MVP (K-21), and the baccalaureate exam period around the launch (K-17). The 2-week buffer covers one of these, not all.</p>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Which milestone is the first where a guest can actually book, and which two milestones must be done before it?</li>
+<li><input disabled="" type="checkbox"> Why is the end of M5 the most important legal date in the plan?</li>
+<li><input disabled="" type="checkbox"> What does &quot;one module at a time behind a flag&quot; mean, and how do we roll back a module that breaks?</li>
+<li><input disabled="" type="checkbox"> Why does the website&#39;s <code>listings.ts</code> switch in M2 even though full search arrives in M3?</li>
+<li><input disabled="" type="checkbox"> Which accountant answers block online top-ups, and in which milestone?</li>
+<li><input disabled="" type="checkbox"> Can staging contain real people&#39;s data? Why not?</li>
+<li><input disabled="" type="checkbox"> What has to be true before PAY-10 (guest payments and payouts) can even be scheduled?</li>
+<li><input disabled="" type="checkbox"> If you had only one backend developer, roughly how long would the MVP take?</li>
+</ul>
+<div class="pager"><span><a href="10-testing-quality.html">&larr; 10. Testing and quality</a></span><span><a href="12-risks.html">12. Risks: what could go wrong, and what we do about it &rarr;</a></span></div></main></div></body></html>

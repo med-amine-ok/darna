@@ -23,7 +23,7 @@ How to re-render: `python ../_tools/build_schema_docs.py` (ERD sources), then `p
 |---|---|
 | [01-system-context](rendered/01-system-context.svg) | Who uses BLADUS and which outside services it talks to. Guests and hosts use the website, staff use the admin app; both call one Django API. The payment gateway is dotted because online payment comes in release R2. |
 | [02-containers](rendered/02-containers.svg) | What runs where. Everything holding personal data runs in Algerian data centres (research C.3, to be confirmed by a lawyer). The Next.js servers keep the login cookie and call Django on the browser's behalf (BFF). Workers send messages and run timed jobs. |
-| [03-django-apps](rendered/03-django-apps.svg) | The backend is one application split into apps with one direction of calls. Example: bookings may call pricing and the ledger, never the reverse. Dotted arrows are events sent through the outbox. |
+| [03-django-apps](rendered/03-django-apps.svg) | The backend is one application split into 17 apps plus a small `core`, arranged in layers. An app may only use apps in lower layers (checked automatically by import-linter); for example bookings may use pricing and the ledger, never the reverse. Events (emails, search refresh) go through the outbox instead of direct calls. Details in 07-architecture.md. |
 | [30-money-flow](rendered/30-money-flow.svg) | Where money goes. At launch (M1) the guest pays the host, the host keeps a deposit at BLADUS, and BLADUS takes its commission from that deposit. M4 (BLADUS collects and pays out) is drawn for later and needs a licence. |
 | [40-document-map](rendered/40-document-map.svg) | How the blueprint documents feed each other, from inventory to tests. |
 
@@ -44,6 +44,7 @@ How to re-render: `python ../_tools/build_schema_docs.py` (ERD sources), then `p
 | [21-seq-request-to-book](rendered/21-seq-request-to-book.svg) | A request: the host accepts, declines, or a timed job expires it after 24 hours. Dates stay blocked while it waits. |
 | [22-seq-wallet-topup](rendered/22-seq-wallet-topup.svg) | A host tops up the commission deposit by transfer; finance records it with the receipt reference; large amounts need a second person. |
 | [23-seq-host-onboarding](rendered/23-seq-host-onboarding.svg) | Becoming a host: the steps come from the published configuration, the draft is saved on the server, documents go to private storage, staff verify. |
+| [25-seq-hotel-sync](rendered/25-seq-hotel-sync.svg) | Connecting a hotel's own system: the access key is tested and stored encrypted, rooms, prices, availability and services are imported, then refreshed every 15 minutes. |
 | [24-seq-message-sync](rendered/24-seq-message-sync.svg) | Messages are fetched with a cursor so polling is cheap; phone numbers are masked until a booking is confirmed (anti-fraud). |
 
 ## Database (ERDs, generated)

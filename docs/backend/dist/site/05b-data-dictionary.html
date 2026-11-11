@@ -1,0 +1,7661 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>05b. Data dictionary · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="on" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 5: database</div><h1 id="05b-data-dictionary">05b. Data dictionary</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Every table and every column of the planned database, with what it means.<br>It is generated from <a href="files/schema.dbml">schema.dbml</a>, so it is always identical to the schema.<br>&quot;Key&quot; says if a column is the row&#39;s identity (PK), a link to another table (FK) or must be unique (UQ).<br>Money columns end in <code>_minor</code> (centimes). Rates end in <code>_bp</code> (basis points: 1,200 = 12%).<br>Read <a href="05-database-schema.html">05-database-schema.md</a> first for the design and the reasons behind it.</p>
+</blockquote>
+<p>Generated by <code>python _tools/build_schema_docs.py</code>. 77 tables, 808 columns, 35 enumerations, 156 foreign keys.</p>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><strong>Accounts</strong>: <a href="#user">user</a>, <a href="#staff-profile">staff_profile</a>, <a href="#staff-permission">staff_permission</a>, <a href="#staff-role-permission">staff_role_permission</a>, <a href="#consent-record">consent_record</a>, <a href="#favorite">favorite</a></li>
+<li><strong>Geography</strong>: <a href="#wilaya">wilaya</a>, <a href="#daira">daira</a>, <a href="#commune">commune</a></li>
+<li><strong>Host Accounts And Organisations</strong>: <a href="#host-account">host_account</a>, <a href="#organization">organization</a>, <a href="#membership">membership</a>, <a href="#invitation">invitation</a>, <a href="#host-document">host_document</a>, <a href="#payout-account">payout_account</a></li>
+<li><strong>Taxonomy</strong>: <a href="#category">category</a>, <a href="#property-type">property_type</a>, <a href="#amenity">amenity</a>, <a href="#cancellation-policy">cancellation_policy</a></li>
+<li><strong>Catalogue: Listings And Room Types</strong>: <a href="#listing">listing</a>, <a href="#listing-revision">listing_revision</a>, <a href="#vehicle-detail">vehicle_detail</a>, <a href="#experience-detail">experience_detail</a>, <a href="#room-type">room_type</a>, <a href="#listing-amenity">listing_amenity</a>, <a href="#room-type-amenity">room_type_amenity</a>, <a href="#listing-photo">listing_photo</a>, <a href="#featured-placement">featured_placement</a></li>
+<li><strong>Inventory And Calendar</strong>: <a href="#listing-day">listing_day</a>, <a href="#room-type-night">room_type_night</a>, <a href="#experience-slot">experience_slot</a></li>
+<li><strong>Trips (Agency Only)</strong>: <a href="#trip">trip</a>, <a href="#trip-itinerary-day">trip_itinerary_day</a>, <a href="#trip-departure">trip_departure</a></li>
+<li><strong>Pricing</strong>: <a href="#quote">quote</a>, <a href="#tax-rate">tax_rate</a></li>
+<li><strong>Bookings</strong>: <a href="#booking">booking</a>, <a href="#booking-event">booking_event</a>, <a href="#refund">refund</a>, <a href="#dispute">dispute</a></li>
+<li><strong>Money: Ledger, Wallet, Dormant Payments</strong>: <a href="#ledger-account">ledger_account</a>, <a href="#ledger-transaction">ledger_transaction</a>, <a href="#ledger-entry">ledger_entry</a>, <a href="#account-balance">account_balance</a>, <a href="#wallet-topup">wallet_topup</a>, <a href="#gateway-event">gateway_event</a>, <a href="#payment">payment</a>, <a href="#payout">payout</a>, <a href="#invoice">invoice</a></li>
+<li><strong>Reviews</strong>: <a href="#review">review</a>, <a href="#review-reply">review_reply</a>, <a href="#review-report">review_report</a></li>
+<li><strong>Messaging And Notifications</strong>: <a href="#conversation">conversation</a>, <a href="#conversation-participant">conversation_participant</a>, <a href="#message">message</a>, <a href="#notification">notification</a>, <a href="#notification-preference">notification_preference</a>, <a href="#outbox-event">outbox_event</a>, <a href="#delivery-log">delivery_log</a></li>
+<li><strong>Media</strong>: <a href="#media-asset">media_asset</a></li>
+<li><strong>Moderation, Config, Audit, Privacy, System</strong>: <a href="#reason-code">reason_code</a>, <a href="#moderation-case">moderation_case</a>, <a href="#moderation-decision">moderation_decision</a>, <a href="#change-request-item">change_request_item</a>, <a href="#platform-settings">platform_settings</a>, <a href="#onboarding-flow-version">onboarding_flow_version</a>, <a href="#onboarding-draft">onboarding_draft</a>, <a href="#coupon">coupon</a>, <a href="#coupon-redemption">coupon_redemption</a>, <a href="#audit-event">audit_event</a>, <a href="#export-job">export_job</a>, <a href="#data-subject-request">data_subject_request</a>, <a href="#idempotency-record">idempotency_record</a>, <a href="#incident-record">incident_record</a>, <a href="#calendar-feed">calendar_feed</a>, <a href="#otp-send-log">otp_send_log</a>, <a href="#listing-search-doc">listing_search_doc</a></li>
+<li><a href="#enumerations">Enumerations</a></li>
+</ul>
+<h2 id="accounts">Accounts</h2>
+<h3 id="user">user</h3>
+<p>Every person: guest, host, organisation member, staff. Constraints: unique lower(email), unique phone_e164, check (email is not null or phone_e164 is not null). Auth tables (emails, MFA authenticators, sessions) come from django-allauth and are not repeated here.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>varchar(254)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Login email. Unique on lower(email) when not null.</td>
+</tr>
+<tr>
+<td><code>email_verified_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>phone_e164</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>E.164 phone, Algerian mobiles match ^+213[5-7][0-9]{8}$. Unique when not null.</td>
+</tr>
+<tr>
+<td><code>phone_verified_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Required before the first booking (DEC-012).</td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Django password hash (argon2). Empty for phone-only accounts.</td>
+</tr>
+<tr>
+<td><code>first_name_latin</code></td>
+<td>varchar(80)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>last_name_latin</code></td>
+<td>varchar(80)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>full_name_ar</code></td>
+<td>varchar(160)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Name in Arabic script, stored separately from the Latin form.</td>
+</tr>
+<tr>
+<td><code>avatar_media_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Link to the media_asset row (many to one).</td>
+</tr>
+<tr>
+<td><code>bio</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Short public introduction (max 500 characters).</td>
+</tr>
+<tr>
+<td><code>spoken_languages</code></td>
+<td>varchar(2)[]</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Languages the person speaks, ISO 639-1 codes, shown on host profiles.</td>
+</tr>
+<tr>
+<td><code>home_commune_id</code></td>
+<td>int</td>
+<td>no</td>
+<td>FK <a href="#commune">commune</a></td>
+<td></td>
+<td>Where the person lives (optional, private).</td>
+</tr>
+<tr>
+<td><code>address_line</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Private postal address (optional); never shown publicly.</td>
+</tr>
+<tr>
+<td><code>preferred_locale</code></td>
+<td>varchar(2)</td>
+<td>yes</td>
+<td></td>
+<td>fr</td>
+<td>en, fr or ar.</td>
+</tr>
+<tr>
+<td><code>nationality_iso2</code></td>
+<td>char(2)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Only when legally needed (foreign guest declaration, VERIFY).</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-user-status">user_status</a></td>
+<td>yes</td>
+<td></td>
+<td>active</td>
+<td>One of the user_status values.</td>
+</tr>
+<tr>
+<td><code>is_staff</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: is staff.</td>
+</tr>
+<tr>
+<td><code>date_joined</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>last_login_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete.</td>
+</tr>
+<tr>
+<td><code>anonymised_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Set when personal data was erased after a deletion request (BR-PRV-02).</td>
+</tr>
+</tbody></table>
+<h3 id="staff_profile">staff_profile</h3>
+<p>Staff-only data. Permission checks read staff_role_permission for role. MFA must be enrolled before status can be active (BR-ACC-04).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (one to one).</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td><a href="#enum-staff-role-code">staff_role_code</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the staff_role_code values.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-staff-status">staff_status</a></td>
+<td>yes</td>
+<td></td>
+<td>invited</td>
+<td>One of the staff_status values.</td>
+</tr>
+<tr>
+<td><code>invited_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>invited_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>activated_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>deactivated_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="staff_permission">staff_permission</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>code</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>e.g. hosts.approve, bookings.refund (34 codes today).</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="staff_role_permission">staff_role_permission</h3>
+<p>Role to permission matrix (Appendix B section 1.1), editable data rather than code.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>role</code></td>
+<td><a href="#enum-staff-role-code">staff_role_code</a></td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>One of the staff_role_code values.</td>
+</tr>
+<tr>
+<td><code>permission_code</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td>PK FK <a href="#staff-permission">staff_permission</a></td>
+<td></td>
+<td>Link to the staff_permission row (many to one).</td>
+</tr>
+</tbody></table>
+<h3 id="consent_record">consent_record</h3>
+<p>Append-only history of consents (BR-PRV-01). Latest row per (user, document) is current.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>document</code></td>
+<td>varchar(32)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>terms, privacy, marketing.</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>varchar(32)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>accepted</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: accepted.</td>
+</tr>
+<tr>
+<td><code>ip</code></td>
+<td>inet</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>user_agent</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="favorite">favorite</h3>
+<p>Check exactly one of listing_id, trip_id. Unique (user_id, listing_id) and (user_id, trip_id).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h2 id="geography">Geography</h2>
+<h3 id="wilaya">wilaya</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>code</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Official code 1 to 69 (codes 59 to 69 to confirm with the JO and ONS).</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>name_en</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>legacy_code_58</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Code of the parent wilaya in the 58-wilaya system, for old data.</td>
+</tr>
+<tr>
+<td><code>region</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>north, high_plateaus, south.</td>
+</tr>
+<tr>
+<td><code>boundary</code></td>
+<td>geometry(MultiPolygon,4326)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>centroid</code></td>
+<td>geography(Point,4326)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Dataset name and commit, e.g. el-amin-dev@sha.</td>
+</tr>
+<tr>
+<td><code>valid_from</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>2026-04-05 for Loi 26-06 wilayas.</td>
+</tr>
+</tbody></table>
+<h3 id="daira">daira</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>int</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>wilaya_code</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td>FK <a href="#wilaya">wilaya</a></td>
+<td></td>
+<td>Link to the wilaya row (many to one).</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+</tbody></table>
+<h3 id="commune">commune</h3>
+<p>1,541 rows. GIN trigram index on unaccent(name_fr) and name_ar for autocomplete.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>int</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Official commune code.</td>
+</tr>
+<tr>
+<td><code>wilaya_code</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td>FK <a href="#wilaya">wilaya</a></td>
+<td></td>
+<td>Link to the wilaya row (many to one).</td>
+</tr>
+<tr>
+<td><code>daira_id</code></td>
+<td>int</td>
+<td>no</td>
+<td>FK <a href="#daira">daira</a></td>
+<td></td>
+<td>Link to the daira row (many to one).</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(100)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(100)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>name_en</code></td>
+<td>varchar(100)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>postal_code</code></td>
+<td>varchar(5)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>centroid</code></td>
+<td>geography(Point,4326)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>valid_from</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="host-accounts-and-organisations">Host Accounts And Organisations</h2>
+<h3 id="host_account">host_account</h3>
+<p>The single thing that hosts: either one user (individual) or one organisation. Owns listings, trips, wallet and commission (resolves disagreement D-1). The active host account of a request comes from the session and is re-checked against membership on every call (workspace switcher, ORG-02). Check: (kind = individual and user_id not null and organization_id is null) or (kind = organization and organization_id not null and user_id is null).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><a href="#enum-host-account-kind">host_account_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the host_account_kind values.</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a> UQ</td>
+<td></td>
+<td>Set when kind = individual.</td>
+</tr>
+<tr>
+<td><code>organization_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#organization">organization</a> UQ</td>
+<td></td>
+<td>Set when kind = organization.</td>
+</tr>
+<tr>
+<td><code>verification_status</code></td>
+<td><a href="#enum-verification-status">verification_status</a></td>
+<td>yes</td>
+<td></td>
+<td>applied</td>
+<td>One of the verification_status values.</td>
+</tr>
+<tr>
+<td><code>status_before_delete</code></td>
+<td><a href="#enum-verification-status">verification_status</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the verification_status values.</td>
+</tr>
+<tr>
+<td><code>default_approval_mode</code></td>
+<td><a href="#enum-approval-mode">approval_mode</a></td>
+<td>yes</td>
+<td></td>
+<td>request</td>
+<td>Default for new listings (BR-BKG-02).</td>
+</tr>
+<tr>
+<td><code>commission_rate_override_bp</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Null = use host-type default from settings. 0 to 10000.</td>
+</tr>
+<tr>
+<td><code>credit_limit_override_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Null = settings default for the host type (BR-PAY-10).</td>
+</tr>
+<tr>
+<td><code>host_cancellations_12m</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Cache recomputed by job.</td>
+</tr>
+<tr>
+<td><code>rating_avg</code></td>
+<td>numeric(3,2)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Cache from published reviews (BR-REV-04).</td>
+</tr>
+<tr>
+<td><code>review_count</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Last submission for review; drives queue waiting time.</td>
+</tr>
+<tr>
+<td><code>approved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h3 id="organization">organization</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>business_category</code></td>
+<td><a href="#enum-business-category">business_category</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Never changes after creation (BR-ORG-02).</td>
+</tr>
+<tr>
+<td><code>display_name</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>legal_name</code></td>
+<td>varchar(160)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>varchar(140)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>source_language</code></td>
+<td>varchar(2)</td>
+<td>yes</td>
+<td></td>
+<td>fr</td>
+<td></td>
+</tr>
+<tr>
+<td><code>logo_media_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Link to the media_asset row (many to one).</td>
+</tr>
+<tr>
+<td><code>cover_media_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Link to the media_asset row (many to one).</td>
+</tr>
+<tr>
+<td><code>business_email</code></td>
+<td>varchar(254)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>business_phone_e164</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>commune_id</code></td>
+<td>int</td>
+<td>no</td>
+<td>FK <a href="#commune">commune</a></td>
+<td></td>
+<td>Link to the commune row (many to one).</td>
+</tr>
+<tr>
+<td><code>address_line</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rc_number</code></td>
+<td>varchar(32)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Registre du commerce. Legal field (BR-ORG-06).</td>
+</tr>
+<tr>
+<td><code>nif</code></td>
+<td>varchar(20)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Tax id. Legal field.</td>
+</tr>
+<tr>
+<td><code>nis</code></td>
+<td>varchar(20)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Statistical id. Legal field.</td>
+</tr>
+<tr>
+<td><code>article_imposition</code></td>
+<td>varchar(20)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tourism_licence_number</code></td>
+<td>varchar(40)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Agencies. Legal field.</td>
+</tr>
+<tr>
+<td><code>star_rating</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Hotels 1 to 5; drives tourist tax.</td>
+</tr>
+<tr>
+<td><code>check_in_time</code></td>
+<td>time</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>check_out_time</code></td>
+<td>time</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>policies</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Hostel age limits, curfew, other house policies.</td>
+</tr>
+<tr>
+<td><code>team_size_range</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h3 id="membership">membership</h3>
+<p>Unique (organization_id, user_id) where is_active. Partial unique (organization_id) where role = owner and is_active: exactly one owner (BR-ORG-04).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>organization_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#organization">organization</a></td>
+<td></td>
+<td>Link to the organization row (many to one).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td><a href="#enum-membership-role">membership_role</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the membership_role values.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+<tr>
+<td><code>joined_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>removed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="invitation">invitation</h3>
+<p>Check email or phone present. Partial unique (organization_id, lower(email)) where status = pending.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>organization_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#organization">organization</a></td>
+<td></td>
+<td>Link to the organization row (many to one).</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>varchar(254)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>phone_e164</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td><a href="#enum-membership-role">membership_role</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Cannot be owner.</td>
+</tr>
+<tr>
+<td><code>token_hash</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td>SHA-256 of the one-time token; the token itself is only sent.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-invitation-status">invitation_status</a></td>
+<td>yes</td>
+<td></td>
+<td>pending</td>
+<td>One of the invitation_status values.</td>
+</tr>
+<tr>
+<td><code>invited_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>expires_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Created + 7 days.</td>
+</tr>
+<tr>
+<td><code>accepted_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>accepted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="host_document">host_document</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>For per-vehicle or per-property documents.</td>
+</tr>
+<tr>
+<td><code>doc_type</code></td>
+<td><a href="#enum-document-type">document_type</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the document_type values.</td>
+</tr>
+<tr>
+<td><code>media_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Private bucket only.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-document-status">document_status</a></td>
+<td>yes</td>
+<td></td>
+<td>pending</td>
+<td>One of the document_status values.</td>
+</tr>
+<tr>
+<td><code>number_hash</code></td>
+<td>char(64)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>HMAC of the document number, kept after the image is deleted (BR-PRV-05).</td>
+</tr>
+<tr>
+<td><code>expires_on</code></td>
+<td>date</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>reviewed_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>reviewed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>rejection_reason_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h3 id="payout_account">payout_account</h3>
+<p>Used for refunds of deposit and, later, payouts (M4).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ccp_rip, bank_rib, baridimob.</td>
+</tr>
+<tr>
+<td><code>holder_name</code></td>
+<td>varchar(160)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>number_encrypted</code></td>
+<td>bytea</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Encrypted with a key outside the database.</td>
+</tr>
+<tr>
+<td><code>number_last4</code></td>
+<td>char(4)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>is_default</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: is default.</td>
+</tr>
+<tr>
+<td><code>hold_until</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Changes block payouts for 72 h (BR-PAY-09).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h2 id="taxonomy">Taxonomy</h2>
+<h3 id="category">category</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>vertical</code></td>
+<td><a href="#enum-vertical">vertical</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the vertical values.</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>name_en</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>varchar(40)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sort_order</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Display order, smallest first.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(vertical, slug) [unique]</code></p>
+<h3 id="property_type">property_type</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>vertical</code></td>
+<td><a href="#enum-vertical">vertical</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the vertical values.</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>name_en</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(vertical, slug) [unique]</code></p>
+<h3 id="amenity">amenity</h3>
+<p>One vocabulary replacing the three in the apps today.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>group_code</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>essentials, features, location, safety.</td>
+</tr>
+<tr>
+<td><code>name_en</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>varchar(40)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>applies_to</code></td>
+<td>vertical[]</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Which verticals may use it.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+</tbody></table>
+<h3 id="cancellation_policy">cancellation_policy</h3>
+<p>Partial unique (code) where is_current. Bookings copy the windows (snapshot).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>flexible, moderate, strict (DEC-011).</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>name_en</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>name_fr</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>name_ar</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>windows</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Ordered [{min_days_before, refund_bp}], see BR-CAN-01.</td>
+</tr>
+<tr>
+<td><code>is_current</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: is current.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(code, version) [unique]</code></p>
+<h2 id="catalogue-listings-and-room-types">Catalogue: Listings And Room Types</h2>
+<h3 id="listing">listing</h3>
+<p>Checks: capacity_guests &gt; 0; base_price_minor &gt; 0; min_nights &lt;= max_nights; discount bp between 0 and 9000; inventory_kind matches vertical (home/vehicle single, hotel/hostel room_pool, experience slot); (vertical = experience) = (experience_type is not null). Host offer rule (DEC-014, BR-HST-05): individual host accounts publish home and vehicle, agencies experience, hotels and hostels hotel/hostel; enforced by service and a trigger that reads host_account.kind and organization.business_category.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>reference</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td>Human id, e.g. LST-7K2M9Q.</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>vertical</code></td>
+<td><a href="#enum-vertical">vertical</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the vertical values.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-listing-status">listing_status</a></td>
+<td>yes</td>
+<td></td>
+<td>draft</td>
+<td>One of the listing_status values.</td>
+</tr>
+<tr>
+<td><code>status_before_delete</code></td>
+<td><a href="#enum-listing-status">listing_status</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the listing_status values.</td>
+</tr>
+<tr>
+<td><code>inventory_kind</code></td>
+<td><a href="#enum-inventory-kind">inventory_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>single (home, vehicle), room_pool (hotel, hostel), slot (experience).</td>
+</tr>
+<tr>
+<td><code>experience_type</code></td>
+<td><a href="#enum-experience-type">experience_type</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Required when vertical = experience, null otherwise (DEC-015, BR-LST-05).</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>source_language</code></td>
+<td>varchar(2)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>category_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#category">category</a></td>
+<td></td>
+<td>Link to the category row (many to one).</td>
+</tr>
+<tr>
+<td><code>property_type_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#property-type">property_type</a></td>
+<td></td>
+<td>Link to the property_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>commune_id</code></td>
+<td>int</td>
+<td>yes</td>
+<td>FK <a href="#commune">commune</a></td>
+<td></td>
+<td>Link to the commune row (many to one).</td>
+</tr>
+<tr>
+<td><code>address_line</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Private until a booking is confirmed (BR-SRC-03).</td>
+</tr>
+<tr>
+<td><code>location_exact</code></td>
+<td>geography(Point,4326)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>location_public</code></td>
+<td>geography(Point,4326)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Offset up to 500 m, fixed.</td>
+</tr>
+<tr>
+<td><code>capacity_guests</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>bedrooms</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>beds</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>bathrooms</code></td>
+<td>numeric(3,1)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>surface_m2</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td>DZD</td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>base_price_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Per night (stays), per day (vehicles), per person (experiences).</td>
+</tr>
+<tr>
+<td><code>cleaning_fee_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>weekly_discount_bp</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>monthly_discount_bp</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>min_nights</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td><code>max_nights</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>90</td>
+<td></td>
+</tr>
+<tr>
+<td><code>advance_notice_days</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>available_from</code></td>
+<td>date</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>available_until</code></td>
+<td>date</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>check_in_time</code></td>
+<td>time</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>check_out_time</code></td>
+<td>time</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>approval_mode</code></td>
+<td><a href="#enum-approval-mode">approval_mode</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Null = inherit from host account (BR-BKG-02).</td>
+</tr>
+<tr>
+<td><code>cancellation_policy_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#cancellation-policy">cancellation_policy</a></td>
+<td></td>
+<td>Link to the cancellation_policy row (many to one).</td>
+</tr>
+<tr>
+<td><code>house_rules</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>List of rule codes plus free text.</td>
+</tr>
+<tr>
+<td><code>rating_avg</code></td>
+<td>numeric(3,2)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (avg).</td>
+</tr>
+<tr>
+<td><code>review_count</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>published_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h3 id="listing_revision">listing_revision</h3>
+<p>Partial unique (listing_id) where status = pending_review.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Proposed values of reviewed fields (BR-LST-02).</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>pending_review, approved, rejected, superseded.</td>
+</tr>
+<tr>
+<td><code>submitted_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>decided_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>decided_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="vehicle_detail">vehicle_detail</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (one to one).</td>
+</tr>
+<tr>
+<td><code>make</code></td>
+<td>varchar(40)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>year</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>seats</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>transmission</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>manual, automatic.</td>
+</tr>
+<tr>
+<td><code>fuel</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>daily_km_limit</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>driver_min_age</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>25</td>
+<td></td>
+</tr>
+<tr>
+<td><code>licence_min_years</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td><code>security_deposit_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+</tbody></table>
+<h3 id="experience_detail">experience_detail</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (one to one).</td>
+</tr>
+<tr>
+<td><code>duration_minutes</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>languages</code></td>
+<td>varchar(2)[]</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>meeting_point</code></td>
+<td>geography(Point,4326)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>meeting_point_text</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>max_group</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>includes</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="room_type">room_type</h3>
+<p>Checks: unit_count &gt; 0, capacity_per_unit &gt; 0, base_price_minor &gt; 0.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>booking_unit</code></td>
+<td><a href="#enum-booking-unit">booking_unit</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>room or bed (hostel dorms).</td>
+</tr>
+<tr>
+<td><code>unit_count</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Physical rooms or beds of this type (inventory total).</td>
+</tr>
+<tr>
+<td><code>capacity_per_unit</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>base_price_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>beds_description</code></td>
+<td>varchar(120)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sort_order</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Display order, smallest first.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h3 id="listing_amenity">listing_amenity</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>amenity_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#amenity">amenity</a></td>
+<td></td>
+<td>Link to the amenity row (many to one).</td>
+</tr>
+</tbody></table>
+<h3 id="room_type_amenity">room_type_amenity</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>amenity_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#amenity">amenity</a></td>
+<td></td>
+<td>Link to the amenity row (many to one).</td>
+</tr>
+</tbody></table>
+<h3 id="listing_photo">listing_photo</h3>
+<p>Check exactly one of listing_id, trip_id (room photos also carry listing_id). Partial unique cover per listing and per trip.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>media_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Link to the media_asset row (many to one).</td>
+</tr>
+<tr>
+<td><code>sort_order</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Display order, smallest first.</td>
+</tr>
+<tr>
+<td><code>caption</code></td>
+<td>varchar(160)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>is_cover</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: is cover.</td>
+</tr>
+</tbody></table>
+<h3 id="featured_placement">featured_placement</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>placement</code></td>
+<td>varchar(24)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>home_weekend, home_hero, search_top.</td>
+</tr>
+<tr>
+<td><code>position</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Display order, smallest first.</td>
+</tr>
+<tr>
+<td><code>starts_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>ends_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h2 id="inventory-and-calendar">Inventory And Calendar</h2>
+<h3 id="listing_day">listing_day</h3>
+<p>Host calendar for single-unit listings (homes, vehicles). Only rows that differ from defaults are stored.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>day</code></td>
+<td>date</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>is_blocked</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: is blocked.</td>
+</tr>
+<tr>
+<td><code>price_override_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>varchar(120)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="room_type_night">room_type_night</h3>
+<p>Pooled inventory (BR-AVL-02). Check: held &gt;= 0 and booked &gt;= 0 and held + booked &lt;= total. Rows created 18 months ahead by job.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>night</code></td>
+<td>date</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>total</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Units sellable that night (unit_count minus host blocks).</td>
+</tr>
+<tr>
+<td><code>held</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>booked</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>price_override_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+</tbody></table>
+<h3 id="experience_slot">experience_slot</h3>
+<p>Check: seats_held + seats_booked &lt;= seats_total, all &gt;= 0.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>starts_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>ends_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>seats_total</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Seat counter (total).</td>
+</tr>
+<tr>
+<td><code>seats_held</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Seat counter (held).</td>
+</tr>
+<tr>
+<td><code>seats_booked</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Seat counter (booked).</td>
+</tr>
+<tr>
+<td><code>price_override_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>is_cancelled</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: is cancelled.</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(listing_id, starts_at) [unique]</code></p>
+<h2 id="trips-agency-only">Trips (Agency Only)</h2>
+<h3 id="trip">trip</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>reference</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>varchar(160)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td>Public URL name, e.g. 5-day-grand-tassili (the website links trips by slug).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Must be an approved agency (BR-TRP-01).</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-listing-status">listing_status</a></td>
+<td>yes</td>
+<td></td>
+<td>draft</td>
+<td>One of the listing_status values.</td>
+</tr>
+<tr>
+<td><code>status_before_delete</code></td>
+<td><a href="#enum-listing-status">listing_status</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the listing_status values.</td>
+</tr>
+<tr>
+<td><code>trip_type</code></td>
+<td><a href="#enum-trip-type">trip_type</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>DEC-015.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>varchar(140)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>source_language</code></td>
+<td>varchar(2)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>duration_days</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>group_min</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td><code>group_max</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td>DZD</td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>price_per_person_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>inclusions</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>exclusions</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>start_commune_id</code></td>
+<td>int</td>
+<td>yes</td>
+<td>FK <a href="#commune">commune</a></td>
+<td></td>
+<td>Link to the commune row (many to one).</td>
+</tr>
+<tr>
+<td><code>meeting_point</code></td>
+<td>geography(Point,4326)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>meeting_point_text</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>cancellation_policy_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#cancellation-policy">cancellation_policy</a></td>
+<td></td>
+<td>Link to the cancellation_policy row (many to one).</td>
+</tr>
+<tr>
+<td><code>approval_mode</code></td>
+<td><a href="#enum-approval-mode">approval_mode</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the approval_mode values.</td>
+</tr>
+<tr>
+<td><code>rating_avg</code></td>
+<td>numeric(3,2)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (avg).</td>
+</tr>
+<tr>
+<td><code>review_count</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>published_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<h3 id="trip_itinerary_day">trip_itinerary_day</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>day_number</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>overnight_commune_id</code></td>
+<td>int</td>
+<td>no</td>
+<td>FK <a href="#commune">commune</a></td>
+<td></td>
+<td>Link to the commune row (many to one).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(trip_id, day_number) [unique]</code></p>
+<h3 id="trip_departure">trip_departure</h3>
+<p>Check: ends_on &gt;= starts_on; seats_held + seats_booked &lt;= seats_total (BR-TRP-02).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>starts_on</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ends_on</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>seats_total</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Seat counter (total).</td>
+</tr>
+<tr>
+<td><code>seats_held</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Seat counter (held).</td>
+</tr>
+<tr>
+<td><code>seats_booked</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Seat counter (booked).</td>
+</tr>
+<tr>
+<td><code>price_per_person_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Null = trip price.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-departure-status">departure_status</a></td>
+<td>yes</td>
+<td></td>
+<td>scheduled</td>
+<td>One of the departure_status values.</td>
+</tr>
+<tr>
+<td><code>guide_membership_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#membership">membership</a></td>
+<td></td>
+<td>Link to the membership row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(trip_id, starts_on) [unique]</code></p>
+<h2 id="pricing">Pricing</h2>
+<h3 id="quote">quote</h3>
+<p>Short-lived; purged after 7 days by job.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>guest_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>experience_slot_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#experience-slot">experience_slot</a></td>
+<td></td>
+<td>Link to the experience_slot row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_departure_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip-departure">trip_departure</a></td>
+<td></td>
+<td>Link to the trip_departure row (many to one).</td>
+</tr>
+<tr>
+<td><code>stay</code></td>
+<td>daterange</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>[check-in, check-out).</td>
+</tr>
+<tr>
+<td><code>guests</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>units</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>lines</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Per-night prices, discount, cleaning, taxes.</td>
+</tr>
+<tr>
+<td><code>subtotal_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>discount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>cleaning_fee_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>taxes_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>total_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>expires_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Created + 30 min (BR-PRC-01).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="tax_rate">tax_rate</h3>
+<p>R2. Values VERIFY WITH A PROFESSIONAL.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>taxe_sejour, vat.</td>
+</tr>
+<tr>
+<td><code>star_rating</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Taxe de sejour by hotel stars; null = unclassified.</td>
+</tr>
+<tr>
+<td><code>rate_bp</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>VAT.</td>
+</tr>
+<tr>
+<td><code>amount_per_person_night_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Taxe de sejour.</td>
+</tr>
+<tr>
+<td><code>valid_from</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>valid_to</code></td>
+<td>date</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="bookings">Bookings</h2>
+<h3 id="booking">booking</h3>
+<p>Checks: exactly the target columns matching inventory_kind are set; total_minor = subtotal - discount + cleaning + taxes; 0 &lt;= refund_due_minor &lt;= total_minor; guests_adults &gt;= 1. Exclusion (BR-AVL-01): EXCLUDE USING gist (listing_id WITH =, stay WITH &amp;&amp;) WHERE (inventory_kind = &#39;single&#39; AND status IN (&#39;awaiting_payment&#39;,&#39;pending&#39;,&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;)).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>reference</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td>BLD-YYYY-XXXXXX.</td>
+</tr>
+<tr>
+<td><code>guest_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>inventory_kind</code></td>
+<td><a href="#enum-inventory-kind">inventory_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the inventory_kind values.</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>experience_slot_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#experience-slot">experience_slot</a></td>
+<td></td>
+<td>Link to the experience_slot row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_departure_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip-departure">trip_departure</a></td>
+<td></td>
+<td>Link to the trip_departure row (many to one).</td>
+</tr>
+<tr>
+<td><code>stay</code></td>
+<td>daterange</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Half-open [check-in, check-out). For slots and departures: their dates.</td>
+</tr>
+<tr>
+<td><code>check_in_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>check_out_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>guests_adults</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>guests_children</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>units</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>1</td>
+<td>Rooms, beds or seats.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-booking-status">booking_status</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the booking_status values.</td>
+</tr>
+<tr>
+<td><code>payment_status</code></td>
+<td><a href="#enum-payment-status">payment_status</a></td>
+<td>yes</td>
+<td></td>
+<td>not_collected</td>
+<td>One of the payment_status values.</td>
+</tr>
+<tr>
+<td><code>approval_mode_applied</code></td>
+<td><a href="#enum-approval-mode">approval_mode</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the approval_mode values.</td>
+</tr>
+<tr>
+<td><code>request_expires_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Set for pending (BR-BKG-04).</td>
+</tr>
+<tr>
+<td><code>confirmed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>completed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>cancelled_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>cancelled_by_role</code></td>
+<td><a href="#enum-actor-role">actor_role</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the actor_role values.</td>
+</tr>
+<tr>
+<td><code>cancelled_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>cancel_reason_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>decline_reason_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>subtotal_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>discount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>cleaning_fee_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>taxes_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>total_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>commission_base_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>DEC-002.</td>
+</tr>
+<tr>
+<td><code>commission_rate_bp</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Snapshot at creation.</td>
+</tr>
+<tr>
+<td><code>commission_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>refund_due_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Cumulative amount owed back to the guest.</td>
+</tr>
+<tr>
+<td><code>price_lines</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>cancellation_windows</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Snapshot of policy windows.</td>
+</tr>
+<tr>
+<td><code>listing_snapshot</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Title, photo, address at booking time.</td>
+</tr>
+<tr>
+<td><code>quote_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#quote">quote</a></td>
+<td></td>
+<td>Link to the quote row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(host_account_id, status, check_in_at) [note: &#39;Q5 host lists&#39;]</code>; <code>(guest_id, created_at) [note: &#39;Q6 guest lists&#39;]</code>; <code>request_expires_at [note: &#39;Q11, partial WHERE status = pending&#39;]</code>; <code>check_out_at [note: &#39;Q12, partial WHERE status = confirmed&#39;]</code></p>
+<h3 id="booking_event">booking_event</h3>
+<p>Append-only history of every status change.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>from_status</code></td>
+<td><a href="#enum-booking-status">booking_status</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the booking_status values.</td>
+</tr>
+<tr>
+<td><code>to_status</code></td>
+<td><a href="#enum-booking-status">booking_status</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the booking_status values.</td>
+</tr>
+<tr>
+<td><code>actor_role</code></td>
+<td><a href="#enum-actor-role">actor_role</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the actor_role values.</td>
+</tr>
+<tr>
+<td><code>actor_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>reason_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="refund">refund</h3>
+<p>Check amount_minor &gt; 0. Sum per booking equals booking.refund_due_minor.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>policy, host_cancel, staff, dispute.</td>
+</tr>
+<tr>
+<td><code>settlement</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td>owed_by_host</td>
+<td>M1: owed_by_host, settled_confirmed. M4: via gateway.</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="dispute">dispute</h3>
+<p>R2.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#booking">booking</a> UQ</td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>opened_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>opened_by_role</code></td>
+<td><a href="#enum-actor-role">actor_role</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the actor_role values.</td>
+</tr>
+<tr>
+<td><code>reason_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>guest_statement</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>host_statement</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>outcome</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>refund_full, refund_partial, declined.</td>
+</tr>
+<tr>
+<td><code>refund_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>resolution_note</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>resolved_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>resolved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h2 id="money-ledger-wallet-dormant-payments">Money: Ledger, Wallet, Dormant Payments</h2>
+<h3 id="ledger_account">ledger_account</h3>
+<p>Partial unique (host_account_id, kind) where host_account_id is not null.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td>e.g. host_wallet:&lt;host_account_id&gt;, platform_cash:ccp_transfer.</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><a href="#enum-ledger-account-kind">ledger_account_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the ledger_account_kind values.</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="ledger_transaction">ledger_transaction</h3>
+<p>Insert-only. Partial unique (booking_id) where kind = commission (BR-PAY-04).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><a href="#enum-ledger-tx-kind">ledger_tx_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the ledger_tx_kind values.</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>topup_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#wallet-topup">wallet_topup</a></td>
+<td></td>
+<td>Link to the wallet_topup row (many to one).</td>
+</tr>
+<tr>
+<td><code>reverses_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#ledger-transaction">ledger_transaction</a></td>
+<td></td>
+<td>For reversals and corrections.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>varchar(255)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Null = system.</td>
+</tr>
+<tr>
+<td><code>occurred_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="ledger_entry">ledger_entry</h3>
+<p>Insert-only. Deferred constraint trigger: per transaction and currency, sum(amount_minor) = 0 (BR-PAY-02).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>transaction_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#ledger-transaction">ledger_transaction</a></td>
+<td></td>
+<td>Link to the ledger_transaction row (many to one).</td>
+</tr>
+<tr>
+<td><code>account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#ledger-account">ledger_account</a></td>
+<td></td>
+<td>Link to the ledger_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Positive = debit, negative = credit. Never 0.</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+</tbody></table>
+<h3 id="account_balance">account_balance</h3>
+<p>Cache updated in the same transaction as entries (row lock). Nightly job checks it equals the sum.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#ledger-account">ledger_account</a></td>
+<td></td>
+<td>Link to the ledger_account row (one to one).</td>
+</tr>
+<tr>
+<td><code>balance_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>last_entry_id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="wallet_topup">wallet_topup</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>method</code></td>
+<td><a href="#enum-topup-method">topup_method</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the topup_method values.</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>1 to 10,000,000 DZD in centimes.</td>
+</tr>
+<tr>
+<td><code>receipt_reference</code></td>
+<td>varchar(200)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-topup-status">topup_status</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the topup_status values.</td>
+</tr>
+<tr>
+<td><code>requested_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>approved_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Second finance user above 500,000 DZD (BR-PAY-07).</td>
+</tr>
+<tr>
+<td><code>approved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>rejection_reason</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>gateway_event_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#gateway-event">gateway_event</a></td>
+<td></td>
+<td>Link to the gateway_event row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(method, receipt_reference) [unique]</code></p>
+<h3 id="gateway_event">gateway_event</h3>
+<p>R2. Raw webhooks (BR-SYS-02).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>chargily, slickpay.</td>
+</tr>
+<tr>
+<td><code>event_id</code></td>
+<td>varchar(100)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>signature_valid</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: signature valid.</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>received_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>processed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(provider, event_id) [unique]</code></p>
+<h3 id="payment">payment</h3>
+<p>DORMANT until money model M2 to M4 is approved (BR-PAY-11).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>provider_checkout_id</code></td>
+<td>varchar(100)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="payout">payout</h3>
+<p>DORMANT (M4). Also used for deposit withdrawals in M1 if the product allows them.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>payout_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#payout-account">payout_account</a></td>
+<td></td>
+<td>Link to the payout_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>requested, approved, sent, confirmed, rejected.</td>
+</tr>
+<tr>
+<td><code>approved_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>ledger_transaction_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#ledger-transaction">ledger_transaction</a></td>
+<td></td>
+<td>Link to the ledger_transaction row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="invoice">invoice</h3>
+<p>R2. Commission invoices (BR-PAY-12). VERIFY WITH A PROFESSIONAL.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>year</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>number</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>period_start</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>period_end</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>amount_ht_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>vat_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>amount_ttc_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>issued, cancelled.</td>
+</tr>
+<tr>
+<td><code>pdf_media_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Link to the media_asset row (many to one).</td>
+</tr>
+<tr>
+<td><code>credit_note_of_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#invoice">invoice</a></td>
+<td></td>
+<td>Link to the invoice row (many to one).</td>
+</tr>
+<tr>
+<td><code>issued_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(year, number) [unique]</code></p>
+<h2 id="reviews">Reviews</h2>
+<h3 id="review">review</h3>
+<p>Ratings between 1 and 5. Window: 14 days after check-out (BR-REV-01).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>author_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>author_role</code></td>
+<td><a href="#enum-actor-role">actor_role</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>guest or host.</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>rating_overall</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (overall).</td>
+</tr>
+<tr>
+<td><code>rating_cleanliness</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (cleanliness).</td>
+</tr>
+<tr>
+<td><code>rating_accuracy</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (accuracy).</td>
+</tr>
+<tr>
+<td><code>rating_communication</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (communication).</td>
+</tr>
+<tr>
+<td><code>rating_location</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (location).</td>
+</tr>
+<tr>
+<td><code>rating_value</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (value).</td>
+</tr>
+<tr>
+<td><code>comment</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td>varchar(2)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-review-status">review_status</a></td>
+<td>yes</td>
+<td></td>
+<td>submitted</td>
+<td>One of the review_status values.</td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>published_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(booking_id, author_role) [unique]</code></p>
+<h3 id="review_reply">review_reply</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>review_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#review">review</a></td>
+<td></td>
+<td>Link to the review row (one to one).</td>
+</tr>
+<tr>
+<td><code>author_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>body</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>editable_until</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="review_report">review_report</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>review_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#review">review</a></td>
+<td></td>
+<td>Link to the review row (many to one).</td>
+</tr>
+<tr>
+<td><code>reporter_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>reason_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>open, dismissed, actioned.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(review_id, reporter_id) [unique]</code></p>
+<h2 id="messaging-and-notifications">Messaging And Notifications</h2>
+<h3 id="conversation">conversation</h3>
+<p>Partial unique (booking_id) where not null; partial unique (guest_id, listing_id) where kind = inquiry.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><a href="#enum-conversation-kind">conversation_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the conversation_kind values.</td>
+</tr>
+<tr>
+<td><code>guest_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>trip_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#trip">trip</a></td>
+<td></td>
+<td>Link to the trip row (many to one).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>last_message_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="conversation_participant">conversation_participant</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>conversation_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#conversation">conversation</a></td>
+<td></td>
+<td>Link to the conversation row (many to one).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>guest, host_member, staff.</td>
+</tr>
+<tr>
+<td><code>last_read_message_id</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>muted</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: muted.</td>
+</tr>
+<tr>
+<td><code>joined_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="message">message</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Ordered id, used as sync cursor (MSG-02).</td>
+</tr>
+<tr>
+<td><code>conversation_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#conversation">conversation</a></td>
+<td></td>
+<td>Link to the conversation row (many to one).</td>
+</tr>
+<tr>
+<td><code>sender_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Null for system messages.</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>text, system.</td>
+</tr>
+<tr>
+<td><code>body</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>body_masked</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Shown to the other side before confirmation (BR-MSG-01).</td>
+</tr>
+<tr>
+<td><code>contains_contact_info</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>false</td>
+<td>Yes/no flag: contains contact info.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(conversation_id, id)</code></p>
+<h3 id="notification">notification</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(48)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>params</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Values for the localized template.</td>
+</tr>
+<tr>
+<td><code>link</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>read_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(user_id, read_at, id)</code></p>
+<h3 id="notification_preference">notification_preference</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(48)</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td>varchar(8)</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>email, sms, push.</td>
+</tr>
+<tr>
+<td><code>enabled</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: enabled.</td>
+</tr>
+</tbody></table>
+<h3 id="outbox_event">outbox_event</h3>
+<p>Written in the same transaction as the change (BR-SYS-03).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>topic</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>aggregate_type</code></td>
+<td>varchar(32)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>aggregate_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-outbox-status">outbox_status</a></td>
+<td>yes</td>
+<td></td>
+<td>pending</td>
+<td>One of the outbox_status values.</td>
+</tr>
+<tr>
+<td><code>attempts</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>next_attempt_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>sent_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(status, next_attempt_at)</code></p>
+<h3 id="delivery_log">delivery_log</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>outbox_event_id</code></td>
+<td>bigint</td>
+<td>no</td>
+<td>FK <a href="#outbox-event">outbox_event</a></td>
+<td></td>
+<td>Link to the outbox_event row (many to one).</td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td>varchar(8)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>recipient_hash</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>provider_message_id</code></td>
+<td>varchar(100)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>cost_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h2 id="media">Media</h2>
+<h3 id="media_asset">media_asset</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>owner_user_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>purpose</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>listing_photo, document, avatar, logo, invoice, export.</td>
+</tr>
+<tr>
+<td><code>bucket</code></td>
+<td><a href="#enum-media-bucket">media_bucket</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the media_bucket values.</td>
+</tr>
+<tr>
+<td><code>storage_key</code></td>
+<td>varchar(255)</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>mime_type</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>size_bytes</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>height</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sha256</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>phash</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Perceptual hash for duplicate photos (BR-MED-01).</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-media-status">media_status</a></td>
+<td>yes</td>
+<td></td>
+<td>quarantined</td>
+<td>One of the media_status values.</td>
+</tr>
+<tr>
+<td><code>scan_result</code></td>
+<td>varchar(32)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>deleted_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Soft delete time; null = not deleted.</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>phash</code></p>
+<h2 id="moderation-config-audit-privacy-system">Moderation, Config, Audit, Privacy, System</h2>
+<h3 id="reason_code">reason_code</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td>varchar(32)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>reject_listing, decline_booking, cancel_booking, report_review ...</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>varchar(48)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>label_en</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>label_fr</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>label_ar</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>host_text_en</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>host_text_fr</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>host_text_ar</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(action, code) [unique]</code></p>
+<h3 id="moderation_case">moderation_case</h3>
+<p>Partial unique (kind, subject_id) where status &lt;&gt; resolved.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><a href="#enum-case-kind">case_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the case_kind values.</td>
+</tr>
+<tr>
+<td><code>subject_type</code></td>
+<td>varchar(24)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>subject_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-case-status">case_status</a></td>
+<td>yes</td>
+<td></td>
+<td>open</td>
+<td>One of the case_status values.</td>
+</tr>
+<tr>
+<td><code>priority</code></td>
+<td><a href="#enum-case-priority">case_priority</a></td>
+<td>yes</td>
+<td></td>
+<td>normal</td>
+<td>One of the case_priority values.</td>
+</tr>
+<tr>
+<td><code>submitted_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Waiting time counts from here (BR-MOD-01).</td>
+</tr>
+<tr>
+<td><code>assigned_to_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>resolved_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>resolved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>outcome</code></td>
+<td>varchar(24)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(status, kind, submitted_at)</code></p>
+<h3 id="moderation_decision">moderation_decision</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>case_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#moderation-case">moderation_case</a></td>
+<td></td>
+<td>Link to the moderation_case row (many to one).</td>
+</tr>
+<tr>
+<td><code>decision</code></td>
+<td>varchar(24)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>reason_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#reason-code">reason_code</a></td>
+<td></td>
+<td>Link to the reason_code row (many to one).</td>
+</tr>
+<tr>
+<td><code>note</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>actor_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="change_request_item">change_request_item</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>case_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#moderation-case">moderation_case</a></td>
+<td></td>
+<td>Link to the moderation_case row (many to one).</td>
+</tr>
+<tr>
+<td><code>checklist_code</code></td>
+<td>varchar(48)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>resolved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="platform_settings">platform_settings</h3>
+<p>Partial unique (is_current) where is_current. New row per change (BR-CFG-01).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>int</td>
+<td>yes</td>
+<td>UQ</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Validated whitelist: commission defaults (bp), credit limits, request_ttl_hours, instant_booking_enabled, maintenance_mode, staff session timeouts, locales, feature flags.</td>
+</tr>
+<tr>
+<td><code>is_current</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: is current.</td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="onboarding_flow_version">onboarding_flow_version</h3>
+<p>Partial unique (host_type) where status = draft; partial unique (host_type) where status = published.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_type</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>individual, agency, hotel, hostel.</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-flow-status">flow_status</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the flow_status values.</td>
+</tr>
+<tr>
+<td><code>schema</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Steps and fields with canonical types (BR-CFG-03).</td>
+</tr>
+<tr>
+<td><code>published_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>published_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(host_type, version) [unique]</code></p>
+<h3 id="onboarding_draft">onboarding_draft</h3>
+<p>Partial unique (user_id, host_type) where status = in_progress.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>host_type</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>flow_version_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#onboarding-flow-version">onboarding_flow_version</a></td>
+<td></td>
+<td>Link to the onboarding_flow_version row (many to one).</td>
+</tr>
+<tr>
+<td><code>current_step</code></td>
+<td>varchar(48)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>answers</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>in_progress, submitted, abandoned.</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="coupon">coupon</h3>
+<p>R2. Unique lower(code).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>varchar(32)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>discount_type</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>percentage, fixed.</td>
+</tr>
+<tr>
+<td><code>discount_value</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>bp or centimes.</td>
+</tr>
+<tr>
+<td><code>min_spend_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>funded_by</code></td>
+<td>varchar(8)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>platform, host (BR-PRM-02).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>scope_verticals</code></td>
+<td>vertical[]</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>usage_limit</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>per_user_limit</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td><code>valid_from</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>valid_to</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="coupon_redemption">coupon_redemption</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>coupon_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#coupon">coupon</a></td>
+<td></td>
+<td>Link to the coupon row (many to one).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#booking">booking</a> UQ</td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>released_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="audit_event">audit_event</h3>
+<p>Insert-only for the app role; hash chain (BR-STF-02). Partitioned by month.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>occurred_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>actor_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>actor_kind</code></td>
+<td>varchar(8)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>staff, user, system.</td>
+</tr>
+<tr>
+<td><code>actor_role</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>action</code></td>
+<td>varchar(48)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>e.g. LISTING_APPROVE, WALLET_TOPUP (53 kinds today).</td>
+</tr>
+<tr>
+<td><code>object_type</code></td>
+<td>varchar(24)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>object_id</code></td>
+<td>varchar(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>before</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>after</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ip</code></td>
+<td>inet</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>user_agent</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>request_id</code></td>
+<td>varchar(36)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>prev_hash</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>hash</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(object_type, object_id, occurred_at)</code>; <code>(actor_id, occurred_at)</code></p>
+<h3 id="export_job">export_job</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>requested_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>dataset</code></td>
+<td>varchar(32)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>filters</code></td>
+<td>jsonb</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>row_count</code></td>
+<td>int</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>media_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Link to the media_asset row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>completed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="data_subject_request">data_subject_request</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><a href="#enum-dsr-kind">dsr_kind</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the dsr_kind values.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>due_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>handled_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>completed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="idempotency_record">idempotency_record</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>endpoint</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>key</code></td>
+<td>varchar(80)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>request_hash</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>in_progress, completed.</td>
+</tr>
+<tr>
+<td><code>response_code</code></td>
+<td>smallint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>response_body</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>locked_until</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>expires_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Created + 24 h (BR-SYS-01).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(user_id, endpoint, key) [unique]</code></p>
+<h3 id="incident_record">incident_record</h3>
+<p>Incident register and breach clock (PRV-05). Staff-only, audited.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(24)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>security_breach, data_leak, outage, fraud.</td>
+</tr>
+<tr>
+<td><code>severity</code></td>
+<td>varchar(8)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>low, medium, high, critical.</td>
+</tr>
+<tr>
+<td><code>detected_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>personal_data_involved</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: personal data involved.</td>
+</tr>
+<tr>
+<td><code>anpdp_deadline_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>detected_at + 5 days when personal data is involved (Law 18-07 as amended, VERIFY WITH A PROFESSIONAL).</td>
+</tr>
+<tr>
+<td><code>anpdp_notified_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>users_notified_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>summary</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>actions_taken</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>owner_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>closed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="calendar_feed">calendar_feed</h3>
+<p>Later release (AVL-06): iCal import and export.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>direction</code></td>
+<td>varchar(8)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>import or export.</td>
+</tr>
+<tr>
+<td><code>url_encrypted</code></td>
+<td>bytea</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Import URL (other platform), encrypted; fetched through the egress proxy with private-IP blocking (SSRF control).</td>
+</tr>
+<tr>
+<td><code>export_token_hash</code></td>
+<td>char(64)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Hash of the secret token in the export URL.</td>
+</tr>
+<tr>
+<td><code>last_synced_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>last_error</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="otp_send_log">otp_send_log</h3>
+<p>Record of every one-time code sent (codes themselves stay in Redis, never stored). Feeds SMS budget alarms and pumping-fraud detection (ACC-02, BR-ACC-02). Kept 90 days.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>phone_hash</code></td>
+<td>char(64)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>HMAC of the phone number.</td>
+</tr>
+<tr>
+<td><code>ip</code></td>
+<td>inet</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>purpose</code></td>
+<td>varchar(16)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>signup, login, phone_change, payout_change.</td>
+</tr>
+<tr>
+<td><code>provider</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>sent, failed, blocked_rate_limit.</td>
+</tr>
+<tr>
+<td><code>cost_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(phone_hash, created_at)</code>; <code>(ip, created_at)</code></p>
+<h3 id="listing_search_doc">listing_search_doc</h3>
+<p>Denormalised row per published listing, refreshed by outbox job. GiST on location_public, GIN on amenity_ids, tsv_* and search_text (gin_trgm_ops).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (one to one).</td>
+</tr>
+<tr>
+<td><code>vertical</code></td>
+<td><a href="#enum-vertical">vertical</a></td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>One of the vertical values.</td>
+</tr>
+<tr>
+<td><code>wilaya_code</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>commune_id</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>location_public</code></td>
+<td>geography(Point,4326)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>price_from_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>capacity_guests</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rating_avg</code></td>
+<td>numeric(3,2)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Rating 1 to 5 (avg).</td>
+</tr>
+<tr>
+<td><code>review_count</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>instant_bookable</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Yes/no flag: instant bookable.</td>
+</tr>
+<tr>
+<td><code>host_type</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>experience_type</code></td>
+<td><a href="#enum-experience-type">experience_type</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>For the experience type filter and facet counts.</td>
+</tr>
+<tr>
+<td><code>property_type_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>amenity_ids</code></td>
+<td>uuid[]</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>tsv_fr</code></td>
+<td>tsvector</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>French text.</td>
+</tr>
+<tr>
+<td><code>tsv_en</code></td>
+<td>tsvector</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>English text.</td>
+</tr>
+<tr>
+<td><code>tsv_ar</code></td>
+<td>tsvector</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Arabic text.</td>
+</tr>
+<tr>
+<td><code>search_text</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Title and place names, unaccented, for trigram search.</td>
+</tr>
+<tr>
+<td><code>published_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+</tbody></table>
+<h2 id="enumerations">Enumerations</h2>
+<p><a id="enum-user-status"></a><strong>user_status</strong>: <code>active</code>, <code>suspended</code>, <code>banned</code>, <code>deleted</code></p>
+<p><a id="enum-staff-role-code"></a><strong>staff_role_code</strong>: <code>super_admin</code>, <code>moderator</code>, <code>support</code>, <code>finance</code>, <code>analyst</code></p>
+<p><a id="enum-staff-status"></a><strong>staff_status</strong>: <code>invited</code>, <code>active</code>, <code>deactivated</code></p>
+<p><a id="enum-host-account-kind"></a><strong>host_account_kind</strong>: <code>individual</code>, <code>organization</code></p>
+<p><a id="enum-business-category"></a><strong>business_category</strong>: <code>agency</code>, <code>hotel</code>, <code>hostel</code></p>
+<p><a id="enum-verification-status"></a><strong>verification_status</strong>: <code>applied</code>, <code>under_review</code>, <code>changes_requested</code>, <code>approved</code>, <code>rejected</code>, <code>suspended</code>, <code>banned</code></p>
+<p><a id="enum-membership-role"></a><strong>membership_role</strong>: <code>owner</code>, <code>admin</code>, <code>manager</code>, <code>agent</code>, <code>guide</code></p>
+<p><a id="enum-invitation-status"></a><strong>invitation_status</strong>: <code>pending</code>, <code>accepted</code>, <code>revoked</code>, <code>expired</code></p>
+<p><a id="enum-document-type"></a><strong>document_type</strong>: <code>national_id</code>, <code>passport</code>, <code>property_proof</code>, <code>lease_authorisation</code>, <code>apc_declaration</code>, <code>insurance</code>, <code>auto_entrepreneur_card</code>, <code>commercial_register</code>, <code>tax_card_nif</code>, <code>statistics_nis</code>, <code>tourism_licence</code>, <code>hotel_classification</code>, <code>operating_authorisation</code>, <code>vehicle_registration</code>, <code>vehicle_insurance</code>, <code>technical_inspection</code>, <code>driving_licence</code></p>
+<p><a id="enum-document-status"></a><strong>document_status</strong>: <code>pending</code>, <code>approved</code>, <code>rejected</code>, <code>expired</code></p>
+<p><a id="enum-approval-mode"></a><strong>approval_mode</strong>: <code>instant</code>, <code>request</code></p>
+<p><a id="enum-vertical"></a><strong>vertical</strong>: <code>home</code>, <code>hotel</code>, <code>hostel</code>, <code>experience</code>, <code>vehicle</code></p>
+<p><a id="enum-experience-type"></a><strong>experience_type</strong>: <code>excursion</code>, <code>guided_tour</code>, <code>nature_adventure</code>, <code>desert</code>, <code>sport</code>, <code>culture_workshop</code>, <code>gastronomy</code>, <code>wellness</code></p>
+<p><a id="enum-trip-type"></a><strong>trip_type</strong>: <code>group_tour</code>, <code>private_trip</code>, <code>adventure</code>, <code>desert_expedition</code>, <code>cultural</code>, <code>hiking</code>, <code>relaxation</code>, <code>religious</code></p>
+<p><a id="enum-listing-status"></a><strong>listing_status</strong>: <code>draft</code>, <code>pending_review</code>, <code>changes_requested</code>, <code>published</code>, <code>paused</code>, <code>rejected</code>, <code>suspended</code>, <code>archived</code>, <code>deleted</code></p>
+<p><a id="enum-booking-unit"></a><strong>booking_unit</strong>: <code>room</code>, <code>bed</code></p>
+<p><a id="enum-inventory-kind"></a><strong>inventory_kind</strong>: <code>single</code>, <code>room_pool</code>, <code>slot</code>, <code>departure</code></p>
+<p><a id="enum-booking-status"></a><strong>booking_status</strong>: <code>awaiting_payment</code>, <code>pending</code>, <code>confirmed</code>, <code>declined</code>, <code>expired</code>, <code>cancelled</code>, <code>completed</code>, <code>disputed</code></p>
+<p><a id="enum-payment-status"></a><strong>payment_status</strong>: <code>not_collected</code>, <code>awaiting</code>, <code>paid</code>, <code>partially_refunded</code>, <code>refunded</code>, <code>failed</code></p>
+<p><a id="enum-actor-role"></a><strong>actor_role</strong>: <code>guest</code>, <code>host</code>, <code>staff</code>, <code>system</code></p>
+<p><a id="enum-departure-status"></a><strong>departure_status</strong>: <code>scheduled</code>, <code>guaranteed</code>, <code>cancelled</code>, <code>completed</code></p>
+<p><a id="enum-ledger-account-kind"></a><strong>ledger_account_kind</strong>: <code>host_wallet</code>, <code>platform_cash</code>, <code>commission_revenue</code>, <code>vat_payable</code>, <code>guest_receivable</code>, <code>escrow</code>, <code>host_payable</code>, <code>payout_clearing</code>, <code>adjustments</code></p>
+<p><a id="enum-ledger-tx-kind"></a><strong>ledger_tx_kind</strong>: <code>wallet_topup</code>, <code>commission</code>, <code>commission_reversal</code>, <code>adjustment</code>, <code>guest_payment</code>, <code>refund</code>, <code>payout</code></p>
+<p><a id="enum-topup-method"></a><strong>topup_method</strong>: <code>ccp_transfer</code>, <code>bank_transfer</code>, <code>baridimob</code>, <code>cash_office</code>, <code>gateway</code></p>
+<p><a id="enum-topup-status"></a><strong>topup_status</strong>: <code>pending_approval</code>, <code>approved</code>, <code>rejected</code></p>
+<p><a id="enum-review-status"></a><strong>review_status</strong>: <code>submitted</code>, <code>published</code>, <code>flagged</code>, <code>hidden</code>, <code>removed</code></p>
+<p><a id="enum-conversation-kind"></a><strong>conversation_kind</strong>: <code>inquiry</code>, <code>booking</code>, <code>support</code></p>
+<p><a id="enum-media-status"></a><strong>media_status</strong>: <code>quarantined</code>, <code>ready</code>, <code>rejected</code>, <code>deleted</code></p>
+<p><a id="enum-media-bucket"></a><strong>media_bucket</strong>: <code>public</code>, <code>private</code></p>
+<p><a id="enum-case-kind"></a><strong>case_kind</strong>: <code>host_verification</code>, <code>listing_review</code>, <code>listing_revision</code>, <code>trip_review</code>, <code>document</code>, <code>review_report</code>, <code>dispute</code>, <code>risk_flag</code>, <code>legal_change</code>, <code>host_cancellations</code></p>
+<p><a id="enum-case-status"></a><strong>case_status</strong>: <code>open</code>, <code>in_progress</code>, <code>resolved</code></p>
+<p><a id="enum-case-priority"></a><strong>case_priority</strong>: <code>low</code>, <code>normal</code>, <code>high</code></p>
+<p><a id="enum-flow-status"></a><strong>flow_status</strong>: <code>draft</code>, <code>published</code>, <code>archived</code></p>
+<p><a id="enum-outbox-status"></a><strong>outbox_status</strong>: <code>pending</code>, <code>sent</code>, <code>failed</code></p>
+<p><a id="enum-dsr-kind"></a><strong>dsr_kind</strong>: <code>access</code>, <code>rectification</code>, <code>deletion</code>, <code>opposition</code></p>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Which table links a host to either a user or an organisation?</li>
+<li><input disabled="" type="checkbox"> In which column is the commission rate frozen on a booking, and in which unit?</li>
+<li><input disabled="" type="checkbox"> Which tables are marked DORMANT, and why?</li>
+<li><input disabled="" type="checkbox"> Where is the cursor used by message sync?</li>
+</ul>
+<div class="pager"><span><a href="05-database-schema.html">&larr; 05. Database schema</a></span><span><a href="06-api-design.html">06. API design: how the apps talk to the backend &rarr;</a></span></div></main></div></body></html>

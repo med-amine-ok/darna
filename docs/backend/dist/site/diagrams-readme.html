@@ -1,0 +1,235 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagrams · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="on" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 4: diagrams</div><h1 id="diagrams">Diagrams</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Pictures of the planned system: who uses it, what runs where, how statuses change, how a booking flows step by step, and how the tables link.<br>Each picture has a short caption and a legend explaining its symbols.<br>The <code>.mmd</code> files are the editable sources (Mermaid text). The <code>rendered/</code> folder holds SVG (sharp at any zoom) and PNG versions.<br>The table diagrams (<code>erd-*</code>) are generated from <a href="files/schema.dbml">../schema.dbml</a>, so they always match the schema.</p>
+</blockquote>
+<p>How to re-render: <code>python ../_tools/build_schema_docs.py</code> (ERD sources), then <code>python ../_tools/render_diagrams.py</code> (needs <code>@mermaid-js/mermaid-cli</code> installed in a tools folder outside the repo and a local Chrome; see the script header).</p>
+<h2 id="legends">Legends</h2>
+<table>
+<thead>
+<tr>
+<th>Diagram type</th>
+<th>How to read it</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Flowchart</strong> (01, 02, 03, 30, 40)</td>
+<td>Boxes are systems or parts; rounded boxes are people; cylinders are data stores. A solid arrow is a call or a flow; a dotted arrow is optional, later (R2) or asynchronous. Grey frames group things that run together.</td>
+</tr>
+<tr>
+<td><strong>State diagram</strong> (10 to 13)</td>
+<td>Each box is a status. An arrow is an allowed move, labelled with who or what causes it. The black dot is the start; the circled dot is the end. A move not drawn is forbidden.</td>
+</tr>
+<tr>
+<td><strong>Sequence diagram</strong> (20 to 24)</td>
+<td>Columns are actors (people) and participants (systems). Time goes down. Solid arrows are requests, dashed arrows are replies, open arrows are messages sent later by a worker. Numbered steps match the text. <code>alt</code> boxes show alternative paths.</td>
+</tr>
+<tr>
+<td><strong>ERD</strong> (erd-*)</td>
+<td>Each box is a table with its columns (type, name, and PK = primary key, FK = link, UK = unique). A line links a table to the one it points to; the label is the linking column. `</td>
+</tr>
+</tbody></table>
+<h2 id="architecture">Architecture</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Caption</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="diagrams/rendered/01-system-context.svg">01-system-context</a></td>
+<td>Who uses BLADUS and which outside services it talks to. Guests and hosts use the website, staff use the admin app; both call one Django API. The payment gateway is dotted because online payment comes in release R2.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/02-containers.svg">02-containers</a></td>
+<td>What runs where. Everything holding personal data runs in Algerian data centres (research C.3, to be confirmed by a lawyer). The Next.js servers keep the login cookie and call Django on the browser&#39;s behalf (BFF). Workers send messages and run timed jobs.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/03-django-apps.svg">03-django-apps</a></td>
+<td>The backend is one application split into 17 apps plus a small <code>core</code>, arranged in layers. An app may only use apps in lower layers (checked automatically by import-linter); for example bookings may use pricing and the ledger, never the reverse. Events (emails, search refresh) go through the outbox instead of direct calls. Details in 07-architecture.md.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/30-money-flow.svg">30-money-flow</a></td>
+<td>Where money goes. At launch (M1) the guest pays the host, the host keeps a deposit at BLADUS, and BLADUS takes its commission from that deposit. M4 (BLADUS collects and pays out) is drawn for later and needs a licence.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/40-document-map.svg">40-document-map</a></td>
+<td>How the blueprint documents feed each other, from inventory to tests.</td>
+</tr>
+</tbody></table>
+<h2 id="lifecycles-state-machines">Lifecycles (state machines)</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Caption</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="diagrams/rendered/10-booking-states.svg">10-booking-states</a></td>
+<td>Every status a booking can have. A request waits up to 24 hours for the host; a confirmed booking becomes completed automatically after check-out. <code>awaiting_payment</code> stays unused until online payment exists. Rules BR-BKG-01 to 07.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/11-listing-states.svg">11-listing-states</a></td>
+<td>A listing or trip is checked by staff before it is published (DEC-003). Hosts can pause; staff can suspend or ask for changes. Deleting is reversible by staff.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/12-host-verification-states.svg">12-host-verification-states</a></td>
+<td>A host (person or organisation) is approved only when all required documents are approved. Changing legal details sends it back to review.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/13-review-states.svg">13-review-states</a></td>
+<td>A review is written after a completed stay, published when both sides wrote or after 14 days, and can be hidden after a report.</td>
+</tr>
+</tbody></table>
+<h2 id="key-flows-sequences">Key flows (sequences)</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Caption</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="diagrams/rendered/20-seq-instant-booking.svg">20-seq-instant-booking</a></td>
+<td>An instant booking from price quote to confirmation in one database transaction; the database itself refuses overlapping dates; the commission is posted to the host&#39;s wallet; messages go out after the save.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/21-seq-request-to-book.svg">21-seq-request-to-book</a></td>
+<td>A request: the host accepts, declines, or a timed job expires it after 24 hours. Dates stay blocked while it waits.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/22-seq-wallet-topup.svg">22-seq-wallet-topup</a></td>
+<td>A host tops up the commission deposit by transfer; finance records it with the receipt reference; large amounts need a second person.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/23-seq-host-onboarding.svg">23-seq-host-onboarding</a></td>
+<td>Becoming a host: the steps come from the published configuration, the draft is saved on the server, documents go to private storage, staff verify.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/24-seq-message-sync.svg">24-seq-message-sync</a></td>
+<td>Messages are fetched with a cursor so polling is cheap; phone numbers are masked until a booking is confirmed (anti-fraud).</td>
+</tr>
+</tbody></table>
+<h2 id="database-erds-generated">Database (ERDs, generated)</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Caption</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="diagrams/rendered/erd-00-overview.svg">erd-00-overview</a></td>
+<td>The 26 central tables and their main links. Start here. <code>host_account</code> sits between people and organisations on one side and listings, trips and wallets on the other.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-01-accounts.svg">erd-01-accounts</a></td>
+<td>People, staff roles and permissions, consents, favourites.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-02-geography.svg">erd-02-geography</a></td>
+<td>69 wilayas, dairas and 1,541 communes.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-03-host-accounts-and-organisations.svg">erd-03-host-accounts-and-organisations</a></td>
+<td>Host accounts, organisations, team members, invitations, verification documents, payout accounts.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-04-taxonomy.svg">erd-04-taxonomy</a></td>
+<td>Shared lists: categories, property types, amenities, cancellation policies.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-05-catalogue-listings-and-room-types.svg">erd-05-catalogue-listings-and-room-types</a></td>
+<td>Listings, edits under review, vehicle and experience details, room types, photos, featured places.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-06-inventory-and-calendar.svg">erd-06-inventory-and-calendar</a></td>
+<td>What is free per day (homes, vehicles), per night and room type (hotels, hostels) and per time slot (experiences).</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-07-trips-agency-only.svg">erd-07-trips-agency-only</a></td>
+<td>Agency trips, day-by-day itinerary, dated departures with seats.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-08-pricing.svg">erd-08-pricing</a></td>
+<td>Price quotes and tax rates.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-09-bookings.svg">erd-09-bookings</a></td>
+<td>Bookings, their status history, refunds owed, disputes.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-10-money-ledger-wallet-dormant-payments.svg">erd-10-money-ledger-wallet-dormant-payments</a></td>
+<td>The ledger, balances, deposit top-ups, gateway webhooks, and the tables kept unused until the money model changes.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-11-reviews.svg">erd-11-reviews</a></td>
+<td>Reviews, replies, reports.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-12-messaging-and-notifications.svg">erd-12-messaging-and-notifications</a></td>
+<td>Conversations, messages, notifications, preferences, the outbox and delivery log.</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-13-media.svg">erd-13-media</a></td>
+<td>Uploaded files (public photos, private documents).</td>
+</tr>
+<tr>
+<td><a href="diagrams/rendered/erd-14-moderation-config-audit-privacy-system.svg">erd-14-moderation-config-audit-privacy-system</a></td>
+<td>Staff queues and decisions, settings and onboarding versions, coupons, audit log, exports, privacy requests, idempotency, search table.</td>
+</tr>
+</tbody></table>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> In the booking state diagram, which statuses are final?</li>
+<li><input disabled="" type="checkbox"> In the instant booking sequence, at which step could a double booking be refused, and by what?</li>
+<li><input disabled="" type="checkbox"> In an ERD, what does a box with only <code>id</code> mean?</li>
+<li><input disabled="" type="checkbox"> Which diagram shows that personal data stays in Algeria?</li>
+</ul>
+<div class="pager"><span><a href="04-business-rules.html">&larr; 04. Business rules</a></span><span><a href="diagram-gallery.html">Diagram gallery &rarr;</a></span></div></main></div></body></html>

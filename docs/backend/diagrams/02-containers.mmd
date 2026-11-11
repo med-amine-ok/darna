@@ -9,7 +9,7 @@ flowchart TB
     end
     subgraph apps["Application servers (Algeria)"]
         web["Website Next.js<br/>BFF: holds httpOnly session cookie"]
-        adm["Admin Next.js<br/>staff BFF, MFA required"]
+        adm["Admin Next.js<br/>admin BFF, MFA required"]
         api["Django + DRF API<br/>modular monolith"]
         worker["Celery workers<br/>notifications, expiry, images"]
         beat["Celery beat<br/>schedules"]

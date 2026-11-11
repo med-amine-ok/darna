@@ -1,0 +1,908 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>05. Database schema · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="on" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 5: database</div><h1 id="05-database-schema">05. Database schema</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This is the plan for the database: which tables exist, how they link, and which rules the database itself enforces.<br>It has 77 tables in 14 groups. The full column list is in <a href="05b-data-dictionary.html">05b-data-dictionary.md</a> and the machine-readable version in <a href="files/schema.dbml">schema.dbml</a>.<br>The most important ideas: one &quot;host account&quot; for every kind of host; the database refuses double bookings; money is kept in a ledger that is never edited.<br>Each big choice is written as a short decision record (ADR) with the options we rejected.<br>At the end: how today&#39;s demo data maps onto the new tables, what to seed first, and how the busiest queries will run.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
+<ul>
+<li><strong>Table / row / column</strong>: a table is like a spreadsheet tab; a row is one record; a column is one field.</li>
+<li><strong>Primary key (PK)</strong>: the column that identifies a row. <strong>Foreign key (FK)</strong>: a column pointing to a row in another table.</li>
+<li><strong>Constraint</strong>: a rule the database checks on every write (unique, check, exclusion, foreign key).</li>
+<li><strong>Index</strong>: a lookup structure that makes searches fast, like the index at the back of a book.</li>
+<li><strong>Partial index</strong>: an index (often unique) that applies only to rows matching a condition, e.g. &quot;only active owners&quot;.</li>
+<li><strong>GiST / GIN</strong>: PostgreSQL index types for ranges, map points, arrays and text search.</li>
+<li><strong>Migration</strong>: a versioned script that creates or changes tables. Not written yet (no backend code in this phase).</li>
+</ul>
+<p>Inputs: <a href="01-system-inventory.html">01-system-inventory.md</a>, <a href="03-requirements.html">03-requirements.md</a>, <a href="04-business-rules.html">04-business-rules.md</a>, research <a href="02-research.html">02-research.md</a> section B.</p>
+<hr>
+<h2 id="1-shape-of-the-database">1. Shape of the database</h2>
+<table>
+<thead>
+<tr>
+<th>Group (Django app)</th>
+<th>Tables</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>accounts</td>
+<td>user, staff_profile, staff_permission, staff_role_permission, consent_record, favorite</td>
+<td>People, staff roles, consents</td>
+</tr>
+<tr>
+<td>geo</td>
+<td>wilaya, daira, commune</td>
+<td>69 wilayas, 1,541 communes</td>
+</tr>
+<tr>
+<td>hosts</td>
+<td>host_account, organization, membership, invitation, host_document, payout_account</td>
+<td>Who hosts, teams, verification</td>
+</tr>
+<tr>
+<td>catalog</td>
+<td>category, property_type, amenity, cancellation_policy, listing, listing_revision, vehicle_detail, experience_detail, room_type, listing_amenity, room_type_amenity, listing_photo, featured_placement</td>
+<td>What is offered</td>
+</tr>
+<tr>
+<td>inventory</td>
+<td>listing_day, room_type_night, experience_slot</td>
+<td>What is free, and at what price, per day or slot</td>
+</tr>
+<tr>
+<td>trips</td>
+<td>trip, trip_itinerary_day, trip_departure</td>
+<td>Agency multi-day products</td>
+</tr>
+<tr>
+<td>pricing</td>
+<td>quote, tax_rate</td>
+<td>Server-computed prices</td>
+</tr>
+<tr>
+<td>bookings</td>
+<td>booking, booking_event, refund, dispute</td>
+<td>Reservations and their history</td>
+</tr>
+<tr>
+<td>ledger</td>
+<td>ledger_account, ledger_transaction, ledger_entry, account_balance, wallet_topup, gateway_event, payment*, payout*, invoice</td>
+<td>Money (* dormant until the money model changes)</td>
+</tr>
+<tr>
+<td>reviews</td>
+<td>review, review_reply, review_report</td>
+<td>Reviews after stays</td>
+</tr>
+<tr>
+<td>messaging, notifications</td>
+<td>conversation, conversation_participant, message, notification, notification_preference, outbox_event, delivery_log</td>
+<td>Messages, alerts, reliable sending</td>
+</tr>
+<tr>
+<td>media</td>
+<td>media_asset</td>
+<td>Photos and private documents</td>
+</tr>
+<tr>
+<td>trust, config, audit, privacy, core</td>
+<td>incident_record, otp_send_log, calendar_feed (inventory), reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc</td>
+<td>Staff work, settings, history, legal requests, system safety</td>
+</tr>
+</tbody></table>
+<p>Diagrams: <a href="diagrams-readme.html">diagrams/erd-00-overview</a> shows the 26 core tables; one diagram per group follows (Phase 4).</p>
+<hr>
+<h2 id="2-conventions">2. Conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Convention</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IDs</td>
+<td>UUIDv7 (time-ordered) made by the app; human references for people (<code>BLD-2026-7K2M9Q</code>, <code>LST-...</code>)</td>
+<td>Not guessable (BR security API1), sortable, no <code>Date.now()</code> collisions</td>
+</tr>
+<tr>
+<td>Money</td>
+<td><code>BIGINT</code> centimes in columns ending <code>_minor</code>, plus <code>currency char(3)</code></td>
+<td>Exact sums (ADR-006)</td>
+</tr>
+<tr>
+<td>Rates</td>
+<td>integer basis points <code>_bp</code> (1,200 = 12%)</td>
+<td>No float rounding</td>
+</tr>
+<tr>
+<td>Time</td>
+<td><code>timestamptz</code> in UTC; stay nights as <code>date</code> / <code>daterange</code> in Africa/Algiers</td>
+<td>BR-SYS-05</td>
+</tr>
+<tr>
+<td>Names in 3 languages</td>
+<td><code>name_en</code>, <code>name_fr</code>, <code>name_ar</code> columns on platform lists (django-modeltranslation)</td>
+<td>Research B.9</td>
+</tr>
+<tr>
+<td>User text</td>
+<td>original text + <code>source_language</code></td>
+<td>Hosts write once</td>
+</tr>
+<tr>
+<td>Soft delete</td>
+<td><code>deleted_at</code> (+ <code>status_before_delete</code> where restore exists)</td>
+<td>Admin restore (U7)</td>
+</tr>
+<tr>
+<td>Who did it</td>
+<td>always an FK to <code>user.id</code>, never a name</td>
+<td>BR-STF-03</td>
+</tr>
+<tr>
+<td>Cached numbers</td>
+<td>ratings, counts, balances are caches recomputed by jobs; never edited by hand</td>
+<td>BR-REV-04, BR-PAY-03</td>
+</tr>
+<tr>
+<td>Table names</td>
+<td>Django will prefix with the app (<code>bookings_booking</code>); this document uses short names</td>
+<td>Readability</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="3-architecture-decision-records-adrs">3. Architecture decision records (ADRs)</h2>
+<p>Each ADR: the context, the decision, the options rejected, the consequences.</p>
+<h3 id="adr-001-one-host_account-for-every-kind-of-host">ADR-001: One <code>host_account</code> for every kind of host</h3>
+<ul>
+<li><strong>Context</strong>: the website has users with organisations; the admin has a flat <code>Host</code> row; one person may host alone and also run an agency (DEC-004, disagreement D-1).</li>
+<li><strong>Decision</strong>: <code>host_account</code> is either one user (<code>kind = individual</code>) or one organisation (<code>kind = organization</code>). Listings, trips, wallets, commission overrides, verification and reviews point to the host account.</li>
+<li><strong>Rejected</strong>: (a) host fields on <code>user</code> (cannot represent organisations); (b) only organisations, with a &quot;solo organisation&quot; per individual (confusing for individuals, more rows, forces team concepts on solo hosts).</li>
+<li><strong>Consequences</strong>: one wallet per host account; Karim&#39;s individual hosting and his agency have separate wallets and commission rates; the API carries an &quot;active host account&quot; header.</li>
+</ul>
+<h3 id="adr-002-database-enforced-availability-two-mechanisms">ADR-002: Database-enforced availability, two mechanisms</h3>
+<ul>
+<li><strong>Context</strong>: double booking must be impossible (AVL-01, AVL-02); today it relies on single-threaded JavaScript.</li>
+<li><strong>Decision</strong>: single units (homes, vehicles) use a <code>daterange</code> on <code>booking</code> with an <strong>exclusion constraint</strong>; pooled units (hotel room types, hostel beds, experience slots, trip departures) use <strong>counter rows</strong> (<code>room_type_night</code>, <code>experience_slot</code>, <code>trip_departure</code>) with <code>CHECK (held + booked &lt;= total)</code> and an atomic conditional <code>UPDATE</code>.</li>
+<li><strong>Rejected</strong>: (a) application locks only (lost under multiple servers); (b) one row per physical room for hotels (heavier; hosts do not assign rooms at booking time); (c) Redis counters (not transactional with the booking).</li>
+<li><strong>Consequences</strong>: concurrent requests for the last unit: exactly one succeeds, the other gets <code>409 dates_unavailable</code>. Counter rows are created 18 months ahead by a job.</li>
+</ul>
+<h3 id="adr-003-one-booking-table-with-typed-targets">ADR-003: One booking table with typed targets</h3>
+<ul>
+<li><strong>Context</strong>: bookings target a listing, a room type, an experience slot or a trip departure.</li>
+<li><strong>Decision</strong>: <code>booking</code> has <code>inventory_kind</code> and four nullable target columns; a check constraint requires exactly the right ones. MVP: one room type per booking (multi-room bookings = several bookings in one checkout later).</li>
+<li><strong>Rejected</strong>: generic foreign keys (no database integrity); one table per kind (four copies of the money and status columns).</li>
+<li><strong>Consequences</strong>: every booking report reads one table.</li>
+</ul>
+<h3 id="adr-004-trips-are-their-own-tables-dec-006">ADR-004: Trips are their own tables (DEC-006)</h3>
+<ul>
+<li><strong>Decision</strong>: <code>trip</code>, <code>trip_itinerary_day</code>, <code>trip_departure</code>. Trips share the <code>listing_status</code> enum and moderation flow but not the <code>listing</code> table.</li>
+<li><strong>Rejected</strong>: listing subtype (admin today): itinerary and departures do not fit listing columns.</li>
+<li><strong>Consequences</strong>: search runs on listings and trips separately; the website&#39;s guest &quot;Trips&quot; page should be renamed &quot;My bookings&quot; in the API (<code>/me/bookings</code>) to avoid the name clash (D-11).</li>
+</ul>
+<h3 id="adr-005-verticals">ADR-005: Verticals</h3>
+<ul>
+<li><strong>Decision</strong>: <code>vertical</code> = <code>home, hotel, hostel, experience, vehicle</code> (DEC-005 plus hostel split out because its unit is a bed). The search tab &quot;Hotels&quot; filters <code>hotel, hostel</code>; analytics group <code>home, hotel, hostel</code> as &quot;stays&quot;.</li>
+<li><strong>Rejected</strong>: hotel as a business category of home (spec): breaks search filters and analytics (D-12).</li>
+</ul>
+<h3 id="adr-006-money-in-centimes-with-a-double-entry-ledger">ADR-006: Money in centimes with a double-entry ledger</h3>
+<ul>
+<li><strong>Context</strong>: DEC-001 (prepaid commission now, maybe collected payments later); research B.17 and A.5.</li>
+<li><strong>Decision</strong>: <code>ledger_account</code>, <code>ledger_transaction</code>, <code>ledger_entry</code> (insert-only, sum to zero per transaction, enforced by a deferred trigger) and <code>account_balance</code> cache. Amounts in centimes.</li>
+<li><strong>Rejected</strong>: single-sided wallet rows (both apps today: cannot prove that money balances); <code>DECIMAL</code> with django-money (repository archived 2026).</li>
+<li><strong>Consequences</strong>: M2 to M4 only add accounts and transaction kinds; no schema rewrite. Corrections are reversing transactions.</li>
+</ul>
+<h3 id="adr-007-snapshots-on-the-booking">ADR-007: Snapshots on the booking</h3>
+<ul>
+<li><strong>Decision</strong>: prices, commission base, rate and amount, cancellation windows, listing title and address are copied onto the booking at creation (BR-BKG-07).</li>
+<li><strong>Rejected</strong>: read live values (old bookings would change when hosts edit).</li>
+<li><strong>Consequences</strong>: some duplication by design; editing a listing never alters a booking.</li>
+</ul>
+<h3 id="adr-008-statuses-as-postgresql-enums-with-transition-checks-in-services">ADR-008: Statuses as PostgreSQL enums with transition checks in services</h3>
+<ul>
+<li><strong>Decision</strong>: enum types for statuses; allowed transitions in service code with a <code>booking_event</code> row per change; the database rejects unknown values.</li>
+<li><strong>Rejected</strong>: transition triggers in SQL (hard to test and translate errors); free text statuses (today&#39;s three conflicting sets).</li>
+<li><strong>Consequences</strong>: adding a status is a migration (rare, deliberate).</li>
+</ul>
+<h3 id="adr-009-listing-revisions-for-edits-under-review">ADR-009: Listing revisions for edits under review</h3>
+<ul>
+<li><strong>Decision</strong>: edits to reviewed fields of a published listing go to <code>listing_revision</code> (JSON payload) while the live listing stays visible (BR-LST-02).</li>
+<li><strong>Rejected</strong>: unpublishing on every edit (hosts lose bookings); no review of edits (fraud path: approved listing turned into a fake one).</li>
+</ul>
+<h3 id="adr-010-versioned-config-as-json-validated-by-the-app">ADR-010: Versioned config as JSON validated by the app</h3>
+<ul>
+<li><strong>Decision</strong>: <code>platform_settings</code> and <code>onboarding_flow_version</code> store a validated JSON document per version; old versions stay readable.</li>
+<li><strong>Rejected</strong>: one column per setting (migration per setting); key-value rows (no validation, no atomic versions).</li>
+</ul>
+<h3 id="adr-011-search-table-postgresql-only">ADR-011: Search table, PostgreSQL only</h3>
+<ul>
+<li><strong>Decision</strong>: <code>listing_search_doc</code> holds one denormalised row per published listing, refreshed through the outbox; queries combine it with live availability (research B.7).</li>
+<li><strong>Rejected</strong>: external search engine at launch.</li>
+</ul>
+<h3 id="adr-012-audit-as-a-hash-chained-insert-only-table-plus-automatic-row-history">ADR-012: Audit as a hash-chained, insert-only table plus automatic row history</h3>
+<ul>
+<li><strong>Decision</strong>: <code>audit_event</code> (human &quot;who did what&quot;) with <code>prev_hash</code>/<code>hash</code>, monthly partitions, no UPDATE/DELETE grant; django-pghistory tables for automatic row history of bookings, listings, memberships, settings (research B.11).</li>
+<li><strong>Rejected</strong>: signal-based history only (misses bulk updates).</li>
+</ul>
+<h3 id="adr-013-geography-as-reference-tables-with-provenance">ADR-013: Geography as reference tables with provenance</h3>
+<ul>
+<li><strong>Decision</strong>: <code>wilaya</code> (code PK 1 to 69), <code>daira</code>, <code>commune</code> with <code>source</code> and <code>valid_from</code>; listings store <code>commune_id</code>; the wilaya is derived. <code>legacy_code_58</code> keeps old data mappable.</li>
+<li><strong>Rejected</strong>: free text city (today).</li>
+</ul>
+<h3 id="adr-014-personal-data-minimisation-in-the-schema">ADR-014: Personal data minimisation in the schema</h3>
+<ul>
+<li><strong>Decision</strong>: document numbers stored only as HMAC hashes; payout account numbers encrypted with a key outside the database; exact listing location separate from public location; message <code>body_masked</code>.</li>
+<li><strong>Consequences</strong>: support cannot read raw ID numbers from the database; a key management step exists in operations (<a href="08-security-privacy.html">08-security-privacy.md</a>, Phase 7).</li>
+</ul>
+<hr>
+<h2 id="4-the-key-tables-in-plain-words">4. The key tables in plain words</h2>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>One sentence</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>user</code></td>
+<td>A person; may be a guest, a host, an organisation member and staff at the same time.</td>
+</tr>
+<tr>
+<td><code>host_account</code></td>
+<td>&quot;The one who hosts&quot;: either one person or one organisation. Owns listings, trips and a wallet.</td>
+</tr>
+<tr>
+<td><code>organization</code> / <code>membership</code></td>
+<td>An agency, hotel or hostel and who works in it with which role.</td>
+</tr>
+<tr>
+<td><code>listing</code></td>
+<td>Something to book: a home, hotel, hostel, experience or vehicle.</td>
+</tr>
+<tr>
+<td><code>room_type</code></td>
+<td>A kind of room or bed in a hotel or hostel, with a count of identical units.</td>
+</tr>
+<tr>
+<td><code>room_type_night</code></td>
+<td>For one room type and one night: how many units exist, are held, are booked.</td>
+</tr>
+<tr>
+<td><code>listing_day</code></td>
+<td>For a home or vehicle: a day the host blocked or priced differently.</td>
+</tr>
+<tr>
+<td><code>trip</code> / <code>trip_departure</code></td>
+<td>An agency trip and its dated departures with seats.</td>
+</tr>
+<tr>
+<td><code>booking</code></td>
+<td>One reservation with its frozen prices, commission and policy.</td>
+</tr>
+<tr>
+<td><code>booking_event</code></td>
+<td>Every status change of a booking, in order.</td>
+</tr>
+<tr>
+<td><code>ledger_*</code></td>
+<td>Money movements written as balanced entries; balances are sums.</td>
+</tr>
+<tr>
+<td><code>wallet_topup</code></td>
+<td>A host&#39;s deposit recorded by finance staff, with its receipt reference.</td>
+</tr>
+<tr>
+<td><code>review</code></td>
+<td>A rating and comment after a completed booking.</td>
+</tr>
+<tr>
+<td><code>conversation</code> / <code>message</code></td>
+<td>Message threads between guest and host.</td>
+</tr>
+<tr>
+<td><code>moderation_case</code></td>
+<td>One item in a staff queue (a host to verify, a listing to review, a report).</td>
+</tr>
+<tr>
+<td><code>audit_event</code></td>
+<td>A tamper-evident record of who did what.</td>
+</tr>
+<tr>
+<td><code>outbox_event</code></td>
+<td>A message to send after a change is saved (notification, email, search refresh).</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="5-booking-lifecycle-in-the-schema">5. Booking lifecycle in the schema</h2>
+<ol>
+<li>Guest asks for a price: a <code>quote</code> row (30 minutes).</li>
+<li>Guest books with an <code>Idempotency-Key</code>: <code>idempotency_record</code> locks the key.</li>
+<li>In one transaction: insert <code>booking</code> (status <code>pending</code> or <code>confirmed</code>), reserve inventory (exclusion constraint or counter <code>UPDATE</code>), insert <code>booking_event</code>, and if confirmed post the commission <code>ledger_transaction</code> (2 entries) and update <code>account_balance</code>; insert <code>outbox_event</code> rows (notify host and guest, refresh search).</li>
+<li>Commit. Workers send notifications from the outbox.</li>
+<li>Jobs later: expire pending (<code>expired</code>, release counters), complete after check-out (<code>completed</code>), open review window.</li>
+</ol>
+<hr>
+<h2 id="6-constraints-the-database-enforces-sql-sketch">6. Constraints the database enforces (SQL sketch)</h2>
+<p>These are written as SQL for clarity; they will become Django <code>Meta.constraints</code> or migration operations in the build phase.</p>
+<pre><code class="lang-sql">-- Extensions
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS btree_gist;   -- equality inside exclusion constraints
+CREATE EXTENSION IF NOT EXISTS pg_trgm;      -- fuzzy text search
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- BR-AVL-01: no overlapping stays on a single unit
+ALTER TABLE booking ADD CONSTRAINT booking_no_overlap
+  EXCLUDE USING gist (listing_id WITH =, stay WITH &amp;&amp;)
+  WHERE (inventory_kind = 'single'
+         AND status IN ('awaiting_payment','pending','confirmed','completed','disputed'));
+
+-- ADR-003: targets match the inventory kind
+ALTER TABLE booking ADD CONSTRAINT booking_target_matches_kind CHECK (
+  (inventory_kind = 'single'    AND listing_id IS NOT NULL AND room_type_id IS NULL AND experience_slot_id IS NULL AND trip_departure_id IS NULL) OR
+  (inventory_kind = 'room_pool' AND listing_id IS NOT NULL AND room_type_id IS NOT NULL AND experience_slot_id IS NULL AND trip_departure_id IS NULL) OR
+  (inventory_kind = 'slot'      AND listing_id IS NOT NULL AND experience_slot_id IS NOT NULL AND room_type_id IS NULL AND trip_departure_id IS NULL) OR
+  (inventory_kind = 'departure' AND trip_departure_id IS NOT NULL AND listing_id IS NULL AND room_type_id IS NULL AND experience_slot_id IS NULL));
+
+ALTER TABLE booking ADD CONSTRAINT booking_money_ok CHECK (
+  subtotal_minor &gt;= 0 AND discount_minor &gt;= 0 AND cleaning_fee_minor &gt;= 0 AND taxes_minor &gt;= 0
+  AND total_minor = subtotal_minor - discount_minor + cleaning_fee_minor + taxes_minor
+  AND refund_due_minor BETWEEN 0 AND total_minor
+  AND commission_rate_bp BETWEEN 0 AND 10000 AND commission_minor &gt;= 0
+  AND NOT isempty(stay) AND lower_inc(stay) AND NOT upper_inc(stay));
+
+-- BR-AVL-02: pooled inventory never oversold
+ALTER TABLE room_type_night ADD CONSTRAINT rtn_capacity
+  CHECK (held &gt;= 0 AND booked &gt;= 0 AND total &gt;= 0 AND held + booked &lt;= total);
+ALTER TABLE trip_departure ADD CONSTRAINT dep_capacity
+  CHECK (seats_held &gt;= 0 AND seats_booked &gt;= 0 AND seats_held + seats_booked &lt;= seats_total AND ends_on &gt;= starts_on);
+ALTER TABLE experience_slot ADD CONSTRAINT slot_capacity
+  CHECK (seats_held &gt;= 0 AND seats_booked &gt;= 0 AND seats_held + seats_booked &lt;= seats_total AND ends_at &gt; starts_at);
+
+-- Reserving 2 rooms for nights [2026-12-10, 2026-12-13): one statement, all nights or nothing
+UPDATE room_type_night SET booked = booked + 2
+ WHERE room_type_id = :rt AND night &gt;= '2026-12-10' AND night &lt; '2026-12-13'
+   AND held + booked + 2 &lt;= total;
+-- the service checks that the updated row count = number of nights, else rolls back (409)
+
+-- ADR-001: host account is exactly one of user or organisation
+ALTER TABLE host_account ADD CONSTRAINT host_account_one_owner CHECK (
+  (kind = 'individual'   AND user_id IS NOT NULL AND organization_id IS NULL) OR
+  (kind = 'organization' AND organization_id IS NOT NULL AND user_id IS NULL));
+
+-- BR-ORG-04: exactly one active owner
+CREATE UNIQUE INDEX membership_one_owner ON membership (organization_id)
+  WHERE role = 'owner' AND is_active;
+CREATE UNIQUE INDEX membership_active_unique ON membership (organization_id, user_id) WHERE is_active;
+
+-- BR-ACC-01
+CREATE UNIQUE INDEX user_email_ci ON &quot;user&quot; (lower(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX user_phone ON &quot;user&quot; (phone_e164) WHERE phone_e164 IS NOT NULL;
+
+-- BR-PAY-02: balanced, insert-only ledger
+CREATE FUNCTION ledger_tx_balanced() RETURNS trigger AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM ledger_entry WHERE transaction_id = NEW.transaction_id
+             GROUP BY currency HAVING sum(amount_minor) &lt;&gt; 0) THEN
+    RAISE EXCEPTION 'ledger transaction % is not balanced', NEW.transaction_id;
+  END IF;
+  RETURN NULL;
+END $$ LANGUAGE plpgsql;
+CREATE CONSTRAINT TRIGGER ledger_entry_balanced AFTER INSERT ON ledger_entry
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ledger_tx_balanced();
+ALTER TABLE ledger_entry ADD CONSTRAINT ledger_entry_nonzero CHECK (amount_minor &lt;&gt; 0);
+REVOKE UPDATE, DELETE ON ledger_entry, ledger_transaction, audit_event, booking_event FROM bladus_app;
+
+-- BR-PAY-04: commission posted once per booking
+CREATE UNIQUE INDEX ledger_one_commission ON ledger_transaction (booking_id) WHERE kind = 'commission';
+
+-- BR-LST-02, BR-CFG-02, BR-MOD: one open item at a time
+CREATE UNIQUE INDEX listing_one_pending_revision ON listing_revision (listing_id) WHERE status = 'pending_review';
+CREATE UNIQUE INDEX flow_one_draft ON onboarding_flow_version (host_type) WHERE status = 'draft';
+CREATE UNIQUE INDEX flow_one_published ON onboarding_flow_version (host_type) WHERE status = 'published';
+CREATE UNIQUE INDEX case_one_open ON moderation_case (kind, subject_id) WHERE status &lt;&gt; 'resolved';
+CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE is_current;</code></pre><p>Other checks (listed in each table&#39;s note in the dictionary): ratings 1 to 5, discounts 0 to 9,000 bp, <code>min_nights &lt;= max_nights</code>, <code>listing.inventory_kind</code> consistent with <code>vertical</code>, favourites and photos pointing to exactly one parent.</p>
+<hr>
+<h2 id="7-indexes-and-query-plan-for-the-busiest-queries">7. Indexes and query plan for the busiest queries</h2>
+<p>Targets from NFR-01 and NFR-02. &quot;Plan&quot; is the expected PostgreSQL strategy; it will be confirmed with <code>EXPLAIN ANALYZE</code> on seeded data (20,000 listings, 1 million booking rows) in the build phase.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Query</th>
+<th>Frequency</th>
+<th>Indexes</th>
+<th>Expected plan</th>
+<th>Target p95</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q1</td>
+<td>Search: vertical + wilaya + guests + price + amenities + map box, page of 24</td>
+<td>very high</td>
+<td><code>listing_search_doc</code>: B-tree <code>(vertical, wilaya_code, price_from_minor)</code>, GiST <code>location_public</code>, GIN <code>amenity_ids</code></td>
+<td>Bitmap AND of B-tree and GIN, GiST for map box; then availability anti-join (Q2) on at most a few hundred candidates</td>
+<td>500 ms</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>Availability for candidates and dates</td>
+<td>very high</td>
+<td><code>booking</code> GiST from the exclusion constraint <code>(listing_id, stay)</code>; <code>room_type_night</code> PK <code>(room_type_id, night)</code>; <code>listing_day</code> PK</td>
+<td><code>NOT EXISTS</code> probe on the exclusion index per candidate; range scan on night PK for pools</td>
+<td>inside Q1</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>Listing detail + calendar 90 days</td>
+<td>high</td>
+<td>PKs; <code>room_type (listing_id)</code>; <code>listing_photo (listing_id, sort_order)</code></td>
+<td>index scans</td>
+<td>150 ms</td>
+</tr>
+<tr>
+<td>Q4</td>
+<td>Create booking (transaction)</td>
+<td>medium</td>
+<td>constraint indexes, <code>idempotency_record</code> unique</td>
+<td>row locks on counters only</td>
+<td>600 ms</td>
+</tr>
+<tr>
+<td>Q5</td>
+<td>Host bookings list by host account + status + dates</td>
+<td>high</td>
+<td><code>booking (host_account_id, status, check_in_at)</code></td>
+<td>index range scan</td>
+<td>200 ms</td>
+</tr>
+<tr>
+<td>Q6</td>
+<td>Guest bookings</td>
+<td>high</td>
+<td><code>booking (guest_id, created_at DESC)</code></td>
+<td>index scan</td>
+<td>150 ms</td>
+</tr>
+<tr>
+<td>Q7</td>
+<td>Message sync since cursor</td>
+<td>very high (polling)</td>
+<td><code>message (conversation_id, id)</code>; <code>conversation_participant (user_id)</code></td>
+<td>index range <code>id &gt; cursor</code></td>
+<td>100 ms</td>
+</tr>
+<tr>
+<td>Q8</td>
+<td>Unread notifications</td>
+<td>very high</td>
+<td><code>notification (user_id, read_at, id)</code></td>
+<td>index only</td>
+<td>50 ms</td>
+</tr>
+<tr>
+<td>Q9</td>
+<td>Moderation queue by kind, oldest first</td>
+<td>medium</td>
+<td><code>moderation_case (status, kind, submitted_at)</code></td>
+<td>index scan</td>
+<td>200 ms</td>
+</tr>
+<tr>
+<td>Q10</td>
+<td>Wallet balance and last entries</td>
+<td>medium</td>
+<td><code>account_balance</code> PK; <code>ledger_entry (account_id, id DESC)</code></td>
+<td>PK + index scan</td>
+<td>100 ms</td>
+</tr>
+<tr>
+<td>Q11</td>
+<td>Expire pending requests (job, every 5 min)</td>
+<td>job</td>
+<td>partial <code>booking (request_expires_at) WHERE status = &#39;pending&#39;</code></td>
+<td>index range</td>
+<td>1 s</td>
+</tr>
+<tr>
+<td>Q12</td>
+<td>Complete stays (job)</td>
+<td>job</td>
+<td>partial <code>booking (check_out_at) WHERE status = &#39;confirmed&#39;</code></td>
+<td>index range</td>
+<td>1 s</td>
+</tr>
+<tr>
+<td>Q13</td>
+<td>Outbox dispatch</td>
+<td>constant</td>
+<td><code>outbox_event (status, next_attempt_at)</code> with <code>FOR UPDATE SKIP LOCKED</code></td>
+<td>index range</td>
+<td>50 ms</td>
+</tr>
+<tr>
+<td>Q14</td>
+<td>Admin lists with facets (listings, hosts, bookings)</td>
+<td>medium</td>
+<td>B-tree on filter columns; counts via <code>GROUP BY</code> on the filtered set</td>
+<td>bitmap scans</td>
+<td>400 ms</td>
+</tr>
+<tr>
+<td>Q15</td>
+<td>Commune autocomplete</td>
+<td>high</td>
+<td>GIN trigram on <code>unaccent(name_fr)</code>, <code>name_ar</code></td>
+<td>GIN</td>
+<td>50 ms</td>
+</tr>
+<tr>
+<td>Q16</td>
+<td>Audit by object</td>
+<td>low</td>
+<td><code>audit_event (object_type, object_id, occurred_at)</code> on monthly partitions</td>
+<td>partition pruning</td>
+<td>300 ms</td>
+</tr>
+</tbody></table>
+<p>Growth estimate for capacity planning (first two years, assumption): 20,000 listings, 500,000 bookings, 5 million <code>room_type_night</code> rows (18 months x 10,000 room types x ~30 nights per month), 10 million messages, 20 million ledger entries. All fit comfortably on one PostgreSQL primary with 8 vCPU / 32 GB; partition <code>audit_event</code> and <code>message</code> by month when they pass 50 million rows.</p>
+<hr>
+<h2 id="8-mapping-todays-data-to-the-new-schema">8. Mapping today&#39;s data to the new schema</h2>
+<h3 id="81-entities">8.1 Entities</h3>
+<table>
+<thead>
+<tr>
+<th>Website (frontend)</th>
+<th>Admin</th>
+<th>New table(s)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>User</code> (role, hostType, organizationId)</td>
+<td><code>GuestUser</code>, <code>Host</code> (separate)</td>
+<td><code>user</code> + <code>host_account(kind=individual)</code> + <code>membership</code></td>
+<td>admin <code>Host</code> of type individual becomes a host account of its owner user</td>
+</tr>
+<tr>
+<td><code>Organization</code> (businessCategory)</td>
+<td><code>Host</code> with hostType agency/hotel/hostel + metadata</td>
+<td><code>organization</code> + <code>host_account(kind=organization)</code></td>
+<td>admin <code>agencyMetadata</code>, <code>hotelMetadata</code>, <code>hostelMetadata</code> become columns or <code>policies</code></td>
+</tr>
+<tr>
+<td><code>Membership</code></td>
+<td><code>OrganizationMember</code> (unused)</td>
+<td><code>membership</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Listing</code> (+ vehicle, experience fields)</td>
+<td><code>Listing</code></td>
+<td><code>listing</code> + <code>vehicle_detail</code> / <code>experience_detail</code></td>
+<td><code>instantBook</code> and <code>bookingApprovalMode</code> merge into <code>approval_mode</code> (D-6)</td>
+</tr>
+<tr>
+<td><code>RoomType</code></td>
+<td><code>RoomType</code></td>
+<td><code>room_type</code></td>
+<td><code>totalInventory</code> becomes <code>unit_count</code>; <code>availableInventory</code> dropped (computed)</td>
+</tr>
+<tr>
+<td><code>Trip</code> (departureDates[])</td>
+<td><code>Listing</code> with category trip</td>
+<td><code>trip</code>, <code>trip_itinerary_day</code>, <code>trip_departure</code></td>
+<td>each date string becomes a departure with <code>seats_total = maxGroupSize</code></td>
+</tr>
+<tr>
+<td><code>Reservation</code></td>
+<td><code>Booking</code></td>
+<td><code>booking</code> + <code>booking_event</code></td>
+<td>ids re-generated; old ids kept in a migration map</td>
+</tr>
+<tr>
+<td><code>DateAvailabilityOverride</code></td>
+<td>none</td>
+<td><code>listing_day</code> or <code>room_type_night</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Wallet</code>, <code>Transaction</code> (prepaid)</td>
+<td><code>HostWallet</code>, <code>WalletTransaction</code></td>
+<td><code>ledger_*</code>, <code>account_balance</code>, <code>wallet_topup</code></td>
+<td>each old transaction becomes a balanced transaction against <code>platform_cash</code> or <code>commission_revenue</code></td>
+</tr>
+<tr>
+<td>none</td>
+<td><code>PayoutRequest</code></td>
+<td><code>payout</code> (dormant)</td>
+<td>M1 has no payouts</td>
+</tr>
+<tr>
+<td><code>Review</code> (5 sub-ratings)</td>
+<td><code>ReviewItem</code> (status, flags, reply)</td>
+<td><code>review</code>, <code>review_reply</code>, <code>review_report</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Conversation</code>, <code>Message</code></td>
+<td>mocked</td>
+<td><code>conversation</code>, <code>conversation_participant</code>, <code>message</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Notification</code></td>
+<td>mocked</td>
+<td><code>notification</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Coupon</code></td>
+<td><code>PromotionCoupon</code></td>
+<td><code>coupon</code></td>
+<td></td>
+</tr>
+<tr>
+<td>amenities (keys), categories (keys)</td>
+<td>names {en,fr,ar}, free strings</td>
+<td><code>amenity</code>, <code>category</code>, <code>property_type</code></td>
+<td>free strings mapped by a lookup table</td>
+</tr>
+<tr>
+<td>onboarding config in code / localStorage</td>
+<td><code>OnboardingConfig</code></td>
+<td><code>onboarding_flow_version</code> (v1 per host type from the website&#39;s 12/5/7/7 steps)</td>
+<td></td>
+</tr>
+<tr>
+<td>none</td>
+<td><code>AuditEntry</code></td>
+<td><code>audit_event</code></td>
+<td></td>
+</tr>
+<tr>
+<td>none</td>
+<td><code>PlatformSettings</code></td>
+<td><code>platform_settings</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="82-enum-mapping">8.2 Enum mapping</h3>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>Website value</th>
+<th>Admin value</th>
+<th>New value</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Listing status</td>
+<td>active</td>
+<td>approved, published (legacy)</td>
+<td>published</td>
+</tr>
+<tr>
+<td></td>
+<td>pending</td>
+<td>pending_review, pending (legacy)</td>
+<td>pending_review</td>
+</tr>
+<tr>
+<td></td>
+<td>draft</td>
+<td>draft</td>
+<td>draft</td>
+</tr>
+<tr>
+<td></td>
+<td>suspended</td>
+<td>suspended</td>
+<td>suspended (staff) or paused (host)</td>
+</tr>
+<tr>
+<td></td>
+<td>n/a</td>
+<td>changes_requested, rejected, refused (legacy), archived, deleted</td>
+<td>same names (refused becomes rejected)</td>
+</tr>
+<tr>
+<td>Booking status</td>
+<td>pending, confirmed, cancelled, completed, declined, expired</td>
+<td>pending, confirmed, cancelled, completed, disputed</td>
+<td>same names</td>
+</tr>
+<tr>
+<td></td>
+<td>n/a</td>
+<td>refunded</td>
+<td>booking stays in its status; <code>payment_status</code> and <code>refund_due_minor</code> carry the refund</td>
+</tr>
+<tr>
+<td>Payment status</td>
+<td>paid, pending, refunded, partially_refunded, voided</td>
+<td>paid, partially_refunded, refunded, pending, failed</td>
+<td>M1: <code>not_collected</code> for all demo bookings (the &quot;paid&quot; labels were never true, O7)</td>
+</tr>
+<tr>
+<td>Transaction type</td>
+<td>recharge</td>
+<td>wallet_recharge</td>
+<td><code>wallet_topup</code></td>
+</tr>
+<tr>
+<td></td>
+<td>commission_deduction</td>
+<td>commission_deduction</td>
+<td><code>commission</code></td>
+</tr>
+<tr>
+<td></td>
+<td>adjustment (reversal)</td>
+<td>booking_refund (host share)</td>
+<td><code>commission_reversal</code></td>
+</tr>
+<tr>
+<td></td>
+<td>payout</td>
+<td>host_payout</td>
+<td><code>payout</code> (dormant)</td>
+</tr>
+<tr>
+<td></td>
+<td>n/a</td>
+<td>booking_payment</td>
+<td><code>guest_payment</code> (dormant)</td>
+</tr>
+<tr>
+<td>Onboarding field type</td>
+<td>multi-select, image-upload, toggle</td>
+<td>multiselect, file, boolean, radio</td>
+<td>multi_select, image_upload / file_upload, toggle, select (radio becomes select with a display hint)</td>
+</tr>
+<tr>
+<td>Wilaya code</td>
+<td>number 1 to 58</td>
+<td>string &quot;01&quot; to &quot;68&quot;</td>
+<td>smallint 1 to 69 via <code>legacy_code_58</code> and a name match</td>
+</tr>
+</tbody></table>
+<h3 id="83-data-that-is-not-migrated">8.3 Data that is not migrated</h3>
+<p>The apps run on demo data only. Nothing real is migrated: the demo seeds are re-created by the seed plan below. The mapping above is still needed so the two apps&#39; screens can switch to the API without surprises.</p>
+<hr>
+<h2 id="9-seed-plan">9. Seed plan</h2>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Data</th>
+<th>Source</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Extensions, enums</td>
+<td>migrations</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>wilaya</code>, <code>daira</code>, <code>commune</code></td>
+<td>el-amin-dev/algeria-wilayas-communes (CC0) names + ihahachi/Algeria-Cities (MIT) coordinates; keep <code>source</code></td>
+<td>69 / ~591 / 1,541</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>staff_permission</code>, <code>staff_role_permission</code></td>
+<td>admin <code>lib/permissions.ts</code> matrix</td>
+<td>34 permissions x 5 roles</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>amenity</code>, <code>category</code>, <code>property_type</code></td>
+<td>merge of the three vocabularies, translated</td>
+<td>~80 / ~20 / ~25</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>cancellation_policy</code> v1</td>
+<td>BR-CAN-01</td>
+<td>3</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>reason_code</code></td>
+<td>admin reasons + new catalogue</td>
+<td>~60</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>platform_settings</code> v1</td>
+<td>defaults: 1,200 / 1,500 / 1,800 / 1,000 bp; request TTL 24; credit limit 20,000 DZD</td>
+<td>1</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>onboarding_flow_version</code> v1 per host type</td>
+<td>website <code>lib/onboarding-config.ts</code> converted to canonical types</td>
+<td>4</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Demo fixtures (dev and staging only)</td>
+<td>website demo users (Yacine, Amina, Karim...), admin staff (Nadia...), 18 listings, 4 trips, reservations, wallets</td>
+<td>factory_boy factories; never in production</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>room_type_night</code> rows</td>
+<td>job generating 18 months ahead</td>
+<td>computed</td>
+</tr>
+</tbody></table>
+<p>Production seeds are only steps 1 to 8. Demo passwords exist only in dev fixtures, never in the website bundle (fixes the current leak).</p>
+<hr>
+<h2 id="additions-on-2026-11-09">Additions on 2026-11-09</h2>
+<ul>
+<li><code>experience_type</code> and <code>trip_type</code> enums with <code>listing.experience_type</code> and <code>trip.trip_type</code> (DEC-015, BR-LST-05).</li>
+<li>Host offer rule (DEC-014, BR-HST-05) documented on <code>listing</code>: a trigger checks the vertical against the host account kind and organisation category.</li>
+<li><code>incident_record</code> (breach register and 5-day clock, PRV-05), <code>calendar_feed</code> (iCal, AVL-06), <code>otp_send_log</code> (one-time code sends, ACC-02). These closed decision T5.</li>
+<li><a href="files/schema.sql">schema.sql</a>: the PostgreSQL rendering of <code>schema.dbml</code> produced by the official DBML tool.</li>
+</ul>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> What does <code>host_account</code> replace, and which disagreement does it solve?</li>
+<li><input disabled="" type="checkbox"> Two guests click &quot;Reserve&quot; on the last hotel room at the same second. Which constraint decides, and what does the loser see?</li>
+<li><input disabled="" type="checkbox"> Why does the ledger refuse <code>UPDATE</code>? How is a mistake corrected?</li>
+<li><input disabled="" type="checkbox"> Which tables are dormant until the money model changes?</li>
+<li><input disabled="" type="checkbox"> Which index makes message polling cheap?</li>
+<li><input disabled="" type="checkbox"> Map the admin status <code>refunded</code> to the new model.</li>
+</ul>
+<div class="pager"><span><a href="diagram-gallery.html">&larr; Diagram gallery</a></span><span><a href="05b-data-dictionary.html">05b. Data dictionary &rarr;</a></span></div></main></div></body></html>

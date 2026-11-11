@@ -1,0 +1,55 @@
+{
+ "operations": 272,
+ "paths": 225,
+ "by_group": {
+  "auth": 15,
+  "public": 23,
+  "me": 26,
+  "messaging": 7,
+  "media": 4,
+  "host": 77,
+  "webhooks": 1,
+  "admin": 119
+ },
+ "dormant": [
+  "createGuestPayment",
+  "listHostPayouts",
+  "requestHostPayout",
+  "receiveGatewayWebhook",
+  "adminListPayouts",
+  "adminApprovePayout",
+  "adminRejectPayout",
+  "adminMarkPayoutSent"
+ ],
+ "reqs_not_cited": [
+  "AVL-05",
+  "AVL-06",
+  "BKG-04",
+  "MSG-06",
+  "NFR-01",
+  "NFR-03",
+  "NFR-04",
+  "NFR-05",
+  "NFR-06",
+  "NFR-07",
+  "NFR-08",
+  "NFR-09",
+  "NFR-10",
+  "NFR-13",
+  "NTF-02",
+  "NTF-04",
+  "PRV-03",
+  "PRV-04",
+  "PRV-05",
+  "PRV-06"
+ ],
+ "rules_not_cited": [
+  "BR-AVL-06",
+  "BR-BKG-05",
+  "BR-MOD-04",
+  "BR-NTF-02",
+  "BR-PRV-04",
+  "BR-PRV-05",
+  "BR-SYS-03"
+ ]
+}
