@@ -1,0 +1,408 @@
+"""
+Input and output shapes of the hosts API.
+
+Private shapes (the host's own workspace, the admin views) and the public
+organisation profile are kept apart on purpose: the public one never
+carries legal numbers or contact details (BR-ORG-06, privacy).
+"""
+
+from django.utils import timezone
+from rest_framework import serializers
+
+from apps.accounts.models import phone_validator
+from apps.config.services import commission_rate_bp
+from apps.geo.models import Commune
+
+from .models import (
+    HOST_ALLOWED_OFFERS,
+    ROLE_PERMISSIONS,
+    ALL_HOST_PERMISSIONS,
+    REQUIRED_DOCUMENTS,
+    ApprovalMode,
+    BusinessCategory,
+    DocumentStatus,
+    DocumentType,
+    HostAccount,
+    HostDocument,
+    Invitation,
+    InvitationStatus,
+    Membership,
+    MembershipRole,
+    Organization,
+    PropertyIntegration,
+    VerificationStatus,
+)
+
+# Roles a person can be invited to or moved to (owner only by transfer, BR-ORG-04).
+ASSIGNABLE_ROLES = [role for role in MembershipRole.values if role != MembershipRole.OWNER]
+# Organisation fields a host may write (create and edit); the rest is managed by BLADUS.
+ORGANIZATION_WRITABLE_FIELDS = [
+    "display_name", "legal_name", "description", "source_language", "business_email", "business_phone_e164",
+    "commune", "address_line", "rc_number", "nif", "nis", "tourism_licence_number", "star_rating",
+    "check_in_time", "check_out_time", "policies",
+]
+
+
+# ---------------------------------------------------------------------------
+# Workspaces and the active host account
+# ---------------------------------------------------------------------------
+def workspace_data(account: HostAccount, membership: Membership | None, active_id=None) -> dict:
+    """
+    One entry of the workspace switcher (ORG-02).
+
+    ``role`` is ``None`` for the user's own solo host account, which holds
+    every permission (BR-ORG-05). ``is_active`` tells which workspace the
+    session currently acts for.
+    """
+    permissions = membership.permissions if membership else ALL_HOST_PERMISSIONS
+    org = account.organization
+    return {
+        "host_account_id": str(account.id),
+        "kind": account.kind,
+        "host_type": account.host_type,
+        "organization_id": str(org.id) if org else None,
+        "organization_slug": org.slug if org else None,
+        "display_name": account.display_name,
+        "role": membership.role if membership else None,
+        "verification_status": account.verification_status,
+        "is_active": active_id is not None and account.id == active_id,
+        "permissions": sorted(permissions),
+        "allowed_verticals": sorted(HOST_ALLOWED_OFFERS.get(account.host_type, set())),  # DEC-014
+        "can_create_trips": account.may_offer("trip"),
+    }
+
+
+def required_documents_data(account: HostAccount) -> list[dict]:
+    """
+    For each required document type (table 3a), the best status reached so far.
+
+    ``approved`` beats ``pending`` beats ``rejected``; ``missing`` when nothing was sent.
+    """
+    rank = {DocumentStatus.APPROVED: 3, DocumentStatus.PENDING: 2, DocumentStatus.REJECTED: 1}
+    best: dict[str, str] = {}
+    for doc in HostDocument.objects.alive().filter(host_account=account).only("doc_type", "status"):
+        if rank[doc.status] > rank.get(best.get(doc.doc_type), 0):
+            best[doc.doc_type] = doc.status
+    return [
+        {"doc_type": str(doc_type), "status": best.get(doc_type, "missing")}
+        for doc_type in sorted(REQUIRED_DOCUMENTS.get(account.host_type, set()))
+    ]
+
+
+def host_account_data(account: HostAccount, membership: Membership | None, active_id=None) -> dict:
+    """``GET /host/account``: the workspace entry plus settings, commission and document checklist."""
+    return {
+        **workspace_data(account, membership, active_id),
+        "default_approval_mode": account.default_approval_mode,
+        "commission_rate_bp": commission_rate_bp(account),
+        "submitted_at": account.submitted_at,
+        "approved_at": account.approved_at,
+        "required_documents": required_documents_data(account),
+    }
+
+
+class WorkspaceSwitchSerializer(serializers.Serializer):
+    """Body of ``PUT /me/workspaces/active``."""
+
+    host_account_id = serializers.UUIDField()
+
+
+class HostAccountUpdateSerializer(serializers.Serializer):
+    """Body of ``PATCH /host/account``: only the default booking approval mode can change here."""
+
+    default_approval_mode = serializers.ChoiceField(choices=ApprovalMode.choices)
+
+
+# ---------------------------------------------------------------------------
+# Organisations
+# ---------------------------------------------------------------------------
+class OrganizationWriteSerializer(serializers.ModelSerializer):
+    """
+    Body of ``PATCH /host/organization`` (every field optional).
+
+    ``business_category`` and ``slug`` are not accepted: the category never
+    changes (BR-ORG-02) and the slug is generated by BLADUS.
+    """
+
+    commune = serializers.PrimaryKeyRelatedField(queryset=Commune.objects.all(), required=False, allow_null=True)
+    business_phone_e164 = serializers.CharField(
+        required=False, allow_blank=True, max_length=16, validators=[phone_validator]
+    )
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = Organization
+        fields = ORGANIZATION_WRITABLE_FIELDS
+        extra_kwargs = {"star_rating": {"min_value": 1, "max_value": 5}}
+
+    def validate(self, attrs):
+        """Refuse a change of business category explicitly, instead of silently ignoring it (BR-ORG-02)."""
+        if "business_category" in self.initial_data:
+            raise serializers.ValidationError({"business_category": ["The business category cannot change."]})
+        return attrs
+
+
+class OrganizationCreateSerializer(OrganizationWriteSerializer):
+    """Body of ``POST /organizations``: the category and the name are required."""
+
+    business_category = serializers.ChoiceField(choices=BusinessCategory.choices)
+
+    class Meta(OrganizationWriteSerializer.Meta):
+        """Model and fields this serializer reads or writes."""
+        fields = ["business_category", *ORGANIZATION_WRITABLE_FIELDS]
+        extra_kwargs = {**OrganizationWriteSerializer.Meta.extra_kwargs, "display_name": {"required": True}}
+
+    def validate(self, attrs):
+        """The category is welcome here (it is chosen once, at creation)."""
+        return attrs
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    """The organisation as its own team sees it (legal numbers and contact included)."""
+
+    host_account_id = serializers.UUIDField(source="host_account.id", read_only=True)
+    verification_status = serializers.CharField(source="host_account.verification_status", read_only=True)
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = Organization
+        fields = ["id", "host_account_id", "slug", "business_category", "verification_status",
+                  *ORGANIZATION_WRITABLE_FIELDS, "created_at", "updated_at"]
+        read_only_fields = fields
+
+
+class PublicOrganizationSerializer(serializers.ModelSerializer):
+    """
+    ``GET /organizations/{slug}``: what any visitor may see.
+
+    Never legal name or numbers (RC, NIF, NIS, licence), business email,
+    phone or street address.
+    """
+
+    host_account_id = serializers.UUIDField(source="host_account.id", read_only=True)
+    verified = serializers.SerializerMethodField()
+    rating_avg = serializers.DecimalField(source="host_account.rating_avg", max_digits=3, decimal_places=2,
+                                          read_only=True, coerce_to_string=False)
+    review_count = serializers.IntegerField(source="host_account.review_count", read_only=True)
+    commune = serializers.SerializerMethodField()
+    member_since = serializers.SerializerMethodField()
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = Organization
+        fields = [
+            "id", "host_account_id", "slug", "display_name", "business_category", "description",
+            "source_language", "commune", "star_rating", "check_in_time", "check_out_time", "policies",
+            "verified", "rating_avg", "review_count", "member_since",
+        ]
+        read_only_fields = fields
+
+    def get_verified(self, org: Organization) -> bool:
+        """True when BLADUS approved the host (always true here: only approved ones are public)."""
+        return org.host_account.verification_status == VerificationStatus.APPROVED
+
+    def get_commune(self, org: Organization) -> dict | None:
+        """Town and wilaya only, never the street address."""
+        if org.commune_id is None:
+            return None
+        return {"id": org.commune_id, "name": org.commune.name_fr, "wilaya_code": org.commune.wilaya_id,
+                "wilaya_name": org.commune.wilaya.name_fr}
+
+    def get_member_since(self, org: Organization) -> int:
+        """Year the organisation joined BLADUS."""
+        return org.created_at.year
+
+
+# ---------------------------------------------------------------------------
+# Team
+# ---------------------------------------------------------------------------
+class MemberSerializer(serializers.ModelSerializer):
+    """A team member: public name, role and what the role allows (BR-ORG-05)."""
+
+    user = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = Membership
+        fields = ["id", "user", "role", "permissions", "joined_at"]
+        read_only_fields = fields
+
+    def get_user(self, member: Membership) -> dict:
+        """User id and display name (no email or phone in team lists)."""
+        return {"id": str(member.user_id), "display_name": member.user.display_name}
+
+    def get_permissions(self, member: Membership) -> list[str]:
+        """Permission codes of the member's role, sorted."""
+        return sorted(ROLE_PERMISSIONS.get(member.role, set()))
+
+
+class MemberUpdateSerializer(serializers.Serializer):
+    """Body of ``PATCH /host/organization/members/{id}``."""
+
+    role = serializers.ChoiceField(choices=ASSIGNABLE_ROLES)
+
+
+class OwnershipTransferSerializer(serializers.Serializer):
+    """Body of ``POST /host/organization/transfer-ownership``: the membership of the new owner."""
+
+    membership_id = serializers.UUIDField()
+
+
+class InvitationSerializer(serializers.ModelSerializer):
+    """An invitation as the team sees it. The token is never shown again after creation."""
+
+    phone = serializers.CharField(source="phone_e164", read_only=True)
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = Invitation
+        fields = ["id", "email", "phone", "role", "status", "expires_at", "created_at", "accepted_at"]
+        read_only_fields = fields
+
+    def get_status(self, invitation: Invitation) -> str:
+        """``expired`` as soon as the date passed, even before any job updates the row (BR-ORG-03)."""
+        if invitation.status == InvitationStatus.PENDING and invitation.expires_at <= timezone.now():
+            return InvitationStatus.EXPIRED
+        return invitation.status
+
+
+class InvitationCreateSerializer(serializers.Serializer):
+    """Body of ``POST /host/organization/invitations``: one email or one phone, one role (never owner)."""
+
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True, validators=[phone_validator])
+    role = serializers.ChoiceField(choices=ASSIGNABLE_ROLES)
+
+
+class InvitationAcceptSerializer(serializers.Serializer):
+    """Body of ``POST /invitations/accept``."""
+
+    token = serializers.CharField(max_length=200)
+
+
+# ---------------------------------------------------------------------------
+# Documents and integrations
+# ---------------------------------------------------------------------------
+class HostDocumentSerializer(serializers.ModelSerializer):
+    """A verification document with its review result."""
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = HostDocument
+        fields = ["id", "doc_type", "file_url", "status", "rejection_reason", "reviewed_at", "created_at"]
+        read_only_fields = fields
+
+
+class HostDocumentCreateSerializer(serializers.Serializer):
+    """Body of ``POST /host/documents``."""
+
+    doc_type = serializers.ChoiceField(choices=DocumentType.choices)
+    file_url = serializers.CharField(max_length=500)
+
+
+class PropertyIntegrationSerializer(serializers.ModelSerializer):
+    """
+    A hotel system connection (DEC-017).
+
+    ``credentials_encrypted`` is deliberately absent: secrets never leave the server.
+    """
+
+    has_credentials = serializers.SerializerMethodField()
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = PropertyIntegration
+        fields = ["id", "kind", "system_name", "base_url", "status", "has_credentials",
+                  "last_synced_at", "last_error", "created_at"]
+        read_only_fields = fields
+
+    def get_has_credentials(self, integration: PropertyIntegration) -> bool:
+        """True when an access key is stored (the key itself is never returned)."""
+        return integration.credentials_encrypted is not None
+
+
+class PropertyIntegrationCreateSerializer(serializers.Serializer):
+    """Body of ``POST /host/integrations``."""
+
+    kind = serializers.ChoiceField(choices=["channel_manager", "pms", "ical", "csv_import"])
+    system_name = serializers.CharField(max_length=60)
+    base_url = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=True)
+    credentials = serializers.DictField(required=False, allow_null=True, write_only=True)
+
+
+# ---------------------------------------------------------------------------
+# Admin
+# ---------------------------------------------------------------------------
+class AdminHostAccountSerializer(serializers.ModelSerializer):
+    """A host account in the admin list: who, which type, where it stands, which rate."""
+
+    host_type = serializers.CharField(read_only=True)
+    display_name = serializers.CharField(read_only=True)
+    organization = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    commission_rate_bp = serializers.SerializerMethodField()
+
+    class Meta:
+        """Model and fields this serializer reads or writes."""
+        model = HostAccount
+        fields = [
+            "id", "kind", "host_type", "display_name", "verification_status", "organization", "user",
+            "default_approval_mode", "commission_rate_override_bp", "commission_rate_bp",
+            "submitted_at", "approved_at", "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_organization(self, account: HostAccount) -> dict | None:
+        """Organisation identity and legal numbers (admins review them, BR-ORG-06)."""
+        org = account.organization
+        if org is None:
+            return None
+        return {
+            "id": str(org.id), "slug": org.slug, "business_category": org.business_category,
+            **{name: getattr(org, name) for name in Organization.LEGAL_FIELDS},
+        }
+
+    def get_user(self, account: HostAccount) -> dict | None:
+        """The solo host's contact details (admins need them to verify the person)."""
+        if account.user_id is None:
+            return None
+        return {"id": str(account.user_id), "email": account.user.email, "phone": account.user.phone_e164}
+
+    def get_commission_rate_bp(self, account: HostAccount) -> int:
+        """Rate actually applied: the override or the default of the host type (BR-PAY-06)."""
+        return commission_rate_bp(account)
+
+
+class AdminHostAccountDetailSerializer(AdminHostAccountSerializer):
+    """One host account for review: everything in the list plus documents and checklist."""
+
+    documents = serializers.SerializerMethodField()
+    required_documents = serializers.SerializerMethodField()
+
+    class Meta(AdminHostAccountSerializer.Meta):
+        """Model and fields this serializer reads or writes."""
+        fields = [*AdminHostAccountSerializer.Meta.fields, "documents", "required_documents"]
+        read_only_fields = fields
+
+    def get_documents(self, account: HostAccount) -> list[dict]:
+        """Every document not withdrawn, newest first."""
+        docs = HostDocument.objects.alive().filter(host_account=account).order_by("-created_at")
+        return HostDocumentSerializer(docs, many=True).data
+
+    def get_required_documents(self, account: HostAccount) -> list[dict]:
+        """Checklist of table 3a (BR-HST-03)."""
+        return required_documents_data(account)
+
+
+class ReasonSerializer(serializers.Serializer):
+    """Body of admin decisions; the reason length rule is checked by the service (BR-HST-04)."""
+
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=2000)
+
+
+class CommissionOverrideSerializer(serializers.Serializer):
+    """Body of ``PATCH /admin/hosts/{id}/commission``: a rate in bp, or ``null`` to clear it."""
+
+    commission_rate_override_bp = serializers.IntegerField(min_value=0, max_value=10_000, allow_null=True)
