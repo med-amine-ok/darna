@@ -74,14 +74,14 @@ Versions read from PyPI and npm on 2026-11-04.
 
 | # | Decision | Option 1 | Option 2 | **Choice** | Why |
 |---|---|---|---|---|---|
-| B.0 | Django version | 6.1.3 (supported to Dec 2027) | 5.2 LTS (to Apr 2028) | **Django 6.1 on Python 3.13**, move to 6.2 LTS in 2027 | 6.x has built-in tasks API and CSP; 6.1 overlaps 6.2 LTS |
+| B.0 | Django version | 6.1.3 (supported to Dec 2027) | 5.2 LTS (to Apr 2028) | **Django 5.2 LTS on Python 3.13** (supported to April 2028); move to the next LTS before support ends. Changed 2026-11-13 by DEC-030 (was Django 6.1) | Long-term support covers the launch and the first year; the backend code already runs on 5.2; the 6.x tasks API and CSP are not needed (Celery and django-csp do the job) |
 | B.1 | Database and maps | PostgreSQL + PostGIS (GeoDjango) | Plain lat/lng numbers | **PostGIS** | Real distance and map-box queries, wilaya polygons, range types and exclusion constraints |
 | B.2 | API framework | Django REST Framework 3.18.3 | Django Ninja 1.7.3 | **DRF** (HackSoft style) | Mature permissions, throttling, OpenAPI; most Algerian Django devs know it |
 | B.3 | Accounts and login | django-allauth 65.21 headless | dj-rest-auth + SimpleJWT | **allauth headless** | Phone OTP, MFA (TOTP, passkeys), rate limits built in; session tokens, not long-lived JWTs |
 | B.4 | Permissions | django-rules (predicates) | django-guardian (per-object rows) | **Own `Membership` roles + django-rules** + always filtering lists by the caller's organisations | Rights come from membership, not per-object grants |
 | B.5 | Background jobs | Celery 5.6 + Redis | Django tasks (6.0+), Dramatiq, Huey | **Celery + Redis** | Retries, schedules, monitoring; tasks kept thin so moving to Django tasks later is easy |
 | B.6 | Live messaging | Polling a "changes since" endpoint | Centrifugo 6.10, Django Channels | **Polling first, Centrifugo later** | Simplest to run; Airbnb's sync idea |
-| B.7 | Search | PostgreSQL full-text + pg_trgm + PostGIS | Meilisearch 1.56, Typesense, OpenSearch | **PostgreSQL first** | One store, consistent with availability; Meilisearch only if Arabic typo search is needed |
+| B.7 | Search | PostgreSQL pg_trgm (trigram similarity) + unaccent + PostGIS | Meilisearch 1.56, Typesense, OpenSearch | **PostgreSQL first, trigram not full-text** (DEC-030, 2026-11-13) | One store, consistent with availability. PostgreSQL full-text has no Arabic stemmer, so text search uses trigram similarity with Arabic normalisation, tested on real Arabic, French and Darija queries; Meilisearch only if the zero-result rate stays high |
 | B.8 | Files and images | django-storages + Cloudflare R2 (S3 API) | Cloudinary | **S3-compatible storage**, presigned uploads, Pillow renditions, ClamAV for documents | Vendor-neutral. **Location must respect Algerian law, see C.3** |
 | B.9 | Translations | django-modeltranslation 0.20 (columns per language) | django-parler 2.4 (translation tables) | **modeltranslation** for platform lists (amenities, wilayas); hosts write in one language with `source_language` | Fixed 3 languages, fast reads |
 | B.10 | Back office | Existing Next.js admin | Django admin + Unfold 0.110 | **Both**: Next.js admin is the product; Django admin is a staff-only, MFA, mostly read-only console | Fast internal tools without bypassing rules |
@@ -233,8 +233,8 @@ Source: https://owasp.org/API-Security/editions/2023/en/0x11-t10/ [verified].
 
 | # | Decision | Confidence | Needs |
 |---|---|---|---|
-| R-1 | Django 6.1 + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless | High | none |
-| R-2 | Exclusion constraints for single units, daily inventory rows for pools | High | none |
+| R-1 | Django 5.2 LTS + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless (changed 2026-11-13 by DEC-030, was Django 6.1) | High | none |
+| R-2 | Exclusion constraints for single units, daily inventory rows with CHECK counters for pools (no exclusion constraint there), triggers between blocked days and bookings (DEC-020) | High | none |
 | R-3 | Centimes + currency, double-entry ledger, idempotency keys | High | none |
 | R-4 | Launch money model M1 (prepaid commission), ledger ready for M2 to M4 | Medium | **Your decision** + **lawyer / accountant** |
 | R-5 | Host production data in Algeria (ICOSNET or Djezzy Cloud) | Medium | **Lawyer** (Law 18-05 art. 8, Law 18-07/25-11) |
@@ -243,7 +243,7 @@ Source: https://owasp.org/API-Security/editions/2023/en/0x11-t10/ [verified].
 | R-8 | KYC document list per host type (see R2 C3.5) | Low | **Lawyer** |
 | R-9 | VAT 9% and taxe de séjour handling per booking | Low | **Accountant** |
 | R-10 | 69 wilayas from el-amin + ihahachi | Medium | Check official JO and ONS codes |
-| R-11 | Polling for messages, PostgreSQL search | High | none |
+| R-11 | Polling for messages, PostgreSQL search with pg_trgm trigram similarity (no Arabic full-text, DEC-030) | High | none |
 
 ---
 

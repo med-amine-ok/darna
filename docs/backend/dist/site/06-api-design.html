@@ -44,8 +44,8 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="on" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 6: API</div><h1 id="06-api-design-how-the-apps-talk-to-the-backend">06. API design: how the apps talk to the backend</h1>
-<blockquote class="plain"><p><strong>In plain words</strong><br>This page explains the contract between the two Next.js apps (website and admin) and the Django backend.<br>The exact contract is the file <a href="files/openapi.yaml">openapi.yaml</a>: 266 operations, each one linked to the requirements and rules it serves.<br>The browser never calls Django. The Next.js server calls Django for it, with a session token the browser never sees.<br>Every function the apps use today in <code>lib/data</code> and their server actions gets an endpoint (table in section 8), or the table says why it goes away.<br>Money is always in centimes, errors always have a stable code and a message in English, French or Arabic.<br>Guest payments and payouts are written in the contract but switched off (&quot;dormant&quot;) until the money model changes.</p>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="on" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 6: API</div><h1 id="06-api-design-how-the-apps-talk-to-the-backend">06. API design: how the apps talk to the backend</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This page explains the contract between the two Next.js apps (website and admin) and the Django backend.<br>The exact contract is the file <a href="files/openapi.yaml">openapi.yaml</a>: 286 operations, each one linked to the requirements and rules it serves.<br>The browser never calls Django. The Next.js server calls Django for it, with a session token the browser never sees.<br>Every function the apps use today in <code>lib/data</code> and their server actions gets an endpoint (table in section 8), or the table says why it goes away.<br>Money is always in centimes, errors always have a stable code and a message in English, French or Arabic.<br>Guest payments and payouts are written in the contract but switched off (&quot;dormant&quot;) until the money model changes. There is no online top-up in v1.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see also <a href="glossary.html">glossary.md</a>):</p>
 <ul>
@@ -76,19 +76,19 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Size</td>
-<td>266 operations on 220 paths, 38 tags in 7 groups</td>
+<td>286 operations on 238 paths, 38 tags in 7 groups (counted from <code>openapi.yaml</code> by <code>_tools/check_contract_refs.py</code>; the generator writes the same numbers to <code>_tools/openapi_gen/stats.json</code>)</td>
 </tr>
 <tr>
 <td>Groups</td>
-<td>auth 15, public 22, me (guest) 26, shared (messaging 7, media 4), host 72, admin 119, webhooks 1</td>
+<td>auth 15, public 23, me (guest) 30, shared (messaging 7, media 4), host 79, admin 127, webhooks 1</td>
 </tr>
 <tr>
 <td>Dormant (money models M2 to M4)</td>
-<td>8: <code>createGuestPayment</code>, <code>listHostPayouts</code>, <code>requestHostPayout</code>, <code>receiveGatewayWebhook</code>, <code>adminListPayouts</code>, <code>adminApprovePayout</code>, <code>adminRejectPayout</code>, <code>adminMarkPayoutSent</code></td>
+<td>8 (part of the 286): <code>createGuestPayment</code>, <code>listHostPayouts</code>, <code>requestHostPayout</code>, <code>receiveGatewayWebhook</code>, <code>adminListPayouts</code>, <code>adminApprovePayout</code>, <code>adminRejectPayout</code>, <code>adminMarkPayoutSent</code></td>
 </tr>
 <tr>
 <td>Lint</td>
-<td><code>npx @redocly/cli lint openapi.yaml</code> (recommended rules): valid, 0 errors, 0 warnings</td>
+<td><code>npx @redocly/cli lint openapi.yaml</code> (recommended rules). Last full lint: 2026-11-09 (0 errors, 0 warnings); on 2026-11-13 the file was rebuilt and every <code>$ref</code> checked, the Redocly lint is to be re-run</td>
 </tr>
 <tr>
 <td>Enums</td>
@@ -129,7 +129,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <p>When Django is built, drf-spectacular generates the real file from the code. CI then compares it with this one (see section 10): this file is the target, not decoration.</p>
-<p>Requirements not cited by any operation are the ones with no endpoint of their own: jobs and quality targets (AVL-05 holds, BKG-04 completion job, NTF-02 email/SMS, NTF-04 outbox, NFR-01 to NFR-10 and NFR-13, PRV-03 to PRV-05), plus two features not designed yet: MSG-06 staff broadcast (R2) and PRV-06 foreign guest declaration (R2). They are covered by the conventions below or left for a later phase.</p>
+<p>Requirements not cited by any operation are the ones with no endpoint of their own: jobs and quality targets (AVL-05 holds, BKG-04 completion job, NTF-02 email/SMS, NTF-04 outbox, NFR-01 to NFR-10, NFR-13 and NFR-14, PRV-03 to PRV-05), plus two features not designed yet: MSG-06 staff broadcast (R2) and PRV-06 foreign guest declaration (R2). They are covered by the conventions below or left for a later phase.</p>
 <hr>
 <h2 id="2-big-picture">2. Big picture</h2>
 <pre><code class="lang-">Browser ──(cookie)──&gt; Next.js website server (BFF) ──(X-Session-Token)──&gt; Django /api/v1/*
@@ -167,11 +167,12 @@ Payment gateway ───────────────(signature header)�
 <li>Query filters on prices say their unit in the name: <code>min_price_minor</code>.</li>
 <li>Totals are sums of rounded lines (half up), so the apps never recompute prices: they show what the quote says (BR-PAY-01, BR-PRC-01).</li>
 </ul>
-<h3 id="35-identifiers">3.5 Identifiers</h3>
+<h3 id="35-identifiers-one-scheme-dec-031">3.5 Identifiers (one scheme, DEC-031)</h3>
 <ul>
-<li>Every id is a UUIDv7 (time-ordered, not guessable).</li>
-<li>People also see short references: bookings <code>BLD-2026-7K2M9Q</code>, listings <code>LST-7K2M9Q</code>, trips <code>TRP-...</code>. Endpoints that show one item accept either the UUID or the reference in the path (<code>booking_id</code>, <code>listing_id</code>, <code>trip_id</code>).</li>
-<li>Messages and notifications use growing integer ids, because they are also the sync cursor.</li>
+<li>Every id is a UUIDv7 (time-ordered, not guessable), for every table the app writes, including messages, notifications, ledger entries and audit rows. Paths take only this id (<code>booking_id</code>, <code>listing_id</code>, <code>trip_id</code> are UUIDs).</li>
+<li>People also see short references: bookings <code>BLD-2026-7K2M9Q</code>, listings <code>LST-7K2M9Q</code>, trips <code>TRP-...</code>. They are for display and search only: to find a booking from its reference, use the <code>q</code> filter of a list (<code>GET /host/bookings?q=BLD-2026-7K2M9Q</code>, <code>GET /admin/bookings?q=...</code>, <code>GET /admin/search?q=...</code>).</li>
+<li>Messages and notifications are also UUIDv7. Because UUIDv7 sorts by time, the message id still works as the sync cursor.</li>
+<li>The only other keys are the official geography codes (wilaya 1 to 69, commune code): reference data from the state, not ids the app makes.</li>
 </ul>
 <h3 id="36-pagination">3.6 Pagination</h3>
 <table>
@@ -227,7 +228,7 @@ Payment gateway ───────────────(signature header)�
 <tbody><tr>
 <td>400</td>
 <td>Malformed request; also all login failures (same answer every time)</td>
-<td><code>bad_request</code>, <code>invalid_credentials</code>, <code>invalid_code</code>, <code>invalid_current_password</code></td>
+<td><code>bad_request</code>, <code>invalid_credentials</code>, <code>invalid_code</code> (also a wrong check-in code), <code>invalid_current_password</code></td>
 </tr>
 <tr>
 <td>401</td>
@@ -237,7 +238,7 @@ Payment gateway ───────────────(signature header)�
 <tr>
 <td>403</td>
 <td>Signed in but not allowed</td>
-<td><code>permission_denied</code>, <code>mfa_required</code>, <code>phone_verification_required</code>, <code>host_offer_not_allowed</code>, <code>agency_not_verified</code>, <code>cannot_book_own_listing</code>, <code>four_eyes_same_user</code>, <code>invitation_contact_mismatch</code>, <code>account_suspended</code></td>
+<td><code>permission_denied</code>, <code>mfa_required</code>, <code>phone_verification_required</code>, <code>host_offer_not_allowed</code>, <code>agency_not_verified</code>, <code>cannot_book_own_listing</code>, <code>four_eyes_same_user</code> (top-ups), <code>four_eyes_required</code> (wallet adjustments), <code>invitation_contact_mismatch</code>, <code>account_suspended</code></td>
 </tr>
 <tr>
 <td>404</td>
@@ -247,7 +248,7 @@ Payment gateway ───────────────(signature header)�
 <tr>
 <td>409</td>
 <td>Conflict with the current state</td>
-<td><code>dates_unavailable</code>, <code>not_enough_units</code>, <code>seats_unavailable</code>, <code>price_changed</code>, <code>quote_expired</code>, <code>booking_not_pending</code>, <code>request_expired</code>, <code>booking_not_cancellable</code>, <code>refund_changed</code>, <code>wallet_below_credit_floor</code>, <code>invalid_transition</code>, <code>receipt_already_used</code>, <code>topup_not_pending</code>, <code>idempotency_in_progress</code>, <code>email_taken</code>, <code>phone_taken</code>, <code>already_member</code>, <code>invitation_pending</code>, <code>invitation_used</code>, <code>cannot_remove_owner</code>, <code>review_exists</code>, <code>already_reported</code>, <code>reply_locked</code>, <code>inventory_in_use</code>, <code>night_booked</code>, <code>slug_taken</code>, <code>in_use</code>, <code>has_future_bookings</code>, <code>case_resolved</code>, <code>last_super_admin</code></td>
+<td><code>dates_unavailable</code>, <code>dates_booked</code>, <code>too_many_open_bookings</code>, <code>refund_overdue</code>, <code>stay_not_started</code>, <code>booking_not_confirmed</code>, <code>stay_not_confirmed</code>, <code>refund_not_open</code>, <code>refund_not_declared</code>, <code>adjustment_not_pending</code>, <code>conflict_resolved</code>, <code>outbox_not_dead</code>, <code>not_enough_units</code>, <code>seats_unavailable</code>, <code>price_changed</code>, <code>quote_expired</code>, <code>booking_not_pending</code>, <code>request_expired</code>, <code>booking_not_cancellable</code>, <code>refund_changed</code>, <code>wallet_below_credit_floor</code>, <code>invalid_transition</code>, <code>receipt_already_used</code>, <code>topup_not_pending</code>, <code>idempotency_in_progress</code>, <code>email_taken</code>, <code>phone_taken</code>, <code>already_member</code>, <code>invitation_pending</code>, <code>invitation_used</code>, <code>cannot_remove_owner</code>, <code>review_exists</code>, <code>already_reported</code>, <code>reply_locked</code>, <code>inventory_in_use</code>, <code>night_booked</code>, <code>slug_taken</code>, <code>in_use</code>, <code>has_future_bookings</code>, <code>case_resolved</code>, <code>last_super_admin</code></td>
 </tr>
 <tr>
 <td>412</td>
@@ -257,12 +258,12 @@ Payment gateway ───────────────(signature header)�
 <tr>
 <td>422</td>
 <td>Validation failed</td>
-<td><code>validation_failed</code> (with <code>errors</code>), <code>idempotency_key_reused</code>, <code>listing_incomplete</code>, <code>documents_missing</code>, <code>documents_not_approved</code>, <code>reason_required</code>, <code>refund_exceeds_total</code>, <code>review_window_closed</code>, <code>dispute_window_closed</code>, <code>invitation_expired</code>, <code>unknown_field</code>, <code>unknown_setting</code>, <code>core_step_removed</code>, <code>preference_locked</code>, <code>min_nights</code>, <code>max_nights</code>, <code>advance_notice</code>, <code>capacity_exceeded</code>, <code>file_type_not_allowed</code>, <code>file_too_large</code></td>
+<td><code>validation_failed</code> (with <code>errors</code>), <code>idempotency_key_reused</code>, <code>listing_incomplete</code>, <code>documents_missing</code>, <code>documents_not_approved</code>, <code>reason_required</code>, <code>refund_exceeds_total</code>, <code>adjustment_too_large</code>, <code>review_window_closed</code>, <code>dispute_window_closed</code>, <code>invitation_expired</code>, <code>unknown_field</code>, <code>unknown_setting</code>, <code>core_step_removed</code>, <code>preference_locked</code>, <code>min_nights</code>, <code>max_nights</code>, <code>advance_notice</code>, <code>capacity_exceeded</code>, <code>file_type_not_allowed</code>, <code>file_too_large</code></td>
 </tr>
 <tr>
 <td>429</td>
 <td>Rate limit</td>
-<td><code>rate_limited</code>, <code>login_locked</code> (with <code>Retry-After</code>)</td>
+<td><code>rate_limited</code>, <code>login_locked</code>, <code>sms_budget_exceeded</code> (with <code>Retry-After</code>)</td>
 </tr>
 </tbody></table>
 <p>A host who asks for another host account&#39;s data gets <strong>404, not 403</strong>, so ids cannot be probed (BR-ORG-01).</p>
@@ -289,9 +290,19 @@ Payment gateway ───────────────(signature header)�
 <td>account and IP</td>
 </tr>
 <tr>
-<td>One-time codes</td>
-<td>3 sends per phone per hour, 10 per IP per hour; 5 tries per code</td>
-<td>phone, IP</td>
+<td>One-time codes (BR-ACC-02)</td>
+<td>Per destination (phone or email) 3 per hour and 10 per day; per IP 10 per hour; 5 tries per code (6 digits, valid 10 minutes)</td>
+<td>destination (HMAC), IP</td>
+</tr>
+<tr>
+<td>SMS budget (BR-ACC-02)</td>
+<td>5,000 SMS per day for the whole platform (setting <code>sms_daily_budget</code>), then <code>sms_budget_exceeded</code> and an admin alert</td>
+<td>global</td>
+</tr>
+<tr>
+<td>Check-in code entry (BR-BKG-09)</td>
+<td>5 wrong codes per booking, then 1 hour lock</td>
+<td>booking</td>
 </tr>
 <tr>
 <td>Signup, password reset</td>
@@ -334,7 +345,7 @@ Payment gateway ───────────────(signature header)�
 <td>staff user</td>
 </tr>
 </tbody></table>
-<p>Responses over the limit are 429 with <code>Retry-After</code>. SMS sends also have a daily budget alarm.</p>
+<p>Responses over the limit are 429 with <code>Retry-After</code>. Code sends are logged in <code>otp_send_log</code> (destination stored only as an HMAC with <code>HASH_PEPPER</code>, BR-SYS-07). Caddy has no built-in rate limit, so these limits live in DRF throttles (see <a href="09b-operations.html">09b-operations.md</a>).</p>
 <h3 id="310-uploads">3.10 Uploads</h3>
 <ol>
 <li><code>POST /media/uploads</code> with purpose, type, size, hash: returns <code>media_id</code> and a presigned URL (valid 10 minutes).</li>
@@ -381,7 +392,7 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 <tbody><tr>
 <td><code>X-Session-Token</code></td>
 <td>BFF to Django</td>
-<td>Who is calling</td>
+<td>Who is calling (a header token, never a cookie)</td>
 </tr>
 <tr>
 <td><code>X-Host-Account</code></td>
@@ -424,7 +435,8 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 <li>On every server render or server action, the BFF decrypts the cookie and sends <code>X-Session-Token</code> to Django.</li>
 <li>Logout calls <code>DELETE /api/v1/auth/session</code> (the token dies at once on the server, BR-ACC-03) and deletes the cookie.</li>
 </ol>
-<p>If allauth answers with a pending step (<code>verify_phone</code>, <code>mfa_authenticate</code>), the BFF shows that step. Sessions last 30 days, sliding. A password change revokes all other sessions. The website keeps its CSRF guard on its own route handlers and server actions (same-origin check); Django itself only receives server-to-server calls with a header token, so it needs no CSRF cookie.</p>
+<p>If allauth answers with a pending step (<code>verify_phone</code>, <code>mfa_authenticate</code>), the BFF shows that step. Sessions last 30 days, sliding. A password change revokes all other sessions.</p>
+<p><strong>CSRF (DEC-025).</strong> The Django API accepts the session only as a header token (<code>X-Session-Token</code> in the contract, an <code>Authorization</code>-style header) and reads no cookies, so classic CSRF does not apply to it. The risk sits in the BFF, which holds the token in an <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code> cookie. On every state-changing route handler and server action the BFF checks the <code>Origin</code> header against its own origin <strong>and</strong> a double-submit CSRF token (a random value in a readable cookie that the page must echo in a header). Requests that fail either check get 403 before Django is called.</p>
 <h3 id="42-staff-admin-bff-mandatory-second-factor">4.2 Staff (admin BFF, mandatory second factor)</h3>
 <ul>
 <li>The admin app uses a separate, staff-only allauth mount at <code>/api/v1/admin/auth/*</code>. Non-staff accounts get the same <code>invalid_credentials</code> as a bad password.</li>
@@ -522,7 +534,7 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 </tbody></table>
 <p>An individual host has every permission on their own host account. Agents and guides get <code>commission: null</code> in bookings (they never see money). The offer rule (DEC-014) comes on top of permissions: individual = home, vehicle; agency = experience and trips; hotel = hotel; hostel = hostel. A forbidden vertical gives 403 <code>host_offer_not_allowed</code>.</p>
 <h3 id="45-staff-permissions">4.5 Staff permissions</h3>
-<p>The 34 permissions and 5 roles of the admin app (matrix in <a href="work-admin-inventory.html">_work/admin-inventory.md</a> section 1.1) move into the <code>staff_role_permission</code> table and are checked on every admin endpoint, deny by default (BR-STF-01). Each admin operation names its permission in <code>x-staff-permission</code>. This contract adds three permissions that the admin app does not have yet:</p>
+<p>The permissions of the admin app (list in <a href="work-admin-inventory.html">_work/admin-inventory.md</a> section 1.1) move into the <code>staff_permission</code> table, all granted to the single role <code>admin</code> in <code>staff_role_permission</code> (DEC-016), and are checked on every admin endpoint, deny by default (BR-STF-01). Each admin operation names its permission in <code>x-staff-permission</code>. This contract adds three permissions that the admin app does not have yet:</p>
 <table>
 <thead>
 <tr>
@@ -534,23 +546,24 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 <tbody><tr>
 <td><code>reports.view</code></td>
 <td>Dashboard KPIs and charts were open to any staff (no check)</td>
-<td>all 5 roles</td>
+<td>admin</td>
 </tr>
 <tr>
 <td><code>ledger.adjust</code></td>
-<td>Ledger corrections did not exist</td>
-<td>super_admin, finance</td>
+<td>Manual wallet adjustments (<code>/admin/wallet-adjustments</code>, BR-PAY-13); always needs a second admin to approve</td>
+<td>admin</td>
 </tr>
 <tr>
 <td><code>privacy.handle_requests</code></td>
 <td>Data protection requests (PRV-02)</td>
-<td>super_admin, support</td>
+<td>admin</td>
 </tr>
 </tbody></table>
+<p>Since DEC-016 there is <strong>one staff role, admin</strong>, with every permission. The permission names stay in the contract and the database so roles can be split later. Four-eyes actions (large top-ups, every wallet adjustment) need a second admin account, because a person cannot approve their own request.</p>
 <hr>
 <h2 id="5-idempotency-and-concurrency">5. Idempotency and concurrency</h2>
 <h3 id="51-idempotency-keys-br-sys-01">5.1 Idempotency keys (BR-SYS-01)</h3>
-<p>Required on: booking create, onboarding submit, listing and trip create, staff refunds, manual top-ups, ledger adjustments, departure cancel, online top-up and the dormant payment endpoints. Optional (recommended) on accept, decline, cancel, top-up approval and moderation decisions.</p>
+<p>Required on: booking create, onboarding submit, listing and trip create, staff refunds, manual top-ups, wallet adjustments, departure cancel and the dormant payment endpoints. Optional (recommended) on accept, decline, cancel, confirm-stay, refund declarations and confirmations, top-up and adjustment approvals, and moderation decisions. There is no online top-up endpoint in v1.</p>
 <table>
 <thead>
 <tr>
@@ -575,33 +588,181 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 <td>422 <code>idempotency_key_reused</code></td>
 </tr>
 </tbody></table>
-<p>The BFF creates the key when the user opens the confirm step (not when they click), so a double click or a network retry sends the same key. Keys are per user and per endpoint (<code>idempotency_record</code> table).</p>
+<p>The BFF creates the key when the user opens the confirm step (not when they click), so a double click or a network retry sends the same key.</p>
+<p><strong>Storage (DEC-029).</strong> Table <code>idempotency_record</code>: user, endpoint, key (unique together), SHA-256 of the request body, status (<code>in_progress</code>, <code>completed</code>), stored status code and body, expiry 24 hours after creation. The same key with a body whose SHA-256 differs answers 422 <code>idempotency_key_reused</code>.</p>
 <h3 id="52-the-booking-race">5.2 The booking race</h3>
 <p>Two guests press &quot;Book&quot; for the same nights at the same second:</p>
 <ol>
-<li>Both requests open a database transaction and re-price their quote.</li>
-<li>Single units (homes, vehicles): both try to insert a booking. The <strong>exclusion constraint</strong> on <code>(listing, stay)</code> lets exactly one succeed; the other gets an error from PostgreSQL that Django turns into <strong>409 <code>dates_unavailable</code></strong> (BR-AVL-01).</li>
-<li>Pooled units (rooms, beds, slots, seats): each request runs one <code>UPDATE ... SET held/booked = booked + n WHERE booked + held + n &lt;= total</code> per night. The loser updates 0 rows and gets <strong>409 <code>not_enough_units</code></strong> or <code>seats_unavailable</code> (BR-AVL-02, BR-TRP-02).</li>
+<li>Both requests open a database transaction. <strong>Lock order (BR-PAY-14, DEC-023)</strong>: first the host wallet balance row (<code>SELECT ... FOR UPDATE</code> on <code>account_balance</code> of <code>host_wallet</code>), then the credit floor and overdue-refund checks, then the listing row or the stock rows, then the commission posting. Every path that touches both (create, accept, cancel) uses this order, so there is no deadlock and the floor is never crossed by two parallel bookings. No platform balance row is updated on this path: commission revenue is a SUM of ledger entries.</li>
+<li>Both re-price their quote.</li>
+<li>Single units (homes, vehicles): both try to insert a booking. The <strong>exclusion constraint</strong> on <code>(listing_id, stay)</code> lets exactly one succeed; the other gets an error from PostgreSQL that Django turns into <strong>409 <code>dates_unavailable</code></strong> (BR-AVL-01).</li>
+<li>Pooled units (rooms, beds, slots, seats): each request runs one conditional <code>UPDATE ... SET booked = booked + n WHERE held + booked + n &lt;= total</code> per night. The loser updates fewer rows than nights and gets <strong>409 <code>not_enough_units</code></strong> or <code>seats_unavailable</code> (BR-AVL-02, BR-TRP-02). There is no exclusion constraint on pools: the CHECK on the counters is the guarantee.</li>
 <li>The winner gets 201. The loser&#39;s app shows the message and reloads availability.</li>
 </ol>
-<p>No application lock is needed; the database is the referee.</p>
+<p><strong>Blocked days (BR-AVL-07, DEC-020).</strong> The exclusion constraint does not see <code>listing_day.is_blocked</code>. Two PostgreSQL triggers close that gap: blocking a day that a blocking single-unit booking covers is refused (the calendar endpoint answers <strong>409 <code>dates_booked</code></strong>), and inserting or moving a single-unit booking onto a blocked day is refused (<strong>409 <code>dates_unavailable</code></strong>). The services check the same thing first, after locking the listing row, so the user gets a clear code.</p>
+<p><strong>What the database really guarantees</strong> (corrects the older &quot;the database refuses every overlap&quot;): single units, the exclusion constraint; rooms, beds, slots and departures, the counter CHECK; blocked days, the two triggers.</p>
+<p><strong>Connected hotels (BR-HST-07, DEC-021).</strong> Every BLADUS booking change on a room-pool listing of a connected hotel writes an outbox message <code>inventory.push</code> in the same transaction; a worker sends it at once and retries. A sync from the hotel system never sets a night&#39;s total below <code>held + booked</code>: the total is clamped and an inventory conflict is opened for the admin (section 5.4).</p>
 <h3 id="53-other-409-cases">5.3 Other 409 cases</h3>
 <ul>
 <li>Status moves that are not allowed by the state machines: <code>invalid_transition</code> (listings, trips, hosts, reviews, top-ups).</li>
-<li>Host accepts a request that expired a second ago: <code>request_expired</code>. Host accepts while the wallet is below the credit floor: <code>wallet_below_credit_floor</code> (BR-PAY-10).</li>
+<li>Host accepts a request that expired a second ago: <code>request_expired</code>. Host accepts while the wallet is below the credit floor: <code>wallet_below_credit_floor</code> (BR-PAY-10). Host accepts while one of their refunds is overdue: <code>refund_overdue</code> (BR-CAN-07).</li>
+<li>Guest already has 3 pending requests or 6 upcoming bookings: <code>too_many_open_bookings</code> (BR-BKG-08).</li>
+<li>Host blocks a day that is booked: <code>dates_booked</code> (BR-AVL-07).</li>
 <li>Quote no longer valid at booking: <code>price_changed</code> (with the new quote) or <code>quote_expired</code>.</li>
 <li>Duplicates: <code>receipt_already_used</code> (same receipt and method), <code>email_taken</code>, <code>review_exists</code>, <code>slug_taken</code>.</li>
 <li>Shrinking inventory under existing bookings: <code>inventory_in_use</code>, <code>night_booked</code>.</li>
 </ul>
+<h3 id="54-endpoints-added-by-the-review-of-2026-11-13">5.4 Endpoints added by the review of 2026-11-13</h3>
+<p>Paths omit <code>/api/v1</code>. Exact inputs and outputs are in <code>openapi.yaml</code>.</p>
+<p><strong>Stay confirmation (BR-BKG-09, DEC-028).</strong> A confirmed booking gets a 6-digit <code>check_in_code</code>, shown only in the guest&#39;s <code>GuestBooking</code>, never to the host.</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Who</th>
+<th>What it does</th>
+<th>Main errors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>POST /host/bookings/{booking_id}/confirm-stay</code></td>
+<td>host (<code>bookings.view</code>)</td>
+<td>Body <code>{&quot;code&quot;: &quot;123456&quot;}</code>: the code the guest shows on arrival. Sets <code>stay_confirmed_via = host_code</code></td>
+<td>400 <code>invalid_code</code>; 429 after 5 wrong codes (1 hour); 409 <code>booking_not_confirmed</code></td>
+</tr>
+<tr>
+<td><code>POST /me/bookings/{booking_id}/confirm-stay</code></td>
+<td>guest</td>
+<td>The guest confirms after check-in time. Sets <code>stay_confirmed_via = guest</code></td>
+<td>409 <code>stay_not_started</code>, <code>booking_not_confirmed</code></td>
+</tr>
+</tbody></table>
+<p>A review needs a completed booking <strong>and</strong> a confirmed stay (<code>POST /me/bookings/{booking_id}/review</code> answers 409 <code>stay_not_confirmed</code> otherwise, BR-REV-01). Repeating a confirmation returns the booking unchanged.</p>
+<p><strong>Refunds a host owes (BR-CAN-06, BR-CAN-07, DEC-024).</strong> Every cancellation with a refund above 0 opens a refund obligation, due 7 days later (setting <code>refund_due_days</code>). BLADUS never holds this money; it only tracks it. VERIFY WITH A PROFESSIONAL (consumer law on refund delays).</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Who</th>
+<th>What it does</th>
+<th>Main errors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET /host/refunds</code></td>
+<td>host (<code>bookings.view</code>)</td>
+<td>Refunds the active host account owes (<code>status</code>, <code>overdue</code> filters)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /host/refunds/{refund_id}/declare-paid</code></td>
+<td>host (<code>bookings.cancel_as_host</code>)</td>
+<td>Body <code>{&quot;payment_reference&quot;: &quot;...&quot;, &quot;method&quot;: &quot;ccp_transfer&quot;, &quot;note&quot;: &quot;...&quot;}</code> (<code>method</code> and <code>note</code> optional): open or disputed to declared</td>
+<td>409 <code>refund_not_open</code></td>
+</tr>
+<tr>
+<td><code>GET /me/refunds</code></td>
+<td>guest</td>
+<td>Refunds hosts owe me</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /me/refunds/{refund_id}/confirm-received</code></td>
+<td>guest</td>
+<td>Open or declared to settled; posts the <code>refund_settled</code> memo</td>
+<td>409 <code>refund_not_open</code></td>
+</tr>
+<tr>
+<td><code>POST /me/refunds/{refund_id}/dispute</code></td>
+<td>guest</td>
+<td>Body <code>{&quot;note&quot;: &quot;...&quot;}</code>: declared to disputed (the due date does not move)</td>
+<td>409 <code>refund_not_declared</code></td>
+</tr>
+<tr>
+<td><code>GET /admin/refunds?overdue=true</code></td>
+<td>admin</td>
+<td>Refund obligations, filters <code>overdue</code>, <code>status</code>, <code>host_account</code>, dates</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /admin/refunds/{refund_id}/settle</code></td>
+<td>admin</td>
+<td>Body <code>{&quot;note&quot;: &quot;...&quot;, &quot;proof_media_id&quot;: null}</code> (proof optional): settles any open, declared or disputed obligation; audited</td>
+<td>409 <code>refund_not_open</code></td>
+</tr>
+</tbody></table>
+<p>While a host has an overdue refund (open or disputed, due date passed), instant bookings become requests and accept answers 409 <code>refund_overdue</code>.</p>
+<p><strong>Manual wallet adjustments (BR-PAY-13, DEC-022).</strong> They replace the former <code>POST /admin/ledger/adjustments</code>, which posted at once with one admin.</p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>What it does</th>
+<th>Main errors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET /admin/wallet-adjustments</code></td>
+<td>List (filters <code>status</code>, <code>host_account</code>)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /admin/wallet-adjustments</code></td>
+<td>Body <code>{host_account_id, amount (signed Money), reason}</code>; creates <code>pending_approval</code>, nothing posted</td>
+<td>422 <code>adjustment_too_large</code> (above 1,000,000 DZD, setting <code>adjustment_max_minor</code>), 422 for amount 0</td>
+</tr>
+<tr>
+<td><code>POST /admin/wallet-adjustments/{adjustment_id}/approve</code></td>
+<td>A <strong>different</strong> admin approves; posts one balanced <code>adjustment</code> transaction</td>
+<td>403 <code>four_eyes_required</code>; 409 <code>adjustment_not_pending</code></td>
+</tr>
+<tr>
+<td><code>POST /admin/wallet-adjustments/{adjustment_id}/reject</code></td>
+<td>Reject with a reason</td>
+<td>409 <code>adjustment_not_pending</code></td>
+</tr>
+</tbody></table>
+<p><strong>Hotel sync conflicts and the outbox (BR-HST-07, BR-SYS-03, DEC-021, DEC-029).</strong></p>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>What it does</th>
+<th>Main errors</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET /admin/inventory-conflicts</code></td>
+<td>Room-nights where a hotel sync asked for fewer rooms than BLADUS holds or sold (the total was clamped)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /admin/inventory-conflicts/{conflict_id}/resolve</code></td>
+<td>Body <code>{&quot;note&quot;: &quot;...&quot;, &quot;resolution&quot;: &quot;accepted_clamp&quot;}</code> (<code>resolution</code> optional, also <code>booking_moved</code>, <code>booking_cancelled</code>). The total never goes below <code>held + booked</code></td>
+<td>409 <code>conflict_resolved</code></td>
+</tr>
+<tr>
+<td><code>GET /admin/outbox?status=dead</code></td>
+<td>Outgoing messages (filters <code>status</code>, <code>topic</code>, e.g. <code>inventory.push</code>). Payloads are not returned</td>
+<td></td>
+</tr>
+<tr>
+<td><code>POST /admin/outbox/{message_id}/retry</code></td>
+<td>Dead to pending, attempts reset; handlers are idempotent so a retry never sends twice</td>
+<td>409 <code>outbox_not_dead</code></td>
+</tr>
+</tbody></table>
+<p>The outbox worker retries after 1 min, 5 min, 15 min, 1 h, 6 h and 24 h; after 8 attempts a message is <code>dead</code> and the admins get an alert.</p>
+<p><strong>Removed.</strong> <code>POST /host/wallet/topups</code> (online top-up) is gone: no online payment and no online top-up in v1 (DEC-019, DEC-031). Hosts top up by transfer and an admin records it.</p>
 <hr>
 <h2 id="6-webhooks-dormant">6. Webhooks (dormant)</h2>
-<p><code>POST /api/v1/webhooks/gateway/{provider}</code> receives gateway callbacks (Chargily first). It is <strong>dormant</strong>: it returns 404 until online top-up (R2, PAY-06) or guest payments (M2 to M4) are switched on.</p>
+<p><code>POST /api/v1/webhooks/gateway/{provider}</code> receives gateway callbacks (Chargily first). It is <strong>dormant</strong>: it returns 404 until online payment exists (guest payments, M2 to M4, DEC-019). There is no online top-up in v1, so nothing calls it today.</p>
 <p>When active (BR-SYS-02, BR-PAY-08):</p>
 <ol>
 <li>Store the raw body and headers in <code>gateway_event</code> first.</li>
 <li>Check the signature (HMAC-SHA256 of the raw body with the provider secret, header <code>signature</code>), mark <code>signature_valid</code>.</li>
 <li>Deduplicate by <code>(provider, event_id)</code> (database unique key). A replay answers 200 <code>{&quot;received&quot;: true, &quot;duplicate&quot;: true}</code> and does nothing.</li>
-<li>Answer 200 within a second; a Celery worker processes the event once (credit the wallet, mark the top-up).</li>
+<li>Answer 200 within a second; a Celery worker processes the event once (for example, mark a guest payment paid).</li>
 <li>Never trust the amount in the browser return URL; only the verified webhook credits money.</li>
 </ol>
 <p>BLADUS does not send outgoing webhooks to partners in this version.</p>
@@ -1040,7 +1201,7 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 </tr>
 <tr>
 <td><code>getPublicTripById</code></td>
-<td><code>GET /trips/{trip_id}</code> (UUID or reference; old slugs redirect)</td>
+<td><code>GET /trips/{trip_id}</code> (UUID only; the website redirects old slugs itself)</td>
 </tr>
 <tr>
 <td><code>createTrip</code>, <code>createTripAction</code></td>
@@ -1395,7 +1556,7 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 </tr>
 <tr>
 <td><code>listRefunds</code></td>
-<td><code>GET /admin/refunds</code></td>
+<td><code>GET /admin/refunds</code> (now refund obligations, with <code>overdue=true</code>); settle <code>POST /admin/refunds/{refund_id}/settle</code></td>
 </tr>
 <tr>
 <td><code>computeWalletAggregates</code>, <code>getHostBalance</code>, <code>appendLedgerEntry</code></td>
@@ -1403,7 +1564,11 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 </tr>
 <tr>
 <td>(missing today) ledger correction</td>
-<td><code>POST /admin/ledger/adjustments</code></td>
+<td><code>GET</code> / <code>POST /admin/wallet-adjustments</code>, <code>POST /admin/wallet-adjustments/{adjustment_id}/approve</code>, <code>/reject</code> (second admin required)</td>
+</tr>
+<tr>
+<td>(missing today) hotel sync conflicts, dead outbox messages</td>
+<td><code>GET /admin/inventory-conflicts</code>, <code>POST .../{conflict_id}/resolve</code>; <code>GET /admin/outbox?status=dead</code>, <code>POST /admin/outbox/{message_id}/retry</code></td>
 </tr>
 </tbody></table>
 <h3 id="817-admin-configuration-settingsts-onboardingts-categoriests-promotionsts">8.17 Admin: configuration (<code>settings.ts</code>, <code>onboarding.ts</code>, <code>categories.ts</code>, <code>promotions.ts</code>)</h3>
@@ -1448,11 +1613,11 @@ Private documents are only read through <code>GET .../url</code>, which returns 
 </tr>
 </tbody></table>
 <h3 id="818-new-endpoints-with-no-caller-today">8.18 New endpoints with no caller today</h3>
-<p>These serve requirements the apps do not implement yet: second-factor enrolment, email and phone verification, password reset, consents, data requests, notification preferences (R2), media uploads, host documents and verification submission, change requests, payout accounts, room-type and slot management, departures, review writing, replies and reports, disputes (R2), host earnings, invoices (R2), online top-up (R2), reference lists and reason codes, moderation cases and bulk decisions (R2), staff MFA reset. Each is in <code>openapi.yaml</code> with its requirement IDs.</p>
+<p>These serve requirements the apps do not implement yet: second-factor enrolment, email and phone verification, password reset, consents, data requests, notification preferences (R2), media uploads, host documents and verification submission, change requests, payout accounts, room-type and slot management, departures, review writing, stay confirmation, refund obligations (host, guest and admin sides), replies and reports, disputes (R2), host earnings, invoices (R2), reference lists and reason codes, moderation cases and bulk decisions (R2), staff MFA reset. Each is in <code>openapi.yaml</code> with its requirement IDs.</p>
 <h3 id="819-gaps-found-while-mapping">8.19 Gaps found while mapping</h3>
 <ul>
 <li>The website profile edits <code>bio</code>, <code>address</code> and <code>languages</code> (<code>updateProfileAction</code>), but <code>schema.dbml</code> has no such columns on <code>user</code>. <code>PATCH /me</code> leaves them out. Decide: add columns or drop the fields (proposed question for <a href="14-open-questions.html">14-open-questions.md</a>).</li>
-<li>Trips are addressed by slug in the website today; the schema has only a reference. Old slugs need a redirect table or are dropped.</li>
+<li>Trips are addressed by slug in the website today; the API takes only the UUID (DEC-031). Old slugs need a redirect table in the website or are dropped.</li>
 <li><code>addOrganizationMember</code> added members directly; the new flow always goes through an invitation the person accepts.</li>
 </ul>
 <hr>
@@ -1518,13 +1683,14 @@ Content-Type: application/json
 
 {&quot;quote_id&quot;: &quot;01933c0f-aaaa-7bbb-8ccc-00000000a001&quot;, &quot;guest_message&quot;: &quot;We arrive around 16:00 with a baby.&quot;, &quot;terms_version&quot;: &quot;2026-10&quot;}</code></pre><p>Response <code>201</code>: a <code>GuestBooking</code> with <code>reference: &quot;BLD-2026-7K2M9Q&quot;</code>, <code>status: &quot;pending&quot;</code> (request mode), <code>request_expires_at</code> 24 hours later (DEC-008), <code>total</code> 5,950,000, <code>address_line: null</code> (hidden until confirmed), <code>payment_status: &quot;not_collected&quot;</code> (model M1). If the guest clicks twice, the second call returns the same body with <code>Idempotency-Replayed: true</code>. If someone else took the nights first: <code>409 dates_unavailable</code>.</p>
 <h3 id="103-host-accepts-the-request">10.3 Host accepts the request</h3>
-<pre><code class="lang-http">POST /api/v1/host/bookings/BLD-2026-7K2M9Q/accept
+<pre><code class="lang-http">POST /api/v1/host/bookings/01933c20-0000-7000-8000-0000000b0001/accept
 X-Host-Account: 01933b7e-8a10-7c3e-9f00-1a2b3c4d5e01
 Idempotency-Key: 0b9e4f7a-3c2d-4e11-8a6b-7d5c9e1f2a33
 Content-Type: application/json
 
 {&quot;message_to_guest&quot;: &quot;Welcome! The key box code will be sent the day before.&quot;}</code></pre><p>Response <code>200</code> (extract):</p>
 <pre><code class="lang-json">{
+  &quot;id&quot;: &quot;01933c20-0000-7000-8000-0000000b0001&quot;,
   &quot;reference&quot;: &quot;BLD-2026-7K2M9Q&quot;,
   &quot;status&quot;: &quot;confirmed&quot;,
   &quot;confirmed_at&quot;: &quot;2026-11-09T11:02:00Z&quot;,
@@ -1534,42 +1700,55 @@ Content-Type: application/json
                  &quot;base&quot;: {&quot;amount_minor&quot;: 5550000, &quot;currency&quot;: &quot;DZD&quot;},
                  &quot;amount&quot;: {&quot;amount_minor&quot;: 666000, &quot;currency&quot;: &quot;DZD&quot;},
                  &quot;reversed&quot;: {&quot;amount_minor&quot;: 0, &quot;currency&quot;: &quot;DZD&quot;}},
-  &quot;allowed_actions&quot;: [&quot;cancel&quot;, &quot;message&quot;]
-}</code></pre><p>In the same transaction Django posts the ledger transaction &quot;debit host_wallet 6,660 DZD, credit commission revenue 6,660 DZD&quot; (example 9a), writes the outbox events (notification, SMS to the guest) and the message. An agent or guide would get <code>403 permission_denied</code> with <code>required_permission: &quot;bookings.respond&quot;</code>. A host whose wallet is below the credit floor gets <code>409 wallet_below_credit_floor</code>.</p>
+  &quot;allowed_actions&quot;: [&quot;cancel&quot;, &quot;message&quot;, &quot;confirm_stay&quot;]
+}</code></pre><p>In the same transaction (wallet balance row locked first, BR-PAY-14) Django posts the ledger transaction &quot;debit host_wallet 6,660 DZD, credit commission revenue 6,660 DZD&quot; (example 9a), creates the guest&#39;s check-in code, writes the outbox messages (notification, SMS to the guest) and the message. An agent or guide would get <code>403 permission_denied</code> with <code>required_permission: &quot;bookings.respond&quot;</code>. A host whose wallet is below the credit floor gets <code>409 wallet_below_credit_floor</code>; a host with an overdue refund gets <code>409 refund_overdue</code>.</p>
 <h3 id="104-wallet-top-up-with-four-eyes-approval">10.4 Wallet top-up with four-eyes approval</h3>
-<p>Finance user Samira records a CCP transfer of 600,000 DZD for Atlas Escapes (above the 500,000 DZD threshold):</p>
+<p>Admin Samira records a CCP transfer of 600,000 DZD for Atlas Escapes. The four-eyes threshold (500,000 DZD) applies to the host&#39;s rolling 24-hour total of top-ups (pending + approved, including this one), so two transfers of 300,000 DZD in the same day would also need a second admin (BR-PAY-07):</p>
 <pre><code class="lang-http">POST /api/v1/admin/wallets/01933b7e-8a10-7c3e-9f00-1a2b3c4d5e02/topups
 Idempotency-Key: 9a7c1e22-4b6f-4d0a-8e3c-1f2d3b4c5d66
 
 {&quot;amount&quot;: {&quot;amount_minor&quot;: 60000000, &quot;currency&quot;: &quot;DZD&quot;}, &quot;method&quot;: &quot;ccp_transfer&quot;,
  &quot;receipt_reference&quot;: &quot;CCP-0012345-2026-11-08&quot;, &quot;note&quot;: &quot;Transfer seen on CCP statement 08/11&quot;}</code></pre><p>Response <code>201</code>: <code>status: &quot;pending_approval&quot;</code>, <code>needs_second_approval: true</code>, nothing posted to the ledger yet. Using the same receipt again gives <code>409 receipt_already_used</code>.</p>
-<p>A second finance user, Nadir, approves:</p>
+<p>A second admin, Nadir, approves:</p>
 <pre><code class="lang-http">POST /api/v1/admin/topups/01933d00-0000-7000-8000-0000000e0001/approve
 Idempotency-Key: 2c4e6a80-1b3d-4f5a-9c7e-0d2f4a6b8c99</code></pre><pre><code class="lang-json">{
   &quot;id&quot;: &quot;01933d00-0000-7000-8000-0000000e0001&quot;,
   &quot;status&quot;: &quot;approved&quot;,
   &quot;amount&quot;: {&quot;amount_minor&quot;: 60000000, &quot;currency&quot;: &quot;DZD&quot;},
-  &quot;requested_by&quot;: {&quot;id&quot;: &quot;01933a00-0000-7000-8000-0000000d0001&quot;, &quot;display_name&quot;: &quot;Samira (finance)&quot;},
-  &quot;approved_by&quot;: {&quot;id&quot;: &quot;01933a00-0000-7000-8000-0000000d0002&quot;, &quot;display_name&quot;: &quot;Nadir (finance)&quot;},
+  &quot;requested_by&quot;: {&quot;id&quot;: &quot;01933a00-0000-7000-8000-0000000d0001&quot;, &quot;display_name&quot;: &quot;Samira (admin)&quot;},
+  &quot;approved_by&quot;: {&quot;id&quot;: &quot;01933a00-0000-7000-8000-0000000d0002&quot;, &quot;display_name&quot;: &quot;Nadir (admin)&quot;},
   &quot;ledger_transaction_id&quot;: &quot;01933d00-0000-7000-8000-0000000f0001&quot;,
   &quot;needs_second_approval&quot;: true,
   &quot;wallet_balance_after&quot;: {&quot;amount_minor&quot;: 61240000, &quot;currency&quot;: &quot;DZD&quot;}
-}</code></pre><p>If Samira tried to approve her own top-up: <code>403 four_eyes_same_user</code>. Both actions are in the audit log with ids, not names (BR-STF-03).</p>
+}</code></pre><p>If Samira tried to approve her own top-up: <code>403 four_eyes_same_user</code>; the approver must always differ from the requester. Both actions are in the audit log with ids, not names (BR-STF-03).</p>
 <h3 id="105-message-sync-polling">10.5 Message sync (polling)</h3>
 <p>The guest&#39;s messages page first calls <code>GET /api/v1/conversations/sync</code> (no cursor) and gets the current cursor. Then, every <code>poll_after_ms</code>:</p>
-<pre><code class="lang-http">GET /api/v1/conversations/sync?after=m90398&amp;as=guest</code></pre><pre><code class="lang-json">{
+<pre><code class="lang-http">GET /api/v1/conversations/sync?after=c01933c30&amp;as=guest</code></pre><pre><code class="lang-json">{
   &quot;conversations&quot;: [{&quot;id&quot;: &quot;01933c10-0000-7000-8000-00000000c001&quot;, &quot;kind&quot;: &quot;booking&quot;, &quot;my_role&quot;: &quot;guest&quot;,
-                     &quot;unread_count&quot;: 1, &quot;last_read_message_id&quot;: 90398, &quot;muted&quot;: false,
+                     &quot;unread_count&quot;: 1, &quot;last_read_message_id&quot;: &quot;01933c30-0000-7000-8000-000000090398&quot;, &quot;muted&quot;: false,
                      &quot;subject&quot;: {&quot;booking_reference&quot;: &quot;BLD-2026-7K2M9Q&quot;, &quot;title&quot;: &quot;Villa with sea view in Tipaza&quot;},
                      &quot;other_party&quot;: {&quot;id&quot;: &quot;01933a00-0000-7000-8000-0000000a0009&quot;, &quot;display_name&quot;: &quot;Karim B.&quot;, &quot;avatar_url&quot;: null}}],
-  &quot;messages&quot;: [{&quot;id&quot;: 90412, &quot;conversation_id&quot;: &quot;01933c10-0000-7000-8000-00000000c001&quot;, &quot;sender_role&quot;: &quot;host_member&quot;,
+  &quot;messages&quot;: [{&quot;id&quot;: &quot;01933c31-0000-7000-8000-000000090412&quot;, &quot;conversation_id&quot;: &quot;01933c10-0000-7000-8000-00000000c001&quot;, &quot;sender_role&quot;: &quot;host_member&quot;,
                 &quot;kind&quot;: &quot;text&quot;, &quot;body&quot;: &quot;Welcome! The key box code will be sent the day before.&quot;,
                 &quot;is_masked&quot;: false, &quot;created_at&quot;: &quot;2026-11-09T11:02:05Z&quot;}],
   &quot;unread_total&quot;: 1,
-  &quot;next_cursor&quot;: &quot;m90412&quot;,
+  &quot;next_cursor&quot;: &quot;c01933c31&quot;,
   &quot;has_more&quot;: false,
   &quot;poll_after_ms&quot;: 10000
-}</code></pre><p>When nothing changed, <code>conversations</code> and <code>messages</code> are empty and the cursor stays the same. When the guest opens the thread, the app calls <code>POST /conversations/{id}/read {&quot;last_read_message_id&quot;: 90412}</code>. Before a booking is confirmed, a phone number in a message arrives as <code>&quot;0555 ** ** **&quot;</code> with <code>is_masked: true</code> (BR-MSG-01). Later, Centrifugo can push the same events without changing this endpoint.</p>
+}</code></pre><p>When nothing changed, <code>conversations</code> and <code>messages</code> are empty and the cursor stays the same. When the guest opens the thread, the app calls <code>POST /conversations/{id}/read {&quot;last_read_message_id&quot;: &quot;01933c31-0000-7000-8000-000000090412&quot;}</code>. Before a booking is confirmed, a phone number in a message arrives as <code>&quot;0555 ** ** **&quot;</code> with <code>is_masked: true</code> (BR-MSG-01). Later, Centrifugo can push the same events without changing this endpoint.</p>
+<h3 id="106-guest-cancels-commission-follows-the-refund">10.6 Guest cancels: commission follows the refund</h3>
+<p>Same villa, booking confirmed (commission 6,660 DZD taken). The guest cancels 3 days before check-in, moderate policy (refund window 50%, 5,000 bp). First the preview:</p>
+<pre><code class="lang-http">GET /api/v1/me/bookings/01933c20-0000-7000-8000-0000000b0001/cancellation-preview</code></pre><pre><code class="lang-json">{&quot;policy_code&quot;: &quot;moderate&quot;, &quot;days_before_check_in&quot;: 3, &quot;refund_percent_bp&quot;: 5000,
+ &quot;refund_amount&quot;: {&quot;amount_minor&quot;: 3175000, &quot;currency&quot;: &quot;DZD&quot;},
+ &quot;kept_by_host&quot;: {&quot;amount_minor&quot;: 2775000, &quot;currency&quot;: &quot;DZD&quot;},
+ &quot;commission_returned_to_host&quot;: {&quot;amount_minor&quot;: 0, &quot;currency&quot;: &quot;DZD&quot;},
+ &quot;allowed&quot;: true}</code></pre><p>(<code>commission_returned_to_host</code> is 0 in guest responses; the host&#39;s preview shows 333,000.) Then <code>POST /api/v1/me/bookings/{booking_id}/cancel</code>. In one transaction:</p>
+<ul>
+<li>refund owed to the guest: 50% x 55,500 + cleaning 4,000 = <strong>31,750 DZD</strong>; a refund obligation of 31,750 DZD opens, due 7 days later, with the memo posting <code>refund_due</code> (BR-CAN-06);</li>
+<li>commission returned to the host: apply_bp(6,660, 5,000) = <strong>3,330 DZD</strong> (<code>commission_reversal</code>); <strong>BLADUS keeps 3,330 DZD</strong> (BR-PAY-05, DEC-018 revised 2026-11-13). The cleaning fee is outside the commission base, so it changes nothing;</li>
+<li>host wallet after: 50,000 - 6,660 + 3,330 = 46,670 DZD (example 9a).</li>
+</ul>
+<p>If the host cancels instead, the guest is owed 59,500 DZD and the full 6,660 DZD goes back. If the admin cancels with a refund R of 31,750 DZD: returned = round_half_up(6,660 x clamp(31,750 - 4,000 - 0, 0, 55,500) / 55,500) = 3,330 DZD. The host then pays the guest directly and calls <code>POST /host/refunds/{refund_id}/declare-paid</code>; the guest confirms with <code>POST /me/refunds/{refund_id}/confirm-received</code>. These money rules are research for the build; VERIFY WITH A PROFESSIONAL before telling hosts.</p>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
@@ -1581,5 +1760,8 @@ Idempotency-Key: 2c4e6a80-1b3d-4f5a-9c7e-0d2f4a6b8c99</code></pre><pre><code cla
 <li><input disabled="" type="checkbox"> Which website function has no endpoint any more because being a host is now a host account, and which endpoint replaces it?</li>
 <li><input disabled="" type="checkbox"> Why is the gateway webhook marked <code>x-dormant</code>, and what does it answer today?</li>
 <li><input disabled="" type="checkbox"> Which change to the API would force a <code>/api/v2</code>: adding a response field, or renaming one?</li>
+<li><input disabled="" type="checkbox"> A guest cancels in the 50% window of a booking with 6,660 DZD of commission. How much does the host get back, and which endpoint shows it first?</li>
+<li><input disabled="" type="checkbox"> Can you put <code>BLD-2026-7K2M9Q</code> in a path? How do you find a booking from its reference?</li>
+<li><input disabled="" type="checkbox"> Who may approve a wallet adjustment, and what happens if the requester tries?</li>
 </ul>
 <div class="pager"><span><a href="05b-data-dictionary.html">&larr; 05b. Data dictionary</a></span><span><a href="api-reference.html">API reference &rarr;</a></span></div></main></div></body></html>

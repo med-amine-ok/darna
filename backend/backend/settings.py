@@ -11,6 +11,8 @@ Design references (docs/backend):
 - 04-business-rules.md: business defaults (commission, request window).
 """
 
+import base64
+import hashlib
 from pathlib import Path
 
 import environ
@@ -24,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ``env`` reads typed values from environment variables. The second element of
 # each tuple is the default used on a developer machine.
 env = environ.Env(
-    DJANGO_DEBUG=(bool, True),
+    DJANGO_DEBUG=(bool, False),
     DJANGO_SECRET_KEY=(str, "dev-only-insecure-key-change-me"),
     DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "testserver"]),
     CORS_ALLOWED_ORIGINS=(list, ["http://localhost:3000", "http://localhost:3001"]),
@@ -33,7 +35,12 @@ env = environ.Env(
     OTP_TTL_MINUTES=(int, 10),
     OTP_MAX_ATTEMPTS=(int, 5),
     OTP_MAX_SENDS_PER_HOUR=(int, 3),
+    OTP_MAX_SENDS_PER_DAY=(int, 10),
+    OTP_MAX_SENDS_PER_IP_PER_HOUR=(int, 10),
+    SMS_DAILY_BUDGET=(int, 5000),
     SMS_BACKEND=(str, "apps.accounts.sms.ConsoleSmsBackend"),
+    HASH_PEPPER=(str, "dev-only-insecure-pepper-change-me"),
+    INTEGRATION_KEYS=(list, []),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -44,6 +51,26 @@ ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 if not DEBUG and SECRET_KEY == "dev-only-insecure-key-change-me":
     # Refuse to start in production with the development key.
     raise RuntimeError("Set DJANGO_SECRET_KEY before running with DJANGO_DEBUG=False.")
+
+# R9: server secret for HMAC-SHA256 of session tokens, one-time codes and
+# lookup hashes (apps.accounts.models.hash_secret). Changing it invalidates
+# every stored hash (sessions, unused codes, invitations).
+HASH_PEPPER = env("HASH_PEPPER")
+if not DEBUG and HASH_PEPPER == "dev-only-insecure-pepper-change-me":
+    raise RuntimeError("Set HASH_PEPPER before running with DJANGO_DEBUG=False.")
+
+# R9, DEC-017: Fernet keys that encrypt hotel system credentials
+# (apps.hosts.crypto). Comma list; the first key encrypts, every key decrypts,
+# so a new key is added in front and the old one removed after re-encryption.
+INTEGRATION_KEYS = [key.strip() for key in env("INTEGRATION_KEYS") if key.strip()]
+if not INTEGRATION_KEYS:
+    if not DEBUG:
+        raise RuntimeError("Set INTEGRATION_KEYS before running with DJANGO_DEBUG=False.")
+    # Development only: a stable key derived from the dev SECRET_KEY, so local
+    # data stays readable between restarts. Never used when DEBUG is False.
+    INTEGRATION_KEYS = [
+        base64.urlsafe_b64encode(hashlib.sha256(f"bladus-dev-integration-key:{SECRET_KEY}".encode()).digest()).decode()
+    ]
 
 # ---------------------------------------------------------------------------
 # Applications
@@ -71,6 +98,8 @@ LOCAL_APPS = [
     "apps.geo",         # L1: wilayas, dairas, communes
     "apps.config",      # L1: platform settings (commission rates, switches)
     "apps.audit",       # L1: who did what (append-only log)
+    "apps.media",       # L1: uploads and signed file URLs
+    "apps.notifications",  # L1: in-app notifications and preferences
     "apps.accounts",    # L2: users, sign-in, one-time codes, staff
     "apps.hosts",       # L2: host accounts, organisations, teams
     "apps.catalog",     # L3: listings, room types, taxonomy
@@ -79,6 +108,10 @@ LOCAL_APPS = [
     "apps.pricing",     # L4: quotes
     "apps.ledger",      # L4: host deposit wallet and commission
     "apps.bookings",    # L4: bookings and cancellations
+    "apps.reviews",     # L5: reviews, replies, reports
+    "apps.messaging",   # L5: guest and host conversations
+    "apps.trust",       # L6: moderation cases and reason codes
+    "apps.search",      # L6: search facets and map pins
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -127,6 +160,12 @@ DATABASES = {
     "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = False
+
+# R15: trigram search lookups (``trigram_word_similar``) come from
+# django.contrib.postgres. It is added only on PostgreSQL, so SQLite laptops do
+# not need a PostgreSQL driver.
+if "postgresql" in DATABASES["default"]["ENGINE"]:
+    INSTALLED_APPS.insert(INSTALLED_APPS.index("django.contrib.staticfiles") + 1, "django.contrib.postgres")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ---------------------------------------------------------------------------
@@ -189,6 +228,9 @@ REST_FRAMEWORK = {
         "auth": "10/min",      # sign-up, sign-in
         "otp": "5/min",        # one-time code requests
         "booking": "20/min",   # booking creation
+        "messages": "30/min",  # sending a message (BR-MSG-01)
+        "reports": "10/hour",  # reporting a review (BR-REV-03)
+        "media_uploads": "120/hour",  # upload slots (BR-MED-01)
     },
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
@@ -242,7 +284,10 @@ SESSION_TOKEN_TTL_DAYS = env("SESSION_TOKEN_TTL_DAYS")      # guests and hosts
 STAFF_SESSION_TTL_HOURS = env("STAFF_SESSION_TTL_HOURS")    # admins
 OTP_TTL_MINUTES = env("OTP_TTL_MINUTES")                    # BR-ACC-02
 OTP_MAX_ATTEMPTS = env("OTP_MAX_ATTEMPTS")                  # BR-ACC-02
-OTP_MAX_SENDS_PER_HOUR = env("OTP_MAX_SENDS_PER_HOUR")      # BR-ACC-02
+OTP_MAX_SENDS_PER_HOUR = env("OTP_MAX_SENDS_PER_HOUR")      # BR-ACC-02, R9: per destination
+OTP_MAX_SENDS_PER_DAY = env("OTP_MAX_SENDS_PER_DAY")        # R9: per destination
+OTP_MAX_SENDS_PER_IP_PER_HOUR = env("OTP_MAX_SENDS_PER_IP_PER_HOUR")  # R9: per client IP
+SMS_DAILY_BUDGET = env("SMS_DAILY_BUDGET")                  # R9: SMS per business day, all users
 SMS_BACKEND = env("SMS_BACKEND")                            # dotted path of the SMS sender
 
 # ---------------------------------------------------------------------------
@@ -255,3 +300,40 @@ DEFAULT_CREDIT_LIMIT_MINOR = 20_000 * 100  # 20,000 DZD in centimes (BR-PAY-10)
 TOPUP_FOUR_EYES_MINOR = 500_000 * 100      # second admin above 500,000 DZD (BR-PAY-07)
 QUOTE_TTL_MINUTES = 30                     # BR-PRC-01
 DEFAULT_CURRENCY = "DZD"
+
+# ---------------------------------------------------------------------------
+# Email, links, files and payment gateways (2026-11-15 endpoint push)
+# ---------------------------------------------------------------------------
+# Email: console in development; SMTP (EMAIL_HOST and friends from the
+# environment) when DEBUG is False. Links in emails point to the website.
+EMAIL_BACKEND = env.str(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend",
+)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="BLADUS <no-reply@bladus.dz>")
+EMAIL_HOST = env.str("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+FRONTEND_URL = env.str("FRONTEND_URL", default="http://localhost:3000")
+
+# CSV exports (apps.audit.exports) and uploads (apps.media.storage). Local
+# folders are for development; production uses S3-compatible storage.
+EXPORTS_ROOT = env.str("EXPORTS_ROOT", default=str(BASE_DIR / "var" / "exports"))
+MEDIA_STORAGE_BACKEND = env.str("MEDIA_STORAGE_BACKEND", default="local")  # local or s3
+MEDIA_LOCAL_ROOT = env.str("MEDIA_LOCAL_ROOT", default=str(BASE_DIR / "var" / "media"))
+MEDIA_SCANNER = env.str("MEDIA_SCANNER", default="")  # dotted path; empty = development stub (BR-MED-02)
+if not DEBUG and MEDIA_STORAGE_BACKEND == "local":
+    raise RuntimeError("Set MEDIA_STORAGE_BACKEND=s3 (and the MEDIA_S3_* variables) before running with DJANGO_DEBUG=False.")
+if not DEBUG and not MEDIA_SCANNER:
+    raise RuntimeError("Set MEDIA_SCANNER to a real virus scanner before running with DJANGO_DEBUG=False.")
+# The MEDIA_S3_* values (endpoint, region, keys, buckets) are read from the
+# environment by apps.media.storage.setting(); see .env.example.
+
+# Payment gateway webhook secrets (apps.ledger.gateways). Online payment is
+# off in the first release (DEC-019), so empty secrets refuse every webhook.
+GATEWAY_WEBHOOK_SECRETS = {
+    "chargily": env.str("CHARGILY_WEBHOOK_SECRET", default=""),
+    "slickpay": env.str("SLICKPAY_WEBHOOK_SECRET", default=""),
+}

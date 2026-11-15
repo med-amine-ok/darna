@@ -11,12 +11,12 @@ info:
 
     **Read 06-api-design.md first.** In short:
 
-    * Base path `/api/v1`. JSON in snake_case. Money is `{amount_minor, currency}` in centimes (1 DZD = 100). IDs are UUIDv7, plus human references (BLD-2026-7K2M9Q, LST-7K2M9Q).
+    * Base path `/api/v1`. JSON in snake_case. Money is `{amount_minor, currency}` in centimes (1 DZD = 100). One id scheme: every id is a UUIDv7; human references (BLD-2026-7K2M9Q, LST-7K2M9Q) are for display and search only, never in paths.
     * Callers are the two Next.js servers (BFF), never the browser directly. They send the allauth session token in `X-Session-Token`.
     * Host endpoints act for the **active host account** (a user or an organisation): header `X-Host-Account` or the one stored in the session.
     * `/api/v1/admin/*` is only for staff sessions with a verified second factor.
     * Errors use `application/problem+json` with a stable `code` and a localized `message` (en, fr, ar).
-    * Money model M1 (DEC-001): guests pay hosts directly; BLADUS deducts commission from a prepaid host wallet. Guest payments, escrow and payouts exist here only as **dormant** operations (`x-dormant: true`), returning 404 until a feature flag is switched on.
+    * Money model M1 (DEC-001): guests pay hosts directly; BLADUS deducts commission from a prepaid host wallet. No online payment and no online top-up in v1 (DEC-019). Guest payments, payouts and the gateway webhook exist here only as **dormant** operations (`x-dormant: true`), returning 404 until a feature flag is switched on.
 
     Vendor extensions on every operation:
     `x-requirements` (IDs in 03-requirements.md), `x-rules` (IDs in 04-business-rules.md), `x-release` (MVP, R2, Later), `x-dormant`, `x-host-permission` (organisation permission, BR-ORG-05), `x-staff-permission` (staff permission, BR-STF-01).
@@ -1757,8 +1757,8 @@ paths:
       summary: Public listing page
       tags:
       - public.catalog
-      description: '`listing_id` is the UUID or the reference (LST-XXXXXX). 404 for unpublished listings, except for members of the owning host
-        account (they see a preview).'
+      description: '`listing_id` is the UUIDv7 id (DEC-031); the reference LST-XXXXXX is for display and search only. 404 for unpublished listings,
+        except for members of the owning host account (they see a preview).'
       security:
       - {}
       - sessionToken: []
@@ -2221,7 +2221,7 @@ paths:
       summary: Public trip page (path accepts the trip id or its slug)
       tags:
       - public.trips
-      description: '`trip_id` is the UUID or the reference. Old website slugs redirect (301) to the reference.'
+      description: '`trip_id` is the UUIDv7 id (DEC-031). Old website slugs are redirected by the website, not the API.'
       security:
       - {}
       - sessionToken: []
@@ -3126,9 +3126,9 @@ paths:
       tags:
       - me.bookings
       description: |-
-        One database transaction: re-price the quote, lock inventory (exclusion constraint for single units, atomic counter update for pools and seats), resolve approval mode, create the booking with its snapshot, post the commission if confirmed, write outbox events.
+        One database transaction, in lock order (BR-PAY-14): lock the host wallet balance row and check the floor and overdue refunds; lock the listing row; re-price the quote; take stock (exclusion constraint and blocked-day trigger for single units, one conditional counter update for pools and seats); resolve approval mode; create the booking with its snapshot; post the commission if confirmed; write outbox messages (including `inventory.push` for a connected hotel).
 
-        Errors: 403 `phone_verification_required`; 403 `cannot_book_own_listing`; 409 `dates_unavailable` / `not_enough_units` / `seats_unavailable` (lost the race); 409 `price_changed` (body has the new `quote`); 409 `quote_expired`; 409 `idempotency_in_progress`; 422 `idempotency_key_reused` (same key, different body).
+        Errors: 403 `phone_verification_required`; 403 `cannot_book_own_listing`; 409 `too_many_open_bookings` (BR-BKG-08); 409 `dates_unavailable` / `not_enough_units` / `seats_unavailable` (lost the race or blocked day); 409 `price_changed` (body has the new `quote`); 409 `quote_expired`; 409 `idempotency_in_progress`; 422 `idempotency_key_reused` (same key, different body).
       security:
       - sessionToken: []
       parameters:
@@ -3281,21 +3281,28 @@ paths:
       - BKG-06
       - BKG-09
       - BKG-10
+      - BKG-12
       - AVL-01
       - AVL-02
+      - AVL-07
       - PAY-03
+      - PAY-14
       - ACC-01
       x-rules:
       - BR-BKG-01
       - BR-BKG-02
       - BR-BKG-03
       - BR-BKG-07
+      - BR-BKG-08
       - BR-AVL-01
       - BR-AVL-02
+      - BR-AVL-07
       - BR-TRP-02
       - BR-PRC-01
       - BR-PAY-04
       - BR-PAY-10
+      - BR-PAY-14
+      - BR-CAN-07
       - BR-SYS-01
       - BR-ACC-01
       x-release: MVP
@@ -3374,7 +3381,8 @@ paths:
       summary: One of my bookings
       tags:
       - me.bookings
-      description: '`booking_id` is the UUID or the reference BLD-YYYY-XXXXXX. 404 if it is not mine.'
+      description: '`booking_id` is the UUIDv7 id (DEC-031); the reference BLD-YYYY-XXXXXX is shown to people and searchable with `q` on list
+        endpoints. 404 if it is not mine. The check-in code is included once confirmed.'
       security:
       - sessionToken: []
       parameters:
@@ -3447,8 +3455,9 @@ paths:
       summary: Cancel my booking or withdraw my request
       tags:
       - me.bookings
-      description: 'pending: withdraw (nothing to refund). confirmed: refund by the snapshot policy; commission on the refunded share goes back
-        to the host wallet. 409 `booking_not_cancellable` (after check-in time, or final state), 409 `refund_changed`.'
+      description: 'pending: withdraw (nothing to refund). confirmed: refund by the snapshot policy; the host gets back apply_bp(commission, refund_bp)
+        (BR-PAY-05, example 8a: 3,330 of 6,660 DZD); a refund obligation opens when the refund is above 0 (BR-CAN-06). 409 `booking_not_cancellable`
+        (after check-in time, or final state), 409 `refund_changed`.'
       security:
       - sessionToken: []
       parameters:
@@ -3488,10 +3497,12 @@ paths:
       x-requirements:
       - CAN-01
       - CAN-04
+      - CAN-05
       - BKG-05
       x-rules:
       - BR-CAN-01
       - BR-CAN-02
+      - BR-CAN-06
       - BR-PAY-05
       - BR-BKG-06
       x-release: MVP
@@ -3501,7 +3512,8 @@ paths:
       summary: Review a completed stay
       tags:
       - me.bookings
-      description: Only for a completed booking, within 14 days after check-out, once (409 `review_exists`, 422 `review_window_closed`).
+      description: Only for a completed booking whose stay was confirmed (409 `stay_not_confirmed`, BR-BKG-09), within 14 days after check-out,
+        once (409 `review_exists`, 422 `review_window_closed`).
       security:
       - sessionToken: []
       parameters:
@@ -3537,9 +3549,202 @@ paths:
           $ref: '#/components/responses/Unprocessable'
       x-requirements:
       - REV-01
+      - BKG-13
       x-rules:
       - BR-REV-01
       - BR-REV-02
+      - BR-BKG-09
+      x-release: MVP
+  /api/v1/me/bookings/{booking_id}/confirm-stay:
+    post:
+      operationId: confirmMyStay
+      summary: Confirm that my stay took place
+      tags:
+      - me.bookings
+      description: Allowed after check-in time on a confirmed or completed booking (409 `stay_not_started` before check-in time, 409 `booking_not_confirmed`).
+        Repeating it returns the booking unchanged. Sets stay_confirmed_via = guest.
+      security:
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_booking_id'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestBooking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - BKG-13
+      x-rules:
+      - BR-BKG-09
+      x-release: MVP
+  /api/v1/me/refunds:
+    get:
+      operationId: listMyRefunds
+      summary: Refunds hosts owe me
+      tags:
+      - me.bookings
+      security:
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - name: status
+        in: query
+        required: false
+        description: Filter.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefundObligationStatus'
+        style: form
+        explode: false
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 'Cursor page: pass next_cursor back as `cursor` to continue.'
+                required:
+                - results
+                - next_cursor
+                - has_more
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RefundObligation'
+                  next_cursor:
+                    type:
+                    - string
+                    - 'null'
+                  has_more:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-requirements:
+      - CAN-05
+      x-rules:
+      - BR-CAN-06
+      - BR-CAN-07
+      x-release: MVP
+  /api/v1/me/refunds/{refund_id}/confirm-received:
+    post:
+      operationId: confirmMyRefundReceived
+      summary: Confirm I received the refund
+      tags:
+      - me.bookings
+      description: open or declared to settled; posts the `refund_settled` memo transaction. 409 `refund_not_open`.
+      security:
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_refund_id'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundObligation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - CAN-05
+      x-rules:
+      - BR-CAN-06
+      x-release: MVP
+  /api/v1/me/refunds/{refund_id}/dispute:
+    post:
+      operationId: disputeMyRefund
+      summary: Say the refund was not received
+      tags:
+      - me.bookings
+      description: declared to disputed (the host must pay and declare again; the due date does not move). 409 `refund_not_declared`.
+      security:
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_refund_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundDispute'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundObligation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - CAN-05
+      x-rules:
+      - BR-CAN-06
+      - BR-CAN-07
       x-release: MVP
   /api/v1/me/bookings/{booking_id}/dispute:
     post:
@@ -7225,8 +7430,9 @@ paths:
       summary: Accept a pending request
       tags:
       - host.bookings
-      description: pending to confirmed in one transaction with the commission posting. 409 `booking_not_pending`, `request_expired`, `wallet_below_credit_floor`;
-        403 `permission_denied` for agents and guides (DEC-009).
+      description: pending to confirmed in one transaction with the commission posting, same lock order as booking creation (wallet balance row
+        first, BR-PAY-14). 409 `booking_not_pending`, `request_expired`, `wallet_below_credit_floor`, `refund_overdue` (BR-CAN-07); 403 `permission_denied`
+        for agents and guides (DEC-009).
       security:
       - sessionToken: []
       parameters:
@@ -7384,6 +7590,8 @@ paths:
       - PAY-03
       - PAY-04
       - PAY-07
+      - PAY-14
+      - CAN-05
       - ORG-05
       x-rules:
       - BR-BKG-03
@@ -7391,6 +7599,8 @@ paths:
       - BR-PAY-04
       - BR-PAY-06
       - BR-PAY-10
+      - BR-PAY-14
+      - BR-CAN-07
       - BR-ORG-05
       - BR-NTF-01
       x-release: MVP
@@ -7493,7 +7703,7 @@ paths:
       summary: Cancel a confirmed booking as host
       tags:
       - host.bookings
-      description: Full refund owed to the guest, full commission reversal, host cancellation counter +1.
+      description: Full total owed to the guest (a refund obligation opens, BR-CAN-06), full commission returned, host cancellation counter +1.
       security:
       - sessionToken: []
       parameters:
@@ -7534,12 +7744,67 @@ paths:
       x-requirements:
       - CAN-02
       - CAN-04
+      - CAN-05
       x-rules:
       - BR-CAN-03
+      - BR-CAN-06
       - BR-PAY-05
       - BR-NTF-01
       x-release: MVP
       x-host-permission: bookings.cancel_as_host
+  /api/v1/host/bookings/{booking_id}/confirm-stay:
+    post:
+      operationId: confirmStayAsHost
+      summary: Confirm the guest arrived (check-in code)
+      tags:
+      - host.bookings
+      description: 'The host types the 6-digit code the guest shows on arrival. Wrong code: 400 `invalid_code`; 5 wrong codes lock this booking
+        for 1 hour (429). 409 `booking_not_confirmed`. Repeating it returns the booking unchanged. Sets stay_confirmed_via = host_code.'
+      security:
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_booking_id'
+      - $ref: '#/components/parameters/XHostAccount'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StayConfirmByHost'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HostBooking'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-requirements:
+      - BKG-13
+      x-rules:
+      - BR-BKG-09
+      x-release: MVP
+      x-host-permission: bookings.view
   /api/v1/host/bookings/{booking_id}/guest-review:
     post:
       operationId: reviewGuest
@@ -7875,28 +8140,100 @@ paths:
       - BR-PAY-03
       x-release: MVP
       x-host-permission: wallet.view
-  /api/v1/host/wallet/topups:
-    post:
-      operationId: startOnlineTopup
-      summary: Top up the wallet online (CIB, Edahabia)
+  /api/v1/host/refunds:
+    get:
+      operationId: listHostRefunds
+      summary: Refunds the active host account owes guests
       tags:
       - host.wallet
-      description: Credited only by the verified gateway webhook. 404 while the `online_topup` flag is off.
+      description: While one is overdue, instant booking is off and requests cannot be accepted (BR-CAN-07).
       security:
       - sessionToken: []
       parameters:
       - $ref: '#/components/parameters/AcceptLanguage'
       - $ref: '#/components/parameters/XHostAccount'
-      - $ref: '#/components/parameters/IdempotencyKey'
+      - name: status
+        in: query
+        required: false
+        description: Filter.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefundObligationStatus'
+        style: form
+        explode: false
+      - name: overdue
+        in: query
+        required: false
+        description: Only overdue ones.
+        schema:
+          type: boolean
+      - $ref: '#/components/parameters/Cursor'
+      - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 'Cursor page: pass next_cursor back as `cursor` to continue.'
+                required:
+                - results
+                - next_cursor
+                - has_more
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RefundObligation'
+                  next_cursor:
+                    type:
+                    - string
+                    - 'null'
+                  has_more:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      x-requirements:
+      - CAN-05
+      x-rules:
+      - BR-CAN-06
+      - BR-CAN-07
+      x-release: MVP
+      x-host-permission: bookings.view
+  /api/v1/host/refunds/{refund_id}/declare-paid:
+    post:
+      operationId: declareHostRefundPaid
+      summary: Declare a refund paid to the guest
+      tags:
+      - host.wallet
+      description: open or disputed to declared, with the transfer reference. The guest is asked to confirm. 409 `refund_not_open`.
+      security:
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_refund_id'
+      - $ref: '#/components/parameters/XHostAccount'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OnlineTopupCreate'
+              $ref: '#/components/schemas/RefundDeclare'
       responses:
-        '201':
-          description: Created
+        '200':
+          description: OK
           headers:
             X-Request-Id:
               $ref: '#/components/headers/RequestId'
@@ -7905,7 +8242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OnlineTopupCheckout'
+                $ref: '#/components/schemas/RefundObligation'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -7919,11 +8256,11 @@ paths:
         '422':
           $ref: '#/components/responses/Unprocessable'
       x-requirements:
-      - PAY-06
+      - CAN-05
       x-rules:
-      - BR-PAY-08
-      x-release: R2
-      x-host-permission: wallet.view
+      - BR-CAN-06
+      x-release: MVP
+      x-host-permission: bookings.cancel_as_host
   /api/v1/host/earnings:
     get:
       operationId: getHostEarnings
@@ -8138,9 +8475,9 @@ paths:
       summary: Payment gateway callback
       tags:
       - webhooks
-      description: DORMANT until online top-up (R2) or guest payments (M2 to M4) are switched on; 404 before that. The raw body is stored first,
-        then the signature is checked (HMAC-SHA256 of the raw body with the provider secret), then the event is deduplicated by (provider, event_id)
-        and processed once by a worker. Always answers 200 quickly, also for duplicates.
+      description: DORMANT until online payment exists (guest payments, M2 to M4; DEC-019); 404 before that. There is no online top-up in v1.
+        The raw body is stored first, then the signature is checked (HMAC-SHA256 of the raw body with the provider secret), then the event is
+        deduplicated by (provider, event_id) and processed once by a worker. Always answers 200 quickly, also for duplicates.
       security:
       - gatewaySignature: []
       parameters:
@@ -8173,7 +8510,6 @@ paths:
           $ref: '#/components/responses/Unprocessable'
       x-requirements:
       - PAY-09
-      - PAY-06
       - PAY-10
       x-rules:
       - BR-SYS-02
@@ -10589,6 +10925,8 @@ paths:
       summary: Cancel a booking as staff
       tags:
       - admin.bookings
+      description: 'Commission returned for a refund R: round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base) (BR-CAN-04, BR-PAY-05).
+        A refund obligation opens when R > 0.'
       security:
       - staffSession: []
       parameters:
@@ -10742,13 +11080,29 @@ paths:
   /api/v1/admin/refunds:
     get:
       operationId: adminListRefunds
-      summary: All refunds
+      summary: Refund obligations (e.g. overdue ones)
       tags:
       - admin.bookings
       security:
       - staffSession: []
       parameters:
       - $ref: '#/components/parameters/AcceptLanguage'
+      - name: overdue
+        in: query
+        required: false
+        description: Only overdue obligations (open or disputed, due date passed).
+        schema:
+          type: boolean
+      - name: status
+        in: query
+        required: false
+        description: Filter.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefundObligationStatus'
+        style: form
+        explode: false
       - name: host_account
         in: query
         required: false
@@ -10756,12 +11110,6 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: kind
-        in: query
-        required: false
-        description: Filter.
-        schema:
-          type: string
       - name: from
         in: query
         required: false
@@ -10796,7 +11144,7 @@ paths:
                   results:
                     type: array
                     items:
-                      $ref: '#/components/schemas/AdminRefund'
+                      $ref: '#/components/schemas/RefundObligation'
                   meta:
                     $ref: '#/components/schemas/PageMeta'
         '400':
@@ -10807,10 +11155,64 @@ paths:
           $ref: '#/components/responses/Forbidden'
       x-requirements:
       - CAN-03
+      - CAN-05
       x-rules:
       - BR-CAN-04
+      - BR-CAN-06
+      - BR-CAN-07
       x-release: MVP
-      x-staff-permission: bookings.view or wallets.view
+      x-staff-permission: bookings.view
+  /api/v1/admin/refunds/{refund_id}/settle:
+    post:
+      operationId: adminSettleRefund
+      summary: Settle a refund obligation with proof
+      tags:
+      - admin.bookings
+      description: Any open, declared or disputed obligation to settled, with a note and optional uploaded proof; posts `refund_settled`; audited.
+        409 `refund_not_open` when already settled.
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_refund_id'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundSettle'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundObligation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - CAN-05
+      x-rules:
+      - BR-CAN-06
+      - BR-STF-02
+      x-release: MVP
+      x-staff-permission: bookings.refund
   /api/v1/admin/users:
     get:
       operationId: adminListUsers
@@ -11846,13 +12248,75 @@ paths:
       - BR-PAY-02
       x-release: MVP
       x-staff-permission: wallets.view
-  /api/v1/admin/ledger/adjustments:
-    post:
-      operationId: adminCreateAdjustment
-      summary: Correct a wallet with an adjustment transaction
+  /api/v1/admin/wallet-adjustments:
+    get:
+      operationId: adminListWalletAdjustments
+      summary: Manual wallet adjustments
       tags:
       - admin.finance
-      description: 'Never edits old entries: posts a new balanced transaction (optionally linked to the one it corrects).'
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - name: status
+        in: query
+        required: false
+        description: Filter.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdjustmentStatus'
+        style: form
+        explode: false
+      - name: host_account
+        in: query
+        required: false
+        description: Filter.
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Numbered page (admin tables).
+                required:
+                - results
+                - meta
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WalletAdjustment'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-requirements:
+      - PAY-13
+      x-rules:
+      - BR-PAY-13
+      x-release: MVP
+      x-staff-permission: wallets.view
+    post:
+      operationId: adminCreateWalletAdjustment
+      summary: Ask for a manual wallet adjustment
+      tags:
+      - admin.finance
+      description: Creates a pending_approval adjustment; nothing is posted until a second admin approves (DEC-022). 422 `adjustment_too_large`
+        above 1,000,000 DZD; 422 for amount 0.
       security:
       - staffSession: []
       parameters:
@@ -11875,7 +12339,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LedgerTransaction'
+                $ref: '#/components/schemas/WalletAdjustment'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -11887,21 +12351,116 @@ paths:
         '422':
           $ref: '#/components/responses/Unprocessable'
       x-requirements:
+      - PAY-13
       - PAY-01
       x-rules:
+      - BR-PAY-13
       - BR-PAY-02
       - BR-STF-03
       - BR-STF-02
       x-release: MVP
-      x-staff-permission: ledger.adjust (new)
+      x-staff-permission: ledger.adjust
+  /api/v1/admin/wallet-adjustments/{adjustment_id}/approve:
+    post:
+      operationId: adminApproveWalletAdjustment
+      summary: Second approval of a wallet adjustment
+      tags:
+      - admin.finance
+      description: The approver must differ from the requester (403 `four_eyes_required`). Posts one balanced `adjustment` transaction (host wallet
+        against `adjustments`). 409 `adjustment_not_pending`.
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_adjustment_id'
+      - $ref: '#/components/parameters/IdempotencyKeyOptional'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+            Idempotency-Replayed:
+              $ref: '#/components/headers/IdempotencyReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletAdjustment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - PAY-13
+      x-rules:
+      - BR-PAY-13
+      - BR-PAY-02
+      - BR-STF-02
+      x-release: MVP
+      x-staff-permission: ledger.adjust
+  /api/v1/admin/wallet-adjustments/{adjustment_id}/reject:
+    post:
+      operationId: adminRejectWalletAdjustment
+      summary: Reject a wallet adjustment
+      tags:
+      - admin.finance
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_adjustment_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reason'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletAdjustment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - PAY-13
+      x-rules:
+      - BR-PAY-13
+      - BR-STF-02
+      x-release: MVP
+      x-staff-permission: ledger.adjust
   /api/v1/admin/wallets/{host_account_id}/topups:
     post:
       operationId: adminCreateTopup
       summary: Record a manual wallet top-up
       tags:
       - admin.finance
-      description: Up to the four-eyes threshold the top-up is approved and posted at once. Above it, status is pending_approval and nothing is
-        posted until a second finance user approves. 409 `receipt_already_used` (same method and receipt).
+      description: If the host's rolling 24-hour top-up total (pending + approved, including this one) stays within the four-eyes threshold (500,000
+        DZD), the top-up is approved and posted at once. Above it, status is pending_approval and nothing is posted until a second admin approves
+        (BR-PAY-07). 409 `receipt_already_used` (same method and receipt).
       security:
       - staffSession: []
       parameters:
@@ -12026,7 +12585,7 @@ paths:
       summary: Second approval of a large top-up (four-eyes)
       tags:
       - admin.finance
-      description: The approver must be a different staff user from the requester (403 `four_eyes_same_user`). 409 `topup_not_pending`. Posts
+      description: The approver must always be a different admin from the requester (403 `four_eyes_same_user`). 409 `topup_not_pending`. Posts
         the ledger transaction and notifies the host.
       security:
       - staffSession: []
@@ -12479,6 +13038,219 @@ paths:
       x-release: Later
       x-dormant: true
       x-staff-permission: payouts.approve
+  /api/v1/admin/inventory-conflicts:
+    get:
+      operationId: adminListInventoryConflicts
+      summary: Hotel sync conflicts (rooms already sold)
+      tags:
+      - admin.hosts
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - name: status
+        in: query
+        required: false
+        description: Filter (default open).
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryConflictStatus'
+        style: form
+        explode: false
+      - name: host_account
+        in: query
+        required: false
+        description: Filter.
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Numbered page (admin tables).
+                required:
+                - results
+                - meta
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryConflict'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-requirements:
+      - HST-09
+      x-rules:
+      - BR-HST-07
+      x-release: MVP
+      x-staff-permission: hosts.view
+  /api/v1/admin/inventory-conflicts/{conflict_id}/resolve:
+    post:
+      operationId: adminResolveInventoryConflict
+      summary: Resolve a hotel sync conflict
+      tags:
+      - admin.hosts
+      description: Records how the admin solved it (note required; accept the clamp, or the booking was moved or cancelled with the guest). The
+        room-night total is never set below held + booked. 409 `conflict_resolved`.
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_conflict_id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryConflictResolve'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryConflict'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+      x-requirements:
+      - HST-09
+      x-rules:
+      - BR-HST-07
+      - BR-STF-02
+      x-release: MVP
+      x-staff-permission: hosts.approve
+  /api/v1/admin/outbox:
+    get:
+      operationId: adminListOutbox
+      summary: Outgoing messages (e.g. dead ones)
+      tags:
+      - admin.audit
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - name: status
+        in: query
+        required: false
+        description: Filter, e.g. dead.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboxStatus'
+        style: form
+        explode: false
+      - name: topic
+        in: query
+        required: false
+        description: Filter, e.g. inventory.push.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Numbered page (admin tables).
+                required:
+                - results
+                - meta
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OutboxMessage'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      x-requirements:
+      - NTF-05
+      - HST-09
+      x-rules:
+      - BR-SYS-03
+      - BR-HST-07
+      x-release: MVP
+      x-staff-permission: settings.manage
+  /api/v1/admin/outbox/{message_id}/retry:
+    post:
+      operationId: adminRetryOutboxMessage
+      summary: Retry a dead outgoing message
+      tags:
+      - admin.audit
+      description: dead to pending with attempts reset and next_attempt_at = now; audited. Handlers are idempotent, so a retry never sends twice.
+        409 `outbox_not_dead`.
+      security:
+      - staffSession: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      - $ref: '#/components/parameters/path_message_id'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OutboxMessage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      x-requirements:
+      - NTF-05
+      x-rules:
+      - BR-SYS-03
+      - BR-STF-02
+      x-release: MVP
+      x-staff-permission: settings.manage
   /api/v1/admin/settings:
     get:
       operationId: adminGetSettings
@@ -14544,6 +15316,8 @@ components:
       - host_payable
       - payout_clearing
       - adjustments
+      - host_refund_payable
+      - guest_refund_clearing
       description: Matches the `ledger_account_kind` enum in schema.dbml.
       x-db-enum: ledger_account_kind
     LedgerTxKind:
@@ -14553,6 +15327,8 @@ components:
       - commission
       - commission_reversal
       - adjustment
+      - refund_due
+      - refund_settled
       - guest_payment
       - refund
       - payout
@@ -14566,7 +15342,7 @@ components:
       - baridimob
       - cash_office
       - gateway
-      description: Matches the `topup_method` enum in schema.dbml. gateway is only used by online top-ups (R2).
+      description: Matches the `topup_method` enum in schema.dbml. gateway is reserved for online top-ups, which are not in v1 (DEC-019, DEC-031).
       x-db-enum: topup_method
     TopupStatus:
       type: string
@@ -14658,6 +15434,45 @@ components:
       - opposition
       description: Matches the `dsr_kind` enum in schema.dbml.
       x-db-enum: dsr_kind
+    AdjustmentStatus:
+      type: string
+      enum:
+      - pending_approval
+      - approved
+      - rejected
+      description: Matches the `adjustment_status` enum in schema.dbml.
+      x-db-enum: adjustment_status
+    RefundObligationStatus:
+      type: string
+      enum:
+      - open
+      - declared
+      - settled
+      - disputed
+      description: Matches the `refund_obligation_status` enum in schema.dbml.
+      x-db-enum: refund_obligation_status
+    StayConfirmedVia:
+      type: string
+      enum:
+      - host_code
+      - guest
+      description: Matches the `stay_confirmed_via` enum in schema.dbml.
+      x-db-enum: stay_confirmed_via
+    InventoryConflictStatus:
+      type: string
+      enum:
+      - open
+      - resolved
+      description: Matches the `inventory_conflict_status` enum in schema.dbml.
+      x-db-enum: inventory_conflict_status
+    OutboxStatus:
+      type: string
+      enum:
+      - pending
+      - sent
+      - dead
+      description: Matches the `outbox_status` enum in schema.dbml.
+      x-db-enum: outbox_status
     HostType:
       type: string
       enum:
@@ -17075,6 +17890,7 @@ components:
         - host
         - can_cancel
         - can_review
+        - can_confirm_stay
         properties:
           host:
             $ref: '#/components/schemas/HostSummary'
@@ -17101,6 +17917,24 @@ components:
             - string
             - 'null'
             format: date-time
+          check_in_code:
+            type:
+            - string
+            - 'null'
+            pattern: ^[0-9]{6}$
+            description: 6 digits, only for the guest and only once confirmed; the guest shows it to the host on arrival (BR-BKG-09).
+          stay_confirmed_at:
+            type:
+            - string
+            - 'null'
+            format: date-time
+          can_confirm_stay:
+            type: boolean
+            description: True after check-in time while the stay is not confirmed yet.
+          refund_obligations:
+            type: array
+            items:
+              $ref: '#/components/schemas/RefundObligation'
       description: A booking as the guest sees it.
     HostBooking:
       allOf:
@@ -17154,7 +17988,21 @@ components:
               - cancel
               - message
               - review_guest
-      description: A booking as the host workspace sees it.
+              - confirm_stay
+          stay_confirmed_at:
+            type:
+            - string
+            - 'null'
+            format: date-time
+          stay_confirmed_via:
+            anyOf:
+            - $ref: '#/components/schemas/StayConfirmedVia'
+            - type: 'null'
+          refund_obligations:
+            type: array
+            items:
+              $ref: '#/components/schemas/RefundObligation'
+      description: A booking as the host workspace sees it. Never contains the check-in code.
     CancellationPreview:
       type: object
       description: What a cancellation would refund now (BR-CAN-01, BR-CAN-02). Pure calculation, nothing is changed.
@@ -17178,7 +18026,8 @@ components:
           $ref: '#/components/schemas/Money'
         commission_returned_to_host:
           $ref: '#/components/schemas/Money'
-          description: Shown to hosts only; 0 in guest responses.
+          description: apply_bp(commission, refund_percent_bp) for a guest cancellation, the full commission for a host cancellation (BR-PAY-05).
+            Shown to hosts only; 0 in guest responses.
         allowed:
           type: boolean
         not_allowed_code:
@@ -17300,6 +18149,129 @@ components:
         created_at:
           type: string
           format: date-time
+    RefundObligation:
+      type: object
+      description: Money a host owes a guest after a cancellation (DEC-024, BR-CAN-06). BLADUS never holds this money.
+      required:
+      - id
+      - booking_id
+      - booking_reference
+      - host_account_id
+      - amount
+      - status
+      - due_at
+      - overdue
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        booking_id:
+          type: string
+          format: uuid
+        booking_reference:
+          type: string
+        host_account_id:
+          type: string
+          format: uuid
+        guest:
+          $ref: '#/components/schemas/UserRef'
+        amount:
+          $ref: '#/components/schemas/Money'
+        status:
+          $ref: '#/components/schemas/RefundObligationStatus'
+        due_at:
+          type: string
+          format: date-time
+        overdue:
+          type: boolean
+          description: Status open or disputed and due_at passed (BR-CAN-07).
+        declared_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        declared_reference:
+          type:
+          - string
+          - 'null'
+        settled_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        settled_via:
+          type:
+          - string
+          - 'null'
+          enum:
+          - guest_confirm
+          - admin
+          - null
+        dispute_note:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+    RefundDeclare:
+      type: object
+      required:
+      - payment_reference
+      properties:
+        payment_reference:
+          type: string
+          minLength: 3
+          maxLength: 120
+          description: Transfer or receipt reference.
+        method:
+          type: string
+          enum:
+          - ccp_transfer
+          - bank_transfer
+          - baridimob
+          - cash
+          - other
+        note:
+          type: string
+          maxLength: 2000
+      additionalProperties: false
+    RefundDispute:
+      type: object
+      required:
+      - note
+      properties:
+        note:
+          type: string
+          minLength: 10
+          maxLength: 2000
+      additionalProperties: false
+    RefundSettle:
+      type: object
+      required:
+      - note
+      properties:
+        note:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        proof_media_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+          description: Optional uploaded proof (bank statement, signed receipt).
+      additionalProperties: false
+    StayConfirmByHost:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          pattern: ^[0-9]{6}$
+      additionalProperties: false
     Payment:
       type: object
       description: DORMANT (models M2 to M4).
@@ -19197,8 +20169,8 @@ components:
       - occurred_at
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
         transaction_id:
           type: string
           format: uuid
@@ -19307,37 +20279,6 @@ components:
           - 'null'
           format: uri
         issued_at:
-          type: string
-          format: date-time
-    OnlineTopupCreate:
-      type: object
-      required:
-      - amount
-      - provider
-      - return_url
-      properties:
-        amount:
-          $ref: '#/components/schemas/MoneyInput'
-        provider:
-          type: string
-          enum:
-          - chargily
-        return_url:
-          type: string
-          format: uri
-    OnlineTopupCheckout:
-      type: object
-      required:
-      - topup_id
-      - checkout_url
-      properties:
-        topup_id:
-          type: string
-          format: uuid
-        checkout_url:
-          type: string
-          format: uri
-        expires_at:
           type: string
           format: date-time
     Payout:
@@ -20164,26 +21105,6 @@ components:
           minLength: 10
           maxLength: 4000
       additionalProperties: false
-    AdminRefund:
-      allOf:
-      - $ref: '#/components/schemas/RefundLine'
-      - type: object
-        required:
-        - booking_id
-        - booking_reference
-        - host
-        properties:
-          booking_id:
-            type: string
-            format: uuid
-          booking_reference:
-            type: string
-          host:
-            $ref: '#/components/schemas/HostSummary'
-          created_by:
-            anyOf:
-            - $ref: '#/components/schemas/UserRef'
-            - type: 'null'
     AdminUser:
       type: object
       required:
@@ -20488,16 +21409,186 @@ components:
           format: uuid
         amount:
           $ref: '#/components/schemas/Money'
-          description: 'Signed: positive credits the wallet, negative debits it.'
+          description: 'Signed: positive credits the wallet, negative debits it. Not 0; at most 1,000,000 DZD in absolute value (BR-PAY-13).'
         reason:
           type: string
           minLength: 10
-        reverses_transaction_id:
+          maxLength: 2000
+      additionalProperties: false
+    WalletAdjustment:
+      type: object
+      description: Manual wallet correction; posted only after a second admin approves (DEC-022).
+      required:
+      - id
+      - host_account_id
+      - amount
+      - reason
+      - status
+      - requested_by
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        host_account_id:
+          type: string
+          format: uuid
+        host:
+          $ref: '#/components/schemas/HostSummary'
+        amount:
+          $ref: '#/components/schemas/Money'
+        reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/AdjustmentStatus'
+        requested_by:
+          $ref: '#/components/schemas/UserRef'
+        approved_by:
+          anyOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
+        approved_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        rejection_reason:
+          type:
+          - string
+          - 'null'
+        ledger_transaction_id:
           type:
           - string
           - 'null'
           format: uuid
+        created_at:
+          type: string
+          format: date-time
+    InventoryConflict:
+      type: object
+      description: A hotel sync asked for fewer rooms than BLADUS holds or sold; the total was clamped (DEC-021, BR-HST-07).
+      required:
+      - id
+      - integration_id
+      - room_type_id
+      - night
+      - requested_total
+      - applied_total
+      - held
+      - booked
+      - status
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        integration_id:
+          type: string
+          format: uuid
+        listing_id:
+          type: string
+          format: uuid
+        room_type_id:
+          type: string
+          format: uuid
+        room_type_name:
+          type: string
+        night:
+          type: string
+          format: date
+        requested_total:
+          type: integer
+        applied_total:
+          type: integer
+        held:
+          type: integer
+        booked:
+          type: integer
+        status:
+          $ref: '#/components/schemas/InventoryConflictStatus'
+        resolution:
+          type:
+          - string
+          - 'null'
+          enum:
+          - accepted_clamp
+          - booking_moved
+          - booking_cancelled
+          - null
+        resolution_note:
+          type:
+          - string
+          - 'null'
+        resolved_by:
+          anyOf:
+          - $ref: '#/components/schemas/UserRef'
+          - type: 'null'
+        resolved_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    InventoryConflictResolve:
+      type: object
+      required:
+      - note
+      properties:
+        note:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        resolution:
+          type: string
+          enum:
+          - accepted_clamp
+          - booking_moved
+          - booking_cancelled
+          description: Optional; default accepted_clamp.
       additionalProperties: false
+    OutboxMessage:
+      type: object
+      description: Outbox message (BR-SYS-03). Payloads are not returned (they may hold personal data).
+      required:
+      - id
+      - topic
+      - status
+      - attempts
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        topic:
+          type: string
+        aggregate_type:
+          type: string
+        aggregate_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OutboxStatus'
+        attempts:
+          type: integer
+        next_attempt_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        last_error:
+          type:
+          - string
+          - 'null'
+        created_at:
+          type: string
+          format: date-time
+        sent_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
     CommissionRates:
       type: object
       required:
@@ -20564,6 +21655,27 @@ components:
         topup_four_eyes_threshold_minor:
           type: integer
           format: int64
+          description: Applies to the host's rolling 24-hour top-up total (BR-PAY-07).
+        adjustment_max_minor:
+          type: integer
+          format: int64
+          description: Cap on one manual adjustment, default 100,000,000 (1,000,000 DZD).
+        refund_due_days:
+          type: integer
+          minimum: 1
+          maximum: 60
+        max_pending_requests_per_guest:
+          type: integer
+          minimum: 1
+          maximum: 20
+        max_upcoming_bookings_per_guest:
+          type: integer
+          minimum: 1
+          maximum: 50
+        sms_daily_budget:
+          type: integer
+          minimum: 0
+          description: Global SMS sends per day; then sms_budget_exceeded (BR-ACC-02).
         guest_session_days:
           type: integer
         staff_session_absolute_hours:
@@ -20580,8 +21692,6 @@ components:
             guest_payments:
               type: boolean
             payouts:
-              type: boolean
-            online_topup:
               type: boolean
             coupons:
               type: boolean
@@ -21210,9 +22320,10 @@ components:
       name: listing_id
       in: path
       required: true
-      description: Listing UUID or its reference (LST-XXXXXX).
+      description: Listing id (UUIDv7). References like LST-XXXXXX are for display and search only (DEC-031).
       schema:
         type: string
+        format: uuid
     path_room_type_id:
       name: room_type_id
       in: path
@@ -21233,9 +22344,10 @@ components:
       name: trip_id
       in: path
       required: true
-      description: Trip UUID or its reference.
+      description: Trip id (UUIDv7).
       schema:
         type: string
+        format: uuid
     path_departure_id:
       name: departure_id
       in: path
@@ -21248,9 +22360,10 @@ components:
       name: booking_id
       in: path
       required: true
-      description: Booking UUID or its reference (BLD-YYYY-XXXXXX).
+      description: Booking id (UUIDv7). The reference BLD-YYYY-XXXXXX is for display and search only (DEC-031).
       schema:
         type: string
+        format: uuid
     path_review_id:
       name: review_id
       in: path
@@ -21273,8 +22386,8 @@ components:
       required: true
       description: Notification id.
       schema:
-        type: integer
-        format: int64
+        type: string
+        format: uuid
     path_media_id:
       name: media_id
       in: path
@@ -21486,6 +22599,38 @@ components:
       schema:
         type: string
         format: uuid
+    path_refund_id:
+      name: refund_id
+      in: path
+      required: true
+      description: Refund obligation id.
+      schema:
+        type: string
+        format: uuid
+    path_adjustment_id:
+      name: adjustment_id
+      in: path
+      required: true
+      description: Wallet adjustment id.
+      schema:
+        type: string
+        format: uuid
+    path_conflict_id:
+      name: conflict_id
+      in: path
+      required: true
+      description: Inventory conflict id.
+      schema:
+        type: string
+        format: uuid
+    path_message_id:
+      name: message_id
+      in: path
+      required: true
+      description: Outbox message id.
+      schema:
+        type: string
+        format: uuid
   responses:
     BadRequest:
       description: Malformed request (bad JSON, bad query value). Code e.g. `bad_request`, `invalid_credentials`, `invalid_code`.
@@ -21501,7 +22646,7 @@ components:
             $ref: '#/components/schemas/Problem'
     Forbidden:
       description: 'Signed in but not allowed. Codes: `permission_denied` (has `required_permission`), `mfa_required`, `phone_verification_required`,
-        `host_offer_not_allowed`, `four_eyes_same_user`, `account_suspended`.'
+        `host_offer_not_allowed`, `four_eyes_same_user` (top-ups), `four_eyes_required` (wallet adjustments), `account_suspended`.'
       content:
         application/problem+json:
           schema:
@@ -21515,7 +22660,8 @@ components:
             $ref: '#/components/schemas/Problem'
     Conflict:
       description: 'The request conflicts with the current state: lost a race, wrong status, duplicate, idempotency key still running. Codes e.g.
-        `dates_unavailable`, `invalid_transition`, `price_changed`, `idempotency_in_progress`.'
+        `dates_unavailable`, `dates_booked`, `invalid_transition`, `price_changed`, `idempotency_in_progress`, `too_many_open_bookings`, `refund_overdue`,
+        `stay_not_started`, `booking_not_confirmed`, `refund_not_open`, `refund_not_declared`, `adjustment_not_pending`, `conflict_resolved`.'
       content:
         application/problem+json:
           schema:

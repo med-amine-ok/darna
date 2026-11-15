@@ -142,3 +142,41 @@ class ExperienceSlot(UUIDModel):
     def price_minor(self) -> int:
         """Price per person of this slot: its own override or the listing base price."""
         return self.price_override_minor if self.price_override_minor is not None else self.listing.base_price_minor
+
+
+class ConflictStatus(models.TextChoices):
+    """State of an inventory conflict in the admin queue (review R3)."""
+
+    OPEN = "open", "Open"
+    RESOLVED = "resolved", "Resolved"
+
+
+class InventoryConflict(UUIDModel):
+    """
+    A hotel system said fewer rooms are free than BLADUS already sold (review R3).
+
+    The sync never sets a night's ``total`` below ``held + booked``: it keeps
+    the sold rooms, clamps the total and opens this row so an admin calls the
+    hotel and moves or cancels the extra booking.
+    """
+
+    room_type = models.ForeignKey("catalog.RoomType", on_delete=models.CASCADE, related_name="inventory_conflicts")
+    night = models.DateField()
+    external_total = models.IntegerField(help_text="Rooms the hotel system said are sellable.")
+    sold = models.IntegerField(help_text="held + booked on BLADUS at that time.")
+    source = models.CharField(max_length=60, help_text="Integration or system that sent the number.")
+    status = models.CharField(max_length=10, choices=ConflictStatus.choices, default=ConflictStatus.OPEN)
+    resolution_note = models.TextField(blank=True)
+    resolved_by = models.ForeignKey("accounts.User", on_delete=models.PROTECT, null=True, blank=True, related_name="+")
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        """Newest first in the admin queue."""
+
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["status", "created_at"])]
+
+    def __str__(self) -> str:
+        """Readable name for the Django console."""
+        return f"{self.room_type_id} {self.night}: hotel {self.external_total}, sold {self.sold}"

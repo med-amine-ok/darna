@@ -54,23 +54,23 @@ Principles:
 | `core` | `Money` arithmetic and rounding; idempotency (same key same body, different body 422, concurrent 409, expiry 24 h); error format and translation; UUIDv7 ordering | BR-PAY-01, BR-SYS-01, BR-SYS-04, NFR-12 |
 | `geo` | Seed completeness (69 wilayas, 1,541 communes, codes unique, `legacy_code_58` mapping); autocomplete with accents and Arabic | BR-SRC-02 |
 | `config` | Unknown settings key refused; new version per change; publish creates immutable version; core steps not removable; old version readable | BR-CFG-01 to 03 |
-| `audit` | Insert-only (UPDATE refused by DB); hash chain correct; chain break detected; export formula neutralisation; export audited with filters and count | BR-STF-02, BR-STF-04 |
+| `audit` | Insert-only (UPDATE and DELETE refused by the trigger, also when connected as the table owner `bladus_migrator`; `bladus_app` has no UPDATE grant); daily export to write-once storage runs; hash chain correct; chain break detected; export formula neutralisation; export audited with filters and count | BR-STF-02, BR-STF-04 |
 | `media` | Presign limits; magic bytes; EXIF/GPS removed (fixture photo with GPS); decompression bomb refused; virus test file (EICAR) rejected; signed URL expiry; KYC view audited | BR-MED-01, 02 |
-| `notifications` | Outbox written in the same transaction; rolled-back change sends nothing; retry and backoff; idempotent sending (one SMS per event); language of recipient; critical messages ignore opt-out | BR-SYS-03, BR-NTF-01, 02, BR-PRV-03 |
-| `accounts` | Email unique case-insensitive; phone format; OTP limits and expiry; lockout shared via Redis; session revocation on logout and password change; staff MFA required; consent records; deletion anonymises and keeps legal records | BR-ACC-01 to 05, BR-PRV-01, 02 |
+| `notifications` | Outbox (`outbox_message`) written in the same transaction; rolled-back change sends nothing; retries at 1 min, 5 min, 15 min, 1 h, 6 h, 24 h; `dead` after 8 attempts with an admin alert; admin retry of a dead message; idempotent sending (one SMS per event); language of recipient; critical messages ignore opt-out | BR-SYS-03, BR-NTF-01, 02, BR-PRV-03 |
+| `accounts` | Email unique case-insensitive; phone format; OTP limits (per destination 3 per hour and 10 per day, per IP 10 per hour, global SMS budget then `sms_budget_exceeded`) and expiry; codes and tokens stored as HMAC with the pepper; lockout shared via Redis; session revocation on logout and password change; staff MFA required; consent records; deletion anonymises and keeps legal records | BR-ACC-01 to 05, BR-PRV-01, 02 |
 | `hosts` | Host account is user XOR organisation; one owner; invitations (7 days, once, matching contact); role permissions matrix; legal field change resets verification; verification transitions; documents all approved before host approval; publish rights per host type; payout change needs MFA and sets 72 h hold | BR-ORG-01 to 06, BR-HST-01 to 05, BR-PAY-09 |
 | `catalog` | Listing state machine (every allowed and every forbidden move); revision under review keeps live version; hotel without room type cannot submit; reference rows cannot be hard-deleted; experience and trip types | BR-LST-01 to 05 |
-| `inventory` | Counter check constraint; atomic multi-night reservation all-or-nothing; holds expire; host block vs booking race; horizon job creates 18 months | BR-AVL-02 to 06 |
+| `inventory` | Counter check constraint; atomic multi-night reservation all-or-nothing; holds expire; host block vs booking race; blocked-day triggers in both directions (`dates_booked`, `dates_unavailable`); horizon job creates 18 months | BR-AVL-02 to 07 |
 | `trips` | Only approved agencies; seats never oversold; cancelling a departure cancels all bookings with refunds owed | BR-TRP-01 to 03 |
 | `pricing` | Quote lines and totals; weekly vs monthly discount; no guest fee; quote expiry and re-validation; tampered price ignored; tax rates by validity date (R2) | BR-PRC-01 to 04 |
-| `ledger` | Balanced transactions only (DB trigger); no UPDATE/DELETE; commission once per booking; reversal amounts; rate resolution; top-up limits, unique receipt, four-eyes; credit floor; balance cache equals sum; dormant models return 404 | BR-PAY-01 to 12 |
-| `bookings` | Instant vs request resolution; snapshot frozen; state machine; expiry and completion jobs; cancellation by guest, host, staff with refunds; refunds never exceed total; disputes window (R2); references unique | BR-BKG-01 to 07, BR-CAN-01 to 05 |
-| `reviews` | Eligibility (completed, 14 days, one per booking); states and reasons; ratings recomputed; double-blind (R2) | BR-REV-01 to 04 |
+| `ledger` | Balanced transactions only (DB trigger); no UPDATE/DELETE (triggers and role grants); commission once per booking; commission follows the refund; rate resolution; top-up limits, unique receipt, four-eyes on the rolling 24-hour total; wallet adjustments (cap, second admin); lock order; `reconcile_balances`; credit floor; balance cache equals sum; dormant models return 404; no online top-up endpoint | BR-PAY-01 to 15 |
+| `bookings` | Instant vs request resolution; snapshot frozen; state machine; expiry and completion jobs; cancellation by guest, host, admin with refunds; refunds never exceed total; refund obligations and overdue blocking; open booking limits; check-in code and stay confirmation; disputes window (R2); references unique | BR-BKG-01 to 09, BR-CAN-01 to 07 |
+| `reviews` | Eligibility (completed, stay confirmed, 14 days, one per booking); states and reasons; ratings recomputed; double-blind (R2) | BR-REV-01 to 04 |
 | `messaging` | Cursor sync returns only newer messages; unread counts; masking of phones, emails, CCP/RIP, WhatsApp links before confirmation and unmasked after; repeated attempts flag the thread | BR-MSG-01 |
 | `trust` | Queue priority by waiting time since last submission; change request items visible to host; suspension cascade pauses listings and flags future bookings; risk flags open cases, never block | BR-MOD-01 to 04 |
-| `search` | Only published listings of approved hosts; facet counts exclude own filter; public point only for anonymous users; partial availability sub-range; map pin cap; hotel and hostel under "Hotels"; search doc refreshed by outbox | BR-SRC-01 to 04, BR-AVL-05 |
+| `search` | Trigram search (`pg_trgm`) passes the fixed list of real Arabic, French and Darija queries; only published listings of approved hosts; facet counts exclude own filter; public point only for anonymous users; partial availability sub-range; map pin cap; hotel and hostel under "Hotels"; search doc refreshed by outbox | BR-SRC-01 to 05, BR-AVL-05 |
 
-Security tests (from [08-security-privacy.md](08-security-privacy.md) section 6) live in each app as `test_api1_*` to `test_api10_*`, plus one matrix test that calls every `/api/v1/admin` endpoint with each of the 5 staff roles and checks allow or deny against the permission table.
+Security tests (from [08-security-privacy.md](08-security-privacy.md) section 6) live in each app as `test_api1_*` to `test_api10_*`, plus one matrix test that calls every `/api/v1/admin` endpoint as an admin, as a website user and without a session, and checks allow or deny (one staff role, DEC-016).
 
 ## 3. Property-based tests (hypothesis)
 
@@ -106,15 +106,25 @@ def test_br_pay_04_commission_bounds(base, rate_bp):
 | Refund is non-decreasing with days before check-in (cancelling earlier never refunds less) | BR-CAN-01 |
 | Before check-in, the cleaning fee and its taxes are always fully refunded | BR-CAN-01, 02 |
 | Host cancellation: refund owed == total paid; commission reversal == commission posted | BR-CAN-03, BR-PAY-05 |
-| Guest cancellation: commission kept == `round(rate x non-refunded subtotal)`; kept + reversed == posted | BR-PAY-05 |
+| Guest cancellation: commission returned == `apply_bp(commission, refund_bp)` of the policy window; kept + returned == posted; cleaning fee and taxes never change it | BR-PAY-05 |
+| Admin refund R: returned == `round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base)`; R = cleaning fee only gives 0; R = total gives the full commission | BR-CAN-04, BR-PAY-05 |
+| Decline and expiry post no commission and return nothing | BR-PAY-05 |
+| Every cancellation with refund > 0 opens exactly one refund obligation of that amount, due `refund_due_days` later | BR-CAN-06 |
 | Several partial staff refunds in any order: their sum never exceeds the total; the last one that would exceed is refused | BR-CAN-04 |
-| Worked example 8a reproduces exactly: 31,750 DZD owed, 3,330 DZD back to the wallet | BR-CAN-02 |
+| Worked example 8a reproduces exactly: 31,750 DZD owed, 3,330 DZD back to the wallet, 3,330 DZD kept by BLADUS | BR-CAN-02, BR-PAY-05 |
 
 ```python
 @given(policy=st.sampled_from(POLICIES), b=bookings(), d1=st.integers(-2, 400), d2=st.integers(-2, 400))
 def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1, d2):
     early, late = max(d1, d2), min(d1, d2)
     assert refund_for(policy, b, days_before=early) >= refund_for(policy, b, days_before=late)
+
+
+@given(commission=st.integers(0, 10**10), refund_bp=st.sampled_from([0, 5000, 10000]))
+def test_br_pay_05_commission_follows_the_refund(commission, refund_bp):
+    returned = commission_returned_guest_cancel(commission, refund_bp)
+    assert returned == apply_bp(commission, refund_bp)
+    assert 0 <= returned <= commission
 ```
 
 ### 3.3 Date ranges
@@ -141,12 +151,16 @@ How: `@pytest.mark.django_db(transaction=True)` (real commits), a `ThreadPoolExe
 | Back-to-back | 2 guests book `[1, 4)` and `[4, 6)` at the same time | Both succeed | BR-AVL-01 |
 | Last hotel room | Room type with 1 unit left; 20 parallel requests for 1 room | Exactly 1 success; counters `held + booked <= total` | BR-AVL-02 |
 | Last seats on a departure | 3 seats left; 10 requests for 2 seats each | Exactly 1 success; seats booked = 2 | BR-TRP-02 |
-| Host blocks while guest books | Host blocks night N while a guest books a stay including N | One wins; never both | BR-AVL-04 |
+| Host blocks while guest books | Host blocks night N while a guest books a stay including N | One wins; never both; the loser gets `dates_booked` or `dates_unavailable`; the triggers refuse it even when the service check is skipped | BR-AVL-04, BR-AVL-07 |
+| Hotel sync vs bookings | Sync sets total 2 for a night while 3 rooms are booked and 2 guests book in parallel | Total stays at held + booked; one `inventory_conflict` open; one `inventory.push` per booking change | BR-HST-07 |
 | Same idempotency key | 10 identical requests with one key | 1 booking; others get the same response or `409 request_in_progress` | BR-SYS-01 |
 | Double confirmation | Host clicks accept twice; job tries to expire at the same time | One transition wins; commission posted once | BR-PAY-04, BR-BKG-06 |
-| Credit floor race | Wallet just above the floor; 2 instant bookings at once whose commissions together cross the floor | Second one becomes `pending`, never both confirmed below the floor | BR-PAY-10 |
+| Credit floor race | Wallet just above the floor; 2 instant bookings at once whose commissions together cross the floor | Second one becomes `pending`, never both confirmed below the floor | BR-PAY-10, BR-PAY-14 |
+| Lock order | 20 parallel bookings and accepts of one host on two listings, plus a top-up approval | No deadlock (wallet balance row always locked first); balance equals the ledger sum | BR-PAY-14 |
+| Split top-ups | 2 admins record two 300,000 DZD top-ups for one host within 24 hours, at the same time | The rolling total passes 500,000 DZD: at least one waits for a second admin | BR-PAY-07 |
+| Open booking limits | One guest sends 6 requests at once | Exactly 3 pending; 3 get `409 too_many_open_bookings` | BR-BKG-08 |
 | Duplicate top-up receipt | 2 finance users record the same receipt at once | 1 succeeds, 1 refused | BR-PAY-07 |
-| Outbox workers | 3 dispatchers on the same pending events | Each event handled once (`SKIP LOCKED`); one SMS per event | BR-SYS-03 |
+| Outbox workers | 3 dispatchers on the same pending messages | Each message handled once (`SKIP LOCKED`); one SMS per message | BR-SYS-03 |
 | Expiry vs accept | Request accepted at the exact second the expiry job runs | Final status is either `confirmed` or `expired`, consistent with ledger and counters | BR-BKG-04 |
 | Ownership transfer | Two owners-to-be at once | Exactly one active owner | BR-ORG-04 |
 
@@ -263,6 +277,7 @@ Coverage is a floor, not a goal: a test without meaningful assertions does not c
 | i18n completeness | makemessages diff, compilemessages, error code registry test | yes | yes |
 | OpenAPI valid + no unplanned breaking change | spectacular, oasdiff | yes | yes |
 | Contract fuzzing | schemathesis | yes | yes |
+| Plan contract references | `python _tools/check_contract_refs.py` (docs): every `METHOD /path` in `diagrams/*.mmd` exists in `openapi.yaml`, and every operation count stated in the docs equals the number computed from `openapi.yaml` | yes | |
 | Frontend compile against API types | `tsc --noEmit` in both apps | yes | yes |
 | Dependency and secret scanning | pip-audit, npm audit, gitleaks, bandit | yes for high/critical | yes |
 | Image scan | Trivy | | yes for critical |
@@ -298,6 +313,32 @@ Example of the report:
 | BR-CAN-02 | `test_br_can_02_example_8a_moderate_three_days_before` | service |
 | BR-SYS-01 | `test_br_sys_01_same_key_same_body_returns_same_booking`, `test_br_sys_01_same_key_other_body_422`, `test_br_sys_01_concurrent_same_key_409` | API, concurrency |
 
+## 14. Tests for the rules changed on 2026-11-13
+
+The external review (DEC-018 revised, DEC-020 to DEC-031) added or changed these rules. Each line is one or more tests named after the plan rule id. The backend code written in parallel used other ids for some of them (BR-CAN-05, BR-PAY-11, BR-PAY-12, BR-SYS-04, BR-HST-06); the cross-reference table at the top of [04-business-rules.md](04-business-rules.md) maps them to the plan ids used here.
+
+| Rule | What the tests check | Kind |
+|---|---|---|
+| BR-PAY-05 | Property: returned = `apply_bp(commission, refund_bp)`; example 8a: 3,330 DZD back, 3,330 DZD kept; host cancel returns the full commission; decline and expiry post nothing; admin refund R: R = cleaning fee only returns 0, R = total returns all, R in between follows the formula | property, service |
+| BR-AVL-07 | Trigger (a): blocking a day inside a blocking single-unit booking is refused in raw SQL; trigger (b): inserting or moving a booking onto a blocked day is refused in raw SQL; service errors `dates_booked` and `dates_unavailable`; concurrent block and booking: one wins | DB, service, concurrency |
+| BR-HST-07 | A sync total below held + booked is clamped and opens one `inventory_conflict`; a second sync does not open a second open conflict for the same room-night; every booking change on a connected hotel writes `inventory.push` in the same transaction; a push that fails 8 times is `dead` and listed for the admin | service, job, DB |
+| BR-PAY-07 | Rolling 24-hour total (pending + approved, including the new one) decides four-eyes; splitting into small top-ups does not avoid it; the approver must differ from the requester (`four_eyes_same_user`) | service, concurrency |
+| BR-PAY-13 | Adjustment of 0 refused; above 1,000,000 DZD refused; nothing posted while pending; same admin approving refused (`four_eyes_required`, and the DB check); approve posts one balanced `adjustment` transaction; reject needs a reason; all steps audited | service, DB |
+| BR-PAY-14 | Booking creation and accept lock the host wallet balance row first; concurrent bookings near the floor never cross it; no deadlock in 200 nightly runs; no platform balance row is written on the booking path | concurrency |
+| BR-PAY-15 | `reconcile_balances` finds a balance edited by hand, writes an audit event, alerts the admins and exits non-zero; `--fix` rewrites only after confirmation and is audited; a clean database exits 0 | job |
+| BR-PAY-02, BR-STF-02 | UPDATE and DELETE on `ledger_transaction`, `ledger_entry`, `audit_event` and `booking_event` refused for `bladus_app` (grants) and for `bladus_migrator` (triggers) | DB |
+| BR-CAN-06 | Lifecycle open, declared, settled; dispute sends it back for a new declaration; admin settles with a note; memo postings `refund_due` and `refund_settled` balance to 0 once settled; wrong-state calls give `refund_not_open` or `refund_not_declared` | service, API |
+| BR-CAN-07 | An obligation open or disputed after `due_at` is overdue; then instant booking becomes a request and accept gives `409 refund_overdue`; settling it lifts the block | service |
+| BR-BKG-08 | 4th pending request and 7th upcoming booking refused with `409 too_many_open_bookings`; limits read from settings | service |
+| BR-BKG-09 | Check-in code made at confirmation, shown only to the guest, never in host responses; host enters the right code; wrong code `400 invalid_code`; 5 wrong codes lock for 1 hour; guest confirmation before check-in time `409 stay_not_started`; review without stay confirmation refused (BR-REV-01) | service, API |
+| BR-SYS-03 | Retry schedule 1 min, 5 min, 15 min, 1 h, 6 h, 24 h; `dead` after 8 attempts; admin retry resets attempts; handlers idempotent (retry never sends twice) | job |
+| BR-SYS-01 | `request_hash` is the SHA-256 of the body; same key with another body gives `422 idempotency_key_reused`; records expire after 24 hours | API |
+| BR-SYS-06 | `netguard` refuses http, loopback, private, link-local, CGNAT, multicast, reserved and 169.254.169.254; DNS that changes to a private address between save and fetch is refused at fetch time; redirect to another host refused; 10 s timeout; 5 MB cap | unit |
+| BR-SYS-07 | Stored code, token and lookup hashes equal HMAC-SHA256 with `HASH_PEPPER`, not plain SHA-256; during pepper rotation both peppers are accepted, after it only the new one | unit |
+| BR-ACC-02 | 4th SMS to one phone in an hour refused; 11th in a day refused; 11th from one IP in an hour refused; global budget reached gives `sms_budget_exceeded` and an alert | service |
+| BR-SRC-05 | A fixed list of real queries (for example `تيزي وزو`, `Tizi Ouzou`, `tizi wezou`, `bejaia`, `Béjaïa`, `بجاية`, `dar diaf`) finds the expected listing or commune in the first 5 results; no `tsvector` column is used | search |
+| DEC-031 | `python _tools/check_contract_refs.py` passes: every sequence diagram endpoint exists in `openapi.yaml`, every stated operation count equals the computed one, and there is no online top-up endpoint | docs CI |
+
 ---
 
 ## Check yourself
@@ -310,3 +351,5 @@ Example of the report:
 - [ ] What must a test for rule BR-REV-01 be called, at minimum?
 - [ ] Which performance scenario checks NFR-02, and what is its pass criterion?
 - [ ] Name three items from the Definition of Done that concern personal data or languages.
+- [ ] Which test proves that a host who cancels nothing but whose guest cancels gets back only part of the commission?
+- [ ] How do we prove the ledger cannot be edited even by the table owner?

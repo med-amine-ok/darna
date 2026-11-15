@@ -4,8 +4,9 @@ title: Money flow in the first release (no online payment)
 flowchart LR
     g1(["Guest"]) -- "pays the stay directly (cash or transfer)" --> h1(["Host"])
     h1 -- "deposit by CCP or bank transfer" --> b1["BLADUS account"]
-    b1 -- "admin records the top-up" --> w1[("Host deposit (wallet)")]
+    b1 -- "admin records the top-up (second admin above 500,000 DZD in 24 h)" --> w1[("Host deposit (wallet)")]
     w1 -- "commission when a booking is confirmed" --> r1[("BLADUS commission")]
-    r1 -. "full commission back if the booking is cancelled" .-> w1
+    r1 -. "on a cancellation: the same share as the refund comes back" .-> w1
+    h1 -. "refund owed after a cancellation (tracked, due in 7 days)" .-> g1
     later["Later: online payment by CIB / Edahabia card through a gateway (needs legal and bank decisions)"]
     style later stroke-dasharray: 5 5

@@ -5,7 +5,7 @@ This file is the single source of truth on the server. It mirrors
 ``frontend/lib/catalog-types.ts`` (same ids, same order, same labels). The
 ids are stored in the database (``Listing.experience_type``,
 ``Trip.trip_type``); the labels are served to both apps by
-``GET /reference/experience-types`` and ``GET /reference/trip-types``.
+``GET /reference`` (``experience_types`` and ``trip_types``).
 
 Changing a list is a product change: edit it here, then in the two apps.
 """
@@ -67,14 +67,19 @@ EXPERIENCE_TYPES: list[str] = list(EXPERIENCE_TYPE_LABELS)
 TRIP_TYPES: list[str] = list(TRIP_TYPE_LABELS)
 
 
-def type_list(labels: dict[str, dict[str, str]]) -> list[dict]:
-    """
-    Turn a label table into the API shape: ``[{"id", "label_en", "label_fr", "label_ar"}]``.
+# Labels of the search verticals (DEC-005: hotel is its own vertical), served by ``GET /reference``.
+VERTICAL_LABELS: dict[str, dict[str, str]] = {
+    "home": {"en": "Homes", "fr": "Logements", "ar": "مساكن"},
+    "hotel": {"en": "Hotels", "fr": "Hôtels", "ar": "فنادق"},
+    "hostel": {"en": "Hostels", "fr": "Auberges", "ar": "نزل"},
+    "experience": {"en": "Experiences", "fr": "Expériences", "ar": "تجارب"},
+    "vehicle": {"en": "Vehicles", "fr": "Véhicules", "ar": "مركبات"},
+}
 
-    Used by the two ``/reference/*-types`` endpoints so both apps read the
-    same list (BR-LST-05).
+
+def labeled_values(labels: dict[str, dict[str, str]], locale: str) -> list[dict]:
     """
-    return [
-        {"id": type_id, "label_en": names["en"], "label_fr": names["fr"], "label_ar": names["ar"]}
-        for type_id, names in labels.items()
-    ]
+    A label table in the ``LabeledValue`` shape of ``GET /reference``:
+    ``[{"id", "label" (caller's language), "labels" {en, fr, ar}}]``, in display order.
+    """
+    return [{"id": key, "label": names.get(locale, names["fr"]), "labels": dict(names)} for key, names in labels.items()]

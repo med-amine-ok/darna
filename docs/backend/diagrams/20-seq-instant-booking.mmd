@@ -12,15 +12,16 @@ sequenceDiagram
     W->>A: POST /quotes
     A->>DB: read listing, calendar, policy
     A-->>W: quote (id, lines, total, expires in 30 min)
-    W->>A: POST /bookings with quote_id and Idempotency-Key
-    A->>DB: BEGIN, lock idempotency key
-    A->>DB: INSERT booking (confirmed, snapshot)
-    Note over A,DB: the database refuses overlapping dates
+    W->>A: POST /me/bookings with quote_id and Idempotency-Key
+    A->>DB: BEGIN, lock idempotency key, check open booking limits
+    A->>DB: lock host wallet balance row, check floor and overdue refunds
+    A->>DB: lock listing row, INSERT booking (confirmed, snapshot, check-in code)
+    Note over A,DB: exclusion constraint refuses overlapping stays, trigger refuses blocked days
     A->>DB: INSERT ledger transaction (wallet debit 6,660, revenue credit 6,660)
-    A->>DB: INSERT booking_event and outbox events
+    A->>DB: INSERT booking_event and outbox messages
     A->>DB: COMMIT
     A-->>W: 201 booking BLD-2026-..., confirmed
-    W-->>G: Confirmation page, exact address now visible
-    Q->>DB: pick outbox events (SKIP LOCKED)
+    W-->>G: Confirmation page, exact address and check-in code now visible
+    Q->>DB: pick outbox messages (SKIP LOCKED), retry or mark dead
     Q-->>G: SMS and email to guest
     Q-->>G: notification to host members

@@ -69,6 +69,7 @@ DB_ENUMS = [
     "actor_role", "departure_status", "ledger_account_kind", "ledger_tx_kind", "topup_method",
     "topup_status", "review_status", "conversation_kind", "media_status", "media_bucket",
     "case_kind", "case_status", "case_priority", "flow_status", "dsr_kind",
+    "adjustment_status", "refund_obligation_status", "stay_confirmed_via", "inventory_conflict_status", "outbox_status",
 ]
 
 
@@ -93,7 +94,7 @@ ENUM_NOTES = {
     "trip_type": "Fixed list of 8 (DEC-015, BR-LST-05).",
     "vertical": "Trips are not a vertical: they have their own endpoints (DEC-006).",
     "verification_status": "Host account verification states (BR-HST-04, table 3b).",
-    "topup_method": "gateway is only used by online top-ups (R2).",
+    "topup_method": "gateway is reserved for online top-ups, which are not in v1 (DEC-019, DEC-031).",
 }
 
 
@@ -495,7 +496,10 @@ def build_schemas(dbml_path):
         "location_exact": nullable(ref("GeoPoint")),
         "host_phone_e164": d(nullable(STR), "Revealed only when confirmed."),
         "can_cancel": BOOL, "can_review": BOOL, "review_deadline": nullable(DT),
-    }, ["host", "can_cancel", "can_review"])], "description": "A booking as the guest sees it."}
+        "check_in_code": d(nullable({"type": "string", "pattern": "^[0-9]{6}$"}), "6 digits, only for the guest and only once confirmed; the guest shows it to the host on arrival (BR-BKG-09)."),
+        "stay_confirmed_at": nullable(DT), "can_confirm_stay": d(BOOL, "True after check-in time while the stay is not confirmed yet."),
+        "refund_obligations": arr(ref("RefundObligation")),
+    }, ["host", "can_cancel", "can_review", "can_confirm_stay"])], "description": "A booking as the guest sees it."}
     S["HostBooking"] = {"allOf": [ref("BookingBase"), obj({
         "host_account_id": UUID,
         "guest": ref("UserRef"),
@@ -503,11 +507,14 @@ def build_schemas(dbml_path):
         "guest_message": nullable(STR),
         "commission": d(nullable(obj({"rate_bp": INT, "base": MONEY, "amount": MONEY, "reversed": MONEY}, ["rate_bp", "base", "amount", "reversed"])),
                         "Hidden (null) for roles without wallet.view (agents and guides never see money, BR-ORG-05)."),
-        "allowed_actions": arr({"type": "string", "enum": ["accept", "decline", "cancel", "message", "review_guest"]}),
-    }, ["host_account_id", "guest", "allowed_actions"])], "description": "A booking as the host workspace sees it."}
+        "allowed_actions": arr({"type": "string", "enum": ["accept", "decline", "cancel", "message", "review_guest", "confirm_stay"]}),
+        "stay_confirmed_at": nullable(DT), "stay_confirmed_via": nullable(ref("StayConfirmedVia")),
+        "refund_obligations": arr(ref("RefundObligation")),
+    }, ["host_account_id", "guest", "allowed_actions"])], "description": "A booking as the host workspace sees it. Never contains the check-in code."}
     S["CancellationPreview"] = obj({
         "policy_code": STR, "days_before_check_in": INT, "refund_percent_bp": INT,
-        "refund_amount": MONEY, "kept_by_host": MONEY, "commission_returned_to_host": d(MONEY, "Shown to hosts only; 0 in guest responses."),
+        "refund_amount": MONEY, "kept_by_host": MONEY,
+        "commission_returned_to_host": d(MONEY, "apply_bp(commission, refund_percent_bp) for a guest cancellation, the full commission for a host cancellation (BR-PAY-05). Shown to hosts only; 0 in guest responses."),
         "allowed": BOOL, "not_allowed_code": nullable(STR),
     }, ["policy_code", "days_before_check_in", "refund_percent_bp", "refund_amount", "kept_by_host", "allowed"],
         "What a cancellation would refund now (BR-CAN-01, BR-CAN-02). Pure calculation, nothing is changed.")
@@ -522,6 +529,21 @@ def build_schemas(dbml_path):
                         "outcome": nullable({"type": "string", "enum": ["refund_full", "refund_partial", "declined"]}),
                         "refund": NMONEY, "resolution_note": nullable(STR), "resolved_at": nullable(DT), "created_at": DT},
                        ["id", "booking_id", "opened_by_role", "created_at"])
+    S["RefundObligation"] = obj({
+        "id": UUID, "booking_id": UUID, "booking_reference": STR, "host_account_id": UUID, "guest": ref("UserRef"),
+        "amount": MONEY, "status": ref("RefundObligationStatus"), "due_at": DT,
+        "overdue": d(BOOL, "Status open or disputed and due_at passed (BR-CAN-07)."),
+        "declared_at": nullable(DT), "declared_reference": nullable(STR), "settled_at": nullable(DT),
+        "settled_via": nullable({"type": "string", "enum": ["guest_confirm", "admin"]}), "dispute_note": nullable(STR), "created_at": DT,
+    }, ["id", "booking_id", "booking_reference", "host_account_id", "amount", "status", "due_at", "overdue", "created_at"],
+        "Money a host owes a guest after a cancellation (DEC-024, BR-CAN-06). BLADUS never holds this money.")
+    S["RefundDeclare"] = obj({"payment_reference": d({"type": "string", "minLength": 3, "maxLength": 120}, "Transfer or receipt reference."),
+                              "method": {"type": "string", "enum": ["ccp_transfer", "bank_transfer", "baridimob", "cash", "other"]},
+                              "note": {"type": "string", "maxLength": 2000}}, ["payment_reference"], extra=False)
+    S["RefundDispute"] = obj({"note": {"type": "string", "minLength": 10, "maxLength": 2000}}, ["note"], extra=False)
+    S["RefundSettle"] = obj({"note": {"type": "string", "minLength": 10, "maxLength": 2000},
+                             "proof_media_id": d(nullable(UUID), "Optional uploaded proof (bank statement, signed receipt).")}, ["note"], extra=False)
+    S["StayConfirmByHost"] = obj({"code": {"type": "string", "pattern": "^[0-9]{6}$"}}, ["code"], extra=False)
     S["Payment"] = obj({"id": UUID, "booking_id": UUID, "provider": STR, "checkout_url": {"type": "string", "format": "uri"}, "amount": MONEY,
                         "status": STR, "created_at": DT}, ["id", "booking_id", "provider", "amount", "status"], "DORMANT (models M2 to M4).")
 
@@ -765,7 +787,7 @@ def build_schemas(dbml_path):
         "updated_at": DT,
     }, ["host_account_id", "balance", "credit_limit", "state", "commission_rate_bp", "commission_rate_source", "updated_at"])
     S["WalletEntry"] = obj({
-        "id": I64, "transaction_id": UUID, "kind": ref("LedgerTxKind"), "description": STR,
+        "id": UUID, "transaction_id": UUID, "kind": ref("LedgerTxKind"), "description": STR,
         "amount": d(MONEY, "Signed from the host's point of view: positive adds to the wallet, negative takes from it."),
         "balance_after": MONEY, "booking_reference": nullable(STR), "topup_id": nullable(UUID), "occurred_at": DT,
     }, ["id", "transaction_id", "kind", "description", "amount", "balance_after", "occurred_at"])
@@ -776,9 +798,6 @@ def build_schemas(dbml_path):
     S["Invoice"] = obj({"id": UUID, "number": d(STR, "e.g. 2026-000123."), "period_start": DATE, "period_end": DATE, "amount_ht": MONEY, "vat": MONEY,
                         "amount_ttc": MONEY, "status": {"type": "string", "enum": ["issued", "cancelled"]}, "pdf_url": nullable({"type": "string", "format": "uri"}),
                         "issued_at": DT}, ["id", "number", "period_start", "period_end", "amount_ht", "vat", "amount_ttc", "status", "issued_at"], "R2 (PAY-11).")
-    S["OnlineTopupCreate"] = obj({"amount": ref("MoneyInput"), "provider": {"type": "string", "enum": ["chargily"]}, "return_url": {"type": "string", "format": "uri"}},
-                                 ["amount", "provider", "return_url"])
-    S["OnlineTopupCheckout"] = obj({"topup_id": UUID, "checkout_url": {"type": "string", "format": "uri"}, "expires_at": DT}, ["topup_id", "checkout_url"])
     S["Payout"] = obj({"id": UUID, "host_account_id": UUID, "payout_account_id": UUID, "amount": MONEY,
                        "status": {"type": "string", "enum": ["requested", "approved", "sent", "confirmed", "rejected"]},
                        "approved_by": nullable(ref("UserRef")), "created_at": DT}, ["id", "host_account_id", "payout_account_id", "amount", "status", "created_at"],
@@ -859,8 +878,6 @@ def build_schemas(dbml_path):
                              "reason": {"type": "string", "minLength": 10, "maxLength": 2000}, "reason_code": nullable(STR)}, ["amount", "reason"], extra=False)
     S["DisputeResolve"] = obj({"outcome": {"type": "string", "enum": ["refund_full", "refund_partial", "declined"]}, "refund_amount": nullable(ref("MoneyInput")),
                                "note": {"type": "string", "minLength": 10, "maxLength": 4000}}, ["outcome", "note"], extra=False)
-    S["AdminRefund"] = {"allOf": [ref("RefundLine"), obj({"booking_id": UUID, "booking_reference": STR, "host": ref("HostSummary"), "created_by": nullable(ref("UserRef"))},
-                                                         ["booking_id", "booking_reference", "host"])]}
     S["AdminUser"] = obj({
         "id": UUID, "display_name": STR, "email": nullable(STR), "phone_e164": nullable(STR), "email_verified": BOOL, "phone_verified": BOOL,
         "status": ref("UserStatus"), "is_host": BOOL, "host_account_ids": arr(UUID), "booking_count": INT, "total_booked": MONEY,
@@ -897,9 +914,30 @@ def build_schemas(dbml_path):
         "receipt_reference": d({"type": "string", "minLength": 3, "maxLength": 200}, "Unique per method (BR-PAY-07)."),
         "note": {"type": "string", "maxLength": 2000},
     }, ["amount", "method", "receipt_reference"], extra=False)
-    S["AdjustmentCreate"] = obj({"host_account_id": UUID, "amount": d(ref("Money"), "Signed: positive credits the wallet, negative debits it."),
-                                 "reason": {"type": "string", "minLength": 10}, "reverses_transaction_id": nullable(UUID)},
+    S["AdjustmentCreate"] = obj({"host_account_id": UUID,
+                                 "amount": d(ref("Money"), "Signed: positive credits the wallet, negative debits it. Not 0; at most 1,000,000 DZD in absolute value (BR-PAY-13)."),
+                                 "reason": {"type": "string", "minLength": 10, "maxLength": 2000}},
                                 ["host_account_id", "amount", "reason"], extra=False)
+    S["WalletAdjustment"] = obj({
+        "id": UUID, "host_account_id": UUID, "host": ref("HostSummary"), "amount": MONEY, "reason": STR,
+        "status": ref("AdjustmentStatus"), "requested_by": ref("UserRef"), "approved_by": nullable(ref("UserRef")),
+        "approved_at": nullable(DT), "rejection_reason": nullable(STR), "ledger_transaction_id": nullable(UUID), "created_at": DT,
+    }, ["id", "host_account_id", "amount", "reason", "status", "requested_by", "created_at"],
+        "Manual wallet correction; posted only after a second admin approves (DEC-022).")
+    S["InventoryConflict"] = obj({
+        "id": UUID, "integration_id": UUID, "listing_id": UUID, "room_type_id": UUID, "room_type_name": STR, "night": DATE,
+        "requested_total": INT, "applied_total": INT, "held": INT, "booked": INT, "status": ref("InventoryConflictStatus"),
+        "resolution": nullable({"type": "string", "enum": ["accepted_clamp", "booking_moved", "booking_cancelled"]}),
+        "resolution_note": nullable(STR), "resolved_by": nullable(ref("UserRef")), "resolved_at": nullable(DT), "created_at": DT,
+    }, ["id", "integration_id", "room_type_id", "night", "requested_total", "applied_total", "held", "booked", "status", "created_at"],
+        "A hotel sync asked for fewer rooms than BLADUS holds or sold; the total was clamped (DEC-021, BR-HST-07).")
+    S["InventoryConflictResolve"] = obj({"note": {"type": "string", "minLength": 10, "maxLength": 2000},
+                                         "resolution": d({"type": "string", "enum": ["accepted_clamp", "booking_moved", "booking_cancelled"]}, "Optional; default accepted_clamp.")},
+                                        ["note"], extra=False)
+    S["OutboxMessage"] = obj({
+        "id": UUID, "topic": STR, "aggregate_type": STR, "aggregate_id": UUID, "status": ref("OutboxStatus"),
+        "attempts": INT, "next_attempt_at": nullable(DT), "last_error": nullable(STR), "created_at": DT, "sent_at": nullable(DT),
+    }, ["id", "topic", "status", "attempts", "created_at"], "Outbox message (BR-SYS-03). Payloads are not returned (they may hold personal data).")
     S["CommissionRates"] = obj({"individual_bp": INT, "agency_bp": INT, "hotel_bp": INT, "hostel_bp": INT,
                                 "effective_for": d(STR, "Always new bookings only (BR-PAY-06).")}, ["individual_bp", "agency_bp", "hotel_bp", "hostel_bp"])
     S["PlatformSettingsData"] = obj({
@@ -908,10 +946,15 @@ def build_schemas(dbml_path):
         "request_ttl_hours": {"type": "integer", "minimum": 1, "maximum": 168},
         "instant_booking_enabled": d(BOOL, "False forces request mode everywhere (BR-BKG-02)."),
         "maintenance_mode": BOOL,
-        "topup_four_eyes_threshold_minor": I64,
+        "topup_four_eyes_threshold_minor": d(I64, "Applies to the host's rolling 24-hour top-up total (BR-PAY-07)."),
+        "adjustment_max_minor": d(I64, "Cap on one manual adjustment, default 100,000,000 (1,000,000 DZD)."),
+        "refund_due_days": {"type": "integer", "minimum": 1, "maximum": 60},
+        "max_pending_requests_per_guest": {"type": "integer", "minimum": 1, "maximum": 20},
+        "max_upcoming_bookings_per_guest": {"type": "integer", "minimum": 1, "maximum": 50},
+        "sms_daily_budget": d({"type": "integer", "minimum": 0}, "Global SMS sends per day; then sms_budget_exceeded (BR-ACC-02)."),
         "guest_session_days": INT, "staff_session_absolute_hours": INT, "staff_session_idle_minutes": INT,
         "locales": arr(ref("Locale")),
-        "feature_flags": obj({"guest_payments": BOOL, "payouts": BOOL, "online_topup": BOOL, "coupons": BOOL, "disputes": BOOL,
+        "feature_flags": obj({"guest_payments": BOOL, "payouts": BOOL, "coupons": BOOL, "disputes": BOOL,
                               "host_reviews": BOOL, "message_attachments": BOOL}),
     }, None, "Whitelisted keys only; unknown keys return 422 unknown_setting (BR-CFG-01).")
     S["PlatformSettings"] = obj({"version": INT, "data": ref("PlatformSettingsData"), "created_by": ref("UserRef"), "created_at": DT},

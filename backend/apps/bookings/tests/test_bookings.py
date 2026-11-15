@@ -273,7 +273,12 @@ def test_br_bkg_02_platform_switch_forces_request(user, admin_user):
 # Cancellations (section 8, DEC-018)
 # ---------------------------------------------------------------------------
 def test_br_can_02_guest_cancel_moderate_three_days_before(user, user_client):
-    """Example 8a: moderate, 3 days before: 50 % of 55,500 + 4,000 = 31,750 DZD owed; 6,660 back to the wallet."""
+    """
+    Example 8a: moderate, 3 days before: 50 % of 55,500 + 4,000 = 31,750 DZD owed.
+
+    DEC-018 revised: the commission follows the refund, so half of the
+    6,660 DZD (3,330) comes back and BLADUS keeps 3,330.
+    """
     listing = villa()
     booking_id = book(user_client, quote_stay(listing, 3, 6)).data["id"]
     assert ledger.wallet_balance_minor(listing.host_account) == -dzd(6_660)
@@ -282,7 +287,7 @@ def test_br_can_02_guest_cancel_moderate_three_days_before(user, user_client):
     assert response.data["status"] == "cancelled"
     assert response.data["cancelled_by_role"] == "guest"
     assert response.data["refund_due"]["amount_minor"] == dzd(31_750)
-    assert ledger.wallet_balance_minor(listing.host_account) == 0  # DEC-018: full commission back
+    assert ledger.wallet_balance_minor(listing.host_account) == -dzd(3_330)  # DEC-018 revised: half back
 
 
 def test_br_can_01_refund_windows_table():
@@ -298,7 +303,7 @@ def test_br_can_01_guest_cannot_cancel_after_check_in_time(user):
     listing = villa(check_in_time=time(0, 0))
     booking = services.create_booking(guest=user, quote_id=quote_stay(listing, 0, 2).id)
     with pytest.raises(DomainError) as exc:
-        services.cancel_by_guest(guest=user, booking_key=booking.id)
+        services.cancel_by_guest(guest=user, booking_id=booking.id)
     assert exc.value.code == "too_late_to_cancel"
 
 
@@ -326,7 +331,12 @@ def test_br_can_03_host_cancel_full_refund_and_commission_back(user, user_client
 
 
 def test_admin_cancel_with_partial_refund_is_audited(user, admin_client):
-    """Admin cancels with a chosen refund; reason required; commission returned (DEC-018); audited."""
+    """
+    Admin cancels with a chosen refund; reason required; audited.
+
+    DEC-018 revised: 10,000 DZD refunded = 4,000 cleaning + 6,000 of the
+    55,500 subtotal, so 6,660 x 6,000 / 55,500 = 720 DZD of commission back.
+    """
     listing = villa()
     booking = services.create_booking(guest=user, quote_id=quote_stay(listing, 10, 13).id)
     url = f"/api/v1/admin/bookings/{booking.id}/cancel"
@@ -336,7 +346,7 @@ def test_admin_cancel_with_partial_refund_is_audited(user, admin_client):
     response = admin_client.post(url, {"reason": "Support case", "refund_due_minor": dzd(10_000)}, format="json")
     assert response.status_code == 200, response.data
     assert response.data["refund_due"]["amount_minor"] == dzd(10_000)
-    assert ledger.wallet_balance_minor(listing.host_account) == 0
+    assert ledger.wallet_balance_minor(listing.host_account) == -dzd(6_660) + dzd(720)
     assert AuditEvent.objects.filter(action="BOOKING_CANCEL_BY_ADMIN", object_id=str(booking.id)).exists()
 
 
@@ -413,10 +423,11 @@ def test_other_guest_cannot_see_booking(user):
 
 
 def test_br_src_03_address_hidden_while_pending(user, user_client):
-    """The exact address appears only once the booking is confirmed; the detail works by reference too."""
+    """The exact address appears only once the booking is confirmed; paths take the UUID only (DEC-031)."""
     listing = villa(approval_mode="request")
     booking = services.create_booking(guest=user, quote_id=quote_stay(listing, 10, 13).id)
-    pending = user_client.get(f"/api/v1/me/bookings/{booking.reference}")
+    assert user_client.get(f"/api/v1/me/bookings/{booking.reference}").status_code == 404
+    pending = user_client.get(f"/api/v1/me/bookings/{booking.id}")
     assert pending.status_code == 200
     assert pending.data["address_line"] is None
     assert pending.data["location_exact"] is None

@@ -6,6 +6,9 @@ Database models of the bookings app.
   (price lines, commission rate, cancellation windows, listing details), so
   later edits of the listing never change it (BR-BKG-07).
 - ``BookingEvent``: the append-only history of its status changes (BR-BKG-06).
+- ``Refund`` and ``RefundObligation``: refunds decided for a booking and the
+  debt the host must pay back (BR-CAN-04, BR-CAN-06, review R8).
+- ``Dispute``: a disagreement about a booking (R2, BR-CAN-05).
 
 Payments are not collected online in this version (DEC-001, DEC-019): the
 guest pays the host directly, ``payment_status`` stays ``not_collected`` and
@@ -69,6 +72,13 @@ class InventoryKind(models.TextChoices):
     ROOM_POOL = "room_pool", "Rooms or beds"
     SLOT = "slot", "Experience seats"
     DEPARTURE = "departure", "Trip seats"
+
+
+class StayConfirmedVia(models.TextChoices):
+    """Who proved that the stay happened (review R13)."""
+
+    HOST_CODE = "host_code", "Host entered the guest's check-in code"
+    GUEST = "guest", "Guest confirmed after check-in time"
 
 
 class PaymentStatus(models.TextChoices):
@@ -152,6 +162,11 @@ class Booking(UUIDModel, TimeStampedModel):
     listing_snapshot = models.JSONField(default=dict, help_text="Title, reference, address, check-in/out times (BR-BKG-07).")
     quote = models.ForeignKey("pricing.Quote", on_delete=models.SET_NULL, null=True, blank=True, related_name="bookings")
 
+    # Stay confirmation (review R13): a review is allowed only for a stay that was confirmed.
+    check_in_code = models.CharField(max_length=6, blank=True, help_text="6 digits shown to the guest once confirmed; the host enters it on arrival.")
+    stay_confirmed_at = models.DateTimeField(null=True, blank=True)
+    stay_confirmed_via = models.CharField(max_length=10, choices=StayConfirmedVia.choices, blank=True, default="")
+
     class Meta:
         """Table options: indexes for the lists and jobs, database checks on money and targets."""
 
@@ -201,6 +216,16 @@ class Booking(UUIDModel, TimeStampedModel):
         """True while the booking can still be accepted, declined or cancelled."""
         return self.status in ACTIVE_STATUSES
 
+    @property
+    def review_eligible(self) -> bool:
+        """
+        True when a review may be written for this booking (review R13).
+
+        The booking must be completed AND the stay confirmed (host code or
+        guest confirmation). Auto-completion alone proves nothing.
+        """
+        return self.status == BookingStatus.COMPLETED and self.stay_confirmed_at is not None
+
 
 class BookingEvent(UUIDModel):
     """
@@ -236,3 +261,159 @@ class BookingEvent(UUIDModel):
     def delete(self, *args, **kwargs):
         """Refuse to delete a history row."""
         raise RuntimeError("Booking events are append-only.")
+
+
+class RefundStatus(models.TextChoices):
+    """Life of a refund a host owes a guest (review R8)."""
+
+    OPEN = "open", "Owed, not paid yet"
+    DECLARED = "declared", "Host says it was paid"
+    DISPUTED = "disputed", "Guest says it was not received"
+    SETTLED = "settled", "Guest received it"
+
+
+# Statuses that count as unpaid when the deadline has passed.
+UNPAID_REFUND_STATUSES = (RefundStatus.OPEN, RefundStatus.DISPUTED)
+
+
+class RefundKind(models.TextChoices):
+    """Why a refund was owed (05b ``refund.kind``)."""
+
+    POLICY = "policy", "Guest cancellation, by the policy"
+    HOST_CANCEL = "host_cancel", "Host cancellation"
+    STAFF = "staff", "Decided by BLADUS staff"
+    DISPUTE = "dispute", "Outcome of a dispute"
+
+
+class RefundSettlement(models.TextChoices):
+    """How the refund reaches the guest. M1: the host pays it back (DEC-019)."""
+
+    OWED_BY_HOST = "owed_by_host", "Owed by the host"
+    SETTLED_CONFIRMED = "settled_confirmed", "Settled and confirmed"
+
+
+class Refund(UUIDModel):
+    """
+    One refund decided for a booking (BR-CAN-04, BR-CAN-06).
+
+    A booking may get several (a cancellation, then a partial refund by
+    support, then a dispute outcome); their sum is ``booking.refund_due_minor``
+    and never passes the total (DB check on the booking). In M1 each refund
+    opens one :class:`RefundObligation` the host must pay; ``settlement``
+    turns ``settled_confirmed`` when that debt is settled. Never deleted.
+    """
+
+    booking = models.ForeignKey(Booking, on_delete=models.PROTECT, related_name="refunds")
+    amount_minor = models.BigIntegerField()
+    currency = models.CharField(max_length=3, default="DZD")
+    kind = models.CharField(max_length=20, choices=RefundKind.choices)
+    settlement = models.CharField(max_length=20, choices=RefundSettlement.choices, default=RefundSettlement.OWED_BY_HOST)
+    reason = models.TextField(blank=True)
+    reason_code = models.CharField(max_length=64, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="+")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        """Oldest first, so the refunds read like a timeline."""
+
+        ordering = ["created_at", "id"]
+        constraints = [models.CheckConstraint(condition=Q(amount_minor__gt=0), name="refund_amount_positive")]
+
+    def __str__(self) -> str:
+        """Readable name for the Django console."""
+        return f"refund {self.amount_minor} of {self.booking_id} ({self.kind})"
+
+
+class RefundObligation(UUIDModel):
+    """
+    A refund the host must pay back to the guest after a cancellation (review R8).
+
+    BLADUS does not hold the guest's money (DEC-019), so it cannot pay the
+    refund itself. It records the debt (here and as memo lines in the
+    ledger), shows it to both sides, and blocks the host from instant
+    bookings and from accepting requests while a refund is overdue.
+    """
+
+    booking = models.ForeignKey(Booking, on_delete=models.PROTECT, related_name="refund_obligations")
+    refund = models.OneToOneField(Refund, on_delete=models.PROTECT, null=True, blank=True, related_name="obligation",
+                                  help_text="Refund row this debt comes from (one debt per refund, BR-CAN-06).")
+    host_account = models.ForeignKey("hosts.HostAccount", on_delete=models.PROTECT, related_name="refund_obligations")
+    guest = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="refunds_owed")
+    amount_minor = models.BigIntegerField()
+    currency = models.CharField(max_length=3, default="DZD")
+    status = models.CharField(max_length=10, choices=RefundStatus.choices, default=RefundStatus.OPEN)
+    due_at = models.DateTimeField(help_text="Cancellation time + refund_due_days.")
+    declared_at = models.DateTimeField(null=True, blank=True)
+    payment_reference = models.CharField(max_length=200, blank=True, help_text="Transfer reference given by the host.")
+    settled_at = models.DateTimeField(null=True, blank=True)
+    settled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+")
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        """Overdue lookups are by host, status and deadline."""
+
+        ordering = ["due_at"]
+        indexes = [models.Index(fields=["host_account", "status", "due_at"])]
+        constraints = [models.CheckConstraint(condition=Q(amount_minor__gt=0), name="refund_obligation_positive")]
+
+    def __str__(self) -> str:
+        """Readable name for the Django console."""
+        return f"refund {self.amount_minor} for {self.booking_id} ({self.status})"
+
+    @property
+    def is_overdue(self) -> bool:
+        """True when still unpaid after the deadline."""
+        return self.status in UNPAID_REFUND_STATUSES and self.due_at <= timezone.now()
+
+
+class DisputeOutcome(models.TextChoices):
+    """How support closed a dispute (BR-CAN-05)."""
+
+    REFUND_FULL = "refund_full", "Full refund"
+    REFUND_PARTIAL = "refund_partial", "Partial refund"
+    DECLINED = "declined", "Declined"
+
+
+class Dispute(UUIDModel):
+    """
+    A disagreement about a booking, opened by the guest or the host (R2, BR-CAN-05).
+
+    One per booking. It may be opened until 14 days after check-out; the
+    other side may add its statement while it is open. Support resolves it
+    with a full refund, a partial refund or a refusal, and a note.
+    """
+
+    booking = models.OneToOneField(Booking, on_delete=models.PROTECT, related_name="dispute")
+    opened_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    opened_by_role = models.CharField(max_length=8, choices=ActorRole.choices)
+    reason_code = models.CharField(max_length=64, blank=True)
+    guest_statement = models.TextField(blank=True)
+    host_statement = models.TextField(blank=True)
+    media_ids = models.JSONField(default=list, blank=True, help_text="Ids of uploaded photos or documents.")
+    outcome = models.CharField(max_length=16, choices=DisputeOutcome.choices, blank=True)
+    refund_minor = models.BigIntegerField(null=True, blank=True)
+    resolution_note = models.TextField(blank=True)
+    resolved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+                                    related_name="+")
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        """Open disputes first in the admin queue."""
+
+        ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(condition=Q(refund_minor__isnull=True) | Q(refund_minor__gte=0),
+                                   name="dispute_refund_not_negative"),
+        ]
+
+    def __str__(self) -> str:
+        """Readable name for the Django console."""
+        return f"dispute on {self.booking_id} ({self.outcome or 'open'})"
+
+    @property
+    def is_open(self) -> bool:
+        """True until support resolves it."""
+        return self.resolved_at is None

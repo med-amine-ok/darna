@@ -4,7 +4,7 @@
 > Building the backend needs some answers we cannot invent: product choices, legal checks, tax rules and technical picks.
 > This page lists every decision still open, grouped by who decides: you (product owner), a lawyer, an accountant or bank, and the tech lead.
 > For each one: the options, our recommendation, the milestone it blocks, and what happens if nobody decides.
-> Decisions already taken (DEC-001 to DEC-015) are repeated first so you can see the whole picture.
+> Decisions already taken (DEC-001 to DEC-031, DEC-018 revised on 2026-11-13) are repeated first so you can see the whole picture.
 > Legal and tax items are questions, not advice: VERIFY WITH A PROFESSIONAL.
 
 **Terms used here** (see [glossary.md](glossary.md)):
@@ -38,8 +38,26 @@ IDs: Q (product) and L (legal) and F (finance) come from [14-open-questions.md](
 | DEC-013 | Show 69 wilayas (codes 59 to 69 to confirm) | 2026-11-04 |
 | DEC-014 | Individuals publish homes and vehicles; agencies experiences and trips; hotels and hostels their property | 2026-11-04 |
 | DEC-015 | 8 experience types and 8 trip types, one shared list | 2026-11-04 |
+| DEC-016 | One staff role: admin, with every permission | 2026-11-11 |
+| DEC-017 | Connect directly to a hotel's own system (rooms, availability, prices, services) | 2026-11-11 |
+| DEC-018 | **Revised 2026-11-13.** Commission follows the refund: guest cancels, the host gets back apply_bp(commission, refund_bp of the policy window) (villa example 8a: 3,330 DZD back, BLADUS keeps 3,330 DZD); host cancels, full commission back; admin cancels with refund R, returned = round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base); decline or expiry, nothing was taken. Replaces the 2026-11-11 text ("full commission back on every cancellation"), because a host could then keep the guest's non-refundable money and pay no commission | 2026-11-11, revised 2026-11-13 |
+| DEC-019 | No online payment in the first release (no online top-up either) | 2026-11-11 |
+| DEC-020 | Say exactly what the database guarantees: exclusion constraint for single units, CHECK counters for pools, slots and departures, and new triggers so blocked days and bookings never clash | 2026-11-13 |
+| DEC-021 | A sync never sets a room-night total below held + booked; the total is clamped and an `inventory_conflict` is opened; every BLADUS booking change is pushed at once through the outbox | 2026-11-13 |
+| DEC-022 | Four-eyes on the rolling 24-hour top-up total (500,000 DZD), approver always different, manual ledger adjustments need a second admin and are capped at 1,000,000 DZD | 2026-11-13 |
+| DEC-023 | Lock the host wallet balance row first, then stock; commission revenue is a SUM of ledger entries, never a shared balance row | 2026-11-13 |
+| DEC-024 | Every cancellation with a refund opens a refund obligation (due in 7 days); host declares paid, guest confirms or disputes; an overdue refund stops instant booking and accepting requests | 2026-11-13 |
+| DEC-025 | SSRF guard, SMS and code limits with a daily budget, HMAC with a pepper, key management, CSRF in the BFF, upload quarantine and scan, insert-only audit | 2026-11-13 |
+| DEC-026 | Separate database roles (`bladus_migrator` owns, `bladus_app` only SELECT and INSERT on ledger and audit), triggers refuse UPDATE and DELETE, nightly `reconcile_balances` | 2026-11-13 |
+| DEC-027 | One operations page before M0: Docker Compose on one VPS for M0 to M2, failover RPO 5 minutes and RTO 1 hour, Redis never the only copy, monthly restore test, alerts, CI/CD with rollback, runbooks | 2026-11-13 |
+| DEC-028 | At most 3 pending requests and 6 upcoming bookings per guest; a stay confirmation (check-in code or guest confirmation) is needed before a review | 2026-11-13 |
+| DEC-029 | Integer centimes, basis points, round half up at each line; commission base excludes cleaning and taxes; `idempotency_record` with body hash; `outbox_message` with fixed retries then `dead` | 2026-11-13 |
+| DEC-030 | Django 5.2 LTS (supported to April 2028), not 6.1; search with pg_trgm trigram similarity plus unaccent, no Arabic full-text | 2026-11-13 |
+| DEC-031 | No online top-up endpoint in v1; one operation count computed from `openapi.yaml`; one id scheme (UUIDv7 keys, references only for display); sequence diagram endpoints checked against `openapi.yaml` by a tool | 2026-11-13 |
 
-Technical choices already taken in research: R-1 to R-11 in [02-research.md](02-research.md) section E (Django 6.1 + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless; database-enforced availability; centimes and double-entry ledger; polling for messages; PostgreSQL search).
+Technical choices already taken in research: R-1 to R-11 in [02-research.md](02-research.md) section E (Django 5.2 LTS + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless; database-enforced availability; centimes and double-entry ledger; polling for messages; PostgreSQL trigram search). DEC-030 changed the Django version from 6.1 to 5.2 LTS on 2026-11-13.
+
+The review of 2026-11-13 is recorded in `_work/review-2026-11-13-decisions.md` (items R1 to R16). DEC-018 keeps its id with the revised text; the other items became DEC-020 to DEC-031.
 
 ---
 
@@ -50,8 +68,8 @@ Technical choices already taken in research: R-1 to R-11 in [02-research.md](02-
 | Product owner | 15 (Q14 to Q28) | M0 | Q22 foreign phone numbers, Q28 verticals at launch |
 | Lawyer | 16 (L1 to L16) | end of M5 (L1, L2) | **L1, L2** hosting and data transfer |
 | Accountant or bank | 7 (F1 to F7) | M4 (F5 to F7) | F5 to F7 how to record and receipt deposits |
-| Tech lead | 11 (T1 to T11, T5 already closed) | M0 | T1 hosting, T3 mock-to-API switch |
-| **Total** | **49 (48 still open)** | | |
+| Tech lead | 11 (T1 to T11, T5 and T7 closed) | M0 | T1 hosting, T3 mock-to-API switch |
+| **Total** | **49 (47 still open)** | | |
 
 ---
 
@@ -120,7 +138,7 @@ Q14 to Q20 are the proposals already built into the schema (Phase 5); the defaul
 | T4 | How the two Next.js servers hold the Django session | (a) allauth headless app tokens stored in an httpOnly cookie on the Next.js server; (b) Django session cookie shared on a common domain; (c) JWT | (a): revocable server-side (ACC-03) | M0 | Sign-in cannot ship |
 | T5 | Small schema gaps found while planning | **Closed on 2026-11-09**: `incident_record`, `calendar_feed` and `otp_send_log` were added to `schema.dbml` | Done | n/a | n/a |
 | T6 | Object storage and virus scanning in Algeria | (a) MinIO self-hosted + ClamAV; (b) provider S3-compatible storage if offered | (a) unless the chosen provider offers (b) in Algeria | M1 (documents) | KYC upload blocked |
-| T7 | Text search in Arabic, French and English | (a) PostgreSQL unaccent + trigram + Arabic normalisation + place-name alias table; (b) self-hosted Meilisearch | (a) (R-11), with a 50-query test set; revisit (b) if the zero-result rate stays high | M3 | Weak Arabic search (risk K-15) |
+| T7 | Text search in Arabic, French and English | **Closed on 2026-11-13 by DEC-030**: PostgreSQL `pg_trgm` trigram similarity + unaccent + Arabic normalisation + place-name alias table, no Arabic full-text | Done; revisit a self-hosted Meilisearch only if the zero-result rate stays high | n/a | n/a |
 | T8 | Third-party processors that see personal data | Email: Algerian SMTP relay or self-hosted vs Resend/Brevo; SMS: local aggregator + fallback; errors: self-hosted GlitchTip/Sentry vs SaaS; uptime: self-hosted | Prefer Algerian or self-hosted for anything with personal data; final list reviewed by the lawyer (L10) | M0 (interfaces), M6 (final providers) | Data transfer risk (K-02) |
 | T9 | Typed API client for both apps | (a) openapi-typescript + openapi-fetch; (b) orval; (c) hand-written | (a): small, no runtime magic | M0 | Drift between API and apps |
 | T10 | Second location for backups and restore drills | (a) second Algerian provider; (b) second data centre of the same provider; (c) abroad (needs L2) | (a) for provider independence | Decide in M6, running in M7 | Backups in one place only (risk K-19) |
@@ -137,3 +155,4 @@ Q14 to Q20 are the proposals already built into the schema (Phase 5); the defaul
 - [ ] Which decisions can be changed later by a setting, and which one is marked costly to change?
 - [ ] Which tech decision makes "one module at a time behind a flag" possible?
 - [ ] Find the decision that keeps BLADUS from needing a PSP licence at launch.
+- [ ] In example 8a, how much commission does the host get back after DEC-018 was revised, and why?

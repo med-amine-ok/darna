@@ -109,3 +109,42 @@ class IdempotencyRecord(UUIDModel):
     def __str__(self) -> str:
         """Short readable label used in the Django admin and in logs."""
         return f"{self.endpoint}:{self.key}"
+
+
+class OutboxStatus(models.TextChoices):
+    """Life of an outbox message (review R14)."""
+
+    PENDING = "pending", "Waiting to be delivered"
+    SENT = "sent", "Delivered"
+    DEAD = "dead", "Gave up after the last attempt"
+
+
+class OutboxMessage(UUIDModel):
+    """
+    A side effect to run after a database change, stored in the same transaction (review R14).
+
+    Example: tell a connected hotel system that BLADUS just sold a room
+    (topic ``inventory.push``, review R3). If the change is rolled back the
+    message disappears with it; if it is committed the worker delivers it,
+    retrying with backoff, so nothing is lost when the other side is down.
+    Handlers must be idempotent: a message can be delivered twice.
+    """
+
+    topic = models.CharField(max_length=60, db_index=True)
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=8, choices=OutboxStatus.choices, default=OutboxStatus.PENDING)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        """The worker reads due pending messages in order."""
+
+        ordering = ["created_at"]
+        indexes = [models.Index(fields=["status", "next_attempt_at"])]
+
+    def __str__(self) -> str:
+        """Short readable label used in the Django admin and in logs."""
+        return f"{self.topic} ({self.status}, {self.attempts} attempts)"

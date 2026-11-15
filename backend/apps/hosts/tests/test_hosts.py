@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from apps.accounts.models import hash_secret
 from apps.audit.models import AuditEvent
-from apps.hosts.crypto import IS_REAL_ENCRYPTION, PLACEHOLDER_PREFIX
+from apps.hosts.crypto import FERNET_PREFIX, IS_REAL_ENCRYPTION, decrypt_secret
 from apps.hosts.models import (
     HostAccount,
     HostDocument,
@@ -23,7 +23,7 @@ from apps.hosts.models import (
 )
 from conftest import client_for, make_user
 
-from .helpers import add_member, approved, make_org, new_user, owner_of
+from .helpers import add_member, approved, make_org, new_user, onboard, owner_of
 
 pytestmark = pytest.mark.django_db
 
@@ -32,33 +32,43 @@ pytestmark = pytest.mark.django_db
 # Becoming a host
 # ---------------------------------------------------------------------------
 def test_become_individual_host_needs_verified_phone():
-    """No verified phone: 403. Then 201 with status applied, and a second try is 409."""
+    """Onboarding submit: no verified phone is 403; then 201 with status applied; a second draft is 409."""
     unverified = make_user(email="u@x.dz", verified=False)
-    res = client_for(unverified).post("/api/v1/host/accounts/individual")
+    res = onboard(client_for(unverified), "individual")
     assert res.status_code == 403 and res.data["code"] == "phone_not_verified"
 
     person = new_user()
     client = client_for(person)
-    res = client.post("/api/v1/host/accounts/individual")
+    res = onboard(client, "individual")
     assert res.status_code == 201, res.data
-    assert res.data["kind"] == "individual" and res.data["verification_status"] == "applied"
-    assert res.data["role"] is None and "listings.manage" in res.data["permissions"]
-    assert client.post("/api/v1/host/accounts/individual").data["code"] == "already_host"
+    workspace = res.data["workspace"]
+    assert workspace["kind"] == "individual" and res.data["verification_status"] == "applied"
+    assert workspace["role"] is None and "listings.manage" in workspace["permissions"]
+    res = client.put("/api/v1/host/onboarding/drafts/individual",
+                     {"current_step": "placement", "answers": {}}, format="json")
+    assert res.status_code == 409 and res.data["code"] == "draft_submitted"
 
 
 def test_br_org_01_create_organization_with_owner_and_unique_slug():
     """Organisation, host account and owner membership are created together; slugs never clash."""
     person = new_user()
     client = client_for(person)
-    res = client.post("/api/v1/organizations", {"business_category": "hotel", "display_name": "Hotel El Djazair"})
+    res = onboard(client, "hotel", hotelName="Hotel El Djazair")
     assert res.status_code == 201, res.data
-    assert res.data["host_type"] == "hotel" and res.data["role"] == "owner"
-    assert res.data["organization_slug"] == "hotel-el-djazair"
+    assert res.data["workspace"]["host_type"] == "hotel" and res.data["workspace"]["role"] == "owner"
+    assert res.data["workspace"]["organization_slug"] == "hotel-el-djazair"
     assert Membership.objects.get(user=person).role == "owner"
 
-    again = client_for(new_user()).post("/api/v1/organizations", {"business_category": "agency", "display_name": "Hotel El Djazair"})
-    assert again.data["organization_slug"] == "hotel-el-djazair-2"
-    assert client.post("/api/v1/organizations", {"business_category": "castle", "display_name": "X"}).status_code == 400
+    again = onboard(client_for(new_user()), "agency", businessName="Hotel El Djazair")
+    assert again.data["workspace"]["organization_slug"] == "hotel-el-djazair-2"
+    assert client.get("/api/v1/host/onboarding/drafts/castle").status_code == 404
+
+
+def test_removed_creation_routes():
+    """POST /organizations and POST /host/accounts/individual are replaced by the onboarding submit."""
+    client = client_for(new_user())
+    assert client.post("/api/v1/host/accounts/individual").status_code == 404
+    assert client.post("/api/v1/organizations", {"business_category": "hotel", "display_name": "X"}).status_code == 405
 
 
 # ---------------------------------------------------------------------------
@@ -363,7 +373,8 @@ def test_integrations_for_hotels_only_and_secret_never_returned():
     assert created.status_code == 201 and created.data["status"] == "pending" and created.data["has_credentials"]
     assert "s3cr3t-key" not in str(created.data) and "s3cr3t-key" not in str(client.get("/api/v1/host/integrations").data)
     stored = bytes(PropertyIntegration.objects.get().credentials_encrypted)
-    assert stored.startswith(PLACEHOLDER_PREFIX) and IS_REAL_ENCRYPTION is False  # placeholder, see crypto.py
+    assert IS_REAL_ENCRYPTION and stored.startswith(FERNET_PREFIX) and b"s3cr3t-key" not in stored  # R9
+    assert decrypt_secret(stored) == '{"api_key": "s3cr3t-key"}'
 
     agent = add_member(hotel, "agent")
     assert client_for(agent.user, hotel).get("/api/v1/host/integrations").status_code == 403

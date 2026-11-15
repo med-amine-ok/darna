@@ -39,6 +39,9 @@ erDiagram
         int commission_rate_bp
         bigint commission_minor
         bigint refund_due_minor
+        char_6 check_in_code
+        timestamptz stay_confirmed_at
+        stay_confirmed_via stay_confirmed_via
         jsonb price_lines
         jsonb cancellation_windows
         jsonb listing_snapshot
@@ -47,7 +50,7 @@ erDiagram
         timestamptz updated_at
     }
     booking_event {
-        bigint id PK
+        uuid id PK
         uuid booking_id FK
         booking_status from_status
         booking_status to_status
@@ -66,6 +69,27 @@ erDiagram
         text reason
         uuid created_by_id FK
         timestamptz created_at
+    }
+    refund_obligation {
+        uuid id PK
+        uuid refund_id FK,UK
+        uuid booking_id FK
+        uuid host_account_id FK
+        uuid guest_id FK
+        bigint amount_minor
+        char_3 currency
+        refund_obligation_status status
+        timestamptz due_at
+        timestamptz declared_at
+        varchar_120 declared_reference
+        uuid declared_by_id FK
+        timestamptz settled_at
+        varchar_12 settled_via
+        uuid settled_by_id FK
+        uuid settlement_proof_id FK
+        text dispute_note
+        timestamptz created_at
+        timestamptz updated_at
     }
     dispute {
         uuid id PK
@@ -89,6 +113,9 @@ erDiagram
         uuid id PK
     }
     listing {
+        uuid id PK
+    }
+    media_asset {
         uuid id PK
     }
     quote {
@@ -121,6 +148,13 @@ erDiagram
     reason_code ||--o{ booking_event : "reason_id"
     booking ||--o{ refund : "booking_id"
     user ||--o{ refund : "created_by_id"
+    refund ||--o| refund_obligation : "refund_id"
+    booking ||--o{ refund_obligation : "booking_id"
+    host_account ||--o{ refund_obligation : "host_account_id"
+    user ||--o{ refund_obligation : "guest_id"
+    user ||--o{ refund_obligation : "declared_by_id"
+    user ||--o{ refund_obligation : "settled_by_id"
+    media_asset ||--o{ refund_obligation : "settlement_proof_id"
     booking ||--o{ dispute : "booking_id"
     user ||--o{ dispute : "opened_by_id"
     reason_code ||--o{ dispute : "reason_id"

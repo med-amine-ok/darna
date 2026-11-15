@@ -44,7 +44,7 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="on" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 1 and 2: discovery and research</div><h1 id="02-research-what-others-do-which-django-tools-to-use-and-what-algeria-requires">02. Research: what others do, which Django tools to use, and what Algeria requires</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="on" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 1 and 2: discovery and research</div><h1 id="02-research-what-others-do-which-django-tools-to-use-and-what-algeria-requires">02. Research: what others do, which Django tools to use, and what Algeria requires</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>Before designing tables we looked at how Airbnb, Booking.com, Expedia and GetYourGuide solve the same problems, and which Django tools are best today.<br>We also checked Algerian realities: how online payment works, SMS costs, the laws on e-commerce and personal data, maps and hosting.<br>Big finding: Algerian law likely requires the site to be hosted in Algeria, and collecting guest money to pay hosts may need a payment licence.<br>So the safest first version is &quot;BLADUS takes only its commission&quot;, which matches what the website already does.<br>Every legal, tax or money point here is marked <strong>VERIFY WITH A PROFESSIONAL</strong>. This is engineering research, not legal advice.</p>
 </blockquote>
 <p>Research date: all sources accessed on <strong>2026-11-04</strong>. Labels: <strong>[verified]</strong> read on an official or primary page; <strong>[secondary]</strong> press, vendor or blog; <strong>[unverified]</strong> could not confirm. Full source lists with every URL: <a href="work-research-platforms-django.html">Appendix R1</a> and <a href="work-research-algeria-security.html">Appendix R2</a>.</p>
@@ -238,8 +238,8 @@ section.doc{page-break-before:always;padding:0}
 <td>Django version</td>
 <td>6.1.3 (supported to Dec 2027)</td>
 <td>5.2 LTS (to Apr 2028)</td>
-<td><strong>Django 6.1 on Python 3.13</strong>, move to 6.2 LTS in 2027</td>
-<td>6.x has built-in tasks API and CSP; 6.1 overlaps 6.2 LTS</td>
+<td><strong>Django 5.2 LTS on Python 3.13</strong> (supported to April 2028); move to the next LTS before support ends. Changed 2026-11-13 by DEC-030 (was Django 6.1)</td>
+<td>Long-term support covers the launch and the first year; the backend code already runs on 5.2; the 6.x tasks API and CSP are not needed (Celery and django-csp do the job)</td>
 </tr>
 <tr>
 <td>B.1</td>
@@ -292,10 +292,10 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>B.7</td>
 <td>Search</td>
-<td>PostgreSQL full-text + pg_trgm + PostGIS</td>
+<td>PostgreSQL pg_trgm (trigram similarity) + unaccent + PostGIS</td>
 <td>Meilisearch 1.56, Typesense, OpenSearch</td>
-<td><strong>PostgreSQL first</strong></td>
-<td>One store, consistent with availability; Meilisearch only if Arabic typo search is needed</td>
+<td><strong>PostgreSQL first, trigram not full-text</strong> (DEC-030, 2026-11-13)</td>
+<td>One store, consistent with availability. PostgreSQL full-text has no Arabic stemmer, so text search uses trigram similarity with Arabic normalisation, tested on real Arabic, French and Darija queries; Meilisearch only if the zero-result rate stays high</td>
 </tr>
 <tr>
 <td>B.8</td>
@@ -783,13 +783,13 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>R-1</td>
-<td>Django 6.1 + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless</td>
+<td>Django 5.2 LTS + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless (changed 2026-11-13 by DEC-030, was Django 6.1)</td>
 <td>High</td>
 <td>none</td>
 </tr>
 <tr>
 <td>R-2</td>
-<td>Exclusion constraints for single units, daily inventory rows for pools</td>
+<td>Exclusion constraints for single units, daily inventory rows with CHECK counters for pools (no exclusion constraint there), triggers between blocked days and bookings (DEC-020)</td>
 <td>High</td>
 <td>none</td>
 </tr>
@@ -843,7 +843,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>R-11</td>
-<td>Polling for messages, PostgreSQL search</td>
+<td>Polling for messages, PostgreSQL search with pg_trgm trigram similarity (no Arabic full-text, DEC-030)</td>
 <td>High</td>
 <td>none</td>
 </tr>

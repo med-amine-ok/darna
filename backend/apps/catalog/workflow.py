@@ -11,7 +11,10 @@ so the rule is written once:
 - :func:`soft_delete` and :func:`restore` handle the special "deleted" state;
 - :func:`admin_moderate` is the single entry point of the admin buttons
   (approve, reject, request changes, suspend, unsuspend), with the reason
-  rule and the audit line.
+  rule and the audit line;
+- :func:`admin_set_status` serves ``POST /admin/listings|trips/{id}/status``
+  (any staff move of table 4a, soft delete and restore included);
+- :func:`host_set_status` serves ``POST /host/listings|trips/{id}/status``.
 """
 
 from django.db import transaction
@@ -45,17 +48,17 @@ def change_status(obj, new_status: str, *, actor_kind: str, note: str | None = N
     Move a listing or trip to ``new_status`` if table 4a allows it (BR-LST-03).
 
     ``actor_kind`` is ``"host"`` or ``"admin"``: some moves are reserved to
-    one of them. Raises ``ConflictError`` with code ``invalid_status_change``
+    one of them. Raises ``ConflictError`` with code ``invalid_transition``
     otherwise. Side effects: ``submitted_at`` is set when the object goes to
     review (the moderation queue counts from the last submission, BR-MOD-01),
     ``published_at`` the first time it is published, ``moderation_note``
     keeps the last admin reason. Saves only the touched columns.
     """
     if obj.deleted_at is not None:
-        raise ConflictError("This item was deleted.", code="invalid_status_change")
+        raise ConflictError("This item was deleted.", code="invalid_transition")
     if not can_transition(obj.status, new_status, actor_kind):
         raise ConflictError(
-            f"Cannot move from {obj.status} to {new_status}.", code="invalid_status_change"
+            f"Cannot move from {obj.status} to {new_status}.", code="invalid_transition"
         )
     now = timezone.now()
     fields = ["status", "updated_at"]
@@ -82,7 +85,7 @@ def soft_delete(obj) -> None:
     the bookings app's concern (they keep their own snapshot).
     """
     if obj.status == ListingStatus.DELETED or obj.deleted_at is not None:
-        raise ConflictError("Already deleted.", code="invalid_status_change")
+        raise ConflictError("Already deleted.", code="invalid_transition")
     obj.status_before_delete = obj.status
     obj.status = ListingStatus.DELETED
     obj.deleted_at = timezone.now()
@@ -95,7 +98,7 @@ def restore(obj, *, actor) -> None:
     Admin undo of a soft delete: back to the state before deletion (table 4a). Audited.
     """
     if obj.deleted_at is None:
-        raise ConflictError("This item is not deleted.", code="invalid_status_change")
+        raise ConflictError("This item is not deleted.", code="invalid_transition")
     before = {"status": obj.status}
     obj.status = obj.status_before_delete or ListingStatus.DRAFT
     obj.status_before_delete = ""
@@ -105,12 +108,13 @@ def restore(obj, *, actor) -> None:
 
 
 def check_reason(reason: str | None) -> str:
-    """Return the cleaned reason, or raise ``reason_required`` when it is shorter than 10 characters."""
+    """Return the cleaned reason, or raise 422 ``reason_required`` when it is shorter than 10 characters."""
     reason = (reason or "").strip()
     if len(reason) < MIN_REASON_LENGTH:
         raise DomainError(
             f"Give a reason of at least {MIN_REASON_LENGTH} characters.",
             code="reason_required",
+            status_code=422,
             errors={"reason": [f"At least {MIN_REASON_LENGTH} characters."]},
         )
     return reason
@@ -142,4 +146,111 @@ def admin_moderate(obj, action: str, *, actor, reason: str | None = None) -> Non
     obj.refresh_from_db()
 
 
-__all__ = ["ADMIN", "HOST", "ADMIN_ACTIONS", "change_status", "soft_delete", "restore", "admin_moderate", "check_reason"]
+# Targets that need a reason of 10+ characters (AdminStatusChange, table 4a practice).
+REASON_REQUIRED_TARGETS = {ListingStatus.REJECTED, ListingStatus.SUSPENDED, ListingStatus.CHANGES_REQUESTED}
+
+# Targets a host may ask for (HostStatusChange): submit, withdraw or reopen, pause, resume, archive.
+HOST_TARGETS = {
+    ListingStatus.PENDING_REVIEW, ListingStatus.DRAFT, ListingStatus.PAUSED, ListingStatus.PUBLISHED,
+    ListingStatus.ARCHIVED,
+}
+
+
+def _admin_action_name(before: str, target: str) -> str:
+    """Audit verb of a staff move: the usual button name when there is one, else ``STATUS_CHANGE``."""
+    if target == ListingStatus.PUBLISHED:
+        return "UNSUSPEND" if before == ListingStatus.SUSPENDED else "APPROVE"
+    return {
+        ListingStatus.REJECTED: "REJECT", ListingStatus.CHANGES_REQUESTED: "REQUEST_CHANGES",
+        ListingStatus.SUSPENDED: "SUSPEND", ListingStatus.DELETED: "DELETE",
+    }.get(target, "STATUS_CHANGE")
+
+
+@transaction.atomic
+def admin_set_status(obj, target: str, *, actor, reason: str | None = None, reason_code: str | None = None) -> None:
+    """
+    Staff status change of a listing or trip (``AdminStatusChange``, BR-LST-03, BR-STF-02).
+
+    - ``deleted``: soft delete (any state except deleted), previous state kept;
+    - on a deleted object, the only allowed target is its previous state
+      (restore, table 4a: "staff restore to previous state");
+    - otherwise any move table 4a gives to staff (409 ``invalid_transition``).
+    Rejected, suspended and changes_requested need a reason of 10+
+    characters (422 ``reason_required``), stored as the moderation note so
+    the host sees it. The row is locked during the change and one audit
+    line is written in the same transaction.
+    """
+    locked = type(obj).objects.select_for_update().get(pk=obj.pk)
+    before = {"status": locked.status}
+    prefix = _audit_prefix(obj)
+    needs_reason = target in REASON_REQUIRED_TARGETS
+    clean_reason = check_reason(reason) if needs_reason else (reason or "").strip()
+    if target == ListingStatus.DELETED:
+        soft_delete(locked)
+        action = "DELETE"
+    elif locked.deleted_at is not None:
+        if target != (locked.status_before_delete or ListingStatus.DRAFT):
+            raise ConflictError("A deleted item can only go back to its previous status.", code="invalid_transition")
+        locked.status = target
+        locked.status_before_delete = ""
+        locked.deleted_at = None
+        locked.save(update_fields=["status_before_delete", "status", "deleted_at", "updated_at"])
+        action = "RESTORE"
+    else:
+        action = _admin_action_name(locked.status, target)
+        change_status(locked, target, actor_kind=ADMIN, note=clean_reason if needs_reason else None)
+    audit.record(
+        actor=actor, action=f"{prefix}_{action}", obj=locked, before=before,
+        after={"status": locked.status, "reason_code": reason_code}, note=clean_reason,
+    )
+    obj.refresh_from_db()
+
+
+def host_targets(obj) -> list[str]:
+    """
+    Statuses the host may ask for from the current one (``allowed_status_changes``, table 4a).
+
+    Same checks as :func:`host_set_status`, without the completeness check
+    of a submission. Empty for a deleted item.
+    """
+    if obj.deleted_at is not None:
+        return []
+    allowed = []
+    for target in sorted(HOST_TARGETS):
+        if target == ListingStatus.PENDING_REVIEW and obj.status not in (
+            ListingStatus.DRAFT, ListingStatus.CHANGES_REQUESTED
+        ):
+            continue
+        if target == ListingStatus.PUBLISHED and obj.status != ListingStatus.PAUSED:
+            continue
+        if can_transition(obj.status, target, HOST):
+            allowed.append(target)
+    return allowed
+
+
+def host_set_status(obj, target: str, *, submit) -> None:
+    """
+    Host status change of a listing or trip (``HostStatusChange``, BR-LST-03, table 4a).
+
+    ``pending_review`` calls ``submit(obj)`` (completeness check, 422
+    ``listing_incomplete``); ``published`` is only "resume" from paused;
+    ``draft`` is withdraw (from pending review) or reopen (from rejected or
+    archived). Any other move: 409 ``invalid_transition``.
+    """
+    if target not in HOST_TARGETS:
+        raise ConflictError(f"A host cannot move to {target}.", code="invalid_transition")
+    if target == ListingStatus.PENDING_REVIEW:
+        if obj.status not in (ListingStatus.DRAFT, ListingStatus.CHANGES_REQUESTED):
+            raise ConflictError("Only a draft or an item with requested changes can be submitted.",
+                                code="invalid_transition")
+        submit(obj)
+        return
+    if target == ListingStatus.PUBLISHED and obj.status != ListingStatus.PAUSED:
+        raise ConflictError("Only a paused item can be resumed.", code="invalid_transition")
+    change_status(obj, target, actor_kind=HOST)
+
+
+__all__ = [
+    "ADMIN", "HOST", "ADMIN_ACTIONS", "change_status", "soft_delete", "restore", "admin_moderate", "check_reason",
+    "admin_set_status", "host_set_status",
+]

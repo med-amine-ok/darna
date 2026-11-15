@@ -9,16 +9,22 @@ Main rules implemented here:
   sends it back to review;
 - BR-LST-03: state machine, via ``workflow.py``;
 - BR-LST-05: an experience has exactly one experience type;
-- BR-SRC-03: the public point is the exact point moved by up to about 500 m.
+- BR-SRC-03: the public point is the exact point moved by up to about 500 m;
+- BR-LST-04: taxonomy rows (amenities, categories, property types) are
+  deleted only when never used, otherwise deactivated; every admin change
+  is audited (BR-STF-02).
 """
 
 import math
 import secrets
+from collections.abc import Callable
 
 from django.db import IntegrityError, transaction
-from django.db.models import Min
+from django.db.models import Min, Q
+from django.utils import timezone
 
-from apps.core.errors import DomainError, ForbiddenError
+from apps.audit import services as audit
+from apps.core.errors import ConflictError, DomainError, ForbiddenError, NotFoundError
 from apps.core.ids import human_reference
 
 from . import workflow
@@ -28,6 +34,7 @@ from .models import (
     CancellationPolicy,
     Category,
     ExperienceDetail,
+    FeaturedPlacement,
     InventoryKind,
     Listing,
     ListingAmenity,
@@ -35,6 +42,7 @@ from .models import (
     PropertyService,
     PropertyType,
     RoomType,
+    RoomTypeAmenity,
     VehicleDetail,
     Vertical,
 )
@@ -350,33 +358,92 @@ def submit_listing(listing: Listing) -> Listing:
     """
     problems = submission_problems(listing)
     if problems:
-        raise DomainError("Complete the listing before submitting.", code="listing_incomplete", errors=problems)
+        raise DomainError("Complete the listing before submitting.", code="listing_incomplete", status_code=422,
+                          errors=problems)
     workflow.change_status(listing, ListingStatus.PENDING_REVIEW, actor_kind=HOST)
     return listing
 
 
-def host_move(listing: Listing, action: str) -> Listing:
+@transaction.atomic
+def change_host_listing_status(listing: Listing, target: str) -> Listing:
     """
-    Host status buttons: ``pause``, ``resume``, ``archive``, ``withdraw``, ``reopen`` (BR-LST-03).
+    ``POST /host/listings/{id}/status`` (``HostStatusChange``, BR-LST-03, table 4a).
 
-    resume = paused -> published without a new review; withdraw = pending
-    review -> draft; reopen = rejected or archived -> draft. The state
-    machine refuses any other move with 409 ``invalid_status_change``.
+    ``pending_review`` submits (422 ``listing_incomplete`` when something is
+    missing, BR-LST-01); ``draft`` withdraws or reopens; ``paused``,
+    ``archived``; ``published`` resumes a paused listing without review.
+    Other moves: 409 ``invalid_transition``. The row is locked first so two
+    clicks cannot cross.
     """
-    targets = {
-        "pause": ListingStatus.PAUSED,
-        "resume": ListingStatus.PUBLISHED,
-        "archive": ListingStatus.ARCHIVED,
-        "withdraw": ListingStatus.DRAFT,
-        "reopen": ListingStatus.DRAFT,
-    }
-    workflow.change_status(listing, targets[action], actor_kind=HOST)
+    locked = Listing.objects.select_for_update().get(pk=listing.pk)
+    workflow.host_set_status(locked, target, submit=submit_listing)
+    listing.refresh_from_db()
     return listing
 
 
 def delete_listing(listing: Listing) -> None:
     """Host soft delete (table 4a). An admin can restore it with the previous status."""
     workflow.soft_delete(listing)
+
+
+def admin_change_listing_status(listing: Listing, target: str, *, actor, reason: str | None = None,
+                                reason_code: str | None = None) -> Listing:
+    """``POST /admin/listings/{id}/status``: any staff move of table 4a, audited (BR-LST-03, BR-STF-02)."""
+    workflow.admin_set_status(listing, target, actor=actor, reason=reason, reason_code=reason_code)
+    return listing
+
+
+def admin_delete_listing(listing: Listing, *, actor) -> None:
+    """``DELETE /admin/listings/{id}``: soft delete by staff, previous state kept for restore, audited (BR-STF-02)."""
+    workflow.admin_set_status(listing, ListingStatus.DELETED, actor=actor)
+
+
+# ---------------------------------------------------------------------------
+# Featured placements (LST-09)
+# ---------------------------------------------------------------------------
+def active_placements(listing: Listing):
+    """Placements of ``listing`` live now (started, not ended)."""
+    now = timezone.now()
+    return FeaturedPlacement.objects.filter(listing=listing, starts_at__lte=now).filter(
+        Q(ends_at__isnull=True) | Q(ends_at__gt=now)
+    )
+
+
+@transaction.atomic
+def set_listing_featured(listing: Listing, data: dict, *, actor) -> Listing:
+    """
+    ``PUT /admin/listings/{id}/featured`` (``FeaturedUpdate``, LST-09, BR-STF-02).
+
+    ``is_featured=true`` needs a published listing (409 ``not_published``)
+    and replaces the current placement with a new one (``placement``
+    defaults to ``search_top``, ``starts_at`` to now). ``is_featured=false``
+    ends every current or future placement (history kept). Audited.
+    """
+    locked = Listing.objects.select_for_update().get(pk=listing.pk)
+    now = timezone.now()
+    before = {"is_featured": active_placements(locked).exists()}
+    open_rows = FeaturedPlacement.objects.filter(listing=locked).filter(Q(ends_at__isnull=True) | Q(ends_at__gt=now))
+    if data["is_featured"]:
+        if locked.status != ListingStatus.PUBLISHED or locked.deleted_at is not None:
+            raise ConflictError("Only published listings can be featured.", code="not_published")
+        starts_at = data.get("starts_at") or now
+        ends_at = data.get("ends_at")
+        if ends_at is not None and ends_at <= starts_at:
+            raise DomainError("End must be after start.", code="validation_failed", status_code=422,
+                              errors={"ends_at": ["Must be after starts_at."]})
+    # Future rows are dropped, rows already live end now.
+    open_rows.filter(starts_at__gt=now).delete()
+    open_rows.update(ends_at=now)
+    if data["is_featured"]:
+        FeaturedPlacement.objects.create(
+            listing=locked, placement=data.get("placement") or "search_top", position=data.get("position") or 0,
+            starts_at=starts_at, ends_at=ends_at, created_by=actor,
+        )
+    audit.record(
+        actor=actor, action="LISTING_FEATURE" if data["is_featured"] else "LISTING_UNFEATURE", obj=locked,
+        before=before, after={"is_featured": bool(data["is_featured"]), "placement": data.get("placement")},
+    )
+    return listing
 
 
 # ---------------------------------------------------------------------------
@@ -388,6 +455,36 @@ def _require_room_pool(listing: Listing) -> None:
         raise DomainError("Only hotels and hostels have room types.", code="room_types_not_allowed")
 
 
+# Hook given by apps.inventory (a higher layer): ``resize(room_type, new_unit_count)`` refuses with
+# 409 ``inventory_in_use`` when a future night has more units held or booked than the new count, and
+# makes the stored night totals follow it. ``new_unit_count=0`` is the check made before a soft delete.
+_room_units_resizer: Callable | None = None
+
+
+def register_room_units_resizer(func: Callable | None) -> None:
+    """
+    Let the inventory app check and apply a room type size change (BR-AVL-02).
+
+    Catalog may not import inventory (layer rule), so inventory registers
+    ``func(room_type, new_unit_count)`` from ``InventoryConfig.ready()``.
+    """
+    global _room_units_resizer
+    _room_units_resizer = func
+
+
+def _set_room_amenities(room_type: RoomType, amenity_ids: list) -> None:
+    """Replace the amenities of a room type; each id must be an active amenity of the listing's vertical."""
+    wanted = {str(i) for i in amenity_ids}
+    found = {str(a.id): a for a in Amenity.objects.filter(id__in=wanted, is_active=True)}
+    vertical = room_type.listing.vertical
+    bad = sorted(i for i in wanted if i not in found or vertical not in (found[i].applies_to or []))
+    if bad:
+        raise DomainError("Unknown amenity for this vertical.", code="validation_failed", status_code=422,
+                          errors={"amenity_ids": bad})
+    RoomTypeAmenity.objects.filter(room_type=room_type).delete()
+    RoomTypeAmenity.objects.bulk_create([RoomTypeAmenity(room_type=room_type, amenity=a) for a in found.values()])
+
+
 @transaction.atomic
 def create_room_type(listing: Listing, data: dict) -> RoomType:
     """
@@ -395,9 +492,14 @@ def create_room_type(listing: Listing, data: dict) -> RoomType:
 
     Updates the listing summary (lowest price, capacity) and, on a live
     listing, sends it back to review (BR-LST-02 first version).
+    ``amenity_ids`` (optional) sets the room amenities.
     """
     _require_room_pool(listing)
+    data = dict(data)
+    amenity_ids = data.pop("amenity_ids", None)
     room_type = RoomType.objects.create(listing=listing, **data)
+    if amenity_ids is not None:
+        _set_room_amenities(room_type, amenity_ids)
     sync_room_pool_summary(listing)
     send_back_to_review_if_live(listing)
     return room_type
@@ -413,14 +515,21 @@ def update_room_type(room_type: RoomType, data: dict) -> RoomType:
     Change a room type. Price changes stay live; descriptive or capacity
     changes on a live listing send it back to review (BR-LST-02 first version).
 
-    Lowering ``unit_count`` does not touch nights already created in the
-    inventory (their ``total`` is changed through the room type calendar,
-    which refuses to go below held + booked).
+    Changing ``unit_count`` goes through the inventory hook: lowering it
+    below the units already held or booked on a future night is refused
+    with 409 ``inventory_in_use`` (BR-AVL-02), and future night totals
+    follow the new count.
     """
+    data = dict(data)
+    amenity_ids = data.pop("amenity_ids", None)
     reviewed = any(f in data and getattr(room_type, f) != data[f] for f in ROOM_TYPE_REVIEWED_FIELDS)
+    if "unit_count" in data and data["unit_count"] != room_type.unit_count and _room_units_resizer is not None:
+        _room_units_resizer(room_type, data["unit_count"])
     for field, value in data.items():
         setattr(room_type, field, value)
     room_type.save()
+    if amenity_ids is not None:
+        _set_room_amenities(room_type, amenity_ids)
     sync_room_pool_summary(room_type.listing)
     if reviewed:
         send_back_to_review_if_live(room_type.listing)
@@ -429,7 +538,14 @@ def update_room_type(room_type: RoomType, data: dict) -> RoomType:
 
 @transaction.atomic
 def delete_room_type(room_type: RoomType) -> None:
-    """Soft-delete a room type (bookings keep pointing to it) and refresh the listing summary."""
+    """
+    Soft-delete a room type (bookings keep pointing to it) and refresh the listing summary.
+
+    Refused with 409 ``inventory_in_use`` while a future night still has
+    units held or booked (BR-AVL-02): deactivate it instead.
+    """
+    if _room_units_resizer is not None:
+        _room_units_resizer(room_type, 0)
     room_type.is_active = False
     room_type.soft_delete(save=False)
     room_type.save(update_fields=["is_active", "deleted_at"])
@@ -465,45 +581,49 @@ def add_photo(listing: Listing, *, url: str, caption: str = "", is_cover: bool =
 
 
 @transaction.atomic
-def update_photo(photo: ListingPhoto, *, caption: str | None = None, is_cover: bool | None = None) -> ListingPhoto:
-    """Change the caption of a photo or make it the cover (only one cover per listing)."""
-    if caption is not None:
-        photo.caption = caption
-    if is_cover:
-        ListingPhoto.objects.filter(listing_id=photo.listing_id, is_cover=True).exclude(pk=photo.pk).update(is_cover=False)
-        photo.is_cover = True
-    photo.save()
-    return photo
-
-
-@transaction.atomic
-def remove_photo(photo: ListingPhoto) -> None:
-    """Delete a photo; if it was the cover, the next photo becomes the cover. Live listing goes back to review."""
-    listing = photo.listing
-    was_cover = photo.is_cover
-    photo.delete()
-    if was_cover:
-        nxt = listing.photos.filter(room_type__isnull=True).order_by("sort_order").first()
-        if nxt:
-            nxt.is_cover = True
-            nxt.save(update_fields=["is_cover"])
-    send_back_to_review_if_live(listing)
-
-
-@transaction.atomic
-def reorder_photos(listing: Listing, photo_ids: list) -> None:
+def replace_listing_photos(listing: Listing, photos: list[dict], cover_media_id) -> list[ListingPhoto]:
     """
-    Put the listing photos in the given order. ``photo_ids`` must contain
-    exactly the ids of the listing's photos (code ``invalid_photo_order``).
+    ``PUT /host/listings/{id}/photos`` (``PhotosReplace``, BR-MED-01, BR-LST-02).
+
+    ``photos`` is the gallery in its new order (``media_id`` and an optional
+    ``caption``); listing photos left out are removed; room type photos are
+    not touched. ``cover_media_id`` must be one of ``photos``. A
+    ``media_id`` matches a photo of this listing by its ``media_id``, or by
+    its own id for photos added by URL. Attaching a brand-new media asset
+    needs the media app (not built yet), so unknown ids answer 422
+    ``validation_failed``, as do duplicates. When the gallery changes, a
+    live listing goes back to review (photos are reviewed, BR-LST-02 first version).
     """
-    photos = {str(p.id): p for p in listing.photos.all()}
-    wanted = [str(i) for i in photo_ids]
-    if sorted(wanted) != sorted(photos):
-        raise DomainError("Send every photo id of the listing exactly once.", code="invalid_photo_order")
-    for position, photo_id in enumerate(wanted):
-        photo = photos[photo_id]
+    existing = list(listing.photos.filter(room_type__isnull=True))
+    by_ref = {str(p.media_ref): p for p in existing}
+    wanted = [str(item["media_id"]) for item in photos]
+    errors: dict[str, list[str]] = {}
+    if len(set(wanted)) != len(wanted):
+        errors["photos"] = ["Send each media_id only once."]
+    unknown = [ref for ref in wanted if ref not in by_ref]
+    if unknown:
+        errors["photos"] = [f"Unknown media_id: {ref}" for ref in unknown]
+    if str(cover_media_id) not in wanted:
+        errors["cover_media_id"] = ["Must be one of the photos."]
+    if errors:
+        raise DomainError("Invalid photo list.", code="validation_failed", status_code=422, errors=errors)
+    before = [(str(p.media_ref), p.is_cover) for p in sorted(existing, key=lambda p: p.sort_order)]
+    keep = set(wanted)
+    ListingPhoto.objects.filter(id__in=[p.id for ref, p in by_ref.items() if ref not in keep]).delete()
+    # Clear the cover first: the partial unique index allows one cover per listing at any moment.
+    listing.photos.filter(is_cover=True).update(is_cover=False)
+    result = []
+    for position, item in enumerate(photos):
+        photo = by_ref[str(item["media_id"])]
         photo.sort_order = position
-        photo.save(update_fields=["sort_order"])
+        if "caption" in item:
+            photo.caption = item["caption"] or ""
+        photo.is_cover = str(item["media_id"]) == str(cover_media_id)
+        photo.save(update_fields=["sort_order", "caption", "is_cover"])
+        result.append(photo)
+    if before != [(ref, ref == str(cover_media_id)) for ref in wanted]:
+        send_back_to_review_if_live(listing)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -534,6 +654,111 @@ def delete_service(service: PropertyService) -> None:
     if service.source == "integration":
         raise DomainError("This service is managed by the hotel system.", code="managed_by_integration")
     service.delete()
+
+
+# ---------------------------------------------------------------------------
+# Taxonomy administration (BR-LST-04, BR-STF-02)
+# ---------------------------------------------------------------------------
+# Audit name of each taxonomy model.
+TAXONOMY_AUDIT_NAMES = {Amenity: "AMENITY", Category: "CATEGORY", PropertyType: "PROPERTY_TYPE"}
+
+
+def taxonomy_usage(row) -> int:
+    """
+    How many rows use this amenity, category or property type (BR-LST-04).
+
+    Counts every listing, soft-deleted ones included (they still point to
+    the row), and for amenities also room types.
+    """
+    if isinstance(row, Amenity):
+        return row.listing_links.count() + row.room_type_links.count()
+    field = "category" if isinstance(row, Category) else "property_type"
+    return Listing.objects.filter(**{field: row}).count()
+
+
+def _taxonomy_values(data: dict) -> dict:
+    """API body (``labels``, ``group``...) to model fields (``name_en``, ``group_code``...)."""
+    values = {k: v for k, v in data.items() if k not in ("labels", "group")}
+    if "labels" in data:
+        for lang in ("en", "fr", "ar"):
+            values[f"name_{lang}"] = data["labels"][lang]
+    if "group" in data:
+        values["group_code"] = data["group"]
+    if "icon" in values and values["icon"] is None:
+        values["icon"] = ""
+    return values
+
+
+def _snapshot(row) -> dict:
+    """Small before/after picture of a taxonomy row for the audit log."""
+    keys = ("slug", "vertical", "is_active", "sort_order", "group_code", "applies_to", "name_en")
+    return {k: getattr(row, k) for k in keys if hasattr(row, k)}
+
+
+def _slug_taken(model, slug: str, vertical: str | None, exclude_id=None) -> bool:
+    """True when another row already uses this slug (per vertical for categories and property types)."""
+    qs = model.objects.filter(slug=slug)
+    if model is not Amenity:
+        qs = qs.filter(vertical=vertical)
+    if exclude_id is not None:
+        qs = qs.exclude(id=exclude_id)
+    return qs.exists()
+
+
+@transaction.atomic
+def create_taxonomy_row(model, data: dict, *, actor):
+    """
+    Create an amenity, category or property type (``POST /admin/...``, BR-LST-04).
+
+    409 ``slug_taken`` when the slug exists (per vertical for categories and
+    property types, globally for amenities). Audited (BR-STF-02).
+    """
+    values = _taxonomy_values(data)
+    if _slug_taken(model, values["slug"], values.get("vertical")):
+        raise ConflictError("This slug is already used.", code="slug_taken")
+    row = model.objects.create(**values)
+    audit.record(actor=actor, action=f"{TAXONOMY_AUDIT_NAMES[model]}_CREATE", obj=row, after=_snapshot(row))
+    return row
+
+
+@transaction.atomic
+def update_taxonomy_row(row, data: dict, *, actor):
+    """
+    Edit, reorder, activate or deactivate a taxonomy row (``PATCH``, BR-LST-04).
+
+    Any subset of the write fields. A new slug or vertical must stay unique
+    (409 ``slug_taken``). The vertical of a row in use cannot change, the
+    listings using it would no longer fit (409 ``in_use``). Audited (BR-STF-02).
+    """
+    model = type(row)
+    values = _taxonomy_values(data)
+    slug = values.get("slug", row.slug)
+    vertical = values.get("vertical", getattr(row, "vertical", None))
+    if ("slug" in values or "vertical" in values) and _slug_taken(model, slug, vertical, exclude_id=row.id):
+        raise ConflictError("This slug is already used.", code="slug_taken")
+    if "vertical" in values and values["vertical"] != row.vertical and taxonomy_usage(row):
+        raise ConflictError("This row is in use; its vertical cannot change.", code="in_use")
+    before = _snapshot(row)
+    for field, value in values.items():
+        setattr(row, field, value)
+    row.save()
+    audit.record(actor=actor, action=f"{TAXONOMY_AUDIT_NAMES[model]}_UPDATE", obj=row, before=before,
+                 after=_snapshot(row))
+    return row
+
+
+@transaction.atomic
+def delete_taxonomy_row(row, *, actor) -> None:
+    """
+    Hard-delete a taxonomy row that was never used (BR-LST-04).
+
+    A row in use answers 409 ``in_use``: deactivate it instead
+    (``is_active=false``). Audited (BR-STF-02).
+    """
+    if taxonomy_usage(row):
+        raise ConflictError("This row is in use: deactivate it instead.", code="in_use")
+    audit.record(actor=actor, action=f"{TAXONOMY_AUDIT_NAMES[type(row)]}_DELETE", obj=row, before=_snapshot(row))
+    row.delete()
 
 
 # ---------------------------------------------------------------------------

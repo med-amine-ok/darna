@@ -4,6 +4,7 @@
 > This page says what we protect (people's identities, ID documents, money records, the platform's reputation), from whom, and how.
 > It maps the ten most common API attacks (OWASP API Top 10) to BLADUS endpoints, and defines login, sessions, roles, secrets, encryption, file safety and rate limits.
 > It explains how Algerian personal data law (Law 18-07 as amended by Law 25-11) shapes the design: data stays in Algeria, a register of processing, consents, a 5-day breach notice.
+> Section 15 defines, one by one, the security controls decided after the review of 2026-11-13 (DEC-025, DEC-026): outgoing URL check, SMS limits, hashing, keys, CSRF, uploads, audit and ledger protection.
 > It ends with a checklist to complete before launch and the questions a lawyer must answer.
 > Every legal point is marked **VERIFY WITH A PROFESSIONAL**: this is an engineering plan, not legal advice.
 
@@ -28,6 +29,9 @@
 - **Data subject**: the person the data is about (guest, host, staff).
 - **Controller / processor**: the controller (BLADUS) decides why data is processed; a processor (hosting company, SMS provider) processes it on BLADUS's instructions.
 - **RPO / RTO**: how much data we may lose (recovery point) / how long we may be down (recovery time) after a disaster.
+- **SSRF**: server-side request forgery: tricking our server into calling an address it should not reach (an internal service, the cloud metadata address).
+- **Pepper**: a server secret mixed into every hash, kept outside the database, so a stolen database alone cannot be used to guess short values like 6-digit codes.
+- **Database role**: a PostgreSQL login with its own rights. The app's role is not the owner of the tables, so it cannot bypass the rules.
 
 Inputs: [02-research.md](02-research.md) sections C.3 and D, [03-requirements.md](03-requirements.md) (ACC, STF, MED, PRV, NFR-05, NFR-11), [04-business-rules.md](04-business-rules.md), [05-database-schema.md](05-database-schema.md) ADR-012 and ADR-014, [07-architecture.md](07-architecture.md).
 
@@ -76,7 +80,7 @@ Trusted components: the Next.js servers (BFF), the Django API, workers, PostgreS
 | Spoofing | Fake webhook claiming a payment (R2) | Signature verified, event re-fetched from the gateway, stored raw, processed once | BR-SYS-02, BR-PAY-08 |
 | Spoofing | Request pretending to come from the BFF with a forged client IP | Django trusts `X-Forwarded-For` only from proxy/BFF addresses; BFF authenticates to Django with a service key on the private network | section 4.5 |
 | Tampering | Changing a price or commission in the request | Server computes every price (quote); writable fields allowlisted; `status`, `commission_rate_bp` never writable by hosts | BR-PRC-01, API3 |
-| Tampering | Editing ledger or audit rows directly in the database | No UPDATE/DELETE grant for the app role; deferred balance trigger; hash chain; nightly verification | BR-PAY-02, BR-STF-02 |
+| Tampering | Editing ledger or audit rows directly in the database | Triggers refuse UPDATE and DELETE for every role; tables owned by `bladus_migrator`, app role `bladus_app` has SELECT and INSERT only (15.8); deferred balance trigger; hash chain; nightly `reconcile_balances` (BR-PAY-15); nightly verification | BR-PAY-02, BR-STF-02 |
 | Tampering | Turning an approved listing into a fake one | Key-field edits go to a revision under review | BR-LST-02, ADR-009 |
 | Repudiation | Staff denies refunding or approving | Audit event with actor id, role, IP, request id, before/after; hash chain | BR-STF-02, 03 |
 | Repudiation | Host denies accepting a booking | `booking_event` with actor and time, insert-only | BR-BKG-06 |
@@ -85,12 +89,13 @@ Trusted components: the Next.js servers (BFF), the Django API, workers, PostgreS
 | Information disclosure | KYC file leaked by URL sharing | Private bucket; signed URLs valid 5 min; every view audited | BR-MED-02 |
 | Information disclosure | GPS position inside photos | Metadata stripped on re-encode | BR-MED-01 |
 | Information disclosure | Personal data in logs or error tracking | Log scrubbing of phone, email, tokens, document numbers; Sentry/GlitchTip `send_default_pii = False` and scrubbers | [09-devops-hosting.md](09-devops-hosting.md) section 9 |
-| Denial of service | Booking requests that block calendars without intent | Request TTL 24 h; per-guest limit of open requests (5); velocity flags | BR-BKG-04, API6 |
-| Denial of service | SMS pumping draining budget | Per phone / IP / device limits, country restriction, every send recorded in `otp_send_log` (hashed phone, IP, cost), daily budget with automatic stop | BR-ACC-02, ACC-02, NFR-11 |
+| Denial of service | Booking requests that block calendars without intent | Request TTL 24 h; per guest at most 3 pending requests and 6 upcoming bookings (`too_many_open_bookings`); velocity flags | BR-BKG-08, BR-BKG-04, API6 |
+| Denial of service | SMS pumping draining budget | Per destination 3 per hour and 10 per day, per IP 10 per hour, global budget 5,000 SMS per day then `sms_budget_exceeded`; every send recorded in `otp_send_log` (HMAC of the destination) (15.2) | BR-ACC-02, NFR-11 |
+| Information disclosure / Spoofing | SSRF through a URL given by a host (hotel system address, iCal link) | Outgoing URL check at save and at fetch time: https only, public IPs only, no cross-host redirect, 10 s, 5 MB (15.1) | BR-SYS-06, NFR-14 |
 | Denial of service | Large uploads, expensive search | Presigned size limits, decompression-bomb limit, page size max 50, statement timeouts | API4 |
 | Elevation of privilege | Host calling an admin endpoint | Separate `/api/v1/admin` surface, staff token + MFA, deny by default | STF-05, BR-STF-01 |
 | Elevation of privilege | Organisation agent accepting bookings or seeing money | Organisation role permissions via django-rules | BR-ORG-05, DEC-009 |
-| Elevation of privilege | Staff member giving themselves a role | `team.manage` only for super admin; role changes audited and notified to all super admins | BR-STF-01 |
+| Elevation of privilege | Staff member giving themselves a role | One staff role, admin (DEC-016); `team.manage` changes need a second admin's confirmation; staff changes audited and notified to every admin | BR-STF-01 |
 
 ## 4. Authentication and sessions
 
@@ -118,7 +123,7 @@ django-allauth in **headless** mode, "app" client (research B.3): the API return
 | Passwords | Minimum 10 characters; refused if in a local list of the 100,000 most common breached passwords; no composition rules; change revokes all other sessions (ACC-04) |
 | OTP | 6 digits, valid 10 min, invalidated after 5 wrong tries, max 3 sends per phone per hour and 10 per IP per hour, same error for every failure (BR-ACC-02). Phone numbers outside Algeria need an extra check (CAPTCHA by a self-hosted provider, or email verification first) to limit SMS pumping |
 | Lockout | 5 failures in 15 min lock the account and the IP for 60 s, counters in Redis shared by all servers (BR-ACC-05). Repeated locks increase the wait (60 s, 5 min, 15 min) |
-| Staff MFA | Mandatory before any admin endpoint works (`403 mfa_required`); TOTP or passkey; 10 single-use recovery codes; passkeys recommended for super admins (BR-ACC-04) |
+| Staff MFA | Mandatory before any admin endpoint works (`403 mfa_required`); TOTP or passkey; 10 single-use recovery codes; passkeys recommended for admins (BR-ACC-04) |
 | Host MFA | Mandatory before adding or changing payout or refund account details (BR-ACC-04, BR-PAY-09) |
 | Step-up | Sensitive actions (change email or phone, payout details, ownership transfer, staff role change, export) need a fresh authentication within the last 10 minutes |
 | Session revocation | Logout, password change, staff deactivation, ban: tokens deleted server-side immediately; the next API call returns `401` (ACC-03, STF-02) |
@@ -141,42 +146,29 @@ Phone-number recovery alone is not enough for hosts with payout details or for s
 
 1. **Public and guest** (`/public`, `/me`): object ownership checked in selectors (`bookings_for_guest(user)`); other people's objects return **404**, not 403, so ids cannot be probed.
 2. **Host** (`/host`): every request names `X-Host-Account`; a permission class checks the user holds it (individual owner or active membership) and the organisation role permission (table 5.3). Lists are always filtered by that host account.
-3. **Staff** (`/admin`): staff token, MFA done, permission from the staff role (table 5.2). Field-level: personal data shown only to roles that need it (for example analysts see counts, not phone numbers).
+3. **Staff** (`/admin`): staff token, MFA done, permission check on every endpoint (table 5.2). Today every admin has every permission (DEC-016); the checks stay in the code so roles can be split later without new endpoints.
 
 Output fields per role are separate serializers (no "one serializer with hidden fields"). Writable fields are an explicit allowlist per endpoint (mass-assignment protection, API3).
 
 ### 5.2 Staff roles and permissions
 
-34 permissions stored in `staff_permission`, linked to the 5 roles in `staff_role_permission` (seeded from today's `admin/lib/permissions.ts`, BR-STF-01). X = granted.
+**One staff role: admin, with every permission (DEC-016, BR-STF-01).** The permission list stays in `staff_permission` and `staff_role_permission`, and every admin endpoint still checks its permission (deny by default), so roles can be split later (for example a privacy officer or a read-only analyst) by data, not by new code.
 
-| Permission | super_admin | moderator | support | finance | analyst |
-|---|---|---|---|---|---|
-| hosts.view | X | X | X | X | X |
-| hosts.approve, hosts.reject, hosts.suspend | X | X | | | |
-| hosts.delete | X | | | | |
-| hosts.commission_override | X | | | X | |
-| listings.view | X | X | X | | X |
-| listings.approve, listings.reject, listings.suspend, listings.feature | X | X | | | |
-| listings.delete | X | | | | |
-| users.view | X | X | X | | X |
-| users.suspend | X | X | X | | |
-| users.ban, users.delete | X | | | | |
-| bookings.view | X | | X | X | X |
-| bookings.cancel, bookings.dispute | X | | X | | |
-| bookings.refund | X | | X | X | |
-| reviews.view | X | X | X | | X |
-| reviews.moderate | X | X | | | |
-| reviews.delete | X | | | | |
-| wallets.view | X | | | X | X |
-| wallets.recharge, commissions.manage, payouts.approve | X | | | X | |
-| onboarding.edit, team.manage, settings.manage | X | | | | |
-| categories.manage, promotions.manage | X | X | | | |
-| reports.export | X | X | | X | X |
-| audit.view | X | X | X | X | X |
+| Permission groups (all granted to admin) | Examples |
+|---|---|
+| Hosts | hosts.view, hosts.approve, hosts.reject, hosts.suspend, hosts.delete, hosts.commission_override, kyc.view_documents (every view audited) |
+| Listings and reviews | listings.view, listings.approve, listings.feature, listings.delete, reviews.view, reviews.moderate, reviews.delete |
+| Users and privacy | users.view, users.suspend, users.ban, users.delete, privacy.handle_requests |
+| Bookings | bookings.view, bookings.cancel, bookings.dispute, bookings.refund |
+| Money | wallets.view, wallets.recharge, commissions.manage, ledger.adjust, payouts.approve (dormant) |
+| Platform | onboarding.edit, team.manage, settings.manage, categories.manage, promotions.manage, reports.export, audit.view |
 
-Additions for the backend (new permissions, added to the seed): `kyc.view_documents` (moderator, super_admin; every view audited), `privacy.handle_requests` (super_admin and a named privacy officer), `wallets.approve_large_topup` (finance, must be a different user from the creator, BR-PAY-07). Proposed new role later: `privacy_officer`.
+**Separation of duties with one role** (DEC-022): it comes from **two different admin accounts**, not from two roles.
 
-Separation of duties: the person who creates a manual top-up cannot approve it; a super admin cannot remove the last other super admin; role changes are notified to every super admin.
+- Top-ups: when the host's rolling 24-hour total of top-ups (pending + approved, including the new one) passes 500,000 DZD, a second admin must approve; the approver is always different from the requester (`four_eyes_same_user`, BR-PAY-07).
+- Manual wallet adjustments (`wallet_adjustment`): always need a second admin (`four_eyes_required`), at most 1,000,000 DZD each, reason required, audited (BR-PAY-13).
+- An admin cannot deactivate the last other admin; staff changes are notified to every admin.
+- BLADUS must therefore always have at least two active admin accounts held by two real people.
 
 ### 5.3 Organisation roles
 
@@ -206,7 +198,7 @@ Individual hosts hold every permission on their own host account.
 | API4 Unrestricted resource consumption | `/public/search`, `/public/search/map`, `/host/media/uploads`, `/auth/code/request` | Page size max 50, 500 map pins, upload size in presigned policy, OTP and SMS budget, statement timeout 5 s | k6 abuse scenarios; limits in unit tests |
 | API5 Broken function level authorisation | `/admin/*` (refund, top-up, ban), `/host/organizations/{id}/members` | Separate surface; staff permission per view; org role per view; deny by default | Matrix test: every admin endpoint x every role |
 | API6 Unrestricted access to sensitive business flows | `POST /me/bookings` (calendar blocking), `/public/quotes`, reviews, invitations, coupons (R2) | Max 5 open requests per guest; request TTL; reviews only after completed booking; coupon per-user limit; velocity rules | Business-flow tests; risk flags (R2) |
-| API7 Server-side request forgery | iCal import feeds (`calendar_feed`, Later, AVL-06), image-by-URL (not offered), webhook callbacks | No URL fetch at MVP. For `calendar_feed` imports: URL stored encrypted (`url_encrypted`), fetched only by a worker through an egress proxy that blocks private and link-local IP ranges after DNS resolution, allows only http(s) on 80/443, no redirects to other hosts, 2 MB and 10 s limits; export feeds use a secret token stored only as a hash (`export_token_hash`) | SSRF test list (169.254.169.254, 10.0.0.0/8, 127.0.0.1, `[::1]`, DNS names resolving to private IPs, redirect to localhost) |
+| API7 Server-side request forgery | Hotel system connection (`POST /host/integrations`, sync job), iCal import feeds (`calendar_feed`, Later), image-by-URL (not offered) | Outgoing URL check at save and at every fetch: https only, public IPs only (no loopback, private, link-local, CGNAT, multicast, reserved, 169.254.169.254), no cross-host redirect, 10 s timeout, 5 MB cap (15.1, BR-SYS-06); egress proxy allowlist | Unit tests on `netguard` with private, metadata and redirect cases; DNS rebinding test |
 | API8 Security misconfiguration | Whole API, Django admin console, Redis, storage buckets | Hardening checklist (section 13); `DEBUG = False`; CORS closed (BFF only); security headers; Redis not public; buckets private by default | Automated config checks (`manage.py check --deploy`), external scan before launch |
 | API9 Improper inventory management | Old `/api/v1` endpoints, staging with real data, forgotten debug routes | OpenAPI is the inventory; CI diff on every change; staging uses synthetic data only; old versions removed on a schedule | OpenAPI diff gate; route list compared with spec |
 | API10 Unsafe consumption of APIs | Payment gateway (R2), SMS and email providers, Nominatim | Webhook signature + server-side status re-check; timeouts; validate provider responses; never trust redirect parameters | Contract tests with recorded provider responses |
@@ -233,6 +225,8 @@ Individual hosts hold every permission on their own host account.
 | `BFF_SERVICE_KEY_WEBSITE`, `BFF_SERVICE_KEY_ADMIN` | Next.js to Django service authentication | Every 6 months |
 | `FIELD_ENCRYPTION_KEYS` (master key, versioned) | Envelope encryption of payout numbers | Yearly; old versions kept to decrypt, data re-wrapped by a job |
 | `ID_HASH_PEPPER` | HMAC of document numbers and recipient hashes | Never rotated casually (hashes would change); rotation needs a planned re-hash from the source documents, impossible after images are deleted, so guard it carefully |
+| `HASH_PEPPER` | HMAC-SHA256 of one-time codes, session token lookups and lookup hashes (phone, email) (BR-SYS-07, 15.3) | Yearly or on leak, by a dual-check window: new hashes use the new pepper, checks accept old and new until the longest-lived value expires (codes 10 min, sessions 30 days) |
+| `INTEGRATION_KEYS` (versioned, key id per record) | AES-GCM (Fernet acceptable) encryption of hotel system credentials in `property_integration` (15.4) | Yearly; records store `credentials_key_id`; a job re-encrypts with the new key, old key removed after the job |
 | Database passwords (per role) | PostgreSQL | Every 6 months |
 | Redis password | Redis AUTH | Every 6 months |
 | Storage access keys | Object storage | Every 6 months |
@@ -251,7 +245,7 @@ Individual hosts hold every permission on their own host account.
 | Field level: payout numbers | AES-256-GCM with a random data key per row; data key wrapped by the master key from `FIELD_ENCRYPTION_KEYS`; stored as `key_version + wrapped_key + nonce + ciphertext` in `payout_account.number_encrypted`; only `number_last4` in clear (ADR-014). The master key is never in the database or in backups |
 | Field level: ID numbers | Never stored in clear. Normalised (digits only, upper case), then `HMAC-SHA256(ID_HASH_PEPPER, type + ":" + number)` in `host_document.number_hash`, used to detect the same ID on two accounts (research D.2) |
 | Recipients in logs | `delivery_log.recipient_hash` is an HMAC of the phone or email, never the clear value |
-| Database roles | `bladus_migrate` (owner, used only by migrations), `bladus_app` (no UPDATE/DELETE on ledger, audit, `booking_event`), `bladus_readonly` (reports, replicas), `bladus_backup` |
+| Database roles | `bladus_migrator` (owner, used only by migrations), `bladus_app` (SELECT and INSERT only on ledger, audit, `booking_event`; see 15.8), `bladus_readonly` (reports, replicas), `bladus_backup` |
 
 ## 8. File security
 
@@ -275,12 +269,14 @@ Two layers: coarse limits per IP at the proxy (Caddy) to stop floods, fine limit
 |---|---|---|
 | Any request per IP | 30 per second burst, 600 per minute | Proxy |
 | Login attempts | 5 failures in 15 min per account and per IP, then lock 60 s (growing) | allauth + Redis (BR-ACC-05) |
-| OTP send | 3 per phone per hour, 10 per IP per hour, 20 per device id per day; every attempt (sent, failed, `blocked_rate_limit`) written to `otp_send_log` | allauth + Redis (BR-ACC-02, ACC-02) |
+| OTP and SMS send | Per destination (phone or email) 3 per hour and 10 per day; per IP 10 per hour; 20 per device id per day; every attempt (sent, failed, `blocked_rate_limit`) written to `otp_send_log` | Redis + service (BR-ACC-02) |
+| Global SMS budget | 5,000 SMS per day (setting `sms_daily_budget`); above it SMS sends answer `sms_budget_exceeded` and the admins are alerted | service (BR-ACC-02) |
 | OTP verify | 5 tries per code | allauth |
 | Password reset request | 3 per account per hour, 10 per IP per hour | allauth |
 | Search and public reads | 120 per minute per IP, 300 per minute per signed-in user | DRF |
 | Quote | 60 per minute per user or IP | DRF |
-| Booking create | 10 per hour per guest; max 5 open requests at once | DRF + service (API6) |
+| Booking create | 10 per hour per guest; at most 3 pending requests and 6 upcoming bookings at once (`too_many_open_bookings`) | DRF + service (BR-BKG-08, API6) |
+| Check-in code entry | 5 wrong codes per booking lock host entry for 1 hour | service (BR-BKG-09) |
 | Messages | 30 per minute per user; 200 per day to new conversations | DRF |
 | Message polling | 1 per 3 seconds per user per conversation | DRF |
 | Upload slots | 60 per hour per host account | DRF |
@@ -293,7 +289,7 @@ Two layers: coarse limits per IP at the proxy (Caddy) to stop floods, fine limit
 - **What is logged** (STF-03): every staff write; every host money action (top-up, commission override, payout details change); team changes (invite, role change, removal, ownership transfer); logins, failed logins, MFA changes and session revocations; every KYC file view; exports (filters and row count); settings and onboarding publishes; privacy requests and their handling.
 - **Row content**: `occurred_at`, `actor_id`, `actor_kind`, `actor_role`, `action`, `object_type`, `object_id`, `host_account_id`, `before`, `after`, `ip`, `user_agent`, `request_id`, `prev_hash`, `hash` ([schema.dbml](schema.dbml)). `before` and `after` keep only changed fields and never contain secrets, full document numbers or message bodies.
 - **Hash**: `hash = SHA-256(prev_hash || canonical_json(row without hash))`, where canonical JSON has sorted keys and UTC timestamps. Rows are appended through one service which takes a short advisory lock so the chain has a single order.
-- **Protection**: insert-only for `bladus_app` (no UPDATE, DELETE, TRUNCATE); monthly partitions; the job `audit.verify_hash_chain` recomputes yesterday's chain each night and stores the day's final hash as an **anchor** in a separate place (the backup bucket in the second data centre and an email to two named people). A break raises a critical alert.
+- **Protection**: insert-only, enforced twice: a trigger refuses UPDATE and DELETE for every role, and `bladus_app` has only SELECT and INSERT (the table owner is `bladus_migrator`, see 15.7); a daily job exports the previous day to write-once object storage; monthly partitions; the job `audit.verify_hash_chain` recomputes yesterday's chain each night and stores the day's final hash as an **anchor** in a separate place (the backup bucket in the second data centre and an email to two named people). A break raises a critical alert.
 - **Access**: `audit.view` for reading; nobody can edit. Exports of the audit log are themselves audited.
 - **Retention**: 5 years for staff and security events, 10 years where linked to accounting (VERIFY).
 
@@ -307,11 +303,14 @@ Two layers: coarse limits per IP at the proxy (Caddy) to stop floods, fine limit
 | Fake listing with stolen photos | Perceptual hash match, reverse-image hits, new host with many listings | Review before publishing; proof of property for the first listing; trust case on duplicates | BR-LST-02, BR-MED-01, BR-HST-03 |
 | Duplicate accounts after a ban | Same phone, same device id, same ID number hash | Block sign-up or verification with a matching hash; case for staff | BR-ACC-01, ADR-014 |
 | Account takeover via SIM swap | Phone change then payout change; new device; new country | Re-verification; MFA; 72 h hold on payout changes; notices to old contacts | BR-PAY-09 |
-| Fake wallet top-up receipt | Same receipt reference twice; large amounts | Unique receipt per method; four-eyes above 500,000 DZD | BR-PAY-07 |
-| Calendar blocking by fake requests | Many open requests, no confirmations | 24 h TTL; max open requests per guest; flags | BR-BKG-04, API6 |
-| Fake reviews and review rings | Reviews only from completed bookings; bursts; same IP/device | Review eligibility in the database; burst and ring detection (R2) | BR-REV-01, BR-MOD-04 |
+| Fake wallet top-up receipt | Same receipt reference twice; large amounts; several top-ups split under the threshold | Unique receipt per method; four-eyes when the rolling 24-hour total passes 500,000 DZD; approver always different | BR-PAY-07 |
+| Admin crediting a wallet by hand | Manual adjustments | `wallet_adjustment` only, never an edit; second admin; cap 1,000,000 DZD; audited; nightly reconciliation | BR-PAY-13, BR-PAY-15 |
+| Host keeps the guest's money after a cancellation | Refund obligation open or disputed past its due date | Refund obligation tracked as a debt (7 days); overdue: instant booking off and no accepting requests (`refund_overdue`); guest can dispute; admin can settle with proof. VERIFY WITH A PROFESSIONAL (consumer law on refund delays) | BR-CAN-06, BR-CAN-07 |
+| Host cancels to avoid commission | Many guest cancellations with non-refundable shares | Commission follows the refund: the host keeps commission only on the refunded share (DEC-018 revised) | BR-PAY-05 |
+| Calendar blocking by fake requests (booking hoarding) | Many open requests, no confirmations | 24 h TTL; at most 3 pending requests and 6 upcoming bookings per guest (`too_many_open_bookings`); flags | BR-BKG-04, BR-BKG-08, API6 |
+| Fake reviews and review rings | Reviews only from completed bookings with a confirmed stay; bursts; same IP/device | Stay confirmation (check-in code entered by the host, or guest confirmation after check-in time) before any review; a completed booking also cost the host its commission; burst and ring detection (R2) | BR-BKG-09, BR-REV-01, BR-MOD-04 |
 | SMS pumping | Many OTP requests to sequential numbers or foreign ranges, visible in `otp_send_log` (by phone hash and IP) | Limits per phone/IP/device; foreign numbers need extra checks; budget stop | BR-ACC-02, ACC-02, NFR-11 |
-| Staff insider abuse | Unusual KYC views, exports, top-ups | Least privilege; four-eyes; every view audited; weekly review of KYC views and exports by a super admin | BR-STF-01, 02, 04 |
+| Staff insider abuse | Unusual KYC views, exports, top-ups, adjustments | Four-eyes with two admin accounts; every view audited; insert-only audit with daily write-once export; weekly review of KYC views and exports by a second admin | BR-STF-01, 02, 04, BR-PAY-13 |
 | Host with many cancellations | 3 host cancellations in 12 months | Moderation case | BR-CAN-03 |
 
 Principle: risk rules add friction (extra check, case for staff), they never silently block (BR-MOD-04, Airbnb "targeted friction", research A.1).
@@ -425,8 +424,12 @@ The incident register is the `incident_record` table (staff-only, every change a
 - [ ] `manage.py check --deploy` clean; `DEBUG = False`; `ALLOWED_HOSTS` exact; `SECURE_PROXY_SSL_HEADER` set correctly; security headers (HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `frame-ancestors 'none'`) on both Next.js apps and Django admin console.
 - [ ] TLS A grade on an external test; HTTP redirects to HTTPS.
 - [ ] Django API not reachable from the internet except the webhook path; Redis, PostgreSQL, storage admin ports closed from outside (external port scan).
-- [ ] Database roles and grants applied; `bladus_app` cannot UPDATE or DELETE ledger, audit, `booking_event` (test).
-- [ ] Every staff account has MFA; super admins use passkeys; recovery codes stored offline.
+- [ ] Database roles and grants applied (`bladus_migrator` owns, `bladus_app` runs); `bladus_app` cannot UPDATE or DELETE ledger, audit, `booking_event`, and the triggers refuse it even for the owner (test).
+- [ ] Outgoing URL check (`apps/core/netguard.py`) tested with the private, metadata and redirect cases.
+- [ ] `HASH_PEPPER` and `INTEGRATION_KEYS` generated, stored in the secret store, backed up offline by two people.
+- [ ] BFF CSRF: Origin check and double-submit token on every state-changing route (test).
+- [ ] `reconcile_balances` scheduled nightly and its alert tested; daily audit export to write-once storage running.
+- [ ] Every admin account has MFA; admins use passkeys; recovery codes stored offline; at least two active admin accounts held by two people.
 - [ ] Admin app reachable only through allowlisted IPs or a VPN, in addition to MFA.
 - [ ] Rate limits active and tested (section 9); SMS budget caps configured.
 - [ ] Secrets in the secret store only; repository scanned for secrets (gitleaks) including history.
@@ -462,6 +465,84 @@ The incident register is the `incident_record` table (staff-only, every change a
 
 L1 to L12 are tracked in [13-decisions-needed.md](13-decisions-needed.md). New items L13 to L16 should be added there at its next update.
 
+## 15. Security controls decided on 2026-11-13 (DEC-025, DEC-026)
+
+Each control below says what it does, where it is enforced and how we test it. The rule ids are in [04-business-rules.md](04-business-rules.md). (Section number 15 keeps the earlier section numbers stable.)
+
+### 15.1 Outgoing URL check (SSRF)
+
+| | |
+|---|---|
+| What | Any URL a host gives (hotel system `base_url`, iCal link) must be `https`, and its host name must resolve **only** to public IP addresses: no loopback, private (10/8, 172.16/12, 192.168/16, fc00::/7), link-local, CGNAT 100.64.0.0/10, multicast, reserved, and never the metadata address 169.254.169.254. No redirect to another host. Timeout 10 seconds; response capped at 5 MB |
+| When | At save time (clear error for the host) **and again at every fetch** (DNS can change between save and fetch); the connection is made to the checked IP address, so a second DNS answer cannot switch it |
+| Where | `apps/core/netguard.py`, used by the hotel sync and iCal jobs; outbound traffic also goes through the egress proxy allowlist (4.5) |
+| Rule | BR-SYS-06, NFR-14 |
+| Test | `https://169.254.169.254/`, `https://127.0.0.1/`, `https://10.0.0.5/`, a name that resolves to a private IP, `http://` URLs, a redirect to another host, a slow server (11 s) and a 6 MB answer are all refused |
+
+### 15.2 SMS and one-time code limits
+
+| | |
+|---|---|
+| What | Codes: 6 digits, valid 10 minutes, 5 wrong attempts invalidate the code. Sends: per destination (phone or email) 3 per hour and 10 per day; per IP 10 per hour; a **global SMS budget of 5,000 per day** (setting `sms_daily_budget`), after which SMS sends answer `sms_budget_exceeded` and the admins are alerted. The same answer is given for known and unknown numbers |
+| Where | Service in `accounts` with Redis counters; every send recorded in `otp_send_log` (HMAC of the destination, IP, status, cost) |
+| Rule | BR-ACC-02, NFR-11 |
+| Test | 4th send to one phone in an hour refused; 11th in a day refused; 11th from one IP in an hour refused; budget reached: `sms_budget_exceeded` and an alert; 6th attempt with the right code fails |
+
+### 15.3 Hashes with a server pepper
+
+| | |
+|---|---|
+| What | One-time codes, session token lookups and lookup hashes (phone, email, ID number) are stored as **HMAC-SHA256 with a server secret** `HASH_PEPPER` (ID numbers keep `ID_HASH_PEPPER`), never a plain SHA-256 of a short value: a 6-digit code has only a million values, so a plain hash is reversed in milliseconds |
+| Rotation | Dual-check window: new values are hashed with the new pepper; checks accept old and new pepper until the longest-lived value has expired; then the old pepper is removed |
+| Where | `apps/core/hashing.py`, used by accounts, sessions and `otp_send_log` |
+| Rule | BR-SYS-07, NFR-14 |
+| Test | The stored hash of a code differs from SHA-256 of the code; a code hashed with the old pepper is accepted during the window and refused after it |
+
+### 15.4 Key management
+
+| | |
+|---|---|
+| What | Every secret comes from the **environment**, filled at deploy time from the host's secret store (section 7.1); nothing in the repository or images. Hotel system credentials are encrypted with **AES-GCM** (Fernet acceptable) under `INTEGRATION_KEYS`, with a **key id stored on each record** (`credentials_key_id`) and **yearly rotation** (re-encrypt job, then the old key is removed). Payout numbers keep envelope encryption under `FIELD_ENCRYPTION_KEYS` (7.3). Pepper rotation as in 15.3 |
+| Where | Django settings read only environment variables; `apps/core/crypto.py` |
+| Rule | DEC-025, ADR-014 |
+| Test | App refuses to start when a required secret is missing; a record encrypted with key 1 is still readable after key 2 is added; after the re-encrypt job no record uses key 1 |
+
+### 15.5 CSRF
+
+| | |
+|---|---|
+| What | The Django API accepts **only** `Authorization: Bearer` (or the session token header) and **no cookies**, so classic CSRF does not apply to it. The Next.js BFF keeps the token in an **HttpOnly, Secure, SameSite=Lax** cookie (admin: Strict) and, on every state-changing route handler and server action, checks the **Origin** header **plus a double-submit CSRF token** (a random value in a readable cookie that must match a header or form field) |
+| Where | Next.js middleware in both apps; Django refuses cookie-only requests on `/api/v1` |
+| Rule | DEC-025, ACC-03 |
+| Test | A POST from another origin is refused; a POST without the matching CSRF token is refused; a request to the API with only a cookie gets 401 |
+
+### 15.6 Uploads
+
+| | |
+|---|---|
+| What | Size and type limits (photos 15 MB, documents 10 MB); content sniffing by magic bytes; EXIF, XMP and IPTC (including GPS) stripped by re-encoding; files land in a **quarantine bucket**; **ClamAV** scans them in the worker; **only clean files are published** (moved to the public or private bucket); infected files deleted and audited |
+| Where | Presigned upload, then `media` worker job (section 8) |
+| Rule | BR-MED-01, BR-MED-02 |
+| Test | EICAR test file rejected; a PNG renamed `.jpg` handled by real type; a photo with GPS comes out without it; a file is not reachable before the scan ends |
+
+### 15.7 Audit log protection
+
+| | |
+|---|---|
+| What | `audit_event` is insert-only: a PostgreSQL **trigger refuses UPDATE and DELETE** for every role, and the app role has only SELECT and INSERT (the owner is another role, 15.8); hash chain (section 10); **daily export** of the previous day to **write-once object storage** (object lock) in the second data centre |
+| Rule | BR-STF-02, DEC-026 |
+| Test | UPDATE and DELETE fail as `bladus_app` and as the owner; the daily export exists and cannot be overwritten |
+
+### 15.8 Ledger protection
+
+| | |
+|---|---|
+| What | Tables are **owned by a separate migration role `bladus_migrator`**; the app connects as **`bladus_app`** with **SELECT and INSERT only** on `ledger_transaction`, `ledger_entry` and `audit_event` (and `booking_event`). This matters because **REVOKE alone does not stop a table owner**. In addition, **triggers refuse UPDATE and DELETE** on these tables for every role. Corrections are new transactions or a `wallet_adjustment` approved by a second admin |
+| Reconciliation | Nightly job `reconcile_balances` recomputes every `account_balance` from ledger entries, reports differences to the admins and the audit log, and **exits non-zero** when one differs; `--fix` rewrites a balance only after a human check, and is audited |
+| Where | Migrations (roles, grants, triggers); Celery beat job |
+| Rule | BR-PAY-02, BR-PAY-15, DEC-026 |
+| Test | UPDATE on `ledger_entry` as `bladus_app` and as `bladus_migrator` fails; a hand-edited balance is reported the next night and the job exit code is non-zero |
+
 ---
 
 ## Check yourself
@@ -474,3 +555,6 @@ L1 to L12 are tracked in [13-decisions-needed.md](13-decisions-needed.md). New i
 - [ ] What makes a deleted audit row visible?
 - [ ] A laptop with a database dump is stolen on day 0. List what must happen before day 5.
 - [ ] Why might a foreign SMS provider need ANPDP authorisation?
+- [ ] A host enters `https://169.254.169.254/` as the hotel system address. When and where is it refused?
+- [ ] Why is REVOKE not enough to protect the ledger, and what is added?
+- [ ] Why is a plain SHA-256 of a 6-digit code unsafe?

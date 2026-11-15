@@ -100,3 +100,25 @@ def admin_host_accounts(*, verification_status: str = "", host_type: str = "") -
 def admin_host_account(host_account_id) -> HostAccount | None:
     """One host account (not deleted) for the admin detail page, or ``None``."""
     return HostAccount.objects.alive().select_related("user", "organization").filter(pk=host_account_id).first()
+
+
+def public_organizations(*, business_category: str = "") -> QuerySet[Organization]:
+    """
+    Organisations of the public directory and sitemap (ORG-07, BR-SRC-01).
+
+    Same visibility as :func:`public_organization`: not deleted, host
+    approved. Ordered by id (UUIDv7, so by creation) for stable cursor pages.
+    """
+    orgs = (
+        Organization.objects.alive()
+        .select_related("host_account", "commune", "commune__wilaya")
+        .filter(host_account__verification_status=VerificationStatus.APPROVED, host_account__deleted_at__isnull=True)
+    )
+    if business_category:
+        orgs = orgs.filter(business_category=business_category)
+    return orgs.order_by("id")
+
+
+def admin_host_account_any(host_account_id) -> HostAccount | None:
+    """One host account for an admin answer, deleted or not, or ``None``."""
+    return HostAccount.objects.select_related("user", "organization").filter(pk=host_account_id).first()

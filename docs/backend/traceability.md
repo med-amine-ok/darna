@@ -1,7 +1,7 @@
 # Traceability matrix: requirement to rule, table, API, test and milestone
 
 > **In plain words**
-> One line per requirement (all 147 from [requirements.csv](requirements.csv)).
+> One line per requirement (all 157 from [requirements.csv](requirements.csv)).
 > Each line says which business rules it follows, which database tables hold its data, which API calls serve it,
 > where its tests will live, in which roadmap milestone it is built, and which app data module stops using demo data.
 > Use it to answer "if we change X, what else moves?" and "is everything planned somewhere?".
@@ -20,18 +20,18 @@
 
 | Milestone | Name | Release | Requirements | of which Must |
 |---|---|---|---|---|
-| M0 | Foundations | MVP | 18 | 17 |
+| M0 | Foundations | MVP | 19 | 18 |
 | M1 | Accounts, staff and host verification | MVP | 28 | 26 |
 | M2 | Catalogue, trips and moderation | MVP | 24 | 21 |
 | M3 | Search, availability and quotes | MVP | 11 | 8 |
-| M4 | Bookings, cancellations and the commission wallet | MVP | 27 | 25 |
-| M5 | Messaging and reviews | MVP | 8 | 6 |
+| M4 | Bookings, cancellations and the commission wallet | MVP | 34 | 32 |
+| M5 | Messaging and reviews | MVP | 9 | 7 |
 | M6 | Reports, privacy and hardening | MVP | 8 | 5 |
 | M7 | Production in Algeria, closed beta, launch | MVP | 3 | 2 |
 | R2-A | Release 2, online money (gateway, invoices, taxes) | R2 | 4 | 0 |
 | R2-B | Release 2, trust and growth | R2 | 15 | 0 |
 | LATER | Later, behind a legal or business gate | Later | 2 | 0 |
-| **Total** | | | **148** | **110** |
+| **Total** | | | **157** | **119** |
 
 ## 2. Requirements per module and milestone
 
@@ -39,17 +39,17 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ACC | 5 | 3 | 1 |  |  |  |  |  |  |  |  | 9 |
 | ORG |  | 7 |  |  |  |  |  |  |  |  |  | 7 |
-| HST |  | 5 | 2 |  | 1 |  |  |  |  |  |  | 8 |
+| HST |  | 5 | 2 |  | 2 |  |  |  |  |  |  | 9 |
 | LST |  |  | 11 |  |  |  |  |  |  | 1 |  | 12 |
 | TRP |  |  | 5 | 1 |  |  |  |  |  | 1 |  | 7 |
-| AVL |  |  | 1 | 1 | 3 |  |  |  |  |  | 1 | 6 |
+| AVL |  |  | 1 | 1 | 4 |  |  |  |  |  | 1 | 7 |
 | PRC |  |  |  | 4 |  |  |  |  | 1 |  |  | 5 |
-| BKG |  |  |  |  | 10 |  |  |  |  | 1 |  | 11 |
-| CAN |  |  |  |  | 4 |  |  |  |  |  |  | 4 |
-| PAY | 1 |  |  |  | 7 |  |  |  | 3 |  | 1 | 12 |
+| BKG |  |  |  |  | 11 | 1 |  |  |  | 1 |  | 13 |
+| CAN |  |  |  |  | 5 |  |  |  |  |  |  | 5 |
+| PAY | 1 |  |  |  | 9 |  |  |  | 3 |  | 1 | 14 |
 | REV |  |  |  |  |  | 4 |  |  |  | 1 |  | 5 |
 | MSG |  |  |  |  |  | 4 |  |  |  | 2 |  | 6 |
-| NTF |  | 1 |  |  | 2 |  |  |  |  | 1 |  | 4 |
+| NTF |  | 1 |  |  | 3 |  |  |  |  | 1 |  | 5 |
 | SRC | 1 |  |  | 5 |  |  |  |  |  |  |  | 6 |
 | MED |  | 1 | 2 |  |  |  |  |  |  |  |  | 3 |
 | MOD |  | 4 | 1 |  |  |  |  |  |  | 3 |  | 8 |
@@ -58,8 +58,8 @@
 | PRM |  |  |  |  |  |  |  |  |  | 2 |  | 2 |
 | RPT |  |  |  |  |  |  | 2 |  |  | 1 |  | 3 |
 | PRV | 1 |  |  |  |  |  | 3 | 1 |  | 1 |  | 6 |
-| NFR | 9 |  |  |  |  |  | 2 | 2 |  |  |  | 13 |
-| **Total** | 18 | 28 | 24 | 11 | 27 | 8 | 8 | 3 | 4 | 15 | 2 | **148** |
+| NFR | 10 |  |  |  |  |  | 2 | 2 |  |  |  | 14 |
+| **Total** | 19 | 28 | 24 | 11 | 34 | 9 | 8 | 3 | 4 | 15 | 2 | **157** |
 
 ## 3. Full matrix (sorted by milestone, then ID order of requirements.csv)
 
@@ -80,15 +80,16 @@
 | NFR-08 | API contract | Must | M0 |  | none | no endpoint: GET /api/v1/schema (OpenAPI) | `tests/core/test_openapi_contract.py` | both apps: generated typed client |
 | NFR-09 | Observability | Must | M0 |  | none | no endpoint: GET /api/v1/health; metrics endpoint | `tests/core/test_logging.py` | none |
 | NFR-10 | Test coverage | Must | M0 |  | all | no endpoint: all | `CI coverage gate (pytest-cov) and tests/**/test_*_property.py` | none |
-| NFR-11 | Rate limits | Must | M0 |  | none (Redis) | POST /api/v1/auth/login | `tests/core/test_rate_limits.py` | none |
+| NFR-11 | Rate limits | Must | M0 | BR-ACC-02 | none (Redis) | POST /api/v1/auth/login | `tests/core/test_rate_limits.py` | none |
 | NFR-12 | Unique identifiers | Must | M0 |  | all primary keys (UUIDv7); booking.reference | GET /api/v1/me/bookings/{booking_id} | `tests/core/test_ids.py` | none |
 | NFR-13 | Accessibility of messages | Should | M0 |  | none | no endpoint: error envelope on all /api/v1/* | `tests/core/test_error_codes.py` | both apps: ActionResult mapping |
+| NFR-14 | Outgoing URL safety and secret hashing | Must | M0 | BR-SYS-06, BR-SYS-07 | property_integration; calendar_feed; otp_send_log | no endpoint: internal: core.netguard; core.hashing | `tests/core/test_netguard.py` | none |
 | ACC-05 | Two-factor login | Must | M1 | BR-ACC-04 | allauth MFA authenticator tables; staff_profile | POST /api/v1/auth/2fa/authenticate; GET /api/v1/auth/authenticators; GET /api/v1/auth/authenticators/totp; POST /api/v1/auth/authenticators/totp; POST /api/v1/host/payout-accounts; POST /api/v1/admin/auth/2fa/authenticate; (+2 more) | `tests/accounts/test_mfa.py` | admin:credentials.ts |
 | ACC-06 | Profile management | Must | M1 |  | user | POST /api/v1/auth/phone/verify; POST /api/v1/auth/email/verify; GET /api/v1/users/{user_id}; GET /api/v1/me; PATCH /api/v1/me; PUT /api/v1/me/phone | `tests/accounts/test_profile.py` | web:auth.ts |
 | ACC-08 | One user, many roles | Must | M1 | BR-ORG-01 | user; host_account; membership | GET /api/v1/me; POST /api/v1/me/invitations/accept; GET /api/v1/me/workspaces; GET /api/v1/admin/users; GET /api/v1/admin/users/{user_id} | `tests/hosts/test_one_user_many_roles.py` | web:organizations.ts |
 | ORG-01 | Create an organisation (agency, hotel, hostel) | Must | M1 | BR-ORG-02 | organization; host_account; membership | POST /api/v1/host/onboarding/drafts/{host_type}/submit; GET /api/v1/host/organization; PATCH /api/v1/host/organization | `tests/hosts/test_org_create.py` | web:organizations.ts |
 | ORG-02 | Active-organisation switcher | Must | M1 | BR-ORG-01 | membership; host_account | GET /api/v1/me/workspaces; PUT /api/v1/me/workspaces/active; GET /api/v1/host/account | `tests/hosts/test_active_host_account.py` | web:organizations.ts |
-| ORG-03 | Invite a team member | Must | M1 | BR-ORG-03 | invitation; membership; outbox_event | POST /api/v1/me/invitations/accept; GET /api/v1/host/organization/invitations; POST /api/v1/host/organization/invitations; DELETE /api/v1/host/organization/invitations/{invitation_id} | `tests/hosts/test_invitations.py` | web:organizations.ts |
+| ORG-03 | Invite a team member | Must | M1 | BR-ORG-03 | invitation; membership; outbox_message | POST /api/v1/me/invitations/accept; GET /api/v1/host/organization/invitations; POST /api/v1/host/organization/invitations; DELETE /api/v1/host/organization/invitations/{invitation_id} | `tests/hosts/test_invitations.py` | web:organizations.ts |
 | ORG-04 | Change role, remove member, transfer ownership | Must | M1 | BR-ORG-04 | membership; audit_event | DELETE /api/v1/host/organization; GET /api/v1/host/organization/members; PATCH /api/v1/host/organization/members/{membership_id}; DELETE /api/v1/host/organization/members/{membership_id}; POST /api/v1/host/organization/transfer-ownership | `tests/hosts/test_members.py` | web:organizations.ts |
 | ORG-05 | Per-role permissions inside an organisation | Must | M1 | BR-ORG-05 | membership | GET /api/v1/host/organization/members; PATCH /api/v1/host/organization/members/{membership_id}; POST /api/v1/host/bookings/{booking_id}/accept; POST /api/v1/host/bookings/{booking_id}/decline | `tests/hosts/test_org_permissions.py` | web:organizations.ts |
 | ORG-06 | Re-verification on legal field change | Should | M1 | BR-ORG-06 | organization; moderation_case | GET /api/v1/host/organization; PATCH /api/v1/host/organization | `tests/hosts/test_org_reverification.py` | web:organizations.ts |
@@ -98,7 +99,7 @@
 | HST-03 | Upload verification documents | Must | M1 | BR-HST-03 | host_document; media_asset | GET /api/v1/host/documents; POST /api/v1/host/documents; DELETE /api/v1/host/documents/{document_id} | `tests/hosts/test_documents_upload.py` | web:organizations.ts |
 | HST-04 | Host verification lifecycle | Must | M1 | BR-HST-04 | host_account; moderation_case; moderation_decision | GET /api/v1/host/account; POST /api/v1/host/verification/submit; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/hosts; GET /api/v1/admin/hosts/{host_account_id}; DELETE /api/v1/admin/hosts/{host_account_id}; (+7 more) | `tests/hosts/test_verification_states.py` | admin:hosts.ts |
 | HST-06 | Default approval mode per host or organisation | Must | M1 | BR-BKG-02 | host_account; listing; platform_settings | GET /api/v1/host/account; PATCH /api/v1/host/account | `tests/hosts/test_approval_mode_default.py` | web:organizations.ts |
-| NTF-04 | Outbox pattern | Must | M1 | BR-SYS-03 | outbox_event; delivery_log | no endpoint: internal: core.outbox_dispatch | `tests/core/test_outbox.py` | none (workers) |
+| NTF-04 | Outbox pattern | Must | M1 | BR-SYS-03 | outbox_message; delivery_log | no endpoint: internal: core.outbox_dispatch | `tests/core/test_outbox.py` | none (workers) |
 | MED-02 | Private documents | Must | M1 | BR-MED-02 | media_asset; host_document; audit_event | POST /api/v1/media/uploads; POST /api/v1/media/{media_id}/complete; GET /api/v1/media/{media_id}/url; POST /api/v1/host/documents; GET /api/v1/admin/documents/{document_id}/url | `tests/media/test_private_documents.py` | admin:hosts.ts |
 | MOD-01 | Moderation queues with waiting time | Must | M1 | BR-MOD-01 | moderation_case | GET /api/v1/admin/moderation/counts; GET /api/v1/admin/dashboard/attention; GET /api/v1/admin/moderation/cases; GET /api/v1/admin/moderation/cases/{case_id}; POST /api/v1/admin/moderation/cases/{case_id}/assign; GET /api/v1/admin/hosts; (+1 more) | `tests/trust/test_queues.py` | admin:approvals.ts |
 | MOD-02 | Change requests to hosts | Must | M1 | BR-MOD-02 | moderation_case; change_request_item | POST /api/v1/host/verification/submit; GET /api/v1/host/change-requests; GET /api/v1/admin/moderation/cases/{case_id}; POST /api/v1/admin/moderation/cases/{case_id}/decisions; POST /api/v1/admin/hosts/{host_account_id}/request-changes; POST /api/v1/admin/listings/{listing_id}/request-changes | `tests/trust/test_change_requests.py` | admin:approvals.ts |
@@ -143,16 +144,18 @@
 | PRC-05 | Whole dinars to guests, centimes inside | Must | M3 | BR-PAY-01 | quote; booking | POST /api/v1/quotes | `tests/pricing/test_rounding.py` | web:reservations.ts |
 | SRC-01 | Search with filters and facets | Must | M3 | BR-SRC-01 | listing_search_doc | GET /api/v1/listings; GET /api/v1/listings/facets | `tests/search/test_filters_facets.py` | web:listings.ts |
 | SRC-02 | Map search | Must | M3 |  | listing_search_doc | GET /api/v1/listings; GET /api/v1/listings/map | `tests/search/test_map_search.py` | web:listings.ts |
-| SRC-03 | Text search in three languages | Should | M3 |  | listing_search_doc; wilaya; commune | GET /api/v1/geo/communes; GET /api/v1/listings | `tests/search/test_text_search_ar_fr_en.py` | web:listings.ts |
+| SRC-03 | Text search in three languages | Should | M3 | BR-SRC-05 | listing_search_doc; wilaya; commune | GET /api/v1/geo/communes; GET /api/v1/listings | `tests/search/test_text_search_ar_fr_en.py` | web:listings.ts |
 | SRC-05 | Sorting and pagination | Must | M3 |  | listing_search_doc | GET /api/v1/listings; GET /api/v1/trips | `tests/search/test_sort_pagination.py` | web:listings.ts |
 | SRC-06 | Hotels as their own vertical | Must | M3 | BR-SRC-04 | listing; listing_search_doc | GET /api/v1/listings; GET /api/v1/listings/{listing_id} | `tests/search/test_hotel_vertical.py` | web:listings.ts |
 | HST-05 | Payout or refund account details | Should | M4 | BR-PAY-09 | payout_account; audit_event | GET /api/v1/host/payout-accounts; POST /api/v1/host/payout-accounts; DELETE /api/v1/host/payout-accounts/{payout_account_id}; POST /api/v1/host/payouts | `tests/hosts/test_payout_account.py` | web:wallet.ts |
+| HST-09 | Hotel sync never oversells | Must | M4 | BR-HST-07 | room_type_night; inventory_conflict; outbox_message; property_integration | GET /api/v1/admin/inventory-conflicts; POST /api/v1/admin/inventory-conflicts/{conflict_id}/resolve; GET /api/v1/admin/outbox | `tests/hosts/test_sync_never_oversells.py` | admin:hosts.ts |
 | AVL-01 | No double booking for single units | Must | M4 | BR-AVL-01 | booking (exclusion constraint on unit and stay range) | POST /api/v1/me/bookings | `tests/bookings/test_no_double_booking.py` | web:reservations.ts |
 | AVL-02 | Pooled inventory for rooms, beds, seats | Must | M4 | BR-AVL-02 | room_type_night; experience_slot; trip_departure | GET /api/v1/listings/{listing_id}/availability; POST /api/v1/me/bookings | `tests/inventory/test_pooled_inventory.py` | web:reservations.ts |
 | AVL-05 | Temporary holds during payment | Should | M4 | BR-AVL-06 | room_type_night; experience_slot; trip_departure; quote | no endpoint: POST /api/v1/bookings (hold step); job: inventory.release_holds | `tests/inventory/test_holds.py` | web:reservations.ts |
+| AVL-07 | Blocked days and bookings never clash | Must | M4 | BR-AVL-07 | listing_day; booking | POST /api/v1/me/bookings | `tests/inventory/test_blocked_days_triggers.py` | web:listings.ts |
 | BKG-01 | Instant booking | Must | M4 | BR-BKG-01 | booking; booking_event; ledger_transaction; account_balance | POST /api/v1/me/bookings | `tests/bookings/test_booking_create_instant.py` | web:reservations.ts |
 | BKG-02 | Request to book | Must | M4 | BR-BKG-03 | booking; booking_event | GET /api/v1/reference/reasons; POST /api/v1/me/bookings; POST /api/v1/host/listings/{listing_id}/status; POST /api/v1/host/bookings/{booking_id}/accept; POST /api/v1/host/bookings/{booking_id}/decline | `tests/bookings/test_request_to_book.py` | web:reservations.ts |
-| BKG-03 | Automatic expiry of requests | Must | M4 | BR-BKG-04 | booking; booking_event; outbox_event | PATCH /api/v1/admin/settings | `tests/bookings/test_request_expiry.py` | web:reservations.ts |
+| BKG-03 | Automatic expiry of requests | Must | M4 | BR-BKG-04 | booking; booking_event; outbox_message | PATCH /api/v1/admin/settings | `tests/bookings/test_request_expiry.py` | web:reservations.ts |
 | BKG-04 | Automatic completion after check-out | Must | M4 | BR-BKG-05 | booking; booking_event | no endpoint: job: bookings.complete_stays | `tests/bookings/test_auto_complete.py` | web:reservations.ts |
 | BKG-05 | Unified booking state machine | Must | M4 | BR-BKG-06 | booking; booking_event | POST /api/v1/me/bookings; POST /api/v1/me/bookings/{booking_id}/cancel; GET /api/v1/admin/bookings; GET /api/v1/admin/bookings/{booking_id} | `tests/bookings/test_booking_states.py` | admin:bookings.ts |
 | BKG-06 | Booking snapshot | Must | M4 | BR-BKG-07 | booking; quote | POST /api/v1/me/bookings; GET /api/v1/admin/bookings/{booking_id} | `tests/bookings/test_booking_snapshot.py` | web:reservations.ts |
@@ -160,19 +163,25 @@
 | BKG-08 | Booking reference | Must | M4 |  | booking | GET /api/v1/me/bookings/{booking_id}; GET /api/v1/host/bookings/{booking_id}; GET /api/v1/admin/bookings | `tests/bookings/test_booking_reference.py` | admin:bookings.ts |
 | BKG-09 | Trip departure booking | Must | M4 | BR-TRP-02 | booking; trip_departure | POST /api/v1/quotes; GET /api/v1/trips/{trip_id}/departures; POST /api/v1/me/bookings | `tests/bookings/test_trip_booking.py` | web:reservations.ts |
 | BKG-10 | Idempotent booking creation | Must | M4 | BR-SYS-01 | idempotency_record | POST /api/v1/me/bookings | `tests/bookings/test_booking_idempotency.py` | web:reservations.ts |
+| BKG-12 | Open booking limits per guest | Must | M4 | BR-BKG-08 | booking; platform_settings | POST /api/v1/me/bookings | `tests/bookings/test_open_booking_limits.py` | web:bookings.ts |
 | CAN-01 | Guest cancellation by policy | Must | M4 | BR-CAN-02 | booking; refund; booking_event; cancellation_policy | GET /api/v1/me/bookings/{booking_id}/cancellation-preview; POST /api/v1/me/bookings/{booking_id}/cancel | `tests/bookings/test_guest_cancel.py` | web:reservations.ts |
 | CAN-02 | Host cancellation | Must | M4 | BR-CAN-03 | booking; refund; ledger_transaction | GET /api/v1/reference/reasons; GET /api/v1/host/bookings/{booking_id}/cancellation-preview; POST /api/v1/host/bookings/{booking_id}/cancel | `tests/bookings/test_host_cancel.py` | web:reservations.ts |
 | CAN-03 | Staff cancellation and refund | Must | M4 | BR-CAN-04 | refund; booking; audit_event | POST /api/v1/admin/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/refunds; GET /api/v1/admin/refunds | `tests/bookings/test_staff_refund.py` | admin:bookings.ts |
-| CAN-04 | Commission reversal rules | Must | M4 | BR-PAY-05 | ledger_transaction; ledger_entry | POST /api/v1/me/bookings/{booking_id}/cancel; POST /api/v1/host/bookings/{booking_id}/decline; POST /api/v1/host/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/refunds | `tests/ledger/test_commission_reversal.py` | web:wallet.ts |
-| PAY-01 | Double-entry ledger | Must | M4 | BR-PAY-02 | ledger_account; ledger_transaction; ledger_entry | GET /api/v1/host/wallet/entries; POST /api/v1/admin/bookings/{booking_id}/refunds; GET /api/v1/admin/ledger/transactions; POST /api/v1/admin/ledger/adjustments | `tests/ledger/test_double_entry.py` | admin:ledger.ts |
+| CAN-04 | Commission reversal rules | Must | M4 | BR-PAY-05, BR-CAN-04 | ledger_transaction; ledger_entry | POST /api/v1/me/bookings/{booking_id}/cancel; POST /api/v1/host/bookings/{booking_id}/decline; POST /api/v1/host/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/cancel; POST /api/v1/admin/bookings/{booking_id}/refunds | `tests/ledger/test_commission_reversal.py` | web:wallet.ts |
+| CAN-05 | Refund obligations tracked as a host debt | Must | M4 | BR-CAN-06, BR-CAN-07 | refund_obligation; refund; ledger_transaction; ledger_entry | POST /api/v1/me/bookings/{booking_id}/cancel; GET /api/v1/me/refunds; POST /api/v1/me/refunds/{refund_id}/confirm-received; POST /api/v1/me/refunds/{refund_id}/dispute; POST /api/v1/host/bookings/{booking_id}/accept; POST /api/v1/host/bookings/{booking_id}/cancel; (+4 more) | `tests/bookings/test_refund_obligations.py` | web:bookings.ts; admin:bookings.ts |
+| PAY-01 | Double-entry ledger | Must | M4 | BR-PAY-02 | ledger_account; ledger_transaction; ledger_entry | GET /api/v1/host/wallet/entries; POST /api/v1/admin/bookings/{booking_id}/refunds; GET /api/v1/admin/ledger/transactions; POST /api/v1/admin/wallet-adjustments | `tests/ledger/test_double_entry.py` | admin:ledger.ts |
 | PAY-02 | Prepaid commission wallet (model M1) | Must | M4 | BR-PAY-03 | ledger_account; account_balance | GET /api/v1/host/wallet; GET /api/v1/admin/finance/summary; GET /api/v1/admin/wallets; GET /api/v1/admin/wallets/{host_account_id}; POST /api/v1/admin/wallets/{host_account_id}/topups | `tests/ledger/test_wallet_balance.py` | web:wallet.ts |
 | PAY-03 | Commission deduction on confirmation | Must | M4 | BR-PAY-04 | ledger_transaction; ledger_entry; booking | POST /api/v1/me/bookings; POST /api/v1/host/bookings/{booking_id}/accept | `tests/ledger/test_commission_on_confirm.py` | web:wallet.ts |
 | PAY-04 | Commission rate resolution | Must | M4 | BR-PAY-06 | host_account; platform_settings; booking | POST /api/v1/host/bookings/{booking_id}/accept; GET /api/v1/host/wallet; PUT /api/v1/admin/hosts/{host_account_id}/commission-override; DELETE /api/v1/admin/hosts/{host_account_id}/commission-override; GET /api/v1/admin/commission-rates; PUT /api/v1/admin/commission-rates | `tests/ledger/test_rate_resolution.py` | admin:hosts.ts |
 | PAY-05 | Manual wallet top-up by staff | Must | M4 | BR-PAY-07 | wallet_topup; ledger_transaction | POST /api/v1/admin/wallets/{host_account_id}/topups; GET /api/v1/admin/topups; POST /api/v1/admin/topups/{topup_id}/approve; POST /api/v1/admin/topups/{topup_id}/reject | `tests/ledger/test_manual_topup.py` | admin:finance.ts |
 | PAY-07 | Negative balance handling | Must | M4 | BR-PAY-10 | account_balance; platform_settings; notification | POST /api/v1/host/bookings/{booking_id}/accept; GET /api/v1/host/wallet; GET /api/v1/admin/dashboard/attention; GET /api/v1/admin/hosts; PUT /api/v1/admin/hosts/{host_account_id}/credit-limit-override; GET /api/v1/admin/finance/summary; (+1 more) | `tests/ledger/test_negative_balance.py` | admin:finance.ts |
 | PAY-08 | Wallet history for hosts | Must | M4 |  | ledger_entry; account_balance | GET /api/v1/host/wallet; GET /api/v1/host/wallet/entries; GET /api/v1/admin/ledger/transactions | `tests/ledger/test_wallet_history.py` | web:wallet.ts |
-| NTF-01 | In-app notifications | Must | M4 | BR-NTF-01 | notification; outbox_event | GET /api/v1/me/notifications; POST /api/v1/me/notifications/{notification_id}/read; POST /api/v1/me/notifications/read-all | `tests/notifications/test_in_app.py` | web:notifications.ts |
-| NTF-02 | Email and SMS notifications | Must | M4 | BR-NTF-02 | outbox_event; delivery_log | no endpoint: internal: notifications.send_email_sms | `tests/notifications/test_email_sms.py` | none (workers) |
+| PAY-13 | Manual ledger adjustments with a second admin | Must | M4 | BR-PAY-13 | wallet_adjustment; ledger_transaction; ledger_entry; audit_event | GET /api/v1/admin/wallet-adjustments; POST /api/v1/admin/wallet-adjustments; POST /api/v1/admin/wallet-adjustments/{adjustment_id}/approve; POST /api/v1/admin/wallet-adjustments/{adjustment_id}/reject | `tests/ledger/test_wallet_adjustments.py` | admin:finance.ts |
+| PAY-14 | Ledger protection and nightly reconciliation | Must | M4 | BR-PAY-14, BR-PAY-15 | account_balance; ledger_entry; ledger_transaction | POST /api/v1/me/bookings; POST /api/v1/host/bookings/{booking_id}/accept | `tests/ledger/test_lock_order_and_reconcile.py` | none |
+| NTF-01 | In-app notifications | Must | M4 | BR-NTF-01 | notification; outbox_message | GET /api/v1/me/notifications; POST /api/v1/me/notifications/{notification_id}/read; POST /api/v1/me/notifications/read-all | `tests/notifications/test_in_app.py` | web:notifications.ts |
+| NTF-02 | Email and SMS notifications | Must | M4 | BR-NTF-02 | outbox_message; delivery_log | no endpoint: internal: notifications.send_email_sms | `tests/notifications/test_email_sms.py` | none (workers) |
+| NTF-05 | Dead outbox messages handled by the admin | Must | M4 | BR-SYS-03 | outbox_message | GET /api/v1/admin/outbox; POST /api/v1/admin/outbox/{message_id}/retry | `tests/notifications/test_outbox_dead.py` | admin:settings.ts |
+| BKG-13 | Stay confirmation | Must | M5 | BR-BKG-09, BR-REV-01 | booking | POST /api/v1/me/bookings/{booking_id}/review; POST /api/v1/me/bookings/{booking_id}/confirm-stay; POST /api/v1/host/bookings/{booking_id}/confirm-stay | `tests/bookings/test_stay_confirmation.py` | web:bookings.ts |
 | REV-01 | Write a review after a stay | Must | M5 | BR-REV-01 | review; booking | POST /api/v1/me/bookings/{booking_id}/review; GET /api/v1/me/reviews | `tests/reviews/test_write_review.py` | web:reviews.ts |
 | REV-03 | Host reply | Should | M5 |  | review_reply | GET /api/v1/listings/{listing_id}/reviews; GET /api/v1/host/reviews; PUT /api/v1/host/reviews/{review_id}/reply | `tests/reviews/test_host_reply.py` | web:reviews.ts |
 | REV-04 | Report and moderate reviews | Must | M5 | BR-REV-03 | review; review_report; moderation_case | POST /api/v1/reviews/{review_id}/reports; POST /api/v1/admin/moderation/cases/{case_id}/decisions; GET /api/v1/admin/reviews; POST /api/v1/admin/reviews/{review_id}/hide; POST /api/v1/admin/reviews/{review_id}/restore; POST /api/v1/admin/reviews/{review_id}/dismiss-reports; (+1 more) | `tests/reviews/test_review_moderation.py` | admin:reviews.ts |
@@ -193,7 +202,7 @@
 | NFR-03 | Availability | Should | M7 |  | none | no endpoint: GET /api/v1/health | `tests/ops/test_health.py` | none |
 | NFR-04 | Backups and restore | Must | M7 |  | all | no endpoint: none | `tests/ops/restore_drill.md (manual)` | none |
 | PRC-04 | Tourist tax and VAT lines | Should | R2-A | BR-PRC-04 | tax_rate; quote; platform_settings | POST /api/v1/quotes | `tests/pricing/test_tax_lines.py` | admin:settings.ts |
-| PAY-06 | Online wallet top-up via gateway | Should | R2-A | BR-PAY-08 | wallet_topup; gateway_event; payment | POST /api/v1/host/wallet/topups; POST /api/v1/webhooks/gateway/{provider} | `tests/ledger/test_online_topup.py` | web:wallet.ts |
+| PAY-06 | Online wallet top-up via gateway | Should | R2-A | BR-PAY-08 | wallet_topup; gateway_event; payment | no endpoint: POST /api/v1/host/wallet/topups | `tests/ledger/test_online_topup.py` | web:wallet.ts |
 | PAY-09 | Gateway webhooks | Should | R2-A | BR-SYS-02 | gateway_event | POST /api/v1/webhooks/gateway/{provider} | `tests/ledger/test_gateway_webhooks.py` | none (server to server) |
 | PAY-11 | Commission invoices to hosts | Should | R2-A | BR-PAY-12 | invoice | GET /api/v1/host/invoices; GET /api/v1/admin/invoices | `tests/ledger/test_commission_invoices.py` | admin:finance.ts |
 | LST-09 | Featured listings | Could | R2-B |  | featured_placement | PUT /api/v1/admin/listings/{listing_id}/featured | `tests/catalog/test_featured.py` | admin:listings.ts |
@@ -218,9 +227,7 @@
 
 | Requirement | Gap | Where it is tracked |
 |---|---|---|
-| AVL-06 | No table for external calendar feeds in `schema.dbml` (Later release, so not urgent) | T5 in [13-decisions-needed.md](13-decisions-needed.md) |
-| PRV-05 | No incident register table; the breach runbook needs one to record the 5-day ANPDP clock | T5 in [13-decisions-needed.md](13-decisions-needed.md) |
-| ACC-02 | One-time codes are kept in Redis, not in a table; the audit of code sends relies on `delivery_log` | T5 in [13-decisions-needed.md](13-decisions-needed.md) |
+| AVL-06, PRV-05, ACC-02 | Closed on 2026-11-09: `calendar_feed`, `incident_record` and `otp_send_log` were added to `schema.dbml` | T5 in [13-decisions-needed.md](13-decisions-needed.md) |
 | MSG-06 | The admin messages pages have no `lib/data` module today (screens are mocked inline) | [11-roadmap.md](11-roadmap.md) R2-B |
 
 ## Check yourself

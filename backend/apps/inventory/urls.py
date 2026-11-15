@@ -11,7 +11,13 @@ urlpatterns = [
          name="host-calendar-blocks"),
     path("host/listings/<uuid:listing_id>/calendar/prices", views.HostCalendarPricesView.as_view(),
          name="host-calendar-prices"),
-    path("host/room-types/<uuid:room_type_id>/calendar", views.HostRoomCalendarView.as_view(), name="host-room-calendar"),
+    path("host/calendar", views.HostMultiCalendarView.as_view(), name="host-multi-calendar"),
     path("host/listings/<uuid:listing_id>/slots", views.HostSlotListView.as_view(), name="host-slots"),
     path("host/listings/<uuid:listing_id>/slots/<uuid:slot_id>", views.HostSlotDetailView.as_view(), name="host-slot"),
+    # Admin (review R3, R14)
+    path("admin/inventory-conflicts", views.AdminInventoryConflictListView.as_view(), name="admin-inventory-conflicts"),
+    path("admin/inventory-conflicts/<uuid:conflict_id>/resolve", views.AdminInventoryConflictResolveView.as_view(),
+         name="admin-inventory-conflict-resolve"),
+    path("admin/outbox", views.AdminOutboxListView.as_view(), name="admin-outbox"),
+    path("admin/outbox/<uuid:message_id>/retry", views.AdminOutboxRetryView.as_view(), name="admin-outbox-retry"),
 ]

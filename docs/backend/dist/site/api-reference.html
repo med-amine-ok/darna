@@ -44,8 +44,8 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="on" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 6: API</div><h1 id="api-reference-generated-from-openapiyaml">API reference (generated from openapi.yaml)</h1>
-<blockquote class="plain"><p><strong>In plain words</strong><br>Every API address the backend will offer, grouped by area, with the requirements each one serves.<br>It is generated from <a href="files/openapi.yaml">openapi.yaml</a>, the machine-readable contract. 266 operations.</p>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="on" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 6: API</div><h1 id="api-reference-generated-from-openapiyaml">API reference (generated from openapi.yaml)</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Every API address the backend will offer, grouped by area, with the requirements each one serves.<br>It is generated from <a href="files/openapi.yaml">openapi.yaml</a>, the machine-readable contract. 286 operations.</p>
 </blockquote>
 <p>Title: BLADUS API, version 1.0.0-draft.1.</p>
 <h2 id="auth">auth</h2>
@@ -265,6 +265,12 @@ section.doc{page-break-before:always;padding:0}
 <td>Read a quote again</td>
 <td>PRC-01</td>
 </tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/listings/{listing_id}/services</code></td>
+<td>Services of a hotel or hostel (restaurants, spa, parking...)</td>
+<td>HST-08</td>
+</tr>
 </tbody></table>
 <h2 id="publictrips">public.trips</h2>
 <table>
@@ -473,7 +479,7 @@ section.doc{page-break-before:always;padding:0}
 <td>POST</td>
 <td><code>/api/v1/me/bookings</code></td>
 <td>Book from a quote (instant or request)</td>
-<td>BKG-01, BKG-02, BKG-05, BKG-06, BKG-09, BKG-10, AVL-01, AVL-02, PAY-03, ACC-01</td>
+<td>BKG-01, BKG-02, BKG-05, BKG-06, BKG-09, BKG-10, BKG-12, AVL-01, AVL-02, AVL-07, PAY-03, PAY-14, ACC-01</td>
 </tr>
 <tr>
 <td>GET</td>
@@ -497,13 +503,37 @@ section.doc{page-break-before:always;padding:0}
 <td>POST</td>
 <td><code>/api/v1/me/bookings/{booking_id}/cancel</code></td>
 <td>Cancel my booking or withdraw my request</td>
-<td>CAN-01, CAN-04, BKG-05</td>
+<td>CAN-01, CAN-04, CAN-05, BKG-05</td>
 </tr>
 <tr>
 <td>POST</td>
 <td><code>/api/v1/me/bookings/{booking_id}/review</code></td>
 <td>Review a completed stay</td>
-<td>REV-01</td>
+<td>REV-01, BKG-13</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/bookings/{booking_id}/confirm-stay</code></td>
+<td>Confirm that my stay took place</td>
+<td>BKG-13</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/me/refunds</code></td>
+<td>Refunds hosts owe me</td>
+<td>CAN-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/refunds/{refund_id}/confirm-received</code></td>
+<td>Confirm I received the refund</td>
+<td>CAN-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/me/refunds/{refund_id}/dispute</code></td>
+<td>Say the refund was not received</td>
+<td>CAN-05</td>
 </tr>
 <tr>
 <td>POST</td>
@@ -770,6 +800,36 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </thead>
 <tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/host/integrations</code></td>
+<td>Connections to the hotel&#39;s own system</td>
+<td>HST-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/integrations</code></td>
+<td>Connect a channel manager, PMS, iCal feed or CSV import</td>
+<td>HST-08</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/api/v1/host/integrations/{integration_id}</code></td>
+<td>Disconnect the hotel system (imported data stays, becomes editable)</td>
+<td>HST-08</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/integrations/{integration_id}/sync</code></td>
+<td>Import rooms, availability, prices and services now</td>
+<td>HST-08</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/host/integrations/{integration_id}/runs</code></td>
+<td>History of sync runs</td>
+<td>HST-08</td>
+</tr>
+<tr>
 <td>GET</td>
 <td><code>/api/v1/host/organization</code></td>
 <td>The active organisation (private view)</td>
@@ -1057,7 +1117,7 @@ section.doc{page-break-before:always;padding:0}
 <td>POST</td>
 <td><code>/api/v1/host/bookings/{booking_id}/accept</code></td>
 <td>Accept a pending request</td>
-<td>BKG-02, PAY-03, PAY-04, PAY-07, ORG-05</td>
+<td>BKG-02, PAY-03, PAY-04, PAY-07, PAY-14, CAN-05, ORG-05</td>
 </tr>
 <tr>
 <td>POST</td>
@@ -1075,7 +1135,13 @@ section.doc{page-break-before:always;padding:0}
 <td>POST</td>
 <td><code>/api/v1/host/bookings/{booking_id}/cancel</code></td>
 <td>Cancel a confirmed booking as host</td>
-<td>CAN-02, CAN-04</td>
+<td>CAN-02, CAN-04, CAN-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/host/bookings/{booking_id}/confirm-stay</code></td>
+<td>Confirm the guest arrived (check-in code)</td>
+<td>BKG-13</td>
 </tr>
 <tr>
 <td>POST</td>
@@ -1136,10 +1202,16 @@ section.doc{page-break-before:always;padding:0}
 <td>PAY-08, PAY-01</td>
 </tr>
 <tr>
+<td>GET</td>
+<td><code>/api/v1/host/refunds</code></td>
+<td>Refunds the active host account owes guests</td>
+<td>CAN-05</td>
+</tr>
+<tr>
 <td>POST</td>
-<td><code>/api/v1/host/wallet/topups</code></td>
-<td>Top up the wallet online (CIB, Edahabia)</td>
-<td>PAY-06</td>
+<td><code>/api/v1/host/refunds/{refund_id}/declare-paid</code></td>
+<td>Declare a refund paid to the guest</td>
+<td>CAN-05</td>
 </tr>
 <tr>
 <td>GET</td>
@@ -1180,7 +1252,7 @@ section.doc{page-break-before:always;padding:0}
 <td>POST</td>
 <td><code>/api/v1/webhooks/gateway/{provider}</code></td>
 <td>Payment gateway callback</td>
-<td>PAY-09, PAY-06, PAY-10 (dormant)</td>
+<td>PAY-09, PAY-10 (dormant)</td>
 </tr>
 </tbody></table>
 <h2 id="adminauth">admin.auth</h2>
@@ -1401,6 +1473,18 @@ section.doc{page-break-before:always;padding:0}
 <td>Reject one document</td>
 <td>MOD-08</td>
 </tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/inventory-conflicts</code></td>
+<td>Hotel sync conflicts (rooms already sold)</td>
+<td>HST-09</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/inventory-conflicts/{conflict_id}/resolve</code></td>
+<td>Resolve a hotel sync conflict</td>
+<td>HST-09</td>
+</tr>
 </tbody></table>
 <h2 id="admincatalog">admin.catalog</h2>
 <table>
@@ -1534,8 +1618,14 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>GET</td>
 <td><code>/api/v1/admin/refunds</code></td>
-<td>All refunds</td>
-<td>CAN-03</td>
+<td>Refund obligations (e.g. overdue ones)</td>
+<td>CAN-03, CAN-05</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/refunds/{refund_id}/settle</code></td>
+<td>Settle a refund obligation with proof</td>
+<td>CAN-05</td>
 </tr>
 </tbody></table>
 <h2 id="adminusers">admin.users</h2>
@@ -1679,10 +1769,28 @@ section.doc{page-break-before:always;padding:0}
 <td>PAY-01, PAY-08</td>
 </tr>
 <tr>
+<td>GET</td>
+<td><code>/api/v1/admin/wallet-adjustments</code></td>
+<td>Manual wallet adjustments</td>
+<td>PAY-13</td>
+</tr>
+<tr>
 <td>POST</td>
-<td><code>/api/v1/admin/ledger/adjustments</code></td>
-<td>Correct a wallet with an adjustment transaction</td>
-<td>PAY-01</td>
+<td><code>/api/v1/admin/wallet-adjustments</code></td>
+<td>Ask for a manual wallet adjustment</td>
+<td>PAY-13, PAY-01</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/wallet-adjustments/{adjustment_id}/approve</code></td>
+<td>Second approval of a wallet adjustment</td>
+<td>PAY-13</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/wallet-adjustments/{adjustment_id}/reject</code></td>
+<td>Reject a wallet adjustment</td>
+<td>PAY-13</td>
 </tr>
 <tr>
 <td>POST</td>
@@ -1749,6 +1857,53 @@ section.doc{page-break-before:always;padding:0}
 <td><code>/api/v1/admin/payouts/{payout_id}/mark-sent</code></td>
 <td>Mark a payout as sent</td>
 <td>PAY-10 (dormant)</td>
+</tr>
+</tbody></table>
+<h2 id="adminaudit">admin.audit</h2>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>What it does</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/api/v1/admin/outbox</code></td>
+<td>Outgoing messages (e.g. dead ones)</td>
+<td>NTF-05, HST-09</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/outbox/{message_id}/retry</code></td>
+<td>Retry a dead outgoing message</td>
+<td>NTF-05</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/audit-events</code></td>
+<td>Audit log</td>
+<td>STF-03, STF-04</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/v1/admin/exports</code></td>
+<td>Export a filtered dataset as CSV</td>
+<td>STF-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/exports</code></td>
+<td>My recent exports</td>
+<td>STF-06</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/v1/admin/exports/{export_id}</code></td>
+<td>Export status and download link</td>
+<td>STF-06</td>
 </tr>
 </tbody></table>
 <h2 id="adminsettings">admin.settings</h2>
@@ -1996,41 +2151,6 @@ section.doc{page-break-before:always;padding:0}
 <td><code>/api/v1/admin/staff/{staff_id}/reset-mfa</code></td>
 <td>Reset a lost second factor</td>
 <td>ACC-05, STF-02</td>
-</tr>
-</tbody></table>
-<h2 id="adminaudit">admin.audit</h2>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>What it does</th>
-<th>Requirements</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GET</td>
-<td><code>/api/v1/admin/audit-events</code></td>
-<td>Audit log</td>
-<td>STF-03, STF-04</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/api/v1/admin/exports</code></td>
-<td>Export a filtered dataset as CSV</td>
-<td>STF-06</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/api/v1/admin/exports</code></td>
-<td>My recent exports</td>
-<td>STF-06</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/api/v1/admin/exports/{export_id}</code></td>
-<td>Export status and download link</td>
-<td>STF-06</td>
 </tr>
 </tbody></table>
 <h2 id="adminanalytics">admin.analytics</h2>

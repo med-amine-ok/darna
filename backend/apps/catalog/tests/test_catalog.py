@@ -91,7 +91,7 @@ def test_br_lst_03_submit_then_admin_approve_publishes(admin_client, api):
     client = client_for(user, host)
     assert api.get(f"/api/v1/listings/{listing.id}").status_code == 404
 
-    response = client.post(f"/api/v1/host/listings/{listing.id}/submit")
+    response = client.post(f"/api/v1/host/listings/{listing.id}/status", {"status": "pending_review"}, format="json")
     assert response.status_code == 200
     assert response.json()["status"] == "pending_review"
     assert api.get(f"/api/v1/listings/{listing.id}").status_code == 404
@@ -108,8 +108,9 @@ def test_br_lst_03_illegal_moves_refused(admin_client):
     host, user = f.approved_individual_host()
     listing = f.listing(host, "home")
     client = client_for(user, host)
-    assert client.post(f"/api/v1/host/listings/{listing.id}/resume").json()["code"] == "invalid_status_change"
-    assert client.post(f"/api/v1/host/listings/{listing.id}/pause").status_code == 409
+    url = f"/api/v1/host/listings/{listing.id}/status"
+    assert client.post(url, {"status": "published"}, format="json").json()["code"] == "invalid_transition"
+    assert client.post(url, {"status": "paused"}, format="json").status_code == 409
     assert admin_client.post(f"/api/v1/admin/listings/{listing.id}/approve").status_code == 409
 
 
@@ -119,9 +120,10 @@ def test_br_lst_03_pause_resume_and_only_published_is_public(api):
     listing = f.published_home(host)
     client = client_for(user, host)
     assert api.get("/api/v1/listings").json()["count"] == 1
-    assert client.post(f"/api/v1/host/listings/{listing.id}/pause").json()["status"] == "paused"
+    url = f"/api/v1/host/listings/{listing.id}/status"
+    assert client.post(url, {"status": "paused"}, format="json").json()["status"] == "paused"
     assert api.get("/api/v1/listings").json()["count"] == 0
-    assert client.post(f"/api/v1/host/listings/{listing.id}/resume").json()["status"] == "published"
+    assert client.post(url, {"status": "published"}, format="json").json()["status"] == "published"
     assert api.get("/api/v1/listings").json()["count"] == 1
 
 
@@ -149,8 +151,8 @@ def test_br_lst_01_hotel_needs_room_type_to_submit():
     hotel, owner = f.approved_hotel()
     listing = f.listing(hotel, "hotel")
     client = client_for(owner, hotel)
-    response = client.post(f"/api/v1/host/listings/{listing.id}/submit")
-    assert response.status_code == 400
+    response = client.post(f"/api/v1/host/listings/{listing.id}/status", {"status": "pending_review"}, format="json")
+    assert response.status_code == 422
     assert response.json()["code"] == "listing_incomplete"
     assert "room_types" in response.json()["errors"]
 
@@ -159,7 +161,7 @@ def test_br_lst_01_hotel_needs_room_type_to_submit():
         {"name": "Double", "unit_count": 5, "capacity_per_unit": 2, "base_price_minor": 800_000}, format="json",
     )
     assert response.status_code == 201
-    response = client.post(f"/api/v1/host/listings/{listing.id}/submit")
+    response = client.post(f"/api/v1/host/listings/{listing.id}/status", {"status": "pending_review"}, format="json")
     assert response.status_code == 200
     assert response.json()["base_price_minor"] == 800_000  # lowest room price copied for search
 
@@ -169,8 +171,9 @@ def test_br_lst_01_home_needs_commune_and_price():
     host, user = f.approved_individual_host()
     listing = f.listing(host, "home", base_price_minor=0)
     Listing.objects.filter(pk=listing.pk).update(commune=None)
-    response = client_for(user, host).post(f"/api/v1/host/listings/{listing.id}/submit")
-    assert response.status_code == 400
+    response = client_for(user, host).post(f"/api/v1/host/listings/{listing.id}/status", {"status": "pending_review"},
+                                           format="json")
+    assert response.status_code == 422
     assert {"commune", "base_price_minor"} <= set(response.json()["errors"])
 
 
@@ -238,7 +241,7 @@ def test_search_filters_vertical_price_guests_amenities_and_sort(api):
     assert set(ids("vertical=home")) == {str(cheap.id), str(dear.id)}
     assert set(ids("vertical=home,vehicle")) == {str(cheap.id), str(dear.id), str(car.id)}
     assert ids("vertical=hostel") == []
-    assert ids("vertical=home&max_price=1000000") == [str(cheap.id)]
+    assert ids("vertical=home&max_price_minor=1000000") == [str(cheap.id)]
     assert ids("vertical=home&guests=6") == [str(dear.id)]
     assert ids("amenities=wifi,pool") == [str(cheap.id)]
     assert ids("vertical=home&sort=-price") == [str(dear.id), str(cheap.id)]
@@ -252,7 +255,7 @@ def test_search_filters_wilaya_and_experience_type(api):
     desert = f.published_experience(experience_type="desert")
     f.published_experience(experience_type="gastronomy")
     assert [r["id"] for r in api.get("/api/v1/listings?wilaya=31").json()["results"]] == [str(home.id)]
-    results = api.get("/api/v1/listings?exp_type=desert,wellness").json()["results"]
+    results = api.get("/api/v1/listings?experience_type=desert,wellness").json()["results"]
     assert [r["id"] for r in results] == [str(desert.id)]
 
 
@@ -303,7 +306,7 @@ def test_br_lst_03_admin_reason_required(admin_client, action):
     host, _ = f.approved_individual_host()
     listing = f.listing(host, "home", status=ListingStatus.PENDING_REVIEW)
     response = admin_client.post(f"/api/v1/admin/listings/{listing.id}/{action}", {"reason": "short"}, format="json")
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert response.json()["code"] == "reason_required"
     reason = "Photos are blurry, please replace them."
     response = admin_client.post(f"/api/v1/admin/listings/{listing.id}/{action}", {"reason": reason}, format="json")
@@ -315,13 +318,15 @@ def test_br_lst_03_admin_reason_required(admin_client, action):
 def test_admin_suspend_and_unsuspend(admin_client, api):
     """Suspend hides a published listing (reason required); unsuspend publishes it again."""
     listing = f.published_home()
-    assert admin_client.post(f"/api/v1/admin/listings/{listing.id}/suspend").status_code == 400
+    assert admin_client.post(f"/api/v1/admin/listings/{listing.id}/suspend").status_code == 422
     response = admin_client.post(
         f"/api/v1/admin/listings/{listing.id}/suspend", {"reason": "Reported as a fake listing."}, format="json"
     )
     assert response.json()["status"] == "suspended"
     assert api.get("/api/v1/listings").json()["count"] == 0
-    assert admin_client.post(f"/api/v1/admin/listings/{listing.id}/unsuspend").json()["status"] == "published"
+    response = admin_client.post(f"/api/v1/admin/listings/{listing.id}/status", {"status": "published"}, format="json")
+    assert response.json()["status"] == "published"
+    assert AuditEvent.objects.filter(action="LISTING_UNSUSPEND", object_id=str(listing.id)).exists()
 
 
 def test_admin_endpoints_refuse_hosts():
@@ -342,21 +347,58 @@ def test_admin_list_filters(admin_client):
 # ---------------------------------------------------------------------------
 # Rooms, photos, services, reference endpoints
 # ---------------------------------------------------------------------------
-def test_photos_cover_and_reorder():
-    """First photo is the cover; reorder keeps every id once."""
+def test_br_med_01_photos_order_cover_and_removal():
+    """First photo is the cover; PUT photos sets order, captions and cover, and drops photos left out."""
     host, user = f.approved_individual_host()
     listing = f.listing(host, "home")
     client = client_for(user, host)
-    first = client.post(f"/api/v1/host/listings/{listing.id}/photos", {"url": "https://x/1.jpg"}, format="json").json()
-    second = client.post(f"/api/v1/host/listings/{listing.id}/photos", {"url": "https://x/2.jpg"}, format="json").json()
+    url = f"/api/v1/host/listings/{listing.id}/photos"
+    first = client.post(url, {"url": "https://x/1.jpg"}, format="json").json()
+    second = client.post(url, {"url": "https://x/2.jpg"}, format="json").json()
+    third = client.post(url, {"url": "https://x/3.jpg"}, format="json").json()
     assert first["is_cover"] and not second["is_cover"]
-    response = client.put(f"/api/v1/host/listings/{listing.id}/photos/order", {"ids": [second["id"], first["id"]]},
-                          format="json")
-    assert [p["id"] for p in response.json()] == [second["id"], first["id"]]
-    assert client.put(f"/api/v1/host/listings/{listing.id}/photos/order", {"ids": [first["id"]]},
-                      format="json").status_code == 400
-    assert client.delete(f"/api/v1/host/listings/{listing.id}/photos/{first['id']}").status_code == 204
-    assert client.get(f"/api/v1/host/listings/{listing.id}/photos").json()[0]["is_cover"] is True
+    body = {"photos": [{"media_id": third["id"], "caption": "Terrace"}, {"media_id": second["id"]}],
+            "cover_media_id": second["id"]}
+    response = client.put(url, body, format="json")
+    assert response.status_code == 200
+    results = response.json()["results"]
+    assert [p["media_id"] for p in results] == [third["id"], second["id"]]
+    assert results[0]["caption"] == "Terrace" and results[1]["is_cover"] is True
+    photos = client.get(f"/api/v1/host/listings/{listing.id}").json()["photos"]
+    assert [p["id"] for p in photos] == [third["id"], second["id"]]
+
+
+def test_br_med_01_photos_replace_refuses_unknown_and_bad_cover():
+    """Unknown media ids, duplicates and a cover outside the list answer 422."""
+    host, user = f.approved_individual_host()
+    listing = f.listing(host, "home")
+    client = client_for(user, host)
+    url = f"/api/v1/host/listings/{listing.id}/photos"
+    first = client.post(url, {"url": "https://x/1.jpg"}, format="json").json()
+    unknown = "01a1de39-6560-776d-97d0-83efbebaf779"
+    bodies = [
+        {"photos": [{"media_id": unknown}], "cover_media_id": unknown},
+        {"photos": [{"media_id": first["id"]}, {"media_id": first["id"]}], "cover_media_id": first["id"]},
+        {"photos": [{"media_id": first["id"]}], "cover_media_id": unknown},
+    ]
+    for body in bodies:
+        response = client.put(url, body, format="json")
+        assert response.status_code == 422 and response.json()["code"] == "validation_failed"
+
+
+def test_br_lst_02_photo_change_on_live_listing_goes_to_review():
+    """Reordering the gallery of a published listing sends it back to review (first version of BR-LST-02)."""
+    host, user = f.approved_individual_host()
+    listing = f.published_home(host)
+    client = client_for(user, host)
+    url = f"/api/v1/host/listings/{listing.id}/photos"
+    ids = [client.post(url, {"url": f"https://x/{i}.jpg"}, format="json").json()["id"] for i in range(2)]
+    listing.refresh_from_db()
+    listing.status = ListingStatus.PUBLISHED
+    listing.save(update_fields=["status"])
+    client.put(url, {"photos": [{"media_id": ids[1]}, {"media_id": ids[0]}], "cover_media_id": ids[1]}, format="json")
+    listing.refresh_from_db()
+    assert listing.status == ListingStatus.PENDING_REVIEW
 
 
 def test_hotel_services_public_and_host(api):
@@ -384,19 +426,38 @@ def test_public_detail_has_room_types_and_host_card(api):
     assert body["host"]["host_type"] == "hotel"
 
 
-def test_reference_endpoints(api):
-    """Reference lists are public; type lists mirror the frontend (8 + 8, three languages)."""
+def test_br_lst_05_reference_document(api):
+    """GET /reference: every shared list at once; type lists mirror the frontend (8 + 8, three languages)."""
     f.reference_data()
-    experience_types = api.get("/api/v1/reference/experience-types").json()
-    trip_types = api.get("/api/v1/reference/trip-types").json()
-    assert [t["id"] for t in experience_types][:2] == ["excursion", "guided_tour"]
-    assert len(experience_types) == 8 and len(trip_types) == 8
-    assert trip_types[0] == {"id": "group_tour", "label_en": "Group tour", "label_fr": "Circuit en groupe",
-                             "label_ar": "جولة جماعية"}
-    assert len(api.get("/api/v1/reference/cancellation-policies").json()) == 3
-    assert api.get("/api/v1/reference/amenities?vertical=vehicle").json()
-    assert api.get("/api/v1/reference/property-types?vertical=home").json()
-    assert api.get("/api/v1/reference/categories").json()
+    response = api.get("/api/v1/reference")
+    assert response.status_code == 200
+    body = response.json()
+    assert [t["id"] for t in body["experience_types"]][:2] == ["excursion", "guided_tour"]
+    assert len(body["experience_types"]) == 8 and len(body["trip_types"]) == 8
+    assert body["trip_types"][0] == {"id": "group_tour", "label": "Circuit en groupe", "labels": {
+        "en": "Group tour", "fr": "Circuit en groupe", "ar": "جولة جماعية"}}
+    assert len(body["cancellation_policies"]) == 3
+    assert body["amenities"] and body["property_types"] and body["categories"]
+    assert {v["id"] for v in body["verticals"]} == {"home", "hotel", "hostel", "experience", "vehicle"}
+    assert body["host_offer_rules"]["agency"] == ["experience", "trip"]
+    assert response["ETag"] == f'"{body["version"]}"'
+
+
+def test_reference_document_language_and_etag(api):
+    """Labels follow Accept-Language; a matching If-None-Match answers 304."""
+    f.reference_data()
+    english = api.get("/api/v1/reference", HTTP_ACCEPT_LANGUAGE="en").json()
+    assert english["trip_types"][0]["label"] == "Group tour"
+    etag = api.get("/api/v1/reference")["ETag"]
+    assert api.get("/api/v1/reference", HTTP_IF_NONE_MATCH=etag).status_code == 304
+
+
+def test_reference_document_hides_inactive_rows(api):
+    """Deactivated taxonomy rows leave the public reference lists (BR-LST-04)."""
+    f.reference_data()
+    Amenity.objects.filter(slug="wifi").update(is_active=False)
+    slugs = {a["slug"] for a in api.get("/api/v1/reference").json()["amenities"]}
+    assert "wifi" not in slugs
 
 
 # ---------------------------------------------------------------------------

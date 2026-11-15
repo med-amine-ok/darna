@@ -4,7 +4,7 @@
 > BLADUS runs in three places: your laptop (dev), a test copy with fake data (staging), and the real site (production).
 > Production and every copy of personal data live in Algerian data centres (ICOSNET or Djezzy Cloud), with backups in a second Algerian site. This follows our reading of Law 18-05 art. 8 and Law 18-07/25-11: **VERIFY WITH A PROFESSIONAL**.
 > We start simple: a few servers running Docker Compose. Every code change is checked automatically on GitHub (tests, types, API contract) before it can be deployed.
-> We can lose at most 15 minutes of data (RPO) and be back within 4 hours (RTO); a restore is practised every month.
+> We can lose at most 5 minutes of data (RPO) and be back within 1 hour (RTO); a restore is practised every month. The short operations page to read before M0 is [09b-operations.md](09b-operations.md).
 > This page also gives a rough monthly cost, step-by-step runbooks (deploy, rollback, incident, restore), and the list of settings each program needs.
 
 **Terms used here** (see also [glossary.md](glossary.md)):
@@ -23,6 +23,8 @@
 - **Health check**: a small URL that says "I am alive" (liveness) or "I can serve requests" (readiness).
 - **Runbook**: a written step-by-step procedure for an operation or an emergency.
 - **Environment variable (env var)**: a named setting given to a program when it starts (for example `DATABASE_URL`).
+
+Updated 2026-11-13 after the external review (DEC-026, DEC-027, DEC-030): Django 5.2 LTS, database role split, RPO 5 minutes and RTO 1 hour, Redis persistence, rate limiting without a built-in Caddy limiter, new secrets `HASH_PEPPER` and `INTEGRATION_KEYS`, alerts on dead outbox messages and reconciliation failures. The one-page summary is [09b-operations.md](09b-operations.md).
 
 Inputs: [02-research.md](02-research.md) sections B.16, C.3, C.6; [03-requirements.md](03-requirements.md) NFR-01 to NFR-13; [05-database-schema.md](05-database-schema.md) section 7; [07-architecture.md](07-architecture.md); [08-security-privacy.md](08-security-privacy.md); diagram [02-containers](diagrams/rendered/02-containers.svg).
 
@@ -59,25 +61,27 @@ One Docker image for the backend (`bladus-api`) used by the API, workers and bea
 
 | Container | Image / program | Command or role | Server (launch) | Replicas |
 |---|---|---|---|---|
-| `caddy` | Caddy 2 | TLS, HTTP/2 and HTTP/3, reverse proxy, coarse rate limits, security headers, access logs | app | 1 |
+| `caddy` | Caddy 2 (optionally built with the `caddy-ratelimit` plugin) | TLS, HTTP/2 and HTTP/3, reverse proxy, security headers, access logs. Caddy has **no built-in rate limit**: either build it with the `caddy-ratelimit` plugin, or rely on DRF throttles plus fail2ban reading the access logs | app | 1 |
 | `website` | Next.js (frontend) | `next start`; BFF for guests and hosts | app | 2 (rolling deploys) |
 | `admin` | Next.js (admin) | `next start`; staff BFF; reachable only from allowlisted IPs or VPN | app | 1 |
-| `api` | `bladus-api` | `gunicorn config.wsgi` with sync workers (2 x CPU + 1), 30 s timeout | app | 2 |
+| `api` | `bladus-api` (Django 5.2 LTS, DEC-030) | `gunicorn config.wsgi` with sync workers (2 x CPU + 1), 30 s timeout | app | 2 |
 | `worker-critical` | `bladus-api` | `celery worker -Q critical,default` (OTP, booking notifications, outbox) | worker | 1 (concurrency 8) |
 | `worker-media` | `bladus-api` | `celery worker -Q media` (images, documents), memory limit 2 GB | worker | 1 (concurrency 2) |
 | `worker-reports` | `bladus-api` | `celery worker -Q reports` (exports, invoices) | worker | 1 (concurrency 1) |
-| `beat` | `bladus-api` | `celery beat`; **exactly one** in the whole system | worker | 1 |
+| `beat` | `bladus-api` | `celery beat`; **exactly one** in the whole system. Also starts `manage.py run_outbox` every minute (safety net) and `manage.py reconcile_balances` nightly | worker | 1 |
 | `clamav` | ClamAV daemon | `clamd` + `freshclam` hourly | worker | 1 |
 | `postgres` | PostgreSQL 17 + PostGIS 3.5 | Primary database, `pg_stat_statements` on | db | 1 |
 | `pgbouncer` | PgBouncer | Connection pooling, transaction mode | db | 1 |
 | `pgbackrest` | pgBackRest | WAL archiving and backups to site B | db | 1 |
 | `postgres-replica` | PostgreSQL 17 + PostGIS | Streaming replica, read-only reports | site B | 1 |
-| `redis` | Redis 7 | db 0 broker, db 1 cache, db 2 limits and OTP; AOF on; password; TLS | app (move to its own server when needed) | 1 |
+| `redis` | Redis 7 | db 0 broker, db 1 cache, db 2 limits and OTP; persistence AOF with `appendfsync everysec`; password; TLS. Redis is **never the only copy** of any business data: bookings, money and outbox messages live in PostgreSQL | app (move to its own server when needed) | 1 |
 | `minio` (or `garage`) | S3-compatible storage | Buckets `public`, `private`, `quarantine`, `exports`; only if the provider has no S3 offer in Algeria | storage | 1 (+ replica at site B) |
 | `prometheus`, `alertmanager`, `grafana` | Monitoring | Metrics, alerts, dashboards | monitoring | 1 each |
 | `node-exporter`, `postgres-exporter`, `redis-exporter`, `celery-exporter`, `caddy` metrics | Exporters | Expose metrics | every server | 1 each |
 | `glitchtip` (+ its own Postgres and Redis) | Sentry-compatible error tracking, self-hosted | Errors from Django, Celery, both Next.js apps | monitoring | 1 |
 | `loki` + `promtail` (or `vector`) | Log storage and shipping | JSON logs searchable 90 days | monitoring | 1 |
+
+Every Compose stack is started by a systemd unit with `Restart=always`, so a server reboot brings it back; each container also has `restart: unless-stopped`. M0 to M2 run on **one VPS** with Docker Compose ([09b-operations.md](09b-operations.md)); the split below is the production layout from M7.
 
 Servers at launch (production): **app**, **worker**, **db**, **storage**, **monitoring** at site A; **backup/replica** at site B. Staging runs all containers on one server with smaller limits. The dev `compose.yaml` runs `postgres`, `redis`, `minio`, `clamav`, `api`, one worker, `beat` and Mailpit (fake email inbox).
 
@@ -87,7 +91,7 @@ Servers at launch (production): **app**, **worker**, **db**, **storage**, **moni
 |---|---|---|
 | `bladus.com.dz` and `www.bladus.com.dz` | Caddy at site A | Website (guests and hosts) |
 | `admin.bladus.com.dz` | Caddy at site A, IP allowlist | Admin app |
-| `hooks.bladus.com.dz` | Caddy, routes only `/api/v1/webhooks/*` to Django | Payment gateway webhooks (R2) |
+| `hooks.bladus.com.dz` | Caddy, routes only `/api/v1/webhooks/*` to Django | Payment gateway webhooks (later; not used in v1) |
 | `media.bladus.com.dz` | Storage (public bucket) through Caddy or CDN | Public photo renditions |
 | `static.bladus.com.dz` | Caddy or CDN | Next.js static files (optional; Next.js can serve them itself) |
 | `console.bladus.com.dz` | Caddy, VPN only | Django admin console (staff, MFA, read-mostly) |
@@ -135,7 +139,7 @@ The deploy job runs on a **self-hosted GitHub Actions runner** inside the privat
 2. Large indexes use `AddIndexConcurrently` in a non-atomic migration; constraints on large tables are added `NOT VALID` then validated separately.
 3. Every migration sets `lock_timeout = 5s`; if it cannot get the lock it fails instead of freezing the site.
 4. Data migrations are separate from schema migrations and must be safe to run twice; big backfills run as Celery jobs in batches, not inside migrations.
-5. Migrations run as a **one-off container** (`manage.py migrate`) before the new app containers start, using the `bladus_migrate` role. The app role cannot change the schema.
+5. Migrations run as a **one-off container** (`manage.py migrate`) before the new app containers start, using the `bladus_migrator` role, which **owns every table**. The app connects as `bladus_app`: it cannot change the schema and has only SELECT and INSERT on `ledger_transaction`, `ledger_entry` and `audit_event` (plus `booking_event`); triggers also refuse UPDATE and DELETE on those tables for every role (DEC-026). REVOKE alone would not be enough if the app role owned the tables, which is why the owner is a different role. The grants are in [05-database-schema.md](05-database-schema.md) section 6.
 6. A pgBackRest incremental backup is taken right before any release that contains a migration flagged `risky` in review.
 7. Squash migrations only once a year, never across a release still deployed somewhere.
 
@@ -143,9 +147,9 @@ The deploy job runs on a **self-hosted GitHub Actions runner** inside the privat
 
 | Mechanism | Tool | Frequency | Kept | Target (NFR-04) |
 |---|---|---|---|---|
-| WAL archive | pgBackRest, `archive_timeout = 60 s`, repository at site B, encrypted (`repo-cipher-type = aes-256-cbc`) | continuous | 7 days of PITR | RPO 15 min (expected: about 1 min) |
+| WAL archive | pgBackRest, `archive_timeout = 60 s`, repository at site B, encrypted (`repo-cipher-type = aes-256-cbc`) | continuous | 7 days of PITR | RPO 5 min (expected: about 1 min) |
 | Full + differential backups | pgBackRest | full weekly (Sunday 02:00), differential daily | 2 full cycles | base for PITR |
-| Streaming replica | PostgreSQL physical replication to site B | continuous | live | fast failover, RTO 4 h |
+| Streaming replica (or the provider's managed PostgreSQL with failover) | PostgreSQL physical replication to site B | continuous | live | failover, RTO 1 h (DEC-027) |
 | Logical dump | `pg_dump -Fc`, encrypted with **age** before leaving the server | nightly 01:00 | 35 daily, 12 monthly | protection against logical mistakes and tool bugs |
 | Object storage | MinIO bucket replication (or provider replication) to site B; versioning on private buckets | continuous | 30 days of versions | documents and photos |
 | Secrets and keys | Offline copies of the backup decryption key and field encryption master key, held by two people | on change | always | without them backups are useless |
@@ -154,11 +158,11 @@ All backup copies stay in Algeria (BR-PRV-04). Backup jobs report a "last succes
 
 ### 8.3 Monthly restore drill
 
-On the first Tuesday of each month: restore the latest full backup plus WAL to a scratch server at site B to a chosen time 1 hour earlier; run `manage.py check`, row counts, `ledger.reconcile_balances` and `audit.verify_hash_chain` on the copy; open 3 random private documents from the storage replica; record the time taken (must be under 4 hours) and the result in the drill log; destroy the scratch server. A failed drill is a high-priority incident.
+On the first Tuesday of each month: restore the latest full backup plus WAL to a scratch server at site B to a chosen time 1 hour earlier; run `manage.py check`, row counts, `ledger.reconcile_balances` and `audit.verify_hash_chain` on the copy; open 3 random private documents from the storage replica; record the time taken (must be under 1 hour) and the result in the drill log; destroy the scratch server. A failed drill is a high-priority incident.
 
 ### 8.4 Routine care
 
-`pg_stat_statements` reviewed weekly (top 20 queries by total time, compared with the query plan targets in [05-database-schema.md](05-database-schema.md) section 7); autovacuum tuned for hot tables (`room_type_night`, `outbox_event`, `notification`); minor PostgreSQL updates monthly, major upgrades yearly with a rehearsal in staging; disk alerts at 70% and 85%.
+`pg_stat_statements` reviewed weekly (top 20 queries by total time, compared with the query plan targets in [05-database-schema.md](05-database-schema.md) section 7); autovacuum tuned for hot tables (`room_type_night`, `outbox_message`, `notification`); minor PostgreSQL updates monthly, major upgrades yearly with a rehearsal in staging; disk alerts at 70% and 85%.
 
 ## 9. Observability
 
@@ -210,12 +214,14 @@ Prometheus scrapes every 15 s. Key metrics:
 | API slow | p95 read latency > 300 ms or booking create > 600 ms for 10 min (NFR-01) | high | Check DB, recent deploy |
 | Search slow | p95 search > 500 ms for 10 min (NFR-02) | high | `pg_stat_statements`, indexes |
 | Error rate | 5xx > 1% of requests for 5 min | critical | GlitchTip, rollback if after a deploy |
-| Outbox stuck | Oldest pending event > 5 min, or any `failed` | high | Worker logs, provider status |
+| Outbox stuck | Oldest pending message > 5 min | high | Worker logs, provider status |
+| Outbox dead | Any `outbox_message` with status `dead` (BR-SYS-03) | high | Admin queue `GET admin/outbox?status=dead`; fix the cause, then retry |
 | Beat stopped | Heartbeat older than 3 min | critical | Restart beat (only one!) |
-| Queue backlog | `critical` queue > 100 for 5 min | high | Scale worker, check provider |
-| SMS spend | 80% of daily budget | high | Check for pumping; at 100% non-critical SMS stop automatically |
+| Queue backlog | `critical` queue > 100 for 5 min, or pending outbox messages > 1,000 | high | Scale worker, check provider |
+| SMS spend | 80% of the daily budget (setting `sms_daily_budget`, default 5,000 SMS) | high | Check for pumping; at 100% sends answer `sms_budget_exceeded` (BR-ACC-02) |
 | Login attack | Lockouts > 50 in 10 min | high | Block IP ranges at Caddy |
-| Ledger mismatch | `bladus_ledger_reconcile_mismatch > 0` | critical | Freeze top-ups; finance and tech lead investigate |
+| Ledger mismatch | `reconcile_balances` exited non-zero, or `bladus_ledger_reconcile_mismatch > 0` (BR-PAY-15) | critical | Freeze top-ups and adjustments; an admin and the tech lead investigate; `--fix` only after a human check |
+| Inventory conflicts | Open `inventory_conflict` older than 2 hours (BR-HST-07) | high | Admin contacts the hotel and the guest |
 | Audit chain broken | `bladus_audit_chain_ok == 0` | critical | Security incident; preserve evidence |
 | Backup late | WAL archive > 10 min or nightly dump > 26 h | critical | Fix before anything else (RPO at risk) |
 | Replica lag | > 60 s for 10 min | high | Network to site B, disk |
@@ -282,7 +288,7 @@ When to grow: second API server when CPU > 60% at peak for a week; Redis on its 
 2. **Declare**: open an entry in the incident register with severity (SEV1 site down or data at risk; SEV2 key feature broken; SEV3 degraded). Name one incident lead.
 3. **Communicate**: status page updated within 30 minutes for SEV1/SEV2 in en, fr, ar; staff informed in the admin app banner.
 4. **Stabilise**: rollback (11.2), switch off a feature flag, block abusive traffic at Caddy, scale workers, or fail over (step 5).
-5. **Failover to site B** (site A lost or database primary lost for more than 30 minutes): promote the replica at site B; switch DNS (TTL 300 s) to site B's proxy; start app, worker and beat containers there from the same images; verify `readyz`, the ledger reconcile and the audit chain; keep site A isolated until repaired, then rebuild it as the new replica. Target total time under 4 hours (RTO).
+5. **Failover to site B** (site A lost or database primary lost for more than 15 minutes): promote the replica at site B; switch DNS (TTL 300 s) to site B's proxy; start app, worker and beat containers there from the same images; verify `readyz`, the ledger reconcile and the audit chain; keep site A isolated until repaired, then rebuild it as the new replica. Target total time under 1 hour (RTO, DEC-027).
 6. **Personal data involved?** Start the breach runbook in [08-security-privacy.md](08-security-privacy.md) section 12.7 at once: the 5-day ANPDP clock starts at discovery.
 7. **Close**: when stable for 1 hour. Within 5 working days: blameless review (timeline, cause, what worked, actions with owners and dates).
 
@@ -310,8 +316,8 @@ No values here. Real values live in the secret store ([08-security-privacy.md](0
 | `DJANGO_ALLOWED_HOSTS` | Host names Django answers to (private names only) |
 | `TRUSTED_PROXY_IPS` | Addresses allowed to set `X-Forwarded-For` (Caddy, BFFs) |
 | `BFF_SERVICE_KEY_WEBSITE` / `BFF_SERVICE_KEY_ADMIN` | Service keys checked on requests from each Next.js server |
-| `DATABASE_URL` | PostgreSQL connection through PgBouncer, app role |
-| `DATABASE_MIGRATE_URL` | Connection with the migration role (migration container only) |
+| `DATABASE_URL` | PostgreSQL connection through PgBouncer, role `bladus_app` |
+| `DATABASE_MIGRATE_URL` | Connection with the owner role `bladus_migrator` (migration container only) |
 | `DATABASE_REPLICA_URL` | Read-only replica for reports and exports |
 | `DB_STATEMENT_TIMEOUT_MS` / `DB_LOCK_TIMEOUT_MS` | Database time limits ([07-architecture.md](07-architecture.md) section 3) |
 | `REDIS_URL` | Redis for cache (db 1) |
@@ -324,10 +330,11 @@ No values here. Real values live in the secret store ([08-security-privacy.md](0
 | `PRESIGNED_URL_TTL_SECONDS` | Lifetime of upload and private download links (300) |
 | `CLAMAV_HOST` / `CLAMAV_PORT` | Antivirus daemon address |
 | `FIELD_ENCRYPTION_KEYS` | Versioned master keys for envelope encryption of payout numbers |
-| `ID_HASH_PEPPER` | Secret for HMAC of ID numbers and recipient hashes |
+| `HASH_PEPPER` (was `ID_HASH_PEPPER`) / `HASH_PEPPER_PREVIOUS` | Secret for HMAC-SHA256 of one-time codes, session tokens and lookup hashes (ID numbers, phones, emails); the previous value is accepted during a rotation window (BR-SYS-07) |
+| `INTEGRATION_KEYS` | Keys for AES-GCM (Fernet acceptable) encryption of hotel system credentials, as `key_id:key` pairs; each record stores its `credentials_key_id`; a new key every year |
 | `SMS_PROVIDER` / `SMS_API_KEY` / `SMS_SENDER_ID` | Main SMS provider (local aggregator) |
 | `SMS_FALLBACK_PROVIDER` / `SMS_FALLBACK_API_KEY` | Fallback SMS provider (transfer abroad: VERIFY) |
-| `SMS_DAILY_BUDGET_DZD` / `SMS_MONTHLY_BUDGET_DZD` | SMS spending caps (NFR-11) |
+| `SMS_DAILY_BUDGET_DZD` / `SMS_MONTHLY_BUDGET_DZD` | SMS spending caps in money (NFR-11). The count limit (5,000 SMS per day) is the platform setting `sms_daily_budget`, not an env var |
 | `EMAIL_BACKEND` / `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` / `EMAIL_USE_TLS` | Outgoing email |
 | `DEFAULT_FROM_EMAIL` | Sender address (`no-reply@notify.bladus.com.dz`) |
 | `STAGING_EMAIL_ALLOWLIST` | Staging only: addresses allowed to receive email |
@@ -338,7 +345,7 @@ No values here. Real values live in the secret store ([08-security-privacy.md](0
 | `CELERY_WORKER_CONCURRENCY` | Worker tuning per container |
 | `NOMINATIM_URL` / `NOMINATIM_USER_AGENT` | Address lookup service (server-side, cached, 1 request per second) |
 | `MONEY_MODEL` | `M1` at launch; other models stay off until legal approval (BR-PAY-11) |
-| `CHARGILY_API_KEY` / `CHARGILY_WEBHOOK_SECRET` | Payment gateway (R2 only) |
+| `CHARGILY_API_KEY` / `CHARGILY_WEBHOOK_SECRET` | Payment gateway (later only; no online payment or online top-up in v1, DEC-019) |
 | `AUDIT_ANCHOR_EMAILS` | Who receives the daily audit hash anchor |
 | `TIME_ZONE_BUSINESS` | `Africa/Algiers` (business dates; storage stays UTC) |
 
@@ -392,7 +399,9 @@ The current `ADMIN_SEED_*` variables (mock staff passwords) disappear when the a
 - [ ] Which data may live outside Algeria, under which condition, and who must confirm it?
 - [ ] Which container must run exactly once, and what happens if two run?
 - [ ] A release removes a column. Why must the removal wait for a later release?
-- [ ] What gives us an RPO of 15 minutes, and what gives us an RTO of 4 hours?
+- [ ] What gives us an RPO of 5 minutes, and what gives us an RTO of 1 hour?
+- [ ] Why does the app connect with a different database role from the one that owns the tables?
+- [ ] Caddy has no built-in rate limit. What do we use instead?
 - [ ] What do we check during the monthly restore drill?
 - [ ] Which pipeline step refuses a website build with test mode on?
 - [ ] Where do commission rates live: environment variables or the database? Why?

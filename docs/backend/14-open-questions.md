@@ -8,6 +8,7 @@
 - Q1 to Q13: decided (DEC-001 to DEC-013); DEC-014 and DEC-015 were added later by the product owner.
 - **Moved to [13-decisions-needed.md](13-decisions-needed.md)** with options, recommendation, deadline (roadmap milestone) and the default if nobody decides: **Q14 to Q20**, **L1 to L7**, **F1 to F4**, and the new items below (**Q21 to Q28**, **L8 to L12**, **F5 to F7**). The tables on this page stay as the running record; answers are written here and in 13 when they arrive.
 - New technical decisions for the tech lead (**T1 to T10**: hosting provider, mock-to-API switch, session model, storage, search, processors, backups) are listed only in [13-decisions-needed.md](13-decisions-needed.md) section 6.
+- **Update 2026-11-13 (external review):** decisions DEC-020 to DEC-031 were taken and DEC-018 was revised (commission follows the refund). This closes T7 (search: `pg_trgm` trigram similarity, no Arabic full-text, DEC-030) and settles parts of Q15 (four-eyes now applies to the host's rolling 24-hour top-up total and the approver must differ, DEC-022). The other open items are unchanged. Details in [13-decisions-needed.md](13-decisions-needed.md) section 1.
 - Deadlines refer to the milestones in [11-roadmap.md](11-roadmap.md). The most urgent outside answers are **L1 and L2, needed by the end of M5**.
 
 Started 2026-11-04 (end of Phase 2). On 2026-11-04 the product owner accepted all defaults for Q1 to Q13; they are recorded as decisions DEC-001 to DEC-013 in `03-requirements.md` section 2.

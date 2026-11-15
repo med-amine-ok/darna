@@ -7,12 +7,13 @@ Privacy rule (BR-SRC-03): the public serializers (``ListingCardSerializer``,
 serializers show everything.
 """
 
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from apps.core.money import money_dict
 from apps.geo.models import Commune
 
-from . import services
+from . import selectors, services, workflow
 from .models import (
     Amenity,
     BookingUnit,
@@ -77,34 +78,225 @@ class AmenitySerializer(serializers.ModelSerializer):
         fields = ("id", "slug", "group_code", "name_en", "name_fr", "name_ar", "icon", "applies_to")
 
 
-class PropertyTypeSerializer(serializers.ModelSerializer):
-    """A property type of one vertical."""
-
-    class Meta:
-        """Which model and fields this serializer uses."""
-
-        model = PropertyType
-        fields = ("id", "vertical", "slug", "name_en", "name_fr", "name_ar")
+def labels_of(obj) -> dict:
+    """The ``LocalizedText`` of a row with ``name_en``, ``name_fr``, ``name_ar`` columns."""
+    return {"en": obj.name_en, "fr": obj.name_fr, "ar": obj.name_ar}
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    """A browsing category of one vertical."""
+@extend_schema_serializer(component_name="TaxonomyLabels")
+class LocalizedTextSerializer(serializers.Serializer):
+    """``LocalizedText``: the same text in the three languages."""
+
+    en = serializers.CharField(max_length=80)
+    fr = serializers.CharField(max_length=80)
+    ar = serializers.CharField(max_length=80)
+
+
+@extend_schema_serializer(component_name="CatalogMoneyInput")
+class MoneyInputSerializer(serializers.Serializer):
+    """``MoneyInput``: a positive amount in centimes and its currency (only DZD in this version)."""
+
+    amount_minor = serializers.IntegerField(min_value=1)
+    currency = serializers.ChoiceField(choices=["DZD"])
+
+
+class _LabelledSerializer(serializers.ModelSerializer):
+    """Base of the taxonomy shapes: ``label`` in the caller's language and ``labels`` in all three."""
+
+    label = serializers.SerializerMethodField()
+    labels = serializers.SerializerMethodField()
+
+    def get_label(self, obj) -> str:
+        """Name in the ``Accept-Language`` of the caller (French by default)."""
+        return getattr(obj, f"name_{_locale(self)}")
+
+    def get_labels(self, obj) -> dict:
+        """Names in en, fr and ar."""
+        return labels_of(obj)
+
+
+class CategorySerializer(_LabelledSerializer):
+    """``Category`` of the API: a browsing category of one vertical (BR-LST-04)."""
 
     class Meta:
         """Which model and fields this serializer uses."""
 
         model = Category
-        fields = ("id", "vertical", "slug", "name_en", "name_fr", "name_ar", "icon", "sort_order")
+        fields = ("id", "vertical", "slug", "label", "labels", "icon", "sort_order", "is_active")
+
+
+class AdminCategorySerializer(CategorySerializer):
+    """``Category`` in admin answers: adds ``listing_count``."""
+
+    listing_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta(CategorySerializer.Meta):
+        """Which model and fields this serializer uses."""
+
+        fields = CategorySerializer.Meta.fields + ("listing_count",)
+
+    def to_representation(self, instance) -> dict:
+        """Turn a missing count (row never used) into 0."""
+        data = super().to_representation(instance)
+        data["listing_count"] = data.get("listing_count") or 0
+        return data
+
+
+class PropertyTypeSerializer(_LabelledSerializer):
+    """``PropertyType`` of the API: the kind of place inside one vertical (BR-LST-04)."""
+
+    class Meta:
+        """Which model and fields this serializer uses."""
+
+        model = PropertyType
+        fields = ("id", "vertical", "slug", "label", "labels", "is_active")
+
+
+class AdminPropertyTypeSerializer(PropertyTypeSerializer):
+    """``PropertyType`` in admin answers: adds ``listing_count``."""
+
+    listing_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta(PropertyTypeSerializer.Meta):
+        """Which model and fields this serializer uses."""
+
+        fields = PropertyTypeSerializer.Meta.fields + ("listing_count",)
+
+    def to_representation(self, instance) -> dict:
+        """Turn a missing count (row never used) into 0."""
+        data = super().to_representation(instance)
+        data["listing_count"] = data.get("listing_count") or 0
+        return data
+
+
+class ReferenceAmenitySerializer(_LabelledSerializer):
+    """``Amenity`` of the API: one equipment or feature and the verticals it applies to (BR-LST-04)."""
+
+    group = serializers.CharField(source="group_code")
+
+    class Meta:
+        """Which model and fields this serializer uses."""
+
+        model = Amenity
+        fields = ("id", "slug", "group", "label", "labels", "icon", "applies_to", "is_active")
+
+
+class AdminAmenitySerializer(ReferenceAmenitySerializer):
+    """``Amenity`` in admin answers: adds ``listing_count``."""
+
+    listing_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta(ReferenceAmenitySerializer.Meta):
+        """Which model and fields this serializer uses."""
+
+        fields = ReferenceAmenitySerializer.Meta.fields + ("listing_count",)
+
+
+SLUG_PATTERN = r"^[a-z0-9-]{2,60}$"
+AMENITY_GROUPS = ["essentials", "features", "location", "safety"]
+
+
+class CategoryWriteSerializer(serializers.Serializer):
+    """``CategoryWrite``: body of ``POST`` (all required but icon, sort, active) and ``PATCH`` (any subset)."""
+
+    vertical = serializers.ChoiceField(choices=Vertical.choices)
+    slug = serializers.RegexField(SLUG_PATTERN)
+    labels = LocalizedTextSerializer()
+    icon = serializers.CharField(max_length=40, required=False, allow_null=True, allow_blank=True)
+    sort_order = serializers.IntegerField(required=False)
+    is_active = serializers.BooleanField(required=False)
+
+
+class PropertyTypeWriteSerializer(serializers.Serializer):
+    """``PropertyTypeWrite``: body of ``POST`` and ``PATCH /admin/property-types``."""
+
+    vertical = serializers.ChoiceField(choices=Vertical.choices)
+    slug = serializers.RegexField(SLUG_PATTERN)
+    labels = LocalizedTextSerializer()
+    is_active = serializers.BooleanField(required=False)
+
+
+class AmenityWriteSerializer(serializers.Serializer):
+    """``AmenityWrite``: body of ``POST`` and ``PATCH /admin/amenities``."""
+
+    slug = serializers.RegexField(SLUG_PATTERN)
+    group = serializers.ChoiceField(choices=AMENITY_GROUPS)
+    labels = LocalizedTextSerializer()
+    icon = serializers.CharField(max_length=40, required=False, allow_null=True, allow_blank=True)
+    applies_to = serializers.ListField(child=serializers.ChoiceField(choices=Vertical.choices), allow_empty=False)
+    is_active = serializers.BooleanField(required=False)
 
 
 class CancellationPolicySerializer(serializers.ModelSerializer):
-    """A cancellation policy template with its refund windows (BR-CAN-01)."""
+    """``CancellationPolicy`` of the API: a policy template with its refund windows (BR-CAN-01)."""
+
+    label = serializers.SerializerMethodField()
+    labels = serializers.SerializerMethodField()
 
     class Meta:
         """Which model and fields this serializer uses."""
 
         model = CancellationPolicy
-        fields = ("id", "code", "version", "name_en", "name_fr", "name_ar", "windows")
+        fields = ("code", "version", "label", "labels", "windows")
+
+    def get_label(self, obj) -> str:
+        """Name in the caller's language."""
+        return getattr(obj, f"name_{_locale(self)}")
+
+    def get_labels(self, obj) -> dict:
+        """Names in en, fr and ar."""
+        return labels_of(obj)
+
+
+class LabeledValueSerializer(serializers.Serializer):
+    """``LabeledValue``: an id with its label in the caller's language and in all three."""
+
+    id = serializers.CharField()
+    label = serializers.CharField()
+    labels = LocalizedTextSerializer()
+
+
+class ReferenceDataSerializer(serializers.Serializer):
+    """``ReferenceData``: every shared list in one answer (``GET /reference``, DEC-015). Schema only."""
+
+    version = serializers.CharField()
+    verticals = LabeledValueSerializer(many=True)
+    experience_types = LabeledValueSerializer(many=True)
+    trip_types = LabeledValueSerializer(many=True)
+    amenities = ReferenceAmenitySerializer(many=True)
+    property_types = PropertyTypeSerializer(many=True)
+    categories = CategorySerializer(many=True)
+    cancellation_policies = CancellationPolicySerializer(many=True)
+    host_offer_rules = serializers.DictField(child=serializers.ListField(child=serializers.CharField()))
+    locales = serializers.ListField(child=serializers.CharField())
+
+
+class HostStatusChangeSerializer(serializers.Serializer):
+    """``HostStatusChange``: body of ``POST /host/listings|trips/{id}/status`` (BR-LST-03)."""
+
+    status = serializers.ChoiceField(choices=["pending_review", "draft", "paused", "published", "archived"])
+    note = serializers.CharField(max_length=2000, required=False, allow_blank=True)
+
+
+class AdminStatusChangeSerializer(serializers.Serializer):
+    """``AdminStatusChange``: body of ``POST /admin/listings|trips/{id}/status`` (BR-LST-03)."""
+
+    status = serializers.ChoiceField(choices=[
+        "draft", "pending_review", "changes_requested", "published", "paused", "rejected", "suspended", "archived",
+        "deleted",
+    ])
+    reason_code = serializers.CharField(max_length=60, required=False, allow_null=True, allow_blank=True)
+    reason = serializers.CharField(max_length=2000, required=False, allow_null=True, allow_blank=True)
+
+
+class FeaturedUpdateSerializer(serializers.Serializer):
+    """``FeaturedUpdate``: body of ``PUT /admin/listings/{id}/featured`` (LST-09)."""
+
+    is_featured = serializers.BooleanField()
+    placement = serializers.ChoiceField(choices=["home_weekend", "home_hero", "search_top"], required=False)
+    position = serializers.IntegerField(required=False, min_value=0, max_value=32767)
+    starts_at = serializers.DateTimeField(required=False)
+    ends_at = serializers.DateTimeField(required=False, allow_null=True)
 
 
 # ---------------------------------------------------------------------------
@@ -137,27 +329,96 @@ class RoomTypeSerializer(serializers.ModelSerializer):
         return money_dict(obj.base_price_minor, obj.listing.currency)
 
 
+class PhotoRefSerializer(serializers.ModelSerializer):
+    """``PhotoRef``: a photo as clients reference it, by ``media_id`` (BR-MED-01)."""
+
+    media_id = serializers.UUIDField(source="media_ref", read_only=True)
+    thumb_url = serializers.CharField(source="url", read_only=True)
+
+    class Meta:
+        """Which model and fields this serializer uses."""
+
+        model = ListingPhoto
+        fields = ("media_id", "url", "thumb_url", "caption", "is_cover", "width", "height")
+
+
+class PhotosReplaceItemSerializer(serializers.Serializer):
+    """One entry of ``PhotosReplace.photos``."""
+
+    media_id = serializers.UUIDField()
+    caption = serializers.CharField(max_length=160, required=False, allow_null=True, allow_blank=True)
+
+
+class PhotosReplaceSerializer(serializers.Serializer):
+    """``PhotosReplace``: body of ``PUT /host/listings/{id}/photos``, the gallery order and the cover."""
+
+    photos = PhotosReplaceItemSerializer(many=True)
+    cover_media_id = serializers.UUIDField()
+
+
+class PhotoListSerializer(serializers.Serializer):
+    """Answer of ``PUT /host/listings/{id}/photos``: ``{"results": [PhotoRef]}``. Schema only."""
+
+    results = PhotoRefSerializer(many=True)
+
+
 class HostRoomTypeSerializer(RoomTypeSerializer):
-    """Host shape of a room type: adds the active flag and the hotel system ids (DEC-017)."""
+    """
+    ``RoomType`` as its host sees it: adds the active flag, amenity ids,
+    photos and the hotel system ids (DEC-017).
+    """
+
+    amenity_ids = serializers.SerializerMethodField()
+    photos = serializers.SerializerMethodField()
 
     class Meta(RoomTypeSerializer.Meta):
         """Which model and fields this serializer uses."""
 
-        fields = RoomTypeSerializer.Meta.fields + ("base_price_minor", "is_active", "external_id", "integration_id")
+        fields = RoomTypeSerializer.Meta.fields + (
+            "base_price_minor", "is_active", "amenity_ids", "photos", "external_id", "integration_id",
+        )
+
+    def get_amenity_ids(self, obj) -> list[str]:
+        """Ids of the room amenities."""
+        return [str(link.amenity_id) for link in obj.amenity_links.all()]
+
+    def get_photos(self, obj) -> list[dict]:
+        """Photos of this room type, in order."""
+        return PhotoRefSerializer(obj.photos.all(), many=True).data
 
 
 class RoomTypeWriteSerializer(serializers.Serializer):
-    """Body of ``POST /host/listings/{id}/room-types`` and ``PATCH /host/room-types/{id}``."""
+    """
+    ``RoomTypeWrite``: body of ``POST /host/listings/{id}/room-types`` and
+    ``PATCH /host/listings/{id}/room-types/{room_type_id}`` (any subset).
+
+    The price is ``base_price`` (``MoneyInput``); ``base_price_minor`` is
+    still read for older clients. ``photo_media_ids`` waits for the media app.
+    """
 
     name = serializers.CharField(max_length=80)
-    description = serializers.CharField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     booking_unit = serializers.ChoiceField(choices=BookingUnit.choices, default=BookingUnit.ROOM)
     unit_count = serializers.IntegerField(min_value=1, max_value=10000)
     capacity_per_unit = serializers.IntegerField(min_value=1, max_value=50)
-    base_price_minor = serializers.IntegerField(min_value=1)
-    beds_description = serializers.CharField(required=False, allow_blank=True, max_length=120)
+    base_price = MoneyInputSerializer(required=False)
+    base_price_minor = serializers.IntegerField(min_value=1, required=False)
+    beds_description = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=120)
     sort_order = serializers.IntegerField(required=False)
     is_active = serializers.BooleanField(required=False)
+    amenity_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
+
+    def validate(self, attrs: dict) -> dict:
+        """Fold ``base_price`` into ``base_price_minor``; a new room type needs a price; nulls become empty text."""
+        money = attrs.pop("base_price", None)
+        if money is not None:
+            attrs["base_price_minor"] = money["amount_minor"]
+        if not self.partial and "base_price_minor" not in attrs:
+            raise serializers.ValidationError({"base_price": ["Required."]})
+        for field in ("description", "beds_description"):
+            if field in attrs and attrs[field] is None:
+                attrs[field] = ""
+        return attrs
 
 
 class PropertyServiceSerializer(serializers.ModelSerializer):
@@ -194,19 +455,6 @@ class PhotoWriteSerializer(serializers.Serializer):
     caption = serializers.CharField(required=False, allow_blank=True, max_length=160, default="")
     is_cover = serializers.BooleanField(required=False, default=False)
     room_type_id = serializers.UUIDField(required=False, allow_null=True)
-
-
-class PhotoUpdateSerializer(serializers.Serializer):
-    """Body of ``PATCH /host/listings/{id}/photos/{photo_id}``."""
-
-    caption = serializers.CharField(required=False, allow_blank=True, max_length=160)
-    is_cover = serializers.BooleanField(required=False)
-
-
-class PhotoOrderSerializer(serializers.Serializer):
-    """Body of ``PUT /host/listings/{id}/photos/order``: every photo id, in the new order."""
-
-    ids = serializers.ListField(child=serializers.UUIDField(), allow_empty=False)
 
 
 # ---------------------------------------------------------------------------
@@ -365,23 +613,35 @@ class HostListingSerializer(ListingDetailSerializer):
 
         fields = ListingDetailSerializer.Meta.fields + (
             "status", "moderation_note", "inventory_kind", "address_line", "latitude", "longitude",
-            "base_price_minor", "cleaning_fee_minor", "approval_mode", "submitted_at", "published_at",
-            "created_at", "updated_at",
+            "base_price_minor", "cleaning_fee_minor", "approval_mode", "allowed_status_changes", "submitted_at",
+            "published_at", "created_at", "updated_at",
         )
+
+    allowed_status_changes = serializers.SerializerMethodField()
 
     def get_room_types(self, obj) -> list[dict]:
         """Every non-deleted room type, active or not."""
         rooms = RoomType.objects.alive().filter(listing=obj).select_related("listing")
         return HostRoomTypeSerializer(rooms, many=True).data
 
+    def get_allowed_status_changes(self, obj) -> list[str]:
+        """Statuses the host may ask for now (table 4a, BR-LST-03): what the status buttons show."""
+        return workflow.host_targets(obj)
+
 
 class AdminListingSerializer(HostListingSerializer):
-    """A listing in the admin console: host view plus deletion data."""
+    """A listing in the admin console: host view plus deletion data and the featured flag (LST-09)."""
+
+    is_featured = serializers.SerializerMethodField()
 
     class Meta(HostListingSerializer.Meta):
         """Which model and fields this serializer uses."""
 
-        fields = HostListingSerializer.Meta.fields + ("deleted_at", "status_before_delete")
+        fields = HostListingSerializer.Meta.fields + ("deleted_at", "status_before_delete", "is_featured")
+
+    def get_is_featured(self, obj) -> bool:
+        """True when a featured placement is live now."""
+        return selectors.is_featured(obj)
 
 
 class AdminListingRowSerializer(serializers.ModelSerializer):
@@ -476,12 +736,3 @@ class ListingWriteSerializer(serializers.Serializer):
     def validate_cancellation_policy(self, value: str):
         """Turn a policy code into the current policy row (400 ``invalid_policy`` when unknown)."""
         return services.current_policy(value)
-
-
-class ReferenceTypeSerializer(serializers.Serializer):
-    """Shape of an experience or trip type in reference lists."""
-
-    key = serializers.CharField()
-    labels = serializers.DictField()
-    label = serializers.CharField()
-

@@ -10,7 +10,8 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from apps.accounts.models import phone_validator
-from apps.config.services import commission_rate_bp
+from apps.config.services import commission_rate_bp, credit_limit_minor
+from apps.core.money import money_dict
 from apps.geo.models import Commune
 
 from .models import (
@@ -24,11 +25,15 @@ from .models import (
     DocumentType,
     HostAccount,
     HostDocument,
+    IntegrationSyncLog,
     Invitation,
     InvitationStatus,
     Membership,
     MembershipRole,
+    OnboardingDraft,
     Organization,
+    PayoutAccount,
+    PayoutAccountKind,
     PropertyIntegration,
     VerificationStatus,
 )
@@ -101,6 +106,28 @@ def host_account_data(account: HostAccount, membership: Membership | None, activ
     }
 
 
+class WorkspaceSerializer(serializers.Serializer):
+    """
+    OpenAPI shape of one workspace entry (``workspace_data``).
+
+    Documentation only: the views build the dict with ``workspace_data`` and
+    this class tells Swagger what it contains.
+    """
+
+    host_account_id = serializers.UUIDField()
+    kind = serializers.CharField()
+    host_type = serializers.CharField(allow_null=True)
+    organization_id = serializers.UUIDField(allow_null=True)
+    organization_slug = serializers.CharField(allow_null=True)
+    display_name = serializers.CharField()
+    role = serializers.CharField(allow_null=True, help_text="Null for the user's own solo host account.")
+    verification_status = serializers.CharField()
+    is_active = serializers.BooleanField()
+    permissions = serializers.ListField(child=serializers.CharField())
+    allowed_verticals = serializers.ListField(child=serializers.CharField())
+    can_create_trips = serializers.BooleanField()
+
+
 class WorkspaceSwitchSerializer(serializers.Serializer):
     """Body of ``PUT /me/workspaces/active``."""
 
@@ -139,21 +166,6 @@ class OrganizationWriteSerializer(serializers.ModelSerializer):
         """Refuse a change of business category explicitly, instead of silently ignoring it (BR-ORG-02)."""
         if "business_category" in self.initial_data:
             raise serializers.ValidationError({"business_category": ["The business category cannot change."]})
-        return attrs
-
-
-class OrganizationCreateSerializer(OrganizationWriteSerializer):
-    """Body of ``POST /organizations``: the category and the name are required."""
-
-    business_category = serializers.ChoiceField(choices=BusinessCategory.choices)
-
-    class Meta(OrganizationWriteSerializer.Meta):
-        """Model and fields this serializer reads or writes."""
-        fields = ["business_category", *ORGANIZATION_WRITABLE_FIELDS]
-        extra_kwargs = {**OrganizationWriteSerializer.Meta.extra_kwargs, "display_name": {"required": True}}
-
-    def validate(self, attrs):
-        """The category is welcome here (it is chosen once, at creation)."""
         return attrs
 
 
@@ -268,6 +280,17 @@ class InvitationSerializer(serializers.ModelSerializer):
         return invitation.status
 
 
+class InvitationCreatedSerializer(InvitationSerializer):
+    """Answer of ``POST /host/organization/invitations``: the invitation plus its raw token, shown once."""
+
+    token = serializers.CharField(read_only=True)
+
+    class Meta(InvitationSerializer.Meta):
+        """Same fields as the invitation, plus the token."""
+        fields = [*InvitationSerializer.Meta.fields, "token"]
+        read_only_fields = fields
+
+
 class InvitationCreateSerializer(serializers.Serializer):
     """Body of ``POST /host/organization/invitations``: one email or one phone, one role (never owner)."""
 
@@ -338,21 +361,54 @@ class PropertyIntegrationCreateSerializer(serializers.Serializer):
 class AdminHostAccountSerializer(serializers.ModelSerializer):
     """A host account in the admin list: who, which type, where it stands, which rate."""
 
+    host_account_id = serializers.UUIDField(source="id", read_only=True)
     host_type = serializers.CharField(read_only=True)
     display_name = serializers.CharField(read_only=True)
     organization = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    owner = serializers.SerializerMethodField()
+    owner_email = serializers.SerializerMethodField()
+    owner_phone_e164 = serializers.SerializerMethodField()
     commission_rate_bp = serializers.SerializerMethodField()
+    credit_limit = serializers.SerializerMethodField()
+    rating_avg = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True, coerce_to_string=False)
 
     class Meta:
         """Model and fields this serializer reads or writes."""
         model = HostAccount
         fields = [
-            "id", "kind", "host_type", "display_name", "verification_status", "organization", "user",
-            "default_approval_mode", "commission_rate_override_bp", "commission_rate_bp",
-            "submitted_at", "approved_at", "created_at",
+            "id", "host_account_id", "kind", "host_type", "display_name", "verification_status", "organization",
+            "user", "owner", "owner_email", "owner_phone_e164", "default_approval_mode",
+            "commission_rate_override_bp", "commission_rate_bp", "credit_limit_override_minor", "credit_limit",
+            "rating_avg", "review_count", "submitted_at", "approved_at", "created_at", "deleted_at",
         ]
         read_only_fields = fields
+
+    def _owner(self, account: HostAccount):
+        """The solo host, or the active owner of the organisation (BR-ORG-04)."""
+        if account.user_id:
+            return account.user
+        member = account.organization.memberships.filter(role=MembershipRole.OWNER, is_active=True).first()
+        return member.user if member else None
+
+    def get_owner(self, account: HostAccount) -> dict | None:
+        """Owner as ``UserRef``: id and display name."""
+        owner = self._owner(account)
+        return {"id": str(owner.id), "display_name": owner.display_name} if owner else None
+
+    def get_owner_email(self, account: HostAccount) -> str | None:
+        """Owner's email (admins verify and contact the host)."""
+        owner = self._owner(account)
+        return owner.email if owner else None
+
+    def get_owner_phone_e164(self, account: HostAccount) -> str | None:
+        """Owner's phone number."""
+        owner = self._owner(account)
+        return owner.phone_e164 if owner else None
+
+    def get_credit_limit(self, account: HostAccount) -> dict:
+        """Credit floor applied to this host: its override or the platform default (BR-PAY-10)."""
+        return money_dict(credit_limit_minor(account))
 
     def get_organization(self, account: HostAccount) -> dict | None:
         """Organisation identity and legal numbers (admins review them, BR-ORG-06)."""
@@ -403,6 +459,118 @@ class ReasonSerializer(serializers.Serializer):
 
 
 class CommissionOverrideSerializer(serializers.Serializer):
-    """Body of ``PATCH /admin/hosts/{id}/commission``: a rate in bp, or ``null`` to clear it."""
+    """
+    Body of ``PUT /admin/hosts/{id}/commission-override`` (BR-PAY-06).
 
-    commission_rate_override_bp = serializers.IntegerField(min_value=0, max_value=10_000, allow_null=True)
+    The reason length (10 characters) is checked by the service: 422 ``reason_required``.
+    """
+
+    rate_bp = serializers.IntegerField(min_value=0, max_value=10_000)
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=2000)
+
+
+class CreditLimitMoneySerializer(serializers.Serializer):
+    """Money sent by a client: positive centimes and the currency (``MoneyInput`` of the plan)."""
+
+    amount_minor = serializers.IntegerField(min_value=1)
+    currency = serializers.CharField(max_length=3)
+
+
+class CreditLimitSerializer(serializers.Serializer):
+    """Body of ``PUT /admin/hosts/{id}/credit-limit-override`` (BR-PAY-10); reason checked by the service."""
+
+    credit_limit = CreditLimitMoneySerializer()
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=2000)
+
+
+class DocumentSignedUrlSerializer(serializers.Serializer):
+    """A short-lived link to a private file (BR-MED-02: 5 minutes for KYC documents)."""
+
+    url = serializers.URLField()
+    expires_at = serializers.DateTimeField()
+
+
+# ---------------------------------------------------------------------------
+# Hotel system sync runs (BR-HST-06)
+# ---------------------------------------------------------------------------
+class IntegrationSyncRunSerializer(serializers.ModelSerializer):
+    """One sync run of a hotel system connection: what changed, or why it failed."""
+
+    error = serializers.SerializerMethodField()
+
+    class Meta:
+        """Model and fields this serializer reads."""
+        model = IntegrationSyncLog
+        fields = ["id", "started_at", "finished_at", "status", "rooms_changed", "nights_changed",
+                  "services_changed", "error"]
+        read_only_fields = fields
+
+    def get_error(self, run: IntegrationSyncLog) -> str | None:
+        """The failure message, or ``None`` when the run went well."""
+        return run.error or None
+
+
+# ---------------------------------------------------------------------------
+# Payout and refund accounts (BR-PAY-09)
+# ---------------------------------------------------------------------------
+class PayoutAccountSerializer(serializers.ModelSerializer):
+    """A payout account as the host sees it: never the full number, only its last 4 digits."""
+
+    class Meta:
+        """Model and fields this serializer reads."""
+        model = PayoutAccount
+        fields = ["id", "kind", "holder_name", "number_last4", "is_default", "hold_until", "created_at"]
+        read_only_fields = fields
+
+
+class PayoutAccountCreateSerializer(serializers.Serializer):
+    """Body of ``POST /host/payout-accounts``; the number is encrypted at once and never shown again."""
+
+    kind = serializers.ChoiceField(choices=PayoutAccountKind.choices)
+    holder_name = serializers.CharField(max_length=160)
+    number = serializers.CharField(max_length=34, write_only=True)
+    is_default = serializers.BooleanField(required=False, default=False)
+
+    def validate(self, attrs):
+        """Refuse unknown keys (the plan sets ``additionalProperties: false``)."""
+        unknown = set(self.initial_data) - set(self.fields)
+        if unknown:
+            raise serializers.ValidationError({key: ["Unknown field."] for key in sorted(unknown)})
+        return attrs
+
+
+# ---------------------------------------------------------------------------
+# Onboarding drafts (BR-HST-01, BR-HST-02)
+# ---------------------------------------------------------------------------
+class OnboardingDraftSerializer(serializers.ModelSerializer):
+    """A become-a-host draft and the flow version it started from (BR-HST-02)."""
+
+    flow_version = serializers.IntegerField(source="flow_version.version", read_only=True)
+
+    class Meta:
+        """Model and fields this serializer reads."""
+        model = OnboardingDraft
+        fields = ["id", "host_type", "flow_version", "current_step", "answers", "status", "created_at", "updated_at"]
+        read_only_fields = fields
+
+
+class OnboardingDraftWriteSerializer(serializers.Serializer):
+    """Body of ``PUT /host/onboarding/drafts/{host_type}``: the step reached and every answer so far."""
+
+    current_step = serializers.CharField(max_length=48)
+    answers = serializers.DictField()
+
+
+class OnboardingResultSerializer(serializers.Serializer):
+    """
+    Answer of ``POST /host/onboarding/drafts/{host_type}/submit``.
+
+    ``listing_id`` stays ``null``: the first listing draft is created by the
+    catalog app, which this app may not import (layer rule).
+    """
+
+    host_account_id = serializers.UUIDField()
+    organization_id = serializers.UUIDField(allow_null=True)
+    listing_id = serializers.UUIDField(allow_null=True)
+    verification_status = serializers.CharField()
+    workspace = WorkspaceSerializer()

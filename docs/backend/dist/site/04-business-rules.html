@@ -44,7 +44,7 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="on" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 3: requirements and rules</div><h1 id="04-business-rules">04. Business rules</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="on" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 3: requirements and rules</div><h1 id="04-business-rules">04. Business rules</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>A business rule is a sentence like &quot;a guest cannot book nights that are already booked&quot; or &quot;BLADUS takes 12% from an individual host&quot;.<br>Each rule has an ID (<code>BR-PAY-04</code>), says <strong>where</strong> it is enforced (the database, the backend code, or a scheduled job) and how to test it.<br>Rules enforced by the database are the strongest: even a bug in the code cannot break them.<br>The statuses each object can have, and the allowed moves between them, are written as tables (state machines).<br>Money examples are worked out in full so anyone can check the arithmetic.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
@@ -55,7 +55,55 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>Basis points (bp)</strong>: hundredths of a percent. 12% = 1,200 bp. Used to store rates without decimals.</li>
 <li><strong>Half-open range</strong> <code>[a, b)</code>: includes <code>a</code>, excludes <code>b</code>.</li>
 </ul>
-<p>Sources: website code (<a href="work-frontend-inventory.html">Appendix A section 4</a>), admin code (<a href="work-admin-inventory.html">Appendix B section 4</a>), decisions DEC-001 to DEC-013 (<a href="03-requirements.html">03-requirements.md</a> section 2). &quot;Today&quot; says what the apps do now.</p>
+<p>Sources: website code (<a href="work-frontend-inventory.html">Appendix A section 4</a>), admin code (<a href="work-admin-inventory.html">Appendix B section 4</a>), decisions DEC-001 to DEC-031 (<a href="03-requirements.html">03-requirements.md</a> section 2, <a href="13-decisions-needed.html">13-decisions-needed.md</a> section 1). &quot;Today&quot; says what the apps do now.</p>
+<p><strong>Rule ids used in the backend code.</strong> The backend code written in parallel (2026-11-13) used some rule ids that already mean something else in this plan. Plan ids are kept stable; read the code ids through this table until the code tests are renamed:</p>
+<table>
+<thead>
+<tr>
+<th>Id in code and tests</th>
+<th>Meaning in code</th>
+<th>Plan rule</th>
+<th>What that id means in the plan</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-CAN-05</td>
+<td>Refund debt with a deadline; overdue blocks the host</td>
+<td>BR-CAN-06, BR-CAN-07</td>
+<td>Disputes (R2)</td>
+</tr>
+<tr>
+<td>BR-PAY-11</td>
+<td>Manual adjustments (two admins, 1,000,000 DZD cap)</td>
+<td>BR-PAY-13</td>
+<td>Payment models M2 to M4 switched off</td>
+</tr>
+<tr>
+<td>BR-PAY-12</td>
+<td>Nightly <code>reconcile_balances</code></td>
+<td>BR-PAY-15</td>
+<td>Commission invoices (R2)</td>
+</tr>
+<tr>
+<td>BR-SYS-04</td>
+<td>Transactional outbox with retries</td>
+<td>BR-SYS-03</td>
+<td>Stable error codes in three languages</td>
+</tr>
+<tr>
+<td>BR-HST-06</td>
+<td>Hotel sync never below sold, inventory conflicts</td>
+<td>BR-HST-07 (clamp); BR-HST-06 is the hotel connection itself</td>
+<td>Hotel system connection</td>
+</tr>
+<tr>
+<td>BR-BKG-08, BR-BKG-09, BR-PAY-05</td>
+<td>Same as the plan</td>
+<td>same ids</td>
+<td>same</td>
+</tr>
+</tbody></table>
+<p><strong>Review of 2026-11-13.</strong> An external review changed several rules (DEC-018 revised, DEC-020 to DEC-031). Changed or new rules: BR-ACC-02, BR-AVL-01, BR-AVL-02, BR-AVL-07, BR-HST-06, BR-HST-07, BR-BKG-01, BR-BKG-03, BR-BKG-08, BR-BKG-09, BR-CAN-03, BR-CAN-04, BR-CAN-06, BR-CAN-07, BR-PAY-01, BR-PAY-02, BR-PAY-05, BR-PAY-07, BR-PAY-08, BR-PAY-13 to BR-PAY-15, BR-REV-01, BR-SRC-05, BR-STF-02, BR-SYS-01, BR-SYS-03, BR-SYS-06, BR-SYS-07.</p>
 <hr>
 <h2 id="1-accounts-acc">1. Accounts (ACC)</h2>
 <table>
@@ -77,10 +125,10 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-ACC-02</td>
-<td>One-time codes: 6 digits, valid 10 minutes, 5 wrong attempts invalidate the code, max 3 sends per phone per hour and 10 per IP per hour. Every failure returns the same error.</td>
-<td>service + Redis</td>
+<td>One-time codes: 6 digits, valid 10 minutes, 5 wrong attempts invalidate the code. Send limits (DEC-025): per destination (phone or email) 3 per hour and 10 per day; per IP 10 per hour; a global SMS budget of 5,000 per day (setting <code>sms_daily_budget</code>), after which SMS sends answer <code>sms_budget_exceeded</code> and the admins are alerted. Codes are stored only as an HMAC (BR-SYS-07). Every failure returns the same error.</td>
+<td>service + Redis + <code>otp_send_log</code></td>
 <td>none</td>
-<td>6th attempt with right code fails</td>
+<td>6th attempt with right code fails; 4th SMS to the same phone in one hour refused</td>
 </tr>
 <tr>
 <td>BR-ACC-03</td>
@@ -273,6 +321,20 @@ section.doc{page-break-before:always;padding:0}
 <td>service + DB trigger</td>
 <td>built in website</td>
 <td>individual creating an experience gets 403 <code>host_offer_not_allowed</code></td>
+</tr>
+<tr>
+<td>BR-HST-06</td>
+<td>Hotel system connection (DEC-017): a hotel or hostel may connect its own system (channel manager, PMS, iCal feed or CSV file). Room types, availability per night, prices and services are imported and refreshed on a schedule; imported fields are read-only on BLADUS while the connection is active; a failed sync never deletes data, it flags the connection. Hotels without a system type the same data by hand. The hotel system address (<code>base_url</code>, iCal link) must pass the outgoing URL check (BR-SYS-06).</td>
+<td>job + service</td>
+<td>none</td>
+<td>sync failure keeps last good data</td>
+</tr>
+<tr>
+<td>BR-HST-07</td>
+<td>Hotel sync never oversells (DEC-021). A sync can never set a room-night <code>total</code> below <code>held + booked</code>: the total is clamped to <code>held + booked</code> and an <code>inventory_conflict</code> row is opened for the admin (resolve: accept the clamp, or cancel or move the BLADUS booking with the guest). Every BLADUS booking change (create, accept, cancel, expire) on a room-pool listing of a connected hotel writes an outbox message <code>inventory.push</code> in the same transaction, sent at once (not only every 15 minutes) with the outbox retries (BR-SYS-03); a message that reaches <code>dead</code> shows in the admin outbox queue. The 15-minute pull stays as a reconciliation pass.</td>
+<td>DB check + job + service</td>
+<td>none</td>
+<td>sync with total 2 while 3 rooms booked: total stays 3, conflict opened</td>
 </tr>
 <tr>
 <td>BR-HST-04</td>
@@ -504,15 +566,15 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>BR-AVL-01</td>
-<td>For a single unit (home, vehicle), two bookings in a blocking state (<code>pending</code>, <code>confirmed</code>, <code>completed</code>, <code>disputed</code>) cannot have overlapping half-open ranges. Back-to-back is allowed (check-out day = next check-in).</td>
-<td><strong>DB exclusion constraint</strong> <code>(unit WITH =, stay WITH &amp;&amp;) WHERE status IN (...)</code></td>
+<td>For a single unit (home, vehicle), two bookings in a blocking state (<code>pending</code>, <code>confirmed</code>, <code>completed</code>, <code>disputed</code>) cannot have overlapping half-open ranges. Back-to-back is allowed (check-out day = next check-in). The service also locks the listing row (<code>SELECT ... FOR UPDATE</code>) before checking, so blocked days and bookings are checked in order.</td>
+<td><strong>DB exclusion constraint</strong> <code>(listing_id WITH =, stay WITH &amp;&amp;) WHERE inventory_kind = &#39;single&#39; AND status IN (...)</code> + service lock on the listing row</td>
 <td>app check</td>
 <td>50 parallel requests for the same nights: exactly 1 succeeds</td>
 </tr>
 <tr>
 <td>BR-AVL-02</td>
-<td>For pooled units (room types, hostel beds, experience slots, trip departures), each night or slot has <code>total</code>, <code>held</code>, <code>booked</code>, with <code>held + booked &lt;= total</code> and all values <code>&gt;= 0</code>. Reserving is one atomic <code>UPDATE ... WHERE held + booked + n &lt;= total</code>.</td>
-<td><strong>DB check</strong> + service</td>
+<td>For pooled units (room types, hostel beds, experience slots, trip departures), each night or slot has <code>total</code>, <code>held</code>, <code>booked</code>, with <code>held + booked &lt;= total</code> and all values <code>&gt;= 0</code>. Reserving is one conditional <code>UPDATE ... WHERE held + booked + n &lt;= total</code>. There is <strong>no exclusion constraint</strong> on pools: the counters and their CHECK are the guarantee.</td>
+<td><strong>DB CHECK on counters</strong> + one conditional UPDATE</td>
 <td>in process</td>
 <td>inventory never negative</td>
 </tr>
@@ -544,7 +606,45 @@ section.doc{page-break-before:always;padding:0}
 <td>none</td>
 <td>hold released after 15 min</td>
 </tr>
+<tr>
+<td>BR-AVL-07</td>
+<td>Blocked days and bookings never clash on a single-unit listing (DEC-020). Two PostgreSQL triggers: (a) on <code>listing_day</code>, refuse setting <code>is_blocked = true</code> on a day covered by a booking in a blocking status; (b) on <code>booking</code>, refuse inserting a single-unit booking in a blocking status, or moving one into a blocking status or new dates, when a day of its range is blocked. The services apply the same rule first, with clear errors: <code>inventory.set_days_blocked</code> answers <code>dates_booked</code>, booking creation answers <code>dates_unavailable</code>. Both run after the lock on the listing row, so they are serialized.</td>
+<td><strong>DB triggers</strong> + service + listing row lock</td>
+<td>none</td>
+<td>block a booked day: refused; book a blocked day: refused, also with two parallel requests</td>
+</tr>
 </tbody></table>
+<p><strong>What the database really guarantees against double booking</strong> (DEC-020, corrects the earlier claim that &quot;the database refuses every overlap&quot;):</p>
+<table>
+<thead>
+<tr>
+<th>Inventory</th>
+<th>Guarantee in PostgreSQL</th>
+<th>Also in the service</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Single unit (home, vehicle)</td>
+<td>Exclusion constraint on <code>booking</code> (daterange overlap, blocking statuses)</td>
+<td>Lock on the listing row</td>
+</tr>
+<tr>
+<td>Room pool (hotel rooms, hostel beds)</td>
+<td>CHECK <code>held + booked &lt;= total</code>, never negative, on <code>room_type_night</code>; one conditional UPDATE</td>
+<td>Hotel sync clamp (BR-HST-07)</td>
+</tr>
+<tr>
+<td>Experience slot, trip departure</td>
+<td>CHECK on the seat counters; one conditional UPDATE</td>
+<td>none needed</td>
+</tr>
+<tr>
+<td>Blocked days (<code>listing_day.is_blocked</code>)</td>
+<td>Triggers (a) and (b) of BR-AVL-07</td>
+<td>Same rule with <code>dates_booked</code> / <code>dates_unavailable</code>, after the listing row lock</td>
+</tr>
+</tbody></table>
+<p>There is no exclusion constraint on pools, slots or departures, and none between bookings and blocked days: those cases rely on the counters and on the triggers above.</p>
 <h2 id="6-pricing-prc">6. Pricing (PRC)</h2>
 <table>
 <thead>
@@ -598,10 +698,10 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>BR-BKG-01</td>
-<td>Instant booking confirms immediately if the listing resolves to instant mode, the guest has a verified phone, the dates are free, and the host&#39;s wallet is above its credit floor (BR-PAY-10). Otherwise it becomes a request.</td>
+<td>Instant booking confirms immediately if the listing resolves to instant mode, the guest has a verified phone, the dates are free, the host&#39;s wallet is above its credit floor (BR-PAY-10) and the host has no overdue refund (BR-CAN-07). Otherwise it becomes a request. Order inside the transaction (BR-PAY-14): lock the host wallet balance row, check the floor, take the stock, post the commission.</td>
 <td>service</td>
 <td>confirmed at once</td>
-<td>host below floor: becomes pending</td>
+<td>host below floor or with an overdue refund: becomes pending</td>
 </tr>
 <tr>
 <td>BR-BKG-02</td>
@@ -612,10 +712,10 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-BKG-03</td>
-<td>A request blocks the dates (BR-AVL-01) until accepted, declined, cancelled or expired. Only users with <code>bookings.respond</code> may accept or decline. Decline needs a reason code.</td>
+<td>A request blocks the dates (BR-AVL-01) until accepted, declined, cancelled or expired. Only users with <code>bookings.respond</code> may accept or decline. Decline needs a reason code. Accept is refused below the credit floor (<code>wallet_below_floor</code>) and while the host has an overdue refund (<code>refund_overdue</code>, BR-CAN-07); it uses the same lock order as BR-BKG-01.</td>
 <td>service + DB</td>
 <td>any member</td>
-<td>agent cannot accept</td>
+<td>agent cannot accept; host with an overdue refund gets 409 <code>refund_overdue</code></td>
 </tr>
 <tr>
 <td>BR-BKG-04</td>
@@ -644,6 +744,20 @@ section.doc{page-break-before:always;padding:0}
 <td>service</td>
 <td>partial</td>
 <td>listing price change keeps booking total</td>
+</tr>
+<tr>
+<td>BR-BKG-08</td>
+<td>Open booking limits per guest (DEC-028): at most 3 <code>pending</code> requests (setting <code>max_pending_requests_per_guest</code>) and 6 upcoming bookings (<code>pending</code> + <code>confirmed</code> with check-out in the future, setting <code>max_upcoming_bookings_per_guest</code>) at a time. Over the limit: 409 <code>too_many_open_bookings</code>.</td>
+<td>service</td>
+<td>none</td>
+<td>4th pending request refused</td>
+</tr>
+<tr>
+<td>BR-BKG-09</td>
+<td>Stay confirmation (DEC-028). When a booking is confirmed it gets a 6-digit <code>check_in_code</code>, shown only to the guest. The host enters it on arrival (<code>POST host/bookings/{id}/confirm-stay</code>), or the guest confirms after check-in time (<code>POST me/bookings/{id}/confirm-stay</code>); this sets <code>stay_confirmed_at</code> and <code>stay_confirmed_via</code> (<code>host_code</code> or <code>guest</code>). 5 wrong codes lock host entry for that booking for 1 hour. Errors: wrong code 400 <code>invalid_code</code>; guest before check-in time 409 <code>stay_not_started</code>; booking not confirmed 409 <code>booking_not_confirmed</code>. Auto-completion (BR-BKG-05) still completes the booking without it, but then no review is possible (BR-REV-01).</td>
+<td>service</td>
+<td>none</td>
+<td>wrong code refused; review refused without confirmation</td>
 </tr>
 </tbody></table>
 <p><strong>Table 7a: booking states</strong></p>
@@ -735,17 +849,17 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-CAN-03</td>
-<td>Host cancellation of a confirmed booking: full refund owed to the guest, full commission reversal, host cancellation counter +1; 3 in 12 months open a moderation case.</td>
+<td>Host cancellation of a confirmed booking: full total owed back to the guest, full commission returned to the host (BR-PAY-05), host cancellation counter +1; 3 in 12 months open a moderation case.</td>
 <td>service</td>
 <td>partly</td>
 <td>example 8a</td>
 </tr>
 <tr>
 <td>BR-CAN-04</td>
-<td>Staff refunds: amount between 1 centime and (total minus already refunded); partial refunds add up; reason required; audited.</td>
-<td>DB check <code>refunded &lt;= total</code> + service</td>
+<td>Admin cancellation or refund with amount R: R between 1 centime and (total minus already refunded); partial refunds add up; reason required; audited. Commission returned (BR-PAY-05): refund_of_base = clamp(R - cleaning fee - taxes, 0, base); returned = round_half_up(commission x refund_of_base / base). R = total gives the full commission back.</td>
+<td>DB check <code>refund_due_minor &lt;= total_minor</code> + service</td>
 <td>admin built</td>
-<td>over-refund refused</td>
+<td>over-refund refused; R = cleaning fee only returns 0 commission</td>
 </tr>
 <tr>
 <td>BR-CAN-05</td>
@@ -754,14 +868,29 @@ section.doc{page-break-before:always;padding:0}
 <td>admin only</td>
 <td>dispute after 15 days refused</td>
 </tr>
+<tr>
+<td>BR-CAN-06</td>
+<td>Host refunds are tracked as a debt (DEC-024). Any cancellation with refund due &gt; 0 opens a <code>refund_obligation</code> (booking, host account, guest, amount, <code>due_at</code> = cancelled_at + <code>refund_due_days</code>, default 7 days) with status <code>open</code>. Ledger memo: transaction <code>refund_due</code> (Dr <code>host_refund_payable:&lt;host&gt;</code>, Cr <code>guest_refund_clearing</code>). The host declares it paid with a reference (<code>declared</code>); the guest confirms (<code>settled</code>, ledger <code>refund_settled</code>, the reverse posting) or disputes (<code>disputed</code>, then back to <code>open</code> for a new declaration); the admin can settle with proof. One obligation per refund line.</td>
+<td>service + DB unique <code>(refund_id)</code></td>
+<td>none</td>
+<td>guest confirms: status settled and memo balance 0</td>
+</tr>
+<tr>
+<td>BR-CAN-07</td>
+<td>Overdue refund: status <code>open</code> or <code>disputed</code> and <code>due_at</code> passed. While a host account has an overdue refund, instant booking is off (requests only, BR-BKG-01) and the host cannot accept requests (<code>refund_overdue</code>, BR-BKG-03). The admin list <code>GET admin/refunds?overdue=true</code> shows them; a daily job notifies host, guest and admins. VERIFY WITH A PROFESSIONAL (consumer law on refund delays).</td>
+<td>job + service</td>
+<td>none</td>
+<td>overdue refund: instant booking becomes request</td>
+</tr>
 </tbody></table>
-<p><strong>Example 8a</strong> (Tipaza villa from the click-through, individual host, 12%):</p>
+<p><strong>Example 8a</strong> (Tipaza villa from the click-through, individual host, 12%; DEC-018 revised 2026-11-13):</p>
 <ul>
 <li>3 nights x 18,500 = <strong>55,500 DZD</strong> subtotal; cleaning 4,000; total <strong>59,500 DZD</strong>.</li>
 <li>Commission at confirmation: 12% x 55,500 = <strong>6,660 DZD</strong> deducted from the host&#39;s wallet.</li>
-<li>Guest cancels 3 days before, moderate policy: 50% of 55,500 = 27,750 + cleaning 4,000 = <strong>31,750 DZD</strong> owed back to the guest.</li>
-<li>BLADUS keeps commission only on the part the host keeps: 12% x 27,750 = 3,330, so <strong>3,330 DZD</strong> goes back to the wallet.</li>
+<li>Guest cancels 3 days before, moderate policy (refund window 50%, 5,000 bp): 50% of 55,500 = 27,750 + cleaning 4,000 = <strong>31,750 DZD</strong> owed back to the guest. A <code>refund_obligation</code> of 31,750 DZD opens, due 7 days later (BR-CAN-06).</li>
+<li>Commission follows the refund (BR-PAY-05): returned = apply_bp(6,660, 5,000) = <strong>3,330 DZD</strong> back to the host&#39;s wallet; <strong>BLADUS keeps 3,330 DZD</strong>. The cleaning fee is outside the commission base, so it changes nothing.</li>
 <li>If the host cancels instead: the guest is owed 59,500 and all 6,660 goes back to the wallet.</li>
+<li>If the admin cancels with a refund of 31,750: refund_of_base = clamp(31,750 - 4,000 - 0, 0, 55,500) = 27,750; returned = round_half_up(6,660 x 27,750 / 55,500) = 3,330 DZD (same result).</li>
 </ul>
 <h2 id="9-money-wallet-and-ledger-pay">9. Money, wallet and ledger (PAY)</h2>
 <table>
@@ -776,17 +905,17 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>BR-PAY-01</td>
-<td>Amounts are stored as whole centimes (<code>BIGINT</code>) with a currency code (<code>DZD</code>). Prices shown to people are whole dinars. Rates are basis points. Rounding: half up at each line; a total is always the sum of its rounded lines.</td>
+<td>Amounts are stored as whole centimes (<code>BIGINT</code>) with a currency code (<code>DZD</code>). Prices shown to people are whole dinars. Rates are basis points. Rounding (DEC-029): every computed line uses <code>apply_bp(amount, bp) = round_half_up(amount x bp / 10,000)</code> in integer centimes; a total is always the sum of its rounded lines, never a rounded sum.</td>
 <td>DB types + Money type</td>
 <td>integer DZD</td>
 <td>property test: sum of lines == total</td>
 </tr>
 <tr>
 <td>BR-PAY-02</td>
-<td>Ledger: every posting is one <code>ledger_transaction</code> with 2+ entries; entries of a transaction sum to 0 per currency; entries are never updated or deleted (corrections are new reversing transactions).</td>
-<td>DB deferred constraint trigger + no UPDATE/DELETE grant</td>
+<td>Ledger: every posting is one <code>ledger_transaction</code> with 2+ entries; entries of a transaction sum to 0 per currency; entries are never updated or deleted (corrections are new reversing transactions or a <code>wallet_adjustment</code>). Protection (DEC-026): the tables are owned by the migration role <code>bladus_migrator</code>; the app connects as <code>bladus_app</code> with only SELECT and INSERT on <code>ledger_transaction</code>, <code>ledger_entry</code> and <code>audit_event</code>; PostgreSQL triggers refuse UPDATE and DELETE on these three tables for every role.</td>
+<td>DB deferred constraint trigger + insert-only triggers + role grants</td>
 <td>single-sided</td>
-<td>unbalanced insert fails at commit</td>
+<td>unbalanced insert fails at commit; UPDATE as <code>bladus_app</code> refused</td>
 </tr>
 <tr>
 <td>BR-PAY-03</td>
@@ -804,10 +933,10 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-PAY-05</td>
-<td>Commission reversal: decline and expiry (nothing was posted); host cancel and staff cancel without guest fault: full; guest cancel: reverse the commission on the refunded subtotal share.</td>
-<td>service</td>
-<td>built (website)</td>
-<td>example 8a</td>
+<td>Commission follows the refund (DEC-018, revised 2026-11-13). Commission is taken at confirmation (BR-PAY-04). <strong>Guest cancels</strong> a confirmed booking: the host gets back the same share of the commission as the share of the accommodation subtotal refunded to the guest: returned = apply_bp(commission, refund_bp of the policy window). Cleaning fee and taxes are outside the commission base and do not change it. <strong>Host cancels</strong>: the guest is owed the full total and the full commission is returned. <strong>Admin cancels</strong> with refund R: refund_of_base = clamp(R - cleaning - taxes, 0, base); returned = round_half_up(commission x refund_of_base / base). <strong>Decline or expiry</strong>: no commission was taken, nothing to return. Posted as one <code>commission_reversal</code> transaction per cancellation (amount 0: no posting). Why: with a full return on every cancellation, a host could keep the guest&#39;s non-refundable money and pay no commission.</td>
+<td>service (pure function, property tests)</td>
+<td>partial reversal on guest cancel</td>
+<td>example 8a: 3,330 back, 3,330 kept</td>
 </tr>
 <tr>
 <td>BR-PAY-06</td>
@@ -818,17 +947,17 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-PAY-07</td>
-<td>Manual top-up: amount 1 to 10,000,000 DZD; method in <code>ccp_transfer</code>, <code>bank_transfer</code>, <code>baridimob</code>, <code>cash_office</code>; receipt reference unique per method; top-ups over 500,000 DZD need a second finance user to approve (four-eyes).</td>
+<td>Manual top-up: amount 1 to 10,000,000 DZD; method in <code>ccp_transfer</code>, <code>bank_transfer</code>, <code>baridimob</code>, <code>cash_office</code>; receipt reference unique per method. Four-eyes (DEC-022): the 500,000 DZD threshold applies to the host&#39;s <strong>rolling 24-hour total</strong> of top-ups (pending + approved, including the new one), so splitting a deposit does not avoid it; above it the top-up stays <code>pending_approval</code> until a second admin approves. The approver must always differ from the requester (403 <code>four_eyes_same_user</code>).</td>
 <td>DB unique + service</td>
 <td>duplicates allowed</td>
-<td>same receipt twice fails</td>
+<td>same receipt twice fails; two 300,000 top-ups in one day: the second waits for approval</td>
 </tr>
 <tr>
 <td>BR-PAY-08</td>
-<td>Online top-up (R2): credited only from a verified gateway webhook, once per gateway event id.</td>
-<td>DB unique <code>(provider, event_id)</code></td>
+<td>Online top-up: <strong>not in v1</strong> (DEC-019, DEC-031). There is no online top-up endpoint while online payment is off. When it is added later: credited only from a verified gateway webhook, once per gateway event id.</td>
+<td>DB unique <code>(provider, event_id)</code> (later)</td>
 <td>none</td>
-<td>replayed webhook ignored</td>
+<td>no top-up endpoint in the v1 contract</td>
 </tr>
 <tr>
 <td>BR-PAY-09</td>
@@ -857,6 +986,27 @@ section.doc{page-break-before:always;padding:0}
 <td>DB sequence + service</td>
 <td>none</td>
 <td>numbers continuous</td>
+</tr>
+<tr>
+<td>BR-PAY-13</td>
+<td>Manual ledger adjustments (DEC-022): a <code>wallet_adjustment</code> has a signed amount (credit or debit of the host wallet against the <code>adjustments</code> account), a required reason, and at most 1,000,000 DZD in absolute value. It is posted only after a <strong>second admin</strong> approves (never the requester: 403 <code>four_eyes_required</code>; DB check approver &lt;&gt; requester); reject needs a reason. Cap from setting <code>adjustment_max_minor</code> (default 100,000,000 centimes). Every step is audited.</td>
+<td>DB check + service</td>
+<td>none</td>
+<td>adjustment of 1,000,001 DZD refused; same admin approving refused</td>
+</tr>
+<tr>
+<td>BR-PAY-14</td>
+<td>Lock order and no hot rows (DEC-023). Booking creation and acceptance lock the host wallet balance row first (<code>SELECT ... FOR UPDATE</code> on <code>account_balance</code> of <code>host_wallet</code>), then check the floor, then take stock (listing row or pool counters), then post the commission. Everywhere the order is: wallet balance, then listing or stock rows. No platform balance row is updated on the booking path: commission revenue is computed from ledger entries (SUM), never read from a shared row.</td>
+<td>service</td>
+<td>none</td>
+<td>concurrent bookings of one host near the floor: the floor is never crossed; no deadlock in the concurrency test</td>
+</tr>
+<tr>
+<td>BR-PAY-15</td>
+<td>Nightly reconciliation (DEC-026): the job <code>reconcile_balances</code> recomputes every <code>account_balance</code> from its ledger entries, reports differences to the admins and the audit log, and exits non-zero when one differs. <code>--fix</code> rewrites a balance only after a human check, and is audited.</td>
+<td>job</td>
+<td>none</td>
+<td>a hand-edited balance is reported the next night</td>
 </tr>
 </tbody></table>
 <p><strong>Ledger accounts</strong></p>
@@ -889,11 +1039,27 @@ section.doc{page-break-before:always;padding:0}
 <td>R2</td>
 </tr>
 <tr>
+<td><code>adjustments</code></td>
+<td>equity or expense (manual corrections)</td>
+<td>wallet adjustments (BR-PAY-13)</td>
+</tr>
+<tr>
+<td><code>host_refund_payable:{host_account}</code></td>
+<td>memo (BLADUS never holds this money)</td>
+<td>refund obligations (BR-CAN-06)</td>
+</tr>
+<tr>
+<td><code>guest_refund_clearing</code></td>
+<td>memo, counterpart of the line above</td>
+<td>refund obligations</td>
+</tr>
+<tr>
 <td><code>guest_receivable</code>, <code>escrow</code>, <code>host_payable</code>, <code>payout_clearing</code></td>
 <td>various</td>
 <td>M2 to M4 (switched off)</td>
 </tr>
 </tbody></table>
+<p>The two memo accounts record that the host owes the guest money; they are not BLADUS money and are excluded from revenue and cash reports. Only host wallet balances have an <code>account_balance</code> row that the booking path locks; platform revenue is a SUM over entries (BR-PAY-14).</p>
 <p><strong>Example 9a: postings</strong></p>
 <table>
 <thead>
@@ -905,25 +1071,37 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </thead>
 <tbody><tr>
-<td>Finance records a CCP top-up</td>
+<td>Admin records a CCP top-up</td>
 <td>platform_cash:ccp</td>
 <td>host_wallet:H</td>
 <td>50,000</td>
 </tr>
 <tr>
-<td>Booking confirmed</td>
+<td>Booking confirmed (<code>commission</code>)</td>
 <td>host_wallet:H</td>
 <td>platform_commission_revenue</td>
 <td>6,660</td>
 </tr>
 <tr>
-<td>Guest cancels (example 8a)</td>
+<td>Guest cancels, 50% window (<code>commission_reversal</code>, example 8a)</td>
 <td>platform_commission_revenue</td>
 <td>host_wallet:H</td>
 <td>3,330</td>
 </tr>
+<tr>
+<td>Same cancellation (<code>refund_due</code>, memo)</td>
+<td>host_refund_payable:H</td>
+<td>guest_refund_clearing</td>
+<td>31,750</td>
+</tr>
+<tr>
+<td>Guest confirms the refund was received (<code>refund_settled</code>, memo)</td>
+<td>guest_refund_clearing</td>
+<td>host_refund_payable:H</td>
+<td>31,750</td>
+</tr>
 </tbody></table>
-<p>Wallet balance after: 50,000 - 6,660 + 3,330 = <strong>46,670 DZD</strong>.</p>
+<p>Wallet balance after: 50,000 - 6,660 + 3,330 = <strong>46,670 DZD</strong>. BLADUS keeps 3,330 DZD of commission. The memo accounts are back to 0 once the refund is settled.</p>
 <h2 id="10-reviews-rev">10. Reviews (REV)</h2>
 <table>
 <thead>
@@ -937,10 +1115,10 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>BR-REV-01</td>
-<td>A guest review needs a <code>completed</code> booking of that guest, within 14 days after check-out, one per booking. Ratings 1 to 5: overall plus cleanliness, accuracy, communication, location, value.</td>
+<td>A guest review needs a <code>completed</code> booking of that guest <strong>whose stay was confirmed</strong> (<code>stay_confirmed_at</code> set, BR-BKG-09), within 14 days after check-out, one per booking. Ratings 1 to 5: overall plus cleanliness, accuracy, communication, location, value. A completed booking also cost the host its commission, which makes fake reviews expensive.</td>
 <td>DB unique <code>(booking, author_role)</code> + check + service</td>
 <td>read only</td>
-<td>second review refused</td>
+<td>second review refused; review without stay confirmation gets 409 <code>stay_not_confirmed</code></td>
 </tr>
 <tr>
 <td>BR-REV-02</td>
@@ -1036,6 +1214,13 @@ section.doc{page-break-before:always;padding:0}
 <td>inconsistent</td>
 <td>counts add up</td>
 </tr>
+<tr>
+<td>BR-SRC-05</td>
+<td>Text search (DEC-030): PostgreSQL has no Arabic stemmer, so search uses <code>pg_trgm</code> trigram similarity (GIN trigram indexes on listing titles and commune names) plus <code>unaccent</code> for French, with light Arabic normalisation (alef forms, ta marbuta, diacritics removed). No PostgreSQL full-text (<code>tsvector</code>) search. Tested with a fixed list of real Arabic, French and Darija queries.</td>
+<td>service + DB indexes</td>
+<td>static list</td>
+<td>query list: expected listing in the first 5 results</td>
+</tr>
 </tbody></table>
 <h2 id="13-files-med">13. Files (MED)</h2>
 <table>
@@ -1116,17 +1301,17 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>BR-STF-01</td>
-<td>Staff permissions come from the role (5 roles, matrix in Appendix B section 1.1) stored in the database; checked on every admin endpoint; deny by default.</td>
+<td>One staff role: <strong>admin</strong>, with every permission (DEC-016). The permission list stays in the database so roles can be split later. Checked on every admin endpoint; deny by default. Four-eyes actions need a second admin user.</td>
 <td>service</td>
-<td>code constants</td>
-<td>analyst refund gets 403</td>
+<td>5 roles in code</td>
+<td>non-staff calling an admin endpoint gets 403</td>
 </tr>
 <tr>
 <td>BR-STF-02</td>
-<td>Audit log is insert-only (no UPDATE or DELETE grant for the app&#39;s database role); each row stores actor id, actor role, action, object type and id, before/after (personal data minimised), IP, request id, and a hash of the previous row.</td>
-<td>DB grants + trigger</td>
+<td>Audit log is insert-only: a PostgreSQL trigger refuses UPDATE and DELETE, and the app role <code>bladus_app</code> has only SELECT and INSERT (tables owned by <code>bladus_migrator</code>, DEC-026). Each row stores actor id, actor role, action, object type and id, before/after (personal data minimised), IP, request id, and a hash of the previous row. A daily job exports the previous day to write-once object storage.</td>
+<td>DB roles + trigger + job</td>
 <td>memory</td>
-<td>update fails</td>
+<td>update fails, also as table owner</td>
 </tr>
 <tr>
 <td>BR-STF-03</td>
@@ -1252,7 +1437,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-SYS-01</td>
-<td>Every create or money endpoint accepts an <code>Idempotency-Key</code>; same key and same body returns the stored response; same key with a different body returns 422; a concurrent request with the same key returns 409. Keys kept 24 h.</td>
+<td>Every create or money endpoint accepts an <code>Idempotency-Key</code>. Stored in <code>idempotency_record</code> (user, endpoint, key unique, SHA-256 of the body, stored status and body, 24 hours, DEC-029). Same key and same body returns the stored response; same key with a different body returns 422 <code>idempotency_key_reused</code>; a concurrent request with the same key returns 409 <code>idempotency_in_progress</code>.</td>
 <td>DB unique + service</td>
 <td>none</td>
 <td>retry returns the same booking</td>
@@ -1266,10 +1451,10 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>BR-SYS-03</td>
-<td>Side effects (notifications, emails, search refresh) are written to an outbox in the same transaction and sent after commit with retries and backoff.</td>
+<td>Side effects (notifications, emails, SMS, search refresh, hotel <code>inventory.push</code>) are written to <code>outbox_message</code> (topic, payload, status <code>pending</code>/<code>sent</code>/<code>dead</code>, attempts, next_attempt_at, last_error) in the same transaction as the change (DEC-029). A worker sends after commit and retries at 1 min, 5 min, 15 min, 1 h, 6 h and 24 h; after 8 attempts the message is <code>dead</code>, the admins are alerted and it shows in <code>GET admin/outbox?status=dead</code> (retry by <code>POST admin/outbox/{id}/retry</code>). Handlers must be idempotent.</td>
 <td>DB + job</td>
 <td>none</td>
-<td>a rolled-back change sends nothing</td>
+<td>a rolled-back change sends nothing; 8 failures make it dead</td>
 </tr>
 <tr>
 <td>BR-SYS-04</td>
@@ -1285,12 +1470,28 @@ section.doc{page-break-before:always;padding:0}
 <td>mixed</td>
 <td></td>
 </tr>
+<tr>
+<td>BR-SYS-06</td>
+<td>Outgoing URL check (SSRF, DEC-025): any URL a host gives (hotel system <code>base_url</code>, iCal link) must be <code>https</code>, and its host must resolve only to public IP addresses (no loopback, private, link-local, CGNAT 100.64.0.0/10, multicast, reserved, or the metadata address 169.254.169.254). Checked at save time and again at fetch time (DNS can change); no redirect to another host; 10 s timeout; 5 MB response cap. Code: <code>apps/core/netguard.py</code>.</td>
+<td>service</td>
+<td>none</td>
+<td><code>https://169.254.169.254/</code> refused; redirect to another host refused</td>
+</tr>
+<tr>
+<td>BR-SYS-07</td>
+<td>Hashes of secrets (DEC-025): one-time codes, session tokens and lookup hashes (phone, email, ID number) use HMAC-SHA256 with a server secret <code>HASH_PEPPER</code> from the environment, never a plain SHA-256 of a short value. Pepper rotation: a dual-check window where the old and the new pepper are both accepted.</td>
+<td>service</td>
+<td>none</td>
+<td>the stored hash of a code differs from SHA-256 of the code</td>
+</tr>
 </tbody></table>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
 <li><input disabled="" type="checkbox"> Which rules are guaranteed by the database itself, and why does that matter for BR-AVL-01?</li>
-<li><input disabled="" type="checkbox"> Recompute example 8a for a strict-policy guest who cancels 10 days before check-in.</li>
+<li><input disabled="" type="checkbox"> Which inventory types have no exclusion constraint, and what protects them instead?</li>
+<li><input disabled="" type="checkbox"> Recompute example 8a for a strict-policy guest who cancels 10 days before check-in (how much commission comes back?).</li>
+<li><input disabled="" type="checkbox"> When does a host with an unpaid refund lose instant booking?</li>
 <li><input disabled="" type="checkbox"> What happens to a host&#39;s instant bookings when the wallet is below the credit floor?</li>
 <li><input disabled="" type="checkbox"> Which organisation roles can accept a booking request?</li>
 <li><input disabled="" type="checkbox"> Why is the exact address hidden until a booking is confirmed?</li>

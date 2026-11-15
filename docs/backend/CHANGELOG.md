@@ -2,6 +2,26 @@
 
 All notable changes to the backend documentation package. Newest first.
 
+## 2026-11-13
+
+External review of the plan. All decisions are in `_work/review-2026-11-13-decisions.md` (R1 to R16) and recorded as DEC-018 (revised) and DEC-020 to DEC-031 in `03-requirements.md` section 2 and `13-decisions-needed.md` section 1.
+
+- **DEC-018 revised (R1): commission follows the refund.** Guest cancels: the host gets back apply_bp(commission, refund_bp); host cancels: all of it; admin refund R: round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base); decline or expiry: nothing was taken. Example 8a: the host gets 3,330 DZD back, BLADUS keeps 3,330 DZD (BR-PAY-05, BR-CAN-04, example 9a).
+- **Double booking claim corrected (R2, DEC-020).** Exclusion constraint for single units only, CHECK counters for pools, slots and departures, new triggers so blocked days and bookings never clash (BR-AVL-01, BR-AVL-02, new BR-AVL-07, AVL-07).
+- **Hotel sync never oversells (R3, DEC-021):** clamp to held + booked, `inventory_conflict`, immediate `inventory.push` through the outbox, admin conflict and dead-outbox queues (BR-HST-07, HST-09, NTF-05).
+- **Money controls (R6, R7, R8, R11, R14):** four-eyes on the rolling 24-hour top-up total, approver always different; `wallet_adjustment` with a second admin and a 1,000,000 DZD cap (BR-PAY-07, BR-PAY-13, PAY-13); wallet row locked first, revenue as a SUM (BR-PAY-14); refund obligations with a due date and overdue blocking (BR-CAN-06, BR-CAN-07, CAN-05); role split `bladus_migrator` / `bladus_app`, insert-only triggers, nightly `reconcile_balances` (BR-PAY-02, BR-PAY-15, BR-STF-02, PAY-14); rounding, idempotency storage and outbox retries defined (BR-PAY-01, BR-SYS-01, BR-SYS-03).
+- **Security (R9, DEC-025):** SSRF guard, SMS and code limits with a daily budget, HMAC with `HASH_PEPPER`, key management with `INTEGRATION_KEYS`, CSRF in the BFF, upload quarantine, audit protection (BR-SYS-06, BR-SYS-07, BR-ACC-02, NFR-14; `08-security-privacy.md` section 15).
+- **Operations (R12, DEC-027):** new page `09b-operations.md`, a gate before M0; RPO 5 minutes, RTO 1 hour (NFR-04).
+- **Booking abuse (R13, DEC-028):** 3 pending requests and 6 upcoming bookings per guest; check-in code and stay confirmation before a review (BR-BKG-08, BR-BKG-09, BR-REV-01, BKG-12, BKG-13).
+- **Framework and search (R15, DEC-030):** Django 5.2 LTS instead of 6.1; search with `pg_trgm` trigram similarity, no Arabic full-text (BR-SRC-05; closes T7).
+- **Contradictions (R16, DEC-031):** the online top-up endpoint is removed (no online top-up in v1); one id scheme (UUIDv7 keys everywhere the app writes, references only for display; the old `bigint` counters became UUIDv7); the four flow diagrams with wrong paths fixed (`20` to `23`); one operation count, computed from `openapi.yaml`: **286 operations on 238 paths** (the old texts said 264, 266 or 272).
+- **Schema:** 83 tables (new `refund_obligation`, `wallet_adjustment`, `inventory_conflict`; `outbox_event` renamed `outbox_message`), booking columns `check_in_code`, `stay_confirmed_at`, `stay_confirmed_via`, ledger account kinds `host_refund_payable`, `guest_refund_clearing`, transaction kinds `refund_due`, `refund_settled`, 39 enums. `schema.sql` now ends with the extra SQL of `05-database-schema.md` section 6 (triggers, roles, trigram indexes).
+- **API:** 16 new operations (confirm-stay, refunds for guest, host and admin, wallet adjustments, inventory conflicts, outbox), `POST /host/wallet/topups` and `POST /admin/ledger/adjustments` removed; booking, listing and trip path ids are UUIDs only.
+- **Requirements:** 157 (136 MVP, 19 R2, 2 Later): new AVL-07, HST-09, BKG-12, BKG-13, CAN-05, PAY-13, PAY-14, NTF-05, NFR-14. Risks: 41 (new K-33 to K-41).
+- **Rule ids in the backend code:** the code written in parallel uses BR-CAN-05, BR-PAY-11, BR-PAY-12, BR-SYS-04 and BR-HST-06 for some of the new rules; plan ids were kept and a cross-reference table is at the top of `04-business-rules.md`.
+- **Tools:** new `_tools/check_contract_refs.py` (every "METHOD /path" in `diagrams/*.mmd` must exist in `openapi.yaml`; every stated operation count must equal the computed one; passes) and `_tools/build_schema_sql.py`. New diagram `26-seq-cancel-refund`; `20` to `25`, `30` and `40` redrawn. Rebuilt: ERDs, data dictionary, rendered diagrams, traceability, compact document and the `dist/` package.
+- Not done: Redocly lint was not re-run (only `$ref` resolution was checked); see `06-api-design.md`.
+
 ## 2026-11-11
 
 - New product decisions: DEC-016 (one staff role: admin), DEC-017 (connect directly to a hotel's own system: `property_integration`, `integration_sync_log`, `property_service`, requirement HST-08, rule BR-HST-06, 6 new API operations), DEC-018 (host always recovers the full commission on cancellation: BR-PAY-05, examples 8a and 9a), DEC-019 (no online payment in the first release).

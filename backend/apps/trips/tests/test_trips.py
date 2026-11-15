@@ -76,16 +76,19 @@ def test_trip_submit_review_and_public(api, admin_client):
     agency, owner = f.approved_agency()
     client = client_for(owner, agency)
     trip_id = client.post("/api/v1/host/trips", trip_body(), format="json").json()["id"]
-    response = client.post(f"/api/v1/host/trips/{trip_id}/submit")
-    assert response.json()["code"] == "trip_incomplete"
-    response = client.put(f"/api/v1/host/trips/{trip_id}/itinerary",
-                          {"days": [{"day_number": 1, "title": "Arrival"}, {"day_number": 2, "title": "Tadrart"}]},
-                          format="json")
-    assert response.status_code == 200 and len(response.json()) == 2
-    assert client.post(f"/api/v1/host/trips/{trip_id}/submit").json()["status"] == "pending_review"
+    status_url = f"/api/v1/host/trips/{trip_id}/status"
+    response = client.post(status_url, {"status": "pending_review"}, format="json")
+    assert response.status_code == 422 and response.json()["code"] == "listing_incomplete"
+    response = client.patch(f"/api/v1/host/trips/{trip_id}",
+                            {"itinerary": [{"day_number": 1, "title": "Arrival"}, {"day_number": 2, "title": "Tadrart"}]},
+                            format="json")
+    assert response.status_code == 200 and len(response.json()["itinerary"]) == 2
+    response = client.post(status_url, {"status": "pending_review"}, format="json")
+    assert response.json()["status"] == "pending_review"
+    assert response.json()["allowed_status_changes"] == ["draft"]
     assert api.get(f"/api/v1/trips/{trip_id}").status_code == 404
 
-    response = admin_client.post(f"/api/v1/admin/trips/{trip_id}/approve")
+    response = admin_client.post(f"/api/v1/admin/trips/{trip_id}/status", {"status": "published"}, format="json")
     assert response.json()["status"] == "published"
     slug = response.json()["slug"]
     assert api.get(f"/api/v1/trips/{slug}").json()["itinerary"][1]["title"] == "Tadrart"
@@ -96,19 +99,22 @@ def test_trip_admin_reason_required(admin_client):
     """Reject needs a reason of 10+ characters."""
     trip = make_trip(published=False)
     Trip.objects.filter(pk=trip.pk).update(status=ListingStatus.PENDING_REVIEW)
-    assert admin_client.post(f"/api/v1/admin/trips/{trip.id}/reject", {"reason": "no"}, format="json").json()["code"] \
-        == "reason_required"
-    response = admin_client.post(f"/api/v1/admin/trips/{trip.id}/reject",
-                                 {"reason": "Itinerary is too vague."}, format="json")
+    url = f"/api/v1/admin/trips/{trip.id}/status"
+    response = admin_client.post(url, {"status": "rejected", "reason": "no"}, format="json")
+    assert response.status_code == 422 and response.json()["code"] == "reason_required"
+    response = admin_client.post(url, {"status": "rejected", "reason": "Itinerary is too vague.",
+                                       "reason_code": "incomplete"}, format="json")
     assert response.json()["status"] == "rejected"
+    event = AuditEvent.objects.get(action="TRIP_REJECT", object_id=str(trip.id))
+    assert event.after["reason_code"] == "incomplete"
 
 
 def test_trip_itinerary_numbering_checked():
     """Day numbers must be 1..n without gaps."""
     trip = make_trip(published=False)
     owner = trip.host_account.organization.memberships.get().user
-    response = client_for(owner, trip.host_account).put(
-        f"/api/v1/host/trips/{trip.id}/itinerary", {"days": [{"day_number": 2, "title": "x"}]}, format="json"
+    response = client_for(owner, trip.host_account).patch(
+        f"/api/v1/host/trips/{trip.id}", {"itinerary": [{"day_number": 2, "title": "x"}]}, format="json"
     )
     assert response.json()["code"] == "invalid_itinerary"
 
@@ -178,7 +184,7 @@ def test_br_trp_02_cancelled_departure_refuses_seats():
 
 
 def test_host_departures_crud():
-    """Create, refuse duplicate start and seats beyond group_max, refuse delete with seats taken, cancel."""
+    """Create, refuse duplicate start and seats beyond group_max, shrink below seats taken refused, cancel."""
     trip = make_trip()
     owner = trip.host_account.organization.memberships.get().user
     client = client_for(owner, trip.host_account)
@@ -191,8 +197,9 @@ def test_host_departures_crud():
                              "seats_total": 99}, format="json").status_code == 400
     departure = TripDeparture.objects.get(id=created.json()["id"])
     services.departure_reserve(departure, 2)
-    assert client.delete(f"{url}/{departure.id}").json()["code"] == "departure_has_bookings"
+    assert client.patch(f"{url}/{departure.id}", {"seats_total": 1}, format="json").json()["code"] == "inventory_in_use"
     assert client.post(f"{url}/{departure.id}/cancel").json()["status"] == "cancelled"
+    assert client.post(f"{url}/{departure.id}/cancel").json()["code"] == "invalid_transition"
 
 
 def test_other_agency_trip_is_404():
@@ -200,3 +207,19 @@ def test_other_agency_trip_is_404():
     trip = make_trip()
     other, owner = f.approved_agency()
     assert client_for(owner, other).get(f"/api/v1/host/trips/{trip.id}").status_code == 404
+
+
+def test_br_lst_03_host_trip_status_pause_resume_and_admin_suspend(admin_client, api):
+    """Host pauses and resumes a live trip; admin suspends and unsuspends it through /status."""
+    trip = make_trip()
+    owner = trip.host_account.organization.memberships.get().user
+    client = client_for(owner, trip.host_account)
+    url = f"/api/v1/host/trips/{trip.id}/status"
+    assert client.post(url, {"status": "paused"}, format="json").json()["status"] == "paused"
+    assert client.post(url, {"status": "published"}, format="json").json()["status"] == "published"
+    assert client.post(url, {"status": "pending_review"}, format="json").json()["code"] == "invalid_transition"
+    admin_url = f"/api/v1/admin/trips/{trip.id}/status"
+    body = {"status": "suspended", "reason": "Unlicensed guide reported."}
+    assert admin_client.post(admin_url, body, format="json").json()["status"] == "suspended"
+    assert admin_client.post(admin_url, {"status": "published"}, format="json").json()["status"] == "published"
+    assert client.post(admin_url, {"status": "suspended", "reason": body["reason"]}, format="json").status_code == 403

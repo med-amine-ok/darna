@@ -1,15 +1,15 @@
 {
- "operations": 272,
- "paths": 225,
+ "operations": 286,
+ "paths": 238,
  "by_group": {
   "auth": 15,
   "public": 23,
-  "me": 26,
+  "me": 30,
   "messaging": 7,
   "media": 4,
-  "host": 77,
+  "host": 79,
   "webhooks": 1,
-  "admin": 119
+  "admin": 127
  },
  "dormant": [
   "createGuestPayment",
@@ -36,8 +36,10 @@
   "NFR-09",
   "NFR-10",
   "NFR-13",
+  "NFR-14",
   "NTF-02",
   "NTF-04",
+  "PAY-06",
   "PRV-03",
   "PRV-04",
   "PRV-05",
@@ -48,8 +50,11 @@
   "BR-BKG-05",
   "BR-MOD-04",
   "BR-NTF-02",
+  "BR-PAY-15",
   "BR-PRV-04",
   "BR-PRV-05",
-  "BR-SYS-03"
+  "BR-SRC-05",
+  "BR-SYS-06",
+  "BR-SYS-07"
  ]
 }

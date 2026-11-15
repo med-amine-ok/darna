@@ -1,4 +1,4 @@
-BLADUS backend blueprint, build 2026-11-09
+BLADUS backend blueprint, build 2026-11-13
 
 site/index.html                    browsable version (open in a browser)
 BLADUS-backend-blueprint.pdf       everything in one PDF

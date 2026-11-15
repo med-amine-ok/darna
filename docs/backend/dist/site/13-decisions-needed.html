@@ -44,8 +44,8 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="on" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="13-decisions-needed-who-must-decide-what-and-by-when">13. Decisions needed: who must decide what, and by when</h1>
-<blockquote class="plain"><p><strong>In plain words</strong><br>Building the backend needs some answers we cannot invent: product choices, legal checks, tax rules and technical picks.<br>This page lists every decision still open, grouped by who decides: you (product owner), a lawyer, an accountant or bank, and the tech lead.<br>For each one: the options, our recommendation, the milestone it blocks, and what happens if nobody decides.<br>Decisions already taken (DEC-001 to DEC-015) are repeated first so you can see the whole picture.<br>Legal and tax items are questions, not advice: VERIFY WITH A PROFESSIONAL.</p>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="on" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="13-decisions-needed-who-must-decide-what-and-by-when">13. Decisions needed: who must decide what, and by when</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>Building the backend needs some answers we cannot invent: product choices, legal checks, tax rules and technical picks.<br>This page lists every decision still open, grouped by who decides: you (product owner), a lawyer, an accountant or bank, and the tech lead.<br>For each one: the options, our recommendation, the milestone it blocks, and what happens if nobody decides.<br>Decisions already taken (DEC-001 to DEC-031, DEC-018 revised on 2026-11-13) are repeated first so you can see the whole picture.<br>Legal and tax items are questions, not advice: VERIFY WITH A PROFESSIONAL.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
 <ul>
@@ -142,8 +142,89 @@ section.doc{page-break-before:always;padding:0}
 <td>8 experience types and 8 trip types, one shared list</td>
 <td>2026-11-04</td>
 </tr>
+<tr>
+<td>DEC-016</td>
+<td>One staff role: admin, with every permission</td>
+<td>2026-11-11</td>
+</tr>
+<tr>
+<td>DEC-017</td>
+<td>Connect directly to a hotel&#39;s own system (rooms, availability, prices, services)</td>
+<td>2026-11-11</td>
+</tr>
+<tr>
+<td>DEC-018</td>
+<td><strong>Revised 2026-11-13.</strong> Commission follows the refund: guest cancels, the host gets back apply_bp(commission, refund_bp of the policy window) (villa example 8a: 3,330 DZD back, BLADUS keeps 3,330 DZD); host cancels, full commission back; admin cancels with refund R, returned = round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base); decline or expiry, nothing was taken. Replaces the 2026-11-11 text (&quot;full commission back on every cancellation&quot;), because a host could then keep the guest&#39;s non-refundable money and pay no commission</td>
+<td>2026-11-11, revised 2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-019</td>
+<td>No online payment in the first release (no online top-up either)</td>
+<td>2026-11-11</td>
+</tr>
+<tr>
+<td>DEC-020</td>
+<td>Say exactly what the database guarantees: exclusion constraint for single units, CHECK counters for pools, slots and departures, and new triggers so blocked days and bookings never clash</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-021</td>
+<td>A sync never sets a room-night total below held + booked; the total is clamped and an <code>inventory_conflict</code> is opened; every BLADUS booking change is pushed at once through the outbox</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-022</td>
+<td>Four-eyes on the rolling 24-hour top-up total (500,000 DZD), approver always different, manual ledger adjustments need a second admin and are capped at 1,000,000 DZD</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-023</td>
+<td>Lock the host wallet balance row first, then stock; commission revenue is a SUM of ledger entries, never a shared balance row</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-024</td>
+<td>Every cancellation with a refund opens a refund obligation (due in 7 days); host declares paid, guest confirms or disputes; an overdue refund stops instant booking and accepting requests</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-025</td>
+<td>SSRF guard, SMS and code limits with a daily budget, HMAC with a pepper, key management, CSRF in the BFF, upload quarantine and scan, insert-only audit</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-026</td>
+<td>Separate database roles (<code>bladus_migrator</code> owns, <code>bladus_app</code> only SELECT and INSERT on ledger and audit), triggers refuse UPDATE and DELETE, nightly <code>reconcile_balances</code></td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-027</td>
+<td>One operations page before M0: Docker Compose on one VPS for M0 to M2, failover RPO 5 minutes and RTO 1 hour, Redis never the only copy, monthly restore test, alerts, CI/CD with rollback, runbooks</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-028</td>
+<td>At most 3 pending requests and 6 upcoming bookings per guest; a stay confirmation (check-in code or guest confirmation) is needed before a review</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-029</td>
+<td>Integer centimes, basis points, round half up at each line; commission base excludes cleaning and taxes; <code>idempotency_record</code> with body hash; <code>outbox_message</code> with fixed retries then <code>dead</code></td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-030</td>
+<td>Django 5.2 LTS (supported to April 2028), not 6.1; search with pg_trgm trigram similarity plus unaccent, no Arabic full-text</td>
+<td>2026-11-13</td>
+</tr>
+<tr>
+<td>DEC-031</td>
+<td>No online top-up endpoint in v1; one operation count computed from <code>openapi.yaml</code>; one id scheme (UUIDv7 keys, references only for display); sequence diagram endpoints checked against <code>openapi.yaml</code> by a tool</td>
+<td>2026-11-13</td>
+</tr>
 </tbody></table>
-<p>Technical choices already taken in research: R-1 to R-11 in <a href="02-research.html">02-research.md</a> section E (Django 6.1 + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless; database-enforced availability; centimes and double-entry ledger; polling for messages; PostgreSQL search).</p>
+<p>Technical choices already taken in research: R-1 to R-11 in <a href="02-research.html">02-research.md</a> section E (Django 5.2 LTS + DRF + PostgreSQL/PostGIS + Celery/Redis + allauth headless; database-enforced availability; centimes and double-entry ledger; polling for messages; PostgreSQL trigram search). DEC-030 changed the Django version from 6.1 to 5.2 LTS on 2026-11-13.</p>
+<p>The review of 2026-11-13 is recorded in <code>_work/review-2026-11-13-decisions.md</code> (items R1 to R16). DEC-018 keeps its id with the revised text; the other items became DEC-020 to DEC-031.</p>
 <hr>
 <h2 id="2-summary">2. Summary</h2>
 <table>
@@ -175,13 +256,13 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Tech lead</td>
-<td>11 (T1 to T11, T5 already closed)</td>
+<td>11 (T1 to T11, T5 and T7 closed)</td>
 <td>M0</td>
 <td>T1 hosting, T3 mock-to-API switch</td>
 </tr>
 <tr>
 <td><strong>Total</strong></td>
-<td><strong>49 (48 still open)</strong></td>
+<td><strong>49 (47 still open)</strong></td>
 <td></td>
 <td></td>
 </tr>
@@ -594,10 +675,10 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>T7</td>
 <td>Text search in Arabic, French and English</td>
-<td>(a) PostgreSQL unaccent + trigram + Arabic normalisation + place-name alias table; (b) self-hosted Meilisearch</td>
-<td>(a) (R-11), with a 50-query test set; revisit (b) if the zero-result rate stays high</td>
-<td>M3</td>
-<td>Weak Arabic search (risk K-15)</td>
+<td><strong>Closed on 2026-11-13 by DEC-030</strong>: PostgreSQL <code>pg_trgm</code> trigram similarity + unaccent + Arabic normalisation + place-name alias table, no Arabic full-text</td>
+<td>Done; revisit a self-hosted Meilisearch only if the zero-result rate stays high</td>
+<td>n/a</td>
+<td>n/a</td>
 </tr>
 <tr>
 <td>T8</td>
@@ -642,5 +723,6 @@ section.doc{page-break-before:always;padding:0}
 <li><input disabled="" type="checkbox"> Which decisions can be changed later by a setting, and which one is marked costly to change?</li>
 <li><input disabled="" type="checkbox"> Which tech decision makes &quot;one module at a time behind a flag&quot; possible?</li>
 <li><input disabled="" type="checkbox"> Find the decision that keeps BLADUS from needing a PSP licence at launch.</li>
+<li><input disabled="" type="checkbox"> In example 8a, how much commission does the host get back after DEC-018 was revised, and why?</li>
 </ul>
 <div class="pager"><span><a href="12-risks.html">&larr; 12. Risks: what could go wrong, and what we do about it</a></span><span><a href="14-open-questions.html">14. Open questions (running list) &rarr;</a></span></div></main></div></body></html>

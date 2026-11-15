@@ -109,7 +109,7 @@ def test_profile_update_ignores_protected_fields(user_client, user):
 def test_change_password_signs_out_other_devices(user):
     """After a password change, other sessions stop working."""
     here, there = client_for(user), client_for(user)
-    res = here.post("/api/v1/me/password", {"current_password": PASSWORD, "new_password": "An0ther-pass-456"})
+    res = here.post("/api/v1/auth/password/change", {"current_password": PASSWORD, "new_password": "An0ther-pass-456"})
     assert res.status_code == 204
     assert here.get("/api/v1/me").status_code == 200
     assert there.get("/api/v1/me").status_code == 401
@@ -119,3 +119,15 @@ def test_anonymous_is_refused_with_error_shape(api):
     """Errors always carry code, message and status."""
     res = api.get("/api/v1/me")
     assert res.status_code == 401 and set(res.data) >= {"code", "message", "status"}
+
+
+def test_change_password_refuses_wrong_current_password(user_client):
+    """A wrong current password gives 400 invalid_current_password (openapi authChangePassword)."""
+    res = user_client.post("/api/v1/auth/password/change", {"current_password": "nope-nope-1", "new_password": "An0ther-pass-456"})
+    assert res.status_code == 400 and res.data["code"] == "invalid_current_password"
+
+
+def test_old_me_password_route_is_gone(user_client):
+    """The password change moved from /me/password to /auth/password/change."""
+    res = user_client.post("/api/v1/me/password", {"current_password": PASSWORD, "new_password": "An0ther-pass-456"})
+    assert res.status_code == 404

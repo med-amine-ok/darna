@@ -44,8 +44,8 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="on" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 5: database</div><h1 id="05-database-schema">05. Database schema</h1>
-<blockquote class="plain"><p><strong>In plain words</strong><br>This is the plan for the database: which tables exist, how they link, and which rules the database itself enforces.<br>It has 77 tables in 14 groups. The full column list is in <a href="05b-data-dictionary.html">05b-data-dictionary.md</a> and the machine-readable version in <a href="files/schema.dbml">schema.dbml</a>.<br>The most important ideas: one &quot;host account&quot; for every kind of host; the database refuses double bookings; money is kept in a ledger that is never edited.<br>Each big choice is written as a short decision record (ADR) with the options we rejected.<br>At the end: how today&#39;s demo data maps onto the new tables, what to seed first, and how the busiest queries will run.</p>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="on" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 5: database</div><h1 id="05-database-schema">05. Database schema</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This is the plan for the database: which tables exist, how they link, and which rules the database itself enforces.<br>It has 83 tables in 14 groups. The full column list is in <a href="05b-data-dictionary.html">05b-data-dictionary.md</a> and the machine-readable version in <a href="files/schema.dbml">schema.dbml</a>.<br>The most important ideas: one &quot;host account&quot; for every kind of host; the database refuses double bookings (section 6 says exactly how, case by case); money is kept in a ledger that is never edited.<br>Each big choice is written as a short decision record (ADR) with the options we rejected.<br>At the end: how today&#39;s demo data maps onto the new tables, what to seed first, and how the busiest queries will run.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
 <ul>
@@ -55,6 +55,9 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>Index</strong>: a lookup structure that makes searches fast, like the index at the back of a book.</li>
 <li><strong>Partial index</strong>: an index (often unique) that applies only to rows matching a condition, e.g. &quot;only active owners&quot;.</li>
 <li><strong>GiST / GIN</strong>: PostgreSQL index types for ranges, map points, arrays and text search.</li>
+<li><strong>Trigger</strong>: a small function PostgreSQL runs automatically before or after a write; it can refuse the write.</li>
+<li><strong>Trigram (<code>pg_trgm</code>)</strong>: a way to compare texts by their 3-letter pieces, so <code>tizi wezou</code> still finds <code>Tizi Ouzou</code>; works for Arabic without a stemmer.</li>
+<li><strong>Database role</strong>: a login inside PostgreSQL with its own rights (which tables it may read, insert, change).</li>
 <li><strong>Migration</strong>: a versioned script that creates or changes tables. Not written yet (no backend code in this phase).</li>
 </ul>
 <p>Inputs: <a href="01-system-inventory.html">01-system-inventory.md</a>, <a href="03-requirements.html">03-requirements.md</a>, <a href="04-business-rules.html">04-business-rules.md</a>, research <a href="02-research.html">02-research.md</a> section B.</p>
@@ -105,12 +108,12 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>bookings</td>
-<td>booking, booking_event, refund, dispute</td>
-<td>Reservations and their history</td>
+<td>booking, booking_event, refund, refund_obligation, dispute</td>
+<td>Reservations, their history and the refunds hosts owe</td>
 </tr>
 <tr>
 <td>ledger</td>
-<td>ledger_account, ledger_transaction, ledger_entry, account_balance, wallet_topup, gateway_event, payment*, payout*, invoice</td>
+<td>ledger_account, ledger_transaction, ledger_entry, account_balance, wallet_topup, wallet_adjustment, gateway_event, payment*, payout*, invoice</td>
 <td>Money (* dormant until the money model changes)</td>
 </tr>
 <tr>
@@ -120,7 +123,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>messaging, notifications</td>
-<td>conversation, conversation_participant, message, notification, notification_preference, outbox_event, delivery_log</td>
+<td>conversation, conversation_participant, message, notification, notification_preference, outbox_message, delivery_log</td>
 <td>Messages, alerts, reliable sending</td>
 </tr>
 <tr>
@@ -129,8 +132,8 @@ section.doc{page-break-before:always;padding:0}
 <td>Photos and private documents</td>
 </tr>
 <tr>
-<td>trust, config, audit, privacy, core</td>
-<td>incident_record, otp_send_log, calendar_feed (inventory), reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc</td>
+<td>trust, config, audit, privacy, core, integrations</td>
+<td>incident_record, otp_send_log, calendar_feed (inventory), property_integration, integration_sync_log, inventory_conflict, property_service, reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc</td>
 <td>Staff work, settings, history, legal requests, system safety</td>
 </tr>
 </tbody></table>
@@ -147,8 +150,8 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>IDs</td>
-<td>UUIDv7 (time-ordered) made by the app; human references for people (<code>BLD-2026-7K2M9Q</code>, <code>LST-...</code>)</td>
-<td>Not guessable (BR security API1), sortable, no <code>Date.now()</code> collisions</td>
+<td><strong>One scheme (DEC-031)</strong>: every table the app writes has a UUIDv7 primary key (time-ordered) made by the app, including history, ledger, message, notification, outbox and audit rows (no more <code>bigint</code> counters). Human references (<code>BLD-2026-7K2M9Q</code> bookings, <code>LST-7K2M9Q</code> listings, <code>TRP-...</code> trips) are only for display and search; API paths take the UUID. The geography reference tables keep the official state codes.</td>
+<td>Not guessable (BR security API1), sortable (works as a cursor), no <code>Date.now()</code> collisions</td>
 </tr>
 <tr>
 <td>Money</td>
@@ -206,12 +209,13 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>Rejected</strong>: (a) host fields on <code>user</code> (cannot represent organisations); (b) only organisations, with a &quot;solo organisation&quot; per individual (confusing for individuals, more rows, forces team concepts on solo hosts).</li>
 <li><strong>Consequences</strong>: one wallet per host account; Karim&#39;s individual hosting and his agency have separate wallets and commission rates; the API carries an &quot;active host account&quot; header.</li>
 </ul>
-<h3 id="adr-002-database-enforced-availability-two-mechanisms">ADR-002: Database-enforced availability, two mechanisms</h3>
+<h3 id="adr-002-database-enforced-availability-three-mechanisms-corrected-2026-11-13-dec-020">ADR-002: Database-enforced availability, three mechanisms (corrected 2026-11-13, DEC-020)</h3>
 <ul>
-<li><strong>Context</strong>: double booking must be impossible (AVL-01, AVL-02); today it relies on single-threaded JavaScript.</li>
-<li><strong>Decision</strong>: single units (homes, vehicles) use a <code>daterange</code> on <code>booking</code> with an <strong>exclusion constraint</strong>; pooled units (hotel room types, hostel beds, experience slots, trip departures) use <strong>counter rows</strong> (<code>room_type_night</code>, <code>experience_slot</code>, <code>trip_departure</code>) with <code>CHECK (held + booked &lt;= total)</code> and an atomic conditional <code>UPDATE</code>.</li>
+<li><strong>Context</strong>: double booking must be impossible (AVL-01, AVL-02, AVL-07); today it relies on single-threaded JavaScript.</li>
+<li><strong>Decision</strong>: (1) single units (homes, vehicles) use a <code>daterange</code> on <code>booking</code> with an <strong>exclusion constraint</strong>, plus a service lock on the listing row; (2) pooled units (hotel room types, hostel beds, experience slots, trip departures) use <strong>counter rows</strong> (<code>room_type_night</code>, <code>experience_slot</code>, <code>trip_departure</code>) with <code>CHECK (held + booked &lt;= total)</code> and one conditional <code>UPDATE</code>, <strong>no exclusion constraint</strong>; (3) blocked days (<code>listing_day.is_blocked</code>) and single-unit bookings are kept apart by <strong>two triggers</strong> (BR-AVL-07), with the same check in the services after the listing row lock.</li>
+<li><strong>Correction</strong>: earlier versions said &quot;the database refuses every overlap&quot;. That was not true for blocked days (no constraint linked <code>listing_day</code> and <code>booking</code>) and the exclusion constraint never covered pools. Section 6 now lists the exact guarantee per case.</li>
 <li><strong>Rejected</strong>: (a) application locks only (lost under multiple servers); (b) one row per physical room for hotels (heavier; hosts do not assign rooms at booking time); (c) Redis counters (not transactional with the booking).</li>
-<li><strong>Consequences</strong>: concurrent requests for the last unit: exactly one succeeds, the other gets <code>409 dates_unavailable</code>. Counter rows are created 18 months ahead by a job.</li>
+<li><strong>Consequences</strong>: concurrent requests for the last unit: exactly one succeeds, the other gets <code>409 dates_unavailable</code>. Counter rows are created 18 months ahead by a job. A hotel sync can never push <code>total</code> below <code>held + booked</code> (BR-HST-07).</li>
 </ul>
 <h3 id="adr-003-one-booking-table-with-typed-targets">ADR-003: One booking table with typed targets</h3>
 <ul>
@@ -234,7 +238,7 @@ section.doc{page-break-before:always;padding:0}
 <h3 id="adr-006-money-in-centimes-with-a-double-entry-ledger">ADR-006: Money in centimes with a double-entry ledger</h3>
 <ul>
 <li><strong>Context</strong>: DEC-001 (prepaid commission now, maybe collected payments later); research B.17 and A.5.</li>
-<li><strong>Decision</strong>: <code>ledger_account</code>, <code>ledger_transaction</code>, <code>ledger_entry</code> (insert-only, sum to zero per transaction, enforced by a deferred trigger) and <code>account_balance</code> cache. Amounts in centimes.</li>
+<li><strong>Decision</strong>: <code>ledger_account</code>, <code>ledger_transaction</code>, <code>ledger_entry</code> (insert-only, sum to zero per transaction, enforced by a deferred trigger) and <code>account_balance</code> cache for host wallets. Amounts in centimes. Insert-only is enforced by triggers and by the role split (<code>bladus_migrator</code> owns, <code>bladus_app</code> may only SELECT and INSERT, DEC-026); the nightly <code>reconcile_balances</code> job checks the caches. No platform balance row is updated on the booking path; revenue is a SUM (DEC-023).</li>
 <li><strong>Rejected</strong>: single-sided wallet rows (both apps today: cannot prove that money balances); <code>DECIMAL</code> with django-money (repository archived 2026).</li>
 <li><strong>Consequences</strong>: M2 to M4 only add accounts and transaction kinds; no schema rewrite. Corrections are reversing transactions.</li>
 </ul>
@@ -260,14 +264,14 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>Decision</strong>: <code>platform_settings</code> and <code>onboarding_flow_version</code> store a validated JSON document per version; old versions stay readable.</li>
 <li><strong>Rejected</strong>: one column per setting (migration per setting); key-value rows (no validation, no atomic versions).</li>
 </ul>
-<h3 id="adr-011-search-table-postgresql-only">ADR-011: Search table, PostgreSQL only</h3>
+<h3 id="adr-011-search-table-postgresql-only-trigram-not-full-text">ADR-011: Search table, PostgreSQL only, trigram not full-text</h3>
 <ul>
-<li><strong>Decision</strong>: <code>listing_search_doc</code> holds one denormalised row per published listing, refreshed through the outbox; queries combine it with live availability (research B.7).</li>
-<li><strong>Rejected</strong>: external search engine at launch.</li>
+<li><strong>Decision</strong>: <code>listing_search_doc</code> holds one denormalised row per published listing, refreshed through the outbox; queries combine it with live availability (research B.7). Text matching uses <code>pg_trgm</code> trigram similarity on <code>search_text</code> (GIN <code>gin_trgm_ops</code>) plus <code>unaccent</code>, with GIN trigram indexes on listing titles and commune names (DEC-030, BR-SRC-05).</li>
+<li><strong>Rejected</strong>: external search engine at launch; PostgreSQL full-text (<code>tsvector</code>): it has no Arabic stemmer, so Arabic and Darija queries would miss.</li>
 </ul>
 <h3 id="adr-012-audit-as-a-hash-chained-insert-only-table-plus-automatic-row-history">ADR-012: Audit as a hash-chained, insert-only table plus automatic row history</h3>
 <ul>
-<li><strong>Decision</strong>: <code>audit_event</code> (human &quot;who did what&quot;) with <code>prev_hash</code>/<code>hash</code>, monthly partitions, no UPDATE/DELETE grant; django-pghistory tables for automatic row history of bookings, listings, memberships, settings (research B.11).</li>
+<li><strong>Decision</strong>: <code>audit_event</code> (human &quot;who did what&quot;) with <code>prev_hash</code>/<code>hash</code>, monthly partitions, a trigger that refuses UPDATE and DELETE, only SELECT and INSERT for <code>bladus_app</code> (REVOKE alone does not stop the table owner, so the owner is a different role), daily export to write-once storage; django-pghistory tables for automatic row history of bookings, listings, memberships, settings (research B.11).</li>
 <li><strong>Rejected</strong>: signal-based history only (misses bulk updates).</li>
 </ul>
 <h3 id="adr-013-geography-as-reference-tables-with-provenance">ADR-013: Geography as reference tables with provenance</h3>
@@ -335,7 +339,19 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>wallet_topup</code></td>
-<td>A host&#39;s deposit recorded by finance staff, with its receipt reference.</td>
+<td>A host&#39;s deposit recorded by an admin, with its receipt reference.</td>
+</tr>
+<tr>
+<td><code>wallet_adjustment</code></td>
+<td>A manual correction of a host wallet, posted only after a second admin approves.</td>
+</tr>
+<tr>
+<td><code>refund_obligation</code></td>
+<td>Money a host owes a guest after a cancellation, with a due date and its status.</td>
+</tr>
+<tr>
+<td><code>inventory_conflict</code></td>
+<td>A hotel sync asked for fewer rooms than BLADUS already sold; the admin decides.</td>
 </tr>
 <tr>
 <td><code>review</code></td>
@@ -354,8 +370,8 @@ section.doc{page-break-before:always;padding:0}
 <td>A tamper-evident record of who did what.</td>
 </tr>
 <tr>
-<td><code>outbox_event</code></td>
-<td>A message to send after a change is saved (notification, email, search refresh).</td>
+<td><code>outbox_message</code></td>
+<td>A message to send after a change is saved (notification, email, SMS, search refresh, hotel push), retried until sent or <code>dead</code>.</td>
 </tr>
 </tbody></table>
 <hr>
@@ -363,13 +379,15 @@ section.doc{page-break-before:always;padding:0}
 <ol>
 <li>Guest asks for a price: a <code>quote</code> row (30 minutes).</li>
 <li>Guest books with an <code>Idempotency-Key</code>: <code>idempotency_record</code> locks the key.</li>
-<li>In one transaction: insert <code>booking</code> (status <code>pending</code> or <code>confirmed</code>), reserve inventory (exclusion constraint or counter <code>UPDATE</code>), insert <code>booking_event</code>, and if confirmed post the commission <code>ledger_transaction</code> (2 entries) and update <code>account_balance</code>; insert <code>outbox_event</code> rows (notify host and guest, refresh search).</li>
+<li>In one transaction, in this lock order (BR-PAY-14): lock the host wallet <code>account_balance</code> row and check the floor and overdue refunds; lock the listing row; insert <code>booking</code> (status <code>pending</code> or <code>confirmed</code>), reserve inventory (exclusion constraint and blocked-day trigger, or counter <code>UPDATE</code>), insert <code>booking_event</code>, and if confirmed post the commission <code>ledger_transaction</code> (2 entries) and update the host wallet <code>account_balance</code>; insert <code>outbox_message</code> rows (notify host and guest, refresh search, <code>inventory.push</code> for a connected hotel).</li>
 <li>Commit. Workers send notifications from the outbox.</li>
-<li>Jobs later: expire pending (<code>expired</code>, release counters), complete after check-out (<code>completed</code>), open review window.</li>
+<li>Jobs later: expire pending (<code>expired</code>, release counters), complete after check-out (<code>completed</code>), open review window (a review also needs <code>stay_confirmed_at</code>).</li>
+<li>Cancellation: <code>commission_reversal</code> for the share of the commission that follows the refund (BR-PAY-05), a <code>refund</code> row and a <code>refund_obligation</code> with the <code>refund_due</code> memo posting (BR-CAN-06).</li>
 </ol>
 <hr>
 <h2 id="6-constraints-the-database-enforces-sql-sketch">6. Constraints the database enforces (SQL sketch)</h2>
-<p>These are written as SQL for clarity; they will become Django <code>Meta.constraints</code> or migration operations in the build phase.</p>
+<p>These are written as SQL for clarity; they will become Django <code>Meta.constraints</code> or migration operations in the build phase. The same block is appended to <a href="files/schema.sql">schema.sql</a>.</p>
+<p><strong>What the database guarantees against double booking</strong> (DEC-020): single units, exclusion constraint on <code>booking</code>; room pools, slots and departures, CHECK on counters (no exclusion constraint); blocked days versus single-unit bookings, triggers <code>listing_day_block_guard</code> and <code>booking_blocked_day_guard</code>. The services check the same rules first (after locking the listing row) so the user gets a clear error code.</p>
 <pre><code class="lang-sql">-- Extensions
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS btree_gist;   -- equality inside exclusion constraints
@@ -436,7 +454,90 @@ END $$ LANGUAGE plpgsql;
 CREATE CONSTRAINT TRIGGER ledger_entry_balanced AFTER INSERT ON ledger_entry
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ledger_tx_balanced();
 ALTER TABLE ledger_entry ADD CONSTRAINT ledger_entry_nonzero CHECK (amount_minor &lt;&gt; 0);
-REVOKE UPDATE, DELETE ON ledger_entry, ledger_transaction, audit_event, booking_event FROM bladus_app;
+
+-- DEC-026: insert-only tables, refused for every role (also the table owner)
+CREATE FUNCTION refuse_change() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION '% on % is not allowed (insert-only table)', TG_OP, TG_TABLE_NAME;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER ledger_transaction_insert_only BEFORE UPDATE OR DELETE ON ledger_transaction
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER ledger_entry_insert_only BEFORE UPDATE OR DELETE ON ledger_entry
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER audit_event_insert_only BEFORE UPDATE OR DELETE ON audit_event
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER booking_event_insert_only BEFORE UPDATE OR DELETE ON booking_event
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+
+-- DEC-026: role split. The owner runs migrations; the app cannot change ledger or audit rows.
+CREATE ROLE bladus_migrator LOGIN;            -- owns every table, used only by migrations
+CREATE ROLE bladus_app LOGIN;                 -- the Django app at run time
+-- (every table is created by bladus_migrator, so bladus_app is never an owner)
+GRANT USAGE ON SCHEMA public TO bladus_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bladus_app;
+REVOKE UPDATE, DELETE, TRUNCATE ON ledger_transaction, ledger_entry, audit_event, booking_event FROM bladus_app;
+GRANT SELECT, INSERT ON ledger_transaction, ledger_entry, audit_event, booking_event TO bladus_app;
+
+-- BR-AVL-07 (a): never block a day that a single-unit booking holds
+CREATE FUNCTION listing_day_block_guard() RETURNS trigger AS $$
+BEGIN
+  IF NEW.is_blocked AND EXISTS (
+       SELECT 1 FROM booking b
+        WHERE b.listing_id = NEW.listing_id AND b.inventory_kind = 'single'
+          AND b.status IN ('awaiting_payment','pending','confirmed','completed','disputed')
+          AND b.stay @&gt; NEW.day) THEN
+    RAISE EXCEPTION 'dates_booked' USING ERRCODE = '23P01';
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER listing_day_block_guard BEFORE INSERT OR UPDATE OF is_blocked ON listing_day
+  FOR EACH ROW EXECUTE FUNCTION listing_day_block_guard();
+
+-- BR-AVL-07 (b): never place or move a single-unit booking onto a blocked day
+CREATE FUNCTION booking_blocked_day_guard() RETURNS trigger AS $$
+BEGIN
+  IF NEW.inventory_kind = 'single'
+     AND NEW.status IN ('awaiting_payment','pending','confirmed','completed','disputed')
+     AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM NEW.status OR OLD.stay IS DISTINCT FROM NEW.stay)
+     AND EXISTS (SELECT 1 FROM listing_day d
+                  WHERE d.listing_id = NEW.listing_id AND d.is_blocked AND NEW.stay @&gt; d.day) THEN
+    RAISE EXCEPTION 'dates_unavailable' USING ERRCODE = '23P01';
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER booking_blocked_day_guard BEFORE INSERT OR UPDATE OF status, stay ON booking
+  FOR EACH ROW EXECUTE FUNCTION booking_blocked_day_guard();
+-- Both services lock the listing row first (SELECT ... FOR UPDATE), so the two triggers never race.
+
+-- BR-BKG-09: stay confirmation only on a confirmed or finished booking
+ALTER TABLE booking ADD CONSTRAINT booking_stay_confirmed_ok CHECK (
+  stay_confirmed_at IS NULL OR status IN ('confirmed','completed','disputed'));
+
+-- BR-PAY-13: manual adjustments, capped and four-eyes
+ALTER TABLE wallet_adjustment ADD CONSTRAINT adjustment_amount_ok
+  CHECK (amount_minor &lt;&gt; 0 AND abs(amount_minor) &lt;= 100000000);
+ALTER TABLE wallet_adjustment ADD CONSTRAINT adjustment_four_eyes
+  CHECK (approved_by_id IS NULL OR approved_by_id &lt;&gt; requested_by_id);
+ALTER TABLE wallet_topup ADD CONSTRAINT topup_four_eyes
+  CHECK (approved_by_id IS NULL OR approved_by_id &lt;&gt; requested_by_id);
+
+-- BR-CAN-06: refund obligations
+ALTER TABLE refund_obligation ADD CONSTRAINT refund_obligation_amount_ok CHECK (amount_minor &gt; 0);
+CREATE INDEX refund_obligation_overdue ON refund_obligation (due_at) WHERE status IN ('open','disputed');
+
+-- BR-HST-07: one open conflict per room-night
+CREATE UNIQUE INDEX inventory_conflict_one_open ON inventory_conflict (room_type_id, night) WHERE status = 'open';
+
+-- BR-SYS-03: outbox
+ALTER TABLE outbox_message ADD CONSTRAINT outbox_attempts_ok CHECK (attempts BETWEEN 0 AND 8);
+
+-- BR-SRC-05: trigram search (no tsvector; PostgreSQL has no Arabic stemmer)
+CREATE INDEX listing_title_trgm ON listing USING gin (lower(unaccent_immutable(title)) gin_trgm_ops);
+CREATE INDEX search_doc_text_trgm ON listing_search_doc USING gin (search_text gin_trgm_ops);
+CREATE INDEX commune_name_fr_trgm ON commune USING gin (lower(unaccent_immutable(name_fr)) gin_trgm_ops);
+CREATE INDEX commune_name_en_trgm ON commune USING gin (lower(name_en) gin_trgm_ops);
+CREATE INDEX commune_name_ar_trgm ON commune USING gin (name_ar gin_trgm_ops);
+-- unaccent_immutable: an IMMUTABLE SQL wrapper around unaccent('unaccent', text), needed to index it
 
 -- BR-PAY-04: commission posted once per booking
 CREATE UNIQUE INDEX ledger_one_commission ON ledger_transaction (booking_id) WHERE kind = 'commission';
@@ -513,7 +614,7 @@ CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE
 <td>Q7</td>
 <td>Message sync since cursor</td>
 <td>very high (polling)</td>
-<td><code>message (conversation_id, id)</code>; <code>conversation_participant (user_id)</code></td>
+<td><code>message (conversation_id, id)</code> (UUIDv7 ids sort by time); <code>conversation_participant (user_id)</code></td>
 <td>index range <code>id &gt; cursor</code></td>
 <td>100 ms</td>
 </tr>
@@ -561,7 +662,7 @@ CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE
 <td>Q13</td>
 <td>Outbox dispatch</td>
 <td>constant</td>
-<td><code>outbox_event (status, next_attempt_at)</code> with <code>FOR UPDATE SKIP LOCKED</code></td>
+<td><code>outbox_message (status, next_attempt_at)</code> with <code>FOR UPDATE SKIP LOCKED</code></td>
 <td>index range</td>
 <td>50 ms</td>
 </tr>
@@ -575,11 +676,19 @@ CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE
 </tr>
 <tr>
 <td>Q15</td>
-<td>Commune autocomplete</td>
+<td>Commune autocomplete and text search</td>
 <td>high</td>
-<td>GIN trigram on <code>unaccent(name_fr)</code>, <code>name_ar</code></td>
-<td>GIN</td>
+<td>GIN trigram (<code>gin_trgm_ops</code>) on <code>unaccent(name_fr)</code>, <code>name_en</code>, <code>name_ar</code>, listing <code>title</code> and <code>listing_search_doc.search_text</code></td>
+<td>GIN, <code>similarity()</code> ordering</td>
 <td>50 ms</td>
+</tr>
+<tr>
+<td>Q17</td>
+<td>Overdue refunds of a host (on booking and accept)</td>
+<td>medium</td>
+<td><code>refund_obligation (host_account_id, status, due_at)</code>; partial <code>(due_at) WHERE status IN (&#39;open&#39;,&#39;disputed&#39;)</code></td>
+<td>index range</td>
+<td>10 ms</td>
 </tr>
 <tr>
 <td>Q16</td>
@@ -841,8 +950,8 @@ CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE
 <tr>
 <td>3</td>
 <td><code>staff_permission</code>, <code>staff_role_permission</code></td>
-<td>admin <code>lib/permissions.ts</code> matrix</td>
-<td>34 permissions x 5 roles</td>
+<td>admin <code>lib/permissions.ts</code> permission list</td>
+<td>one role, admin, with every permission (DEC-016)</td>
 </tr>
 <tr>
 <td>4</td>
@@ -865,7 +974,7 @@ CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE
 <tr>
 <td>7</td>
 <td><code>platform_settings</code> v1</td>
-<td>defaults: 1,200 / 1,500 / 1,800 / 1,000 bp; request TTL 24; credit limit 20,000 DZD</td>
+<td>defaults: 1,200 / 1,500 / 1,800 / 1,000 bp; request TTL 24; credit limit 20,000 DZD; four-eyes 500,000 DZD (rolling 24 h); adjustment cap 1,000,000 DZD; refund due 7 days; 3 pending requests and 6 upcoming bookings per guest; SMS budget 5,000 per day</td>
 <td>1</td>
 </tr>
 <tr>
@@ -896,10 +1005,20 @@ CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE
 <li><code>incident_record</code> (breach register and 5-day clock, PRV-05), <code>calendar_feed</code> (iCal, AVL-06), <code>otp_send_log</code> (one-time code sends, ACC-02). These closed decision T5.</li>
 <li><a href="files/schema.sql">schema.sql</a>: the PostgreSQL rendering of <code>schema.dbml</code> produced by the official DBML tool.</li>
 </ul>
+<h2 id="changes-on-2026-11-13-external-review">Changes on 2026-11-13 (external review)</h2>
+<ul>
+<li>New tables: <code>refund_obligation</code> (DEC-024), <code>wallet_adjustment</code> (DEC-022), <code>inventory_conflict</code> (DEC-021); <code>outbox_event</code> renamed <code>outbox_message</code> with <code>last_error</code> and status <code>dead</code> (DEC-029). Total 83 tables.</li>
+<li><code>booking</code>: <code>check_in_code</code>, <code>stay_confirmed_at</code>, <code>stay_confirmed_via</code> (DEC-028).</li>
+<li>Ledger: account kinds <code>host_refund_payable</code>, <code>guest_refund_clearing</code>; transaction kinds <code>refund_due</code>, <code>refund_settled</code> (<code>adjustment</code> already existed).</li>
+<li>Triggers for blocked days (BR-AVL-07) and for the insert-only ledger, audit and booking history tables; role split <code>bladus_migrator</code> / <code>bladus_app</code> (DEC-026); trigram indexes instead of <code>tsvector</code> columns (DEC-030).</li>
+<li>One id scheme (DEC-031): the former <code>bigint</code> counters (<code>booking_event</code>, <code>ledger_entry</code>, <code>message</code>, <code>notification</code>, <code>outbox_message</code>, <code>delivery_log</code>, <code>audit_event</code>, <code>otp_send_log</code>, <code>integration_sync_log</code>) are now UUIDv7.</li>
+<li>The double-booking claim is corrected (ADR-002 and section 6).</li>
+</ul>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
 <li><input disabled="" type="checkbox"> What does <code>host_account</code> replace, and which disagreement does it solve?</li>
 <li><input disabled="" type="checkbox"> Two guests click &quot;Reserve&quot; on the last hotel room at the same second. Which constraint decides, and what does the loser see?</li>
+<li><input disabled="" type="checkbox"> A host blocks a day that a guest booked one second earlier. What stops it?</li>
 <li><input disabled="" type="checkbox"> Why does the ledger refuse <code>UPDATE</code>? How is a mistake corrected?</li>
 <li><input disabled="" type="checkbox"> Which tables are dormant until the money model changes?</li>
 <li><input disabled="" type="checkbox"> Which index makes message polling cheap?</li>

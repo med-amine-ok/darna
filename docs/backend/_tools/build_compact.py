@@ -43,7 +43,7 @@ DESC = {
  "room_type_amenity": "Which amenities a room type has.",
  "listing_photo": "Photos of listings, room types and trips, in order, with a cover.",
  "featured_placement": "Listings or trips the admin features on the home page for a period.",
- "listing_day": "For a home or vehicle: a day the host blocked or priced differently.",
+ "listing_day": "For a home or vehicle: a day the host blocked or priced differently. A trigger refuses blocking a booked day.",
  "room_type_night": "For one room type and one night: units existing, held and booked. The database refuses overselling.",
  "experience_slot": "A dated time slot of an experience with its seats.",
  "trip": "A multi-day agency trip with type, price per person and policy.",
@@ -51,15 +51,17 @@ DESC = {
  "trip_departure": "A dated departure of a trip with seats and status.",
  "quote": "A price calculated by the server for chosen dates, valid 30 minutes.",
  "tax_rate": "Tourist tax and VAT rates with validity dates (used later).",
- "booking": "One reservation with frozen prices, commission and cancellation rules. The database refuses overlapping stays.",
+ "booking": "One reservation with frozen prices, commission, cancellation rules and the check-in code. The database refuses overlapping stays of a home or vehicle.",
  "booking_event": "Every status change of a booking, in order.",
  "refund": "Amounts owed back to the guest after a cancellation.",
+ "refund_obligation": "The refund a host owes a guest after a cancellation, with a due date (7 days) and a status: open, declared, settled, disputed.",
  "dispute": "A disagreement about a stay and how it was resolved (later release).",
- "ledger_account": "Money accounts: one deposit wallet per host, BLADUS cash, BLADUS commission.",
- "ledger_transaction": "One money event (top-up, commission, commission returned). Never edited.",
+ "ledger_account": "Money accounts: one deposit wallet per host, BLADUS cash, BLADUS commission, adjustments, and two memo accounts for refunds hosts owe.",
+ "ledger_transaction": "One money event (top-up, commission, commission returned, adjustment, refund owed or settled). Never edited: a trigger refuses it.",
  "ledger_entry": "The lines of a money event; they always add up to zero.",
- "account_balance": "Current balance of each account (always equals the sum of its lines).",
+ "account_balance": "Current balance of each host wallet (always equals the sum of its lines; checked every night).",
  "wallet_topup": "A host deposit recorded by the admin with its receipt reference.",
+ "wallet_adjustment": "A manual correction of a host deposit; posted only after a second admin approves (at most 1,000,000 DZD).",
  "gateway_event": "Messages from a payment gateway. Not used until online payment exists.",
  "payment": "Guest payments by card. Not used until online payment exists.",
  "payout": "Money sent to hosts. Not used until online payment exists (except returning unused deposit).",
@@ -72,7 +74,7 @@ DESC = {
  "message": "One message; contact details are masked before a booking is confirmed.",
  "notification": "In-app notifications.",
  "notification_preference": "Which notifications a user wants by email, SMS or push.",
- "outbox_event": "Things to send after a change is saved (email, SMS, search refresh), so nothing is lost.",
+ "outbox_message": "Things to send after a change is saved (email, SMS, search refresh, hotel availability push), retried until sent or marked dead.",
  "delivery_log": "Result and cost of each email or SMS sent.",
  "media_asset": "Every uploaded file: public photos and private documents.",
  "reason_code": "Preset reasons (reject, decline, cancel, report) in three languages.",
@@ -84,7 +86,7 @@ DESC = {
  "onboarding_draft": "A host application in progress, saved on the server.",
  "coupon": "Discount codes (later release).",
  "coupon_redemption": "Use of a coupon on a booking (later release).",
- "audit_event": "Who did what and when. Cannot be edited or deleted.",
+ "audit_event": "Who did what and when. Cannot be edited or deleted (trigger and database roles), copied every day to write-once storage.",
  "export_job": "CSV exports requested by the admin.",
  "data_subject_request": "Requests from users to see, fix or delete their data.",
  "idempotency_record": "Protects against a request being executed twice after a retry.",
@@ -93,8 +95,9 @@ DESC = {
  "otp_send_log": "Log of every SMS code sent (for cost control and fraud detection).",
  "property_integration": "Connection to a hotel's own system: which system, encrypted access key, what to sync, status.",
  "integration_sync_log": "One line per sync run with what changed or why it failed.",
+ "inventory_conflict": "A hotel system asked for fewer rooms than BLADUS already sold; the total is kept and the admin decides.",
  "property_service": "Services of a hotel or hostel (restaurant, spa, parking...), typed by hand or imported.",
- "listing_search_doc": "One ready-to-search line per published listing; makes search fast.",
+ "listing_search_doc": "One ready-to-search line per published listing; makes search fast (trigram text search, map, filters).",
 }
 
 GROUP_TEXT = {
@@ -135,19 +138,21 @@ STATES = [
 ]
 FLOWS = [
  ("20-seq-instant-booking", "Instant booking, step by step",
-  "Read from top to bottom. The website first asks the API for a price (quote), then creates the booking with that quote. Everything happens in one database transaction: the booking is saved, the database itself refuses overlapping dates, the commission is taken from the host's deposit, and the messages to send are written in the outbox. After the save, a worker sends the SMS, email and notifications. The exact address is shown to the guest only after confirmation."),
+  "Read from top to bottom. The website first asks the API for a price (quote), then creates the booking with that quote. Everything happens in one database transaction, always in the same order: the host's deposit row is locked first, then the listing; the booking is saved (the database refuses overlapping stays and blocked days), the commission is taken from the deposit, and the messages to send are written in the outbox. After the save, a worker sends the SMS, email and notifications, retrying if needed. The exact address and the check-in code are shown to the guest only after confirmation."),
  ("21-seq-request-to-book", "Request to book",
-  "The guest sends a request and the dates are blocked while it waits. Three endings are possible: the host accepts (the booking is confirmed and the commission is taken), the host declines (dates are freed), or nobody answers and a timed job expires the request after 24 hours and tells both sides."),
+  "The guest sends a request (at most 3 pending requests per guest) and the dates are blocked while it waits. Three endings are possible: the host accepts (the booking is confirmed and the commission is taken; refused if the deposit is too low or a refund is overdue), the host declines (dates are freed), or nobody answers and a timed job expires the request after 24 hours and tells both sides."),
  ("22-seq-wallet-topup", "Host deposit top-up",
-  "There is no online payment in the first release. The host sends money to BLADUS by CCP or bank transfer; the admin records the top-up with the receipt reference (the same receipt cannot be used twice). Large amounts need a second admin to approve. Each confirmed booking then takes its commission from this deposit, and a cancelled booking gives the full commission back."),
+  "There is no online payment and no online top-up in the first release. The host sends money to BLADUS by CCP or bank transfer; the admin records the top-up with the receipt reference (the same receipt cannot be used twice). When the host's top-ups of the last 24 hours pass 500,000 DZD, a second, different admin must approve, so splitting a deposit does not help. Each confirmed booking then takes its commission from this deposit; on a cancellation the commission follows the refund."),
  ("23-seq-host-onboarding", "Becoming a host",
   "The form steps come from the published configuration, and the draft is saved on the server so the host can continue later. Documents are uploaded directly to private storage. When the host submits, a case appears in the admin queue; the admin checks each document, then approves the host, who can then create a first listing."),
  ("25-seq-hotel-sync", "Connecting a hotel's own system",
-  "A hotel owner enters the access key of the hotel system. The API tests the connection, saves the key encrypted, and a job imports room types, prices, availability and services (restaurants, spa, parking...). The job then refreshes availability and prices every 15 minutes. If a sync fails, the last good data stays and the connection is flagged."),
+  "A hotel owner enters the access key of the hotel system. The API checks the address is safe, tests the connection, saves the key encrypted, and a job imports room types, prices, availability and services (restaurants, spa, parking...). Every booking made on BLADUS is pushed to the hotel system at once through the outbox; a 15-minute pass then reconciles both sides. A sync can never set availability below what BLADUS already sold: the number is kept and a conflict goes to the admin. If a push keeps failing it becomes a dead message the admin can retry."),
+ ("26-seq-cancel-refund", "A guest cancels: commission and refund",
+  "The guest of the villa example cancels 3 days before arrival (moderate policy, 50% window). The host owes the guest 31,750 DZD. The commission follows the refund: the host gets 3,330 DZD of the 6,660 DZD back and BLADUS keeps 3,330 DZD. A refund obligation opens, due in 7 days. The host declares it paid with a reference; the guest confirms or says it did not arrive; the admin can settle it with proof. While a refund is overdue, the host loses instant booking and cannot accept requests."),
  ("24-seq-message-sync", "Messages",
   "The website asks the API for messages after the last one it already has (a cursor), so repeated checks are cheap. Before a booking is confirmed, phone numbers, emails and payment account numbers written in a message are masked for the other person, to protect guests from off-platform scams."),
  ("30-money-flow", "Where the money goes",
-  "In the first release the guest pays the host directly. The host keeps a deposit at BLADUS, topped up by transfer. BLADUS takes its commission from that deposit when a booking is confirmed and returns it in full if the booking is cancelled. Online card payment comes later."),
+  "In the first release the guest pays the host directly. The host keeps a deposit at BLADUS, topped up by transfer. BLADUS takes its commission from that deposit when a booking is confirmed. On a cancellation the same share of the commission as the share of the stay refunded goes back to the host, and the refund the host owes the guest is tracked with a due date. Online card payment comes later."),
 ]
 
 
@@ -208,7 +213,7 @@ def api_block():
     live = [o for o in ops if not o["dormant"]]
     groups = [("auth", "Sign-up and sign-in"), ("public", "Public (no login needed)"), ("me", "Signed-in guest"),
               ("messaging", "Messages"), ("media", "File uploads"), ("host", "Host workspace"), ("admin", "Admin"), ("webhooks", "Webhooks")]
-    out = [f"The contract has {len(ops)} operations; {len(ops) - len(live)} of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is `openapi.yaml`.\n"]
+    out = [f"The contract has {len(ops)} operations (computed from `openapi.yaml`). {len(ops) - len(live)} of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is `openapi.yaml`.\n"]
     for key, title in groups:
         rows = [o for o in live if o["tag"].split(".")[0] == key]
         if not rows:
@@ -222,6 +227,7 @@ def api_block():
 # ------------------------------------------------------------------ SQL
 def sql_blocks():
     full = (ROOT / "schema.sql").read_text(encoding="utf-8")
+    full = full.split("-- ==== EXTRA SQL FROM 05-database-schema.md")[0]
     kept, skip = [], False
     for line in full.splitlines():
         if line.startswith("COMMENT ON"):
@@ -244,7 +250,7 @@ n_tables = len(all_tables)
 
 MD = f"""# BLADUS backend: compact blueprint
 
-**What we will build, the choices, the flows, the database and the API.** Version of 2026-11-11. The complete blueprint (all research, requirements and details) stays in `dist/BLADUS-backend-blueprint.pdf`.
+**What we will build, the choices, the flows, the database and the API.** Version of 2026-11-13 (after the external review of 2026-11-13). The complete blueprint (all research, requirements and details) stays in `dist/BLADUS-backend-blueprint.pdf`.
 
 ## 1. What we will build
 
@@ -256,29 +262,29 @@ BLADUS has a website (guests and hosts) and an admin app, but no real backend: d
 | Who publishes what | Solo host: homes and vehicles. Agency: experiences and trips. Hotel and hostel: their property with rooms and services |
 | BLADUS income | Commission paid by the host: individual 12%, agency 15%, hotel 18%, hostel 10%. Guests pay no BLADUS fee |
 | Payment | **No online payment in the first release.** The guest pays the host directly; the host keeps a deposit at BLADUS. Online payment comes later |
-| Cancellation | The host **always recovers the full commission** when a confirmed booking is cancelled |
+| Cancellation | **Commission follows the refund**: the host gets back the same share of the commission as the share of the stay refunded to the guest (host cancels: all of it). The refund the host owes the guest is tracked with a due date |
 | Admin | **One role: admin**, with all permissions |
 | Hotels | BLADUS **connects directly to the hotel's own system** to import rooms, availability, prices and services |
 | Moderation | New listings and trips are checked by the admin before going live |
-| Double booking | Impossible: the database itself refuses it |
+| Double booking | Refused by the database: an exclusion rule for homes and vehicles, counters for rooms, beds and seats, triggers for blocked days; hotel syncs never go below what is sold |
 | Languages | English, French, Arabic (right-to-left), Latin digits |
 | Geography | 69 wilayas, 1,541 communes |
-| Size | {n_tables} tables, {n_live} API operations in the first release |
+| Size | {n_tables} tables, {n_ops} API operations ({n_ops - n_live} of them switched off until online payment exists) |
 
 ## 2. Technical choices, with short comparisons
 
 | Need | We choose | Instead of | Why |
 |---|---|---|---|
-| Backend framework | **Django 6.1** (Python) | Node/NestJS, Laravel | The owner knows Django; admin tools, security and database support are built in |
+| Backend framework | **Django 5.2 LTS** (Python, supported to April 2028) | Django 6.x, Node/NestJS, Laravel | The owner knows Django; long-term support; admin tools, security and database support are built in |
 | API layer | **Django REST Framework** | Django Ninja | Mature permissions, rate limits and documentation tools; most Django developers know it |
 | Database | **PostgreSQL + PostGIS** | MySQL, MongoDB | Date ranges and exclusion rules stop double booking inside the database; real map queries |
 | Sign-in | **django-allauth (headless)**, session tokens | JWT tokens with SimpleJWT | Phone codes and two-step login included; sessions can be cancelled at once |
 | Session in the apps | **Next.js server keeps an httpOnly cookie** and calls Django | Token stored in the browser | The browser never holds a token that scripts could steal |
 | Background jobs | **Celery + Redis** | Django tasks, Dramatiq | Schedules, retries and monitoring are proven |
-| Search | **PostgreSQL** (text + map + availability) | Meilisearch, Elasticsearch | One system, always consistent with availability; add a search engine only if needed |
+| Search | **PostgreSQL trigram search** (`pg_trgm` + unaccent) with map and availability | PostgreSQL full-text, Meilisearch | PostgreSQL full-text has no Arabic stemmer; trigrams work for Arabic, French and Darija spellings; one system, always consistent with availability |
 | Messages | **Polling "what is new since..."** | WebSockets from day one | Much simpler to run; real-time can be added later |
 | Files | **S3-compatible storage hosted in Algeria**, direct uploads | Files on the app server, Cloudinary | Cheap, safe, and personal documents stay in the country |
-| Money storage | **Whole centimes + double-entry ledger** | Decimal numbers, simple balance column | No rounding errors; every dinar can be explained |
+| Money storage | **Whole centimes + double-entry ledger**, insert-only, checked every night | Decimal numbers, simple balance column | No rounding errors (round half up per line); every dinar can be explained; the app's database login cannot edit money lines |
 | Code structure | **One project, small apps in layers** | Many microservices | Right size for a small team |
 | API contract | **OpenAPI file + generated TypeScript client** | Hand-written fetch calls | The two apps cannot drift from the API |
 | Hosting | **Algerian data centre** (two sites) | European cloud | Algerian e-commerce and personal data laws point to hosting in Algeria (to confirm with a lawyer) |
@@ -291,7 +297,7 @@ BLADUS has a website (guests and hosts) and an admin app, but no real backend: d
 | Guest pays | Directly to the host: cash on arrival or transfer | By CIB or Edahabia card on BLADUS, through a payment gateway |
 | BLADUS is paid | From the host's deposit: commission taken at confirmation | Commission kept from the guest's payment |
 | Host deposit top-up | Transfer to BLADUS (CCP or bank); the admin records it with the receipt reference | Also online by card |
-| Refund to guest | Owed by the host; BLADUS shows the amount to both sides | Made by BLADUS through the gateway |
+| Refund to guest | Owed by the host and tracked: due in 7 days, the host declares it paid, the guest confirms; an overdue refund blocks instant booking and accepting requests | Made by BLADUS through the gateway |
 | What is needed first | Nothing more | Gateway contract and legal confirmation that BLADUS may collect guests' money |
 
 The database and API already contain the tables and operations for online payment (`payment`, `payout`, `gateway_event`), but they stay switched off. Adding online payment later will not need a redesign.
@@ -306,7 +312,7 @@ The database and API already contain the tables and operations for online paymen
 | Organisation member | Website, host mode | Works for an agency, hotel or hostel with a team role (table below) |
 | **Admin** | Admin app | Everything on the staff side: verify hosts, review listings, handle bookings and reports, record deposits, settings, exports. Two-step login is required |
 
-There is **one admin role**. Sensitive actions that need two people (a deposit top-up above 500,000 DZD) need a second admin account. The permission tables stay in the database so roles can be split later without changing the design.
+There is **one admin role**. Sensitive actions need a second, different admin account: deposit top-ups when the host's total of the last 24 hours passes 500,000 DZD, and every manual correction of a deposit (at most 1,000,000 DZD each). The permission tables stay in the database so roles can be split later without changing the design.
 
 Team roles inside an organisation:
 
@@ -333,15 +339,15 @@ When a hotel or hostel becomes a host, BLADUS connects to the system the hotel a
 | **CSV file import** | Rooms, prices and services once | Hotels with no connected system | Not automatic |
 | **Manual entry** | Whatever the hotel types | Always available | Hotel must keep it up to date |
 
-How it works: the hotel owner chooses the system and enters its access key; BLADUS tests it, stores the key encrypted, imports room types, prices, availability and services, then refreshes every 15 minutes. Imported fields are read-only on BLADUS while the connection is active. A booking made on BLADUS lowers BLADUS availability immediately and is sent to the hotel system when that system accepts reservations. If a sync fails, the last good data stays and the connection is flagged for the hotel and the admin. Which hotel systems are used in Algeria must be checked with the first partner hotels; the design uses one small adapter per system, so new systems can be added without touching the rest.
+How it works: the hotel owner chooses the system and enters its access key; BLADUS tests it, stores the key encrypted, imports room types, prices, availability and services, then refreshes every 15 minutes. Imported fields are read-only on BLADUS while the connection is active. A booking made on BLADUS lowers BLADUS availability immediately and is pushed to the hotel system at once through the outbox (with retries). A sync can never set the number of rooms below what BLADUS holds or sold: the number is kept and a conflict is shown to the admin. If a sync fails, the last good data stays and the connection is flagged for the hotel and the admin. Which hotel systems are used in Algeria must be checked with the first partner hotels; the design uses one small adapter per system, so new systems can be added without touching the rest.
 
 ## 6. Main rules
 
 **Price.** The server calculates every price: nights x price per night (with per-day prices and weekly or monthly discounts) + cleaning fee. No BLADUS fee for the guest.
 
-**Commission.** Rate by host type x the nights total (cleaning fee excluded). Taken from the host's deposit when the booking is confirmed. **Returned in full if the booking is cancelled**, whoever cancels. If the deposit goes more than 20,000 DZD below zero, instant bookings become requests until the host tops up.
+**Commission.** Rate by host type x the nights total (cleaning fee and taxes excluded), rounded half up in centimes. Taken from the host's deposit when the booking is confirmed. **On a cancellation it follows the refund**: guest cancels, the host gets back the same share of the commission as the share of the nights refunded; host cancels, all of it; a declined or expired request never paid any. If the deposit goes more than 20,000 DZD below zero, instant bookings become requests until the host tops up.
 
-**Dates.** Check-in day is booked, check-out day is free for the next guest. Two bookings can never overlap on the same home or vehicle; rooms, beds and seats can never be oversold.
+**Dates.** Check-in day is booked, check-out day is free for the next guest. Two bookings can never overlap on the same home or vehicle; a booked day cannot be blocked and a blocked day cannot be booked; rooms, beds and seats can never be oversold. A guest can have at most 3 pending requests and 6 upcoming bookings.
 
 **Booking modes.** Instant (confirmed at once) or request (host answers within 24 hours, otherwise it expires automatically).
 
@@ -359,11 +365,11 @@ How it works: the hotel owner chooses the system and enters its access key; BLAD
 |---|---|---|
 | Admin records a 50,000 DZD top-up | 50,000 | 0 |
 | Booking confirmed: commission 12% x 55,500 | 43,340 (-6,660) | 6,660 |
-| Guest cancels 3 days before (moderate policy): host owes the guest 27,750 + 4,000 = 31,750 | **50,000 (+6,660, full commission back)** | 0 |
+| Guest cancels 3 days before (moderate policy, 50%): host owes the guest 27,750 + 4,000 = 31,750, due in 7 days | **46,670 (+3,330: 50% of the commission back)** | **3,330** |
 
-**Reviews.** Only after a completed stay, within 14 days, one per booking. Ratings on listings and hosts are always calculated from reviews.
+**Reviews.** Only after a completed stay **that was confirmed** (the host types the guest's 6-digit check-in code on arrival, or the guest confirms after check-in time), within 14 days, one per booking. Ratings on listings and hosts are always calculated from reviews.
 
-**Safety.** Phone verified before the first booking; exact address shown only after confirmation; contact details masked in messages before confirmation; every admin action written in a log that cannot be edited.
+**Safety.** Phone verified before the first booking; code sends limited (3 per hour and 10 per day per number, 5,000 SMS per day in total); exact address shown only after confirmation; contact details masked in messages before confirmation; addresses given by hotels checked before BLADUS calls them; every admin action written in a log that cannot be edited.
 
 ## 7. Architecture
 
@@ -391,7 +397,7 @@ This is the map of the central tables. Each box is a table; a line links a table
 
 ### Rules the database enforces by itself
 
-These rules are inside PostgreSQL, so even a bug in the code cannot break them: no overlapping stays, no overselling, exactly one owner per organisation, money lines that always balance, and logs that cannot be edited.
+These rules are inside PostgreSQL, so even a bug in the code cannot break them. Exactly what they guarantee: no overlapping stays on a home or vehicle (exclusion rule); no overselling of rooms, beds and seats (counter checks, no exclusion rule there); no blocked day under a booking and no booking on a blocked day (two triggers); exactly one owner per organisation; money lines that always balance; ledger, booking history and audit rows that nobody can change (triggers, and the app's database login may only read and add).
 
 ```sql
 {cons_sql}
@@ -399,7 +405,7 @@ These rules are inside PostgreSQL, so even a bug in the code cannot break them: 
 
 ## 11. API design
 
-**Conventions.** All addresses start with `/api/v1`. Data is JSON with `snake_case` names. Money is `{{"amount_minor": 5950000, "currency": "DZD"}}` (centimes). Dates are ISO 8601. Errors always have the same shape: a stable `code`, a message in the user's language (en, fr, ar) and field errors. Lists are paginated. Creating a booking or recording money needs an `Idempotency-Key` header, so a retry never creates a duplicate. Requests are rate limited.
+**Conventions.** All addresses start with `/api/v1`. Every id is a UUIDv7; references like `BLD-2026-7K2M9Q` are only for display and search. Data is JSON with `snake_case` names. Money is `{{"amount_minor": 5950000, "currency": "DZD"}}` (centimes). Dates are ISO 8601. Errors always have the same shape: a stable `code`, a message in the user's language (en, fr, ar) and field errors. Lists are paginated. Creating a booking or recording money needs an `Idempotency-Key` header, so a retry never creates a duplicate. Requests are rate limited.
 
 **Access.** Four areas: public (no login), `me` (signed-in guest), `host` (the active workspace: the user as solo host or one of their organisations, re-checked on every call), and `admin` (staff only, two-step login). The website and admin never call Django from the browser: their Next.js server does, with the session kept in an httpOnly cookie.
 
@@ -429,12 +435,13 @@ Assumed team: 2 backend developers and 1 part-time frontend developer. The apps 
 
 | Step | What is delivered | Weeks |
 |---|---|---|
-| M0 Foundations | Project, automatic checks, sign-up and sign-in with phone codes, wilayas and communes, settings | 3 |
+| Before M0 | Agree the one-page operations plan: servers, failover (5 minutes of data at most, back within 1 hour), backups, alerts, deploys, secrets | gate |
+| M0 Foundations | Project, automatic checks, sign-up and sign-in with phone codes, wilayas and communes, settings, safety helpers (URL check, hashing) | 3 |
 | M1 Accounts and hosts | Profiles, organisations and teams, become-a-host forms, documents, admin sign-in, host verification | 5 |
 | M2 Catalogue | Listings, room types, hotel system connection, trips and departures, experience and trip types, admin review | 4 |
 | M3 Search | Search with filters and map, availability, prices | 3 |
-| M4 Bookings and deposit | Instant and request bookings, cancellations, host deposit, commission, admin top-ups | 5 |
-| M5 Messages and reviews | Conversations, notifications, reviews | 3 |
+| M4 Bookings and deposit | Instant and request bookings, cancellations, refunds the hosts owe, host deposit, commission, admin top-ups and corrections, nightly balance check, hotel push | 5 |
+| M5 Messages and reviews | Conversations, notifications, check-in code, reviews | 3 |
 | M6 Hardening | Reports, exports, privacy requests, security and load tests | 3 |
 | M7 Launch | Production hosting in Algeria, closed test with real hosts, public launch | 3 |
 | Later | Online payment by card, invoices, coupons, disputes, calendar links | after launch |

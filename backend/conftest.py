@@ -50,7 +50,8 @@ def client_for(user: User, host_account=None) -> APIClient:
     Pass ``host_account`` to act in that workspace (sets ``X-Host-Account``).
     """
     client = APIClient()
-    token = account_services.start_session(user)
+    # Test-only shortcut: staff users get an admin session without the second factor.
+    token = account_services.start_session(user, trusted_staff_session=True)
     headers = {"HTTP_AUTHORIZATION": f"Bearer {token}"}
     if host_account is not None:
         headers["HTTP_X_HOST_ACCOUNT"] = str(host_account.id)

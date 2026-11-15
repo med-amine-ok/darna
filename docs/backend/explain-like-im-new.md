@@ -30,8 +30,8 @@ Staff browser ───────────> Admin (Next.js)  ────�
 ```
 
 - The websites stay as they are. Only the inside of their "data" functions changes: instead of reading memory, they ask the API.
-- The **API** is a list of addresses like `POST /api/v1/bookings` ("create a booking"). The full list is in [06-api-design.md](06-api-design.md) and [openapi.yaml](openapi.yaml).
-- The **database** is PostgreSQL. It has 77 tables (like 77 spreadsheet tabs) described in [05-database-schema.md](05-database-schema.md).
+- The **API** is a list of addresses like `POST /api/v1/me/bookings` ("create a booking"). The full list is in [06-api-design.md](06-api-design.md) and [openapi.yaml](openapi.yaml).
+- The **database** is PostgreSQL. It has 83 tables (like 83 spreadsheet tabs) described in [05-database-schema.md](05-database-schema.md).
 
 ## 3. A guest books a villa
 
@@ -39,7 +39,7 @@ Yacine wants 3 nights in a villa in Tipaza.
 
 1. **Search.** The website asks the API for villas in Tipaza for his dates. The API looks in the database and only returns villas whose nights are free.
 2. **Price.** He opens the villa. The API calculates the price itself (3 nights x 18,500 DZD + 4,000 cleaning = 59,500 DZD). Guests pay **no BLADUS fee**.
-3. **Book.** He clicks Reserve. The API saves the booking. The database has a built-in rule that refuses two bookings on the same night for the same villa, so even if two people click at the same second, only one wins.
+3. **Book.** He clicks Reserve. The API saves the booking. For a villa or a car, the database has a built-in rule that refuses two bookings on the same night, so even if two people click at the same second, only one wins. For hotel rooms, beds and seats the database keeps a counter per night that can never go above the number that exist. And if the host blocked a day in the calendar, the database also refuses a booking on it (and refuses blocking a day that is already booked).
 4. **Pay.** At launch Yacine pays the host directly (cash or transfer). BLADUS does not touch the guest's money. (This is decision **DEC-001**; the reason is Algerian payment law, see [02-research.md](02-research.md) section C.1.)
 5. **Messages.** He and the host chat in the app. Phone numbers are hidden until the booking is confirmed, to stop scams.
 
@@ -55,6 +55,10 @@ BLADUS takes a **commission** from the host, not from the guest:
 | Hostel | 10% |
 
 Each host keeps a **deposit** with BLADUS (like a prepaid phone card). When a booking is confirmed, the commission is taken from that deposit. For Yacine's villa: 12% of 55,500 = 6,660 DZD.
+
+If Yacine cancels 3 days before arrival, the moderate policy gives him back half of the nights (27,750 DZD) plus the cleaning fee: the host owes him 31,750 DZD. The **commission follows the refund**: half the nights were refunded, so half the commission goes back to the host (3,330 DZD) and BLADUS keeps the other 3,330 DZD. If the host cancels, the host gets the whole commission back and owes Yacine everything he paid.
+
+Because Yacine paid the host directly, BLADUS cannot refund him itself. Instead it records a **refund obligation**: the host has 7 days to pay him back and say so in the app, and Yacine confirms he received it. A host who is late loses instant booking and cannot accept new requests until it is settled.
 
 Every money movement is written in a **ledger**: a notebook where lines are only added, never erased. If there is a mistake, a correcting line is added. This makes it easy to prove where every dinar went.
 
@@ -74,7 +78,7 @@ What each host type can publish is fixed (**DEC-014**): individuals publish home
 
 Nadia, a moderator, opens the admin. She sees queues: hosts to verify, listings to review, reported reviews. Each item shows how long it has been waiting. When she approves or refuses, the reason is saved and the host is notified. Every action she takes is written in an **audit log** that nobody can edit.
 
-Finance staff record host deposits (for example a transfer to BLADUS's CCP account). Above 500,000 DZD a second person must approve, to prevent mistakes and fraud.
+An admin records host deposits (for example a transfer to BLADUS's CCP account). When a host's deposits in the last 24 hours add up to more than 500,000 DZD, a second admin must approve, to prevent mistakes and fraud. Corrections to a deposit also need a second admin.
 
 ## 7. Things that happen by themselves
 
@@ -82,7 +86,8 @@ Some work runs in the background on a schedule (**jobs**):
 
 - a request that the host does not answer within 24 hours expires and both sides are told;
 - after check-out, the booking becomes "completed" and the review window opens;
-- SMS and emails are sent after a change is saved, and retried if they fail.
+- SMS and emails are sent after a change is saved, and retried if they fail; after 8 failures the message is shown to the admin;
+- every night, every deposit balance is recomputed from the ledger to prove nothing was changed by hand.
 
 ## 8. Why Algeria matters in the design
 
@@ -110,7 +115,8 @@ Some work runs in the background on a schedule (**jobs**):
 
 - [ ] Why does a booking made today on the website not appear in the admin?
 - [ ] Who pays BLADUS, the guest or the host? How much for an agency?
-- [ ] What stops two people from booking the same night?
+- [ ] What stops two people from booking the same night, for a villa and for a hotel room?
+- [ ] If a guest gets half the nights refunded, how much commission does the host get back?
 - [ ] Why does BLADUS not collect guests' money at launch?
 - [ ] What is a ledger, and why are its lines never erased?
 - [ ] Name two things that happen by themselves without anyone clicking.

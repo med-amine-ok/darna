@@ -44,24 +44,24 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="on" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Start here</div><h1 id="00-start-here-bladus-backend-blueprint">00. Start here: BLADUS backend blueprint</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="on" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Start here</div><h1 id="00-start-here-bladus-backend-blueprint">00. Start here: BLADUS backend blueprint</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>BLADUS has a finished-looking website and admin, but no real backend: data lives in memory and the two apps do not share it.<br>This folder is the complete plan for that backend, built with Django and PostgreSQL, designed for Algeria.<br>It was written before any backend code: what exists, what to build, the rules, the database, the API, security, hosting, tests and the plan.<br>Verdict: <strong>ready to start the first milestone now</strong>; real customer data waits for two legal answers on hosting.<br>New to these topics? Read <a href="explain-like-im-new.html">explain-like-im-new.md</a> first. Everything in one file: <code>dist/BLADUS-backend-blueprint.pdf</code>.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (all in <a href="glossary.html">glossary.md</a>): <strong>backend</strong> (the server program that stores data and applies rules), <strong>API</strong> (the list of addresses the apps call), <strong>schema</strong> (the design of the database tables), <strong>milestone</strong> (a 3 to 5 week block of work).</p>
-<p>Prepared 2026-11-04 to 2026-11-09. Documentation only: no backend code exists yet.</p>
+<p>Prepared 2026-11-04 to 2026-11-09, updated 2026-11-11 and 2026-11-13 (external review: decisions DEC-018 revised and DEC-020 to DEC-031, see <a href="changelog.html">CHANGELOG.md</a>). This folder is the plan; the backend code in <code>backend/</code> is built from it.</p>
 <hr>
 <h2 id="1-the-plan-in-ten-lines">1. The plan in ten lines</h2>
 <ol>
-<li><strong>Stack</strong>: Django 6.1, Django REST Framework, PostgreSQL with PostGIS, Redis and Celery, django-allauth (email and phone codes, two-factor login). The two Next.js apps stay and call the API through their server (<a href="02-research.html">02-research.md</a> B, <a href="07-architecture.html">07-architecture.md</a>).</li>
-<li><strong>Money (DEC-001)</strong>: guests pay hosts directly; hosts keep a prepaid deposit; BLADUS deducts its commission (12% individual, 15% agency, 18% hotel, 10% hostel) on each confirmed booking. Guests pay no BLADUS fee. Everything is recorded in a double-entry ledger.</li>
-<li><strong>No double booking</strong>: the database itself refuses overlapping stays and over-selling of rooms, beds and seats (<a href="05-database-schema.html">05-database-schema.md</a>).</li>
+<li><strong>Stack</strong>: Django 5.2 LTS (supported to April 2028), Django REST Framework, PostgreSQL with PostGIS, Redis and Celery, django-allauth (email and phone codes, two-factor login). The two Next.js apps stay and call the API through their server (<a href="02-research.html">02-research.md</a> B, <a href="07-architecture.html">07-architecture.md</a>).</li>
+<li><strong>Money (DEC-001, DEC-018 revised)</strong>: guests pay hosts directly; hosts keep a prepaid deposit; BLADUS deducts its commission (12% individual, 15% agency, 18% hotel, 10% hostel) on each confirmed booking. On a cancellation the commission follows the refund (villa example: 3,330 DZD back to the host, BLADUS keeps 3,330 DZD), and the refund the host owes the guest is tracked with a due date. Guests pay no BLADUS fee. No online payment and no online top-up in the first release. Everything is recorded in a double-entry ledger that the app cannot edit.</li>
+<li><strong>No double booking</strong> (DEC-020): for homes and vehicles an exclusion constraint refuses overlapping stays; for rooms, beds and seats CHECK counters refuse over-selling; triggers keep blocked days and bookings apart; a hotel sync can never set availability below what is sold (<a href="05-database-schema.html">05-database-schema.md</a> section 6).</li>
 <li><strong>Who publishes what (DEC-014)</strong>: solo hosts publish homes and vehicles, agencies publish experiences and trips, hotels and hostels publish their property.</li>
 <li><strong>Types (DEC-015)</strong>: 8 experience types and 8 trip types, one shared list.</li>
 <li><strong>Moderation (DEC-003)</strong>: new listings and trips are reviewed by staff before going live.</li>
 <li><strong>Algeria</strong>: hosting in Algeria and a <code>.com.dz</code> domain are likely required; personal data should not leave the country without authorisation (VERIFY WITH A PROFESSIONAL).</li>
-<li><strong>Size</strong>: 147 requirements (126 in the first release), 77 tables, 266 API operations.</li>
+<li><strong>Size</strong>: 157 requirements (136 in the first release), 83 tables, 286 API operations (computed from <code>openapi.yaml</code> by <code>_tools/check_contract_refs.py</code>).</li>
 <li><strong>Plan</strong>: 8 milestones (M0 to M7, about 29 weeks plus a 2-week buffer) for a team of 2 backend developers and 1 part-time frontend developer, then R2 (<a href="11-roadmap.html">11-roadmap.md</a>).</li>
-<li><strong>Open</strong>: 48 decisions remain, most of them for the lawyer and accountant (<a href="13-decisions-needed.html">13-decisions-needed.md</a>).</li>
+<li><strong>Open</strong>: 47 decisions remain, most of them for the lawyer and accountant (<a href="13-decisions-needed.html">13-decisions-needed.md</a>). Before M0, the operations page <a href="09b-operations.html">09b-operations.md</a> must be agreed (DEC-027).</li>
 </ol>
 <h2 id="2-reading-order">2. Reading order</h2>
 <table>
@@ -106,7 +106,7 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>5</td>
 <td><a href="diagrams-readme.html">diagrams/README.md</a></td>
-<td>29 diagrams with captions and legends</td>
+<td>31 diagrams with captions and legends</td>
 <td>15 min</td>
 </tr>
 <tr>
@@ -140,6 +140,12 @@ section.doc{page-break-before:always;padding:0}
 <td>25 min</td>
 </tr>
 <tr>
+<td>10b</td>
+<td><a href="09b-operations.html">09b-operations.md</a></td>
+<td><strong>One page to agree before M0</strong>: how the servers run, failover, backups, alerts, deploys, secrets, rate limits, on-call</td>
+<td>10 min</td>
+</tr>
+<tr>
 <td>11</td>
 <td><a href="10-testing-quality.html">10-testing-quality.md</a></td>
 <td>Test strategy and quality gates</td>
@@ -154,7 +160,7 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>13</td>
 <td><a href="12-risks.html">12-risks.md</a></td>
-<td>32 risks with mitigations</td>
+<td>41 risks with mitigations</td>
 <td>15 min</td>
 </tr>
 <tr>
@@ -212,11 +218,11 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Phase 6: API design and OpenAPI</td>
-<td><a href="06-api-design.html">06-api-design.md</a>, <a href="files/openapi.yaml">openapi.yaml</a> (lint: 0 errors, 0 warnings)</td>
+<td><a href="06-api-design.html">06-api-design.md</a>, <a href="files/openapi.yaml">openapi.yaml</a> (generated by <code>_tools/openapi_gen</code>; references checked; diagrams checked by <code>_tools/check_contract_refs.py</code>)</td>
 </tr>
 <tr>
 <td>Phase 7: architecture, security and privacy, DevOps and hosting, testing</td>
-<td><a href="07-architecture.html">07</a>, <a href="08-security-privacy.html">08</a>, <a href="09-devops-hosting.html">09</a>, <a href="10-testing-quality.html">10</a></td>
+<td><a href="07-architecture.html">07</a>, <a href="08-security-privacy.html">08</a>, <a href="09-devops-hosting.html">09</a>, <a href="09b-operations.html">09b</a>, <a href="10-testing-quality.html">10</a></td>
 </tr>
 <tr>
 <td>Phase 8: roadmap, risks, decisions, open questions</td>
@@ -232,7 +238,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Rendered HTML package and one PDF with everything</td>
-<td><code>dist/site/index.html</code>, <code>dist/BLADUS-backend-blueprint.pdf</code></td>
+<td><code>dist/site/index.html</code>, <code>dist/BLADUS-backend-blueprint.pdf</code>; short version <code>compact/BLADUS-backend-compact.pdf</code></td>
 </tr>
 <tr>
 <td>Change log and question list</td>
@@ -244,12 +250,12 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h2 id="4-verdict">4. Verdict</h2>
-<p><strong>GO for milestone M0 (foundations) now</strong>, once five small technical and product choices are confirmed in the first week (T2, T3, T4, T9, Q22). <strong>Not yet GO for real customer data</strong>: the lawyer must answer L1 and L2 (hosting in Algeria, data transfer) before production hosting is signed at the end of M5. Collecting guests&#39; money stays out of the first release until a payment licence question (L3) is settled. Details and the first build prompt: <a href="15-readiness-and-first-build-prompt.html">15-readiness-and-first-build-prompt.md</a>.</p>
+<p><strong>GO for milestone M0 (foundations) now</strong>, once five small technical and product choices are confirmed in the first week (T2, T3, T4, T9, Q22) and the operations page <a href="09b-operations.html">09b-operations.md</a> is agreed (DEC-027). <strong>Not yet GO for real customer data</strong>: the lawyer must answer L1 and L2 (hosting in Algeria, data transfer) before production hosting is signed at the end of M5. Collecting guests&#39; money stays out of the first release until a payment licence question (L3) is settled. Details and the first build prompt: <a href="15-readiness-and-first-build-prompt.html">15-readiness-and-first-build-prompt.md</a>.</p>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
 <li><input disabled="" type="checkbox"> In one sentence, what is missing from BLADUS today?</li>
-<li><input disabled="" type="checkbox"> Who pays BLADUS, and how?</li>
+<li><input disabled="" type="checkbox"> Who pays BLADUS, and how? What happens to the commission when a guest cancels?</li>
 <li><input disabled="" type="checkbox"> Which document do you open to find the endpoint for creating a booking?</li>
 <li><input disabled="" type="checkbox"> Which milestone can start now, and which two legal answers block real customer data?</li>
 <li><input disabled="" type="checkbox"> Where is the single PDF with everything?</li>

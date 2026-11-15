@@ -37,15 +37,15 @@ REQ_RELEASE = {m[0]: m[1] for m in re.findall(r"^\| ([A-Z]{3}-\d{2}) \|[^|]*\|[^
 assert len(REQ_IDS) >= 147, len(REQ_IDS)
 
 PATH_PARAMS = {
-    "listing_id": (STR, "Listing UUID or its reference (LST-XXXXXX)."),
+    "listing_id": (UUID, "Listing id (UUIDv7). References like LST-XXXXXX are for display and search only (DEC-031)."),
     "room_type_id": (UUID, "Room type id."),
     "slot_id": (UUID, "Experience slot id."),
-    "trip_id": (STR, "Trip UUID or its reference."),
+    "trip_id": (UUID, "Trip id (UUIDv7)."),
     "departure_id": (UUID, "Departure id."),
-    "booking_id": (STR, "Booking UUID or its reference (BLD-YYYY-XXXXXX)."),
+    "booking_id": (UUID, "Booking id (UUIDv7). The reference BLD-YYYY-XXXXXX is for display and search only (DEC-031)."),
     "review_id": (UUID, "Review id."),
     "conversation_id": (UUID, "Conversation id."),
-    "notification_id": (I64, "Notification id."),
+    "notification_id": (UUID, "Notification id."),
     "media_id": (UUID, "Media asset id."),
     "membership_id": (UUID, "Membership id."),
     "invitation_id": (UUID, "Invitation id."),
@@ -72,6 +72,10 @@ PATH_PARAMS = {
     "quote_id": (UUID, "Quote id."),
     "data_request_id": (UUID, "Data subject request id."),
     "payout_id": (UUID, "Payout id."),
+    "refund_id": (UUID, "Refund obligation id."),
+    "adjustment_id": (UUID, "Wallet adjustment id."),
+    "conflict_id": (UUID, "Inventory conflict id."),
+    "message_id": (UUID, "Outbox message id."),
 }
 
 
@@ -82,9 +86,9 @@ def problem_response(desc):
 RESPONSES = {
     "BadRequest": problem_response("Malformed request (bad JSON, bad query value). Code e.g. `bad_request`, `invalid_credentials`, `invalid_code`."),
     "Unauthorized": problem_response("No valid session token, or the session was revoked. Code `not_authenticated`."),
-    "Forbidden": problem_response("Signed in but not allowed. Codes: `permission_denied` (has `required_permission`), `mfa_required`, `phone_verification_required`, `host_offer_not_allowed`, `four_eyes_same_user`, `account_suspended`."),
+    "Forbidden": problem_response("Signed in but not allowed. Codes: `permission_denied` (has `required_permission`), `mfa_required`, `phone_verification_required`, `host_offer_not_allowed`, `four_eyes_same_user` (top-ups), `four_eyes_required` (wallet adjustments), `account_suspended`."),
     "NotFound": problem_response("Not found, or not visible to the caller (other host accounts look like 404 on purpose), or a dormant feature that is switched off. Code `not_found` or `feature_disabled`."),
-    "Conflict": problem_response("The request conflicts with the current state: lost a race, wrong status, duplicate, idempotency key still running. Codes e.g. `dates_unavailable`, `invalid_transition`, `price_changed`, `idempotency_in_progress`."),
+    "Conflict": problem_response("The request conflicts with the current state: lost a race, wrong status, duplicate, idempotency key still running. Codes e.g. `dates_unavailable`, `dates_booked`, `invalid_transition`, `price_changed`, `idempotency_in_progress`, `too_many_open_bookings`, `refund_overdue`, `stay_not_started`, `booking_not_confirmed`, `refund_not_open`, `refund_not_declared`, `adjustment_not_pending`, `conflict_resolved`."),
     "PreconditionFailed": problem_response("If-Match did not match the current ETag: someone else saved first. Reload and try again. Code `stale_version`."),
     "Unprocessable": problem_response("Validation failed. `errors` lists each field. Also `idempotency_key_reused` (same key, different body)."),
     "TooManyRequests": {"description": "Rate limit reached. Wait for Retry-After seconds. Code `rate_limited` or `login_locked`.",
@@ -191,12 +195,12 @@ INFO_DESC = """BLADUS marketplace API (homes, hotels, hostels, experiences, vehi
 
 **Read 06-api-design.md first.** In short:
 
-* Base path `/api/v1`. JSON in snake_case. Money is `{amount_minor, currency}` in centimes (1 DZD = 100). IDs are UUIDv7, plus human references (BLD-2026-7K2M9Q, LST-7K2M9Q).
+* Base path `/api/v1`. JSON in snake_case. Money is `{amount_minor, currency}` in centimes (1 DZD = 100). One id scheme: every id is a UUIDv7; human references (BLD-2026-7K2M9Q, LST-7K2M9Q) are for display and search only, never in paths.
 * Callers are the two Next.js servers (BFF), never the browser directly. They send the allauth session token in `X-Session-Token`.
 * Host endpoints act for the **active host account** (a user or an organisation): header `X-Host-Account` or the one stored in the session.
 * `/api/v1/admin/*` is only for staff sessions with a verified second factor.
 * Errors use `application/problem+json` with a stable `code` and a localized `message` (en, fr, ar).
-* Money model M1 (DEC-001): guests pay hosts directly; BLADUS deducts commission from a prepaid host wallet. Guest payments, escrow and payouts exist here only as **dormant** operations (`x-dormant: true`), returning 404 until a feature flag is switched on.
+* Money model M1 (DEC-001): guests pay hosts directly; BLADUS deducts commission from a prepaid host wallet. No online payment and no online top-up in v1 (DEC-019). Guest payments, payouts and the gateway webhook exist here only as **dormant** operations (`x-dormant: true`), returning 404 until a feature flag is switched on.
 
 Vendor extensions on every operation:
 `x-requirements` (IDs in 03-requirements.md), `x-rules` (IDs in 04-business-rules.md), `x-release` (MVP, R2, Later), `x-dormant`, `x-host-permission` (organisation permission, BR-ORG-05), `x-staff-permission` (staff permission, BR-STF-01).

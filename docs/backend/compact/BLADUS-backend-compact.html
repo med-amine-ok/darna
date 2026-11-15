@@ -27,8 +27,8 @@ figure img{max-width:100%;max-height:205mm}
 .toc a{color:#152C52;text-decoration:none}
 @page{size:A4;margin:15mm 13mm 16mm}
 @page:first{margin:0}
-</style></head><body><div class="cover"><p>BLADUS</p><h1>BLADUS backend: compact blueprint</h1><p><strong>What we will build, the choices, the flows, the database and the API.</strong> Version of 2026-11-11. The complete blueprint (all research, requirements and details) stays in <code>dist/BLADUS-backend-blueprint.pdf</code>.</p>
-<p style="margin-top:28px;font-size:10px">Legal and tax points are research, to confirm with a professional.</p></div><div class="toc"><h2>Contents</h2><ol><li><a href="#s2-1-what-we-will-build">What we will build</a></li><li><a href="#s3-2-technical-choices-with-short-comparisons">Technical choices, with short comparisons</a></li><li><a href="#s4-3-payment-now-and-later">Payment: now and later</a></li><li><a href="#s5-4-people-and-roles">People and roles</a></li><li><a href="#s6-5-hotels-connecting-their-own-system">Hotels: connecting their own system</a></li><li><a href="#s7-6-main-rules">Main rules</a></li><li><a href="#s8-7-architecture">Architecture</a></li><li><a href="#s12-8-life-cycles">Life cycles</a></li><li><a href="#s17-9-flows">Flows</a></li><li><a href="#s25-10-database">Database</a></li><li><a href="#s42-11-api-design">API design</a></li><li><a href="#s51-12-build-plan">Build plan</a></li><li><a href="#s52-appendix-database-sql">Appendix: database SQL</a></li></ol></div><h2 id="s2-1-what-we-will-build">1. What we will build</h2><p>BLADUS has a website (guests and hosts) and an admin app, but no real backend: data lives in memory, disappears on restart, and the two apps do not share it. We will build <strong>one Django backend with a PostgreSQL database</strong> that both apps call through an API.</p>
+</style></head><body><div class="cover"><p>BLADUS</p><h1>BLADUS backend: compact blueprint</h1><p><strong>What we will build, the choices, the flows, the database and the API.</strong> Version of 2026-11-13 (after the external review of 2026-11-13). The complete blueprint (all research, requirements and details) stays in <code>dist/BLADUS-backend-blueprint.pdf</code>.</p>
+<p style="margin-top:28px;font-size:10px">Legal and tax points are research, to confirm with a professional.</p></div><div class="toc"><h2>Contents</h2><ol><li><a href="#s2-1-what-we-will-build">What we will build</a></li><li><a href="#s3-2-technical-choices-with-short-comparisons">Technical choices, with short comparisons</a></li><li><a href="#s4-3-payment-now-and-later">Payment: now and later</a></li><li><a href="#s5-4-people-and-roles">People and roles</a></li><li><a href="#s6-5-hotels-connecting-their-own-system">Hotels: connecting their own system</a></li><li><a href="#s7-6-main-rules">Main rules</a></li><li><a href="#s8-7-architecture">Architecture</a></li><li><a href="#s12-8-life-cycles">Life cycles</a></li><li><a href="#s17-9-flows">Flows</a></li><li><a href="#s26-10-database">Database</a></li><li><a href="#s43-11-api-design">API design</a></li><li><a href="#s52-12-build-plan">Build plan</a></li><li><a href="#s53-appendix-database-sql">Appendix: database SQL</a></li></ol></div><h2 id="s2-1-what-we-will-build">1. What we will build</h2><p>BLADUS has a website (guests and hosts) and an admin app, but no real backend: data lives in memory, disappears on restart, and the two apps do not share it. We will build <strong>one Django backend with a PostgreSQL database</strong> that both apps call through an API.</p>
 <table>
 <thead>
 <tr>
@@ -54,7 +54,7 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td>Cancellation</td>
-<td>The host <strong>always recovers the full commission</strong> when a confirmed booking is cancelled</td>
+<td><strong>Commission follows the refund</strong>: the host gets back the same share of the commission as the share of the stay refunded to the guest (host cancels: all of it). The refund the host owes the guest is tracked with a due date</td>
 </tr>
 <tr>
 <td>Admin</td>
@@ -70,7 +70,7 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td>Double booking</td>
-<td>Impossible: the database itself refuses it</td>
+<td>Refused by the database: an exclusion rule for homes and vehicles, counters for rooms, beds and seats, triggers for blocked days; hotel syncs never go below what is sold</td>
 </tr>
 <tr>
 <td>Languages</td>
@@ -82,7 +82,7 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td>Size</td>
-<td>80 tables, 264 API operations in the first release</td>
+<td>83 tables, 286 API operations (8 of them switched off until online payment exists)</td>
 </tr>
 </tbody></table>
 <h2 id="s3-2-technical-choices-with-short-comparisons">2. Technical choices, with short comparisons</h2><table>
@@ -96,9 +96,9 @@ figure img{max-width:100%;max-height:205mm}
 </thead>
 <tbody><tr>
 <td>Backend framework</td>
-<td><strong>Django 6.1</strong> (Python)</td>
-<td>Node/NestJS, Laravel</td>
-<td>The owner knows Django; admin tools, security and database support are built in</td>
+<td><strong>Django 5.2 LTS</strong> (Python, supported to April 2028)</td>
+<td>Django 6.x, Node/NestJS, Laravel</td>
+<td>The owner knows Django; long-term support; admin tools, security and database support are built in</td>
 </tr>
 <tr>
 <td>API layer</td>
@@ -132,9 +132,9 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td>Search</td>
-<td><strong>PostgreSQL</strong> (text + map + availability)</td>
-<td>Meilisearch, Elasticsearch</td>
-<td>One system, always consistent with availability; add a search engine only if needed</td>
+<td><strong>PostgreSQL trigram search</strong> (<code>pg_trgm</code> + unaccent) with map and availability</td>
+<td>PostgreSQL full-text, Meilisearch</td>
+<td>PostgreSQL full-text has no Arabic stemmer; trigrams work for Arabic, French and Darija spellings; one system, always consistent with availability</td>
 </tr>
 <tr>
 <td>Messages</td>
@@ -150,9 +150,9 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td>Money storage</td>
-<td><strong>Whole centimes + double-entry ledger</strong></td>
+<td><strong>Whole centimes + double-entry ledger</strong>, insert-only, checked every night</td>
 <td>Decimal numbers, simple balance column</td>
-<td>No rounding errors; every dinar can be explained</td>
+<td>No rounding errors (round half up per line); every dinar can be explained; the app&#39;s database login cannot edit money lines</td>
 </tr>
 <tr>
 <td>Code structure</td>
@@ -204,7 +204,7 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td>Refund to guest</td>
-<td>Owed by the host; BLADUS shows the amount to both sides</td>
+<td>Owed by the host and tracked: due in 7 days, the host declares it paid, the guest confirms; an overdue refund blocks instant booking and accepting requests</td>
 <td>Made by BLADUS through the gateway</td>
 </tr>
 <tr>
@@ -248,7 +248,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Everything on the staff side: verify hosts, review listings, handle bookings and reports, record deposits, settings, exports. Two-step login is required</td>
 </tr>
 </tbody></table>
-<p>There is <strong>one admin role</strong>. Sensitive actions that need two people (a deposit top-up above 500,000 DZD) need a second admin account. The permission tables stay in the database so roles can be split later without changing the design.</p>
+<p>There is <strong>one admin role</strong>. Sensitive actions need a second, different admin account: deposit top-ups when the host&#39;s total of the last 24 hours passes 500,000 DZD, and every manual correction of a deposit (at most 1,000,000 DZD each). The permission tables stay in the database so roles can be split later without changing the design.</p>
 <p>Team roles inside an organisation:</p>
 <table>
 <thead>
@@ -367,10 +367,10 @@ figure img{max-width:100%;max-height:205mm}
 <td>Hotel must keep it up to date</td>
 </tr>
 </tbody></table>
-<p>How it works: the hotel owner chooses the system and enters its access key; BLADUS tests it, stores the key encrypted, imports room types, prices, availability and services, then refreshes every 15 minutes. Imported fields are read-only on BLADUS while the connection is active. A booking made on BLADUS lowers BLADUS availability immediately and is sent to the hotel system when that system accepts reservations. If a sync fails, the last good data stays and the connection is flagged for the hotel and the admin. Which hotel systems are used in Algeria must be checked with the first partner hotels; the design uses one small adapter per system, so new systems can be added without touching the rest.</p>
+<p>How it works: the hotel owner chooses the system and enters its access key; BLADUS tests it, stores the key encrypted, imports room types, prices, availability and services, then refreshes every 15 minutes. Imported fields are read-only on BLADUS while the connection is active. A booking made on BLADUS lowers BLADUS availability immediately and is pushed to the hotel system at once through the outbox (with retries). A sync can never set the number of rooms below what BLADUS holds or sold: the number is kept and a conflict is shown to the admin. If a sync fails, the last good data stays and the connection is flagged for the hotel and the admin. Which hotel systems are used in Algeria must be checked with the first partner hotels; the design uses one small adapter per system, so new systems can be added without touching the rest.</p>
 <h2 id="s7-6-main-rules">6. Main rules</h2><p><strong>Price.</strong> The server calculates every price: nights x price per night (with per-day prices and weekly or monthly discounts) + cleaning fee. No BLADUS fee for the guest.</p>
-<p><strong>Commission.</strong> Rate by host type x the nights total (cleaning fee excluded). Taken from the host&#39;s deposit when the booking is confirmed. <strong>Returned in full if the booking is cancelled</strong>, whoever cancels. If the deposit goes more than 20,000 DZD below zero, instant bookings become requests until the host tops up.</p>
-<p><strong>Dates.</strong> Check-in day is booked, check-out day is free for the next guest. Two bookings can never overlap on the same home or vehicle; rooms, beds and seats can never be oversold.</p>
+<p><strong>Commission.</strong> Rate by host type x the nights total (cleaning fee and taxes excluded), rounded half up in centimes. Taken from the host&#39;s deposit when the booking is confirmed. <strong>On a cancellation it follows the refund</strong>: guest cancels, the host gets back the same share of the commission as the share of the nights refunded; host cancels, all of it; a declined or expired request never paid any. If the deposit goes more than 20,000 DZD below zero, instant bookings become requests until the host tops up.</p>
+<p><strong>Dates.</strong> Check-in day is booked, check-out day is free for the next guest. Two bookings can never overlap on the same home or vehicle; a booked day cannot be blocked and a blocked day cannot be booked; rooms, beds and seats can never be oversold. A guest can have at most 3 pending requests and 6 upcoming bookings.</p>
 <p><strong>Booking modes.</strong> Instant (confirmed at once) or request (host answers within 24 hours, otherwise it expires automatically).</p>
 <p><strong>Cancellation by the guest</strong> (refund owed by the host on the nights total; the cleaning fee is always returned before arrival):</p>
 <table>
@@ -421,13 +421,13 @@ figure img{max-width:100%;max-height:205mm}
 <td>6,660</td>
 </tr>
 <tr>
-<td>Guest cancels 3 days before (moderate policy): host owes the guest 27,750 + 4,000 = 31,750</td>
-<td><strong>50,000 (+6,660, full commission back)</strong></td>
-<td>0</td>
+<td>Guest cancels 3 days before (moderate policy, 50%): host owes the guest 27,750 + 4,000 = 31,750, due in 7 days</td>
+<td><strong>46,670 (+3,330: 50% of the commission back)</strong></td>
+<td><strong>3,330</strong></td>
 </tr>
 </tbody></table>
-<p><strong>Reviews.</strong> Only after a completed stay, within 14 days, one per booking. Ratings on listings and hosts are always calculated from reviews.</p>
-<p><strong>Safety.</strong> Phone verified before the first booking; exact address shown only after confirmation; contact details masked in messages before confirmation; every admin action written in a log that cannot be edited.</p>
+<p><strong>Reviews.</strong> Only after a completed stay <strong>that was confirmed</strong> (the host types the guest&#39;s 6-digit check-in code on arrival, or the guest confirms after check-in time), within 14 days, one per booking. Ratings on listings and hosts are always calculated from reviews.</p>
+<p><strong>Safety.</strong> Phone verified before the first booking; code sends limited (3 per hour and 10 per day per number, 5,000 SMS per day in total); exact address shown only after confirmation; contact details masked in messages before confirmation; addresses given by hotels checked before BLADUS calls them; every admin action written in a log that cannot be edited.</p>
 <h2 id="s8-7-architecture">7. Architecture</h2><div class="keep"><h3 id="s9-who-uses-bladus-and-what-it-talks-to">Who uses BLADUS and what it talks to</h3><figure><img src="../diagrams/rendered/01-system-context.svg" alt="Who uses BLADUS and what it talks to"></figure></div>
 <p>Guests and hosts use the website; the admin uses the admin app. Both apps call one Django API, which is the only place where data is stored and rules are applied. The API sends SMS and emails, stores photos and documents, and exchanges data with hotel systems. The payment gateway is drawn with a dotted line because online payment is not part of the first release.</p>
 <div class="keep"><h3 id="s10-what-runs-where">What runs where</h3><figure><img src="../diagrams/rendered/02-containers.svg" alt="What runs where"></figure></div>
@@ -443,23 +443,25 @@ figure img{max-width:100%;max-height:205mm}
 <div class="keep"><h3 id="s16-life-of-a-review">Life of a review</h3><figure><img src="../diagrams/rendered/13-review-states.svg" alt="Life of a review"></figure></div>
 <p>A guest can write a review only after a completed stay, within 14 days. It becomes public when published. If someone reports it, the admin can dismiss the report, hide the review or remove it.</p>
 <h2 id="s17-9-flows">9. Flows</h2><div class="keep"><h3 id="s18-instant-booking-step-by-step">Instant booking, step by step</h3><figure><img src="../diagrams/rendered/20-seq-instant-booking.svg" alt="Instant booking, step by step"></figure></div>
-<p>Read from top to bottom. The website first asks the API for a price (quote), then creates the booking with that quote. Everything happens in one database transaction: the booking is saved, the database itself refuses overlapping dates, the commission is taken from the host&#39;s deposit, and the messages to send are written in the outbox. After the save, a worker sends the SMS, email and notifications. The exact address is shown to the guest only after confirmation.</p>
+<p>Read from top to bottom. The website first asks the API for a price (quote), then creates the booking with that quote. Everything happens in one database transaction, always in the same order: the host&#39;s deposit row is locked first, then the listing; the booking is saved (the database refuses overlapping stays and blocked days), the commission is taken from the deposit, and the messages to send are written in the outbox. After the save, a worker sends the SMS, email and notifications, retrying if needed. The exact address and the check-in code are shown to the guest only after confirmation.</p>
 <div class="keep"><h3 id="s19-request-to-book">Request to book</h3><figure><img src="../diagrams/rendered/21-seq-request-to-book.svg" alt="Request to book"></figure></div>
-<p>The guest sends a request and the dates are blocked while it waits. Three endings are possible: the host accepts (the booking is confirmed and the commission is taken), the host declines (dates are freed), or nobody answers and a timed job expires the request after 24 hours and tells both sides.</p>
+<p>The guest sends a request (at most 3 pending requests per guest) and the dates are blocked while it waits. Three endings are possible: the host accepts (the booking is confirmed and the commission is taken; refused if the deposit is too low or a refund is overdue), the host declines (dates are freed), or nobody answers and a timed job expires the request after 24 hours and tells both sides.</p>
 <div class="keep"><h3 id="s20-host-deposit-top-up">Host deposit top-up</h3><figure><img src="../diagrams/rendered/22-seq-wallet-topup.svg" alt="Host deposit top-up"></figure></div>
-<p>There is no online payment in the first release. The host sends money to BLADUS by CCP or bank transfer; the admin records the top-up with the receipt reference (the same receipt cannot be used twice). Large amounts need a second admin to approve. Each confirmed booking then takes its commission from this deposit, and a cancelled booking gives the full commission back.</p>
+<p>There is no online payment and no online top-up in the first release. The host sends money to BLADUS by CCP or bank transfer; the admin records the top-up with the receipt reference (the same receipt cannot be used twice). When the host&#39;s top-ups of the last 24 hours pass 500,000 DZD, a second, different admin must approve, so splitting a deposit does not help. Each confirmed booking then takes its commission from this deposit; on a cancellation the commission follows the refund.</p>
 <div class="keep"><h3 id="s21-becoming-a-host">Becoming a host</h3><figure><img src="../diagrams/rendered/23-seq-host-onboarding.svg" alt="Becoming a host"></figure></div>
 <p>The form steps come from the published configuration, and the draft is saved on the server so the host can continue later. Documents are uploaded directly to private storage. When the host submits, a case appears in the admin queue; the admin checks each document, then approves the host, who can then create a first listing.</p>
 <div class="keep"><h3 id="s22-connecting-a-hotel-39-s-own-system">Connecting a hotel&#39;s own system</h3><figure><img src="../diagrams/rendered/25-seq-hotel-sync.svg" alt="Connecting a hotel's own system"></figure></div>
-<p>A hotel owner enters the access key of the hotel system. The API tests the connection, saves the key encrypted, and a job imports room types, prices, availability and services (restaurants, spa, parking...). The job then refreshes availability and prices every 15 minutes. If a sync fails, the last good data stays and the connection is flagged.</p>
-<div class="keep"><h3 id="s23-messages">Messages</h3><figure><img src="../diagrams/rendered/24-seq-message-sync.svg" alt="Messages"></figure></div>
+<p>A hotel owner enters the access key of the hotel system. The API checks the address is safe, tests the connection, saves the key encrypted, and a job imports room types, prices, availability and services (restaurants, spa, parking...). Every booking made on BLADUS is pushed to the hotel system at once through the outbox; a 15-minute pass then reconciles both sides. A sync can never set availability below what BLADUS already sold: the number is kept and a conflict goes to the admin. If a push keeps failing it becomes a dead message the admin can retry.</p>
+<div class="keep"><h3 id="s23-a-guest-cancels-commission-and-refund">A guest cancels: commission and refund</h3><figure><img src="../diagrams/rendered/26-seq-cancel-refund.svg" alt="A guest cancels: commission and refund"></figure></div>
+<p>The guest of the villa example cancels 3 days before arrival (moderate policy, 50% window). The host owes the guest 31,750 DZD. The commission follows the refund: the host gets 3,330 DZD of the 6,660 DZD back and BLADUS keeps 3,330 DZD. A refund obligation opens, due in 7 days. The host declares it paid with a reference; the guest confirms or says it did not arrive; the admin can settle it with proof. While a refund is overdue, the host loses instant booking and cannot accept requests.</p>
+<div class="keep"><h3 id="s24-messages">Messages</h3><figure><img src="../diagrams/rendered/24-seq-message-sync.svg" alt="Messages"></figure></div>
 <p>The website asks the API for messages after the last one it already has (a cursor), so repeated checks are cheap. Before a booking is confirmed, phone numbers, emails and payment account numbers written in a message are masked for the other person, to protect guests from off-platform scams.</p>
-<div class="keep"><h3 id="s24-where-the-money-goes">Where the money goes</h3><figure><img src="../diagrams/rendered/30-money-flow.svg" alt="Where the money goes"></figure></div>
-<p>In the first release the guest pays the host directly. The host keeps a deposit at BLADUS, topped up by transfer. BLADUS takes its commission from that deposit when a booking is confirmed and returns it in full if the booking is cancelled. Online card payment comes later.</p>
-<h2 id="s25-10-database">10. Database</h2><p>The database has <strong>80 tables</strong> in 14 groups. Conventions: every row has a time-ordered unique id; money is stored in whole centimes with a currency code; rates are stored in hundredths of a percent (1,200 = 12%); times are stored in UTC and stay dates in Algerian time; names of platform lists exist in English, French and Arabic; deleting is &quot;soft&quot; (a deleted date) wherever the admin must be able to restore.</p>
-<div class="keep"><h3 id="s26-relation-diagram-overview">Relation diagram (overview)</h3><figure><img src="../diagrams/rendered/erd-00-overview.svg" alt="Relation diagram"></figure></div>
+<div class="keep"><h3 id="s25-where-the-money-goes">Where the money goes</h3><figure><img src="../diagrams/rendered/30-money-flow.svg" alt="Where the money goes"></figure></div>
+<p>In the first release the guest pays the host directly. The host keeps a deposit at BLADUS, topped up by transfer. BLADUS takes its commission from that deposit when a booking is confirmed. On a cancellation the same share of the commission as the share of the stay refunded goes back to the host, and the refund the host owes the guest is tracked with a due date. Online card payment comes later.</p>
+<h2 id="s26-10-database">10. Database</h2><p>The database has <strong>83 tables</strong> in 14 groups. Conventions: every row has a time-ordered unique id; money is stored in whole centimes with a currency code; rates are stored in hundredths of a percent (1,200 = 12%); times are stored in UTC and stay dates in Algerian time; names of platform lists exist in English, French and Arabic; deleting is &quot;soft&quot; (a deleted date) wherever the admin must be able to restore.</p>
+<div class="keep"><h3 id="s27-relation-diagram-overview">Relation diagram (overview)</h3><figure><img src="../diagrams/rendered/erd-00-overview.svg" alt="Relation diagram"></figure></div>
 <p>This is the map of the central tables. Each box is a table; a line links a table to the table it points to, and the label is the linking column. Read it from <code>host_account</code> in the middle: on one side it is linked to <code>user</code> or <code>organization</code> (who hosts), on the other side it owns <code>listing</code>, <code>trip</code> and the money accounts. A <code>booking</code> points to the guest (<code>user</code>), the host account, and exactly one target: a listing, a room type, an experience slot or a trip departure. Money lines (<code>ledger_entry</code>) belong to a <code>ledger_transaction</code> and an account. The detailed diagrams below show every column.</p>
-<div class="keep"><h3 id="s27-1-accounts">1. Accounts</h3><figure><img src="../diagrams/rendered/erd-01-accounts.svg" alt="Accounts"></figure></div>
+<div class="keep"><h3 id="s28-1-accounts">1. Accounts</h3><figure><img src="../diagrams/rendered/erd-01-accounts.svg" alt="Accounts"></figure></div>
 <p>People and access. One <code>user</code> table for everybody; an admin is a user with a <code>staff_profile</code>. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -493,7 +495,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Listings and trips a guest saved.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s28-2-geography">2. Geography</h3><figure><img src="../diagrams/rendered/erd-02-geography.svg" alt="Geography"></figure></div>
+<div class="keep"><h3 id="s29-2-geography">2. Geography</h3><figure><img src="../diagrams/rendered/erd-02-geography.svg" alt="Geography"></figure></div>
 <p>Algeria&#39;s official places. A listing points to a commune and the wilaya is deduced from it. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -515,7 +517,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>The 1,541 communes; every listing points to one.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s29-3-host-accounts-and-organisations">3. Host Accounts and Organisations</h3><figure><img src="../diagrams/rendered/erd-03-host-accounts-and-organisations.svg" alt="Host Accounts and Organisations"></figure></div>
+<div class="keep"><h3 id="s30-3-host-accounts-and-organisations">3. Host Accounts and Organisations</h3><figure><img src="../diagrams/rendered/erd-03-host-accounts-and-organisations.svg" alt="Host Accounts and Organisations"></figure></div>
 <p>Who hosts. A <code>host_account</code> is either one person or one organisation; team members are linked through <code>membership</code>. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -549,7 +551,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>The host&#39;s CCP or bank details, stored encrypted (used to return unused deposit; payouts later).</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s30-4-taxonomy">4. Taxonomy</h3><figure><img src="../diagrams/rendered/erd-04-taxonomy.svg" alt="Taxonomy"></figure></div>
+<div class="keep"><h3 id="s31-4-taxonomy">4. Taxonomy</h3><figure><img src="../diagrams/rendered/erd-04-taxonomy.svg" alt="Taxonomy"></figure></div>
 <p>Shared lists used by listings: categories, property types, amenities, cancellation policies. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -575,7 +577,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Flexible, moderate, strict: refund percentages by days before arrival.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s31-5-catalogue-listings-and-room-types">5. Catalogue: Listings and Room Types</h3><figure><img src="../diagrams/rendered/erd-05-catalogue-listings-and-room-types.svg" alt="Catalogue: Listings and Room Types"></figure></div>
+<div class="keep"><h3 id="s32-5-catalogue-listings-and-room-types">5. Catalogue: Listings and Room Types</h3><figure><img src="../diagrams/rendered/erd-05-catalogue-listings-and-room-types.svg" alt="Catalogue: Listings and Room Types"></figure></div>
 <p>What is offered. A <code>listing</code> holds the common fields; vehicles and experiences have an extra detail table; hotels and hostels have room types. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -621,7 +623,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Listings or trips the admin features on the home page for a period.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s32-6-inventory-and-calendar">6. Inventory and Calendar</h3><figure><img src="../diagrams/rendered/erd-06-inventory-and-calendar.svg" alt="Inventory and Calendar"></figure></div>
+<div class="keep"><h3 id="s33-6-inventory-and-calendar">6. Inventory and Calendar</h3><figure><img src="../diagrams/rendered/erd-06-inventory-and-calendar.svg" alt="Inventory and Calendar"></figure></div>
 <p>What is free and at which price, per day (homes, vehicles), per night and room type (hotels, hostels) or per time slot (experiences). Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -632,7 +634,7 @@ figure img{max-width:100%;max-height:205mm}
 </thead>
 <tbody><tr>
 <td><code>listing_day</code></td>
-<td>For a home or vehicle: a day the host blocked or priced differently.</td>
+<td>For a home or vehicle: a day the host blocked or priced differently. A trigger refuses blocking a booked day.</td>
 </tr>
 <tr>
 <td><code>room_type_night</code></td>
@@ -643,7 +645,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>A dated time slot of an experience with its seats.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s33-7-trips-agency-only">7. Trips (agency only)</h3><figure><img src="../diagrams/rendered/erd-07-trips-agency-only.svg" alt="Trips (agency only)"></figure></div>
+<div class="keep"><h3 id="s34-7-trips-agency-only">7. Trips (agency only)</h3><figure><img src="../diagrams/rendered/erd-07-trips-agency-only.svg" alt="Trips (agency only)"></figure></div>
 <p>Multi-day trips sold by agencies, with a day by day programme and dated departures. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -665,7 +667,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>A dated departure of a trip with seats and status.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s34-8-pricing">8. Pricing</h3><figure><img src="../diagrams/rendered/erd-08-pricing.svg" alt="Pricing"></figure></div>
+<div class="keep"><h3 id="s35-8-pricing">8. Pricing</h3><figure><img src="../diagrams/rendered/erd-08-pricing.svg" alt="Pricing"></figure></div>
 <p>Prices are always calculated by the server and stored as a quote. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -683,7 +685,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Tourist tax and VAT rates with validity dates (used later).</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s35-9-bookings">9. Bookings</h3><figure><img src="../diagrams/rendered/erd-09-bookings.svg" alt="Bookings"></figure></div>
+<div class="keep"><h3 id="s36-9-bookings">9. Bookings</h3><figure><img src="../diagrams/rendered/erd-09-bookings.svg" alt="Bookings"></figure></div>
 <p>Reservations and their history. A booking points to exactly one target: a listing, a room type, an experience slot or a trip departure. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -694,7 +696,7 @@ figure img{max-width:100%;max-height:205mm}
 </thead>
 <tbody><tr>
 <td><code>booking</code></td>
-<td>One reservation with frozen prices, commission and cancellation rules. The database refuses overlapping stays.</td>
+<td>One reservation with frozen prices, commission, cancellation rules and the check-in code. The database refuses overlapping stays of a home or vehicle.</td>
 </tr>
 <tr>
 <td><code>booking_event</code></td>
@@ -705,11 +707,15 @@ figure img{max-width:100%;max-height:205mm}
 <td>Amounts owed back to the guest after a cancellation.</td>
 </tr>
 <tr>
+<td><code>refund_obligation</code></td>
+<td>The refund a host owes a guest after a cancellation, with a due date (7 days) and a status: open, declared, settled, disputed.</td>
+</tr>
+<tr>
 <td><code>dispute</code></td>
 <td>A disagreement about a stay and how it was resolved (later release).</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s36-10-money-ledger-wallet-dormant-payments">10. Money: Ledger, Wallet, Dormant Payments</h3><figure><img src="../diagrams/rendered/erd-10-money-ledger-wallet-dormant-payments.svg" alt="Money: Ledger, Wallet, Dormant Payments"></figure></div>
+<div class="keep"><h3 id="s37-10-money-ledger-wallet-dormant-payments">10. Money: Ledger, Wallet, Dormant Payments</h3><figure><img src="../diagrams/rendered/erd-10-money-ledger-wallet-dormant-payments.svg" alt="Money: Ledger, Wallet, Dormant Payments"></figure></div>
 <p>Host deposits and BLADUS commission, written as balanced lines that are never edited. The payment, payout and gateway tables exist but are not used until online payment is added. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -720,11 +726,11 @@ figure img{max-width:100%;max-height:205mm}
 </thead>
 <tbody><tr>
 <td><code>ledger_account</code></td>
-<td>Money accounts: one deposit wallet per host, BLADUS cash, BLADUS commission.</td>
+<td>Money accounts: one deposit wallet per host, BLADUS cash, BLADUS commission, adjustments, and two memo accounts for refunds hosts owe.</td>
 </tr>
 <tr>
 <td><code>ledger_transaction</code></td>
-<td>One money event (top-up, commission, commission returned). Never edited.</td>
+<td>One money event (top-up, commission, commission returned, adjustment, refund owed or settled). Never edited: a trigger refuses it.</td>
 </tr>
 <tr>
 <td><code>ledger_entry</code></td>
@@ -732,11 +738,15 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td><code>account_balance</code></td>
-<td>Current balance of each account (always equals the sum of its lines).</td>
+<td>Current balance of each host wallet (always equals the sum of its lines; checked every night).</td>
 </tr>
 <tr>
 <td><code>wallet_topup</code></td>
 <td>A host deposit recorded by the admin with its receipt reference.</td>
+</tr>
+<tr>
+<td><code>wallet_adjustment</code></td>
+<td>A manual correction of a host deposit; posted only after a second admin approves (at most 1,000,000 DZD).</td>
 </tr>
 <tr>
 <td><code>gateway_event</code></td>
@@ -755,7 +765,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Commission invoices to hosts (later release).</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s37-11-reviews">11. Reviews</h3><figure><img src="../diagrams/rendered/erd-11-reviews.svg" alt="Reviews"></figure></div>
+<div class="keep"><h3 id="s38-11-reviews">11. Reviews</h3><figure><img src="../diagrams/rendered/erd-11-reviews.svg" alt="Reviews"></figure></div>
 <p>Ratings and comments after completed stays, the host reply and reports. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -777,7 +787,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>A report against a review, for the admin to check.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s38-12-messaging-and-notifications">12. Messaging and Notifications</h3><figure><img src="../diagrams/rendered/erd-12-messaging-and-notifications.svg" alt="Messaging and Notifications"></figure></div>
+<div class="keep"><h3 id="s39-12-messaging-and-notifications">12. Messaging and Notifications</h3><figure><img src="../diagrams/rendered/erd-12-messaging-and-notifications.svg" alt="Messaging and Notifications"></figure></div>
 <p>Message threads, notifications and the reliable sending of emails and SMS. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -807,15 +817,15 @@ figure img{max-width:100%;max-height:205mm}
 <td>Which notifications a user wants by email, SMS or push.</td>
 </tr>
 <tr>
-<td><code>outbox_event</code></td>
-<td>Things to send after a change is saved (email, SMS, search refresh), so nothing is lost.</td>
+<td><code>outbox_message</code></td>
+<td>Things to send after a change is saved (email, SMS, search refresh, hotel availability push), retried until sent or marked dead.</td>
 </tr>
 <tr>
 <td><code>delivery_log</code></td>
 <td>Result and cost of each email or SMS sent.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s39-13-media">13. Media</h3><figure><img src="../diagrams/rendered/erd-13-media.svg" alt="Media"></figure></div>
+<div class="keep"><h3 id="s40-13-media">13. Media</h3><figure><img src="../diagrams/rendered/erd-13-media.svg" alt="Media"></figure></div>
 <p>Uploaded files. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -829,7 +839,7 @@ figure img{max-width:100%;max-height:205mm}
 <td>Every uploaded file: public photos and private documents.</td>
 </tr>
 </tbody></table>
-<div class="keep"><h3 id="s40-14-moderation-config-audit-privacy-system">14. Moderation, Config, Audit, Privacy, System</h3><figure><img src="../diagrams/rendered/erd-14-moderation-config-audit-privacy-system.svg" alt="Moderation, Config, Audit, Privacy, System"></figure></div>
+<div class="keep"><h3 id="s41-14-moderation-config-audit-privacy-system">14. Moderation, Config, Audit, Privacy, System</h3><figure><img src="../diagrams/rendered/erd-14-moderation-config-audit-privacy-system.svg" alt="Moderation, Config, Audit, Privacy, System"></figure></div>
 <p>Admin work (queues, decisions), settings, onboarding forms, the audit log, privacy requests, hotel system connections and technical helpers. Boxes that show only <code>id</code> are tables from another group, drawn to show the link.</p>
 <table>
 <thead>
@@ -876,7 +886,7 @@ figure img{max-width:100%;max-height:205mm}
 </tr>
 <tr>
 <td><code>audit_event</code></td>
-<td>Who did what and when. Cannot be edited or deleted.</td>
+<td>Who did what and when. Cannot be edited or deleted (trigger and database roles), copied every day to write-once storage.</td>
 </tr>
 <tr>
 <td><code>export_job</code></td>
@@ -911,15 +921,19 @@ figure img{max-width:100%;max-height:205mm}
 <td>One line per sync run with what changed or why it failed.</td>
 </tr>
 <tr>
+<td><code>inventory_conflict</code></td>
+<td>A hotel system asked for fewer rooms than BLADUS already sold; the total is kept and the admin decides.</td>
+</tr>
+<tr>
 <td><code>property_service</code></td>
 <td>Services of a hotel or hostel (restaurant, spa, parking...), typed by hand or imported.</td>
 </tr>
 <tr>
 <td><code>listing_search_doc</code></td>
-<td>One ready-to-search line per published listing; makes search fast.</td>
+<td>One ready-to-search line per published listing; makes search fast (trigram text search, map, filters).</td>
 </tr>
 </tbody></table>
-<h3 id="s41-rules-the-database-enforces-by-itself">Rules the database enforces by itself</h3><p>These rules are inside PostgreSQL, so even a bug in the code cannot break them: no overlapping stays, no overselling, exactly one owner per organisation, money lines that always balance, and logs that cannot be edited.</p>
+<h3 id="s42-rules-the-database-enforces-by-itself">Rules the database enforces by itself</h3><p>These rules are inside PostgreSQL, so even a bug in the code cannot break them. Exactly what they guarantee: no overlapping stays on a home or vehicle (exclusion rule); no overselling of rooms, beds and seats (counter checks, no exclusion rule there); no blocked day under a booking and no booking on a blocked day (two triggers); exactly one owner per organisation; money lines that always balance; ledger, booking history and audit rows that nobody can change (triggers, and the app&#39;s database login may only read and add).</p>
 <pre><code class="language-sql">-- Extensions
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS btree_gist;   -- equality inside exclusion constraints
@@ -986,7 +1000,90 @@ END $$ LANGUAGE plpgsql;
 CREATE CONSTRAINT TRIGGER ledger_entry_balanced AFTER INSERT ON ledger_entry
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ledger_tx_balanced();
 ALTER TABLE ledger_entry ADD CONSTRAINT ledger_entry_nonzero CHECK (amount_minor &lt;&gt; 0);
-REVOKE UPDATE, DELETE ON ledger_entry, ledger_transaction, audit_event, booking_event FROM bladus_app;
+
+-- DEC-026: insert-only tables, refused for every role (also the table owner)
+CREATE FUNCTION refuse_change() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION &#39;% on % is not allowed (insert-only table)&#39;, TG_OP, TG_TABLE_NAME;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER ledger_transaction_insert_only BEFORE UPDATE OR DELETE ON ledger_transaction
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER ledger_entry_insert_only BEFORE UPDATE OR DELETE ON ledger_entry
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER audit_event_insert_only BEFORE UPDATE OR DELETE ON audit_event
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER booking_event_insert_only BEFORE UPDATE OR DELETE ON booking_event
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+
+-- DEC-026: role split. The owner runs migrations; the app cannot change ledger or audit rows.
+CREATE ROLE bladus_migrator LOGIN;            -- owns every table, used only by migrations
+CREATE ROLE bladus_app LOGIN;                 -- the Django app at run time
+-- (every table is created by bladus_migrator, so bladus_app is never an owner)
+GRANT USAGE ON SCHEMA public TO bladus_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bladus_app;
+REVOKE UPDATE, DELETE, TRUNCATE ON ledger_transaction, ledger_entry, audit_event, booking_event FROM bladus_app;
+GRANT SELECT, INSERT ON ledger_transaction, ledger_entry, audit_event, booking_event TO bladus_app;
+
+-- BR-AVL-07 (a): never block a day that a single-unit booking holds
+CREATE FUNCTION listing_day_block_guard() RETURNS trigger AS $$
+BEGIN
+  IF NEW.is_blocked AND EXISTS (
+       SELECT 1 FROM booking b
+        WHERE b.listing_id = NEW.listing_id AND b.inventory_kind = &#39;single&#39;
+          AND b.status IN (&#39;pending&#39;,&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;)
+          AND b.stay @&gt; NEW.day) THEN
+    RAISE EXCEPTION &#39;dates_booked&#39; USING ERRCODE = &#39;23P01&#39;;
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER listing_day_block_guard BEFORE INSERT OR UPDATE OF is_blocked ON listing_day
+  FOR EACH ROW EXECUTE FUNCTION listing_day_block_guard();
+
+-- BR-AVL-07 (b): never place or move a single-unit booking onto a blocked day
+CREATE FUNCTION booking_blocked_day_guard() RETURNS trigger AS $$
+BEGIN
+  IF NEW.inventory_kind = &#39;single&#39;
+     AND NEW.status IN (&#39;pending&#39;,&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;)
+     AND (TG_OP = &#39;INSERT&#39; OR OLD.status IS DISTINCT FROM NEW.status OR OLD.stay IS DISTINCT FROM NEW.stay)
+     AND EXISTS (SELECT 1 FROM listing_day d
+                  WHERE d.listing_id = NEW.listing_id AND d.is_blocked AND NEW.stay @&gt; d.day) THEN
+    RAISE EXCEPTION &#39;dates_unavailable&#39; USING ERRCODE = &#39;23P01&#39;;
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER booking_blocked_day_guard BEFORE INSERT OR UPDATE OF status, stay ON booking
+  FOR EACH ROW EXECUTE FUNCTION booking_blocked_day_guard();
+-- Both services lock the listing row first (SELECT ... FOR UPDATE), so the two triggers never race.
+
+-- BR-BKG-09: stay confirmation only on a confirmed or finished booking
+ALTER TABLE booking ADD CONSTRAINT booking_stay_confirmed_ok CHECK (
+  stay_confirmed_at IS NULL OR status IN (&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;));
+
+-- BR-PAY-13: manual adjustments, capped and four-eyes
+ALTER TABLE wallet_adjustment ADD CONSTRAINT adjustment_amount_ok
+  CHECK (amount_minor &lt;&gt; 0 AND abs(amount_minor) &lt;= 100000000);
+ALTER TABLE wallet_adjustment ADD CONSTRAINT adjustment_four_eyes
+  CHECK (approved_by_id IS NULL OR approved_by_id &lt;&gt; requested_by_id);
+ALTER TABLE wallet_topup ADD CONSTRAINT topup_four_eyes
+  CHECK (approved_by_id IS NULL OR approved_by_id &lt;&gt; requested_by_id);
+
+-- BR-CAN-06: refund obligations
+ALTER TABLE refund_obligation ADD CONSTRAINT refund_obligation_amount_ok CHECK (amount_minor &gt; 0);
+CREATE INDEX refund_obligation_overdue ON refund_obligation (due_at) WHERE status IN (&#39;open&#39;,&#39;disputed&#39;);
+
+-- BR-HST-07: one open conflict per room-night
+CREATE UNIQUE INDEX inventory_conflict_one_open ON inventory_conflict (room_type_id, night) WHERE status = &#39;open&#39;;
+
+-- BR-SYS-03: outbox
+ALTER TABLE outbox_message ADD CONSTRAINT outbox_attempts_ok CHECK (attempts BETWEEN 0 AND 8);
+
+-- BR-SRC-05: trigram search (no tsvector; PostgreSQL has no Arabic stemmer)
+CREATE INDEX listing_title_trgm ON listing USING gin (lower(unaccent_immutable(title)) gin_trgm_ops);
+CREATE INDEX search_doc_text_trgm ON listing_search_doc USING gin (search_text gin_trgm_ops);
+CREATE INDEX commune_name_fr_trgm ON commune USING gin (lower(unaccent_immutable(name_fr)) gin_trgm_ops);
+CREATE INDEX commune_name_en_trgm ON commune USING gin (lower(name_en) gin_trgm_ops);
+CREATE INDEX commune_name_ar_trgm ON commune USING gin (name_ar gin_trgm_ops);
+-- unaccent_immutable: an IMMUTABLE SQL wrapper around unaccent(&#39;unaccent&#39;, text), needed to index it
 
 -- BR-PAY-04: commission posted once per booking
 CREATE UNIQUE INDEX ledger_one_commission ON ledger_transaction (booking_id) WHERE kind = &#39;commission&#39;;
@@ -998,7 +1095,7 @@ CREATE UNIQUE INDEX flow_one_published ON onboarding_flow_version (host_type) WH
 CREATE UNIQUE INDEX case_one_open ON moderation_case (kind, subject_id) WHERE status &lt;&gt; &#39;resolved&#39;;
 CREATE UNIQUE INDEX settings_one_current ON platform_settings (is_current) WHERE is_current;
 </code></pre>
-<h2 id="s42-11-api-design">11. API design</h2><p><strong>Conventions.</strong> All addresses start with <code>/api/v1</code>. Data is JSON with <code>snake_case</code> names. Money is <code>{&quot;amount_minor&quot;: 5950000, &quot;currency&quot;: &quot;DZD&quot;}</code> (centimes). Dates are ISO 8601. Errors always have the same shape: a stable <code>code</code>, a message in the user&#39;s language (en, fr, ar) and field errors. Lists are paginated. Creating a booking or recording money needs an <code>Idempotency-Key</code> header, so a retry never creates a duplicate. Requests are rate limited.</p>
+<h2 id="s43-11-api-design">11. API design</h2><p><strong>Conventions.</strong> All addresses start with <code>/api/v1</code>. Every id is a UUIDv7; references like <code>BLD-2026-7K2M9Q</code> are only for display and search. Data is JSON with <code>snake_case</code> names. Money is <code>{&quot;amount_minor&quot;: 5950000, &quot;currency&quot;: &quot;DZD&quot;}</code> (centimes). Dates are ISO 8601. Errors always have the same shape: a stable <code>code</code>, a message in the user&#39;s language (en, fr, ar) and field errors. Lists are paginated. Creating a booking or recording money needs an <code>Idempotency-Key</code> header, so a retry never creates a duplicate. Requests are rate limited.</p>
 <p><strong>Access.</strong> Four areas: public (no login), <code>me</code> (signed-in guest), <code>host</code> (the active workspace: the user as solo host or one of their organisations, re-checked on every call), and <code>admin</code> (staff only, two-step login). The website and admin never call Django from the browser: their Next.js server does, with the session kept in an httpOnly cookie.</p>
 <p><strong>Example: create a booking</strong></p>
 <pre><code class="language-http">POST /api/v1/me/bookings
@@ -1013,8 +1110,8 @@ Idempotency-Key: 6f1c2a9e-...
 409 Conflict (someone booked these dates first)
 { &quot;code&quot;: &quot;dates_unavailable&quot;, &quot;message&quot;: &quot;Ces dates ne sont plus disponibles.&quot; }
 </code></pre>
-<h3 id="s43-endpoint-list">Endpoint list</h3><p>The contract has 272 operations; 8 of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is <code>openapi.yaml</code>.</p>
-<h4 id="s44-sign-up-and-sign-in-15">Sign-up and sign-in (15)</h4><table>
+<h3 id="s44-endpoint-list">Endpoint list</h3><p>The contract has 286 operations (computed from <code>openapi.yaml</code>). 8 of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is <code>openapi.yaml</code>.</p>
+<h4 id="s45-sign-up-and-sign-in-15">Sign-up and sign-in (15)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -1098,7 +1195,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Enrol a TOTP authenticator</td>
 </tr>
 </tbody></table>
-<h4 id="s45-public-no-login-needed-23">Public (no login needed) (23)</h4><table>
+<h4 id="s46-public-no-login-needed-23">Public (no login needed) (23)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -1222,7 +1319,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Services of a hotel or hostel (restaurants, spa, parking...)</td>
 </tr>
 </tbody></table>
-<h4 id="s46-signed-in-guest-25">Signed-in guest (25)</h4><table>
+<h4 id="s47-signed-in-guest-29">Signed-in guest (29)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -1337,6 +1434,26 @@ Idempotency-Key: 6f1c2a9e-...
 </tr>
 <tr>
 <td>POST</td>
+<td><code>/me/bookings/{booking_id}/confirm-stay</code></td>
+<td>Confirm that my stay took place</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/me/refunds</code></td>
+<td>Refunds hosts owe me</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/refunds/{refund_id}/confirm-received</code></td>
+<td>Confirm I received the refund</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/me/refunds/{refund_id}/dispute</code></td>
+<td>Say the refund was not received</td>
+</tr>
+<tr>
+<td>POST</td>
 <td><code>/me/bookings/{booking_id}/dispute</code></td>
 <td>Open a dispute about a booking</td>
 </tr>
@@ -1356,7 +1473,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Accept an organisation invitation</td>
 </tr>
 </tbody></table>
-<h4 id="s47-messages-7">Messages (7)</h4><table>
+<h4 id="s48-messages-7">Messages (7)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -1400,7 +1517,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Move my read pointer</td>
 </tr>
 </tbody></table>
-<h4 id="s48-file-uploads-4">File uploads (4)</h4><table>
+<h4 id="s49-file-uploads-4">File uploads (4)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -1429,7 +1546,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Short-lived URL for a private file</td>
 </tr>
 </tbody></table>
-<h4 id="s49-host-workspace-75">Host workspace (75)</h4><table>
+<h4 id="s50-host-workspace-77">Host workspace (77)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -1769,6 +1886,11 @@ Idempotency-Key: 6f1c2a9e-...
 </tr>
 <tr>
 <td>POST</td>
+<td><code>/host/bookings/{booking_id}/confirm-stay</code></td>
+<td>Confirm the guest arrived (check-in code)</td>
+</tr>
+<tr>
+<td>POST</td>
 <td><code>/host/bookings/{booking_id}/guest-review</code></td>
 <td>Review the guest</td>
 </tr>
@@ -1798,9 +1920,14 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Wallet history</td>
 </tr>
 <tr>
+<td>GET</td>
+<td><code>/host/refunds</code></td>
+<td>Refunds the active host account owes guests</td>
+</tr>
+<tr>
 <td>POST</td>
-<td><code>/host/wallet/topups</code></td>
-<td>Top up the wallet online (CIB, Edahabia)</td>
+<td><code>/host/refunds/{refund_id}/declare-paid</code></td>
+<td>Declare a refund paid to the guest</td>
 </tr>
 <tr>
 <td>GET</td>
@@ -1813,7 +1940,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Commission invoices</td>
 </tr>
 </tbody></table>
-<h4 id="s50-admin-115">Admin (115)</h4><table>
+<h4 id="s51-admin-123">Admin (123)</h4><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -2069,7 +2196,12 @@ Idempotency-Key: 6f1c2a9e-...
 <tr>
 <td>GET</td>
 <td><code>/admin/refunds</code></td>
-<td>All refunds</td>
+<td>Refund obligations (e.g. overdue ones)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/refunds/{refund_id}/settle</code></td>
+<td>Settle a refund obligation with proof</td>
 </tr>
 <tr>
 <td>GET</td>
@@ -2162,9 +2294,24 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Ledger transactions with their entries</td>
 </tr>
 <tr>
+<td>GET</td>
+<td><code>/admin/wallet-adjustments</code></td>
+<td>Manual wallet adjustments</td>
+</tr>
+<tr>
 <td>POST</td>
-<td><code>/admin/ledger/adjustments</code></td>
-<td>Correct a wallet with an adjustment transaction</td>
+<td><code>/admin/wallet-adjustments</code></td>
+<td>Ask for a manual wallet adjustment</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/wallet-adjustments/{adjustment_id}/approve</code></td>
+<td>Second approval of a wallet adjustment</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/wallet-adjustments/{adjustment_id}/reject</code></td>
+<td>Reject a wallet adjustment</td>
 </tr>
 <tr>
 <td>POST</td>
@@ -2200,6 +2347,26 @@ Idempotency-Key: 6f1c2a9e-...
 <td>GET</td>
 <td><code>/admin/invoices</code></td>
 <td>Commission invoices</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/inventory-conflicts</code></td>
+<td>Hotel sync conflicts (rooms already sold)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/inventory-conflicts/{conflict_id}/resolve</code></td>
+<td>Resolve a hotel sync conflict</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/outbox</code></td>
+<td>Outgoing messages (e.g. dead ones)</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/admin/outbox/{message_id}/retry</code></td>
+<td>Retry a dead outgoing message</td>
 </tr>
 <tr>
 <td>GET</td>
@@ -2397,7 +2564,7 @@ Idempotency-Key: 6f1c2a9e-...
 <td>Command palette search</td>
 </tr>
 </tbody></table>
-<h2 id="s51-12-build-plan">12. Build plan</h2><p>Assumed team: 2 backend developers and 1 part-time frontend developer. The apps switch from demo data to the API one module at a time.</p>
+<h2 id="s52-12-build-plan">12. Build plan</h2><p>Assumed team: 2 backend developers and 1 part-time frontend developer. The apps switch from demo data to the API one module at a time.</p>
 <table>
 <thead>
 <tr>
@@ -2407,8 +2574,13 @@ Idempotency-Key: 6f1c2a9e-...
 </tr>
 </thead>
 <tbody><tr>
+<td>Before M0</td>
+<td>Agree the one-page operations plan: servers, failover (5 minutes of data at most, back within 1 hour), backups, alerts, deploys, secrets</td>
+<td>gate</td>
+</tr>
+<tr>
 <td>M0 Foundations</td>
-<td>Project, automatic checks, sign-up and sign-in with phone codes, wilayas and communes, settings</td>
+<td>Project, automatic checks, sign-up and sign-in with phone codes, wilayas and communes, settings, safety helpers (URL check, hashing)</td>
 <td>3</td>
 </tr>
 <tr>
@@ -2428,12 +2600,12 @@ Idempotency-Key: 6f1c2a9e-...
 </tr>
 <tr>
 <td>M4 Bookings and deposit</td>
-<td>Instant and request bookings, cancellations, host deposit, commission, admin top-ups</td>
+<td>Instant and request bookings, cancellations, refunds the hosts owe, host deposit, commission, admin top-ups and corrections, nightly balance check, hotel push</td>
 <td>5</td>
 </tr>
 <tr>
 <td>M5 Messages and reviews</td>
-<td>Conversations, notifications, reviews</td>
+<td>Conversations, notifications, check-in code, reviews</td>
 <td>3</td>
 </tr>
 <tr>
@@ -2453,12 +2625,12 @@ Idempotency-Key: 6f1c2a9e-...
 </tr>
 </tbody></table>
 <p>Before real customers use the platform, a lawyer must confirm two points: hosting in Algeria with a <code>.com.dz</code> name, and the rules for personal data.</p>
-<h2 id="s52-appendix-database-sql">Appendix: database SQL</h2><p>The tables as PostgreSQL statements, generated from the schema (<code>schema.dbml</code>). Column comments are left out to keep this short; they are in the data dictionary of the full blueprint. The special rules of section 10 are added on top of these statements.</p>
-<div class="sql"><pre><code class="language-sql">-- Generated from schema.dbml with @dbml/cli (dbml2sql --postgres). Documentation artifact, not a migration.
--- Exclusion constraints, partial indexes and triggers are in 05-database-schema.md section 6.
+<h2 id="s53-appendix-database-sql">Appendix: database SQL</h2><p>The tables as PostgreSQL statements, generated from the schema (<code>schema.dbml</code>). Column comments are left out to keep this short; they are in the data dictionary of the full blueprint. The special rules of section 10 are added on top of these statements.</p>
+<div class="sql"><pre><code class="language-sql">-- Generated from schema.dbml with @dbml/cli (dbml2sql --postgres) by _tools/build_schema_sql.py.
+-- Documentation artifact, not a migration. The extra SQL (exclusion constraint, checks, triggers,
+-- role split, trigram indexes) from 05-database-schema.md section 6 is appended after the marker line.
 -- SQL dump generated using DBML (dbml.dbdiagram.io)
 -- Database: PostgreSQL
--- Generated at: 2026-11-11T10:47:04.909Z
 
 CREATE TYPE &quot;user_status&quot; AS ENUM (
   &#39;active&#39;,
@@ -2642,7 +2814,9 @@ CREATE TYPE &quot;ledger_account_kind&quot; AS ENUM (
   &#39;escrow&#39;,
   &#39;host_payable&#39;,
   &#39;payout_clearing&#39;,
-  &#39;adjustments&#39;
+  &#39;adjustments&#39;,
+  &#39;host_refund_payable&#39;,
+  &#39;guest_refund_clearing&#39;
 );
 
 CREATE TYPE &quot;ledger_tx_kind&quot; AS ENUM (
@@ -2650,9 +2824,34 @@ CREATE TYPE &quot;ledger_tx_kind&quot; AS ENUM (
   &#39;commission&#39;,
   &#39;commission_reversal&#39;,
   &#39;adjustment&#39;,
+  &#39;refund_due&#39;,
+  &#39;refund_settled&#39;,
   &#39;guest_payment&#39;,
   &#39;refund&#39;,
   &#39;payout&#39;
+);
+
+CREATE TYPE &quot;adjustment_status&quot; AS ENUM (
+  &#39;pending_approval&#39;,
+  &#39;approved&#39;,
+  &#39;rejected&#39;
+);
+
+CREATE TYPE &quot;refund_obligation_status&quot; AS ENUM (
+  &#39;open&#39;,
+  &#39;declared&#39;,
+  &#39;settled&#39;,
+  &#39;disputed&#39;
+);
+
+CREATE TYPE &quot;stay_confirmed_via&quot; AS ENUM (
+  &#39;host_code&#39;,
+  &#39;guest&#39;
+);
+
+CREATE TYPE &quot;inventory_conflict_status&quot; AS ENUM (
+  &#39;open&#39;,
+  &#39;resolved&#39;
 );
 
 CREATE TYPE &quot;topup_method&quot; AS ENUM (
@@ -2729,7 +2928,7 @@ CREATE TYPE &quot;flow_status&quot; AS ENUM (
 CREATE TYPE &quot;outbox_status&quot; AS ENUM (
   &#39;pending&#39;,
   &#39;sent&#39;,
-  &#39;failed&#39;
+  &#39;dead&#39;
 );
 
 CREATE TYPE &quot;dsr_kind&quot; AS ENUM (
@@ -3276,6 +3475,9 @@ CREATE TABLE &quot;booking&quot; (
   &quot;commission_rate_bp&quot; int NOT NULL,
   &quot;commission_minor&quot; bigint NOT NULL,
   &quot;refund_due_minor&quot; bigint NOT NULL DEFAULT 0,
+  &quot;check_in_code&quot; char(6),
+  &quot;stay_confirmed_at&quot; timestamptz,
+  &quot;stay_confirmed_via&quot; stay_confirmed_via,
   &quot;price_lines&quot; jsonb NOT NULL,
   &quot;cancellation_windows&quot; jsonb NOT NULL,
   &quot;listing_snapshot&quot; jsonb NOT NULL,
@@ -3285,7 +3487,7 @@ CREATE TABLE &quot;booking&quot; (
 );
 
 CREATE TABLE &quot;booking_event&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;booking_id&quot; uuid NOT NULL,
   &quot;from_status&quot; booking_status,
   &quot;to_status&quot; booking_status NOT NULL,
@@ -3305,6 +3507,28 @@ CREATE TABLE &quot;refund&quot; (
   &quot;reason&quot; text,
   &quot;created_by_id&quot; uuid,
   &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;refund_obligation&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;refund_id&quot; uuid UNIQUE NOT NULL,
+  &quot;booking_id&quot; uuid NOT NULL,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;guest_id&quot; uuid NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;currency&quot; char(3) NOT NULL,
+  &quot;status&quot; refund_obligation_status NOT NULL DEFAULT &#39;open&#39;,
+  &quot;due_at&quot; timestamptz NOT NULL,
+  &quot;declared_at&quot; timestamptz,
+  &quot;declared_reference&quot; varchar(120),
+  &quot;declared_by_id&quot; uuid,
+  &quot;settled_at&quot; timestamptz,
+  &quot;settled_via&quot; varchar(12),
+  &quot;settled_by_id&quot; uuid,
+  &quot;settlement_proof_id&quot; uuid,
+  &quot;dispute_note&quot; text,
+  &quot;created_at&quot; timestamptz NOT NULL,
+  &quot;updated_at&quot; timestamptz NOT NULL
 );
 
 CREATE TABLE &quot;dispute&quot; (
@@ -3346,7 +3570,7 @@ CREATE TABLE &quot;ledger_transaction&quot; (
 );
 
 CREATE TABLE &quot;ledger_entry&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;transaction_id&quot; uuid NOT NULL,
   &quot;account_id&quot; uuid NOT NULL,
   &quot;amount_minor&quot; bigint NOT NULL,
@@ -3356,7 +3580,7 @@ CREATE TABLE &quot;ledger_entry&quot; (
 CREATE TABLE &quot;account_balance&quot; (
   &quot;account_id&quot; uuid PRIMARY KEY,
   &quot;balance_minor&quot; bigint NOT NULL,
-  &quot;last_entry_id&quot; bigint NOT NULL,
+  &quot;last_entry_id&quot; uuid NOT NULL,
   &quot;updated_at&quot; timestamptz NOT NULL
 );
 
@@ -3372,6 +3596,21 @@ CREATE TABLE &quot;wallet_topup&quot; (
   &quot;approved_at&quot; timestamptz,
   &quot;rejection_reason&quot; text,
   &quot;gateway_event_id&quot; uuid,
+  &quot;created_at&quot; timestamptz NOT NULL
+);
+
+CREATE TABLE &quot;wallet_adjustment&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;host_account_id&quot; uuid NOT NULL,
+  &quot;amount_minor&quot; bigint NOT NULL,
+  &quot;currency&quot; char(3) NOT NULL,
+  &quot;reason&quot; text NOT NULL,
+  &quot;status&quot; adjustment_status NOT NULL DEFAULT &#39;pending_approval&#39;,
+  &quot;requested_by_id&quot; uuid NOT NULL,
+  &quot;approved_by_id&quot; uuid,
+  &quot;approved_at&quot; timestamptz,
+  &quot;rejection_reason&quot; text,
+  &quot;ledger_transaction_id&quot; uuid,
   &quot;created_at&quot; timestamptz NOT NULL
 );
 
@@ -3479,14 +3718,14 @@ CREATE TABLE &quot;conversation_participant&quot; (
   &quot;conversation_id&quot; uuid,
   &quot;user_id&quot; uuid,
   &quot;role&quot; varchar(12) NOT NULL,
-  &quot;last_read_message_id&quot; bigint,
+  &quot;last_read_message_id&quot; uuid,
   &quot;muted&quot; boolean NOT NULL DEFAULT false,
   &quot;joined_at&quot; timestamptz NOT NULL,
   PRIMARY KEY (&quot;conversation_id&quot;, &quot;user_id&quot;)
 );
 
 CREATE TABLE &quot;message&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;conversation_id&quot; uuid NOT NULL,
   &quot;sender_id&quot; uuid,
   &quot;kind&quot; varchar(12) NOT NULL,
@@ -3498,7 +3737,7 @@ CREATE TABLE &quot;message&quot; (
 );
 
 CREATE TABLE &quot;notification&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;user_id&quot; uuid NOT NULL,
   &quot;kind&quot; varchar(48) NOT NULL,
   &quot;params&quot; jsonb NOT NULL,
@@ -3515,8 +3754,8 @@ CREATE TABLE &quot;notification_preference&quot; (
   PRIMARY KEY (&quot;user_id&quot;, &quot;kind&quot;, &quot;channel&quot;)
 );
 
-CREATE TABLE &quot;outbox_event&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+CREATE TABLE &quot;outbox_message&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;topic&quot; varchar(64) NOT NULL,
   &quot;aggregate_type&quot; varchar(32) NOT NULL,
   &quot;aggregate_id&quot; uuid NOT NULL,
@@ -3524,13 +3763,14 @@ CREATE TABLE &quot;outbox_event&quot; (
   &quot;status&quot; outbox_status NOT NULL DEFAULT &#39;pending&#39;,
   &quot;attempts&quot; smallint NOT NULL DEFAULT 0,
   &quot;next_attempt_at&quot; timestamptz NOT NULL,
+  &quot;last_error&quot; text,
   &quot;created_at&quot; timestamptz NOT NULL,
   &quot;sent_at&quot; timestamptz
 );
 
 CREATE TABLE &quot;delivery_log&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
-  &quot;outbox_event_id&quot; bigint,
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;outbox_message_id&quot; uuid,
   &quot;channel&quot; varchar(8) NOT NULL,
   &quot;provider&quot; varchar(20) NOT NULL,
   &quot;recipient_hash&quot; char(64) NOT NULL,
@@ -3668,7 +3908,7 @@ CREATE TABLE &quot;coupon_redemption&quot; (
 );
 
 CREATE TABLE &quot;audit_event&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;occurred_at&quot; timestamptz NOT NULL,
   &quot;actor_id&quot; uuid,
   &quot;actor_kind&quot; varchar(8) NOT NULL,
@@ -3754,7 +3994,7 @@ CREATE TABLE &quot;calendar_feed&quot; (
 );
 
 CREATE TABLE &quot;otp_send_log&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;phone_hash&quot; char(64) NOT NULL,
   &quot;ip&quot; inet,
   &quot;purpose&quot; varchar(16) NOT NULL,
@@ -3772,6 +4012,7 @@ CREATE TABLE &quot;property_integration&quot; (
   &quot;system_name&quot; varchar(60) NOT NULL,
   &quot;base_url&quot; varchar(255),
   &quot;credentials_encrypted&quot; bytea,
+  &quot;credentials_key_id&quot; varchar(16),
   &quot;status&quot; varchar(12) NOT NULL DEFAULT &#39;pending&#39;,
   &quot;sync_rooms&quot; boolean NOT NULL DEFAULT true,
   &quot;sync_availability&quot; boolean NOT NULL DEFAULT true,
@@ -3783,7 +4024,7 @@ CREATE TABLE &quot;property_integration&quot; (
 );
 
 CREATE TABLE &quot;integration_sync_log&quot; (
-  &quot;id&quot; BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  &quot;id&quot; uuid PRIMARY KEY,
   &quot;integration_id&quot; uuid NOT NULL,
   &quot;started_at&quot; timestamptz NOT NULL,
   &quot;finished_at&quot; timestamptz,
@@ -3792,6 +4033,23 @@ CREATE TABLE &quot;integration_sync_log&quot; (
   &quot;nights_changed&quot; int NOT NULL DEFAULT 0,
   &quot;services_changed&quot; int NOT NULL DEFAULT 0,
   &quot;error&quot; text
+);
+
+CREATE TABLE &quot;inventory_conflict&quot; (
+  &quot;id&quot; uuid PRIMARY KEY,
+  &quot;integration_id&quot; uuid NOT NULL,
+  &quot;room_type_id&quot; uuid NOT NULL,
+  &quot;night&quot; date NOT NULL,
+  &quot;requested_total&quot; smallint NOT NULL,
+  &quot;applied_total&quot; smallint NOT NULL,
+  &quot;held&quot; smallint NOT NULL,
+  &quot;booked&quot; smallint NOT NULL,
+  &quot;status&quot; inventory_conflict_status NOT NULL DEFAULT &#39;open&#39;,
+  &quot;resolution&quot; varchar(24),
+  &quot;resolution_note&quot; text,
+  &quot;resolved_by_id&quot; uuid,
+  &quot;resolved_at&quot; timestamptz,
+  &quot;created_at&quot; timestamptz NOT NULL
 );
 
 CREATE TABLE &quot;property_service&quot; (
@@ -3823,10 +4081,7 @@ CREATE TABLE &quot;listing_search_doc&quot; (
   &quot;experience_type&quot; experience_type,
   &quot;property_type_id&quot; uuid,
   &quot;amenity_ids&quot; uuid[] NOT NULL,
-  &quot;tsv_fr&quot; tsvector,
-  &quot;tsv_en&quot; tsvector,
-  &quot;tsv_ar&quot; tsvector,
-  &quot;search_text&quot; text,
+  &quot;search_text&quot; text NOT NULL,
   &quot;published_at&quot; timestamptz NOT NULL,
   &quot;updated_at&quot; timestamptz NOT NULL
 );
@@ -3851,7 +4106,15 @@ CREATE INDEX ON &quot;booking&quot; (&quot;request_expires_at&quot;);
 
 CREATE INDEX ON &quot;booking&quot; (&quot;check_out_at&quot;);
 
+CREATE INDEX ON &quot;refund_obligation&quot; (&quot;host_account_id&quot;, &quot;status&quot;, &quot;due_at&quot;);
+
+CREATE INDEX ON &quot;refund_obligation&quot; (&quot;guest_id&quot;, &quot;status&quot;);
+
+CREATE INDEX ON &quot;refund_obligation&quot; (&quot;due_at&quot;);
+
 CREATE UNIQUE INDEX ON &quot;wallet_topup&quot; (&quot;method&quot;, &quot;receipt_reference&quot;);
+
+CREATE INDEX ON &quot;wallet_adjustment&quot; (&quot;status&quot;, &quot;created_at&quot;);
 
 CREATE UNIQUE INDEX ON &quot;gateway_event&quot; (&quot;provider&quot;, &quot;event_id&quot;);
 
@@ -3865,7 +4128,7 @@ CREATE INDEX ON &quot;message&quot; (&quot;conversation_id&quot;, &quot;id&quot;
 
 CREATE INDEX ON &quot;notification&quot; (&quot;user_id&quot;, &quot;read_at&quot;, &quot;id&quot;);
 
-CREATE INDEX ON &quot;outbox_event&quot; (&quot;status&quot;, &quot;next_attempt_at&quot;);
+CREATE INDEX ON &quot;outbox_message&quot; (&quot;status&quot;, &quot;next_attempt_at&quot;);
 
 CREATE INDEX ON &quot;media_asset&quot; (&quot;phash&quot;);
 
@@ -3884,6 +4147,10 @@ CREATE UNIQUE INDEX ON &quot;idempotency_record&quot; (&quot;user_id&quot;, &quo
 CREATE INDEX ON &quot;otp_send_log&quot; (&quot;phone_hash&quot;, &quot;created_at&quot;);
 
 CREATE INDEX ON &quot;otp_send_log&quot; (&quot;ip&quot;, &quot;created_at&quot;);
+
+CREATE INDEX ON &quot;inventory_conflict&quot; (&quot;status&quot;, &quot;created_at&quot;);
+
+CREATE INDEX ON &quot;inventory_conflict&quot; (&quot;room_type_id&quot;, &quot;night&quot;);
 
 ALTER TABLE &quot;user&quot; ADD FOREIGN KEY (&quot;avatar_media_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -4049,6 +4316,20 @@ ALTER TABLE &quot;refund&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENC
 
 ALTER TABLE &quot;refund&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;refund_id&quot;) REFERENCES &quot;refund&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;guest_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;declared_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;settled_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;refund_obligation&quot; ADD FOREIGN KEY (&quot;settlement_proof_id&quot;) REFERENCES &quot;media_asset&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
 ALTER TABLE &quot;dispute&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE &quot;dispute&quot; ADD FOREIGN KEY (&quot;opened_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
@@ -4080,6 +4361,14 @@ ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;requested_by_id&quot
 ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;approved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE &quot;wallet_topup&quot; ADD FOREIGN KEY (&quot;gateway_event_id&quot;) REFERENCES &quot;gateway_event&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_adjustment&quot; ADD FOREIGN KEY (&quot;host_account_id&quot;) REFERENCES &quot;host_account&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_adjustment&quot; ADD FOREIGN KEY (&quot;requested_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_adjustment&quot; ADD FOREIGN KEY (&quot;approved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;wallet_adjustment&quot; ADD FOREIGN KEY (&quot;ledger_transaction_id&quot;) REFERENCES &quot;ledger_transaction&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE &quot;payment&quot; ADD FOREIGN KEY (&quot;booking_id&quot;) REFERENCES &quot;booking&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -4139,7 +4428,7 @@ ALTER TABLE &quot;notification&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFER
 
 ALTER TABLE &quot;notification_preference&quot; ADD FOREIGN KEY (&quot;user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE &quot;delivery_log&quot; ADD FOREIGN KEY (&quot;outbox_event_id&quot;) REFERENCES &quot;outbox_event&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE &quot;delivery_log&quot; ADD FOREIGN KEY (&quot;outbox_message_id&quot;) REFERENCES &quot;outbox_message&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE &quot;media_asset&quot; ADD FOREIGN KEY (&quot;owner_user_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -4204,6 +4493,12 @@ ALTER TABLE &quot;property_integration&quot; ADD FOREIGN KEY (&quot;listing_id&q
 ALTER TABLE &quot;property_integration&quot; ADD FOREIGN KEY (&quot;created_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE &quot;integration_sync_log&quot; ADD FOREIGN KEY (&quot;integration_id&quot;) REFERENCES &quot;property_integration&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;inventory_conflict&quot; ADD FOREIGN KEY (&quot;integration_id&quot;) REFERENCES &quot;property_integration&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;inventory_conflict&quot; ADD FOREIGN KEY (&quot;room_type_id&quot;) REFERENCES &quot;room_type&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE &quot;inventory_conflict&quot; ADD FOREIGN KEY (&quot;resolved_by_id&quot;) REFERENCES &quot;user&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE &quot;property_service&quot; ADD FOREIGN KEY (&quot;listing_id&quot;) REFERENCES &quot;listing&quot; (&quot;id&quot;) DEFERRABLE INITIALLY IMMEDIATE;
 

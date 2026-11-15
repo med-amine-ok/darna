@@ -54,7 +54,7 @@ T = {
     # ORG
     "ORG-01": ("M1", "organization; host_account; membership", "POST /api/v1/organizations", "tests/hosts/test_org_create.py", "web:organizations.ts"),
     "ORG-02": ("M1", "membership; host_account", "GET /api/v1/me/host-accounts; PUT /api/v1/me/active-host-account", "tests/hosts/test_active_host_account.py", "web:organizations.ts"),
-    "ORG-03": ("M1", "invitation; membership; outbox_event", "POST /api/v1/host/organization/invitations; POST /api/v1/invitations/{token}/accept", "tests/hosts/test_invitations.py", "web:organizations.ts"),
+    "ORG-03": ("M1", "invitation; membership; outbox_message", "POST /api/v1/host/organization/invitations; POST /api/v1/invitations/{token}/accept", "tests/hosts/test_invitations.py", "web:organizations.ts"),
     "ORG-04": ("M1", "membership; audit_event", "PATCH /api/v1/host/organization/members/{id}; DELETE /api/v1/host/organization/members/{id}; POST /api/v1/host/organization/transfer-ownership", "tests/hosts/test_members.py", "web:organizations.ts"),
     "ORG-05": ("M1", "membership", "permission layer on every /api/v1/host/* call", "tests/hosts/test_org_permissions.py", "web:organizations.ts"),
     "ORG-06": ("M1", "organization; moderation_case", "PATCH /api/v1/host/organization", "tests/hosts/test_org_reverification.py", "web:organizations.ts"),
@@ -67,6 +67,7 @@ T = {
     "HST-05": ("M4", "payout_account; audit_event", "GET /api/v1/host/payout-account; PUT /api/v1/host/payout-account", "tests/hosts/test_payout_account.py", "web:wallet.ts"),
     "HST-06": ("M1", "host_account; listing; platform_settings", "PATCH /api/v1/host/settings", "tests/hosts/test_approval_mode_default.py", "web:organizations.ts"),
     "HST-08": ("M2", "property_integration; integration_sync_log; property_service; room_type; room_type_night", "host integration endpoints", "tests/hosts/test_property_integration.py", "web:organizations.ts"),
+    "HST-09": ("M4", "room_type_night; inventory_conflict; outbox_message; property_integration", "admin inventory-conflicts and outbox endpoints", "tests/hosts/test_sync_never_oversells.py", "admin:hosts.ts"),
     "HST-07": ("M2", "host_account; organization; listing; trip", "POST /api/v1/host/listings; POST /api/v1/host/trips (offer rule check)", "tests/catalog/test_host_offer_rule.py", "web:listings.ts"),
     # LST
     "LST-01": ("M2", "listing; vehicle_detail; experience_detail; listing_revision", "POST /api/v1/host/listings; PATCH /api/v1/host/listings/{id}; POST /api/v1/host/listings/{id}/submit", "tests/catalog/test_listing_create.py", "web:listings.ts"),
@@ -96,6 +97,7 @@ T = {
     "AVL-04": ("M3", "listing_day; room_type_night; listing_search_doc", "GET /api/v1/listings?check_in=&check_out=; GET /api/v1/listings/{id}/availability", "tests/inventory/test_partial_availability.py", "web:listings.ts"),
     "AVL-05": ("M4", "room_type_night; experience_slot; trip_departure; quote", "POST /api/v1/bookings (hold step); job: inventory.release_holds", "tests/inventory/test_holds.py", "web:reservations.ts"),
     "AVL-06": ("LATER", "new table needed (ical_feed, not in schema.dbml yet)", "GET /api/v1/host/listings/{id}/ical; POST /api/v1/host/listings/{id}/ical-imports", "tests/inventory/test_ical_sync.py", "web:calendar.ts"),
+    "AVL-07": ("M4", "listing_day; booking", "host calendar and booking endpoints", "tests/inventory/test_blocked_days_triggers.py", "web:listings.ts"),
     # PRC
     "PRC-01": ("M3", "quote; listing_day; room_type_night; tax_rate", "POST /api/v1/quotes; GET /api/v1/quotes/{id}", "tests/pricing/test_quote.py", "web:reservations.ts"),
     "PRC-02": ("M3", "quote", "POST /api/v1/quotes", "tests/pricing/test_no_guest_fee.py", "web:reservations.ts"),
@@ -105,7 +107,7 @@ T = {
     # BKG
     "BKG-01": ("M4", "booking; booking_event; ledger_transaction; account_balance", "POST /api/v1/bookings", "tests/bookings/test_booking_create_instant.py", "web:reservations.ts"),
     "BKG-02": ("M4", "booking; booking_event", "POST /api/v1/bookings; POST /api/v1/host/bookings/{id}/accept; POST /api/v1/host/bookings/{id}/decline", "tests/bookings/test_request_to_book.py", "web:reservations.ts"),
-    "BKG-03": ("M4", "booking; booking_event; outbox_event", "job: bookings.expire_requests", "tests/bookings/test_request_expiry.py", "web:reservations.ts"),
+    "BKG-03": ("M4", "booking; booking_event; outbox_message", "job: bookings.expire_requests", "tests/bookings/test_request_expiry.py", "web:reservations.ts"),
     "BKG-04": ("M4", "booking; booking_event", "job: bookings.complete_stays", "tests/bookings/test_auto_complete.py", "web:reservations.ts"),
     "BKG-05": ("M4", "booking; booking_event", "GET /api/v1/bookings/{id}", "tests/bookings/test_booking_states.py", "admin:bookings.ts"),
     "BKG-06": ("M4", "booking; quote", "POST /api/v1/bookings", "tests/bookings/test_booking_snapshot.py", "web:reservations.ts"),
@@ -114,11 +116,14 @@ T = {
     "BKG-09": ("M4", "booking; trip_departure", "POST /api/v1/bookings (target trip_departure)", "tests/bookings/test_trip_booking.py", "web:reservations.ts"),
     "BKG-10": ("M4", "idempotency_record", "POST /api/v1/bookings (Idempotency-Key header)", "tests/bookings/test_booking_idempotency.py", "web:reservations.ts"),
     "BKG-11": ("R2-B", "dispute; media_asset; moderation_case", "POST /api/v1/bookings/{id}/disputes; POST /api/v1/admin/disputes/{id}/resolve", "tests/bookings/test_disputes.py", "admin:bookings.ts"),
+    "BKG-12": ("M4", "booking; platform_settings", "POST /api/v1/me/bookings (limit check)", "tests/bookings/test_open_booking_limits.py", "web:bookings.ts"),
+    "BKG-13": ("M5", "booking", "POST /api/v1/host/bookings/{id}/confirm-stay; POST /api/v1/me/bookings/{id}/confirm-stay", "tests/bookings/test_stay_confirmation.py", "web:bookings.ts"),
     # CAN
     "CAN-01": ("M4", "booking; refund; booking_event; cancellation_policy", "POST /api/v1/bookings/{id}/cancel", "tests/bookings/test_guest_cancel.py", "web:reservations.ts"),
     "CAN-02": ("M4", "booking; refund; ledger_transaction", "POST /api/v1/host/bookings/{id}/cancel", "tests/bookings/test_host_cancel.py", "web:reservations.ts"),
     "CAN-03": ("M4", "refund; booking; audit_event", "POST /api/v1/admin/bookings/{id}/cancel; POST /api/v1/admin/bookings/{id}/refunds", "tests/bookings/test_staff_refund.py", "admin:bookings.ts"),
     "CAN-04": ("M4", "ledger_transaction; ledger_entry", "internal: ledger.reverse_commission", "tests/ledger/test_commission_reversal.py", "web:wallet.ts"),
+    "CAN-05": ("M4", "refund_obligation; refund; ledger_transaction; ledger_entry", "host, me and admin refunds endpoints", "tests/bookings/test_refund_obligations.py", "web:bookings.ts; admin:bookings.ts"),
     # PAY
     "PAY-01": ("M4", "ledger_account; ledger_transaction; ledger_entry", "GET /api/v1/admin/finance/ledger", "tests/ledger/test_double_entry.py", "admin:ledger.ts"),
     "PAY-02": ("M4", "ledger_account; account_balance", "GET /api/v1/host/wallet", "tests/ledger/test_wallet_balance.py", "web:wallet.ts"),
@@ -132,6 +137,8 @@ T = {
     "PAY-10": ("LATER", "payment; payout; payout_account; ledger_account", "GET /api/v1/admin/finance/payouts; POST /api/v1/admin/finance/payouts/{id}/approve (disabled by setting)", "tests/ledger/test_payout_models.py", "admin:finance.ts"),
     "PAY-11": ("R2-A", "invoice", "GET /api/v1/host/invoices; GET /api/v1/admin/finance/invoices", "tests/ledger/test_commission_invoices.py", "admin:finance.ts"),
     "PAY-12": ("M0", "all *_minor columns with currency", "every money field in /api/v1/*", "tests/core/test_money.py", "none (shared convention)"),
+    "PAY-13": ("M4", "wallet_adjustment; ledger_transaction; ledger_entry; audit_event", "admin wallet-adjustments endpoints", "tests/ledger/test_wallet_adjustments.py", "admin:finance.ts"),
+    "PAY-14": ("M4", "account_balance; ledger_entry; ledger_transaction", "job: reconcile_balances", "tests/ledger/test_lock_order_and_reconcile.py", "none"),
     # REV
     "REV-01": ("M5", "review; booking", "POST /api/v1/bookings/{id}/review", "tests/reviews/test_write_review.py", "web:reviews.ts"),
     "REV-02": ("R2-B", "review", "POST /api/v1/host/bookings/{id}/guest-review", "tests/reviews/test_double_blind.py", "web:reviews.ts"),
@@ -146,10 +153,11 @@ T = {
     "MSG-05": ("R2-B", "message; media_asset", "POST /api/v1/conversations/{id}/attachments", "tests/messaging/test_attachments.py", "web:conversations.ts"),
     "MSG-06": ("R2-B", "conversation; message; audit_event", "POST /api/v1/admin/messages; POST /api/v1/admin/broadcasts", "tests/messaging/test_staff_broadcast.py", "admin (messages pages, no lib/data module yet)"),
     # NTF
-    "NTF-01": ("M4", "notification; outbox_event", "GET /api/v1/me/notifications; POST /api/v1/me/notifications/{id}/read; POST /api/v1/me/notifications/read-all", "tests/notifications/test_in_app.py", "web:notifications.ts"),
-    "NTF-02": ("M4", "outbox_event; delivery_log", "internal: notifications.send_email_sms", "tests/notifications/test_email_sms.py", "none (workers)"),
+    "NTF-01": ("M4", "notification; outbox_message", "GET /api/v1/me/notifications; POST /api/v1/me/notifications/{id}/read; POST /api/v1/me/notifications/read-all", "tests/notifications/test_in_app.py", "web:notifications.ts"),
+    "NTF-02": ("M4", "outbox_message; delivery_log", "internal: notifications.send_email_sms", "tests/notifications/test_email_sms.py", "none (workers)"),
     "NTF-03": ("R2-B", "notification_preference", "GET /api/v1/me/notification-preferences; PUT /api/v1/me/notification-preferences", "tests/notifications/test_preferences.py", "web:notifications.ts"),
-    "NTF-04": ("M1", "outbox_event; delivery_log", "internal: core.outbox_dispatch", "tests/core/test_outbox.py", "none (workers)"),
+    "NTF-04": ("M1", "outbox_message; delivery_log", "internal: core.outbox_dispatch", "tests/core/test_outbox.py", "none (workers)"),
+    "NTF-05": ("M4", "outbox_message", "GET /api/v1/admin/outbox; POST /api/v1/admin/outbox/{id}/retry", "tests/notifications/test_outbox_dead.py", "admin:settings.ts"),
     # SRC
     "SRC-01": ("M3", "listing_search_doc", "GET /api/v1/listings (filters and facets)", "tests/search/test_filters_facets.py", "web:listings.ts"),
     "SRC-02": ("M3", "listing_search_doc", "GET /api/v1/listings/map?bbox=", "tests/search/test_map_search.py", "web:listings.ts"),
@@ -211,6 +219,7 @@ T = {
     "NFR-11": ("M0", "none (Redis)", "throttles per endpoint group", "tests/core/test_rate_limits.py", "none"),
     "NFR-12": ("M0", "all primary keys (UUIDv7); booking.reference", "all ids in /api/v1/*", "tests/core/test_ids.py", "none"),
     "NFR-13": ("M0", "none", "error envelope on all /api/v1/*", "tests/core/test_error_codes.py", "both apps: ActionResult mapping"),
+    "NFR-14": ("M0", "property_integration; calendar_feed; otp_send_log", "internal: core.netguard; core.hashing", "tests/core/test_netguard.py", "none"),
 }
 
 
@@ -286,7 +295,7 @@ def main():
     out.append("# Traceability matrix: requirement to rule, table, API, test and milestone")
     out.append("")
     out.append("> **In plain words**")
-    out.append("> One line per requirement (all 147 from [requirements.csv](requirements.csv)).")
+    out.append(f"> One line per requirement (all {len(rows)} from [requirements.csv](requirements.csv)).")
     out.append("> Each line says which business rules it follows, which database tables hold its data, which API calls serve it,")
     out.append("> where its tests will live, in which roadmap milestone it is built, and which app data module stops using demo data.")
     out.append("> Use it to answer \"if we change X, what else moves?\" and \"is everything planned somewhere?\".")
@@ -329,9 +338,7 @@ def main():
     out.append("")
     out.append("| Requirement | Gap | Where it is tracked |")
     out.append("|---|---|---|")
-    out.append("| AVL-06 | No table for external calendar feeds in `schema.dbml` (Later release, so not urgent) | T5 in [13-decisions-needed.md](13-decisions-needed.md) |")
-    out.append("| PRV-05 | No incident register table; the breach runbook needs one to record the 5-day ANPDP clock | T5 in [13-decisions-needed.md](13-decisions-needed.md) |")
-    out.append("| ACC-02 | One-time codes are kept in Redis, not in a table; the audit of code sends relies on `delivery_log` | T5 in [13-decisions-needed.md](13-decisions-needed.md) |")
+    out.append("| AVL-06, PRV-05, ACC-02 | Closed on 2026-11-09: `calendar_feed`, `incident_record` and `otp_send_log` were added to `schema.dbml` | T5 in [13-decisions-needed.md](13-decisions-needed.md) |")
     out.append("| MSG-06 | The admin messages pages have no `lib/data` module today (screens are mocked inline) | [11-roadmap.md](11-roadmap.md) R2-B |")
     out.append("")
     out.append("## Check yourself")

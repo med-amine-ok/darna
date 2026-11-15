@@ -40,7 +40,7 @@ def test_br_hst_03_approve_blocked_without_required_approved_documents(admin_cli
     assert res.data["errors"]["missing_documents"] == ["tourism_licence"]
 
     licence = HostDocument.objects.get(doc_type="tourism_licence")
-    assert admin_client.post(f"/api/v1/admin/host-documents/{licence.id}/approve").status_code == 200
+    assert admin_client.post(f"/api/v1/admin/documents/{licence.id}/approve").status_code == 200
     res = admin_client.post(host_url(agency, "approve"))
     assert res.status_code == 200 and res.data["verification_status"] == "approved"
     agency.refresh_from_db()
@@ -61,7 +61,7 @@ def test_br_hst_04_reason_required(admin_client, action):
     """These decisions need a reason of at least 10 characters."""
     agency = set_status(make_org(), VerificationStatus.APPROVED if action == "suspend" else VerificationStatus.UNDER_REVIEW)
     res = admin_client.post(host_url(agency, action), {"reason": "too short"})
-    assert res.status_code == 400 and res.data["code"] == "reason_required"
+    assert res.status_code == 422 and res.data["code"] == "reason_required"
     res = admin_client.post(host_url(agency, action), {"reason": REASON})
     assert res.status_code == 200, res.data
     assert AuditEvent.objects.get(object_id=str(agency.id), note=REASON)
@@ -87,8 +87,8 @@ def test_admin_document_reject_needs_reason(admin_client):
     agency = make_org()
     add_docs(agency, "commercial_register", status="pending")
     doc = HostDocument.objects.get()
-    assert admin_client.post(f"/api/v1/admin/host-documents/{doc.id}/reject").status_code == 400
-    res = admin_client.post(f"/api/v1/admin/host-documents/{doc.id}/reject", {"reason": REASON})
+    assert admin_client.post(f"/api/v1/admin/documents/{doc.id}/reject").status_code == 422
+    res = admin_client.post(f"/api/v1/admin/documents/{doc.id}/reject", {"reason": REASON})
     assert res.status_code == 200 and res.data["status"] == "rejected" and res.data["rejection_reason"] == REASON
     assert AuditEvent.objects.filter(action="DOCUMENT_REJECT").count() == 1
 
@@ -114,13 +114,28 @@ def test_admin_host_list_filters_and_detail(admin_client):
 
 
 def test_br_pay_06_admin_commission_override(admin_client):
-    """Set, then clear, the host's own rate; out of range is 400; each change is audited."""
+    """PUT sets the host's own rate with a reason, DELETE clears it; out of range is 400; each change is audited."""
     hotel = make_org(category="hotel", name="Hotel")
-    url = host_url(hotel, "commission")
-    res = admin_client.patch(url, {"commission_rate_override_bp": 950})
-    assert res.status_code == 200 and res.data["commission_rate_bp"] == 950
-    assert admin_client.patch(url, {"commission_rate_override_bp": 10001}).status_code == 400
-    res = admin_client.patch(url, {"commission_rate_override_bp": None})
-    assert res.data["commission_rate_override_bp"] is None and res.data["commission_rate_bp"] == 1800
+    url = host_url(hotel, "commission-override")
+    res = admin_client.put(url, {"rate_bp": 950, "reason": REASON})
+    assert res.status_code == 200, res.data
+    assert res.data["commission_rate_bp"] == 950 and res.data["host_account_id"] == str(hotel.id)
+    assert admin_client.put(url, {"rate_bp": 10001, "reason": REASON}).status_code == 400
+    res = admin_client.put(url, {"rate_bp": 900, "reason": "short"})
+    assert res.status_code == 422 and res.data["code"] == "reason_required"
+    assert admin_client.delete(url).status_code == 204
+    hotel.refresh_from_db()
+    assert hotel.commission_rate_override_bp is None
+    assert admin_client.get(host_url(hotel)).data["commission_rate_bp"] == 1800
     events = AuditEvent.objects.filter(action="HOST_COMMISSION_OVERRIDE").order_by("occurred_at", "id")
     assert [e.after["commission_rate_override_bp"] for e in events] == [950, None]
+    assert events[0].note == REASON
+
+
+def test_old_admin_routes_are_gone(admin_client):
+    """Document review and commission moved to the addresses of the plan."""
+    hotel = make_org(category="hotel", name="Hotel")
+    add_docs(hotel, "commercial_register", status="pending")
+    doc = HostDocument.objects.get()
+    assert admin_client.post(f"/api/v1/admin/host-documents/{doc.id}/approve").status_code == 404
+    assert admin_client.patch(host_url(hotel, "commission"), {"commission_rate_override_bp": 1}).status_code == 404

@@ -25,14 +25,14 @@
 | O1 to O11 | Something seen while clicking through | [01-system-inventory.md](01-system-inventory.md) section 6 |
 | INV-F / INV-A | Website / admin inventory section | Appendices A and B |
 | RES | Research section | [02-research.md](02-research.md) |
-| DEC-001 to DEC-013 | A product decision (section 2 below) | here |
+| DEC-001 to DEC-031 | A product or design decision (section 2 below) | here and [13-decisions-needed.md](13-decisions-needed.md) |
 | BR-xxx | A business rule | [04-business-rules.md](04-business-rules.md) |
 
 ---
 
 ## 2. Product decisions (approved 2026-11-04)
 
-The product owner accepted the proposed defaults for all open product questions (DEC-001 to DEC-013) and later asked for two more rules, already built in the apps (DEC-014, DEC-015).
+The product owner accepted the proposed defaults for all open product questions (DEC-001 to DEC-013) and later asked for two more rules, already built in the apps (DEC-014, DEC-015). DEC-016 to DEC-019 came on 2026-11-11. DEC-020 to DEC-031, and the revised DEC-018, come from the external review of 2026-11-13.
 
 | ID | Question | Decision | Consequence for the design |
 |---|---|---|---|
@@ -52,8 +52,20 @@ The product owner accepted the proposed defaults for all open product questions 
 | DEC-015 | Experience and trip types (2026-11-04) | **8 experience types and 8 trip types, one shared list** used everywhere | `LST-12`, `TRP-07`, `BR-LST-05`; enums in the schema |
 | DEC-016 | Staff roles (2026-11-11) | **One role: admin**, with every permission | `BR-STF-01`; `staff_role_code` enum has one value; the permission tables stay for later |
 | DEC-017 | Hotel onboarding (2026-11-11) | **Connect directly to the hotel's own system** to import rooms, availability, prices and services | `HST-08`, `BR-HST-06`; tables `property_integration`, `integration_sync_log`, `property_service` |
-| DEC-018 | Commission on cancellation (2026-11-11) | **The host always recovers the full commission** when a confirmed booking is cancelled | `BR-PAY-05`, examples 8a and 9a |
+| DEC-018 | Commission on cancellation (2026-11-11, **revised 2026-11-13**) | **Commission follows the refund**: on a guest cancellation the host gets back the same share of the commission as the share of the subtotal refunded (villa example: 3,330 DZD back, BLADUS keeps 3,330 DZD); host cancellation returns all of it; decline and expiry take nothing | `BR-PAY-05`, `BR-CAN-04`, examples 8a and 9a |
 | DEC-019 | Online payment (2026-11-11) | **No online payment in the first release**; it comes later | Payment, payout and gateway tables stay unused |
+| DEC-020 | Double booking guarantees (2026-11-13) | **Say exactly what the database guarantees**: exclusion constraint for single units, CHECK counters for pools, slots and departures, and **new triggers** so blocked days and bookings never clash | `BR-AVL-01`, `BR-AVL-02`, `BR-AVL-07`, `AVL-07`; triggers on `listing_day` and `booking` |
+| DEC-021 | Hotel sync never oversells (2026-11-13) | **A sync never sets a room-night total below held + booked**; the total is clamped and an `inventory_conflict` is opened; every BLADUS booking change is pushed at once through the outbox | `BR-HST-07`, `HST-09`; tables `inventory_conflict`, `outbox_message` |
+| DEC-022 | Admin control of money (2026-11-13) | **Four-eyes on the rolling 24-hour top-up total** (500,000 DZD), approver always different, **manual ledger adjustments** need a second admin and are capped at 1,000,000 DZD | `BR-PAY-07`, `BR-PAY-13`, `PAY-13`; table `wallet_adjustment` |
+| DEC-023 | Deposit race (2026-11-13) | **Lock the host wallet balance row first**, then stock; commission revenue is a SUM of ledger entries, never a shared balance row | `BR-PAY-14`, `BR-BKG-01` |
+| DEC-024 | Host refunds tracked as a debt (2026-11-13) | **Every cancellation with a refund opens a refund obligation** (due in 7 days); host declares paid, guest confirms or disputes; an overdue refund stops instant booking and accepting requests | `BR-CAN-06`, `BR-CAN-07`, `CAN-05`; table `refund_obligation`; ledger memo accounts |
+| DEC-025 | Security controls (2026-11-13) | **SSRF guard, SMS and code limits with a daily budget, HMAC with a pepper, key management, CSRF in the BFF, upload quarantine and scan, insert-only audit** | `BR-SYS-06`, `BR-SYS-07`, `BR-ACC-02`, `NFR-14`; [08-security-privacy.md](08-security-privacy.md) |
+| DEC-026 | Ledger protection (2026-11-13) | **Separate database roles** (`bladus_migrator` owns, `bladus_app` only SELECT and INSERT on ledger and audit), **triggers refuse UPDATE and DELETE**, nightly `reconcile_balances` | `BR-PAY-02`, `BR-PAY-15`, `BR-STF-02`, `PAY-14` |
+| DEC-027 | Operations before M0 (2026-11-13) | **One operations page before M0**: Docker Compose on one VPS for M0 to M2, failover RPO 5 minutes and RTO 1 hour, Redis never the only copy, monthly restore test, alerts, CI/CD with rollback, runbooks | [09b-operations.md](09b-operations.md), `NFR-04` |
+| DEC-028 | Booking abuse (2026-11-13) | **At most 3 pending requests and 6 upcoming bookings per guest**; a **stay confirmation** (check-in code or guest confirmation) is needed before a review | `BR-BKG-08`, `BR-BKG-09`, `BR-REV-01`, `BKG-12`, `REV-06`; booking columns `check_in_code`, `stay_confirmed_at`, `stay_confirmed_via` |
+| DEC-029 | Money rules (2026-11-13) | **Integer centimes, basis points, round half up at each line**; commission base excludes cleaning and taxes; `idempotency_record` with body hash; `outbox_message` with fixed retries then `dead` | `BR-PAY-01`, `BR-SYS-01`, `BR-SYS-03` |
+| DEC-030 | Search and framework (2026-11-13) | **Django 5.2 LTS** (supported to April 2028), not 6.1; **search with pg_trgm** trigram similarity plus unaccent, no Arabic full-text | `BR-SRC-05`, `SRC-03`; replaces R-1 version and closes T7 |
+| DEC-031 | One contract, no drift (2026-11-13) | **No online top-up endpoint** in v1; **one operation count** computed from `openapi.yaml`; **one id scheme** (UUIDv7 keys, references only for display); sequence diagram endpoints checked against `openapi.yaml` by a tool | `BR-PAY-08`, `NFR-12`; `_tools/check_contract_refs.py` |
 | DEC-013 | Wilaya count shown | **69** (codes 59 to 69 to be confirmed against the official journal). | Geography seed |
 
 Legal and accounting questions (L1 to L7, F1 to F4 in [14-open-questions.md](14-open-questions.md)) are still open. Every requirement that depends on them carries "VERIFY" in its source.
@@ -80,10 +92,10 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 <!-- BEGIN GENERATED REQUIREMENTS -->
 | Priority | MVP | R2 | Later | Total |
 |---|---|---|---|---|
-| Must | 110 | 0 | 0 | 110 |
+| Must | 119 | 0 | 0 | 119 |
 | Should | 17 | 12 | 0 | 29 |
 | Could | 0 | 7 | 2 | 9 |
-| **Total** | 127 | 19 | 2 | **148** |
+| **Total** | 136 | 19 | 2 | **157** |
 
 ### ACC: Accounts and sign-in (9)
 
@@ -111,7 +123,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | ORG-06 | Re-verification on legal field change | Org owner | Should | MVP | Changing legal name, RC, NIF or licence number moves verification back to pending and notifies staff | Field list exists | INV-F 3.8 | BR-ORG-06 |
 | ORG-07 | Public organisation profile | Visitor | Must | MVP | Public page shows name, logo, verified badge, listings, trips, rating; never legal numbers or staff phones | Built | INV-F 1.1 |  |
 
-### HST: Becoming a host and verification (8)
+### HST: Becoming a host and verification (9)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
@@ -123,6 +135,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | HST-08 | Connect a hotel's own system | Hotel, Hostel | Must | MVP | A hotel or hostel connects its channel manager, PMS, iCal feed or CSV file; room types, availability, prices and services (restaurants, spa, parking) are imported and kept in sync; manual entry stays possible | Missing (rooms hardcoded at onboarding) | DEC-017 | BR-HST-06 |
 | HST-07 | What each host type may publish | Host | Must | MVP | Individual: homes and vehicles; agency: experiences and trips; hotel and hostel: their property with room types; enforced by API and database, create-listing flow offers only allowed choices | Built in website 2026-11-04 (UI + server actions) | DEC-014 | BR-HST-05 |
 | HST-06 | Default approval mode per host or organisation | Host | Must | MVP | Owner default applies to new listings; a listing may override; platform switch can force request mode | Stored in 3 places, not applied | R20, D-6 | BR-BKG-02 |
+| HST-09 | Hotel sync never oversells | System, Admin | Must | MVP | A sync never sets a room-night total below held + booked (clamped, inventory_conflict opened for the admin); every BLADUS booking change is pushed at once through the outbox; dead messages visible to the admin | Missing | DEC-021 | BR-HST-07 |
 
 ### LST: Listings and catalogue (12)
 
@@ -153,7 +166,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | TRP-07 | Canonical trip types | Agency, Guest | Must | MVP | Every trip has one of 8 types (group tour, private trip, adventure, Saharan expedition, cultural, hiking, relaxation, religious); used by trip creation, search filters, cards and admin | Built in both apps 2026-11-04 | DEC-015 | BR-LST-05 |
 | TRP-06 | Cancel a departure under minimum group | Agency | Should | R2 | Agency cancels a departure; all its bookings are cancelled with full refund and notifications | Missing | RES A.4 | BR-TRP-03 |
 
-### AVL: Availability and calendar (6)
+### AVL: Availability and calendar (7)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
@@ -163,6 +176,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | AVL-04 | Availability window and partial matches | Guest | Must | MVP | Search shows listings overlapping the dates with a 'available X to Y' hint; booking only inside free nights | Built | R38-R40 | BR-AVL-05 |
 | AVL-05 | Temporary holds during payment | System | Should | MVP | A hold blocks inventory for 15 min while a guest pays; expires automatically | Missing | RES A.5 | BR-AVL-06 |
 | AVL-06 | External calendar sync (iCal) | Host | Could | Later | Import and export iCal feeds with SSRF protection | Missing | RES D.1 API7 |  |
+| AVL-07 | Blocked days and bookings never clash | System | Must | MVP | Blocking a booked day is refused (dates_booked) and booking a blocked day is refused (dates_unavailable), by the services and by two PostgreSQL triggers, also under concurrent requests | Missing | DEC-020 | BR-AVL-07 |
 
 ### PRC: Pricing and quotes (5)
 
@@ -174,7 +188,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | PRC-04 | Tourist tax and VAT lines | System | Should | R2 | Quote shows taxe de séjour by star rating and VAT where applicable; rates from settings | Free 'taxes' number | RES C.4 | BR-PRC-04 |
 | PRC-05 | Whole dinars to guests, centimes inside | System | Must | MVP | Prices shown in whole DZD; stored in centimes; rounding rule documented and tested | Integer DZD | RES B.17 | BR-PAY-01 |
 
-### BKG: Bookings (11)
+### BKG: Bookings (13)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
@@ -189,38 +203,43 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | BKG-09 | Trip departure booking | Guest | Must | MVP | Books seats on a departure; per-person price; respects agency approval mode | Built (string dates) | R35 | BR-TRP-02 |
 | BKG-10 | Idempotent booking creation | System | Must | MVP | POST with the same Idempotency-Key returns the same booking | Missing | RES B.12 | BR-SYS-01 |
 | BKG-11 | Disputes | Guest, Host, Support | Should | R2 | Either party opens a dispute within 14 days after check-out with statement and files; support resolves | Admin only | U8, D-9 | BR-CAN-05 |
+| BKG-12 | Open booking limits per guest | Guest | Must | MVP | At most 3 pending requests and 6 upcoming bookings per guest (settings); over the limit the API answers too_many_open_bookings | Missing | DEC-028 | BR-BKG-08 |
+| BKG-13 | Stay confirmation | Guest, Host | Must | MVP | A confirmed booking has a 6-digit check-in code shown to the guest; the host enters it on arrival or the guest confirms after check-in time; without it no review | Missing | DEC-028 | BR-BKG-09, BR-REV-01 |
 
-### CAN: Cancellations and refunds (4)
+### CAN: Cancellations and refunds (5)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
 | CAN-01 | Guest cancellation by policy | Guest | Must | MVP | Refund percentage computed from the snapshot policy and time before check-in | Built | INV-F 4.8 | BR-CAN-02 |
 | CAN-02 | Host cancellation | Host | Must | MVP | Host cancels with reason; guest gets full refund of anything paid; host commission returned; host cancellation counted | Built partly | D-4 | BR-CAN-03 |
 | CAN-03 | Staff cancellation and refund | Support, Finance | Must | MVP | Staff cancel or refund with reason; partial refunds add up and never exceed amount paid | Built (admin) | INV-A 4.5 | BR-CAN-04 |
-| CAN-04 | Commission reversal rules | System | Must | MVP | Decline and host cancel: full reversal; guest cancel: commission on the non-refunded part kept | Built (website) | D-4 | BR-PAY-05 |
+| CAN-04 | Commission reversal rules | System | Must | MVP | Decline and expiry: nothing was taken; host cancel: full commission returned; guest cancel: returned = apply_bp(commission, refund_bp) (example 8a: 3,330 DZD back, 3,330 kept); admin refund R: returned in proportion to the part of R that refunds the subtotal | Built (website) | D-4, DEC-018 (revised 2026-11-13) | BR-PAY-05, BR-CAN-04 |
+| CAN-05 | Refund obligations tracked as a host debt | Guest, Host, Admin | Must | MVP | Every cancellation with a refund opens an obligation due in 7 days; host declares paid, guest confirms or disputes, admin settles with proof; an overdue refund stops instant booking and accepting requests | Missing | DEC-024 | BR-CAN-06, BR-CAN-07 |
 
-### PAY: Payments, wallet and ledger (12)
+### PAY: Payments, wallet and ledger (14)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
-| PAY-01 | Double-entry ledger | System | Must | MVP | Every money movement is a transaction whose entries sum to zero; entries never updated or deleted | Single-sided lists | RES A.5, D-16 | BR-PAY-02 |
+| PAY-01 | Double-entry ledger | System | Must | MVP | Every money movement is a transaction whose entries sum to zero; entries never updated or deleted (triggers refuse UPDATE and DELETE; the app role has only SELECT and INSERT) | Single-sided lists | RES A.5, D-16, DEC-026 | BR-PAY-02 |
 | PAY-02 | Prepaid commission wallet (model M1) | Host | Must | MVP | Each host account (user or organisation) has a commission wallet; balance derived from the ledger | Built (website) | DEC-001 | BR-PAY-03 |
 | PAY-03 | Commission deduction on confirmation | System | Must | MVP | On confirm: commission = rate x accommodation subtotal (excl. cleaning, taxes), posted once per booking | Built (website) | R63, DEC-002 | BR-PAY-04 |
 | PAY-04 | Commission rate resolution | System | Must | MVP | Host override if set, else host-type default from settings; rate snapshot on booking | Two sources | D-5 | BR-PAY-06 |
-| PAY-05 | Manual wallet top-up by staff | Finance | Must | MVP | Amount 1 to 10,000,000 DZD, method, receipt reference unique per method, optional four-eyes above a threshold | No duplicate check | R60, D-17 | BR-PAY-07 |
-| PAY-06 | Online wallet top-up via gateway | Host | Should | R2 | Host tops up with CIB/Edahabia through Chargily; credited only after a verified webhook | Missing | RES C.1 | BR-PAY-08 |
+| PAY-05 | Manual wallet top-up by staff | Finance | Must | MVP | Amount 1 to 10,000,000 DZD, method, receipt reference unique per method; four-eyes when the host's rolling 24-hour top-up total passes 500,000 DZD; approver always differs from the requester | No duplicate check | R60, D-17, DEC-022 | BR-PAY-07 |
+| PAY-06 | Online wallet top-up via gateway | Host | Should | R2 | Not in the v1 contract (DEC-019, DEC-031): no endpoint while online payment is off. Later: host tops up with CIB/Edahabia through Chargily; credited only after a verified webhook | Missing | RES C.1 | BR-PAY-08 |
 | PAY-07 | Negative balance handling | Host, Finance | Must | MVP | Negative balance shows host banner, admin flag and dashboard item; below a threshold new instant bookings switch to request | Banner only | R65 | BR-PAY-10 |
 | PAY-08 | Wallet history for hosts | Host | Must | MVP | Host sees balance and paginated entries with booking links | Built | R64 |  |
 | PAY-09 | Gateway webhooks | System | Should | R2 | Webhook payloads stored raw, signature verified, deduplicated by event id, processed once | Missing | RES D.1 API10 | BR-SYS-02 |
 | PAY-10 | Payouts and guest payments (model M4) | Finance | Could | Later | Schema supports guest payments, escrow and host payouts; disabled until legal approval | Admin mock | DEC-001 | BR-PAY-11 |
 | PAY-11 | Commission invoices to hosts | Finance | Should | R2 | Monthly invoice per host with sequential number, NIF/NIS of both sides, HT, VAT, TTC; PDF kept 10 years | Missing | RES C.4 | BR-PAY-12 |
 | PAY-12 | Money as centimes with currency | System | Must | MVP | All amounts BIGINT centimes + currency code DZD | Integer DZD | RES B.17 | BR-PAY-01 |
+| PAY-13 | Manual ledger adjustments with a second admin | Admin | Must | MVP | Signed amount up to 1,000,000 DZD with a reason; posted only after a different admin approves; reject needs a reason; audited | Missing | DEC-022 | BR-PAY-13 |
+| PAY-14 | Ledger protection and nightly reconciliation | System, Admin | Must | MVP | Wallet row locked before stock on every booking path; reconcile_balances recomputes every balance each night, reports differences and exits non-zero | Missing | DEC-023, DEC-026 | BR-PAY-14, BR-PAY-15 |
 
 ### REV: Reviews (5)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
-| REV-01 | Write a review after a stay | Guest | Must | MVP | Only for a completed booking, within 14 days, one per booking; 5 sub-ratings + comment | Missing (read only) | INV-F gaps | BR-REV-01 |
+| REV-01 | Write a review after a stay | Guest | Must | MVP | Only for a completed booking whose stay was confirmed (check-in code or guest confirmation), within 14 days, one per booking; 5 sub-ratings + comment | Missing (read only) | INV-F gaps | BR-REV-01 |
 | REV-02 | Host reviews guest | Host | Should | R2 | Host reviews guest under the same window; double-blind reveal | Missing | RES A.1 | BR-REV-02 |
 | REV-03 | Host reply | Host | Should | MVP | One public reply per review, editable for 48 h | Display only | INV-A 4.8 |  |
 | REV-04 | Report and moderate reviews | Guest, Host, Moderator | Must | MVP | Anyone reports with a reason; moderator hides, restores or deletes with reason; allowed moves enforced | No state machine | INV-A 4.8 | BR-REV-03 |
@@ -237,14 +256,15 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | MSG-05 | Attachments | Guest, Host | Could | R2 | Images and PDFs up to 10 MB, scanned | Missing |  |  |
 | MSG-06 | Staff messages and broadcast | Support | Should | R2 | Staff message a user or segment with permission and audit | Mocked, no permission | INV-A 6.2 |  |
 
-### NTF: Notifications (4)
+### NTF: Notifications (5)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
 | NTF-01 | In-app notifications | All | Must | MVP | Events (request, accept, decline, expiry, cancel, review, verification) create notifications; mark read, read all | Seeds only | INV-F 3.7 | BR-NTF-01 |
 | NTF-02 | Email and SMS notifications | All | Must | MVP | Critical events also by email or SMS in the user's language; provider behind an interface | Missing | RES C.2 | BR-NTF-02 |
 | NTF-03 | Notification preferences | All | Should | R2 | User opts in or out per channel for non-critical events; marketing needs explicit opt-in | Missing | INV-A 6.2 | BR-PRV-03 |
-| NTF-04 | Outbox pattern | System | Must | MVP | Events written in the same transaction as the change, then sent by workers with retries | Missing | U5 | BR-SYS-03 |
+| NTF-04 | Outbox pattern | System | Must | MVP | Events written to outbox_message in the same transaction as the change, then sent by workers with retries at 1 min, 5 min, 15 min, 1 h, 6 h, 24 h; dead after 8 attempts | Missing | U5 | BR-SYS-03 |
+| NTF-05 | Dead outbox messages handled by the admin | Admin | Must | MVP | Messages that failed 8 times are dead, raise an alert and are listed for the admin, who can retry them | Missing | DEC-021, DEC-029 | BR-SYS-03 |
 
 ### SRC: Search and geography (6)
 
@@ -252,7 +272,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 |---|---|---|---|---|---|---|---|---|
 | SRC-01 | Search with filters and facets | Visitor | Must | MVP | Filters: vertical, wilaya, commune, dates, guests, price, property type, amenities, rating, instant; facet counts returned | Built (in memory) | INV-F 1.1, U4 | BR-SRC-01 |
 | SRC-02 | Map search | Visitor | Must | MVP | Bounding box filter and up to 500 pins; public points only | Built | INV-F 1.1 |  |
-| SRC-03 | Text search in three languages | Visitor | Should | MVP | Title and place search tolerant to accents and transliteration (trigram) | Static list of 10 cities | RES B.7 |  |
+| SRC-03 | Text search in three languages | Visitor | Should | MVP | Title and place search with pg_trgm trigram similarity plus unaccent and Arabic normalisation, no full-text; passes a fixed list of real Arabic, French and Darija queries | Static list of 10 cities | RES B.7, DEC-030 | BR-SRC-05 |
 | SRC-04 | 69 wilayas and 1,541 communes | System | Must | MVP | Reference tables seeded from el-amin (CC0) + ihahachi (MIT) with source and valid_from | 58 or 68 | RES C.5 | BR-SRC-02 |
 | SRC-05 | Sorting and pagination | Visitor | Must | MVP | Sort by relevance, price, rating, newest; cursor or page pagination capped at 50 | Built partly |  |  |
 | SRC-06 | Hotels as their own vertical | Visitor | Must | MVP | Vertical filter includes hotel; analytics roll hotel into the home family | Inconsistent | DEC-005 | BR-SRC-04 |
@@ -284,7 +304,7 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 |---|---|---|---|---|---|---|---|---|
 | STF-01 | Staff roles and permissions in the database | Super admin | Must | MVP | One staff role (admin) with every permission, stored and enforced by the API, deny by default (DEC-016) | Code constants | U16, INV-A 1.1 | BR-STF-01 |
 | STF-02 | Staff invitation and activation | Super admin | Must | MVP | Invite sends a one-time link; staff sets password and MFA; deactivation revokes sessions immediately | No acceptance | INV-A 4.15 |  |
-| STF-03 | Append-only audit log | System | Must | MVP | Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; no update or delete | Admin memory only | U13 | BR-STF-02 |
+| STF-03 | Append-only audit log | System | Must | MVP | Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; a trigger and the database roles refuse update and delete; daily export to write-once storage | Admin memory only | U13 | BR-STF-02 |
 | STF-04 | Actors by id, not name | System | Must | MVP | Ledger, payouts, disputes, config publishes reference staff user ids | Names | INV-A 6.1-6 | BR-STF-03 |
 | STF-05 | Separate admin API surface | System | Must | MVP | /api/v1/admin/* only for staff tokens; never reachable with a guest or host session | n/a | RES D.1 API5 |  |
 | STF-06 | Audited CSV exports | Analyst, Finance | Must | MVP | Exports cover full filtered set, formula-injection safe, audited with filters and row count; large exports run as jobs | Built (admin) | INV-A 4.16 | BR-STF-04 |
@@ -325,23 +345,24 @@ The tables below are generated from [_tools/requirements_data.py](_tools/require
 | PRV-05 | Breach response | Staff | Must | MVP | Runbook with a 5-day ANPDP notification clock and incident register | Missing | RES C3.1 |  |
 | PRV-06 | Foreign guest declaration support | Host | Could | R2 | Guest nationality and ID type captured when required; host reminded of the declaration duty | Missing | RES C3.3 (VERIFY) |  |
 
-### NFR: Quality (non-functional) (13)
+### NFR: Quality (non-functional) (14)
 
 | ID | Requirement | Actor | Pri. | Release | Accepted when | Today in code | Source | Rules |
 |---|---|---|---|---|---|---|---|---|
 | NFR-01 | API response time | System | Must | MVP | p95 under 300 ms for reads and 600 ms for booking create at 50 requests/s on one app node | n/a | RES A.5 |  |
 | NFR-02 | Search response time | System | Must | MVP | p95 under 500 ms with 20,000 listings and dates | n/a |  |  |
 | NFR-03 | Availability | System | Should | MVP | 99.5% monthly for the public API; planned maintenance announced | n/a |  |  |
-| NFR-04 | Backups and restore | System | Must | MVP | Point-in-time recovery 7 days, nightly encrypted dump in a second Algerian location, monthly restore drill; RPO 15 min, RTO 4 h | n/a | RES D.3 |  |
+| NFR-04 | Backups and restore | System | Must | MVP | Point-in-time recovery 7 days, nightly encrypted dump in a second Algerian location, monthly restore test; RPO 5 min, RTO 1 h (managed PostgreSQL or streaming replica); see 09b-operations.md | n/a | RES D.3, DEC-027 |  |
 | NFR-05 | Security baseline | System | Must | MVP | OWASP API Top 10 controls, TLS everywhere, secrets outside code, dependency scanning in CI | Partly | RES D.1 |  |
 | NFR-06 | Three languages and right-to-left | All | Must | MVP | Every API error and notification has en/fr/ar text; Latin digits in Arabic | Partly | R68 | BR-SYS-04 |
 | NFR-07 | Time and dates | System | Must | MVP | Timestamps stored in UTC; business dates in Africa/Algiers; week starts Sunday; weekend Friday-Saturday | Partly | U15 | BR-SYS-05 |
 | NFR-08 | API contract | System | Must | MVP | OpenAPI generated in CI; typed client shared by both apps; breaking changes need a new version | n/a | RES B.13 |  |
 | NFR-09 | Observability | System | Must | MVP | JSON logs with request, user and org ids; error tracking; metrics and health checks | n/a | RES B.16 |  |
 | NFR-10 | Test coverage | System | Must | MVP | Services 90% line coverage; property tests for money and dates; concurrency tests on real PostgreSQL | n/a | RES B.14 |  |
-| NFR-11 | Rate limits | System | Must | MVP | Per user and per IP throttles per endpoint group; SMS budget alarms | Login only (admin) | RES B.12 |  |
-| NFR-12 | Unique identifiers | System | Must | MVP | UUIDv7 primary keys plus human references; no time or random based ids | Date.now/Math.random | INV-A 6.1-3 |  |
+| NFR-11 | Rate limits | System | Must | MVP | Per user and per IP throttles per endpoint group; codes: per destination 3 per hour and 10 per day, per IP 10 per hour, global SMS budget 5,000 per day then sms_budget_exceeded | Login only (admin) | RES B.12 | BR-ACC-02 |
+| NFR-12 | Unique identifiers | System | Must | MVP | UUIDv7 primary keys for every table the app writes; human references (BLD-YYYY-XXXXXX, LST-..., TRP-...) only for display and search; no Date.now or Math.random ids | Date.now/Math.random | INV-A 6.1-3, DEC-031 |  |
 | NFR-13 | Accessibility of messages | All | Should | MVP | Errors have stable codes the apps map to localized text | Built (ActionResult codes) |  |  |
+| NFR-14 | Outgoing URL safety and secret hashing | System | Must | MVP | Host-given URLs pass the SSRF check at save and fetch time (https, public IPs only, no cross-host redirect, 10 s, 5 MB); codes, tokens and lookup hashes use HMAC-SHA256 with a pepper | n/a | DEC-025 | BR-SYS-06, BR-SYS-07 |
 
 <!-- END GENERATED REQUIREMENTS -->
 

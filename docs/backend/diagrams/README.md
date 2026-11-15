@@ -6,6 +6,8 @@
 > The `.mmd` files are the editable sources (Mermaid text). The `rendered/` folder holds SVG (sharp at any zoom) and PNG versions.
 > The table diagrams (`erd-*`) are generated from [../schema.dbml](../schema.dbml), so they always match the schema.
 
+Endpoint labels in the sequence diagrams are checked against [../openapi.yaml](../openapi.yaml) by `python ../_tools/check_contract_refs.py` (DEC-031), so a diagram cannot show an address that does not exist.
+
 How to re-render: `python ../_tools/build_schema_docs.py` (ERD sources), then `python ../_tools/render_diagrams.py` (needs `@mermaid-js/mermaid-cli` installed in a tools folder outside the repo and a local Chrome; see the script header).
 
 ## Legends
@@ -24,7 +26,7 @@ How to re-render: `python ../_tools/build_schema_docs.py` (ERD sources), then `p
 | [01-system-context](rendered/01-system-context.svg) | Who uses BLADUS and which outside services it talks to. Guests and hosts use the website, staff use the admin app; both call one Django API. The payment gateway is dotted because online payment comes in release R2. |
 | [02-containers](rendered/02-containers.svg) | What runs where. Everything holding personal data runs in Algerian data centres (research C.3, to be confirmed by a lawyer). The Next.js servers keep the login cookie and call Django on the browser's behalf (BFF). Workers send messages and run timed jobs. |
 | [03-django-apps](rendered/03-django-apps.svg) | The backend is one application split into 17 apps plus a small `core`, arranged in layers. An app may only use apps in lower layers (checked automatically by import-linter); for example bookings may use pricing and the ledger, never the reverse. Events (emails, search refresh) go through the outbox instead of direct calls. Details in 07-architecture.md. |
-| [30-money-flow](rendered/30-money-flow.svg) | Where money goes. At launch (M1) the guest pays the host, the host keeps a deposit at BLADUS, and BLADUS takes its commission from that deposit. M4 (BLADUS collects and pays out) is drawn for later and needs a licence. |
+| [30-money-flow](rendered/30-money-flow.svg) | Where money goes. At launch (M1) the guest pays the host, the host keeps a deposit at BLADUS, and BLADUS takes its commission from that deposit. On a cancellation the commission follows the refund (DEC-018 revised), and the refund the host owes the guest is tracked with a due date (DEC-024). Online payment is drawn for later and needs a licence. |
 | [40-document-map](rendered/40-document-map.svg) | How the blueprint documents feed each other, from inventory to tests. |
 
 ## Lifecycles (state machines)
@@ -40,12 +42,13 @@ How to re-render: `python ../_tools/build_schema_docs.py` (ERD sources), then `p
 
 | File | Caption |
 |---|---|
-| [20-seq-instant-booking](rendered/20-seq-instant-booking.svg) | An instant booking from price quote to confirmation in one database transaction; the database itself refuses overlapping dates; the commission is posted to the host's wallet; messages go out after the save. |
+| [20-seq-instant-booking](rendered/20-seq-instant-booking.svg) | An instant booking from price quote to confirmation in one database transaction: the host wallet row is locked first, then the listing; the exclusion constraint refuses overlapping stays and a trigger refuses blocked days; the commission is posted to the host's wallet; messages go out after the save through the outbox (retried, then `dead`). |
 | [21-seq-request-to-book](rendered/21-seq-request-to-book.svg) | A request: the host accepts, declines, or a timed job expires it after 24 hours. Dates stay blocked while it waits. |
-| [22-seq-wallet-topup](rendered/22-seq-wallet-topup.svg) | A host tops up the commission deposit by transfer; finance records it with the receipt reference; large amounts need a second person. |
+| [22-seq-wallet-topup](rendered/22-seq-wallet-topup.svg) | A host tops up the commission deposit by transfer; an admin records it with the receipt reference; when the host's top-ups of the last 24 hours pass 500,000 DZD a second, different admin must approve. There is no online top-up. |
 | [23-seq-host-onboarding](rendered/23-seq-host-onboarding.svg) | Becoming a host: the steps come from the published configuration, the draft is saved on the server, documents go to private storage, staff verify. |
-| [25-seq-hotel-sync](rendered/25-seq-hotel-sync.svg) | Connecting a hotel's own system: the access key is tested and stored encrypted, rooms, prices, availability and services are imported, then refreshed every 15 minutes. |
-| [24-seq-message-sync](rendered/24-seq-message-sync.svg) | Messages are fetched with a cursor so polling is cheap; phone numbers are masked until a booking is confirmed (anti-fraud). |
+| [25-seq-hotel-sync](rendered/25-seq-hotel-sync.svg) | Connecting a hotel's own system: the access key is tested and stored encrypted, rooms, prices, availability and services are imported, then refreshed every 15 minutes. A sync never sets a room-night total below what BLADUS holds or sold: it is clamped and an inventory conflict goes to the admin. Every BLADUS booking change is pushed at once through the outbox. |
+| [24-seq-message-sync](rendered/24-seq-message-sync.svg) | Messages are fetched with a cursor (the last UUIDv7 id) so polling is cheap; phone numbers are masked until a booking is confirmed (anti-fraud). |
+| [26-seq-cancel-refund](rendered/26-seq-cancel-refund.svg) | A guest cancels the villa (example 8a): 31,750 DZD is owed back; the host gets 3,330 DZD of the 6,660 DZD commission back and BLADUS keeps 3,330 DZD; a refund obligation opens, due in 7 days; the host declares it paid and the guest confirms or disputes; the admin can settle with proof. |
 
 ## Database (ERDs, generated)
 
@@ -71,5 +74,6 @@ How to re-render: `python ../_tools/build_schema_docs.py` (ERD sources), then `p
 
 - [ ] In the booking state diagram, which statuses are final?
 - [ ] In the instant booking sequence, at which step could a double booking be refused, and by what?
+- [ ] In the cancellation sequence, how much commission goes back to the host, and why not all of it?
 - [ ] In an ERD, what does a box with only `id` mean?
 - [ ] Which diagram shows that personal data stays in Algeria?

@@ -17,12 +17,12 @@ erDiagram
         uuid conversation_id PK,FK
         uuid user_id PK,FK
         varchar_12 role
-        bigint last_read_message_id
+        uuid last_read_message_id
         boolean muted
         timestamptz joined_at
     }
     message {
-        bigint id PK
+        uuid id PK
         uuid conversation_id FK
         uuid sender_id FK
         varchar_12 kind
@@ -33,7 +33,7 @@ erDiagram
         timestamptz deleted_at
     }
     notification {
-        bigint id PK
+        uuid id PK
         uuid user_id FK
         varchar_48 kind
         jsonb params
@@ -47,8 +47,8 @@ erDiagram
         varchar_8 channel PK
         boolean enabled
     }
-    outbox_event {
-        bigint id PK
+    outbox_message {
+        uuid id PK
         varchar_64 topic
         varchar_32 aggregate_type
         uuid aggregate_id
@@ -56,12 +56,13 @@ erDiagram
         outbox_status status
         smallint attempts
         timestamptz next_attempt_at
+        text last_error
         timestamptz created_at
         timestamptz sent_at
     }
     delivery_log {
-        bigint id PK
-        bigint outbox_event_id FK
+        uuid id PK
+        uuid outbox_message_id FK
         varchar_8 channel
         varchar_20 provider
         char_64 recipient_hash
@@ -97,4 +98,4 @@ erDiagram
     user ||--o{ message : "sender_id"
     user ||--o{ notification : "user_id"
     user ||--o{ notification_preference : "user_id"
-    outbox_event ||--o{ delivery_log : "outbox_event_id"
+    outbox_message ||--o{ delivery_log : "outbox_message_id"

@@ -1,11 +1,13 @@
-"""API shapes of the pricing app: the quote request and the quote answer (BR-PRC-01)."""
+"""API shapes of the pricing app: the quote request and answer (BR-PRC-01) and the admin coupons (R2, BR-PRM-01)."""
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.catalog.models import POLICY_WINDOWS
 from apps.core.money import money_dict
+from apps.hosts.models import HostAccount
 
-from .models import Quote
+from .models import Coupon, CouponFundedBy, DiscountType, Quote
 from .services import effective_approval_mode
 
 
@@ -114,3 +116,66 @@ class QuoteSerializer(serializers.ModelSerializer):
     def get_cancellation_policy(self, obj: Quote) -> dict:
         """The policy the guest accepts by booking (BR-CAN-01)."""
         return policy_payload(self._target(obj).cancellation_policy)
+
+
+# ---------------------------------------------------------------------------
+# Coupons (R2, BR-PRM-01, BR-PRM-02)
+# ---------------------------------------------------------------------------
+VERTICALS = ["home", "hotel", "hostel", "experience", "vehicle"]
+
+
+class CouponMoneyInputSerializer(serializers.Serializer):
+    """``MoneyInput`` for the minimum spend: centimes, DZD only."""
+
+    amount_minor = serializers.IntegerField(min_value=0)
+    currency = serializers.ChoiceField(choices=["DZD"])
+
+
+class CouponWriteSerializer(serializers.Serializer):
+    """``CouponWrite``: body of ``POST /admin/coupons`` (all fields optional on ``PATCH``)."""
+
+    code = serializers.RegexField(r"^[A-Za-z0-9_-]{3,32}$")
+    discount_type = serializers.ChoiceField(choices=DiscountType.choices)
+    discount_value = serializers.IntegerField(min_value=1, help_text="Basis points for percentage, centimes for fixed.")
+    min_spend = CouponMoneyInputSerializer(required=False)
+    funded_by = serializers.ChoiceField(choices=CouponFundedBy.choices)
+    host_account_id = serializers.UUIDField(required=False, allow_null=True)
+    scope_verticals = serializers.ListField(child=serializers.ChoiceField(choices=VERTICALS), required=False)
+    usage_limit = serializers.IntegerField(min_value=1, required=False, allow_null=True)
+    per_user_limit = serializers.IntegerField(min_value=1, required=False)
+    valid_from = serializers.DateTimeField()
+    valid_to = serializers.DateTimeField(required=False, allow_null=True)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate_host_account_id(self, value):
+        """The host account must exist (and not be deleted)."""
+        if value is not None and not HostAccount.objects.alive().filter(pk=value).exists():
+            raise serializers.ValidationError("Unknown host account.")
+        return value
+
+    def to_service(self) -> dict:
+        """Validated data in the shape of :func:`apps.pricing.services.create_coupon` (``min_spend_minor``)."""
+        data = dict(self.validated_data)
+        if "min_spend" in data:
+            data["min_spend_minor"] = data.pop("min_spend")["amount_minor"]
+        return data
+
+
+class CouponSerializer(serializers.ModelSerializer):
+    """``Coupon``: one discount code as the admin sees it, with how often it was used."""
+
+    min_spend = serializers.SerializerMethodField()
+    used_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        """Model and fields this serializer reads."""
+
+        model = Coupon
+        fields = ["id", "code", "discount_type", "discount_value", "min_spend", "funded_by", "host_account_id",
+                  "scope_verticals", "usage_limit", "per_user_limit", "used_count", "valid_from", "valid_to",
+                  "is_active", "created_at"]
+
+    @extend_schema_field(serializers.DictField())
+    def get_min_spend(self, coupon: Coupon) -> dict:
+        """Minimum booking amount as Money."""
+        return money_dict(coupon.min_spend_minor, coupon.currency)

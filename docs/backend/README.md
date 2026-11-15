@@ -11,12 +11,14 @@
 |---|---|
 | `00-START-HERE.md` | Reading order, summary, readiness verdict, first build prompt |
 | `explain-like-im-new.md`, `glossary.md` | Plain-language introduction and every term explained |
-| `01` to `14` `*.md` | The blueprint, one document per topic (see 00-START-HERE) |
+| `01` to `15` `*.md` | The blueprint, one document per topic (see 00-START-HERE) |
+| `09b-operations.md` | One page to agree before M0: servers, failover, backups, alerts, deploys, secrets, rate limits, on-call |
 | `requirements.csv`, `traceability.csv` | Spreadsheet versions of the requirements and the traceability matrix |
 | `schema.dbml`, `schema.sql`, `05b-data-dictionary.md` | Database schema (source, PostgreSQL rendering, column dictionary) |
 | `openapi.yaml` | API contract (OpenAPI 3.1) |
 | `diagrams/` | Mermaid sources (`*.mmd`), rendered SVG/PNG in `rendered/`, captions and legends in `README.md` |
 | `dist/` | Built package: `site/index.html` (browsable), `BLADUS-backend-blueprint.pdf` (everything), raw files |
+| `compact/` | Short version: `BLADUS-backend-compact.md`, `.html`, `.pdf` |
 | `_sources/` | Original spec and usability reports recovered from git history |
 | `_work/` | Raw working notes from the inventories and research (appendices) |
 | `_tools/` | Small scripts that generate tables, the dictionary, diagrams and the package |
@@ -30,9 +32,13 @@ Run from `docs/backend`. The scripts only write inside this folder.
 |---|---|
 | `python _tools/build_requirements.py` | `requirements.csv` and the tables in `03-requirements.md` (edit `_tools/requirements_data.py`) |
 | `python _tools/build_schema_docs.py` | `05b-data-dictionary.md` and `diagrams/erd-*.mmd` from `schema.dbml` |
+| `python _tools/build_schema_sql.py` | `schema.sql` from `schema.dbml` plus the extra SQL of `05-database-schema.md` section 6 |
+| `python _tools/openapi_gen/build.py` (run inside `_tools/openapi_gen`) | `openapi.yaml` from `ops.py` and `schemas.py` |
+| `python _tools/check_contract_refs.py` | Nothing: checks that every endpoint in `diagrams/*.mmd` exists in `openapi.yaml` and that every operation count in the documents equals the count computed from `openapi.yaml` (exit 1 if not) |
 | `python _tools/build_traceability.py` | `traceability.csv` and `traceability.md` |
 | `python _tools/render_diagrams.py` | `diagrams/rendered/*.svg` and `*.png` |
 | `node _tools/build_dist.mjs` | `dist/` (HTML site and PDF) |
+| `python _tools/build_compact.py && node _tools/build_compact.mjs` | `compact/` (short version: Markdown, HTML, PDF) |
 
 The Node tools (Mermaid CLI, marked, js-yaml) are installed in a temporary folder outside the repository; the setup lines are at the top of `render_diagrams.py` and `build_dist.mjs`. A local Google Chrome is used for rendering.
 

@@ -363,3 +363,104 @@ class PropertyIntegration(UUIDModel):
     last_error = models.TextField(blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class PayoutAccountKind(models.TextChoices):
+    """Where money owed to a host is sent (BR-PAY-09)."""
+
+    CCP_RIP = "ccp_rip", "CCP (RIP)"
+    BANK_RIB = "bank_rib", "Bank account (RIB)"
+    BARIDIMOB = "baridimob", "BaridiMob"
+
+
+class PayoutAccount(UUIDModel, SoftDeleteModel):
+    """
+    A host's account for deposit refunds and, later, payouts (BR-PAY-09).
+
+    The full number is encrypted with ``apps.hosts.crypto.encrypt_secret``;
+    only the last four digits are shown. Any change sets ``hold_until`` to
+    72 hours later, and payouts to this account wait until then.
+    """
+
+    host_account = models.ForeignKey(HostAccount, on_delete=models.CASCADE, related_name="payout_accounts")
+    kind = models.CharField(max_length=16, choices=PayoutAccountKind.choices)
+    holder_name = models.CharField(max_length=160)
+    number_encrypted = models.BinaryField()
+    number_last4 = models.CharField(max_length=4)
+    is_default = models.BooleanField(default=False)
+    hold_until = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class IntegrationSyncStatus(models.TextChoices):
+    """Result of one sync run of a hotel system connection (BR-HST-06)."""
+
+    OK = "ok", "Everything imported"
+    PARTIAL = "partial", "Imported with some errors"
+    FAILED = "failed", "Failed (nothing changed)"
+
+
+class IntegrationSyncLog(UUIDModel):
+    """
+    One sync run of a hotel system connection (DEC-017, BR-HST-06).
+
+    Lets the hotel and the admin see what was imported and why a run
+    failed. A failed run never deletes data: it only flags the connection.
+    """
+
+    integration = models.ForeignKey(PropertyIntegration, on_delete=models.CASCADE, related_name="sync_runs")
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=12, choices=IntegrationSyncStatus.choices)
+    rooms_changed = models.PositiveIntegerField(default=0)
+    nights_changed = models.PositiveIntegerField(default=0)
+    services_changed = models.PositiveIntegerField(default=0)
+    error = models.TextField(blank=True)
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+        help_text="Person who pressed 'sync now'; empty for scheduled runs.",
+    )
+
+    class Meta:
+        """Database options: newest run first per connection."""
+        indexes = [models.Index(fields=["integration", "-started_at"])]
+
+
+class OnboardingDraftStatus(models.TextChoices):
+    """Life of a become-a-host draft (BR-HST-02)."""
+
+    IN_PROGRESS = "in_progress", "In progress"
+    SUBMITTED = "submitted", "Submitted"
+    ABANDONED = "abandoned", "Abandoned"
+
+
+class OnboardingDraft(UUIDModel, TimeStampedModel):
+    """
+    A become-a-host wizard saved on the server (HST-02, BR-HST-02).
+
+    The draft keeps the flow version it started from, so a flow published
+    later never changes the questions under the person's feet. Answers are
+    JSON keyed by field id. Submitting it creates the host account
+    (``host_account``). One draft in progress per person and host type.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="onboarding_drafts")
+    host_type = models.CharField(max_length=12)
+    flow_version = models.ForeignKey("config.OnboardingFlowVersion", on_delete=models.PROTECT, related_name="+")
+    current_step = models.CharField(max_length=48)
+    answers = models.JSONField(default=dict)
+    status = models.CharField(
+        max_length=12, choices=OnboardingDraftStatus.choices, default=OnboardingDraftStatus.IN_PROGRESS
+    )
+    host_account = models.ForeignKey(
+        HostAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        """Database options: one draft in progress per person and host type."""
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "host_type"], condition=models.Q(status="in_progress"),
+                name="onboarding_draft_one_in_progress",
+            ),
+        ]

@@ -1,0 +1,198 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>09b. Operations: how BLADUS is kept running (read before M0) · BLADUS backend blueprint</title><style>
+:root{--ink:#152C52;--ink2:#334155;--muted:#475569;--blue:#0B57D0;--line:#D3DCE8;--band:#F5F8FC;--plain:#EFF5FF}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink2);line-height:1.55;font-size:15px;background:#fff}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25}
+h1{font-size:2rem;margin:0 0 .6em}
+h2{font-size:1.35rem;margin-top:2em;padding-top:.4em;border-top:1px solid var(--line)}
+h3{font-size:1.1rem;margin-top:1.6em}
+a{color:var(--blue)}
+code{font-family:Consolas,monospace;font-size:.88em;background:var(--band);padding:.1em .3em;border-radius:4px}
+pre{background:#0E1F3B;color:#E2EAF5;padding:12px 14px;border-radius:8px;overflow:auto;font-size:12.5px;line-height:1.45}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:13px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:start;vertical-align:top}
+th{background:var(--band);color:var(--ink)}
+tr:nth-child(even) td{background:#FBFCFE}
+blockquote{margin:1em 0;padding:.6em 1em;border-inline-start:4px solid var(--line);color:var(--muted)}
+blockquote.plain{background:var(--plain);border-inline-start-color:var(--blue);color:var(--ink);border-radius:0 8px 8px 0}
+img{max-width:100%}
+figure.mermaid{margin:1em 0;text-align:center}
+ul.contains-task-list{list-style:none;padding-inline-start:1em}
+.layout{display:flex;min-height:100vh}
+nav.side{width:290px;flex:none;background:var(--band);border-inline-end:1px solid var(--line);padding:18px 16px;position:sticky;top:0;height:100vh;overflow:auto;font-size:13.5px}
+nav.side .brand{font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+nav.side .part{margin:14px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+nav.side a{display:block;padding:3px 6px;border-radius:6px;text-decoration:none;color:var(--ink2)}
+nav.side a.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+main{flex:1;min-width:0;max-width:1050px;padding:32px 40px 80px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:16px}
+.pager{display:flex;justify-content:space-between;margin-top:3em;padding-top:1em;border-top:1px solid var(--line)}
+/* book */
+.book main{max-width:none;padding:0}
+.cover{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 12%;background:linear-gradient(135deg,#0E1F3B,#0B57D0);color:#fff}
+.cover h1{color:#fff;font-size:44px;margin:.2em 0}
+.cover p{font-size:18px;opacity:.9}
+.toc ol{line-height:1.9}
+section.doc{page-break-before:always;padding:0}
+@media print{
+  body{font-size:11.5px}
+  table{display:table;font-size:10px}
+  pre{white-space:pre-wrap;word-break:break-word;font-size:9.5px}
+  h2{page-break-after:avoid}
+  tr,figure,img{page-break-inside:avoid}
+  a{color:var(--ink);text-decoration:none}
+}
+@page{size:A4;margin:16mm 14mm 18mm}
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="on" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="09b-operations-how-bladus-is-kept-running-read-before-m0">09b. Operations: how BLADUS is kept running (read before M0)</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This one page says how the backend is run day to day, decided before the first line of code (DEC-027).<br>Until M2 everything runs on one rented server with Docker Compose; a broken program restarts by itself.<br>The database has a live copy elsewhere: we lose at most 5 minutes of data and are back within 1 hour.<br>Backups are restored for real once a month, alerts tell us about problems before users do, and every deploy can be undone.<br>Secrets never live in the code. The details are in <a href="09-devops-hosting.html">09-devops-hosting.md</a>.<br>Hosting in Algeria and the data law points are research: <strong>VERIFY WITH A PROFESSIONAL</strong>.</p>
+</blockquote>
+<p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>): <strong>VPS</strong> (a rented virtual server), <strong>orchestrator</strong> (the tool that starts and restarts programs), <strong>RPO / RTO</strong> (how much data we may lose / how long we may be down), <strong>runbook</strong> (a written step-by-step procedure), <strong>on-call</strong> (the person who answers alerts).</p>
+<hr>
+<h2 id="1-the-decisions">1. The decisions</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Decision</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Orchestrator</td>
+<td><strong>Docker Compose on one VPS for M0 to M2</strong>, started by a systemd unit with <code>Restart=always</code>; every container <code>restart: unless-stopped</code></td>
+<td>Move to several servers (still Compose) before the closed beta in M7, as in <a href="09-devops-hosting.html">09-devops-hosting.md</a> section 3. Kubernetes only above about 6 servers</td>
+</tr>
+<tr>
+<td>Database failover</td>
+<td><strong>Managed PostgreSQL with failover</strong> if the Algerian provider offers it, otherwise a <strong>streaming replica</strong> at a second site. <strong>RPO 5 minutes, RTO 1 hour</strong></td>
+<td>WAL archived every 60 s with pgBackRest; promotion steps in runbook R4</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>Persistence <strong>AOF <code>appendfsync everysec</code></strong>. Redis holds only cache, rate-limit counters and the Celery broker</td>
+<td><strong>Never the only copy of data</strong>: bookings, money and outbox messages are in PostgreSQL. Losing Redis loses at most one second of counters</td>
+</tr>
+<tr>
+<td>Backups</td>
+<td>Point-in-time recovery 7 days; nightly encrypted dump kept 35 days and 12 months; storage buckets replicated; all copies in Algeria</td>
+<td><strong>Restore test every month</strong> on a scratch server, timed (must be under 1 hour), with <code>reconcile_balances</code> and the audit chain check on the copy</td>
+</tr>
+<tr>
+<td>Monitoring</td>
+<td>Health checks (<code>/internal/healthz</code>, <code>/internal/readyz</code>), error tracking (Sentry SDK to a self-hosted GlitchTip), outside uptime probe every minute, metrics and dashboards</td>
+<td>One alert channel; critical alerts also by SMS through a second provider</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions: lint, types, tests on real PostgreSQL, <strong>migrations check</strong>, contract check, build images, deploy to staging, manual approval, deploy to production</td>
+<td>Every deploy keeps the previous image; <strong>rollback</strong> = redeploy the previous tag (migrations are expand-then-contract, so no down-migration)</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>Environment variables filled at deploy time from the host&#39;s secret store, never in Git</td>
+<td><code>HASH_PEPPER</code> (HMAC of codes, tokens, lookup hashes; rotated with a dual-check window), <code>INTEGRATION_KEYS</code> (hotel system credentials, a key id per record, new key yearly), <code>DJANGO_SECRET_KEY</code> with fallbacks, database roles <code>bladus_migrator</code> and <code>bladus_app</code></td>
+</tr>
+<tr>
+<td>Rate limiting</td>
+<td>Caddy has <strong>no built-in rate limit</strong>: build it with the <code>caddy-ratelimit</code> plugin, <strong>or</strong> rely on DRF throttles plus fail2ban on the access logs</td>
+<td>The real limits (login, one-time codes, SMS budget of 5,000 per day) are in Django and Redis anyway (BR-ACC-02, BR-ACC-05)</td>
+</tr>
+</tbody></table>
+<h2 id="2-alerts-that-wake-someone-up">2. Alerts that wake someone up</h2>
+<table>
+<thead>
+<tr>
+<th>Alert</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Site or API down (3 failed probes)</td>
+<td>Users cannot book</td>
+</tr>
+<tr>
+<td>Error rate above 1% for 5 minutes</td>
+<td>Often a bad deploy: roll back</td>
+</tr>
+<tr>
+<td>Queue depth: <code>critical</code> queue above 100, or more than 1,000 pending outbox messages</td>
+<td>Codes and booking notices are late</td>
+</tr>
+<tr>
+<td>Any <strong>dead outbox message</strong></td>
+<td>A notice or a hotel <code>inventory.push</code> failed 8 times; see <code>GET admin/outbox?status=dead</code></td>
+</tr>
+<tr>
+<td><strong><code>reconcile_balances</code> failed</strong> (non-zero exit)</td>
+<td>A wallet balance does not match the ledger: freeze top-ups and adjustments</td>
+</tr>
+<tr>
+<td>WAL archive older than 10 minutes, nightly dump older than 26 hours</td>
+<td>The 5-minute RPO is at risk</td>
+</tr>
+<tr>
+<td>Replica lag above 60 seconds</td>
+<td>Failover would lose data</td>
+</tr>
+<tr>
+<td>SMS budget at 80%</td>
+<td>Possible SMS pumping fraud</td>
+</tr>
+</tbody></table>
+<h2 id="3-on-call-and-runbooks">3. On-call and runbooks</h2>
+<p>One named on-call person per week (two people rotate during the beta). They acknowledge within 15 minutes in office hours and 30 minutes at night. Runbooks live in <code>ops/runbooks/</code>, one page each:</p>
+<table>
+<thead>
+<tr>
+<th>Runbook</th>
+<th>One line</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R1 Deploy</td>
+<td>Tag, staging green, approve, migrate with <code>bladus_migrator</code>, rolling restart, smoke test, watch 15 minutes</td>
+</tr>
+<tr>
+<td>R2 Rollback</td>
+<td>Redeploy the previous image tag; turn off the feature flag if the change was behind one</td>
+</tr>
+<tr>
+<td>R3 Incident</td>
+<td>Detect, declare severity, communicate (status page in en, fr, ar), stabilise, write a short note</td>
+</tr>
+<tr>
+<td>R4 Database failover</td>
+<td>Promote the replica or trigger managed failover, point the apps at it, check <code>readyz</code>, reconcile and audit chain</td>
+</tr>
+<tr>
+<td>R5 Restore</td>
+<td>Restore to a chosen minute on a scratch server, check, then switch or copy back the lost rows</td>
+</tr>
+<tr>
+<td>R6 Dead outbox</td>
+<td>Read <code>last_error</code>, fix the cause (provider, hotel system), retry from the admin queue</td>
+</tr>
+<tr>
+<td>R7 Ledger mismatch</td>
+<td>Freeze money actions, compare entries and balances, <code>reconcile_balances --fix</code> only after a human check</td>
+</tr>
+<tr>
+<td>R8 Personal data breach</td>
+<td>Start the 5-day ANPDP clock in <code>incident_record</code> (<a href="08-security-privacy.html">08-security-privacy.md</a>); VERIFY WITH A PROFESSIONAL</td>
+</tr>
+<tr>
+<td>R9 Secret rotation</td>
+<td>New <code>HASH_PEPPER</code> or <code>INTEGRATION_KEYS</code> key, dual-check window, re-encrypt, remove the old value</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="check-yourself">Check yourself</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Until which milestone does everything run on one server, and what restarts a stopped program?</li>
+<li><input disabled="" type="checkbox"> What are the RPO and RTO, and which two options give them?</li>
+<li><input disabled="" type="checkbox"> Why is it safe to lose Redis?</li>
+<li><input disabled="" type="checkbox"> Which two alerts are about money or messages that BLADUS cannot afford to lose?</li>
+<li><input disabled="" type="checkbox"> Caddy has no built-in rate limit: what are the two options?</li>
+</ul>
+<div class="pager"><span><a href="09-devops-hosting.html">&larr; 09. DevOps and hosting: where BLADUS runs and how we operate it</a></span><span><a href="10-testing-quality.html">10. Testing and quality &rarr;</a></span></div></main></div></body></html>

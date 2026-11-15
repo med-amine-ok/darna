@@ -2,12 +2,14 @@
 title: How the blueprint documents connect
 ---
 flowchart LR
-    inv["01 Inventory<br/>what exists"] --> req["03 Requirements<br/>144 IDs"]
+    inv["01 Inventory<br/>what exists"] --> req["03 Requirements<br/>157 IDs"]
     res["02 Research<br/>options and law"] --> req
-    dec["Decisions<br/>DEC-001 to 013"] --> req
+    dec["13 Decisions<br/>DEC-001 to 031"] --> req
     req --> br["04 Business rules<br/>BR-xxx"]
-    br --> sch["05 Schema<br/>74 tables"]
-    req --> api["06 API<br/>(Phase 6)"]
+    br --> sch["05 Schema<br/>83 tables"]
+    req --> api["06 API<br/>openapi.yaml"]
     sch --> api
-    br --> tst["10 Tests<br/>(Phase 7)"]
+    api --> dia["Diagrams<br/>checked against openapi.yaml"]
+    br --> tst["10 Tests"]
     api --> tst
+    ops["09b Operations<br/>before M0"] --> tst

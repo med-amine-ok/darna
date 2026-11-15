@@ -178,18 +178,100 @@ def test_host_calendar_blocks_and_prices_endpoints():
                              "has_price_override": True}]
 
 
-def test_host_room_type_calendar_endpoint():
-    """Host lowers the sellable rooms of a night."""
+def test_br_avl_04_room_type_blocks_and_prices():
+    """Blocks and prices per room type go through the listing calendar with room_type_id (AVL-03)."""
     hotel, room = f.published_hotel(units=3)
     owner = hotel.host_account.organization.memberships.get().user
     client = client_for(owner, hotel.host_account)
-    response = client.put(f"/api/v1/host/room-types/{room.id}/calendar",
-                          {"dates": [f.future(2).isoformat()], "total": 1}, format="json")
-    assert response.status_code == 204
-    assert selectors.rooms_available(room, f.future(2), f.future(3)) == 1
-    response = client.put(f"/api/v1/host/room-types/{room.id}/calendar",
-                          {"dates": [f.future(2).isoformat()], "total": 9}, format="json")
-    assert response.status_code == 400
+    day = f.future(2).isoformat()
+    url = f"/api/v1/host/listings/{hotel.id}"
+    body = {"dates": [day], "room_type_id": str(room.id), "blocked": True}
+    assert client.put(f"{url}/calendar/blocks", body, format="json").status_code == 204
+    assert selectors.rooms_available(room, f.future(2), f.future(3)) == 0
+    body["blocked"] = False
+    assert client.put(f"{url}/calendar/blocks", body, format="json").status_code == 204
+    assert selectors.rooms_available(room, f.future(2), f.future(3)) == 3
+    body = {"range": {"from": day, "to": f.future(3).isoformat()}, "room_type_id": str(room.id),
+            "price_override": {"amount_minor": 1_500_000, "currency": "DZD"}}
+    assert client.put(f"{url}/calendar/prices", body, format="json").status_code == 204
+    assert [p for _, p in selectors.nightly_prices(hotel, f.future(2), f.future(4), room_type=room)] == [1_500_000] * 2
+
+
+def test_br_avl_04_room_type_block_refused_when_sold():
+    """A night with rooms already held or booked cannot be closed (409 night_booked)."""
+    hotel, room = f.published_hotel(units=3)
+    owner = hotel.host_account.organization.memberships.get().user
+    services.reserve_rooms(room, f.future(2), f.future(3), 1)
+    response = client_for(owner, hotel.host_account).put(
+        f"/api/v1/host/listings/{hotel.id}/calendar/blocks",
+        {"dates": [f.future(2).isoformat()], "room_type_id": str(room.id), "blocked": True}, format="json",
+    )
+    assert response.status_code == 409 and response.json()["code"] == "night_booked"
+
+
+def test_calendar_blocks_refuse_past_days_and_foreign_room_type():
+    """No block in the past (422); a room type of another listing is 404."""
+    home = f.published_home()
+    client = client_for(home.host_account.user, home.host_account)
+    response = client.put(f"/api/v1/host/listings/{home.id}/calendar/blocks",
+                          {"dates": [f.future(-2).isoformat()], "blocked": True}, format="json")
+    assert response.status_code == 422
+    _, room = f.published_hotel()
+    response = client.put(f"/api/v1/host/listings/{home.id}/calendar/blocks",
+                          {"dates": [f.future(2).isoformat()], "blocked": True, "room_type_id": str(room.id)},
+                          format="json")
+    assert response.status_code == 404
+
+
+def test_br_avl_04_host_multi_calendar():
+    """GET /host/calendar: one row per home, one per room type, with blocks, prices and counters."""
+    hotel, room = f.published_hotel(units=3)
+    account = hotel.host_account
+    owner = account.organization.memberships.get().user
+    services.reserve_rooms(room, f.future(2), f.future(3), 2)
+    client = client_for(owner, account)
+    query = f"from={f.future(1).isoformat()}&to={f.future(4).isoformat()}"
+    body = client.get(f"/api/v1/host/calendar?{query}").json()
+    assert body["from"] == f.future(1).isoformat()
+    row = body["results"][0]
+    assert row["listing_id"] == str(hotel.id) and row["room_type_id"] == str(room.id)
+    assert len(row["days"]) == 3
+    night = row["days"][1]
+    assert night["units_booked"] == 2 and night["units_total"] == 3
+    assert night["price"] == {"amount_minor": room.base_price_minor, "currency": "DZD"}
+
+    home = f.published_home()
+    set_days_blocked = services.set_days_blocked
+    set_days_blocked(home, [f.future(2)], True)
+    home_client = client_for(home.host_account.user, home.host_account)
+    rows = home_client.get(f"/api/v1/host/calendar?{query}&listing_ids={home.id}").json()["results"]
+    assert rows[0]["room_type_id"] is None and rows[0]["days"][1]["is_blocked"] is True
+
+
+def test_host_multi_calendar_checks_ids_and_range():
+    """Someone else's listing id is 404; a range over 400 days or without dates is 400."""
+    home = f.published_home()
+    other = f.published_home()
+    client = client_for(home.host_account.user, home.host_account)
+    query = f"from={f.future(1).isoformat()}&to={f.future(4).isoformat()}"
+    assert client.get(f"/api/v1/host/calendar?{query}&listing_ids={other.id}").status_code == 404
+    assert client.get(f"/api/v1/host/calendar?from={f.future(1)}&to={f.future(500)}").status_code == 400
+    assert client.get("/api/v1/host/calendar").status_code == 400
+
+
+def test_br_avl_02_room_type_shrink_refused_below_sold_units():
+    """Lowering unit_count under the units booked on a future night is 409 inventory_in_use; delete too."""
+    hotel, room = f.published_hotel(units=3)
+    owner = hotel.host_account.organization.memberships.get().user
+    client = client_for(owner, hotel.host_account)
+    services.reserve_rooms(room, f.future(2), f.future(3), 2)
+    url = f"/api/v1/host/listings/{hotel.id}/room-types/{room.id}"
+    response = client.patch(url, {"unit_count": 1}, format="json")
+    assert response.status_code == 409 and response.json()["code"] == "inventory_in_use"
+    assert client.delete(url).json()["code"] == "inventory_in_use"
+    response = client.patch(url, {"unit_count": 4}, format="json")
+    assert response.status_code == 200 and response.json()["unit_count"] == 4
+    assert selectors.rooms_available(room, f.future(2), f.future(3)) == 2
 
 
 def test_calendar_needs_permission_and_ownership():
@@ -198,8 +280,9 @@ def test_calendar_needs_permission_and_ownership():
 
     hotel, room = f.published_hotel()
     other, user = f.approved_individual_host()
-    assert client_for(user, other).put(f"/api/v1/host/room-types/{room.id}/calendar",
-                                       {"dates": [f.future(2).isoformat()], "total": 1}, format="json").status_code == 404
+    assert client_for(user, other).put(f"/api/v1/host/listings/{hotel.id}/calendar/blocks",
+                                       {"dates": [f.future(2).isoformat()], "blocked": True,
+                                        "room_type_id": str(room.id)}, format="json").status_code == 404
     agent = f.make_user(email="agent@example.dz")
     Membership.objects.create(organization=hotel.host_account.organization, user=agent, role="agent")
     response = client_for(agent, hotel.host_account).get(f"/api/v1/host/listings/{hotel.id}/calendar")
@@ -207,7 +290,7 @@ def test_calendar_needs_permission_and_ownership():
 
 
 def test_host_slots_crud():
-    """Create, list, refuse duplicate start, shrink below taken seats refused, delete cancels a used slot."""
+    """Create, list, refuse duplicate start, shrink below taken seats refused, PATCH is_cancelled closes it."""
     agency, owner = f.approved_agency()
     experience = f.published_experience(agency)
     client = client_for(owner, agency)
@@ -219,8 +302,9 @@ def test_host_slots_crud():
     slot = ExperienceSlot.objects.get(id=created.json()["id"])
     services.slot_reserve(slot, 4)
     url = f"/api/v1/host/listings/{experience.id}/slots/{slot.id}"
-    assert client.patch(url, {"seats_total": 3}, format="json").json()["code"] == "seats_taken"
-    assert client.delete(url).status_code == 204
+    assert client.patch(url, {"seats_total": 3}, format="json").json()["code"] == "inventory_in_use"
+    assert client.patch(url, {"is_cancelled": True}, format="json").json()["is_cancelled"] is True
     slot.refresh_from_db()
     assert slot.is_cancelled
+    assert client.patch(url, {"is_cancelled": False}, format="json").json()["code"] == "invalid_transition"
     assert len(client.get(f"/api/v1/host/listings/{experience.id}/slots").json()) == 1

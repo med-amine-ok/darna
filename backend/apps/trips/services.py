@@ -85,8 +85,9 @@ def create_trip(host_account, data: dict) -> Trip:
     """
     Create a draft trip for an approved agency (BR-TRP-01, BR-LST-05).
 
-    ``data`` holds model fields (``EDITABLE_FIELDS``). The moderate policy
-    is used when none is given. The slug comes from the title.
+    ``data`` holds model fields (``EDITABLE_FIELDS``) and optionally
+    ``itinerary`` (list of days). The moderate policy is used when none is
+    given. The slug comes from the title.
     """
     check_can_offer_trips(host_account)
     check_trip_type(data.get("trip_type"))
@@ -95,6 +96,8 @@ def create_trip(host_account, data: dict) -> Trip:
     trip = Trip(reference=_new_reference(), slug=_unique_slug(values["title"]), host_account=host_account, **values)
     _check_values(trip)
     trip.save()
+    if data.get("itinerary") is not None:
+        replace_itinerary(trip, data["itinerary"])
     return trip
 
 
@@ -104,7 +107,10 @@ def update_trip(trip: Trip, data: dict) -> Trip:
     Apply a host's partial update. Changing a reviewed field of a published
     or paused trip sends it back to review (BR-LST-02, first version: the
     revision mechanism is the next step). Price and policy edits stay live.
+    ``itinerary`` (when sent) replaces the whole programme.
     """
+    data = dict(data)
+    itinerary = data.pop("itinerary", None)
     if "trip_type" in data:
         check_trip_type(data["trip_type"])
     reviewed = False
@@ -116,6 +122,8 @@ def update_trip(trip: Trip, data: dict) -> Trip:
         setattr(trip, field, value)
     _check_values(trip)
     trip.save()
+    if itinerary is not None:
+        replace_itinerary(trip, itinerary)
     if reviewed:
         send_back_to_review_if_live(trip)
     return trip
@@ -148,18 +156,37 @@ def submit_trip(trip: Trip) -> Trip:
     check_can_offer_trips(trip.host_account)
     problems = submission_problems(trip)
     if problems:
-        raise DomainError("Complete the trip before submitting.", code="trip_incomplete", errors=problems)
+        raise DomainError("Complete the trip before submitting.", code="listing_incomplete", status_code=422,
+                          errors=problems)
     workflow.change_status(trip, ListingStatus.PENDING_REVIEW, actor_kind=HOST)
     return trip
 
 
-def host_move(trip: Trip, action: str) -> Trip:
-    """Host status buttons ``pause``, ``resume``, ``archive``, ``withdraw``, ``reopen`` (table 4a)."""
-    targets = {
-        "pause": ListingStatus.PAUSED, "resume": ListingStatus.PUBLISHED, "archive": ListingStatus.ARCHIVED,
-        "withdraw": ListingStatus.DRAFT, "reopen": ListingStatus.DRAFT,
-    }
-    workflow.change_status(trip, targets[action], actor_kind=HOST)
+@transaction.atomic
+def change_host_trip_status(trip: Trip, target: str) -> Trip:
+    """
+    ``POST /host/trips/{id}/status`` (``HostStatusChange``, BR-LST-03, table 4a).
+
+    ``pending_review`` submits (going live always passes review, DEC-003;
+    422 ``listing_incomplete`` when something is missing); ``draft``
+    withdraws or reopens; ``paused``, ``archived``; ``published`` resumes a
+    paused trip. Other moves: 409 ``invalid_transition``.
+    """
+    locked = Trip.objects.select_for_update().get(pk=trip.pk)
+    workflow.host_set_status(locked, target, submit=submit_trip)
+    trip.refresh_from_db()
+    return trip
+
+
+def admin_change_trip_status(trip: Trip, target: str, *, actor, reason: str | None = None,
+                             reason_code: str | None = None) -> Trip:
+    """
+    ``POST /admin/trips/{id}/status``: approve, reject, request changes,
+    suspend, unsuspend, delete or restore a trip (table 4a, BR-LST-03,
+    BR-STF-02). Reasons of 10+ characters for reject, suspend and request
+    changes; audited in the same transaction.
+    """
+    workflow.admin_set_status(trip, target, actor=actor, reason=reason, reason_code=reason_code)
     return trip
 
 
@@ -171,7 +198,7 @@ def delete_trip(trip: Trip) -> None:
 @transaction.atomic
 def replace_itinerary(trip: Trip, days: list[dict]) -> list[TripItineraryDay]:
     """
-    Replace the whole programme with ``days`` (``PUT /host/trips/{id}/itinerary``).
+    Replace the whole programme with ``days`` (``itinerary`` of ``POST`` or ``PATCH /host/trips``).
 
     Day numbers must be 1, 2, 3... without gaps and not beyond
     ``duration_days`` (code ``invalid_itinerary``). A live trip goes back to
@@ -219,22 +246,15 @@ def create_departure(trip: Trip, data: dict) -> TripDeparture:
 
 @transaction.atomic
 def update_departure(departure: TripDeparture, data: dict) -> TripDeparture:
-    """Change a departure. ``seats_total`` cannot go below the seats taken (409 ``seats_taken``)."""
+    """Change a departure. ``seats_total`` cannot go below the seats taken (409 ``inventory_in_use``, BR-TRP-02)."""
     departure = TripDeparture.objects.select_for_update().get(pk=departure.pk)
     for field, value in data.items():
         setattr(departure, field, value)
     _check_departure(departure.trip, departure.starts_on, departure.ends_on, departure.seats_total)
     if departure.seats_total < departure.seats_held + departure.seats_booked:
-        raise ConflictError("More seats are already taken.", code="seats_taken")
+        raise ConflictError("More seats are already taken.", code="inventory_in_use")
     departure.save()
     return departure
-
-
-def delete_departure(departure: TripDeparture) -> None:
-    """Delete a departure without any seat taken; otherwise 409 ``departure_has_bookings`` (cancel it instead)."""
-    if departure.seats_held or departure.seats_booked:
-        raise ConflictError("Seats are taken: cancel the departure instead.", code="departure_has_bookings")
-    departure.delete()
 
 
 def cancel_departure(departure: TripDeparture) -> TripDeparture:
@@ -246,7 +266,7 @@ def cancel_departure(departure: TripDeparture) -> TripDeparture:
     this and then process the bookings of the departure.
     """
     if departure.status in (DepartureStatus.CANCELLED, DepartureStatus.COMPLETED):
-        raise ConflictError("This departure is already closed.", code="invalid_status_change")
+        raise ConflictError("This departure is already closed.", code="invalid_transition")
     departure.status = DepartureStatus.CANCELLED
     departure.save(update_fields=["status"])
     return departure

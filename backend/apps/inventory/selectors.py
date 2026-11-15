@@ -263,3 +263,99 @@ def public_availability(listing: Listing, start: date, end: date, room_type_id=N
             for s in open_slots(listing, max(start, today), end).select_related("listing")
         ]
     return body
+
+
+def _money(amount_minor: int | None, currency: str) -> dict | None:
+    """``Money`` shape, or None."""
+    return None if amount_minor is None else {"amount_minor": amount_minor, "currency": currency}
+
+
+def _single_rows(listing: Listing, start: date, end: date) -> list[dict]:
+    """One ``CalendarRow`` of a home or vehicle: block, note, price and booked flag per day."""
+    stored = {d.day: d for d in ListingDay.objects.filter(listing=listing, day__gte=start, day__lt=end)}
+    booked = booked_ranges([listing.id], start, end).get(listing.id, [])
+    days = []
+    for day, price in nightly_prices(listing, start, end):
+        row = stored.get(day)
+        is_booked = any(first <= day < last for first, last in booked)
+        days.append({
+            "date": day.isoformat(),
+            "is_blocked": bool(row and row.is_blocked),
+            "price": _money(price, listing.currency),
+            "price_override": _money(row.price_override_minor if row else None, listing.currency),
+            "note": (row.note or None) if row else None,
+            "units_total": 1,
+            "units_booked": int(is_booked),
+            "units_held": 0,
+            "booking_ids": [],
+        })
+    return [{"listing_id": str(listing.id), "room_type_id": None, "days": days}]
+
+
+def _room_rows(listing: Listing, start: date, end: date) -> list[dict]:
+    """One ``CalendarRow`` per room type of a hotel or hostel: units total, held, booked and price per night."""
+    rows = []
+    for room in RoomType.objects.alive().filter(listing=listing):
+        stored = {r.night: r for r in RoomTypeNight.objects.filter(room_type=room, night__gte=start, night__lt=end)}
+        days = []
+        for day, price in nightly_prices(listing, start, end, room_type=room):
+            night = stored.get(day)
+            total = night.total if night else room.unit_count
+            days.append({
+                "date": day.isoformat(),
+                # A room type closed for the night (total 0) or switched off counts as blocked.
+                "is_blocked": total == 0 or not room.is_active,
+                "price": _money(price, listing.currency),
+                "price_override": _money(night.price_override_minor if night else None, listing.currency),
+                "note": None,
+                "units_total": total,
+                "units_booked": night.booked if night else 0,
+                "units_held": night.held if night else 0,
+                "booking_ids": [],
+            })
+        rows.append({"listing_id": str(listing.id), "room_type_id": str(room.id), "days": days})
+    return rows
+
+
+def _slot_rows(listing: Listing, start: date, end: date) -> list[dict]:
+    """One ``CalendarRow`` of an experience: per day, the seats of its open slots added up (null without slot)."""
+    per_day: dict[date, list[ExperienceSlot]] = {}
+    slots = ExperienceSlot.objects.filter(listing=listing, is_cancelled=False,
+                                          starts_at__date__gte=start, starts_at__date__lt=end)
+    for slot in slots:
+        per_day.setdefault(slot.starts_at.date(), []).append(slot)
+    days = []
+    for day in nights_of(start, end):
+        found = per_day.get(day, [])
+        days.append({
+            "date": day.isoformat(),
+            "is_blocked": False,
+            "price": _money(listing.base_price_minor, listing.currency),
+            "price_override": None,
+            "note": None,
+            "units_total": sum(s.seats_total for s in found) if found else None,
+            "units_booked": sum(s.seats_booked for s in found) if found else None,
+            "units_held": sum(s.seats_held for s in found) if found else None,
+            "booking_ids": [],
+        })
+    return [{"listing_id": str(listing.id), "room_type_id": None, "days": days}]
+
+
+def host_calendar(listings: Iterable[Listing], start: date, end: date) -> list[dict]:
+    """
+    ``CalendarResponse.results`` of ``GET /host/calendar`` for several listings of one host (AVL-03, BR-AVL-04).
+
+    ``[start, end)`` is half-open. Homes and vehicles give one row; hotels
+    and hostels one row per room type; experiences one row with the seats of
+    the day's slots. ``booking_ids`` stays empty until the bookings app
+    gives ids with its booked ranges (the provider only gives date ranges).
+    """
+    rows: list[dict] = []
+    for listing in listings:
+        if listing.inventory_kind == InventoryKind.SINGLE:
+            rows.extend(_single_rows(listing, start, end))
+        elif listing.inventory_kind == InventoryKind.ROOM_POOL:
+            rows.extend(_room_rows(listing, start, end))
+        else:
+            rows.extend(_slot_rows(listing, start, end))
+    return rows

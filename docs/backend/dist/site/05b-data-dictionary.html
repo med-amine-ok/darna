@@ -44,10 +44,10 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="on" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 5: database</div><h1 id="05b-data-dictionary">05b. Data dictionary</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="on" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 5: database</div><h1 id="05b-data-dictionary">05b. Data dictionary</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>Every table and every column of the planned database, with what it means.<br>It is generated from <a href="files/schema.dbml">schema.dbml</a>, so it is always identical to the schema.<br>&quot;Key&quot; says if a column is the row&#39;s identity (PK), a link to another table (FK) or must be unique (UQ).<br>Money columns end in <code>_minor</code> (centimes). Rates end in <code>_bp</code> (basis points: 1,200 = 12%).<br>Read <a href="05-database-schema.html">05-database-schema.md</a> first for the design and the reasons behind it.</p>
 </blockquote>
-<p>Generated by <code>python _tools/build_schema_docs.py</code>. 77 tables, 808 columns, 35 enumerations, 156 foreign keys.</p>
+<p>Generated by <code>python _tools/build_schema_docs.py</code>. 83 tables, 892 columns, 39 enumerations, 176 foreign keys.</p>
 <h2 id="contents">Contents</h2>
 <ul>
 <li><strong>Accounts</strong>: <a href="#user">user</a>, <a href="#staff-profile">staff_profile</a>, <a href="#staff-permission">staff_permission</a>, <a href="#staff-role-permission">staff_role_permission</a>, <a href="#consent-record">consent_record</a>, <a href="#favorite">favorite</a></li>
@@ -58,12 +58,12 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>Inventory And Calendar</strong>: <a href="#listing-day">listing_day</a>, <a href="#room-type-night">room_type_night</a>, <a href="#experience-slot">experience_slot</a></li>
 <li><strong>Trips (Agency Only)</strong>: <a href="#trip">trip</a>, <a href="#trip-itinerary-day">trip_itinerary_day</a>, <a href="#trip-departure">trip_departure</a></li>
 <li><strong>Pricing</strong>: <a href="#quote">quote</a>, <a href="#tax-rate">tax_rate</a></li>
-<li><strong>Bookings</strong>: <a href="#booking">booking</a>, <a href="#booking-event">booking_event</a>, <a href="#refund">refund</a>, <a href="#dispute">dispute</a></li>
-<li><strong>Money: Ledger, Wallet, Dormant Payments</strong>: <a href="#ledger-account">ledger_account</a>, <a href="#ledger-transaction">ledger_transaction</a>, <a href="#ledger-entry">ledger_entry</a>, <a href="#account-balance">account_balance</a>, <a href="#wallet-topup">wallet_topup</a>, <a href="#gateway-event">gateway_event</a>, <a href="#payment">payment</a>, <a href="#payout">payout</a>, <a href="#invoice">invoice</a></li>
+<li><strong>Bookings</strong>: <a href="#booking">booking</a>, <a href="#booking-event">booking_event</a>, <a href="#refund">refund</a>, <a href="#refund-obligation">refund_obligation</a>, <a href="#dispute">dispute</a></li>
+<li><strong>Money: Ledger, Wallet, Dormant Payments</strong>: <a href="#ledger-account">ledger_account</a>, <a href="#ledger-transaction">ledger_transaction</a>, <a href="#ledger-entry">ledger_entry</a>, <a href="#account-balance">account_balance</a>, <a href="#wallet-topup">wallet_topup</a>, <a href="#wallet-adjustment">wallet_adjustment</a>, <a href="#gateway-event">gateway_event</a>, <a href="#payment">payment</a>, <a href="#payout">payout</a>, <a href="#invoice">invoice</a></li>
 <li><strong>Reviews</strong>: <a href="#review">review</a>, <a href="#review-reply">review_reply</a>, <a href="#review-report">review_report</a></li>
-<li><strong>Messaging And Notifications</strong>: <a href="#conversation">conversation</a>, <a href="#conversation-participant">conversation_participant</a>, <a href="#message">message</a>, <a href="#notification">notification</a>, <a href="#notification-preference">notification_preference</a>, <a href="#outbox-event">outbox_event</a>, <a href="#delivery-log">delivery_log</a></li>
+<li><strong>Messaging And Notifications</strong>: <a href="#conversation">conversation</a>, <a href="#conversation-participant">conversation_participant</a>, <a href="#message">message</a>, <a href="#notification">notification</a>, <a href="#notification-preference">notification_preference</a>, <a href="#outbox-message">outbox_message</a>, <a href="#delivery-log">delivery_log</a></li>
 <li><strong>Media</strong>: <a href="#media-asset">media_asset</a></li>
-<li><strong>Moderation, Config, Audit, Privacy, System</strong>: <a href="#reason-code">reason_code</a>, <a href="#moderation-case">moderation_case</a>, <a href="#moderation-decision">moderation_decision</a>, <a href="#change-request-item">change_request_item</a>, <a href="#platform-settings">platform_settings</a>, <a href="#onboarding-flow-version">onboarding_flow_version</a>, <a href="#onboarding-draft">onboarding_draft</a>, <a href="#coupon">coupon</a>, <a href="#coupon-redemption">coupon_redemption</a>, <a href="#audit-event">audit_event</a>, <a href="#export-job">export_job</a>, <a href="#data-subject-request">data_subject_request</a>, <a href="#idempotency-record">idempotency_record</a>, <a href="#incident-record">incident_record</a>, <a href="#calendar-feed">calendar_feed</a>, <a href="#otp-send-log">otp_send_log</a>, <a href="#listing-search-doc">listing_search_doc</a></li>
+<li><strong>Moderation, Config, Audit, Privacy, System</strong>: <a href="#reason-code">reason_code</a>, <a href="#moderation-case">moderation_case</a>, <a href="#moderation-decision">moderation_decision</a>, <a href="#change-request-item">change_request_item</a>, <a href="#platform-settings">platform_settings</a>, <a href="#onboarding-flow-version">onboarding_flow_version</a>, <a href="#onboarding-draft">onboarding_draft</a>, <a href="#coupon">coupon</a>, <a href="#coupon-redemption">coupon_redemption</a>, <a href="#audit-event">audit_event</a>, <a href="#export-job">export_job</a>, <a href="#data-subject-request">data_subject_request</a>, <a href="#idempotency-record">idempotency_record</a>, <a href="#incident-record">incident_record</a>, <a href="#calendar-feed">calendar_feed</a>, <a href="#otp-send-log">otp_send_log</a>, <a href="#property-integration">property_integration</a>, <a href="#integration-sync-log">integration_sync_log</a>, <a href="#inventory-conflict">inventory_conflict</a>, <a href="#property-service">property_service</a>, <a href="#listing-search-doc">listing_search_doc</a></li>
 <li><a href="#enumerations">Enumerations</a></li>
 </ul>
 <h2 id="accounts">Accounts</h2>
@@ -357,7 +357,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="staff_role_permission">staff_role_permission</h3>
-<p>Role to permission matrix (Appendix B section 1.1), editable data rather than code.</p>
+<p>One staff role today: admin, with every permission (DEC-016). The table stays so more roles can be added later without a redesign.</p>
 <table>
 <thead>
 <tr>
@@ -630,7 +630,7 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td>PK</td>
 <td></td>
-<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+<td>Official daira code from the state list (reference data, not an app id).</td>
 </tr>
 <tr>
 <td><code>wilaya_code</code></td>
@@ -658,7 +658,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="commune">commune</h3>
-<p>1,541 rows. GIN trigram index on unaccent(name_fr) and name_ar for autocomplete.</p>
+<p>1,541 rows. GIN trigram indexes (pg_trgm, gin_trgm_ops) on unaccent(name_fr), name_en and the normalised name_ar for search and autocomplete (BR-SRC-05).</p>
 <table>
 <thead>
 <tr>
@@ -1936,7 +1936,7 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td></td>
 <td></td>
-<td></td>
+<td>GIN trigram index (gin_trgm_ops) on the normalised title (BR-SRC-05).</td>
 </tr>
 <tr>
 <td><code>description</code></td>
@@ -2553,6 +2553,22 @@ section.doc{page-break-before:always;padding:0}
 <td></td>
 </tr>
 <tr>
+<td><code>external_id</code></td>
+<td>varchar(80)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Id of this room type in the hotel system (DEC-017).</td>
+</tr>
+<tr>
+<td><code>integration_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#property-integration">property_integration</a></td>
+<td></td>
+<td>Set when the room type is managed by a hotel system connection.</td>
+</tr>
+<tr>
 <td><code>sort_order</code></td>
 <td>int</td>
 <td>yes</td>
@@ -2808,7 +2824,7 @@ section.doc{page-break-before:always;padding:0}
 </tbody></table>
 <h2 id="inventory-and-calendar">Inventory And Calendar</h2>
 <h3 id="listing_day">listing_day</h3>
-<p>Host calendar for single-unit listings (homes, vehicles). Only rows that differ from defaults are stored.</p>
+<p>Host calendar for single-unit listings (homes, vehicles). Only rows that differ from defaults are stored. Trigger listing_day_block_guard (BR-AVL-07 a): refuses is_blocked = true on a day covered by a single-unit booking in a blocking status.</p>
 <table>
 <thead>
 <tr>
@@ -2862,7 +2878,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="room_type_night">room_type_night</h3>
-<p>Pooled inventory (BR-AVL-02). Check: held &gt;= 0 and booked &gt;= 0 and held + booked &lt;= total. Rows created 18 months ahead by job.</p>
+<p>Pooled inventory (BR-AVL-02). Check: held &gt;= 0 and booked &gt;= 0 and held + booked &lt;= total (no exclusion constraint on pools). A hotel sync never sets total below held + booked (BR-HST-07). Rows created 18 months ahead by job.</p>
 <table>
 <thead>
 <tr>
@@ -3652,7 +3668,7 @@ section.doc{page-break-before:always;padding:0}
 </tbody></table>
 <h2 id="bookings">Bookings</h2>
 <h3 id="booking">booking</h3>
-<p>Checks: exactly the target columns matching inventory_kind are set; total_minor = subtotal - discount + cleaning + taxes; 0 &lt;= refund_due_minor &lt;= total_minor; guests_adults &gt;= 1. Exclusion (BR-AVL-01): EXCLUDE USING gist (listing_id WITH =, stay WITH &amp;&amp;) WHERE (inventory_kind = &#39;single&#39; AND status IN (&#39;awaiting_payment&#39;,&#39;pending&#39;,&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;)).</p>
+<p>Checks: exactly the target columns matching inventory_kind are set; total_minor = subtotal - discount + cleaning + taxes; 0 &lt;= refund_due_minor &lt;= total_minor; guests_adults &gt;= 1. Exclusion (BR-AVL-01): EXCLUDE USING gist (listing_id WITH =, stay WITH &amp;&amp;) WHERE (inventory_kind = &#39;single&#39; AND status IN (&#39;awaiting_payment&#39;,&#39;pending&#39;,&#39;confirmed&#39;,&#39;completed&#39;,&#39;disputed&#39;)). Trigger booking_blocked_day_guard (BR-AVL-07 b): refuses a single-unit booking in a blocking status whose range contains a blocked listing_day. Check: stay_confirmed_at is null or status in (confirmed, completed, disputed).</p>
 <table>
 <thead>
 <tr>
@@ -3953,6 +3969,30 @@ section.doc{page-break-before:always;padding:0}
 <td>Cumulative amount owed back to the guest.</td>
 </tr>
 <tr>
+<td><code>check_in_code</code></td>
+<td>char(6)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>6 digits shown only to the guest once confirmed; the host enters it on arrival (BR-BKG-09). Stored as given, compared in constant time.</td>
+</tr>
+<tr>
+<td><code>stay_confirmed_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Set by host code entry or guest confirmation; needed for a review (BR-REV-01).</td>
+</tr>
+<tr>
+<td><code>stay_confirmed_via</code></td>
+<td><a href="#enum-stay-confirmed-via">stay_confirmed_via</a></td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>One of the stay_confirmed_via values.</td>
+</tr>
+<tr>
 <td><code>price_lines</code></td>
 <td>jsonb</td>
 <td>yes</td>
@@ -4017,7 +4057,7 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
@@ -4089,7 +4129,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="refund">refund</h3>
-<p>Check amount_minor &gt; 0. Sum per booking equals booking.refund_due_minor.</p>
+<p>Check amount_minor &gt; 0. Sum per booking equals booking.refund_due_minor. In M1 each row opens one refund_obligation (BR-CAN-06).</p>
 <table>
 <thead>
 <tr>
@@ -4166,6 +4206,173 @@ section.doc{page-break-before:always;padding:0}
 <td>When the row was created (UTC).</td>
 </tr>
 </tbody></table>
+<h3 id="refund_obligation">refund_obligation</h3>
+<p>Debt of the host to the guest after a cancellation (DEC-024, BR-CAN-06). Check amount_minor &gt; 0. Ledger memo: refund_due when opened, refund_settled when settled.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>refund_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#refund">refund</a> UQ</td>
+<td></td>
+<td>Link to the refund row (one to one).</td>
+</tr>
+<tr>
+<td><code>booking_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#booking">booking</a></td>
+<td></td>
+<td>Link to the booking row (many to one).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>guest_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Amount in centimes.</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-refund-obligation-status">refund_obligation_status</a></td>
+<td>yes</td>
+<td></td>
+<td>open</td>
+<td>One of the refund_obligation_status values.</td>
+</tr>
+<tr>
+<td><code>due_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>cancelled_at + refund_due_days (setting, default 7).</td>
+</tr>
+<tr>
+<td><code>declared_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>declared_reference</code></td>
+<td>varchar(120)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Transfer or receipt reference given by the host.</td>
+</tr>
+<tr>
+<td><code>declared_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>settled_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>settled_via</code></td>
+<td>varchar(12)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>guest_confirm or admin.</td>
+</tr>
+<tr>
+<td><code>settled_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>settlement_proof_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#media-asset">media_asset</a></td>
+<td></td>
+<td>Proof uploaded by the admin when settling.</td>
+</tr>
+<tr>
+<td><code>dispute_note</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+<tr>
+<td><code>updated_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was last changed (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(host_account_id, status, due_at) [note: &#39;Overdue check on booking and accept (BR-CAN-07).&#39;]</code>; <code>(guest_id, status)</code>; <code>due_at [note: &#39;Partial WHERE status IN (open, disputed): admin overdue list.&#39;]</code></p>
 <h3 id="dispute">dispute</h3>
 <p>R2.</p>
 <table>
@@ -4356,7 +4563,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="ledger_transaction">ledger_transaction</h3>
-<p>Insert-only. Partial unique (booking_id) where kind = commission (BR-PAY-04).</p>
+<p>Insert-only: trigger refuses UPDATE and DELETE; app role has SELECT and INSERT only (DEC-026). Partial unique (booking_id) where kind = commission (BR-PAY-04).</p>
 <table>
 <thead>
 <tr>
@@ -4442,7 +4649,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="ledger_entry">ledger_entry</h3>
-<p>Insert-only. Deferred constraint trigger: per transaction and currency, sum(amount_minor) = 0 (BR-PAY-02).</p>
+<p>Insert-only: trigger refuses UPDATE and DELETE; app role has SELECT and INSERT only (DEC-026). Deferred constraint trigger: per transaction and currency, sum(amount_minor) = 0 (BR-PAY-02).</p>
 <table>
 <thead>
 <tr>
@@ -4456,7 +4663,7 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
@@ -4496,7 +4703,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="account_balance">account_balance</h3>
-<p>Cache updated in the same transaction as entries (row lock). Nightly job checks it equals the sum.</p>
+<p>Cache for host wallets, updated in the same transaction as entries. Locked first on the booking path (SELECT ... FOR UPDATE, BR-PAY-14). No platform account row is updated on the booking path: revenue is a SUM over ledger_entry. Nightly reconcile_balances checks it equals the sum (BR-PAY-15).</p>
 <table>
 <thead>
 <tr>
@@ -4526,7 +4733,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>last_entry_id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td></td>
 <td></td>
@@ -4615,7 +4822,7 @@ section.doc{page-break-before:always;padding:0}
 <td>no</td>
 <td>FK <a href="#user">user</a></td>
 <td></td>
-<td>Second finance user above 500,000 DZD (BR-PAY-07).</td>
+<td>Second admin when the host rolling 24-hour total passes 500,000 DZD; never the requester (BR-PAY-07).</td>
 </tr>
 <tr>
 <td><code>approved_at</code></td>
@@ -4651,6 +4858,117 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <p>Indexes: <code>(method, receipt_reference) [unique]</code></p>
+<h3 id="wallet_adjustment">wallet_adjustment</h3>
+<p>Manual correction of a host wallet (DEC-022, BR-PAY-13). Always needs a second admin; audited.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>host_account_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#host-account">host_account</a></td>
+<td></td>
+<td>Link to the host_account row (many to one).</td>
+</tr>
+<tr>
+<td><code>amount_minor</code></td>
+<td>bigint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Signed: positive credits the host wallet, negative debits it. Check amount_minor &lt;&gt; 0 and abs(amount_minor) &lt;= 100,000,000 (1,000,000 DZD).</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td>char(3)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ISO 4217 code, DZD today.</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>text</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-adjustment-status">adjustment_status</a></td>
+<td>yes</td>
+<td></td>
+<td>pending_approval</td>
+<td>One of the adjustment_status values.</td>
+</tr>
+<tr>
+<td><code>requested_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>approved_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Check approved_by_id &lt;&gt; requested_by_id (four-eyes).</td>
+</tr>
+<tr>
+<td><code>approved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>rejection_reason</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ledger_transaction_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#ledger-transaction">ledger_transaction</a></td>
+<td></td>
+<td>Set when posted (kind adjustment).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(status, created_at)</code></p>
 <h3 id="gateway_event">gateway_event</h3>
 <p>R2. Raw webhooks (BR-SYS-02).</p>
 <table>
@@ -5413,7 +5731,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>last_read_message_id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>no</td>
 <td></td>
 <td></td>
@@ -5450,11 +5768,11 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
-<td>Ordered id, used as sync cursor (MSG-02).</td>
+<td>UUIDv7, ordered by time, used as sync cursor (MSG-02).</td>
 </tr>
 <tr>
 <td><code>conversation_id</code></td>
@@ -5536,7 +5854,7 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
@@ -5637,8 +5955,8 @@ section.doc{page-break-before:always;padding:0}
 <td>Yes/no flag: enabled.</td>
 </tr>
 </tbody></table>
-<h3 id="outbox_event">outbox_event</h3>
-<p>Written in the same transaction as the change (BR-SYS-03).</p>
+<h3 id="outbox_message">outbox_message</h3>
+<p>Written in the same transaction as the change (BR-SYS-03, DEC-029). Dead messages raise an admin alert and are listed in GET admin/outbox. Handlers are idempotent. Replaces outbox_event (renamed 2026-11-13).</p>
 <table>
 <thead>
 <tr>
@@ -5652,7 +5970,7 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
@@ -5664,7 +5982,7 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td></td>
 <td></td>
-<td></td>
+<td>e.g. notification.send, sms.send, search.refresh, inventory.push.</td>
 </tr>
 <tr>
 <td><code>aggregate_type</code></td>
@@ -5704,7 +6022,7 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td></td>
 <td>0</td>
-<td></td>
+<td>Max 8, then dead.</td>
 </tr>
 <tr>
 <td><code>next_attempt_at</code></td>
@@ -5712,7 +6030,15 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td></td>
 <td></td>
-<td>Time of the event (UTC).</td>
+<td>Retries after 1 min, 5 min, 15 min, 1 h, 6 h, 24 h.</td>
+</tr>
+<tr>
+<td><code>last_error</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
 </tr>
 <tr>
 <td><code>created_at</code></td>
@@ -5746,19 +6072,19 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
 <td>Primary key (UUIDv7 made by the app, ordered by time).</td>
 </tr>
 <tr>
-<td><code>outbox_event_id</code></td>
-<td>bigint</td>
+<td><code>outbox_message_id</code></td>
+<td>uuid</td>
 <td>no</td>
-<td>FK <a href="#outbox-event">outbox_event</a></td>
+<td>FK <a href="#outbox-message">outbox_message</a></td>
 <td></td>
-<td>Link to the outbox_event row (many to one).</td>
+<td>Link to the outbox_message row (many to one).</td>
 </tr>
 <tr>
 <td><code>channel</code></td>
@@ -6735,7 +7061,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="audit_event">audit_event</h3>
-<p>Insert-only for the app role; hash chain (BR-STF-02). Partitioned by month.</p>
+<p>Insert-only: trigger refuses UPDATE and DELETE, app role has SELECT and INSERT only (DEC-026); hash chain (BR-STF-02); daily export to write-once storage. Partitioned by month.</p>
 <table>
 <thead>
 <tr>
@@ -6749,7 +7075,7 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
@@ -7097,7 +7423,7 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td></td>
 <td></td>
-<td></td>
+<td>SHA-256 of the request body. Same key with a different hash: 422 idempotency_key_reused.</td>
 </tr>
 <tr>
 <td><code>status</code></td>
@@ -7362,7 +7688,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <h3 id="otp_send_log">otp_send_log</h3>
-<p>Record of every one-time code sent (codes themselves stay in Redis, never stored). Feeds SMS budget alarms and pumping-fraud detection (ACC-02, BR-ACC-02). Kept 90 days.</p>
+<p>Record of every one-time code sent (codes themselves stay in Redis as an HMAC, never stored in clear). Feeds the limits per destination and per IP, the global daily SMS budget (sms_budget_exceeded) and pumping-fraud detection (ACC-02, BR-ACC-02). Kept 90 days.</p>
 <table>
 <thead>
 <tr>
@@ -7376,7 +7702,7 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td><code>id</code></td>
-<td>bigint</td>
+<td>uuid</td>
 <td>yes</td>
 <td>PK</td>
 <td></td>
@@ -7388,7 +7714,7 @@ section.doc{page-break-before:always;padding:0}
 <td>yes</td>
 <td></td>
 <td></td>
-<td>HMAC of the phone number.</td>
+<td>HMAC-SHA256 of the destination with HASH_PEPPER (BR-SYS-07).</td>
 </tr>
 <tr>
 <td><code>ip</code></td>
@@ -7440,8 +7766,465 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <p>Indexes: <code>(phone_hash, created_at)</code>; <code>(ip, created_at)</code></p>
+<h3 id="property_integration">property_integration</h3>
+<p>Direct connection to a hotel system (DEC-017, HST-08). Room types, per-night availability, prices and services are pulled from it. BLADUS stays the source of truth for bookings made on BLADUS and pushes them back when the system allows it.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>organization_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#organization">organization</a></td>
+<td></td>
+<td>Link to the organization row (many to one).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>The hotel or hostel property this connection feeds.</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(20)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>channel_manager, pms, ical, csv_import.</td>
+</tr>
+<tr>
+<td><code>system_name</code></td>
+<td>varchar(60)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Name of the hotel system as the hotel gave it.</td>
+</tr>
+<tr>
+<td><code>base_url</code></td>
+<td>varchar(255)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>https only; passes the outgoing URL check at save and fetch time (BR-SYS-06).</td>
+</tr>
+<tr>
+<td><code>credentials_encrypted</code></td>
+<td>bytea</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>API key or login of the hotel system, AES-GCM (Fernet acceptable) under INTEGRATION_KEYS, outside the database.</td>
+</tr>
+<tr>
+<td><code>credentials_key_id</code></td>
+<td>varchar(16)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Which INTEGRATION_KEYS key encrypted this record (yearly rotation).</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td>pending</td>
+<td>pending, active, error, disabled.</td>
+</tr>
+<tr>
+<td><code>sync_rooms</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: sync rooms.</td>
+</tr>
+<tr>
+<td><code>sync_availability</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: sync availability.</td>
+</tr>
+<tr>
+<td><code>sync_services</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: sync services.</td>
+</tr>
+<tr>
+<td><code>last_synced_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>last_error</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_by_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<h3 id="integration_sync_log">integration_sync_log</h3>
+<p>One row per sync run, so the hotel and the admin can see what was imported and why a sync failed.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>integration_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#property-integration">property_integration</a></td>
+<td></td>
+<td>Link to the property_integration row (many to one).</td>
+</tr>
+<tr>
+<td><code>started_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>finished_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>ok, partial, failed.</td>
+</tr>
+<tr>
+<td><code>rooms_changed</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>nights_changed</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>services_changed</code></td>
+<td>int</td>
+<td>yes</td>
+<td></td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="inventory_conflict">inventory_conflict</h3>
+<p>Opened when a hotel sync asks for fewer rooms than BLADUS already holds or sold (DEC-021, BR-HST-07).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>integration_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#property-integration">property_integration</a></td>
+<td></td>
+<td>Link to the property_integration row (many to one).</td>
+</tr>
+<tr>
+<td><code>room_type_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#room-type">room_type</a></td>
+<td></td>
+<td>Link to the room_type row (many to one).</td>
+</tr>
+<tr>
+<td><code>night</code></td>
+<td>date</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>requested_total</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Total sent by the hotel system.</td>
+</tr>
+<tr>
+<td><code>applied_total</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>Clamped to held + booked.</td>
+</tr>
+<tr>
+<td><code>held</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>booked</code></td>
+<td>smallint</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td><a href="#enum-inventory-conflict-status">inventory_conflict_status</a></td>
+<td>yes</td>
+<td></td>
+<td>open</td>
+<td>One of the inventory_conflict_status values.</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>varchar(24)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>accepted_clamp, booking_moved, booking_cancelled.</td>
+</tr>
+<tr>
+<td><code>resolution_note</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>resolved_by_id</code></td>
+<td>uuid</td>
+<td>no</td>
+<td>FK <a href="#user">user</a></td>
+<td></td>
+<td>Link to the user row (many to one).</td>
+</tr>
+<tr>
+<td><code>resolved_at</code></td>
+<td>timestamptz</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Time of the event (UTC).</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
+<p>Indexes: <code>(status, created_at)</code>; <code>(room_type_id, night) [note: &#39;Partial unique WHERE status = open: one open conflict per room-night.&#39;]</code></p>
+<h3 id="property_service">property_service</h3>
+<p>Services of a hotel or hostel (restaurants, spa, parking...), typed by the host or imported from the hotel system.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Required</th>
+<th>Key</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>PK</td>
+<td></td>
+<td>Primary key (UUIDv7 made by the app, ordered by time).</td>
+</tr>
+<tr>
+<td><code>listing_id</code></td>
+<td>uuid</td>
+<td>yes</td>
+<td>FK <a href="#listing">listing</a></td>
+<td></td>
+<td>Link to the listing row (many to one).</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>varchar(24)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>restaurant, cafe, spa, pool, gym, parking, conference_room, airport_transfer, other.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>varchar(120)</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>text</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>opening_hours</code></td>
+<td>jsonb</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>price_minor</code></td>
+<td>bigint</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Null = included or price on request.</td>
+</tr>
+<tr>
+<td><code>external_id</code></td>
+<td>varchar(80)</td>
+<td>no</td>
+<td></td>
+<td></td>
+<td>Id of the service in the hotel system.</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>varchar(12)</td>
+<td>yes</td>
+<td></td>
+<td>manual</td>
+<td>manual or integration.</td>
+</tr>
+<tr>
+<td><code>is_active</code></td>
+<td>boolean</td>
+<td>yes</td>
+<td></td>
+<td>true</td>
+<td>Yes/no flag: is active.</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td>timestamptz</td>
+<td>yes</td>
+<td></td>
+<td></td>
+<td>When the row was created (UTC).</td>
+</tr>
+</tbody></table>
 <h3 id="listing_search_doc">listing_search_doc</h3>
-<p>Denormalised row per published listing, refreshed by outbox job. GiST on location_public, GIN on amenity_ids, tsv_* and search_text (gin_trgm_ops).</p>
+<p>Denormalised row per published listing, refreshed by outbox job. GiST on location_public, GIN on amenity_ids, GIN (search_text gin_trgm_ops). No tsvector: PostgreSQL has no Arabic stemmer (DEC-030).</p>
 <table>
 <thead>
 <tr>
@@ -7566,36 +8349,12 @@ section.doc{page-break-before:always;padding:0}
 <td></td>
 </tr>
 <tr>
-<td><code>tsv_fr</code></td>
-<td>tsvector</td>
-<td>no</td>
-<td></td>
-<td></td>
-<td>French text.</td>
-</tr>
-<tr>
-<td><code>tsv_en</code></td>
-<td>tsvector</td>
-<td>no</td>
-<td></td>
-<td></td>
-<td>English text.</td>
-</tr>
-<tr>
-<td><code>tsv_ar</code></td>
-<td>tsvector</td>
-<td>no</td>
-<td></td>
-<td></td>
-<td>Arabic text.</td>
-</tr>
-<tr>
 <td><code>search_text</code></td>
 <td>text</td>
-<td>no</td>
+<td>yes</td>
 <td></td>
 <td></td>
-<td>Title and place names, unaccented, for trigram search.</td>
+<td>Title and place names (fr, ar, en), unaccented and with Arabic normalisation, for pg_trgm trigram search (BR-SRC-05).</td>
 </tr>
 <tr>
 <td><code>published_at</code></td>
@@ -7616,7 +8375,7 @@ section.doc{page-break-before:always;padding:0}
 </tbody></table>
 <h2 id="enumerations">Enumerations</h2>
 <p><a id="enum-user-status"></a><strong>user_status</strong>: <code>active</code>, <code>suspended</code>, <code>banned</code>, <code>deleted</code></p>
-<p><a id="enum-staff-role-code"></a><strong>staff_role_code</strong>: <code>super_admin</code>, <code>moderator</code>, <code>support</code>, <code>finance</code>, <code>analyst</code></p>
+<p><a id="enum-staff-role-code"></a><strong>staff_role_code</strong>: <code>admin</code></p>
 <p><a id="enum-staff-status"></a><strong>staff_status</strong>: <code>invited</code>, <code>active</code>, <code>deactivated</code></p>
 <p><a id="enum-host-account-kind"></a><strong>host_account_kind</strong>: <code>individual</code>, <code>organization</code></p>
 <p><a id="enum-business-category"></a><strong>business_category</strong>: <code>agency</code>, <code>hotel</code>, <code>hostel</code></p>
@@ -7636,8 +8395,12 @@ section.doc{page-break-before:always;padding:0}
 <p><a id="enum-payment-status"></a><strong>payment_status</strong>: <code>not_collected</code>, <code>awaiting</code>, <code>paid</code>, <code>partially_refunded</code>, <code>refunded</code>, <code>failed</code></p>
 <p><a id="enum-actor-role"></a><strong>actor_role</strong>: <code>guest</code>, <code>host</code>, <code>staff</code>, <code>system</code></p>
 <p><a id="enum-departure-status"></a><strong>departure_status</strong>: <code>scheduled</code>, <code>guaranteed</code>, <code>cancelled</code>, <code>completed</code></p>
-<p><a id="enum-ledger-account-kind"></a><strong>ledger_account_kind</strong>: <code>host_wallet</code>, <code>platform_cash</code>, <code>commission_revenue</code>, <code>vat_payable</code>, <code>guest_receivable</code>, <code>escrow</code>, <code>host_payable</code>, <code>payout_clearing</code>, <code>adjustments</code></p>
-<p><a id="enum-ledger-tx-kind"></a><strong>ledger_tx_kind</strong>: <code>wallet_topup</code>, <code>commission</code>, <code>commission_reversal</code>, <code>adjustment</code>, <code>guest_payment</code>, <code>refund</code>, <code>payout</code></p>
+<p><a id="enum-ledger-account-kind"></a><strong>ledger_account_kind</strong>: <code>host_wallet</code>, <code>platform_cash</code>, <code>commission_revenue</code>, <code>vat_payable</code>, <code>guest_receivable</code>, <code>escrow</code>, <code>host_payable</code>, <code>payout_clearing</code>, <code>adjustments</code>, <code>host_refund_payable</code>, <code>guest_refund_clearing</code></p>
+<p><a id="enum-ledger-tx-kind"></a><strong>ledger_tx_kind</strong>: <code>wallet_topup</code>, <code>commission</code>, <code>commission_reversal</code>, <code>adjustment</code>, <code>refund_due</code>, <code>refund_settled</code>, <code>guest_payment</code>, <code>refund</code>, <code>payout</code></p>
+<p><a id="enum-adjustment-status"></a><strong>adjustment_status</strong>: <code>pending_approval</code>, <code>approved</code>, <code>rejected</code></p>
+<p><a id="enum-refund-obligation-status"></a><strong>refund_obligation_status</strong>: <code>open</code>, <code>declared</code>, <code>settled</code>, <code>disputed</code></p>
+<p><a id="enum-stay-confirmed-via"></a><strong>stay_confirmed_via</strong>: <code>host_code</code>, <code>guest</code></p>
+<p><a id="enum-inventory-conflict-status"></a><strong>inventory_conflict_status</strong>: <code>open</code>, <code>resolved</code></p>
 <p><a id="enum-topup-method"></a><strong>topup_method</strong>: <code>ccp_transfer</code>, <code>bank_transfer</code>, <code>baridimob</code>, <code>cash_office</code>, <code>gateway</code></p>
 <p><a id="enum-topup-status"></a><strong>topup_status</strong>: <code>pending_approval</code>, <code>approved</code>, <code>rejected</code></p>
 <p><a id="enum-review-status"></a><strong>review_status</strong>: <code>submitted</code>, <code>published</code>, <code>flagged</code>, <code>hidden</code>, <code>removed</code></p>
@@ -7648,7 +8411,7 @@ section.doc{page-break-before:always;padding:0}
 <p><a id="enum-case-status"></a><strong>case_status</strong>: <code>open</code>, <code>in_progress</code>, <code>resolved</code></p>
 <p><a id="enum-case-priority"></a><strong>case_priority</strong>: <code>low</code>, <code>normal</code>, <code>high</code></p>
 <p><a id="enum-flow-status"></a><strong>flow_status</strong>: <code>draft</code>, <code>published</code>, <code>archived</code></p>
-<p><a id="enum-outbox-status"></a><strong>outbox_status</strong>: <code>pending</code>, <code>sent</code>, <code>failed</code></p>
+<p><a id="enum-outbox-status"></a><strong>outbox_status</strong>: <code>pending</code>, <code>sent</code>, <code>dead</code></p>
 <p><a id="enum-dsr-kind"></a><strong>dsr_kind</strong>: <code>access</code>, <code>rectification</code>, <code>deletion</code>, <code>opposition</code></p>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>

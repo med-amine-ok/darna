@@ -23,7 +23,7 @@ erDiagram
         timestamptz created_at
     }
     ledger_entry {
-        bigint id PK
+        uuid id PK
         uuid transaction_id FK
         uuid account_id FK
         bigint amount_minor
@@ -32,7 +32,7 @@ erDiagram
     account_balance {
         uuid account_id PK,FK
         bigint balance_minor
-        bigint last_entry_id
+        uuid last_entry_id
         timestamptz updated_at
     }
     wallet_topup {
@@ -47,6 +47,20 @@ erDiagram
         timestamptz approved_at
         text rejection_reason
         uuid gateway_event_id FK
+        timestamptz created_at
+    }
+    wallet_adjustment {
+        uuid id PK
+        uuid host_account_id FK
+        bigint amount_minor
+        char_3 currency
+        text reason
+        adjustment_status status
+        uuid requested_by_id FK
+        uuid approved_by_id FK
+        timestamptz approved_at
+        text rejection_reason
+        uuid ledger_transaction_id FK
         timestamptz created_at
     }
     gateway_event {
@@ -121,6 +135,10 @@ erDiagram
     user ||--o{ wallet_topup : "requested_by_id"
     user ||--o{ wallet_topup : "approved_by_id"
     gateway_event ||--o{ wallet_topup : "gateway_event_id"
+    host_account ||--o{ wallet_adjustment : "host_account_id"
+    user ||--o{ wallet_adjustment : "requested_by_id"
+    user ||--o{ wallet_adjustment : "approved_by_id"
+    ledger_transaction ||--o{ wallet_adjustment : "ledger_transaction_id"
     booking ||--o{ payment : "booking_id"
     host_account ||--o{ payout : "host_account_id"
     payout_account ||--o{ payout : "payout_account_id"

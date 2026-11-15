@@ -44,7 +44,7 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="on" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="10-testing-and-quality">10. Testing and quality</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="on" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="10-testing-and-quality">10. Testing and quality</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>This page says how we prove the backend does what the rules say, before every deployment.<br>Most tests are small and fast; fewer are big and slow (the &quot;test pyramid&quot;). Money, refunds and dates are tested with thousands of random examples, not only a few hand-picked ones.<br>Double booking is tested by firing many requests at the same time against a real PostgreSQL database.<br>The API contract is checked automatically so the website and admin never break silently; speed is measured against the targets in NFR-01 and NFR-02.<br>Every business rule (<code>BR-...</code>) must have at least one test whose name contains the rule ID; the build fails if one is missing.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see also <a href="glossary.html">glossary.md</a>):</p>
@@ -162,7 +162,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>audit</code></td>
-<td>Insert-only (UPDATE refused by DB); hash chain correct; chain break detected; export formula neutralisation; export audited with filters and count</td>
+<td>Insert-only (UPDATE and DELETE refused by the trigger, also when connected as the table owner <code>bladus_migrator</code>; <code>bladus_app</code> has no UPDATE grant); daily export to write-once storage runs; hash chain correct; chain break detected; export formula neutralisation; export audited with filters and count</td>
 <td>BR-STF-02, BR-STF-04</td>
 </tr>
 <tr>
@@ -172,12 +172,12 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>notifications</code></td>
-<td>Outbox written in the same transaction; rolled-back change sends nothing; retry and backoff; idempotent sending (one SMS per event); language of recipient; critical messages ignore opt-out</td>
+<td>Outbox (<code>outbox_message</code>) written in the same transaction; rolled-back change sends nothing; retries at 1 min, 5 min, 15 min, 1 h, 6 h, 24 h; <code>dead</code> after 8 attempts with an admin alert; admin retry of a dead message; idempotent sending (one SMS per event); language of recipient; critical messages ignore opt-out</td>
 <td>BR-SYS-03, BR-NTF-01, 02, BR-PRV-03</td>
 </tr>
 <tr>
 <td><code>accounts</code></td>
-<td>Email unique case-insensitive; phone format; OTP limits and expiry; lockout shared via Redis; session revocation on logout and password change; staff MFA required; consent records; deletion anonymises and keeps legal records</td>
+<td>Email unique case-insensitive; phone format; OTP limits (per destination 3 per hour and 10 per day, per IP 10 per hour, global SMS budget then <code>sms_budget_exceeded</code>) and expiry; codes and tokens stored as HMAC with the pepper; lockout shared via Redis; session revocation on logout and password change; staff MFA required; consent records; deletion anonymises and keeps legal records</td>
 <td>BR-ACC-01 to 05, BR-PRV-01, 02</td>
 </tr>
 <tr>
@@ -192,8 +192,8 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>inventory</code></td>
-<td>Counter check constraint; atomic multi-night reservation all-or-nothing; holds expire; host block vs booking race; horizon job creates 18 months</td>
-<td>BR-AVL-02 to 06</td>
+<td>Counter check constraint; atomic multi-night reservation all-or-nothing; holds expire; host block vs booking race; blocked-day triggers in both directions (<code>dates_booked</code>, <code>dates_unavailable</code>); horizon job creates 18 months</td>
+<td>BR-AVL-02 to 07</td>
 </tr>
 <tr>
 <td><code>trips</code></td>
@@ -207,17 +207,17 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>ledger</code></td>
-<td>Balanced transactions only (DB trigger); no UPDATE/DELETE; commission once per booking; reversal amounts; rate resolution; top-up limits, unique receipt, four-eyes; credit floor; balance cache equals sum; dormant models return 404</td>
-<td>BR-PAY-01 to 12</td>
+<td>Balanced transactions only (DB trigger); no UPDATE/DELETE (triggers and role grants); commission once per booking; commission follows the refund; rate resolution; top-up limits, unique receipt, four-eyes on the rolling 24-hour total; wallet adjustments (cap, second admin); lock order; <code>reconcile_balances</code>; credit floor; balance cache equals sum; dormant models return 404; no online top-up endpoint</td>
+<td>BR-PAY-01 to 15</td>
 </tr>
 <tr>
 <td><code>bookings</code></td>
-<td>Instant vs request resolution; snapshot frozen; state machine; expiry and completion jobs; cancellation by guest, host, staff with refunds; refunds never exceed total; disputes window (R2); references unique</td>
-<td>BR-BKG-01 to 07, BR-CAN-01 to 05</td>
+<td>Instant vs request resolution; snapshot frozen; state machine; expiry and completion jobs; cancellation by guest, host, admin with refunds; refunds never exceed total; refund obligations and overdue blocking; open booking limits; check-in code and stay confirmation; disputes window (R2); references unique</td>
+<td>BR-BKG-01 to 09, BR-CAN-01 to 07</td>
 </tr>
 <tr>
 <td><code>reviews</code></td>
-<td>Eligibility (completed, 14 days, one per booking); states and reasons; ratings recomputed; double-blind (R2)</td>
+<td>Eligibility (completed, stay confirmed, 14 days, one per booking); states and reasons; ratings recomputed; double-blind (R2)</td>
 <td>BR-REV-01 to 04</td>
 </tr>
 <tr>
@@ -232,11 +232,11 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><code>search</code></td>
-<td>Only published listings of approved hosts; facet counts exclude own filter; public point only for anonymous users; partial availability sub-range; map pin cap; hotel and hostel under &quot;Hotels&quot;; search doc refreshed by outbox</td>
-<td>BR-SRC-01 to 04, BR-AVL-05</td>
+<td>Trigram search (<code>pg_trgm</code>) passes the fixed list of real Arabic, French and Darija queries; only published listings of approved hosts; facet counts exclude own filter; public point only for anonymous users; partial availability sub-range; map pin cap; hotel and hostel under &quot;Hotels&quot;; search doc refreshed by outbox</td>
+<td>BR-SRC-01 to 05, BR-AVL-05</td>
 </tr>
 </tbody></table>
-<p>Security tests (from <a href="08-security-privacy.html">08-security-privacy.md</a> section 6) live in each app as <code>test_api1_*</code> to <code>test_api10_*</code>, plus one matrix test that calls every <code>/api/v1/admin</code> endpoint with each of the 5 staff roles and checks allow or deny against the permission table.</p>
+<p>Security tests (from <a href="08-security-privacy.html">08-security-privacy.md</a> section 6) live in each app as <code>test_api1_*</code> to <code>test_api10_*</code>, plus one matrix test that calls every <code>/api/v1/admin</code> endpoint as an admin, as a website user and without a session, and checks allow or deny (one staff role, DEC-016).</p>
 <h2 id="3-property-based-tests-hypothesis">3. Property-based tests (hypothesis)</h2>
 <p>Pure functions for money, refunds and dates are written so they can be tested without a database. Example properties (the tests will name the rule they protect):</p>
 <h3 id="31-money">3.1 Money</h3>
@@ -303,22 +303,41 @@ def test_br_pay_04_commission_bounds(base, rate_bp):
 <td>BR-CAN-03, BR-PAY-05</td>
 </tr>
 <tr>
-<td>Guest cancellation: commission kept == <code>round(rate x non-refunded subtotal)</code>; kept + reversed == posted</td>
+<td>Guest cancellation: commission returned == <code>apply_bp(commission, refund_bp)</code> of the policy window; kept + returned == posted; cleaning fee and taxes never change it</td>
 <td>BR-PAY-05</td>
+</tr>
+<tr>
+<td>Admin refund R: returned == <code>round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base)</code>; R = cleaning fee only gives 0; R = total gives the full commission</td>
+<td>BR-CAN-04, BR-PAY-05</td>
+</tr>
+<tr>
+<td>Decline and expiry post no commission and return nothing</td>
+<td>BR-PAY-05</td>
+</tr>
+<tr>
+<td>Every cancellation with refund &gt; 0 opens exactly one refund obligation of that amount, due <code>refund_due_days</code> later</td>
+<td>BR-CAN-06</td>
 </tr>
 <tr>
 <td>Several partial staff refunds in any order: their sum never exceeds the total; the last one that would exceed is refused</td>
 <td>BR-CAN-04</td>
 </tr>
 <tr>
-<td>Worked example 8a reproduces exactly: 31,750 DZD owed, 3,330 DZD back to the wallet</td>
-<td>BR-CAN-02</td>
+<td>Worked example 8a reproduces exactly: 31,750 DZD owed, 3,330 DZD back to the wallet, 3,330 DZD kept by BLADUS</td>
+<td>BR-CAN-02, BR-PAY-05</td>
 </tr>
 </tbody></table>
 <pre><code class="lang-python">@given(policy=st.sampled_from(POLICIES), b=bookings(), d1=st.integers(-2, 400), d2=st.integers(-2, 400))
 def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1, d2):
     early, late = max(d1, d2), min(d1, d2)
-    assert refund_for(policy, b, days_before=early) &gt;= refund_for(policy, b, days_before=late)</code></pre><h3 id="33-date-ranges">3.3 Date ranges</h3>
+    assert refund_for(policy, b, days_before=early) &gt;= refund_for(policy, b, days_before=late)
+
+
+@given(commission=st.integers(0, 10**10), refund_bp=st.sampled_from([0, 5000, 10000]))
+def test_br_pay_05_commission_follows_the_refund(commission, refund_bp):
+    returned = commission_returned_guest_cancel(commission, refund_bp)
+    assert returned == apply_bp(commission, refund_bp)
+    assert 0 &lt;= returned &lt;= commission</code></pre><h3 id="33-date-ranges">3.3 Date ranges</h3>
 <table>
 <thead>
 <tr>
@@ -394,8 +413,14 @@ def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1,
 <tr>
 <td>Host blocks while guest books</td>
 <td>Host blocks night N while a guest books a stay including N</td>
-<td>One wins; never both</td>
-<td>BR-AVL-04</td>
+<td>One wins; never both; the loser gets <code>dates_booked</code> or <code>dates_unavailable</code>; the triggers refuse it even when the service check is skipped</td>
+<td>BR-AVL-04, BR-AVL-07</td>
+</tr>
+<tr>
+<td>Hotel sync vs bookings</td>
+<td>Sync sets total 2 for a night while 3 rooms are booked and 2 guests book in parallel</td>
+<td>Total stays at held + booked; one <code>inventory_conflict</code> open; one <code>inventory.push</code> per booking change</td>
+<td>BR-HST-07</td>
 </tr>
 <tr>
 <td>Same idempotency key</td>
@@ -413,7 +438,25 @@ def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1,
 <td>Credit floor race</td>
 <td>Wallet just above the floor; 2 instant bookings at once whose commissions together cross the floor</td>
 <td>Second one becomes <code>pending</code>, never both confirmed below the floor</td>
-<td>BR-PAY-10</td>
+<td>BR-PAY-10, BR-PAY-14</td>
+</tr>
+<tr>
+<td>Lock order</td>
+<td>20 parallel bookings and accepts of one host on two listings, plus a top-up approval</td>
+<td>No deadlock (wallet balance row always locked first); balance equals the ledger sum</td>
+<td>BR-PAY-14</td>
+</tr>
+<tr>
+<td>Split top-ups</td>
+<td>2 admins record two 300,000 DZD top-ups for one host within 24 hours, at the same time</td>
+<td>The rolling total passes 500,000 DZD: at least one waits for a second admin</td>
+<td>BR-PAY-07</td>
+</tr>
+<tr>
+<td>Open booking limits</td>
+<td>One guest sends 6 requests at once</td>
+<td>Exactly 3 pending; 3 get <code>409 too_many_open_bookings</code></td>
+<td>BR-BKG-08</td>
 </tr>
 <tr>
 <td>Duplicate top-up receipt</td>
@@ -423,8 +466,8 @@ def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1,
 </tr>
 <tr>
 <td>Outbox workers</td>
-<td>3 dispatchers on the same pending events</td>
-<td>Each event handled once (<code>SKIP LOCKED</code>); one SMS per event</td>
+<td>3 dispatchers on the same pending messages</td>
+<td>Each message handled once (<code>SKIP LOCKED</code>); one SMS per message</td>
 <td>BR-SYS-03</td>
 </tr>
 <tr>
@@ -803,6 +846,12 @@ def test_br_can_01_refund_never_decreases_when_cancelling_earlier(policy, b, d1,
 <td>yes</td>
 </tr>
 <tr>
+<td>Plan contract references</td>
+<td><code>python _tools/check_contract_refs.py</code> (docs): every <code>METHOD /path</code> in <code>diagrams/*.mmd</code> exists in <code>openapi.yaml</code>, and every operation count stated in the docs equals the number computed from <code>openapi.yaml</code></td>
+<td>yes</td>
+<td></td>
+</tr>
+<tr>
 <td>Frontend compile against API types</td>
 <td><code>tsc --noEmit</code> in both apps</td>
 <td>yes</td>
@@ -882,6 +931,112 @@ BR-ACC-02  -&gt;  test_br_acc_02_sixth_attempt_with_right_code_fails</code></pre
 <td>API, concurrency</td>
 </tr>
 </tbody></table>
+<h2 id="14-tests-for-the-rules-changed-on-2026-11-13">14. Tests for the rules changed on 2026-11-13</h2>
+<p>The external review (DEC-018 revised, DEC-020 to DEC-031) added or changed these rules. Each line is one or more tests named after the plan rule id. The backend code written in parallel used other ids for some of them (BR-CAN-05, BR-PAY-11, BR-PAY-12, BR-SYS-04, BR-HST-06); the cross-reference table at the top of <a href="04-business-rules.html">04-business-rules.md</a> maps them to the plan ids used here.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>What the tests check</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BR-PAY-05</td>
+<td>Property: returned = <code>apply_bp(commission, refund_bp)</code>; example 8a: 3,330 DZD back, 3,330 DZD kept; host cancel returns the full commission; decline and expiry post nothing; admin refund R: R = cleaning fee only returns 0, R = total returns all, R in between follows the formula</td>
+<td>property, service</td>
+</tr>
+<tr>
+<td>BR-AVL-07</td>
+<td>Trigger (a): blocking a day inside a blocking single-unit booking is refused in raw SQL; trigger (b): inserting or moving a booking onto a blocked day is refused in raw SQL; service errors <code>dates_booked</code> and <code>dates_unavailable</code>; concurrent block and booking: one wins</td>
+<td>DB, service, concurrency</td>
+</tr>
+<tr>
+<td>BR-HST-07</td>
+<td>A sync total below held + booked is clamped and opens one <code>inventory_conflict</code>; a second sync does not open a second open conflict for the same room-night; every booking change on a connected hotel writes <code>inventory.push</code> in the same transaction; a push that fails 8 times is <code>dead</code> and listed for the admin</td>
+<td>service, job, DB</td>
+</tr>
+<tr>
+<td>BR-PAY-07</td>
+<td>Rolling 24-hour total (pending + approved, including the new one) decides four-eyes; splitting into small top-ups does not avoid it; the approver must differ from the requester (<code>four_eyes_same_user</code>)</td>
+<td>service, concurrency</td>
+</tr>
+<tr>
+<td>BR-PAY-13</td>
+<td>Adjustment of 0 refused; above 1,000,000 DZD refused; nothing posted while pending; same admin approving refused (<code>four_eyes_required</code>, and the DB check); approve posts one balanced <code>adjustment</code> transaction; reject needs a reason; all steps audited</td>
+<td>service, DB</td>
+</tr>
+<tr>
+<td>BR-PAY-14</td>
+<td>Booking creation and accept lock the host wallet balance row first; concurrent bookings near the floor never cross it; no deadlock in 200 nightly runs; no platform balance row is written on the booking path</td>
+<td>concurrency</td>
+</tr>
+<tr>
+<td>BR-PAY-15</td>
+<td><code>reconcile_balances</code> finds a balance edited by hand, writes an audit event, alerts the admins and exits non-zero; <code>--fix</code> rewrites only after confirmation and is audited; a clean database exits 0</td>
+<td>job</td>
+</tr>
+<tr>
+<td>BR-PAY-02, BR-STF-02</td>
+<td>UPDATE and DELETE on <code>ledger_transaction</code>, <code>ledger_entry</code>, <code>audit_event</code> and <code>booking_event</code> refused for <code>bladus_app</code> (grants) and for <code>bladus_migrator</code> (triggers)</td>
+<td>DB</td>
+</tr>
+<tr>
+<td>BR-CAN-06</td>
+<td>Lifecycle open, declared, settled; dispute sends it back for a new declaration; admin settles with a note; memo postings <code>refund_due</code> and <code>refund_settled</code> balance to 0 once settled; wrong-state calls give <code>refund_not_open</code> or <code>refund_not_declared</code></td>
+<td>service, API</td>
+</tr>
+<tr>
+<td>BR-CAN-07</td>
+<td>An obligation open or disputed after <code>due_at</code> is overdue; then instant booking becomes a request and accept gives <code>409 refund_overdue</code>; settling it lifts the block</td>
+<td>service</td>
+</tr>
+<tr>
+<td>BR-BKG-08</td>
+<td>4th pending request and 7th upcoming booking refused with <code>409 too_many_open_bookings</code>; limits read from settings</td>
+<td>service</td>
+</tr>
+<tr>
+<td>BR-BKG-09</td>
+<td>Check-in code made at confirmation, shown only to the guest, never in host responses; host enters the right code; wrong code <code>400 invalid_code</code>; 5 wrong codes lock for 1 hour; guest confirmation before check-in time <code>409 stay_not_started</code>; review without stay confirmation refused (BR-REV-01)</td>
+<td>service, API</td>
+</tr>
+<tr>
+<td>BR-SYS-03</td>
+<td>Retry schedule 1 min, 5 min, 15 min, 1 h, 6 h, 24 h; <code>dead</code> after 8 attempts; admin retry resets attempts; handlers idempotent (retry never sends twice)</td>
+<td>job</td>
+</tr>
+<tr>
+<td>BR-SYS-01</td>
+<td><code>request_hash</code> is the SHA-256 of the body; same key with another body gives <code>422 idempotency_key_reused</code>; records expire after 24 hours</td>
+<td>API</td>
+</tr>
+<tr>
+<td>BR-SYS-06</td>
+<td><code>netguard</code> refuses http, loopback, private, link-local, CGNAT, multicast, reserved and 169.254.169.254; DNS that changes to a private address between save and fetch is refused at fetch time; redirect to another host refused; 10 s timeout; 5 MB cap</td>
+<td>unit</td>
+</tr>
+<tr>
+<td>BR-SYS-07</td>
+<td>Stored code, token and lookup hashes equal HMAC-SHA256 with <code>HASH_PEPPER</code>, not plain SHA-256; during pepper rotation both peppers are accepted, after it only the new one</td>
+<td>unit</td>
+</tr>
+<tr>
+<td>BR-ACC-02</td>
+<td>4th SMS to one phone in an hour refused; 11th in a day refused; 11th from one IP in an hour refused; global budget reached gives <code>sms_budget_exceeded</code> and an alert</td>
+<td>service</td>
+</tr>
+<tr>
+<td>BR-SRC-05</td>
+<td>A fixed list of real queries (for example <code>تيزي وزو</code>, <code>Tizi Ouzou</code>, <code>tizi wezou</code>, <code>bejaia</code>, <code>Béjaïa</code>, <code>بجاية</code>, <code>dar diaf</code>) finds the expected listing or commune in the first 5 results; no <code>tsvector</code> column is used</td>
+<td>search</td>
+</tr>
+<tr>
+<td>DEC-031</td>
+<td><code>python _tools/check_contract_refs.py</code> passes: every sequence diagram endpoint exists in <code>openapi.yaml</code>, every stated operation count equals the computed one, and there is no online top-up endpoint</td>
+<td>docs CI</td>
+</tr>
+</tbody></table>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
@@ -893,5 +1048,7 @@ BR-ACC-02  -&gt;  test_br_acc_02_sixth_attempt_with_right_code_fails</code></pre
 <li><input disabled="" type="checkbox"> What must a test for rule BR-REV-01 be called, at minimum?</li>
 <li><input disabled="" type="checkbox"> Which performance scenario checks NFR-02, and what is its pass criterion?</li>
 <li><input disabled="" type="checkbox"> Name three items from the Definition of Done that concern personal data or languages.</li>
+<li><input disabled="" type="checkbox"> Which test proves that a host who cancels nothing but whose guest cancels gets back only part of the commission?</li>
+<li><input disabled="" type="checkbox"> How do we prove the ledger cannot be edited even by the table owner?</li>
 </ul>
-<div class="pager"><span><a href="09-devops-hosting.html">&larr; 09. DevOps and hosting: where BLADUS runs and how we operate it</a></span><span><a href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend &rarr;</a></span></div></main></div></body></html>
+<div class="pager"><span><a href="09b-operations.html">&larr; 09b. Operations: how BLADUS is kept running (read before M0)</a></span><span><a href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend &rarr;</a></span></div></main></div></body></html>

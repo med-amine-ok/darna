@@ -2,16 +2,22 @@
 HTTP endpoints of the catalog app.
 
 Three audiences:
-- public (``AllowAny``): search, listing page, reference lists;
+- public (``AllowAny``): search, listing page, ``GET /reference`` (every shared list);
 - host (``/host/...``): every query is scoped by ``ctx.host_account`` and
   needs the ``listings.manage`` permission (BR-ORG-05), so another host's
   listing answers 404;
-- admin (``/admin/...``, ``IsAdmin``): review queue and decisions, audited.
+- admin (``/admin/...``, ``IsAdmin``): review queue, status changes,
+  featured placements and the taxonomy (amenities, categories, property
+  types), every change audited (BR-STF-02).
 
 Views are thin: read the input, call ``services``/``selectors``, return JSON.
 """
 
+import hashlib
+import json
+
 from django.db import transaction
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -20,32 +26,44 @@ from rest_framework.views import APIView
 from apps.accounts.permissions import IsAdmin
 from apps.core.errors import NotFoundError
 from apps.hosts.context import get_host_context
+from apps.hosts.models import HOST_ALLOWED_OFFERS
 
 from . import selectors, services, workflow
-from .api import paginated, query_bbox, query_bool, query_int, date_pair
-from .models import ListingPhoto, PropertyService, RoomType
+from .api import SEARCH_PARAMETERS, page_schema, paginated, query_bool, search_filters
+from .models import Amenity, Category, PropertyService, PropertyType, RoomType
 from .serializers import (
+    AdminAmenitySerializer,
+    AdminCategorySerializer,
     AdminListingRowSerializer,
     AdminListingSerializer,
-    AmenitySerializer,
+    AdminPropertyTypeSerializer,
+    AdminStatusChangeSerializer,
+    AmenityWriteSerializer,
     CancellationPolicySerializer,
     CategorySerializer,
+    CategoryWriteSerializer,
+    FeaturedUpdateSerializer,
     HostListingSerializer,
     HostRoomTypeSerializer,
+    HostStatusChangeSerializer,
     ListingCardSerializer,
     ListingDetailSerializer,
     ListingWriteSerializer,
-    PhotoOrderSerializer,
+    PhotoListSerializer,
+    PhotoRefSerializer,
     PhotoSerializer,
-    PhotoUpdateSerializer,
+    PhotosReplaceSerializer,
     PhotoWriteSerializer,
     PropertyServiceSerializer,
     PropertyServiceWriteSerializer,
     PropertyTypeSerializer,
-    ReferenceTypeSerializer,
+    PropertyTypeWriteSerializer,
+    ReferenceAmenitySerializer,
+    ReferenceDataSerializer,
     RoomTypeWriteSerializer,
+    _locale,
 )
-from .types import EXPERIENCE_TYPE_LABELS, TRIP_TYPE_LABELS, type_list
+from .types import EXPERIENCE_TYPE_LABELS, TRIP_TYPE_LABELS, VERTICAL_LABELS, labeled_values
 
 
 # ---------------------------------------------------------------------------
@@ -57,25 +75,13 @@ class ListingSearchView(APIView):
     permission_classes = [AllowAny]
     serializer_class = ListingCardSerializer
 
+    @extend_schema(
+        parameters=[*SEARCH_PARAMETERS, OpenApiParameter("sort", str, description="price, -price, newest, rating.")],
+        responses=page_schema(ListingCardSerializer),
+    )
     def get(self, request):
         """Return a page of listing cards. See ``selectors.search_listings`` for every filter."""
-        check_in, check_out = date_pair(request, "check_in", "check_out")
-        results = selectors.search_listings(
-            vertical=request.query_params.get("vertical"),
-            wilaya=query_int(request, "wilaya"),
-            commune=query_int(request, "commune"),
-            guests=query_int(request, "guests", minimum=1),
-            min_price=query_int(request, "min_price", minimum=0),
-            max_price=query_int(request, "max_price", minimum=0),
-            property_type=request.query_params.get("property_type"),
-            amenities=request.query_params.get("amenities"),
-            exp_type=request.query_params.get("exp_type"),
-            instant=query_bool(request, "instant"),
-            check_in=check_in,
-            check_out=check_out,
-            bbox=query_bbox(request),
-            sort=request.query_params.get("sort"),
-        )
+        results = selectors.search_listings(**search_filters(request), sort=request.query_params.get("sort"))
         return paginated(request, results, ListingCardSerializer)
 
 
@@ -104,80 +110,63 @@ class ListingServicesView(APIView):
         return Response(PropertyServiceSerializer(services_qs, many=True).data)
 
 
-class AmenityListView(APIView):
-    """``GET /reference/amenities``."""
+# Locales served by the apps (``ReferenceData.locales``).
+LOCALES = ["fr", "ar", "en"]
+# How long clients and the website may cache ``GET /reference`` (06-api-design 3.11).
+REFERENCE_MAX_AGE_S = 3600
+
+
+def reference_document(request) -> dict:
+    """
+    Build the ``ReferenceData`` answer: every shared list in the caller's
+    language (DEC-015, BR-LST-04, BR-LST-05, BR-HST-05, BR-CAN-01).
+
+    ``version`` is a hash of the content, so it changes whenever any list
+    (or the language) changes; it is also the ETag.
+    """
+    context = {"request": request}
+    locale = _locale(ReferenceAmenitySerializer(context=context))
+    body = {
+        "verticals": labeled_values(VERTICAL_LABELS, locale),
+        "experience_types": labeled_values(EXPERIENCE_TYPE_LABELS, locale),
+        "trip_types": labeled_values(TRIP_TYPE_LABELS, locale),
+        "amenities": ReferenceAmenitySerializer(selectors.reference_amenities(), many=True, context=context).data,
+        "property_types": PropertyTypeSerializer(selectors.reference_property_types(), many=True, context=context).data,
+        "categories": CategorySerializer(selectors.reference_categories(), many=True, context=context).data,
+        "cancellation_policies": CancellationPolicySerializer(
+            selectors.current_policies(), many=True, context=context
+        ).data,
+        "host_offer_rules": {kind: sorted(offers) for kind, offers in HOST_ALLOWED_OFFERS.items()},
+        "locales": LOCALES,
+    }
+    digest = hashlib.sha256(json.dumps([locale, body], sort_keys=True, default=str).encode()).hexdigest()[:16]
+    return {"version": digest, **body}
+
+
+class ReferenceDataView(APIView):
+    """
+    ``GET /reference``: all shared lists in one cacheable answer (DEC-015).
+
+    Sends ``ETag`` and ``Cache-Control: public, max-age=3600``; a matching
+    ``If-None-Match`` answers 304 without a body.
+    """
 
     permission_classes = [AllowAny]
-    serializer_class = AmenitySerializer
+    serializer_class = ReferenceDataSerializer
 
+    @extend_schema(
+        parameters=[OpenApiParameter("If-None-Match", str, OpenApiParameter.HEADER, description="ETag of a copy.")],
+        responses={200: ReferenceDataSerializer, 304: None},
+    )
     def get(self, request):
-        """Active amenities (optionally ``?vertical=home``)."""
-        rows = list(selectors.reference_amenities())
-        vertical = request.query_params.get("vertical")
-        if vertical:
-            rows = [a for a in rows if vertical in (a.applies_to or [])]
-        return Response(AmenitySerializer(rows, many=True).data)
-
-
-class PropertyTypeListView(APIView):
-    """``GET /reference/property-types``."""
-
-    permission_classes = [AllowAny]
-    serializer_class = PropertyTypeSerializer
-
-    def get(self, request):
-        """Active property types (optionally ``?vertical=home``)."""
-        rows = selectors.reference_property_types()
-        if vertical := request.query_params.get("vertical"):
-            rows = rows.filter(vertical=vertical)
-        return Response(PropertyTypeSerializer(rows, many=True).data)
-
-
-class CategoryListView(APIView):
-    """``GET /reference/categories``."""
-
-    permission_classes = [AllowAny]
-    serializer_class = CategorySerializer
-
-    def get(self, request):
-        """Active categories (optionally ``?vertical=home``)."""
-        rows = selectors.reference_categories()
-        if vertical := request.query_params.get("vertical"):
-            rows = rows.filter(vertical=vertical)
-        return Response(CategorySerializer(rows, many=True).data)
-
-
-class CancellationPolicyListView(APIView):
-    """``GET /reference/cancellation-policies``: current flexible, moderate, strict (BR-CAN-01)."""
-
-    permission_classes = [AllowAny]
-    serializer_class = CancellationPolicySerializer
-
-    def get(self, request):
-        """The current version of each policy."""
-        return Response(CancellationPolicySerializer(selectors.current_policies(), many=True).data)
-
-
-class ExperienceTypeListView(APIView):
-    """``GET /reference/experience-types``: the 8 experience types with en/fr/ar labels (BR-LST-05)."""
-
-    permission_classes = [AllowAny]
-    serializer_class = ReferenceTypeSerializer
-
-    def get(self, request):
-        """Fixed list from ``types.py``."""
-        return Response(type_list(EXPERIENCE_TYPE_LABELS))
-
-
-class TripTypeListView(APIView):
-    """``GET /reference/trip-types``: the 8 trip types with en/fr/ar labels (BR-LST-05)."""
-
-    permission_classes = [AllowAny]
-    serializer_class = ReferenceTypeSerializer
-
-    def get(self, request):
-        """Fixed list from ``types.py``."""
-        return Response(type_list(TRIP_TYPE_LABELS))
+        """The reference document, or 304 when the client copy is current."""
+        body = reference_document(request)
+        etag = f'"{body["version"]}"'
+        headers = {"ETag": etag, "Cache-Control": f"public, max-age={REFERENCE_MAX_AGE_S}", "Vary": "Accept-Language"}
+        sent = [tag.strip() for tag in request.headers.get("If-None-Match", "").split(",")]
+        if etag in sent or body["version"] in sent:
+            return Response(status=status.HTTP_304_NOT_MODIFIED, headers=headers)
+        return Response(body, headers=headers)
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +191,7 @@ def _host_listing_response(request, listing, status_code=status.HTTP_200_OK):
 class HostListingListView(APIView):
     """``GET /host/listings`` (my listings) and ``POST /host/listings`` (new draft)."""
 
+    @extend_schema(parameters=[OpenApiParameter("status", str, description="Comma list, for example draft,published.")], responses=page_schema(HostListingSerializer))
     def get(self, request):
         """Listings of the active workspace, optionally ``?status=draft,published``."""
         ctx = get_host_context(request)
@@ -211,6 +201,7 @@ class HostListingListView(APIView):
             qs = qs.filter(status__in=status_filter.split(","))
         return paginated(request, qs, HostListingSerializer)
 
+    @extend_schema(request=ListingWriteSerializer, responses={201: HostListingSerializer})
     def post(self, request):
         """Create a draft; refused with 403 ``host_offer_not_allowed`` for a wrong vertical (DEC-014)."""
         ctx = get_host_context(request)
@@ -224,10 +215,12 @@ class HostListingListView(APIView):
 class HostListingDetailView(APIView):
     """``GET``, ``PATCH`` and ``DELETE`` (soft) ``/host/listings/{id}``."""
 
+    @extend_schema(responses=HostListingSerializer)
     def get(self, request, listing_id):
         """One of my listings, with private fields."""
         return _host_listing_response(request, host_listing_for(request, listing_id))
 
+    @extend_schema(request=ListingWriteSerializer, responses=HostListingSerializer)
     def patch(self, request, listing_id):
         """Partial update; reviewed fields of a live listing send it back to review (BR-LST-02)."""
         listing = host_listing_for(request, listing_id)
@@ -236,36 +229,40 @@ class HostListingDetailView(APIView):
         services.update_listing(listing, data.validated_data)
         return _host_listing_response(request, listing)
 
+    @extend_schema(responses={204: None})
     def delete(self, request, listing_id):
         """Soft delete (an admin can restore it)."""
         services.delete_listing(host_listing_for(request, listing_id))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class HostListingActionView(APIView):
-    """``POST /host/listings/{id}/submit|pause|resume|archive|withdraw|reopen`` (BR-LST-03)."""
+class HostListingStatusView(APIView):
+    """
+    ``POST /host/listings/{id}/status`` ``{status, note?}``: submit, withdraw,
+    pause, resume or archive (BR-LST-03, table 4a).
+    """
 
-    action_name = ""
-
+    @extend_schema(request=HostStatusChangeSerializer, responses=HostListingSerializer)
     def post(self, request, listing_id):
-        """Apply the status move named by the URL."""
+        """Apply the move; 409 ``invalid_transition``, 422 ``listing_incomplete`` on submit."""
         listing = host_listing_for(request, listing_id)
-        if self.action_name == "submit":
-            services.submit_listing(listing)
-        else:
-            services.host_move(listing, self.action_name)
+        data = HostStatusChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        services.change_host_listing_status(listing, data.validated_data["status"])
         return _host_listing_response(request, listing)
 
 
 class HostRoomTypeListView(APIView):
     """``GET`` and ``POST /host/listings/{id}/room-types`` (hotels and hostels)."""
 
+    @extend_schema(responses=HostRoomTypeSerializer(many=True))
     def get(self, request, listing_id):
         """Every non-deleted room type of the listing."""
         listing = host_listing_for(request, listing_id)
         rooms = RoomType.objects.alive().filter(listing=listing).select_related("listing")
         return Response(HostRoomTypeSerializer(rooms, many=True).data)
 
+    @extend_schema(request=RoomTypeWriteSerializer, responses={201: HostRoomTypeSerializer})
     def post(self, request, listing_id):
         """Add a room type."""
         listing = host_listing_for(request, listing_id)
@@ -275,52 +272,43 @@ class HostRoomTypeListView(APIView):
         return Response(HostRoomTypeSerializer(room).data, status=status.HTTP_201_CREATED)
 
 
-def host_room_type_for(request, room_type_id, permission: str = "listings.manage") -> RoomType:
-    """One non-deleted room type of the active workspace, else 404. Shared with inventory views."""
-    ctx = get_host_context(request)
-    ctx.require(permission)
-    room = (
-        RoomType.objects.alive()
-        .filter(id=room_type_id, listing__host_account=ctx.host_account, listing__deleted_at__isnull=True)
-        .select_related("listing")
-        .first()
-    )
+def host_room_type_for(request, listing_id, room_type_id, permission: str = "listings.manage") -> RoomType:
+    """One non-deleted room type of one listing of the active workspace, else 404."""
+    listing = host_listing_for(request, listing_id, permission)
+    room = RoomType.objects.alive().filter(id=room_type_id, listing=listing).select_related("listing").first()
     if room is None:
         raise NotFoundError("Room type not found.")
     return room
 
 
 class HostRoomTypeDetailView(APIView):
-    """``GET``, ``PATCH``, ``DELETE /host/room-types/{id}``."""
+    """``PATCH`` and ``DELETE /host/listings/{listing_id}/room-types/{room_type_id}``."""
 
-    def get(self, request, room_type_id):
-        """One room type."""
-        return Response(HostRoomTypeSerializer(host_room_type_for(request, room_type_id)).data)
-
-    def patch(self, request, room_type_id):
-        """Change a room type."""
-        room = host_room_type_for(request, room_type_id)
+    @extend_schema(request=RoomTypeWriteSerializer, responses=HostRoomTypeSerializer)
+    def patch(self, request, listing_id, room_type_id):
+        """Change a room type; lowering units under future bookings: 409 ``inventory_in_use`` (BR-AVL-02)."""
+        room = host_room_type_for(request, listing_id, room_type_id)
         data = RoomTypeWriteSerializer(data=request.data, partial=True)
         data.is_valid(raise_exception=True)
         services.update_room_type(room, data.validated_data)
         return Response(HostRoomTypeSerializer(room).data)
 
-    def delete(self, request, room_type_id):
-        """Soft-delete a room type."""
-        services.delete_room_type(host_room_type_for(request, room_type_id))
+    @extend_schema(responses={204: None})
+    def delete(self, request, listing_id, room_type_id):
+        """Soft-delete a room type; 409 ``inventory_in_use`` while future nights are held or booked."""
+        services.delete_room_type(host_room_type_for(request, listing_id, room_type_id))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class HostPhotoListView(APIView):
-    """``GET`` and ``POST /host/listings/{id}/photos``."""
+    """
+    ``POST /host/listings/{id}/photos`` (add by URL, kept until the media
+    app exists) and ``PUT /host/listings/{id}/photos`` (order and cover).
+    """
 
-    def get(self, request, listing_id):
-        """Photos in gallery order."""
-        listing = host_listing_for(request, listing_id)
-        return Response(PhotoSerializer(listing.photos.all(), many=True).data)
-
+    @extend_schema(request=PhotoWriteSerializer, responses={201: PhotoSerializer})
     def post(self, request, listing_id):
-        """Add a photo (by URL until file uploads exist)."""
+        """Add a photo by URL (stop-gap until media uploads exist, BR-MED-01)."""
         listing = host_listing_for(request, listing_id)
         data = PhotoWriteSerializer(data=request.data)
         data.is_valid(raise_exception=True)
@@ -334,52 +322,28 @@ class HostPhotoListView(APIView):
         photo = services.add_photo(listing, room_type=room, **values)
         return Response(PhotoSerializer(photo).data, status=status.HTTP_201_CREATED)
 
-
-class HostPhotoOrderView(APIView):
-    """``PUT /host/listings/{id}/photos/order``: reorder the gallery."""
-
+    @extend_schema(request=PhotosReplaceSerializer, responses=PhotoListSerializer)
     def put(self, request, listing_id):
-        """Save the new order and return the photos."""
+        """Save the gallery order, captions and cover; photos left out are removed (BR-MED-01)."""
         listing = host_listing_for(request, listing_id)
-        data = PhotoOrderSerializer(data=request.data)
+        data = PhotosReplaceSerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        services.reorder_photos(listing, data.validated_data["ids"])
-        return Response(PhotoSerializer(listing.photos.all(), many=True).data)
-
-
-class HostPhotoDetailView(APIView):
-    """``PATCH`` and ``DELETE /host/listings/{id}/photos/{photo_id}``."""
-
-    def _photo(self, request, listing_id, photo_id) -> ListingPhoto:
-        """One photo of one of my listings, else 404."""
-        listing = host_listing_for(request, listing_id)
-        photo = listing.photos.filter(id=photo_id).first()
-        if photo is None:
-            raise NotFoundError("Photo not found.")
-        return photo
-
-    def patch(self, request, listing_id, photo_id):
-        """Change caption or make it the cover."""
-        photo = self._photo(request, listing_id, photo_id)
-        data = PhotoUpdateSerializer(data=request.data)
-        data.is_valid(raise_exception=True)
-        services.update_photo(photo, **data.validated_data)
-        return Response(PhotoSerializer(photo).data)
-
-    def delete(self, request, listing_id, photo_id):
-        """Remove the photo."""
-        services.remove_photo(self._photo(request, listing_id, photo_id))
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        photos = services.replace_listing_photos(
+            listing, [dict(p) for p in data.validated_data["photos"]], data.validated_data["cover_media_id"]
+        )
+        return Response({"results": PhotoRefSerializer(photos, many=True).data})
 
 
 class HostServiceListView(APIView):
     """``GET`` and ``POST /host/listings/{id}/services`` (DEC-017)."""
 
+    @extend_schema(responses=PropertyServiceSerializer(many=True))
     def get(self, request, listing_id):
         """Every service of the listing, active or not."""
         listing = host_listing_for(request, listing_id)
         return Response(PropertyServiceSerializer(listing.services.select_related("listing"), many=True).data)
 
+    @extend_schema(request=PropertyServiceWriteSerializer, responses={201: PropertyServiceSerializer})
     def post(self, request, listing_id):
         """Add a manual service."""
         listing = host_listing_for(request, listing_id)
@@ -400,6 +364,7 @@ class HostServiceDetailView(APIView):
             raise NotFoundError("Service not found.")
         return service
 
+    @extend_schema(request=PropertyServiceWriteSerializer, responses=PropertyServiceSerializer)
     def patch(self, request, listing_id, service_id):
         """Change a manual service."""
         service = self._service(request, listing_id, service_id)
@@ -408,6 +373,7 @@ class HostServiceDetailView(APIView):
         services.update_service(service, data.validated_data)
         return Response(PropertyServiceSerializer(service).data)
 
+    @extend_schema(responses={204: None})
     def delete(self, request, listing_id, service_id):
         """Delete a manual service."""
         services.delete_service(self._service(request, listing_id, service_id))
@@ -415,8 +381,14 @@ class HostServiceDetailView(APIView):
 
 
 # ---------------------------------------------------------------------------
-# Admin
+# Admin: listings
 # ---------------------------------------------------------------------------
+def _admin_listing_response(request, listing):
+    """Reload the listing and answer with the admin shape."""
+    listing.refresh_from_db()
+    return Response(AdminListingSerializer(listing, context={"request": request}).data)
+
+
 class AdminListingListView(APIView):
     """``GET /admin/listings``: review queue with filters ``status``, ``vertical``, ``host``, ``deleted``."""
 
@@ -433,7 +405,7 @@ class AdminListingListView(APIView):
 
 
 class AdminListingDetailView(APIView):
-    """``GET /admin/listings/{id}``: full listing, private fields included."""
+    """``GET /admin/listings/{id}`` (any listing, even deleted) and ``DELETE`` (soft delete, audited)."""
 
     permission_classes = [IsAdmin]
     serializer_class = AdminListingSerializer
@@ -443,10 +415,16 @@ class AdminListingDetailView(APIView):
         listing = selectors.get_admin_listing(listing_id)
         return Response(AdminListingSerializer(listing, context={"request": request}).data)
 
+    @extend_schema(responses={204: None})
+    def delete(self, request, listing_id):
+        """Soft delete; the previous status is kept so ``restore`` can bring it back (table 4a, BR-STF-02)."""
+        services.admin_delete_listing(selectors.get_admin_listing(listing_id), actor=request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class AdminListingActionView(APIView):
     """
-    ``POST /admin/listings/{id}/approve|reject|request-changes|suspend|unsuspend|restore``.
+    ``POST /admin/listings/{id}/approve|reject|request-changes|suspend|restore``.
 
     Body: ``{"reason": "..."}``, at least 10 characters for reject, request
     changes and suspend. Every decision is audited in the same transaction.
@@ -464,5 +442,157 @@ class AdminListingActionView(APIView):
                 workflow.restore(listing, actor=request.user)
             else:
                 workflow.admin_moderate(listing, self.action_name, actor=request.user, reason=request.data.get("reason"))
-        listing.refresh_from_db()
-        return Response(AdminListingSerializer(listing, context={"request": request}).data)
+        return _admin_listing_response(request, listing)
+
+
+class AdminListingStatusView(APIView):
+    """
+    ``POST /admin/listings/{id}/status`` ``{status, reason_code?, reason?}``:
+    any other staff move of table 4a, for example unsuspend (BR-LST-03, BR-STF-02).
+    """
+
+    permission_classes = [IsAdmin]
+
+    @extend_schema(request=AdminStatusChangeSerializer, responses=AdminListingSerializer)
+    def post(self, request, listing_id):
+        """Apply the move (409 ``invalid_transition``, 422 ``reason_required``) and return the listing."""
+        listing = selectors.get_admin_listing(listing_id)
+        data = AdminStatusChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        values = data.validated_data
+        services.admin_change_listing_status(
+            listing, values["status"], actor=request.user, reason=values.get("reason"),
+            reason_code=values.get("reason_code") or None,
+        )
+        return _admin_listing_response(request, listing)
+
+
+class AdminListingFeaturedView(APIView):
+    """``PUT /admin/listings/{id}/featured`` ``FeaturedUpdate``: feature or unfeature (LST-09, audited)."""
+
+    permission_classes = [IsAdmin]
+
+    @extend_schema(request=FeaturedUpdateSerializer, responses=AdminListingSerializer)
+    def put(self, request, listing_id):
+        """Feature (published listings only, 409 ``not_published``) or unfeature the listing."""
+        listing = selectors.get_admin_listing(listing_id)
+        data = FeaturedUpdateSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        services.set_listing_featured(listing, data.validated_data, actor=request.user)
+        return _admin_listing_response(request, listing)
+
+
+# ---------------------------------------------------------------------------
+# Admin: taxonomy (BR-LST-04)
+# ---------------------------------------------------------------------------
+TAXONOMY_FILTERS = [
+    OpenApiParameter("vertical", str, description="Only rows of this vertical (amenities: that apply to it)."),
+    OpenApiParameter("active", bool, description="Only active (true) or inactive (false) rows."),
+]
+
+
+class _TaxonomyListView(APIView):
+    """
+    ``GET`` (list with ``listing_count``) and ``POST`` (create, 409
+    ``slug_taken``) of one taxonomy table. Subclasses set the model and serializers.
+    """
+
+    permission_classes = [IsAdmin]
+    model = None
+    read_serializer = None
+    write_serializer = None
+
+    def get(self, request):
+        """Every row, active or not, ``{"results": [...]}``; filters ``vertical`` and ``active``."""
+        rows = selectors.admin_taxonomy(
+            self.model, vertical=request.query_params.get("vertical"), active=query_bool(request, "active")
+        )
+        return Response({"results": self.read_serializer(rows, many=True, context={"request": request}).data})
+
+    def post(self, request):
+        """Create a row (audited, BR-STF-02)."""
+        data = self.write_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        row = services.create_taxonomy_row(self.model, data.validated_data, actor=request.user)
+        return Response(self.read_serializer(row, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class _TaxonomyDetailView(APIView):
+    """``PATCH`` (edit, reorder, activate, deactivate) and ``DELETE`` (only if never used) of one taxonomy row."""
+
+    permission_classes = [IsAdmin]
+    model = None
+    read_serializer = None
+    write_serializer = None
+    lookup = ""  # name of the path parameter, for example ``category_id``
+
+    def patch(self, request, **kwargs):
+        """Partial update (audited); 409 ``slug_taken`` or ``in_use`` for a vertical change of a used row."""
+        row = selectors.get_taxonomy_row(self.model, kwargs[self.lookup])
+        data = self.write_serializer(data=request.data, partial=True)
+        data.is_valid(raise_exception=True)
+        services.update_taxonomy_row(row, data.validated_data, actor=request.user)
+        row = selectors.admin_taxonomy(self.model).get(pk=row.pk)
+        return Response(self.read_serializer(row, context={"request": request}).data)
+
+    def delete(self, request, **kwargs):
+        """Hard delete when never used, else 409 ``in_use`` (deactivate instead, BR-LST-04)."""
+        services.delete_taxonomy_row(selectors.get_taxonomy_row(self.model, kwargs[self.lookup]), actor=request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def _list_schema(item):
+    """``{"results": [item]}`` answer for the taxonomy lists."""
+    name = item.__name__.removesuffix("Serializer")
+    return inline_serializer(name=f"{name}List", fields={"results": item(many=True)})
+
+
+@extend_schema(parameters=TAXONOMY_FILTERS, responses=_list_schema(AdminCategorySerializer), methods=["GET"])
+@extend_schema(request=CategoryWriteSerializer, responses={201: AdminCategorySerializer}, methods=["POST"])
+class AdminCategoryListView(_TaxonomyListView):
+    """``GET`` and ``POST /admin/categories``."""
+
+    model, read_serializer, write_serializer = Category, AdminCategorySerializer, CategoryWriteSerializer
+
+
+@extend_schema(request=CategoryWriteSerializer, responses=AdminCategorySerializer, methods=["PATCH"])
+@extend_schema(responses={204: None}, methods=["DELETE"])
+class AdminCategoryDetailView(_TaxonomyDetailView):
+    """``PATCH`` and ``DELETE /admin/categories/{category_id}``."""
+
+    model, read_serializer, write_serializer = Category, AdminCategorySerializer, CategoryWriteSerializer
+    lookup = "category_id"
+
+
+@extend_schema(parameters=TAXONOMY_FILTERS, responses=_list_schema(AdminAmenitySerializer), methods=["GET"])
+@extend_schema(request=AmenityWriteSerializer, responses={201: AdminAmenitySerializer}, methods=["POST"])
+class AdminAmenityListView(_TaxonomyListView):
+    """``GET`` and ``POST /admin/amenities``."""
+
+    model, read_serializer, write_serializer = Amenity, AdminAmenitySerializer, AmenityWriteSerializer
+
+
+@extend_schema(request=AmenityWriteSerializer, responses=AdminAmenitySerializer, methods=["PATCH"])
+@extend_schema(responses={204: None}, methods=["DELETE"])
+class AdminAmenityDetailView(_TaxonomyDetailView):
+    """``PATCH`` and ``DELETE /admin/amenities/{amenity_id}``."""
+
+    model, read_serializer, write_serializer = Amenity, AdminAmenitySerializer, AmenityWriteSerializer
+    lookup = "amenity_id"
+
+
+@extend_schema(parameters=TAXONOMY_FILTERS, responses=_list_schema(AdminPropertyTypeSerializer), methods=["GET"])
+@extend_schema(request=PropertyTypeWriteSerializer, responses={201: AdminPropertyTypeSerializer}, methods=["POST"])
+class AdminPropertyTypeListView(_TaxonomyListView):
+    """``GET`` and ``POST /admin/property-types``."""
+
+    model, read_serializer, write_serializer = PropertyType, AdminPropertyTypeSerializer, PropertyTypeWriteSerializer
+
+
+@extend_schema(request=PropertyTypeWriteSerializer, responses=AdminPropertyTypeSerializer, methods=["PATCH"])
+@extend_schema(responses={204: None}, methods=["DELETE"])
+class AdminPropertyTypeDetailView(_TaxonomyDetailView):
+    """``PATCH`` and ``DELETE /admin/property-types/{property_type_id}``."""
+
+    model, read_serializer, write_serializer = PropertyType, AdminPropertyTypeSerializer, PropertyTypeWriteSerializer
+    lookup = "property_type_id"

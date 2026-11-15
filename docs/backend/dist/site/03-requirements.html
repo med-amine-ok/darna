@@ -44,7 +44,7 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="on" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 3: requirements and rules</div><h1 id="03-requirements-what-the-backend-must-do">03. Requirements: what the backend must do</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="on" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 3: requirements and rules</div><h1 id="03-requirements-what-the-backend-must-do">03. Requirements: what the backend must do</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>This is the list of everything the Django backend must do, one line per need, each with an ID like <code>BKG-03</code>.<br>Each line says who needs it, how important it is, in which release, and how we will know it works (&quot;accepted when&quot;).<br>It also says what the apps do today, so you can see the size of the gap.<br>The same list is in <a href="files/requirements.csv">requirements.csv</a> for spreadsheets. The rules behind the lines are in <a href="04-business-rules.html">04-business-rules.md</a>.<br>The product decisions you approved on 2026-11-04 are written first, because many lines depend on them.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
@@ -95,9 +95,9 @@ section.doc{page-break-before:always;padding:0}
 <td><a href="02-research.html">02-research.md</a></td>
 </tr>
 <tr>
-<td>DEC-001 to DEC-013</td>
-<td>A product decision (section 2 below)</td>
-<td>here</td>
+<td>DEC-001 to DEC-031</td>
+<td>A product or design decision (section 2 below)</td>
+<td>here and <a href="13-decisions-needed.html">13-decisions-needed.md</a></td>
 </tr>
 <tr>
 <td>BR-xxx</td>
@@ -107,7 +107,7 @@ section.doc{page-break-before:always;padding:0}
 </tbody></table>
 <hr>
 <h2 id="2-product-decisions-approved-2026-11-04">2. Product decisions (approved 2026-11-04)</h2>
-<p>The product owner accepted the proposed defaults for all open product questions (DEC-001 to DEC-013) and later asked for two more rules, already built in the apps (DEC-014, DEC-015).</p>
+<p>The product owner accepted the proposed defaults for all open product questions (DEC-001 to DEC-013) and later asked for two more rules, already built in the apps (DEC-014, DEC-015). DEC-016 to DEC-019 came on 2026-11-11. DEC-020 to DEC-031, and the revised DEC-018, come from the external review of 2026-11-13.</p>
 <table>
 <thead>
 <tr>
@@ -202,6 +202,102 @@ section.doc{page-break-before:always;padding:0}
 <td><code>LST-12</code>, <code>TRP-07</code>, <code>BR-LST-05</code>; enums in the schema</td>
 </tr>
 <tr>
+<td>DEC-016</td>
+<td>Staff roles (2026-11-11)</td>
+<td><strong>One role: admin</strong>, with every permission</td>
+<td><code>BR-STF-01</code>; <code>staff_role_code</code> enum has one value; the permission tables stay for later</td>
+</tr>
+<tr>
+<td>DEC-017</td>
+<td>Hotel onboarding (2026-11-11)</td>
+<td><strong>Connect directly to the hotel&#39;s own system</strong> to import rooms, availability, prices and services</td>
+<td><code>HST-08</code>, <code>BR-HST-06</code>; tables <code>property_integration</code>, <code>integration_sync_log</code>, <code>property_service</code></td>
+</tr>
+<tr>
+<td>DEC-018</td>
+<td>Commission on cancellation (2026-11-11, <strong>revised 2026-11-13</strong>)</td>
+<td><strong>Commission follows the refund</strong>: on a guest cancellation the host gets back the same share of the commission as the share of the subtotal refunded (villa example: 3,330 DZD back, BLADUS keeps 3,330 DZD); host cancellation returns all of it; decline and expiry take nothing</td>
+<td><code>BR-PAY-05</code>, <code>BR-CAN-04</code>, examples 8a and 9a</td>
+</tr>
+<tr>
+<td>DEC-019</td>
+<td>Online payment (2026-11-11)</td>
+<td><strong>No online payment in the first release</strong>; it comes later</td>
+<td>Payment, payout and gateway tables stay unused</td>
+</tr>
+<tr>
+<td>DEC-020</td>
+<td>Double booking guarantees (2026-11-13)</td>
+<td><strong>Say exactly what the database guarantees</strong>: exclusion constraint for single units, CHECK counters for pools, slots and departures, and <strong>new triggers</strong> so blocked days and bookings never clash</td>
+<td><code>BR-AVL-01</code>, <code>BR-AVL-02</code>, <code>BR-AVL-07</code>, <code>AVL-07</code>; triggers on <code>listing_day</code> and <code>booking</code></td>
+</tr>
+<tr>
+<td>DEC-021</td>
+<td>Hotel sync never oversells (2026-11-13)</td>
+<td><strong>A sync never sets a room-night total below held + booked</strong>; the total is clamped and an <code>inventory_conflict</code> is opened; every BLADUS booking change is pushed at once through the outbox</td>
+<td><code>BR-HST-07</code>, <code>HST-09</code>; tables <code>inventory_conflict</code>, <code>outbox_message</code></td>
+</tr>
+<tr>
+<td>DEC-022</td>
+<td>Admin control of money (2026-11-13)</td>
+<td><strong>Four-eyes on the rolling 24-hour top-up total</strong> (500,000 DZD), approver always different, <strong>manual ledger adjustments</strong> need a second admin and are capped at 1,000,000 DZD</td>
+<td><code>BR-PAY-07</code>, <code>BR-PAY-13</code>, <code>PAY-13</code>; table <code>wallet_adjustment</code></td>
+</tr>
+<tr>
+<td>DEC-023</td>
+<td>Deposit race (2026-11-13)</td>
+<td><strong>Lock the host wallet balance row first</strong>, then stock; commission revenue is a SUM of ledger entries, never a shared balance row</td>
+<td><code>BR-PAY-14</code>, <code>BR-BKG-01</code></td>
+</tr>
+<tr>
+<td>DEC-024</td>
+<td>Host refunds tracked as a debt (2026-11-13)</td>
+<td><strong>Every cancellation with a refund opens a refund obligation</strong> (due in 7 days); host declares paid, guest confirms or disputes; an overdue refund stops instant booking and accepting requests</td>
+<td><code>BR-CAN-06</code>, <code>BR-CAN-07</code>, <code>CAN-05</code>; table <code>refund_obligation</code>; ledger memo accounts</td>
+</tr>
+<tr>
+<td>DEC-025</td>
+<td>Security controls (2026-11-13)</td>
+<td><strong>SSRF guard, SMS and code limits with a daily budget, HMAC with a pepper, key management, CSRF in the BFF, upload quarantine and scan, insert-only audit</strong></td>
+<td><code>BR-SYS-06</code>, <code>BR-SYS-07</code>, <code>BR-ACC-02</code>, <code>NFR-14</code>; <a href="08-security-privacy.html">08-security-privacy.md</a></td>
+</tr>
+<tr>
+<td>DEC-026</td>
+<td>Ledger protection (2026-11-13)</td>
+<td><strong>Separate database roles</strong> (<code>bladus_migrator</code> owns, <code>bladus_app</code> only SELECT and INSERT on ledger and audit), <strong>triggers refuse UPDATE and DELETE</strong>, nightly <code>reconcile_balances</code></td>
+<td><code>BR-PAY-02</code>, <code>BR-PAY-15</code>, <code>BR-STF-02</code>, <code>PAY-14</code></td>
+</tr>
+<tr>
+<td>DEC-027</td>
+<td>Operations before M0 (2026-11-13)</td>
+<td><strong>One operations page before M0</strong>: Docker Compose on one VPS for M0 to M2, failover RPO 5 minutes and RTO 1 hour, Redis never the only copy, monthly restore test, alerts, CI/CD with rollback, runbooks</td>
+<td><a href="09b-operations.html">09b-operations.md</a>, <code>NFR-04</code></td>
+</tr>
+<tr>
+<td>DEC-028</td>
+<td>Booking abuse (2026-11-13)</td>
+<td><strong>At most 3 pending requests and 6 upcoming bookings per guest</strong>; a <strong>stay confirmation</strong> (check-in code or guest confirmation) is needed before a review</td>
+<td><code>BR-BKG-08</code>, <code>BR-BKG-09</code>, <code>BR-REV-01</code>, <code>BKG-12</code>, <code>REV-06</code>; booking columns <code>check_in_code</code>, <code>stay_confirmed_at</code>, <code>stay_confirmed_via</code></td>
+</tr>
+<tr>
+<td>DEC-029</td>
+<td>Money rules (2026-11-13)</td>
+<td><strong>Integer centimes, basis points, round half up at each line</strong>; commission base excludes cleaning and taxes; <code>idempotency_record</code> with body hash; <code>outbox_message</code> with fixed retries then <code>dead</code></td>
+<td><code>BR-PAY-01</code>, <code>BR-SYS-01</code>, <code>BR-SYS-03</code></td>
+</tr>
+<tr>
+<td>DEC-030</td>
+<td>Search and framework (2026-11-13)</td>
+<td><strong>Django 5.2 LTS</strong> (supported to April 2028), not 6.1; <strong>search with pg_trgm</strong> trigram similarity plus unaccent, no Arabic full-text</td>
+<td><code>BR-SRC-05</code>, <code>SRC-03</code>; replaces R-1 version and closes T7</td>
+</tr>
+<tr>
+<td>DEC-031</td>
+<td>One contract, no drift (2026-11-13)</td>
+<td><strong>No online top-up endpoint</strong> in v1; <strong>one operation count</strong> computed from <code>openapi.yaml</code>; <strong>one id scheme</strong> (UUIDv7 keys, references only for display); sequence diagram endpoints checked against <code>openapi.yaml</code> by a tool</td>
+<td><code>BR-PAY-08</code>, <code>NFR-12</code>; <code>_tools/check_contract_refs.py</code></td>
+</tr>
+<tr>
 <td>DEC-013</td>
 <td>Wilaya count shown</td>
 <td><strong>69</strong> (codes 59 to 69 to be confirmed against the official journal).</td>
@@ -240,8 +336,8 @@ section.doc{page-break-before:always;padding:0}
 <td>Website (host mode)</td>
 </tr>
 <tr>
-<td>Moderator, Support, Finance, Analyst, Super admin</td>
-<td>BLADUS staff roles</td>
+<td>Admin</td>
+<td>BLADUS staff (one role, DEC-016)</td>
 <td>Admin</td>
 </tr>
 <tr>
@@ -266,10 +362,10 @@ section.doc{page-break-before:always;padding:0}
 </thead>
 <tbody><tr>
 <td>Must</td>
-<td>109</td>
+<td>119</td>
 <td>0</td>
 <td>0</td>
-<td>109</td>
+<td>119</td>
 </tr>
 <tr>
 <td>Should</td>
@@ -287,10 +383,10 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td><strong>Total</strong></td>
-<td>126</td>
+<td>136</td>
 <td>19</td>
 <td>2</td>
-<td><strong>147</strong></td>
+<td><strong>157</strong></td>
 </tr>
 </tbody></table>
 <h3 id="acc-accounts-and-sign-in-9">ACC: Accounts and sign-in (9)</h3>
@@ -501,7 +597,7 @@ section.doc{page-break-before:always;padding:0}
 <td></td>
 </tr>
 </tbody></table>
-<h3 id="hst-becoming-a-host-and-verification-7">HST: Becoming a host and verification (7)</h3>
+<h3 id="hst-becoming-a-host-and-verification-9">HST: Becoming a host and verification (9)</h3>
 <table>
 <thead>
 <tr>
@@ -572,6 +668,17 @@ section.doc{page-break-before:always;padding:0}
 <td>BR-PAY-09</td>
 </tr>
 <tr>
+<td>HST-08</td>
+<td>Connect a hotel&#39;s own system</td>
+<td>Hotel, Hostel</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A hotel or hostel connects its channel manager, PMS, iCal feed or CSV file; room types, availability, prices and services (restaurants, spa, parking) are imported and kept in sync; manual entry stays possible</td>
+<td>Missing (rooms hardcoded at onboarding)</td>
+<td>DEC-017</td>
+<td>BR-HST-06</td>
+</tr>
+<tr>
 <td>HST-07</td>
 <td>What each host type may publish</td>
 <td>Host</td>
@@ -592,6 +699,17 @@ section.doc{page-break-before:always;padding:0}
 <td>Stored in 3 places, not applied</td>
 <td>R20, D-6</td>
 <td>BR-BKG-02</td>
+</tr>
+<tr>
+<td>HST-09</td>
+<td>Hotel sync never oversells</td>
+<td>System, Admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A sync never sets a room-night total below held + booked (clamped, inventory_conflict opened for the admin); every BLADUS booking change is pushed at once through the outbox; dead messages visible to the admin</td>
+<td>Missing</td>
+<td>DEC-021</td>
+<td>BR-HST-07</td>
 </tr>
 </tbody></table>
 <h3 id="lst-listings-and-catalogue-12">LST: Listings and catalogue (12)</h3>
@@ -835,7 +953,7 @@ section.doc{page-break-before:always;padding:0}
 <td>BR-TRP-03</td>
 </tr>
 </tbody></table>
-<h3 id="avl-availability-and-calendar-6">AVL: Availability and calendar (6)</h3>
+<h3 id="avl-availability-and-calendar-7">AVL: Availability and calendar (7)</h3>
 <table>
 <thead>
 <tr>
@@ -916,6 +1034,17 @@ section.doc{page-break-before:always;padding:0}
 <td>RES D.1 API7</td>
 <td></td>
 </tr>
+<tr>
+<td>AVL-07</td>
+<td>Blocked days and bookings never clash</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Blocking a booked day is refused (dates_booked) and booking a blocked day is refused (dates_unavailable), by the services and by two PostgreSQL triggers, also under concurrent requests</td>
+<td>Missing</td>
+<td>DEC-020</td>
+<td>BR-AVL-07</td>
+</tr>
 </tbody></table>
 <h3 id="prc-pricing-and-quotes-5">PRC: Pricing and quotes (5)</h3>
 <table>
@@ -988,7 +1117,7 @@ section.doc{page-break-before:always;padding:0}
 <td>BR-PAY-01</td>
 </tr>
 </tbody></table>
-<h3 id="bkg-bookings-11">BKG: Bookings (11)</h3>
+<h3 id="bkg-bookings-13">BKG: Bookings (13)</h3>
 <table>
 <thead>
 <tr>
@@ -1124,8 +1253,30 @@ section.doc{page-break-before:always;padding:0}
 <td>U8, D-9</td>
 <td>BR-CAN-05</td>
 </tr>
+<tr>
+<td>BKG-12</td>
+<td>Open booking limits per guest</td>
+<td>Guest</td>
+<td>Must</td>
+<td>MVP</td>
+<td>At most 3 pending requests and 6 upcoming bookings per guest (settings); over the limit the API answers too_many_open_bookings</td>
+<td>Missing</td>
+<td>DEC-028</td>
+<td>BR-BKG-08</td>
+</tr>
+<tr>
+<td>BKG-13</td>
+<td>Stay confirmation</td>
+<td>Guest, Host</td>
+<td>Must</td>
+<td>MVP</td>
+<td>A confirmed booking has a 6-digit check-in code shown to the guest; the host enters it on arrival or the guest confirms after check-in time; without it no review</td>
+<td>Missing</td>
+<td>DEC-028</td>
+<td>BR-BKG-09, BR-REV-01</td>
+</tr>
 </tbody></table>
-<h3 id="can-cancellations-and-refunds-4">CAN: Cancellations and refunds (4)</h3>
+<h3 id="can-cancellations-and-refunds-5">CAN: Cancellations and refunds (5)</h3>
 <table>
 <thead>
 <tr>
@@ -1179,13 +1330,24 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Decline and host cancel: full reversal; guest cancel: commission on the non-refunded part kept</td>
+<td>Decline and expiry: nothing was taken; host cancel: full commission returned; guest cancel: returned = apply_bp(commission, refund_bp) (example 8a: 3,330 DZD back, 3,330 kept); admin refund R: returned in proportion to the part of R that refunds the subtotal</td>
 <td>Built (website)</td>
-<td>D-4</td>
-<td>BR-PAY-05</td>
+<td>D-4, DEC-018 (revised 2026-11-13)</td>
+<td>BR-PAY-05, BR-CAN-04</td>
+</tr>
+<tr>
+<td>CAN-05</td>
+<td>Refund obligations tracked as a host debt</td>
+<td>Guest, Host, Admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Every cancellation with a refund opens an obligation due in 7 days; host declares paid, guest confirms or disputes, admin settles with proof; an overdue refund stops instant booking and accepting requests</td>
+<td>Missing</td>
+<td>DEC-024</td>
+<td>BR-CAN-06, BR-CAN-07</td>
 </tr>
 </tbody></table>
-<h3 id="pay-payments-wallet-and-ledger-12">PAY: Payments, wallet and ledger (12)</h3>
+<h3 id="pay-payments-wallet-and-ledger-14">PAY: Payments, wallet and ledger (14)</h3>
 <table>
 <thead>
 <tr>
@@ -1206,9 +1368,9 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Every money movement is a transaction whose entries sum to zero; entries never updated or deleted</td>
+<td>Every money movement is a transaction whose entries sum to zero; entries never updated or deleted (triggers refuse UPDATE and DELETE; the app role has only SELECT and INSERT)</td>
 <td>Single-sided lists</td>
-<td>RES A.5, D-16</td>
+<td>RES A.5, D-16, DEC-026</td>
 <td>BR-PAY-02</td>
 </tr>
 <tr>
@@ -1250,9 +1412,9 @@ section.doc{page-break-before:always;padding:0}
 <td>Finance</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Amount 1 to 10,000,000 DZD, method, receipt reference unique per method, optional four-eyes above a threshold</td>
+<td>Amount 1 to 10,000,000 DZD, method, receipt reference unique per method; four-eyes when the host&#39;s rolling 24-hour top-up total passes 500,000 DZD; approver always differs from the requester</td>
 <td>No duplicate check</td>
-<td>R60, D-17</td>
+<td>R60, D-17, DEC-022</td>
 <td>BR-PAY-07</td>
 </tr>
 <tr>
@@ -1261,7 +1423,7 @@ section.doc{page-break-before:always;padding:0}
 <td>Host</td>
 <td>Should</td>
 <td>R2</td>
-<td>Host tops up with CIB/Edahabia through Chargily; credited only after a verified webhook</td>
+<td>Not in the v1 contract (DEC-019, DEC-031): no endpoint while online payment is off. Later: host tops up with CIB/Edahabia through Chargily; credited only after a verified webhook</td>
 <td>Missing</td>
 <td>RES C.1</td>
 <td>BR-PAY-08</td>
@@ -1332,6 +1494,28 @@ section.doc{page-break-before:always;padding:0}
 <td>RES B.17</td>
 <td>BR-PAY-01</td>
 </tr>
+<tr>
+<td>PAY-13</td>
+<td>Manual ledger adjustments with a second admin</td>
+<td>Admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Signed amount up to 1,000,000 DZD with a reason; posted only after a different admin approves; reject needs a reason; audited</td>
+<td>Missing</td>
+<td>DEC-022</td>
+<td>BR-PAY-13</td>
+</tr>
+<tr>
+<td>PAY-14</td>
+<td>Ledger protection and nightly reconciliation</td>
+<td>System, Admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Wallet row locked before stock on every booking path; reconcile_balances recomputes every balance each night, reports differences and exits non-zero</td>
+<td>Missing</td>
+<td>DEC-023, DEC-026</td>
+<td>BR-PAY-14, BR-PAY-15</td>
+</tr>
 </tbody></table>
 <h3 id="rev-reviews-5">REV: Reviews (5)</h3>
 <table>
@@ -1354,7 +1538,7 @@ section.doc{page-break-before:always;padding:0}
 <td>Guest</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Only for a completed booking, within 14 days, one per booking; 5 sub-ratings + comment</td>
+<td>Only for a completed booking whose stay was confirmed (check-in code or guest confirmation), within 14 days, one per booking; 5 sub-ratings + comment</td>
 <td>Missing (read only)</td>
 <td>INV-F gaps</td>
 <td>BR-REV-01</td>
@@ -1486,7 +1670,7 @@ section.doc{page-break-before:always;padding:0}
 <td></td>
 </tr>
 </tbody></table>
-<h3 id="ntf-notifications-4">NTF: Notifications (4)</h3>
+<h3 id="ntf-notifications-5">NTF: Notifications (5)</h3>
 <table>
 <thead>
 <tr>
@@ -1540,9 +1724,20 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Events written in the same transaction as the change, then sent by workers with retries</td>
+<td>Events written to outbox_message in the same transaction as the change, then sent by workers with retries at 1 min, 5 min, 15 min, 1 h, 6 h, 24 h; dead after 8 attempts</td>
 <td>Missing</td>
 <td>U5</td>
+<td>BR-SYS-03</td>
+</tr>
+<tr>
+<td>NTF-05</td>
+<td>Dead outbox messages handled by the admin</td>
+<td>Admin</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Messages that failed 8 times are dead, raise an alert and are listed for the admin, who can retry them</td>
+<td>Missing</td>
+<td>DEC-021, DEC-029</td>
 <td>BR-SYS-03</td>
 </tr>
 </tbody></table>
@@ -1589,10 +1784,10 @@ section.doc{page-break-before:always;padding:0}
 <td>Visitor</td>
 <td>Should</td>
 <td>MVP</td>
-<td>Title and place search tolerant to accents and transliteration (trigram)</td>
+<td>Title and place search with pg_trgm trigram similarity plus unaccent and Arabic normalisation, no full-text; passes a fixed list of real Arabic, French and Darija queries</td>
 <td>Static list of 10 cities</td>
-<td>RES B.7</td>
-<td></td>
+<td>RES B.7, DEC-030</td>
+<td>BR-SRC-05</td>
 </tr>
 <tr>
 <td>SRC-04</td>
@@ -1802,7 +1997,7 @@ section.doc{page-break-before:always;padding:0}
 <td>Super admin</td>
 <td>Must</td>
 <td>MVP</td>
-<td>5 roles, 34+ permissions stored and enforced by the API, deny by default</td>
+<td>One staff role (admin) with every permission, stored and enforced by the API, deny by default (DEC-016)</td>
 <td>Code constants</td>
 <td>U16, INV-A 1.1</td>
 <td>BR-STF-01</td>
@@ -1824,7 +2019,7 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; no update or delete</td>
+<td>Every staff mutation, every host money or team action, logins and KYC views logged with actor id, IP, before/after; a trigger and the database roles refuse update and delete; daily export to write-once storage</td>
 <td>Admin memory only</td>
 <td>U13</td>
 <td>BR-STF-02</td>
@@ -2103,7 +2298,7 @@ section.doc{page-break-before:always;padding:0}
 <td></td>
 </tr>
 </tbody></table>
-<h3 id="nfr-quality-non-functional-13">NFR: Quality (non-functional) (13)</h3>
+<h3 id="nfr-quality-non-functional-14">NFR: Quality (non-functional) (14)</h3>
 <table>
 <thead>
 <tr>
@@ -2157,9 +2352,9 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Point-in-time recovery 7 days, nightly encrypted dump in a second Algerian location, monthly restore drill; RPO 15 min, RTO 4 h</td>
+<td>Point-in-time recovery 7 days, nightly encrypted dump in a second Algerian location, monthly restore test; RPO 5 min, RTO 1 h (managed PostgreSQL or streaming replica); see 09b-operations.md</td>
 <td>n/a</td>
-<td>RES D.3</td>
+<td>RES D.3, DEC-027</td>
 <td></td>
 </tr>
 <tr>
@@ -2234,10 +2429,10 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>Per user and per IP throttles per endpoint group; SMS budget alarms</td>
+<td>Per user and per IP throttles per endpoint group; codes: per destination 3 per hour and 10 per day, per IP 10 per hour, global SMS budget 5,000 per day then sms_budget_exceeded</td>
 <td>Login only (admin)</td>
 <td>RES B.12</td>
-<td></td>
+<td>BR-ACC-02</td>
 </tr>
 <tr>
 <td>NFR-12</td>
@@ -2245,9 +2440,9 @@ section.doc{page-break-before:always;padding:0}
 <td>System</td>
 <td>Must</td>
 <td>MVP</td>
-<td>UUIDv7 primary keys plus human references; no time or random based ids</td>
+<td>UUIDv7 primary keys for every table the app writes; human references (BLD-YYYY-XXXXXX, LST-..., TRP-...) only for display and search; no Date.now or Math.random ids</td>
 <td>Date.now/Math.random</td>
-<td>INV-A 6.1-3</td>
+<td>INV-A 6.1-3, DEC-031</td>
 <td></td>
 </tr>
 <tr>
@@ -2260,6 +2455,17 @@ section.doc{page-break-before:always;padding:0}
 <td>Built (ActionResult codes)</td>
 <td></td>
 <td></td>
+</tr>
+<tr>
+<td>NFR-14</td>
+<td>Outgoing URL safety and secret hashing</td>
+<td>System</td>
+<td>Must</td>
+<td>MVP</td>
+<td>Host-given URLs pass the SSRF check at save and fetch time (https, public IPs only, no cross-host redirect, 10 s, 5 MB); codes, tokens and lookup hashes use HMAC-SHA256 with a pepper</td>
+<td>n/a</td>
+<td>DEC-025</td>
+<td>BR-SYS-06, BR-SYS-07</td>
 </tr>
 </tbody></table>
 <!-- END GENERATED REQUIREMENTS --><hr>

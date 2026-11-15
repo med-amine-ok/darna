@@ -13,6 +13,7 @@ Adapted to SQLite: latitude/longitude decimals instead of PostGIS points,
 JSON lists instead of PostgreSQL arrays.
 """
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -460,6 +461,12 @@ class ListingPhoto(UUIDModel):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="photos")
     room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, null=True, blank=True, related_name="photos")
     url = models.CharField(max_length=500)
+    # media_asset id (BR-MED-01). No foreign key yet: the media app has no
+    # MediaAsset table in this push. Empty for photos added by URL; the API
+    # then uses the photo id as ``media_id`` (see ``ListingPhoto.media_ref``).
+    media_id = models.UUIDField(null=True, blank=True, db_index=True)
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
     sort_order = models.IntegerField(default=0)
     caption = models.CharField(max_length=160, blank=True)
     is_cover = models.BooleanField(default=False)
@@ -476,6 +483,65 @@ class ListingPhoto(UUIDModel):
     def __str__(self) -> str:
         """Readable name for the Django console."""
         return self.url
+
+    @property
+    def media_ref(self):
+        """The id clients use for this photo: its ``media_id``, or its own id for photos added by URL."""
+        return self.media_id or self.id
+
+
+class RoomTypeAmenity(models.Model):
+    """Link table: one amenity of one room type (``room_type_amenity``, RoomTypeWrite.amenity_ids)."""
+
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name="amenity_links")
+    # PROTECT: an amenity in use cannot be hard-deleted, it is deactivated (BR-LST-04).
+    amenity = models.ForeignKey(Amenity, on_delete=models.PROTECT, related_name="room_type_links")
+
+    class Meta:
+        """Table options: ordering, indexes and database checks."""
+
+        constraints = [models.UniqueConstraint(fields=["room_type", "amenity"], name="room_type_amenity_unique")]
+
+    def __str__(self) -> str:
+        """Readable name for the Django console."""
+        return f"{self.room_type_id} / {self.amenity_id}"
+
+
+class FeaturedPlacement(UUIDModel):
+    """
+    A listing shown in a featured place (``featured_placement``, LST-09).
+
+    A placement is active while ``starts_at <= now`` and ``ends_at`` is empty
+    or in the future. Unfeaturing ends the active placements (history kept).
+    Trip placements will need a ``trip`` column owned by the trips app layer;
+    only listings are featured in this version.
+    """
+
+    PLACEMENTS = [("home_weekend", "Home weekend"), ("home_hero", "Home hero"), ("search_top", "Search top")]
+
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="featured_placements")
+    placement = models.CharField(max_length=24, choices=PLACEMENTS)
+    position = models.SmallIntegerField(default=0)
+    starts_at = models.DateTimeField(default=timezone.now)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        """Table options: ordering, indexes and database checks."""
+
+        ordering = ["placement", "position", "starts_at"]
+        indexes = [models.Index(fields=["listing", "ends_at"])]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(ends_at__isnull=True) | Q(ends_at__gt=models.F("starts_at")),
+                name="featured_placement_ends_after_start",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        """Readable name for the Django console."""
+        return f"{self.placement}: {self.listing_id}"
 
 
 class PropertyService(UUIDModel):

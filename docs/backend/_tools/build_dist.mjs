@@ -40,7 +40,7 @@ const PARTS = [
   { title: "Phase 4: diagrams", docs: ["diagrams/README.md", "@diagram-gallery"] },
   { title: "Phase 5: database", docs: ["05-database-schema.md", "05b-data-dictionary.md"] },
   { title: "Phase 6: API", docs: ["06-api-design.md", "@api-reference"] },
-  { title: "Phase 7: architecture and operations", docs: ["07-architecture.md", "08-security-privacy.md", "09-devops-hosting.md", "10-testing-quality.md"] },
+  { title: "Phase 7: architecture and operations", docs: ["07-architecture.md", "08-security-privacy.md", "09-devops-hosting.md", "09b-operations.md", "10-testing-quality.md"] },
   { title: "Phase 8: plan and decisions", docs: ["11-roadmap.md", "12-risks.md", "13-decisions-needed.md", "14-open-questions.md", "traceability.md", "15-readiness-and-first-build-prompt.md"] },
   { title: "Appendices (raw working notes)", docs: ["_work/frontend-inventory.md", "_work/admin-inventory.md", "_work/spec-vs-code.md", "_work/click-through.md", "_work/research-platforms-django.md", "_work/research-algeria-security.md", "CHANGELOG.md"] },
 ];

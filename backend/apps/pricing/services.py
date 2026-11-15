@@ -22,6 +22,10 @@ Availability: pricing checks the listing window, the host's blocked days,
 free rooms, seats, and (through the provider the bookings app plugs into
 inventory) the booked nights of a home. The bookings service checks the
 overlap again under a row lock, because only it can do so safely.
+
+Coupons (R2, BR-PRM-01/02): :func:`create_coupon`, :func:`update_coupon`,
+:func:`delete_coupon` manage the admin catalogue. Quotes do not apply
+coupons in this release.
 """
 
 import uuid
@@ -29,7 +33,11 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Count, Q
 from django.utils import timezone
+
+from apps.audit import services as audit
 
 from apps.catalog.models import BookingUnit, InventoryKind, Listing, RoomType
 from apps.catalog.selectors import public_listings
@@ -49,7 +57,7 @@ from apps.inventory.selectors import (
 from apps.trips.models import OPEN_DEPARTURE_STATUSES, TripDeparture
 from apps.trips.selectors import public_trips
 
-from .models import Quote
+from .models import Coupon, CouponFundedBy, CouponRedemption, DiscountType, Quote
 
 # Stays of at least this many nights get the weekly or monthly discount (BR-PRC-03).
 WEEKLY_MIN_NIGHTS = 7
@@ -377,3 +385,101 @@ def get_quote(quote_id) -> Quote:
     if quote is None:
         raise NotFoundError("Quote not found.")
     return quote
+
+
+# ---------------------------------------------------------------------------
+# Coupons (R2, BR-PRM-01, BR-PRM-02): admin catalogue only in this release
+# ---------------------------------------------------------------------------
+COUPON_FIELDS = (
+    "code", "discount_type", "discount_value", "min_spend_minor", "funded_by", "host_account_id", "scope_verticals",
+    "usage_limit", "per_user_limit", "valid_from", "valid_to", "is_active",
+)
+
+
+def coupons(*, active: bool | None = None):
+    """Coupons for the admin, newest first, with ``used_count`` (redemptions not released)."""
+    qs = Coupon.objects.annotate(used_count=Count("redemptions", filter=Q(redemptions__released_at__isnull=True)))
+    if active is not None:
+        qs = qs.filter(is_active=active)
+    return qs.order_by("-created_at")
+
+
+def get_coupon(coupon_id) -> Coupon:
+    """One coupon with ``used_count``, else 404."""
+    try:
+        coupon_uuid = uuid.UUID(str(coupon_id))
+    except (TypeError, ValueError) as exc:
+        raise NotFoundError("Coupon not found.") from exc
+    coupon = coupons().filter(pk=coupon_uuid).first()
+    if coupon is None:
+        raise NotFoundError("Coupon not found.")
+    return coupon
+
+
+def _check_coupon(data: dict, *, exclude_id=None) -> None:
+    """
+    Business checks of a coupon after the field checks (BR-PRM-01, BR-PRM-02).
+
+    Code unique without regard to case (409 ``code_taken``); percentage
+    between 1 and 10,000 bp; a host-funded coupon names its host account; an
+    end date after the start date (422 ``invalid_coupon``).
+    """
+    clash = Coupon.objects.filter(code__iexact=data["code"])
+    if exclude_id:
+        clash = clash.exclude(pk=exclude_id)
+    if clash.exists():
+        raise ConflictError("This code is already used by another coupon.", code="code_taken")
+    errors = {}
+    if data["discount_value"] <= 0:
+        errors["discount_value"] = ["Must be positive."]
+    elif data["discount_type"] == DiscountType.PERCENTAGE and data["discount_value"] > 10_000:
+        errors["discount_value"] = ["At most 10000 basis points (100 %)."]
+    if data["funded_by"] == CouponFundedBy.HOST and not data.get("host_account_id"):
+        errors["host_account_id"] = ["Required for a host-funded coupon."]
+    if data.get("valid_to") and data["valid_to"] <= data["valid_from"]:
+        errors["valid_to"] = ["Must be after valid_from."]
+    if errors:
+        raise DomainError("Check the coupon.", code="invalid_coupon", status_code=422, errors=errors)
+
+
+def _coupon_snapshot(coupon: Coupon) -> dict:
+    """Small audit view of a coupon (no personal data)."""
+    return {"code": coupon.code, "discount_type": coupon.discount_type, "discount_value": coupon.discount_value,
+            "funded_by": coupon.funded_by, "is_active": coupon.is_active}
+
+
+@transaction.atomic
+def create_coupon(*, data: dict, actor) -> Coupon:
+    """Create a coupon (BR-PRM-01, BR-PRM-02). Audited (BR-STF-02)."""
+    values = {"min_spend_minor": 0, "scope_verticals": [], "per_user_limit": 1, "is_active": True, **data}
+    _check_coupon(values)
+    coupon = Coupon.objects.create(created_by=actor, **{k: v for k, v in values.items() if k in COUPON_FIELDS})
+    audit.record(actor=actor, action="COUPON_CREATE", obj=coupon, after=_coupon_snapshot(coupon))
+    return get_coupon(coupon.pk)
+
+
+@transaction.atomic
+def update_coupon(coupon_id, *, data: dict, actor) -> Coupon:
+    """Edit, enable or disable a coupon; every field is optional. Audited (BR-STF-02)."""
+    coupon = Coupon.objects.select_for_update().filter(pk=get_coupon(coupon_id).pk).first()
+    before = _coupon_snapshot(coupon)
+    values = {name: getattr(coupon, name) for name in COUPON_FIELDS}
+    values.update({k: v for k, v in data.items() if k in COUPON_FIELDS})
+    if values["funded_by"] == CouponFundedBy.PLATFORM and "host_account_id" not in data:
+        values["host_account_id"] = coupon.host_account_id
+    _check_coupon(values, exclude_id=coupon.pk)
+    for name in COUPON_FIELDS:
+        setattr(coupon, name, values[name])
+    coupon.save()
+    audit.record(actor=actor, action="COUPON_UPDATE", obj=coupon, before=before, after=_coupon_snapshot(coupon))
+    return get_coupon(coupon.pk)
+
+
+@transaction.atomic
+def delete_coupon(coupon_id, *, actor) -> None:
+    """Delete a coupon never redeemed; once used it can only be disabled (409 ``in_use``). Audited."""
+    coupon = Coupon.objects.select_for_update().filter(pk=get_coupon(coupon_id).pk).first()
+    if CouponRedemption.objects.filter(coupon=coupon).exists():
+        raise ConflictError("This coupon was used: disable it instead.", code="in_use")
+    audit.record(actor=actor, action="COUPON_DELETE", obj=coupon, before=_coupon_snapshot(coupon))
+    coupon.delete()

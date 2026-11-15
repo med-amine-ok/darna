@@ -44,8 +44,8 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="on" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="08-security-and-privacy">08. Security and privacy</h1>
-<blockquote class="plain"><p><strong>In plain words</strong><br>This page says what we protect (people&#39;s identities, ID documents, money records, the platform&#39;s reputation), from whom, and how.<br>It maps the ten most common API attacks (OWASP API Top 10) to BLADUS endpoints, and defines login, sessions, roles, secrets, encryption, file safety and rate limits.<br>It explains how Algerian personal data law (Law 18-07 as amended by Law 25-11) shapes the design: data stays in Algeria, a register of processing, consents, a 5-day breach notice.<br>It ends with a checklist to complete before launch and the questions a lawyer must answer.<br>Every legal point is marked <strong>VERIFY WITH A PROFESSIONAL</strong>: this is an engineering plan, not legal advice.</p>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="on" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 7: architecture and operations</div><h1 id="08-security-and-privacy">08. Security and privacy</h1>
+<blockquote class="plain"><p><strong>In plain words</strong><br>This page says what we protect (people&#39;s identities, ID documents, money records, the platform&#39;s reputation), from whom, and how.<br>It maps the ten most common API attacks (OWASP API Top 10) to BLADUS endpoints, and defines login, sessions, roles, secrets, encryption, file safety and rate limits.<br>It explains how Algerian personal data law (Law 18-07 as amended by Law 25-11) shapes the design: data stays in Algeria, a register of processing, consents, a 5-day breach notice.<br>Section 15 defines, one by one, the security controls decided after the review of 2026-11-13 (DEC-025, DEC-026): outgoing URL check, SMS limits, hashing, keys, CSRF, uploads, audit and ledger protection.<br>It ends with a checklist to complete before launch and the questions a lawyer must answer.<br>Every legal point is marked <strong>VERIFY WITH A PROFESSIONAL</strong>: this is an engineering plan, not legal advice.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see also <a href="glossary.html">glossary.md</a>):</p>
 <ul>
@@ -69,6 +69,9 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>Data subject</strong>: the person the data is about (guest, host, staff).</li>
 <li><strong>Controller / processor</strong>: the controller (BLADUS) decides why data is processed; a processor (hosting company, SMS provider) processes it on BLADUS&#39;s instructions.</li>
 <li><strong>RPO / RTO</strong>: how much data we may lose (recovery point) / how long we may be down (recovery time) after a disaster.</li>
+<li><strong>SSRF</strong>: server-side request forgery: tricking our server into calling an address it should not reach (an internal service, the cloud metadata address).</li>
+<li><strong>Pepper</strong>: a server secret mixed into every hash, kept outside the database, so a stolen database alone cannot be used to guess short values like 6-digit codes.</li>
+<li><strong>Database role</strong>: a PostgreSQL login with its own rights. The app&#39;s role is not the owner of the tables, so it cannot bypass the rules.</li>
 </ul>
 <p>Inputs: <a href="02-research.html">02-research.md</a> sections C.3 and D, <a href="03-requirements.html">03-requirements.md</a> (ACC, STF, MED, PRV, NFR-05, NFR-11), <a href="04-business-rules.html">04-business-rules.md</a>, <a href="05-database-schema.html">05-database-schema.md</a> ADR-012 and ADR-014, <a href="07-architecture.html">07-architecture.md</a>.</p>
 <hr>
@@ -260,7 +263,7 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>Tampering</td>
 <td>Editing ledger or audit rows directly in the database</td>
-<td>No UPDATE/DELETE grant for the app role; deferred balance trigger; hash chain; nightly verification</td>
+<td>Triggers refuse UPDATE and DELETE for every role; tables owned by <code>bladus_migrator</code>, app role <code>bladus_app</code> has SELECT and INSERT only (15.8); deferred balance trigger; hash chain; nightly <code>reconcile_balances</code> (BR-PAY-15); nightly verification</td>
 <td>BR-PAY-02, BR-STF-02</td>
 </tr>
 <tr>
@@ -314,14 +317,20 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>Denial of service</td>
 <td>Booking requests that block calendars without intent</td>
-<td>Request TTL 24 h; per-guest limit of open requests (5); velocity flags</td>
-<td>BR-BKG-04, API6</td>
+<td>Request TTL 24 h; per guest at most 3 pending requests and 6 upcoming bookings (<code>too_many_open_bookings</code>); velocity flags</td>
+<td>BR-BKG-08, BR-BKG-04, API6</td>
 </tr>
 <tr>
 <td>Denial of service</td>
 <td>SMS pumping draining budget</td>
-<td>Per phone / IP / device limits, country restriction, every send recorded in <code>otp_send_log</code> (hashed phone, IP, cost), daily budget with automatic stop</td>
-<td>BR-ACC-02, ACC-02, NFR-11</td>
+<td>Per destination 3 per hour and 10 per day, per IP 10 per hour, global budget 5,000 SMS per day then <code>sms_budget_exceeded</code>; every send recorded in <code>otp_send_log</code> (HMAC of the destination) (15.2)</td>
+<td>BR-ACC-02, NFR-11</td>
+</tr>
+<tr>
+<td>Information disclosure / Spoofing</td>
+<td>SSRF through a URL given by a host (hotel system address, iCal link)</td>
+<td>Outgoing URL check at save and at fetch time: https only, public IPs only, no cross-host redirect, 10 s, 5 MB (15.1)</td>
+<td>BR-SYS-06, NFR-14</td>
 </tr>
 <tr>
 <td>Denial of service</td>
@@ -344,7 +353,7 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>Elevation of privilege</td>
 <td>Staff member giving themselves a role</td>
-<td><code>team.manage</code> only for super admin; role changes audited and notified to all super admins</td>
+<td>One staff role, admin (DEC-016); <code>team.manage</code> changes need a second admin&#39;s confirmation; staff changes audited and notified to every admin</td>
 <td>BR-STF-01</td>
 </tr>
 </tbody></table>
@@ -415,7 +424,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Staff MFA</td>
-<td>Mandatory before any admin endpoint works (<code>403 mfa_required</code>); TOTP or passkey; 10 single-use recovery codes; passkeys recommended for super admins (BR-ACC-04)</td>
+<td>Mandatory before any admin endpoint works (<code>403 mfa_required</code>); TOTP or passkey; 10 single-use recovery codes; passkeys recommended for admins (BR-ACC-04)</td>
 </tr>
 <tr>
 <td>Host MFA</td>
@@ -451,201 +460,50 @@ section.doc{page-break-before:always;padding:0}
 <ol>
 <li><strong>Public and guest</strong> (<code>/public</code>, <code>/me</code>): object ownership checked in selectors (<code>bookings_for_guest(user)</code>); other people&#39;s objects return <strong>404</strong>, not 403, so ids cannot be probed.</li>
 <li><strong>Host</strong> (<code>/host</code>): every request names <code>X-Host-Account</code>; a permission class checks the user holds it (individual owner or active membership) and the organisation role permission (table 5.3). Lists are always filtered by that host account.</li>
-<li><strong>Staff</strong> (<code>/admin</code>): staff token, MFA done, permission from the staff role (table 5.2). Field-level: personal data shown only to roles that need it (for example analysts see counts, not phone numbers).</li>
+<li><strong>Staff</strong> (<code>/admin</code>): staff token, MFA done, permission check on every endpoint (table 5.2). Today every admin has every permission (DEC-016); the checks stay in the code so roles can be split later without new endpoints.</li>
 </ol>
 <p>Output fields per role are separate serializers (no &quot;one serializer with hidden fields&quot;). Writable fields are an explicit allowlist per endpoint (mass-assignment protection, API3).</p>
 <h3 id="52-staff-roles-and-permissions">5.2 Staff roles and permissions</h3>
-<p>34 permissions stored in <code>staff_permission</code>, linked to the 5 roles in <code>staff_role_permission</code> (seeded from today&#39;s <code>admin/lib/permissions.ts</code>, BR-STF-01). X = granted.</p>
+<p><strong>One staff role: admin, with every permission (DEC-016, BR-STF-01).</strong> The permission list stays in <code>staff_permission</code> and <code>staff_role_permission</code>, and every admin endpoint still checks its permission (deny by default), so roles can be split later (for example a privacy officer or a read-only analyst) by data, not by new code.</p>
 <table>
 <thead>
 <tr>
-<th>Permission</th>
-<th>super_admin</th>
-<th>moderator</th>
-<th>support</th>
-<th>finance</th>
-<th>analyst</th>
+<th>Permission groups (all granted to admin)</th>
+<th>Examples</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>hosts.view</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
+<td>Hosts</td>
+<td>hosts.view, hosts.approve, hosts.reject, hosts.suspend, hosts.delete, hosts.commission_override, kyc.view_documents (every view audited)</td>
 </tr>
 <tr>
-<td>hosts.approve, hosts.reject, hosts.suspend</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
+<td>Listings and reviews</td>
+<td>listings.view, listings.approve, listings.feature, listings.delete, reviews.view, reviews.moderate, reviews.delete</td>
 </tr>
 <tr>
-<td>hosts.delete</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+<td>Users and privacy</td>
+<td>users.view, users.suspend, users.ban, users.delete, privacy.handle_requests</td>
 </tr>
 <tr>
-<td>hosts.commission_override</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td>X</td>
-<td></td>
+<td>Bookings</td>
+<td>bookings.view, bookings.cancel, bookings.dispute, bookings.refund</td>
 </tr>
 <tr>
-<td>listings.view</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td>X</td>
+<td>Money</td>
+<td>wallets.view, wallets.recharge, commissions.manage, ledger.adjust, payouts.approve (dormant)</td>
 </tr>
 <tr>
-<td>listings.approve, listings.reject, listings.suspend, listings.feature</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>listings.delete</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>users.view</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td>X</td>
-</tr>
-<tr>
-<td>users.suspend</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>users.ban, users.delete</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>bookings.view</td>
-<td>X</td>
-<td></td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-</tr>
-<tr>
-<td>bookings.cancel, bookings.dispute</td>
-<td>X</td>
-<td></td>
-<td>X</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>bookings.refund</td>
-<td>X</td>
-<td></td>
-<td>X</td>
-<td>X</td>
-<td></td>
-</tr>
-<tr>
-<td>reviews.view</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td>X</td>
-</tr>
-<tr>
-<td>reviews.moderate</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>reviews.delete</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>wallets.view</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td>X</td>
-<td>X</td>
-</tr>
-<tr>
-<td>wallets.recharge, commissions.manage, payouts.approve</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td>X</td>
-<td></td>
-</tr>
-<tr>
-<td>onboarding.edit, team.manage, settings.manage</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>categories.manage, promotions.manage</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>reports.export</td>
-<td>X</td>
-<td>X</td>
-<td></td>
-<td>X</td>
-<td>X</td>
-</tr>
-<tr>
-<td>audit.view</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
-<td>X</td>
+<td>Platform</td>
+<td>onboarding.edit, team.manage, settings.manage, categories.manage, promotions.manage, reports.export, audit.view</td>
 </tr>
 </tbody></table>
-<p>Additions for the backend (new permissions, added to the seed): <code>kyc.view_documents</code> (moderator, super_admin; every view audited), <code>privacy.handle_requests</code> (super_admin and a named privacy officer), <code>wallets.approve_large_topup</code> (finance, must be a different user from the creator, BR-PAY-07). Proposed new role later: <code>privacy_officer</code>.</p>
-<p>Separation of duties: the person who creates a manual top-up cannot approve it; a super admin cannot remove the last other super admin; role changes are notified to every super admin.</p>
+<p><strong>Separation of duties with one role</strong> (DEC-022): it comes from <strong>two different admin accounts</strong>, not from two roles.</p>
+<ul>
+<li>Top-ups: when the host&#39;s rolling 24-hour total of top-ups (pending + approved, including the new one) passes 500,000 DZD, a second admin must approve; the approver is always different from the requester (<code>four_eyes_same_user</code>, BR-PAY-07).</li>
+<li>Manual wallet adjustments (<code>wallet_adjustment</code>): always need a second admin (<code>four_eyes_required</code>), at most 1,000,000 DZD each, reason required, audited (BR-PAY-13).</li>
+<li>An admin cannot deactivate the last other admin; staff changes are notified to every admin.</li>
+<li>BLADUS must therefore always have at least two active admin accounts held by two real people.</li>
+</ul>
 <h3 id="53-organisation-roles">5.3 Organisation roles</h3>
 <p>From BR-ORG-05, table 2a in <a href="04-business-rules.html">04-business-rules.md</a>:</p>
 <table>
@@ -781,9 +639,9 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>API7 Server-side request forgery</td>
-<td>iCal import feeds (<code>calendar_feed</code>, Later, AVL-06), image-by-URL (not offered), webhook callbacks</td>
-<td>No URL fetch at MVP. For <code>calendar_feed</code> imports: URL stored encrypted (<code>url_encrypted</code>), fetched only by a worker through an egress proxy that blocks private and link-local IP ranges after DNS resolution, allows only http(s) on 80/443, no redirects to other hosts, 2 MB and 10 s limits; export feeds use a secret token stored only as a hash (<code>export_token_hash</code>)</td>
-<td>SSRF test list (169.254.169.254, 10.0.0.0/8, 127.0.0.1, <code>[::1]</code>, DNS names resolving to private IPs, redirect to localhost)</td>
+<td>Hotel system connection (<code>POST /host/integrations</code>, sync job), iCal import feeds (<code>calendar_feed</code>, Later), image-by-URL (not offered)</td>
+<td>Outgoing URL check at save and at every fetch: https only, public IPs only (no loopback, private, link-local, CGNAT, multicast, reserved, 169.254.169.254), no cross-host redirect, 10 s timeout, 5 MB cap (15.1, BR-SYS-06); egress proxy allowlist</td>
+<td>Unit tests on <code>netguard</code> with private, metadata and redirect cases; DNS rebinding test</td>
 </tr>
 <tr>
 <td>API8 Security misconfiguration</td>
@@ -873,6 +731,16 @@ section.doc{page-break-before:always;padding:0}
 <td>Never rotated casually (hashes would change); rotation needs a planned re-hash from the source documents, impossible after images are deleted, so guard it carefully</td>
 </tr>
 <tr>
+<td><code>HASH_PEPPER</code></td>
+<td>HMAC-SHA256 of one-time codes, session token lookups and lookup hashes (phone, email) (BR-SYS-07, 15.3)</td>
+<td>Yearly or on leak, by a dual-check window: new hashes use the new pepper, checks accept old and new until the longest-lived value expires (codes 10 min, sessions 30 days)</td>
+</tr>
+<tr>
+<td><code>INTEGRATION_KEYS</code> (versioned, key id per record)</td>
+<td>AES-GCM (Fernet acceptable) encryption of hotel system credentials in <code>property_integration</code> (15.4)</td>
+<td>Yearly; records store <code>credentials_key_id</code>; a job re-encrypts with the new key, old key removed after the job</td>
+</tr>
+<tr>
 <td>Database passwords (per role)</td>
 <td>PostgreSQL</td>
 <td>Every 6 months</td>
@@ -940,7 +808,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Database roles</td>
-<td><code>bladus_migrate</code> (owner, used only by migrations), <code>bladus_app</code> (no UPDATE/DELETE on ledger, audit, <code>booking_event</code>), <code>bladus_readonly</code> (reports, replicas), <code>bladus_backup</code></td>
+<td><code>bladus_migrator</code> (owner, used only by migrations), <code>bladus_app</code> (SELECT and INSERT only on ledger, audit, <code>booking_event</code>; see 15.8), <code>bladus_readonly</code> (reports, replicas), <code>bladus_backup</code></td>
 </tr>
 </tbody></table>
 <h2 id="8-file-security">8. File security</h2>
@@ -1019,9 +887,14 @@ section.doc{page-break-before:always;padding:0}
 <td>allauth + Redis (BR-ACC-05)</td>
 </tr>
 <tr>
-<td>OTP send</td>
-<td>3 per phone per hour, 10 per IP per hour, 20 per device id per day; every attempt (sent, failed, <code>blocked_rate_limit</code>) written to <code>otp_send_log</code></td>
-<td>allauth + Redis (BR-ACC-02, ACC-02)</td>
+<td>OTP and SMS send</td>
+<td>Per destination (phone or email) 3 per hour and 10 per day; per IP 10 per hour; 20 per device id per day; every attempt (sent, failed, <code>blocked_rate_limit</code>) written to <code>otp_send_log</code></td>
+<td>Redis + service (BR-ACC-02)</td>
+</tr>
+<tr>
+<td>Global SMS budget</td>
+<td>5,000 SMS per day (setting <code>sms_daily_budget</code>); above it SMS sends answer <code>sms_budget_exceeded</code> and the admins are alerted</td>
+<td>service (BR-ACC-02)</td>
 </tr>
 <tr>
 <td>OTP verify</td>
@@ -1045,8 +918,13 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Booking create</td>
-<td>10 per hour per guest; max 5 open requests at once</td>
-<td>DRF + service (API6)</td>
+<td>10 per hour per guest; at most 3 pending requests and 6 upcoming bookings at once (<code>too_many_open_bookings</code>)</td>
+<td>DRF + service (BR-BKG-08, API6)</td>
+</tr>
+<tr>
+<td>Check-in code entry</td>
+<td>5 wrong codes per booking lock host entry for 1 hour</td>
+<td>service (BR-BKG-09)</td>
 </tr>
 <tr>
 <td>Messages</td>
@@ -1084,7 +962,7 @@ section.doc{page-break-before:always;padding:0}
 <li><strong>What is logged</strong> (STF-03): every staff write; every host money action (top-up, commission override, payout details change); team changes (invite, role change, removal, ownership transfer); logins, failed logins, MFA changes and session revocations; every KYC file view; exports (filters and row count); settings and onboarding publishes; privacy requests and their handling.</li>
 <li><strong>Row content</strong>: <code>occurred_at</code>, <code>actor_id</code>, <code>actor_kind</code>, <code>actor_role</code>, <code>action</code>, <code>object_type</code>, <code>object_id</code>, <code>host_account_id</code>, <code>before</code>, <code>after</code>, <code>ip</code>, <code>user_agent</code>, <code>request_id</code>, <code>prev_hash</code>, <code>hash</code> (<a href="files/schema.dbml">schema.dbml</a>). <code>before</code> and <code>after</code> keep only changed fields and never contain secrets, full document numbers or message bodies.</li>
 <li><strong>Hash</strong>: <code>hash = SHA-256(prev_hash || canonical_json(row without hash))</code>, where canonical JSON has sorted keys and UTC timestamps. Rows are appended through one service which takes a short advisory lock so the chain has a single order.</li>
-<li><strong>Protection</strong>: insert-only for <code>bladus_app</code> (no UPDATE, DELETE, TRUNCATE); monthly partitions; the job <code>audit.verify_hash_chain</code> recomputes yesterday&#39;s chain each night and stores the day&#39;s final hash as an <strong>anchor</strong> in a separate place (the backup bucket in the second data centre and an email to two named people). A break raises a critical alert.</li>
+<li><strong>Protection</strong>: insert-only, enforced twice: a trigger refuses UPDATE and DELETE for every role, and <code>bladus_app</code> has only SELECT and INSERT (the table owner is <code>bladus_migrator</code>, see 15.7); a daily job exports the previous day to write-once object storage; monthly partitions; the job <code>audit.verify_hash_chain</code> recomputes yesterday&#39;s chain each night and stores the day&#39;s final hash as an <strong>anchor</strong> in a separate place (the backup bucket in the second data centre and an email to two named people). A break raises a critical alert.</li>
 <li><strong>Access</strong>: <code>audit.view</code> for reading; nobody can edit. Exports of the audit log are themselves audited.</li>
 <li><strong>Retention</strong>: 5 years for staff and security events, 10 years where linked to accounting (VERIFY).</li>
 </ul>
@@ -1125,21 +1003,39 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Fake wallet top-up receipt</td>
-<td>Same receipt reference twice; large amounts</td>
-<td>Unique receipt per method; four-eyes above 500,000 DZD</td>
+<td>Same receipt reference twice; large amounts; several top-ups split under the threshold</td>
+<td>Unique receipt per method; four-eyes when the rolling 24-hour total passes 500,000 DZD; approver always different</td>
 <td>BR-PAY-07</td>
 </tr>
 <tr>
-<td>Calendar blocking by fake requests</td>
+<td>Admin crediting a wallet by hand</td>
+<td>Manual adjustments</td>
+<td><code>wallet_adjustment</code> only, never an edit; second admin; cap 1,000,000 DZD; audited; nightly reconciliation</td>
+<td>BR-PAY-13, BR-PAY-15</td>
+</tr>
+<tr>
+<td>Host keeps the guest&#39;s money after a cancellation</td>
+<td>Refund obligation open or disputed past its due date</td>
+<td>Refund obligation tracked as a debt (7 days); overdue: instant booking off and no accepting requests (<code>refund_overdue</code>); guest can dispute; admin can settle with proof. VERIFY WITH A PROFESSIONAL (consumer law on refund delays)</td>
+<td>BR-CAN-06, BR-CAN-07</td>
+</tr>
+<tr>
+<td>Host cancels to avoid commission</td>
+<td>Many guest cancellations with non-refundable shares</td>
+<td>Commission follows the refund: the host keeps commission only on the refunded share (DEC-018 revised)</td>
+<td>BR-PAY-05</td>
+</tr>
+<tr>
+<td>Calendar blocking by fake requests (booking hoarding)</td>
 <td>Many open requests, no confirmations</td>
-<td>24 h TTL; max open requests per guest; flags</td>
-<td>BR-BKG-04, API6</td>
+<td>24 h TTL; at most 3 pending requests and 6 upcoming bookings per guest (<code>too_many_open_bookings</code>); flags</td>
+<td>BR-BKG-04, BR-BKG-08, API6</td>
 </tr>
 <tr>
 <td>Fake reviews and review rings</td>
-<td>Reviews only from completed bookings; bursts; same IP/device</td>
-<td>Review eligibility in the database; burst and ring detection (R2)</td>
-<td>BR-REV-01, BR-MOD-04</td>
+<td>Reviews only from completed bookings with a confirmed stay; bursts; same IP/device</td>
+<td>Stay confirmation (check-in code entered by the host, or guest confirmation after check-in time) before any review; a completed booking also cost the host its commission; burst and ring detection (R2)</td>
+<td>BR-BKG-09, BR-REV-01, BR-MOD-04</td>
 </tr>
 <tr>
 <td>SMS pumping</td>
@@ -1149,9 +1045,9 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Staff insider abuse</td>
-<td>Unusual KYC views, exports, top-ups</td>
-<td>Least privilege; four-eyes; every view audited; weekly review of KYC views and exports by a super admin</td>
-<td>BR-STF-01, 02, 04</td>
+<td>Unusual KYC views, exports, top-ups, adjustments</td>
+<td>Four-eyes with two admin accounts; every view audited; insert-only audit with daily write-once export; weekly review of KYC views and exports by a second admin</td>
+<td>BR-STF-01, 02, 04, BR-PAY-13</td>
 </tr>
 <tr>
 <td>Host with many cancellations</td>
@@ -1552,8 +1448,12 @@ section.doc{page-break-before:always;padding:0}
 <li><input disabled="" type="checkbox"> <code>manage.py check --deploy</code> clean; <code>DEBUG = False</code>; <code>ALLOWED_HOSTS</code> exact; <code>SECURE_PROXY_SSL_HEADER</code> set correctly; security headers (HSTS, CSP, <code>X-Content-Type-Options</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>, <code>frame-ancestors &#39;none&#39;</code>) on both Next.js apps and Django admin console.</li>
 <li><input disabled="" type="checkbox"> TLS A grade on an external test; HTTP redirects to HTTPS.</li>
 <li><input disabled="" type="checkbox"> Django API not reachable from the internet except the webhook path; Redis, PostgreSQL, storage admin ports closed from outside (external port scan).</li>
-<li><input disabled="" type="checkbox"> Database roles and grants applied; <code>bladus_app</code> cannot UPDATE or DELETE ledger, audit, <code>booking_event</code> (test).</li>
-<li><input disabled="" type="checkbox"> Every staff account has MFA; super admins use passkeys; recovery codes stored offline.</li>
+<li><input disabled="" type="checkbox"> Database roles and grants applied (<code>bladus_migrator</code> owns, <code>bladus_app</code> runs); <code>bladus_app</code> cannot UPDATE or DELETE ledger, audit, <code>booking_event</code>, and the triggers refuse it even for the owner (test).</li>
+<li><input disabled="" type="checkbox"> Outgoing URL check (<code>apps/core/netguard.py</code>) tested with the private, metadata and redirect cases.</li>
+<li><input disabled="" type="checkbox"> <code>HASH_PEPPER</code> and <code>INTEGRATION_KEYS</code> generated, stored in the secret store, backed up offline by two people.</li>
+<li><input disabled="" type="checkbox"> BFF CSRF: Origin check and double-submit token on every state-changing route (test).</li>
+<li><input disabled="" type="checkbox"> <code>reconcile_balances</code> scheduled nightly and its alert tested; daily audit export to write-once storage running.</li>
+<li><input disabled="" type="checkbox"> Every admin account has MFA; admins use passkeys; recovery codes stored offline; at least two active admin accounts held by two people.</li>
 <li><input disabled="" type="checkbox"> Admin app reachable only through allowlisted IPs or a VPN, in addition to MFA.</li>
 <li><input disabled="" type="checkbox"> Rate limits active and tested (section 9); SMS budget caps configured.</li>
 <li><input disabled="" type="checkbox"> Secrets in the secret store only; repository scanned for secrets (gitleaks) including history.</li>
@@ -1645,6 +1545,216 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 </tbody></table>
 <p>L1 to L12 are tracked in <a href="13-decisions-needed.html">13-decisions-needed.md</a>. New items L13 to L16 should be added there at its next update.</p>
+<h2 id="15-security-controls-decided-on-2026-11-13-dec-025-dec-026">15. Security controls decided on 2026-11-13 (DEC-025, DEC-026)</h2>
+<p>Each control below says what it does, where it is enforced and how we test it. The rule ids are in <a href="04-business-rules.html">04-business-rules.md</a>. (Section number 15 keeps the earlier section numbers stable.)</p>
+<h3 id="151-outgoing-url-check-ssrf">15.1 Outgoing URL check (SSRF)</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>Any URL a host gives (hotel system <code>base_url</code>, iCal link) must be <code>https</code>, and its host name must resolve <strong>only</strong> to public IP addresses: no loopback, private (10/8, 172.16/12, 192.168/16, fc00::/7), link-local, CGNAT 100.64.0.0/10, multicast, reserved, and never the metadata address 169.254.169.254. No redirect to another host. Timeout 10 seconds; response capped at 5 MB</td>
+</tr>
+<tr>
+<td>When</td>
+<td>At save time (clear error for the host) <strong>and again at every fetch</strong> (DNS can change between save and fetch); the connection is made to the checked IP address, so a second DNS answer cannot switch it</td>
+</tr>
+<tr>
+<td>Where</td>
+<td><code>apps/core/netguard.py</code>, used by the hotel sync and iCal jobs; outbound traffic also goes through the egress proxy allowlist (4.5)</td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>BR-SYS-06, NFR-14</td>
+</tr>
+<tr>
+<td>Test</td>
+<td><code>https://169.254.169.254/</code>, <code>https://127.0.0.1/</code>, <code>https://10.0.0.5/</code>, a name that resolves to a private IP, <code>http://</code> URLs, a redirect to another host, a slow server (11 s) and a 6 MB answer are all refused</td>
+</tr>
+</tbody></table>
+<h3 id="152-sms-and-one-time-code-limits">15.2 SMS and one-time code limits</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>Codes: 6 digits, valid 10 minutes, 5 wrong attempts invalidate the code. Sends: per destination (phone or email) 3 per hour and 10 per day; per IP 10 per hour; a <strong>global SMS budget of 5,000 per day</strong> (setting <code>sms_daily_budget</code>), after which SMS sends answer <code>sms_budget_exceeded</code> and the admins are alerted. The same answer is given for known and unknown numbers</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Service in <code>accounts</code> with Redis counters; every send recorded in <code>otp_send_log</code> (HMAC of the destination, IP, status, cost)</td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>BR-ACC-02, NFR-11</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>4th send to one phone in an hour refused; 11th in a day refused; 11th from one IP in an hour refused; budget reached: <code>sms_budget_exceeded</code> and an alert; 6th attempt with the right code fails</td>
+</tr>
+</tbody></table>
+<h3 id="153-hashes-with-a-server-pepper">15.3 Hashes with a server pepper</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>One-time codes, session token lookups and lookup hashes (phone, email, ID number) are stored as <strong>HMAC-SHA256 with a server secret</strong> <code>HASH_PEPPER</code> (ID numbers keep <code>ID_HASH_PEPPER</code>), never a plain SHA-256 of a short value: a 6-digit code has only a million values, so a plain hash is reversed in milliseconds</td>
+</tr>
+<tr>
+<td>Rotation</td>
+<td>Dual-check window: new values are hashed with the new pepper; checks accept old and new pepper until the longest-lived value has expired; then the old pepper is removed</td>
+</tr>
+<tr>
+<td>Where</td>
+<td><code>apps/core/hashing.py</code>, used by accounts, sessions and <code>otp_send_log</code></td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>BR-SYS-07, NFR-14</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>The stored hash of a code differs from SHA-256 of the code; a code hashed with the old pepper is accepted during the window and refused after it</td>
+</tr>
+</tbody></table>
+<h3 id="154-key-management">15.4 Key management</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>Every secret comes from the <strong>environment</strong>, filled at deploy time from the host&#39;s secret store (section 7.1); nothing in the repository or images. Hotel system credentials are encrypted with <strong>AES-GCM</strong> (Fernet acceptable) under <code>INTEGRATION_KEYS</code>, with a <strong>key id stored on each record</strong> (<code>credentials_key_id</code>) and <strong>yearly rotation</strong> (re-encrypt job, then the old key is removed). Payout numbers keep envelope encryption under <code>FIELD_ENCRYPTION_KEYS</code> (7.3). Pepper rotation as in 15.3</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Django settings read only environment variables; <code>apps/core/crypto.py</code></td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>DEC-025, ADR-014</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>App refuses to start when a required secret is missing; a record encrypted with key 1 is still readable after key 2 is added; after the re-encrypt job no record uses key 1</td>
+</tr>
+</tbody></table>
+<h3 id="155-csrf">15.5 CSRF</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>The Django API accepts <strong>only</strong> <code>Authorization: Bearer</code> (or the session token header) and <strong>no cookies</strong>, so classic CSRF does not apply to it. The Next.js BFF keeps the token in an <strong>HttpOnly, Secure, SameSite=Lax</strong> cookie (admin: Strict) and, on every state-changing route handler and server action, checks the <strong>Origin</strong> header <strong>plus a double-submit CSRF token</strong> (a random value in a readable cookie that must match a header or form field)</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Next.js middleware in both apps; Django refuses cookie-only requests on <code>/api/v1</code></td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>DEC-025, ACC-03</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>A POST from another origin is refused; a POST without the matching CSRF token is refused; a request to the API with only a cookie gets 401</td>
+</tr>
+</tbody></table>
+<h3 id="156-uploads">15.6 Uploads</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>Size and type limits (photos 15 MB, documents 10 MB); content sniffing by magic bytes; EXIF, XMP and IPTC (including GPS) stripped by re-encoding; files land in a <strong>quarantine bucket</strong>; <strong>ClamAV</strong> scans them in the worker; <strong>only clean files are published</strong> (moved to the public or private bucket); infected files deleted and audited</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Presigned upload, then <code>media</code> worker job (section 8)</td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>BR-MED-01, BR-MED-02</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>EICAR test file rejected; a PNG renamed <code>.jpg</code> handled by real type; a photo with GPS comes out without it; a file is not reachable before the scan ends</td>
+</tr>
+</tbody></table>
+<h3 id="157-audit-log-protection">15.7 Audit log protection</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td><code>audit_event</code> is insert-only: a PostgreSQL <strong>trigger refuses UPDATE and DELETE</strong> for every role, and the app role has only SELECT and INSERT (the owner is another role, 15.8); hash chain (section 10); <strong>daily export</strong> of the previous day to <strong>write-once object storage</strong> (object lock) in the second data centre</td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>BR-STF-02, DEC-026</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>UPDATE and DELETE fail as <code>bladus_app</code> and as the owner; the daily export exists and cannot be overwritten</td>
+</tr>
+</tbody></table>
+<h3 id="158-ledger-protection">15.8 Ledger protection</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>What</td>
+<td>Tables are <strong>owned by a separate migration role <code>bladus_migrator</code></strong>; the app connects as <strong><code>bladus_app</code></strong> with <strong>SELECT and INSERT only</strong> on <code>ledger_transaction</code>, <code>ledger_entry</code> and <code>audit_event</code> (and <code>booking_event</code>). This matters because <strong>REVOKE alone does not stop a table owner</strong>. In addition, <strong>triggers refuse UPDATE and DELETE</strong> on these tables for every role. Corrections are new transactions or a <code>wallet_adjustment</code> approved by a second admin</td>
+</tr>
+<tr>
+<td>Reconciliation</td>
+<td>Nightly job <code>reconcile_balances</code> recomputes every <code>account_balance</code> from ledger entries, reports differences to the admins and the audit log, and <strong>exits non-zero</strong> when one differs; <code>--fix</code> rewrites a balance only after a human check, and is audited</td>
+</tr>
+<tr>
+<td>Where</td>
+<td>Migrations (roles, grants, triggers); Celery beat job</td>
+</tr>
+<tr>
+<td>Rule</td>
+<td>BR-PAY-02, BR-PAY-15, DEC-026</td>
+</tr>
+<tr>
+<td>Test</td>
+<td>UPDATE on <code>ledger_entry</code> as <code>bladus_app</code> and as <code>bladus_migrator</code> fails; a hand-edited balance is reported the next night and the job exit code is non-zero</td>
+</tr>
+</tbody></table>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
@@ -1656,5 +1766,8 @@ section.doc{page-break-before:always;padding:0}
 <li><input disabled="" type="checkbox"> What makes a deleted audit row visible?</li>
 <li><input disabled="" type="checkbox"> A laptop with a database dump is stolen on day 0. List what must happen before day 5.</li>
 <li><input disabled="" type="checkbox"> Why might a foreign SMS provider need ANPDP authorisation?</li>
+<li><input disabled="" type="checkbox"> A host enters <code>https://169.254.169.254/</code> as the hotel system address. When and where is it refused?</li>
+<li><input disabled="" type="checkbox"> Why is REVOKE not enough to protect the ledger, and what is added?</li>
+<li><input disabled="" type="checkbox"> Why is a plain SHA-256 of a 6-digit code unsafe?</li>
 </ul>
 <div class="pager"><span><a href="07-architecture.html">&larr; 07. Architecture: how the Django backend is organised</a></span><span><a href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it &rarr;</a></span></div></main></div></body></html>

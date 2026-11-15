@@ -6,6 +6,7 @@
 > The two apps keep working on demo data the whole time: in each step, a few of their data files switch to the real API, one at a time, behind a switch we can turn back.
 > Some steps cannot finish without an answer from a lawyer or an accountant. Those answers are shown as gates at the step that needs them.
 > With 2 backend developers and 1 part-time frontend developer, the MVP takes about 29 weeks of work plus 2 weeks of buffer (about 7 months).
+> Before M0 starts, the one-page operations plan [09b-operations.md](09b-operations.md) must be agreed (DEC-027).
 
 **Terms used here** (see [glossary.md](glossary.md)):
 - **Milestone (M0 to M7)**: a block of work that ends with a check anyone can run ("exit criteria").
@@ -17,7 +18,7 @@
 - **Closed beta**: real hosts and guests, invited by us, before the public can sign up.
 - **Gantt chart**: a bar chart of tasks over time.
 
-Inputs: [03-requirements.md](03-requirements.md) (147 requirements), [04-business-rules.md](04-business-rules.md), [05-database-schema.md](05-database-schema.md), [01-system-inventory.md](01-system-inventory.md) section 4 (the `lib/data` bridge), [02-research.md](02-research.md) section E. The API contract is written in parallel in `06-api-design.md` and `openapi.yaml`; operations, security and testing details in `07` to `10`. The full requirement-to-milestone list is in [traceability.md](traceability.md).
+Inputs: [03-requirements.md](03-requirements.md) (157 requirements: 136 MVP, 19 R2, 2 Later), [04-business-rules.md](04-business-rules.md), [05-database-schema.md](05-database-schema.md), [01-system-inventory.md](01-system-inventory.md) section 4 (the `lib/data` bridge), [02-research.md](02-research.md) section E. The API contract is written in parallel in `06-api-design.md` and `openapi.yaml`; operations, security and testing details in `07` to `10`. The full requirement-to-milestone list is in [traceability.md](traceability.md).
 
 ---
 
@@ -28,10 +29,11 @@ Inputs: [03-requirements.md](03-requirements.md) (147 requirements), [04-busines
 | A1 | **Team: 2 backend developers full-time** (Django, PostgreSQL), **1 frontend developer half-time** (Next.js, switches the `lib/data` modules), a product owner who answers within 3 working days, and one of the backend developers acting as tech lead. | With 1 backend developer, multiply backend durations by about 1.8. |
 | A2 | Work starts **Monday 2026-11-16**. Dates in the chart are targets, not promises. | Shift every date by the delay. |
 | A3 | **Ramadan 2027** (about 8 February to 9 March, VERIFY the exact dates) and the two Eids lower capacity; M3 and M4 are planned a little longer for this. | Add 1 week if the team works reduced hours. |
-| A4 | The 147 requirements and DEC-001 to DEC-015 do not change much. New ideas go to R2 by default (risk K-21 in [12-risks.md](12-risks.md)). | Re-plan at each milestone review. |
+| A4 | The 157 requirements and DEC-001 to DEC-031 (DEC-018 revised on 2026-11-13) do not change much. New ideas go to R2 by default (risk K-21 in [12-risks.md](12-risks.md)). | Re-plan at each milestone review. |
 | A5 | Staging runs on any cloud with **demo data only**. **No real personal data exists anywhere until production is hosted in Algeria** (gates L1, L2). | Real data abroad may break Law 18-07 (VERIFY WITH A PROFESSIONAL). |
 | A6 | The money model stays **M1 (prepaid commission)** for the MVP (DEC-001). Collecting guest money (M2 to M4) is a separate project behind a licence gate. | A different model adds 6 to 10 weeks and a legal track. |
 | A7 | Each milestone ends with a 1-hour review: demo on staging, exit criteria checked, next milestone confirmed. | |
+| A8 | The operations page [09b-operations.md](09b-operations.md) is agreed before M0 (DEC-027): Docker Compose on one VPS for M0 to M2, failover with RPO 5 minutes and RTO 1 hour, monthly restore test, alerts, CI/CD with rollback, runbooks. | M0 starts without a deploy and restore path; incidents found late. |
 
 ## 2. How the apps move from demo data to the API
 
@@ -47,12 +49,13 @@ Inputs: [03-requirements.md](03-requirements.md) (147 requirements), [04-busines
 
 | Milestone | Name | Weeks | Target dates | Requirements | Main gate |
 |---|---|---|---|---|---|
-| M0 | Foundations | 3 | 2026-11-16 to 2026-12-06 | 18 | Q22, T1 to T4, T8, T9 |
+| Gate 0 | Operations plan agreed ([09b-operations.md](09b-operations.md), DEC-027) | before M0 | by 2026-11-16 | | DEC-027 |
+| M0 | Foundations | 3 | 2026-11-16 to 2026-12-06 | 19 | Q22, T1 to T4, T8, T9 |
 | M1 | Accounts, staff and host verification | 5 | 2026-12-07 to 2027-01-10 | 28 | L4 (draft list), T6 |
-| M2 | Catalogue, trips and moderation | 4 | 2027-01-11 to 2027-02-07 | 23 | Q16, Q19, Q24, Q28 |
-| M3 | Search, availability and quotes | 3 | 2027-02-08 to 2027-02-28 | 11 | T7, Q17 |
-| M4 | Bookings, cancellations and the commission wallet | 5 | 2027-03-01 to 2027-04-04 | 27 | Q14, Q15, Q18, Q20, Q25, Q26, F5, F6, F7, L3 (for Q18 only) |
-| M5 | Messaging and reviews | 3 | 2027-04-05 to 2027-04-25 | 8 | **L1, L2 answered** (to sign the Algerian hosting contract), T1 final |
+| M2 | Catalogue, trips and moderation | 4 | 2027-01-11 to 2027-02-07 | 24 | Q16, Q19, Q24, Q28 |
+| M3 | Search, availability and quotes | 3 | 2027-02-08 to 2027-02-28 | 11 | Q17 (T7 closed by DEC-030) |
+| M4 | Bookings, cancellations and the commission wallet | 5 | 2027-03-01 to 2027-04-04 | 34 | Q14, Q15, Q18, Q20, Q25, Q26, F5, F6, F7, L3 (for Q18 only) |
+| M5 | Messaging and reviews | 3 | 2027-04-05 to 2027-04-25 | 9 | **L1, L2 answered** (to sign the Algerian hosting contract), T1 final |
 | M6 | Reports, privacy and hardening | 3 | 2027-04-26 to 2027-05-16 | 8 | L7, L8, L10, L12, Q23 |
 | M7 | Production in Algeria, closed beta, launch | 3 | 2027-05-17 to 2027-06-06 | 3 | **L1, L2, L4, L5, L9, L11 cleared** before real data; Q21, Q27 |
 | Buffer | Contingency | 2 | 2027-06-07 to 2027-06-20 | | |
@@ -61,7 +64,7 @@ Inputs: [03-requirements.md](03-requirements.md) (147 requirements), [04-busines
 | R2-B | Trust and growth | 8 | about 2027-07 to 2027-09 (parallel to R2-A) | 15 | L6 (for PRV-06) |
 | LATER | Behind a legal or business gate | open | not scheduled | 2 | **L3 + PSP licence** for PAY-10 |
 
-Total MVP: **126 requirements** in M0 to M7 (109 Must, 17 Should). Counts per milestone and module: [traceability.md](traceability.md) sections 1 and 2.
+Total MVP: **136 requirements** in M0 to M7 (119 Must, 17 Should). Added on 2026-11-13: NFR-14 (M0), AVL-07, HST-09, BKG-12, CAN-05, PAY-13, PAY-14, NTF-05 (M4), BKG-13 (M5); M4 is the busiest milestone, so its buffer is watched first. Counts per milestone and module: [traceability.md](traceability.md) sections 1 and 2.
 
 ---
 
@@ -69,15 +72,17 @@ Total MVP: **126 requirements** in M0 to M7 (109 Must, 17 Should). Counts per mi
 
 ### M0. Foundations (3 weeks)
 
-- **Goal**: an empty but production-shaped backend: repository, CI, Django 6.1 + DRF + PostgreSQL/PostGIS + Redis + Celery (R-1), sign-up and sign-in that the website can use, the 69 wilayas, platform settings, and the shared conventions (money, time, IDs, errors, languages).
-- **Scope**: ACC-01, ACC-02, ACC-03, ACC-04, ACC-07, PAY-12, SRC-04, CFG-01, PRV-01, NFR-05, NFR-06, NFR-07, NFR-08, NFR-09, NFR-10, NFR-11, NFR-12, NFR-13.
+- **Goal**: an empty but production-shaped backend: repository, CI, Django 5.2 LTS + DRF + PostgreSQL/PostGIS + Redis + Celery (R-1, DEC-030), sign-up and sign-in that the website can use, the 69 wilayas, platform settings, and the shared conventions (money, time, IDs, errors, languages).
+- **Scope**: ACC-01, ACC-02, ACC-03, ACC-04, ACC-07, PAY-12, SRC-04, CFG-01, PRV-01, NFR-05, NFR-06, NFR-07, NFR-08, NFR-09, NFR-10, NFR-11, NFR-12, NFR-13, NFR-14.
 - **Exit criteria**:
   - CI runs lint, type checks, tests with coverage gate, dependency scan and OpenAPI generation on every pull request; main branch deploys to staging automatically.
   - A visitor signs up on the website (staging) with email or `+213` phone, gets a code, verifies, signs in, signs out; the session token is revoked on logout (ACC-03).
   - 69 wilayas and 1,541 communes are seeded with `source` and `valid_from` (BR-SRC-02); a test counts them.
   - `platform_settings` v1 holds the default commission rates (1,200 / 1,500 / 1,800 / 1,000 bp) and request TTL 24 h.
-  - Error envelope has stable codes and en/fr/ar messages; money helper and UUIDv7 helper have property tests.
-- **Dependencies**: decisions T1 (staging host only), T2, T3, T4, T8, T9; Q22 (foreign phone numbers) for ACC-01.
+  - Error envelope has stable codes and en/fr/ar messages; money helper (`apply_bp`, round half up) and UUIDv7 helper have property tests.
+  - Database roles split (`bladus_migrator` owns, `bladus_app` runs the app); insert-only triggers on ledger and audit tables; outgoing URL guard (`core/netguard.py`) and HMAC with `HASH_PEPPER` in place; SMS limits and daily budget enforced (NFR-11, NFR-14).
+  - `python _tools/check_contract_refs.py` runs in CI for the plan documents.
+- **Dependencies**: Gate 0 (operations plan, DEC-027); decisions T1 (staging host only), T2, T3, T4, T8, T9; Q22 (foreign phone numbers) for ACC-01.
 - **`lib/data` switches**: website `auth.ts` (sign-up, sign-in, profile read). Website `lib/algeria.ts` static wilaya list replaced by the geography endpoint (same flag pattern).
 - **Gates**: none blocking. Start the lawyer engagement now (L1, L2, L4, L5, L9, L11 take months).
 
@@ -119,20 +124,23 @@ Total MVP: **126 requirements** in M0 to M7 (109 Must, 17 Should). Counts per mi
   - Searching "تيزي وزو", "Tizi Ouzou" and "tizi-ouzou" returns the same top results (SRC-03, decision T7).
   - A quote lists nights, per-day prices, discount, cleaning fee, total in whole dinars, has an ID and expires after 30 minutes.
   - First performance run: search p95 measured on 20,000 generated listings (target 500 ms is enforced in M6).
-- **Dependencies**: M2; T7 (Arabic search approach); Q17 (one room type per booking).
+- **Dependencies**: M2; Q17 (one room type per booking). Search uses `pg_trgm` trigram similarity plus unaccent (DEC-030, closes T7) and must pass the fixed list of Arabic, French and Darija queries (BR-SRC-05).
 - **`lib/data` switches**: none new on the website (the `listings.ts` endpoint gets richer); admin `network.ts` and `command-palette.ts` (global search).
 - **Gates**: none.
 
 ### M4. Bookings, cancellations and the commission wallet (5 weeks)
 
 - **Goal**: the heart of the product: instant and request bookings that can never double-book, cancellations by policy, and the prepaid commission wallet on a double-entry ledger (model M1).
-- **Scope**: HST-05, AVL-01, AVL-02, AVL-05, BKG-01 to BKG-10, CAN-01 to CAN-04, PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-07, PAY-08, NTF-01, NTF-02.
+- **Scope**: HST-05, HST-09, AVL-01, AVL-02, AVL-05, AVL-07, BKG-01 to BKG-10, BKG-12, CAN-01 to CAN-05, PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-07, PAY-08, PAY-13, PAY-14, NTF-01, NTF-02, NTF-05.
 - **Exit criteria**:
   - Concurrency test on real PostgreSQL: 50 parallel requests for the same home and nights give exactly one booking; for a 3-room hotel room type, exactly 3 (AVL-01, AVL-02).
   - Same `Idempotency-Key` twice returns the same booking (BKG-10).
   - Expiry and completion jobs run on schedule, not on read (BKG-03, BKG-04).
-  - Ledger property test: every transaction sums to zero; the worked examples of [04-business-rules.md](04-business-rules.md) section 9 give the exact centimes.
-  - A finance staff member records a top-up with a receipt; the same receipt is refused a second time; above the threshold a second person must approve (Q15).
+  - Ledger property test: every transaction sums to zero; the worked examples of [04-business-rules.md](04-business-rules.md) sections 8 and 9 give the exact centimes (example 8a: 3,330 DZD back to the host, 3,330 DZD kept, DEC-018 revised).
+  - An admin records a top-up with a receipt; the same receipt is refused a second time; when the host's rolling 24-hour total passes the threshold a different admin must approve (Q15, BR-PAY-07). Manual wallet adjustments need a second admin and are capped at 1,000,000 DZD (PAY-13).
+  - Blocking a booked day and booking a blocked day are both refused by the database triggers (AVL-07). A hotel sync never sets a night below what is held and booked; conflicts show in the admin queue; dead outbox messages show and can be retried (HST-09, NTF-05).
+  - Every cancellation with a refund opens a refund obligation; an overdue one stops instant booking and accepting requests (CAN-05). A guest cannot hold more than 3 pending requests and 6 upcoming bookings (BKG-12).
+  - Lock order test passes with no deadlock; `reconcile_balances` runs nightly and exits non-zero on a difference (PAY-14).
   - Booking confirmed, declined, expired and cancelled each produce an in-app notification and an email or SMS in the user's language.
 - **Dependencies**: M3; decisions Q14 (credit floor), Q15 (four-eyes threshold), Q18 (deposit withdrawals), Q20 (host cancellation penalty), Q25 (minimum first deposit), Q26 (reply window for agencies); accountant answers F5, F6, F7 (how deposits and commissions are recorded and receipted); bank or CCP account opened for host top-ups.
 - **`lib/data` switches** (in this order): website `wallet.ts`, `reservations.ts`, `notifications.ts`; admin `ledger.ts`, `finance.ts`, `bookings.ts`.
@@ -141,10 +149,10 @@ Total MVP: **126 requirements** in M0 to M7 (109 Must, 17 Should). Counts per mi
 ### M5. Messaging and reviews (3 weeks)
 
 - **Goal**: guests and hosts talk before and after booking, with contact details masked until confirmation; guests review completed stays; ratings come from real reviews.
-- **Scope**: REV-01, REV-03, REV-04, REV-05, MSG-01, MSG-02, MSG-03, MSG-04.
+- **Scope**: REV-01, REV-03, REV-04, REV-05, BKG-13, MSG-01, MSG-02, MSG-03, MSG-04.
 - **Exit criteria**:
   - Messages sync by cursor; a phone number or CCP number typed before confirmation is masked for the other side (MSG-04).
-  - A review is accepted only for a completed booking within 14 days, once (REV-01); listing rating changes after publication.
+  - A review is accepted only for a completed booking whose stay was confirmed (check-in code entered by the host, or guest confirmation after check-in time, BKG-13), within 14 days, once (REV-01); listing rating changes after publication.
   - The admin can hide and restore a reported review with a reason.
 - **Dependencies**: M4 (completed bookings).
 - **`lib/data` switches**: website `conversations.ts`, `reviews.ts`; admin `reviews.ts`.
@@ -169,7 +177,7 @@ Total MVP: **126 requirements** in M0 to M7 (109 Must, 17 Should). Counts per mi
 - **Goal**: run in production in Algeria with real data, first with invited hosts and guests, then open to the public.
 - **Scope**: PRV-03, NFR-03, NFR-04 (plus the launch checklist below).
 - **Exit criteria**:
-  - Production and its backups run in Algerian data centres; a restore drill from the second location meets RPO 15 min and RTO 4 h.
+  - Production and its backups run in Algerian data centres; a restore drill from the second location meets RPO 5 min and RTO 1 h (NFR-04, [09b-operations.md](09b-operations.md)).
   - Production builds of both apps have no mock store and no demo passwords (fixes the current leak).
   - Closed beta: at least 30 real hosts (mix of the four host types, Q21 wilayas) verified, at least 50 real bookings, no double booking, no ledger mismatch in the daily reconciliation.
   - Support channels and on-call rota ready (Q27); status page and uptime monitoring active.
@@ -180,7 +188,7 @@ Total MVP: **126 requirements** in M0 to M7 (109 Must, 17 Should). Counts per mi
 
 ### R2-A. Online money: gateway, invoices, taxes (about 6 weeks, after launch)
 
-- **Goal**: hosts top up online by CIB or Edahabia through Chargily; BLADUS issues monthly commission invoices; quotes show tourist tax and VAT where they apply.
+- **Goal**: hosts top up online by CIB or Edahabia through Chargily; BLADUS issues monthly commission invoices; quotes show tourist tax and VAT where they apply. The online top-up is **not in the v1 contract** (DEC-019, DEC-031): PAY-06 stays R2, and its endpoint is designed and added only when this release starts.
 - **Scope**: PRC-04, PAY-06, PAY-09, PAY-11.
 - **Exit criteria**: a test-mode top-up is credited only after a verified webhook, once per event; invoice numbers have no gaps per year; tax lines match the rates in settings.
 - **Dependencies**: launch; Chargily contract signed (start the paperwork during M6, lead time is long).
@@ -259,6 +267,7 @@ The LATER bar is a placeholder only: nothing starts until the L3 gate opens.
 
 | Gate | Question (short) | Blocks | Why there |
 |---|---|---|---|
+| DEC-027 | Operations plan agreed ([09b-operations.md](09b-operations.md)) | before M0 | Deploy, backup and restore path from day one |
 | Q22 | Can foreign phone numbers verify? | M0 | Sign-up rules |
 | L4 (draft) | KYC documents per host type | M1 (soft), M7 (hard) | Document types are data; final list before real hosts |
 | Q16, Q19, Q24, Q28 | Hostel vertical, minimum photos, moderation staffing, verticals at launch | M2 | Catalogue rules |
@@ -292,3 +301,4 @@ The top schedule risks (full register in [12-risks.md](12-risks.md)): late legal
 - [ ] Can staging contain real people's data? Why not?
 - [ ] What has to be true before PAY-10 (guest payments and payouts) can even be scheduled?
 - [ ] If you had only one backend developer, roughly how long would the MVP take?
+- [ ] What must be agreed before M0 can start, and why?

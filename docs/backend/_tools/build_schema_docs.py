@@ -145,6 +145,8 @@ for sec, names in sections.items():
             if c["unique"]:
                 key.append("UQ")
             meaning = c["note"] or COMMON.get(c["name"], "")
+            if c["name"] == "id" and c["pk"] and c["type"] != "uuid" and not c["note"]:
+                meaning = "Official code from the state list (read-only reference data, not an app id)."
             if not meaning and c["ref"]:
                 meaning = f"Link to the {c['ref'][1]} row ({'one to one' if c['ref'][0] == '-' else 'many to one'})."
             elif not meaning and c["type"] in enums:

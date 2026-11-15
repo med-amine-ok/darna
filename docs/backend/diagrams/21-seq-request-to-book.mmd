@@ -8,18 +8,18 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant J as Celery beat + worker
     actor H as Host manager
-    G->>A: POST /bookings (listing in request mode)
+    G->>A: POST /me/bookings (listing in request mode)
     A->>DB: INSERT booking pending, expires in 24 h
-    Note over A,DB: dates stay blocked while pending
+    Note over A,DB: dates stay blocked while pending (at most 3 pending per guest)
     A-->>G: 201 pending
     A-)H: notification and SMS (via outbox)
     alt host accepts in time
-        H->>A: POST /host/bookings/{id}/accept
-        A->>DB: check permission and wallet above floor
+        H->>A: POST /host/bookings/{booking_id}/accept
+        A->>DB: lock wallet balance row, check permission, floor, no overdue refund
         A->>DB: status confirmed, post commission
-        A-)G: confirmed notification
+        A-)G: confirmed notification with check-in code
     else host declines
-        H->>A: POST /host/bookings/{id}/decline with reason
+        H->>A: POST /host/bookings/{booking_id}/decline with reason
         A->>DB: status declined, dates released
         A-)G: declined notification
     else nobody answers

@@ -5,15 +5,15 @@ Host endpoints need ``trips.manage`` (BR-ORG-05) and are scoped by
 ``ctx.host_account``; admin endpoints use ``IsAdmin`` and are audited.
 """
 
-from django.db import transaction
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsAdmin
-from apps.catalog import workflow
-from apps.catalog.api import paginated, query_bool, query_date, query_int
+from apps.catalog.api import page_schema, paginated, query_bool, query_date, query_int
+from apps.catalog.serializers import AdminStatusChangeSerializer, HostStatusChangeSerializer
 from apps.core.errors import NotFoundError
 from apps.hosts.context import get_host_context
 
@@ -25,8 +25,6 @@ from .serializers import (
     DepartureWriteSerializer,
     HostDepartureSerializer,
     HostTripSerializer,
-    ItineraryDaySerializer,
-    ItineraryWriteSerializer,
     TripCardSerializer,
     TripDetailSerializer,
     TripPhotoSerializer,
@@ -96,12 +94,14 @@ def _trip_response(request, trip, status_code=status.HTTP_200_OK):
 class HostTripListView(APIView):
     """``GET`` and ``POST /host/trips``."""
 
+    @extend_schema(responses=page_schema(HostTripSerializer))
     def get(self, request):
         """Trips of the active workspace."""
         ctx = get_host_context(request)
         ctx.require("trips.manage")
         return paginated(request, selectors.host_trips(ctx.host_account), HostTripSerializer)
 
+    @extend_schema(request=TripWriteSerializer, responses={201: HostTripSerializer})
     def post(self, request):
         """Create a draft trip; only approved agencies (BR-TRP-01)."""
         ctx = get_host_context(request)
@@ -115,10 +115,12 @@ class HostTripListView(APIView):
 class HostTripDetailView(APIView):
     """``GET``, ``PATCH``, ``DELETE`` (soft) ``/host/trips/{id}``."""
 
+    @extend_schema(responses=HostTripSerializer)
     def get(self, request, trip_id):
         """One of my trips."""
         return _trip_response(request, host_trip_for(request, trip_id))
 
+    @extend_schema(request=TripWriteSerializer, responses=HostTripSerializer)
     def patch(self, request, trip_id):
         """Partial update; reviewed fields of a live trip send it back to review."""
         trip = host_trip_for(request, trip_id)
@@ -127,42 +129,38 @@ class HostTripDetailView(APIView):
         services.update_trip(trip, data.validated_data)
         return _trip_response(request, trip)
 
+    @extend_schema(responses={204: None})
     def delete(self, request, trip_id):
         """Soft delete."""
         services.delete_trip(host_trip_for(request, trip_id))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class HostTripActionView(APIView):
-    """``POST /host/trips/{id}/submit|pause|resume|archive|withdraw|reopen``."""
+class HostTripStatusView(APIView):
+    """
+    ``POST /host/trips/{id}/status`` ``{status, note?}``: submit, withdraw,
+    pause, resume or archive a trip (BR-LST-03, table 4a; going live always
+    passes review, DEC-003).
+    """
 
-    action_name = ""
-
+    @extend_schema(request=HostStatusChangeSerializer, responses=HostTripSerializer)
     def post(self, request, trip_id):
-        """Apply the status move named by the URL."""
+        """Apply the move; 409 ``invalid_transition``, 422 ``listing_incomplete`` on submit."""
         trip = host_trip_for(request, trip_id)
-        if self.action_name == "submit":
-            services.submit_trip(trip)
-        else:
-            services.host_move(trip, self.action_name)
+        data = HostStatusChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        services.change_host_trip_status(trip, data.validated_data["status"])
         return _trip_response(request, trip)
 
 
-class HostItineraryView(APIView):
-    """``PUT /host/trips/{id}/itinerary`` ``{days: [...]}``: replace the programme."""
-
-    def put(self, request, trip_id):
-        """Save the new programme and return it."""
-        trip = host_trip_for(request, trip_id)
-        data = ItineraryWriteSerializer(data=request.data)
-        data.is_valid(raise_exception=True)
-        services.replace_itinerary(trip, [dict(d) for d in data.validated_data["days"]])
-        return Response(ItineraryDaySerializer(trip.itinerary.all(), many=True).data)
-
-
 class HostTripPhotoView(APIView):
-    """``POST /host/trips/{id}/photos`` ``{url, caption?, is_cover?}``."""
+    """
+    ``POST /host/trips/{id}/photos`` ``{url, caption?, is_cover?}``. Kept
+    until the media app exists: the plan sets trip photos with
+    ``TripWrite.photo_media_ids``, which needs media assets (BR-MED-01).
+    """
 
+    @extend_schema(request=TripPhotoSerializer, responses={201: TripPhotoSerializer})
     def post(self, request, trip_id):
         """Add a photo."""
         trip = host_trip_for(request, trip_id)
@@ -177,11 +175,13 @@ class HostTripPhotoView(APIView):
 class HostDepartureListView(APIView):
     """``GET`` and ``POST /host/trips/{id}/departures``."""
 
+    @extend_schema(responses=HostDepartureSerializer(many=True))
     def get(self, request, trip_id):
         """Every departure of the trip."""
         trip = host_trip_for(request, trip_id)
         return Response(HostDepartureSerializer(trip.departures.all(), many=True).data)
 
+    @extend_schema(request=DepartureWriteSerializer, responses={201: HostDepartureSerializer})
     def post(self, request, trip_id):
         """Add a departure."""
         trip = host_trip_for(request, trip_id)
@@ -201,12 +201,9 @@ def _departure(request, trip_id, departure_id) -> TripDeparture:
 
 
 class HostDepartureDetailView(APIView):
-    """``GET``, ``PATCH``, ``DELETE /host/trips/{id}/departures/{departure_id}``."""
+    """``PATCH /host/trips/{id}/departures/{departure_id}`` (cancelling uses the cancel endpoint)."""
 
-    def get(self, request, trip_id, departure_id):
-        """One departure with counters."""
-        return Response(HostDepartureSerializer(_departure(request, trip_id, departure_id)).data)
-
+    @extend_schema(request=DepartureWriteSerializer, responses=HostDepartureSerializer)
     def patch(self, request, trip_id, departure_id):
         """Change dates, seats, price or status."""
         departure = _departure(request, trip_id, departure_id)
@@ -215,15 +212,11 @@ class HostDepartureDetailView(APIView):
         departure = services.update_departure(departure, data.validated_data)
         return Response(HostDepartureSerializer(departure).data)
 
-    def delete(self, request, trip_id, departure_id):
-        """Delete a departure without any seat taken."""
-        services.delete_departure(_departure(request, trip_id, departure_id))
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class HostDepartureCancelView(APIView):
     """``POST /host/trips/{id}/departures/{departure_id}/cancel``."""
 
+    @extend_schema(request=None, responses=HostDepartureSerializer)
     def post(self, request, trip_id, departure_id):
         """Mark the departure cancelled (bookings are handled by the bookings app, BR-TRP-03)."""
         departure = services.cancel_departure(_departure(request, trip_id, departure_id))
@@ -259,24 +252,25 @@ class AdminTripDetailView(APIView):
         return Response(AdminTripSerializer(selectors.get_admin_trip(trip_id), context={"request": request}).data)
 
 
-class AdminTripActionView(APIView):
+class AdminTripStatusView(APIView):
     """
-    ``POST /admin/trips/{id}/approve|reject|request-changes|suspend|unsuspend|restore``.
-
-    Reason of at least 10 characters for reject, request changes, suspend. Audited.
+    ``POST /admin/trips/{id}/status`` ``{status, reason_code?, reason?}``:
+    approve, reject, request changes, suspend, unsuspend, delete or restore
+    a trip (table 4a, BR-LST-03, BR-STF-02). Audited.
     """
 
     permission_classes = [IsAdmin]
-    serializer_class = AdminTripSerializer
-    action_name = ""
 
+    @extend_schema(request=AdminStatusChangeSerializer, responses=AdminTripSerializer)
     def post(self, request, trip_id):
-        """Apply the decision and return the trip."""
+        """Apply the move (409 ``invalid_transition``, 422 ``reason_required``) and return the trip."""
         trip = selectors.get_admin_trip(trip_id)
-        with transaction.atomic():
-            if self.action_name == "restore":
-                workflow.restore(trip, actor=request.user)
-            else:
-                workflow.admin_moderate(trip, self.action_name, actor=request.user, reason=request.data.get("reason"))
+        data = AdminStatusChangeSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        values = data.validated_data
+        services.admin_change_trip_status(
+            trip, values["status"], actor=request.user, reason=values.get("reason"),
+            reason_code=values.get("reason_code") or None,
+        )
         trip.refresh_from_db()
         return Response(AdminTripSerializer(trip, context={"request": request}).data)

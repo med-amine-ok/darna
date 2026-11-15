@@ -1,5 +1,5 @@
 ---
-title: Host deposit top-up and commission (no online payment yet)
+title: Host deposit top-up and commission (no online payment, no online top-up)
 ---
 sequenceDiagram
     autonumber
@@ -9,15 +9,17 @@ sequenceDiagram
     participant A as Django API
     participant DB as PostgreSQL
     H->>H: Transfers 50,000 DZD to the BLADUS CCP or bank account
-    H->>A: (optional) uploads the transfer receipt
-    A1->>A: POST /admin/wallet-topups (host, amount, method, receipt ref)
+    H->>A1: sends the transfer receipt
+    A1->>A: POST /admin/wallets/{host_account_id}/topups (amount, method, receipt ref)
     A->>DB: unique check on method + receipt ref
-    alt amount up to 500,000 DZD
+    A->>DB: sum the host top-ups of the last 24 h (pending + approved + this one)
+    alt rolling total up to 500,000 DZD
         A->>DB: approved, ledger cash debit / host wallet credit
     else above the threshold
         A->>DB: pending_approval
-        A2->>A: POST /admin/wallet-topups/{id}/approve
+        A2->>A: POST /admin/topups/{topup_id}/approve
+        Note over A2,A: the approver must differ from the requester
         A->>DB: approved, ledger postings
     end
     A-)H: deposit received notification
-    Note over H,DB: a confirmed booking takes its commission from the deposit, a cancelled one gives it back
+    Note over H,DB: a confirmed booking takes its commission from the deposit, and on a cancellation the commission follows the refund

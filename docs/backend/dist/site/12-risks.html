@@ -44,7 +44,7 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="on" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="12-risks-what-could-go-wrong-and-what-we-do-about-it">12. Risks: what could go wrong, and what we do about it</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="on" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Phase 8: plan and decisions</div><h1 id="12-risks-what-could-go-wrong-and-what-we-do-about-it">12. Risks: what could go wrong, and what we do about it</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>This is the list of things that could hurt BLADUS while we build and launch the backend: legal, money, fraud, technical, operations, team and scope.<br>Each risk gets two marks from 1 to 5: how likely it is, and how bad it would be. Multiplied, they give a score from 1 to 25.<br>Each risk has an owner (a role, not a name), what we do to reduce it, and the early sign that tells us it is happening.<br>The heat map at the end shows the dangerous corner at a glance. We review this list at every milestone review (<a href="11-roadmap.html">11-roadmap.md</a>).<br>Legal and tax points are engineering reading, not advice: VERIFY WITH A PROFESSIONAL.</p>
 </blockquote>
 <p><strong>Terms used here</strong> (see <a href="glossary.html">glossary.md</a>):</p>
@@ -183,9 +183,9 @@ section.doc{page-break-before:always;padding:0}
 <td>3</td>
 <td>9</td>
 <td>TL</td>
-<td>Limits per phone, IP and device (BR-ACC-02); daily SMS budget alarm (NFR-11); block premium and foreign ranges unless Q22 allows; email OTP where possible</td>
+<td>Limits per destination 3 per hour and 10 per day, per IP 10 per hour, per device (BR-ACC-02); global budget of 5,000 SMS per day then <code>sms_budget_exceeded</code> and an admin alert (DEC-025, NFR-11); codes stored as HMAC with a pepper (BR-SYS-07); block premium and foreign ranges unless Q22 allows; email OTP where possible</td>
 <td>SMS spend per day above budget; many codes to one prefix</td>
-<td>ACC-02, NFR-11, BR-ACC-02, Q22</td>
+<td>ACC-02, NFR-11, BR-ACC-02, BR-SYS-07, DEC-025, Q22</td>
 </tr>
 <tr>
 <td>K-11</td>
@@ -200,14 +200,14 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>K-12</td>
-<td><strong>Technical: double booking</strong> if the database guarantees are built wrong (exclusion constraint, inventory rows, holds)</td>
+<td><strong>Technical: double booking</strong> if the database guarantees are built wrong (exclusion constraint for single units, counters for pools, blocked-day triggers, holds), or if the plan claims more than the database does</td>
 <td>2</td>
 <td>5</td>
 <td>10</td>
 <td>BE</td>
-<td>Constraints in the database, not only in Python (ADR-002); concurrency tests on real PostgreSQL in CI (M4 exit); idempotency keys on create (BKG-10)</td>
+<td>Exact guarantee per case written down (DEC-020, BR-AVL-07): exclusion constraint for homes and vehicles, CHECK counters for rooms, slots and departures, triggers between blocked days and bookings, listing row lock in the services; concurrency tests on real PostgreSQL in CI (M4 exit); idempotency keys on create (BKG-10)</td>
 <td>Any concurrency test flaky; support ticket &quot;two guests same night&quot;</td>
-<td>AVL-01, AVL-02, AVL-05, BKG-10, BR-AVL-01, BR-AVL-02, BR-SYS-01</td>
+<td>AVL-01, AVL-02, AVL-05, AVL-07, BKG-10, BR-AVL-01, BR-AVL-02, BR-AVL-07, BR-SYS-01, DEC-020</td>
 </tr>
 <tr>
 <td>K-13</td>
@@ -233,14 +233,14 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>K-15</td>
-<td><strong>Technical: Arabic search quality.</strong> Spelling variants (alef forms, ta marbuta), Latin transliterations (Tizi Ouzou, Tizi-Ouzou), Darija names; PostgreSQL trigram works less well on Arabic</td>
+<td><strong>Technical: Arabic search quality.</strong> Spelling variants (alef forms, ta marbuta), Latin transliterations (Tizi Ouzou, Tizi-Ouzou), Darija names; PostgreSQL has no Arabic stemmer, so full-text search would miss words</td>
 <td>4</td>
 <td>3</td>
 <td>12</td>
 <td>BE</td>
-<td>Normalise Arabic text before indexing; alias table for place names in three scripts from the geography seed; test set of 50 real queries (T7)</td>
+<td>Search with <code>pg_trgm</code> trigram similarity plus unaccent, no full-text (DEC-030, BR-SRC-05); GIN trigram indexes on titles and commune names; normalise Arabic text before indexing; alias table for place names in three scripts; fixed test list of real Arabic, French and Darija queries in CI</td>
 <td>Zero-result rate above 10% for Arabic queries</td>
-<td>SRC-03, SRC-04, T7</td>
+<td>SRC-03, SRC-04, BR-SRC-05, DEC-030</td>
 </tr>
 <tr>
 <td>K-16</td>
@@ -429,8 +429,107 @@ section.doc{page-break-before:always;padding:0}
 <td>Few top-ups during the beta; hosts stay in request mode</td>
 <td>PAY-02, PAY-05, PAY-07, DEC-001, Q25</td>
 </tr>
+<tr>
+<td>K-33</td>
+<td><strong>Money: host keeps the guest&#39;s non-refundable money and pays no commission.</strong> With the old rule (full commission back on every cancellation) a host could push guests to cancel late and keep their money commission-free</td>
+<td>2</td>
+<td>3</td>
+<td>6</td>
+<td>PO + FIN</td>
+<td>Fixed by DEC-018 revised: commission follows the refund, returned = apply_bp(commission, refund_bp) (BR-PAY-05; villa example 8a: 3,330 DZD back, 3,330 DZD kept); host cancellations counted (BR-CAN-03). VERIFY WITH A PROFESSIONAL (accounting of returned commission)</td>
+<td>One host with many late guest cancellations</td>
+<td>CAN-04, BR-PAY-05, BR-CAN-03, DEC-018</td>
+</tr>
+<tr>
+<td>K-34</td>
+<td><strong>Technical: hotel sync oversells.</strong> A hotel system sends fewer rooms than BLADUS already sold, or a BLADUS booking reaches the hotel only 15 minutes later</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>BE</td>
+<td>A sync never sets a total below held + booked: clamp and <code>inventory_conflict</code> for the admin; every BLADUS booking change pushed at once through the outbox (<code>inventory.push</code>), retried, dead messages in the admin queue (DEC-021, BR-HST-07)</td>
+<td>Open inventory conflicts; dead <code>inventory.push</code> messages</td>
+<td>HST-08, HST-09, NTF-05, BR-HST-07, BR-SYS-03, DEC-021</td>
+</tr>
+<tr>
+<td>K-35</td>
+<td><strong>Technical: deposit race.</strong> Two bookings of one host confirmed at the same time both pass the credit floor check, or lock rows in a different order and deadlock</td>
+<td>2</td>
+<td>3</td>
+<td>6</td>
+<td>BE</td>
+<td>Lock the host wallet balance row first, then stock; same order everywhere; no shared platform balance row on the booking path (revenue is a SUM) (DEC-023, BR-PAY-14); concurrency test</td>
+<td>Wallet below the floor after concurrent bookings; deadlock errors in logs</td>
+<td>PAY-14, BR-PAY-14, BR-BKG-01, DEC-023</td>
+</tr>
+<tr>
+<td>K-36</td>
+<td><strong>Business and legal: hosts do not pay refunds</strong> owed to guests after a cancellation (BLADUS never holds the money in M1)</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>PO + SUP</td>
+<td>Refund obligation with a 7-day due date; host declares paid, guest confirms or disputes, admin settles with proof; overdue: no instant booking and no accepting requests (DEC-024, BR-CAN-06, BR-CAN-07); admin overdue list. VERIFY WITH A PROFESSIONAL (consumer law on refund delays and BLADUS liability)</td>
+<td>Overdue refund count rising; guest complaints about refunds</td>
+<td>CAN-05, BR-CAN-06, BR-CAN-07, DEC-024</td>
+</tr>
+<tr>
+<td>K-37</td>
+<td><strong>Security: SSRF through a URL given by a host</strong> (hotel system address, iCal link) reaching internal services or the metadata address</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>TL</td>
+<td>Outgoing URL check at save and at every fetch: https only, public IPs only, no cross-host redirect, 10 s, 5 MB (<code>apps/core/netguard.py</code>, DEC-025, BR-SYS-06); egress proxy allowlist</td>
+<td>Refused URLs in logs; outbound connections to private ranges</td>
+<td>NFR-14, HST-08, BR-SYS-06, DEC-025</td>
+</tr>
+<tr>
+<td>K-38</td>
+<td><strong>Security: ledger or audit tampering</strong> by a bug, an insider or a stolen app database password</td>
+<td>2</td>
+<td>5</td>
+<td>10</td>
+<td>TL + FIN</td>
+<td>Tables owned by <code>bladus_migrator</code>, app role <code>bladus_app</code> with SELECT and INSERT only; triggers refuse UPDATE and DELETE; nightly <code>reconcile_balances</code> exits non-zero on a difference; daily audit export to write-once storage (DEC-026, BR-PAY-02, BR-PAY-15, BR-STF-02); manual corrections only by <code>wallet_adjustment</code> with a second admin (BR-PAY-13)</td>
+<td>Reconciliation job fails; hash chain break</td>
+<td>PAY-01, PAY-13, PAY-14, STF-03, BR-PAY-02, BR-PAY-15, DEC-026</td>
+</tr>
+<tr>
+<td>K-39</td>
+<td><strong>Operations not ready before M0</strong>: no orchestrator, failover, backups, alerts or runbooks when development starts, so staging and launch are improvised</td>
+<td>3</td>
+<td>4</td>
+<td>12</td>
+<td>TL</td>
+<td>One operations page before M0 (<a href="09b-operations.html">09b-operations.md</a>, DEC-027): Docker Compose on one VPS for M0 to M2, RPO 5 minutes and RTO 1 hour, Redis never the only copy, monthly restore test, alerts on dead outbox and reconcile failures, CI/CD with rollback, runbooks</td>
+<td>M0 starts without the page reviewed; first restore test missed</td>
+<td>NFR-03, NFR-04, NFR-09, DEC-027</td>
+</tr>
+<tr>
+<td>K-40</td>
+<td><strong>Fraud: fake reviews and booking hoarding.</strong> Reviews for stays that never happened; guests holding many requests to block calendars</td>
+<td>3</td>
+<td>3</td>
+<td>9</td>
+<td>MOD</td>
+<td>At most 3 pending requests and 6 upcoming bookings per guest (BR-BKG-08); stay confirmation (check-in code or guest confirmation) before any review (BR-BKG-09, BR-REV-01); a completed booking costs the host its commission (DEC-028)</td>
+<td>Many <code>too_many_open_bookings</code> answers from one guest; reviews without stay confirmation attempted</td>
+<td>BKG-12, BKG-13, REV-01, BR-BKG-08, BR-BKG-09, DEC-028</td>
+</tr>
+<tr>
+<td>K-41</td>
+<td><strong>Technical: contract drift.</strong> Diagrams, docs and the apps cite endpoints or counts that are not in <code>openapi.yaml</code></td>
+<td>3</td>
+<td>2</td>
+<td>6</td>
+<td>TL</td>
+<td>One operation count computed from <code>openapi.yaml</code>; <code>_tools/check_contract_refs.py</code> checks every <code>METHOD /path</code> in the sequence diagrams and the counts stated in the docs, run before each rebuild and in CI (DEC-031)</td>
+<td>The check tool fails</td>
+<td>NFR-08, DEC-031</td>
+</tr>
 </tbody></table>
-<p><strong>32 risks</strong>: 6 high, 22 medium, 4 low.</p>
+<p><strong>41 risks</strong>: 6 high, 28 medium, 7 low. K-33 to K-41 were added after the review of 2026-11-13; K-10, K-12 and K-15 were updated.</p>
 <h2 id="2-heat-map-likelihood-x-impact">2. Heat map (likelihood x impact)</h2>
 <p>Cells list risk IDs. Bold cells are high (score 15 or more).</p>
 <table>
@@ -463,18 +562,18 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td><strong>3 possible</strong></td>
 <td></td>
-<td>K-25, K-27, K-29</td>
-<td>K-06, K-07, K-08, K-10, K-14, K-22</td>
-<td>K-04, K-05, K-18, K-19, K-32</td>
+<td>K-25, K-27, K-29, K-41</td>
+<td>K-06, K-07, K-08, K-10, K-14, K-22, K-40</td>
+<td>K-04, K-05, K-18, K-19, K-32, K-34, K-36, K-39</td>
 <td><strong>K-01</strong></td>
 </tr>
 <tr>
 <td><strong>2 unlikely</strong></td>
 <td></td>
 <td>K-30</td>
-<td></td>
+<td>K-33, K-35</td>
 <td>K-11, K-31</td>
-<td>K-03, K-12, K-26</td>
+<td>K-03, K-12, K-26, K-37, K-38</td>
 </tr>
 <tr>
 <td><strong>1 rare</strong></td>
@@ -525,7 +624,7 @@ section.doc{page-break-before:always;padding:0}
 <td>M0</td>
 </tr>
 </tbody></table>
-<p>Medium risks with the highest impact on dates: K-13 (switch breaks), K-18 (hosting set-up), K-21 (scope creep), K-17 (exam period).</p>
+<p>Medium risks with the highest impact on dates: K-13 (switch breaks), K-18 (hosting set-up), K-21 (scope creep), K-17 (exam period), K-39 (operations not ready before M0).</p>
 <hr>
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
@@ -536,5 +635,7 @@ section.doc{page-break-before:always;padding:0}
 <li><input disabled="" type="checkbox"> Which risk explains why the launch should not fall in the baccalaureate exam weeks?</li>
 <li><input disabled="" type="checkbox"> Name two ways we keep the mock-to-API switch (K-13) from breaking the apps.</li>
 <li><input disabled="" type="checkbox"> Who owns the scope creep risk, and what rule do they apply to new ideas?</li>
+<li><input disabled="" type="checkbox"> Which rule change closed K-33, and how much commission does BLADUS keep in the villa example?</li>
+<li><input disabled="" type="checkbox"> What happens to a host&#39;s instant booking while a refund is overdue (K-36)?</li>
 </ul>
 <div class="pager"><span><a href="11-roadmap.html">&larr; 11. Roadmap: how we build the BLADUS backend</a></span><span><a href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when &rarr;</a></span></div></main></div></body></html>

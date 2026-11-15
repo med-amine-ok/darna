@@ -57,6 +57,12 @@ api_v1 = [
     path("", include("apps.pricing.urls")),
     path("", include("apps.ledger.urls")),
     path("", include("apps.bookings.urls")),
+    path("", include("apps.media.urls")),
+    path("", include("apps.notifications.urls")),
+    path("", include("apps.reviews.urls")),
+    path("", include("apps.messaging.urls")),
+    path("", include("apps.trust.urls")),
+    path("", include("apps.search.urls")),
 ]
 
 urlpatterns = [

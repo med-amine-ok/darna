@@ -3,7 +3,10 @@ API authentication with opaque session tokens.
 
 The Next.js servers keep the token in an httpOnly cookie and send it as
 ``Authorization: Bearer <token>`` (BFF pattern, 06-api-design.md). The token
-is looked up by its hash; revoked or expired sessions are refused at once.
+is looked up by its hash; revoked or expired sessions are refused at once,
+staff sessions also after 30 minutes without a request (BR-ACC-03), and a
+session still waiting for its second factor only works on views that set
+``allow_mfa_pending = True`` (BR-ACC-04).
 """
 
 from datetime import timedelta
@@ -36,16 +39,25 @@ class SessionTokenAuthentication(authentication.BaseAuthentication):
             .filter(token_hash=hash_secret(parts[1]))
             .first()
         )
-        if session is None or not session.is_valid:
+        if session is None or not session.is_valid or session.is_idle:
             raise exceptions.AuthenticationFailed("Session expired. Sign in again.")
         if not session.user.is_active:
             raise exceptions.AuthenticationFailed("This account is not active.")
+        if session.mfa_pending and not self._view_allows_pending(request):
+            # BR-ACC-04: after the password step only the second-factor endpoints work.
+            raise exceptions.AuthenticationFailed("Finish signing in with your second factor.")
 
         # Touch "last used" at most once a minute to avoid a write per request.
         now = timezone.now()
         if now - session.last_used_at > timedelta(minutes=1):
             SessionToken.objects.filter(pk=session.pk).update(last_used_at=now)
         return session.user, session
+
+    @staticmethod
+    def _view_allows_pending(request) -> bool:
+        """True when the called view accepts a session still waiting for its second factor (TOTP enrolment)."""
+        view = (getattr(request, "parser_context", None) or {}).get("view")
+        return bool(getattr(view, "allow_mfa_pending", False))
 
     def authenticate_header(self, request):
         """Value of the ``WWW-Authenticate`` header on 401 responses."""
@@ -65,6 +77,7 @@ try:
         name = "SessionTokenAuth"
 
         def get_security_definition(self, auto_schema):
+            """OpenAPI security scheme: HTTP Bearer with the opaque session token."""
             return {
                 "type": "http",
                 "scheme": "bearer",

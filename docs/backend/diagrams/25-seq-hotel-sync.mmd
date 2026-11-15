@@ -1,5 +1,5 @@
 ---
-title: Connecting a hotel's own system (DEC-017)
+title: Connecting a hotel system (DEC-017, DEC-021)
 ---
 sequenceDiagram
     autonumber
@@ -7,10 +7,12 @@ sequenceDiagram
     participant W as Website (host mode)
     participant A as Django API
     participant X as Hotel system (channel manager or PMS)
-    participant J as Sync job
+    participant J as Sync job and outbox worker
     participant DB as PostgreSQL
+    actor M as Admin
     O->>W: Chooses "Connect my hotel system", enters system and access key
     W->>A: POST /host/integrations
+    A->>A: URL check (https, public address only)
     A->>X: test call with the key
     X-->>A: ok, property found
     A->>DB: save connection (key encrypted), status active
@@ -20,9 +22,16 @@ sequenceDiagram
     J->>DB: create or update room types, nights, services (marked as imported)
     J->>DB: write sync log (what changed)
     A-->>W: connection active, rooms and services listed
-    loop every 15 minutes
+    loop every 15 minutes (reconciliation pass)
         J->>X: read changes
-        J->>DB: update availability and prices
+        J->>DB: update availability and prices, never total below held + booked
+        opt hotel asks for fewer rooms than BLADUS sold
+            J->>DB: clamp total to held + booked, open an inventory conflict
+            M->>A: GET /admin/inventory-conflicts
+            M->>A: POST /admin/inventory-conflicts/{conflict_id}/resolve
+        end
     end
-    Note over A,X: a booking made on BLADUS lowers BLADUS availability at once and is sent to the hotel system when it accepts reservations
-    Note over J,DB: if a sync fails, the last good data stays and the connection is flagged for the hotel and the admin
+    Note over A,J: every BLADUS booking change writes an inventory.push outbox message, sent at once
+    J->>X: push the new availability (retries, then dead)
+    M->>A: GET /admin/outbox?status=dead
+    M->>A: POST /admin/outbox/{message_id}/retry

@@ -1,0 +1,29 @@
+---
+title: Guest cancels, commission follows the refund, the host refund is tracked (DEC-018 revised, DEC-024)
+---
+sequenceDiagram
+    autonumber
+    actor G as Guest
+    participant A as Django API
+    participant DB as PostgreSQL
+    actor H as Host
+    actor M as Admin
+    G->>A: GET /me/bookings/{booking_id}/cancellation-preview
+    A-->>G: refund 31,750 DZD (50% window of 55,500 + cleaning 4,000)
+    G->>A: POST /me/bookings/{booking_id}/cancel
+    A->>DB: status cancelled, refund line 31,750
+    A->>DB: commission_reversal = apply_bp(6,660, 5,000) = 3,330 back to the host wallet
+    Note over A,DB: BLADUS keeps 3,330 DZD
+    A->>DB: refund obligation open, due in 7 days, memo refund_due 31,750
+    A-)H: you owe the guest 31,750 DZD by the due date
+    H->>A: POST /host/refunds/{refund_id}/declare-paid (payment reference)
+    alt guest received it
+        G->>A: POST /me/refunds/{refund_id}/confirm-received
+        A->>DB: settled, memo refund_settled
+    else guest did not receive it
+        G->>A: POST /me/refunds/{refund_id}/dispute
+        A->>DB: disputed (the due date does not move)
+        M->>A: GET /admin/refunds?overdue=true
+        M->>A: POST /admin/refunds/{refund_id}/settle (note, optional proof)
+    end
+    Note over H,DB: while a refund is overdue the host has no instant booking and cannot accept requests

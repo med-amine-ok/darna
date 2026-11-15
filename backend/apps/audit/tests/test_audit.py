@@ -49,3 +49,44 @@ def test_audit_api_offers_no_write(admin_client):
     """POST, PATCH and DELETE are not allowed on the audit endpoint."""
     assert admin_client.post("/api/v1/admin/audit-events", {}).status_code == 405
     assert admin_client.delete("/api/v1/admin/audit-events").status_code == 405
+
+
+class _FakeSchemaEditor:
+    """Records the SQL a migration would run, for a given database vendor."""
+
+    def __init__(self, vendor: str):
+        """Pretend to be connected to ``vendor``."""
+        self.connection = type("Conn", (), {"vendor": vendor})()
+        self.sql: list[str] = []
+
+    def quote_name(self, name: str) -> str:
+        """Quote like PostgreSQL."""
+        return f'"{name}"'
+
+    def execute(self, sql: str, params=None) -> None:
+        """Keep the statement instead of running it."""
+        self.sql.append(sql)
+
+
+def test_br_stf_02_trigger_migration_postgres_only():
+    """Migration audit.0002 installs UPDATE/DELETE/TRUNCATE triggers on the real table on PostgreSQL, nothing on SQLite (R9, R11)."""
+    import importlib
+
+    from django.apps import apps as registry
+
+    migration = importlib.import_module("apps.audit.migrations.0002_audit_event_insert_only_trigger")
+    sqlite = _FakeSchemaEditor("sqlite")
+    migration.create_trigger(registry, sqlite)
+    migration.drop_trigger(registry, sqlite)
+    assert sqlite.sql == []
+
+    postgres = _FakeSchemaEditor("postgresql")
+    migration.create_trigger(registry, postgres)
+    sql = "\n".join(postgres.sql)
+    table = AuditEvent._meta.db_table
+    assert table == "audit_auditevent"
+    assert f'BEFORE UPDATE OR DELETE ON "{table}"' in sql and "FOR EACH ROW" in sql
+    assert f'BEFORE TRUNCATE ON "{table}"' in sql and "RAISE EXCEPTION" in sql
+    postgres.sql.clear()
+    migration.drop_trigger(registry, postgres)
+    assert any("DROP FUNCTION" in statement for statement in postgres.sql)

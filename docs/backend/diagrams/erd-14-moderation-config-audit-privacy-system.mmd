@@ -101,7 +101,7 @@ erDiagram
         timestamptz created_at
     }
     audit_event {
-        bigint id PK
+        uuid id PK
         timestamptz occurred_at
         uuid actor_id FK
         varchar_8 actor_kind
@@ -181,7 +181,7 @@ erDiagram
         timestamptz created_at
     }
     otp_send_log {
-        bigint id PK
+        uuid id PK
         char_64 phone_hash
         inet ip
         varchar_16 purpose
@@ -198,6 +198,7 @@ erDiagram
         varchar_60 system_name
         varchar_255 base_url
         bytea credentials_encrypted
+        varchar_16 credentials_key_id
         varchar_12 status
         boolean sync_rooms
         boolean sync_availability
@@ -208,7 +209,7 @@ erDiagram
         timestamptz created_at
     }
     integration_sync_log {
-        bigint id PK
+        uuid id PK
         uuid integration_id FK
         timestamptz started_at
         timestamptz finished_at
@@ -217,6 +218,22 @@ erDiagram
         int nights_changed
         int services_changed
         text error
+    }
+    inventory_conflict {
+        uuid id PK
+        uuid integration_id FK
+        uuid room_type_id FK
+        date night
+        smallint requested_total
+        smallint applied_total
+        smallint held
+        smallint booked
+        inventory_conflict_status status
+        varchar_24 resolution
+        text resolution_note
+        uuid resolved_by_id FK
+        timestamptz resolved_at
+        timestamptz created_at
     }
     property_service {
         uuid id PK
@@ -246,9 +263,6 @@ erDiagram
         experience_type experience_type
         uuid property_type_id
         uuid amenity_ids
-        tsvector tsv_fr
-        tsvector tsv_en
-        tsvector tsv_ar
         text search_text
         timestamptz published_at
         timestamptz updated_at
@@ -304,5 +318,8 @@ erDiagram
     listing ||--o{ property_integration : "listing_id"
     user ||--o{ property_integration : "created_by_id"
     property_integration ||--o{ integration_sync_log : "integration_id"
+    property_integration ||--o{ inventory_conflict : "integration_id"
+    room_type ||--o{ inventory_conflict : "room_type_id"
+    user ||--o{ inventory_conflict : "resolved_by_id"
     listing ||--o{ property_service : "listing_id"
     listing ||--o| listing_search_doc : "listing_id"

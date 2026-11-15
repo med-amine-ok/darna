@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 
+from apps.catalog import workflow
 from apps.catalog.serializers import _locale, commune_ref, host_public_card, policy_dict
 from apps.catalog.services import current_policy
 from apps.catalog.types import TripType
@@ -58,10 +59,22 @@ class ItineraryDaySerializer(serializers.ModelSerializer):
         fields = ("day_number", "title", "description", "overnight_commune")
 
 
-class ItineraryWriteSerializer(serializers.Serializer):
-    """Body of ``PUT /host/trips/{id}/itinerary``: the whole programme."""
+class ItineraryDayWriteSerializer(serializers.Serializer):
+    """``ItineraryDay`` sent in ``TripWrite.itinerary``: one day of the programme."""
 
-    days = ItineraryDaySerializer(many=True)
+    day_number = serializers.IntegerField(min_value=1)
+    title = serializers.CharField(max_length=120)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    overnight_commune_id = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate(self, attrs: dict) -> dict:
+        """Empty description instead of null; the commune must exist."""
+        if attrs.get("description") is None:
+            attrs["description"] = ""
+        commune_id = attrs.get("overnight_commune_id")
+        if commune_id is not None and not Commune.objects.filter(id=commune_id).exists():
+            raise serializers.ValidationError({"overnight_commune_id": ["Unknown commune."]})
+        return attrs
 
 
 class TripPhotoSerializer(serializers.ModelSerializer):
@@ -150,15 +163,21 @@ class TripDetailSerializer(TripCardSerializer):
 
 
 class HostTripSerializer(TripDetailSerializer):
-    """A trip as its agency sees it: every departure, status and moderation note."""
+    """A trip as its agency sees it: every departure, status, moderation note and allowed status changes."""
+
+    allowed_status_changes = serializers.SerializerMethodField()
 
     class Meta(TripDetailSerializer.Meta):
         """Which model and fields this serializer uses."""
 
         fields = TripDetailSerializer.Meta.fields + (
             "status", "moderation_note", "price_per_person_minor", "meeting_point_latitude", "meeting_point_longitude",
-            "approval_mode", "submitted_at", "published_at", "created_at", "updated_at",
+            "approval_mode", "allowed_status_changes", "submitted_at", "published_at", "created_at", "updated_at",
         )
+
+    def get_allowed_status_changes(self, obj) -> list[str]:
+        """Statuses the agency may ask for now (table 4a, BR-LST-03)."""
+        return workflow.host_targets(obj)
 
     def get_departures(self, obj) -> list[dict]:
         """All departures, past and cancelled included."""
@@ -175,7 +194,10 @@ class AdminTripSerializer(HostTripSerializer):
 
 
 class TripWriteSerializer(serializers.Serializer):
-    """Body of ``POST /host/trips`` and ``PATCH /host/trips/{id}``. ``cancellation_policy`` is a code."""
+    """
+    Body of ``POST /host/trips`` and ``PATCH /host/trips/{id}``. ``cancellation_policy`` is a code;
+    ``itinerary`` (optional) replaces the whole programme (it replaces ``PUT /host/trips/{id}/itinerary``).
+    """
 
     trip_type = serializers.ChoiceField(choices=TripType.choices, required=False, allow_null=True)
     title = serializers.CharField(max_length=140)
@@ -193,6 +215,7 @@ class TripWriteSerializer(serializers.Serializer):
     meeting_point_text = serializers.CharField(required=False, allow_blank=True, max_length=255)
     cancellation_policy = serializers.CharField(required=False, max_length=20)
     approval_mode = serializers.ChoiceField(choices=["instant", "request"], required=False, allow_null=True)
+    itinerary = ItineraryDayWriteSerializer(many=True, required=False)
 
     def validate_cancellation_policy(self, value: str):
         """Policy code to the current policy row."""

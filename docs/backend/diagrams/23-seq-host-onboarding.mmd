@@ -8,14 +8,15 @@ sequenceDiagram
     participant A as Django API
     participant S as Object storage
     actor M as Admin
-    W->>A: GET /onboarding/flows/{host_type}
+    W->>A: GET /onboarding-flows/{host_type}
     U->>W: Fills the steps (draft saved on the server)
-    W->>A: PUT /me/onboarding-drafts/{host_type}
+    W->>A: PUT /host/onboarding/drafts/{host_type}
     U->>W: Adds ID and business documents
     W->>A: POST /media/uploads (presign)
-    A-->>W: presigned PUT URL (private bucket, quarantine)
+    A-->>W: presigned upload URL (private bucket, quarantine)
     W->>S: upload file
-    W->>A: POST /me/onboarding-drafts/{host_type}/submit
+    S-)A: worker scans the file (ClamAV), only clean files are kept
+    W->>A: POST /host/onboarding/drafts/{host_type}/submit
     A->>A: validate answers against the flow version
     A->>A: create host account, organisation, owner membership, documents, case
     A-)M: case appears in the queue, waiting time starts

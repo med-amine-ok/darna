@@ -1,7 +1,7 @@
 """
 One error shape for the whole API.
 
-Every error response looks like this (06-api-design.md, BR-SYS-04)::
+Every error response looks like this (06-api-design.md, BR-SYS-03)::
 
     {
       "code": "dates_unavailable",          # stable, the apps switch on it

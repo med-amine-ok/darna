@@ -44,7 +44,7 @@ section.doc{page-break-before:always;padding:0}
   a{color:var(--ink);text-decoration:none}
 }
 @page{size:A4;margin:16mm 14mm 18mm}
-</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-09 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="on" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Start here</div><h1 id="glossary">Glossary</h1>
+</style></head><body><div class="layout"><nav class="side"><div class="brand">BLADUS backend blueprint</div><div class="meta">Built 2026-11-13 · <a href="../BLADUS-backend-blueprint.pdf">PDF</a></div><div class="part">Start here</div><a class="" href="index.html">00. Start here: BLADUS backend blueprint</a><a class="" href="explain-like-im-new.html">Explain it like I'm new</a><a class="on" href="glossary.html">Glossary</a><div class="part">Phase 1 and 2: discovery and research</div><a class="" href="01-system-inventory.html">01. System inventory: what BLADUS does today</a><a class="" href="02-research.html">02. Research: what others do, which Django tools to use, and what Algeria requires</a><div class="part">Phase 3: requirements and rules</div><a class="" href="03-requirements.html">03. Requirements: what the backend must do</a><a class="" href="04-business-rules.html">04. Business rules</a><div class="part">Phase 4: diagrams</div><a class="" href="diagrams-readme.html">Diagrams</a><a class="" href="diagram-gallery.html">Diagram gallery</a><div class="part">Phase 5: database</div><a class="" href="05-database-schema.html">05. Database schema</a><a class="" href="05b-data-dictionary.html">05b. Data dictionary</a><div class="part">Phase 6: API</div><a class="" href="06-api-design.html">06. API design: how the apps talk to the backend</a><a class="" href="api-reference.html">API reference</a><div class="part">Phase 7: architecture and operations</div><a class="" href="07-architecture.html">07. Architecture: how the Django backend is organised</a><a class="" href="08-security-privacy.html">08. Security and privacy</a><a class="" href="09-devops-hosting.html">09. DevOps and hosting: where BLADUS runs and how we operate it</a><a class="" href="09b-operations.html">09b. Operations: how BLADUS is kept running (read before M0)</a><a class="" href="10-testing-quality.html">10. Testing and quality</a><div class="part">Phase 8: plan and decisions</div><a class="" href="11-roadmap.html">11. Roadmap: how we build the BLADUS backend</a><a class="" href="12-risks.html">12. Risks: what could go wrong, and what we do about it</a><a class="" href="13-decisions-needed.html">13. Decisions needed: who must decide what, and by when</a><a class="" href="14-open-questions.html">14. Open questions (running list)</a><a class="" href="traceability.html">Traceability matrix: requirement to rule, table, API, test and milestone</a><a class="" href="15-readiness-and-first-build-prompt.html">15. Readiness verdict and first build prompt</a><div class="part">Appendices (raw working notes)</div><a class="" href="work-frontend-inventory.html">BLADUS frontend inventory (raw analysis notes for the backend blueprint)</a><a class="" href="work-admin-inventory.html">BLADUS admin back-office: raw inventory for the backend blueprint</a><a class="" href="work-spec-vs-code.html">BLADUS: spec vs code (raw analysis for the backend blueprint)</a><a class="" href="work-click-through.html">Click-through observations (website, dev server, 2026-11-04)</a><a class="" href="work-research-platforms-django.html">BLADUS backend research: comparable platforms and Django ecosystem</a><a class="" href="work-research-algeria-security.html">BLADUS backend research: Algeria context, payments, compliance, infra, security</a><a class="" href="changelog.html">Backend blueprint changelog</a><div class="part">Files</div><a href="files/openapi.yaml">openapi.yaml</a><a href="files/schema.dbml">schema.dbml</a><a href="files/schema.sql">schema.sql</a><a href="files/requirements.csv">requirements.csv</a><a href="files/traceability.csv">traceability.csv</a></nav><main><div class="meta">Start here</div><h1 id="glossary">Glossary</h1>
 <blockquote class="plain"><p><strong>In plain words</strong><br>Every technical or business word used in the blueprint, explained in one or two sentences.<br>If a document uses a word you do not know, look here first. The list grows with each phase.</p>
 </blockquote>
 <table>
@@ -57,10 +57,6 @@ section.doc{page-break-before:always;padding:0}
 <tbody><tr>
 <td><code>ActionResult</code></td>
 <td>What a Next.js server action returns today: success with data, or an error code.</td>
-</tr>
-<tr>
-<td><code>lib/data</code> seam</td>
-<td>The folder of data functions both apps call; each becomes an API call.</td>
 </tr>
 <tr>
 <td>ADR</td>
@@ -77,6 +73,10 @@ section.doc{page-break-before:always;padding:0}
 <tr>
 <td>API</td>
 <td>The set of web addresses (endpoints) the apps call to read and change data.</td>
+</tr>
+<tr>
+<td><code>apply_bp</code></td>
+<td>The one rounding rule for money: amount x basis points / 10,000, rounded half up to a whole centime. Every computed line uses it; totals are sums of rounded lines.</td>
 </tr>
 <tr>
 <td>Audit log</td>
@@ -99,6 +99,10 @@ section.doc{page-break-before:always;padding:0}
 <td>Hundredths of a dinar. We store money as whole centimes to avoid rounding errors.</td>
 </tr>
 <tr>
+<td>Check-in code / stay confirmation</td>
+<td>A 6-digit code shown only to the guest once a booking is confirmed. The host types it on arrival, or the guest confirms after check-in time; this &quot;stay confirmation&quot; is needed before a review can be written.</td>
+</tr>
+<tr>
 <td>CI/CD</td>
 <td>Continuous integration and delivery: every code change is automatically checked (tests, lint) and, if green, deployed to staging.</td>
 </tr>
@@ -108,11 +112,19 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Commission</td>
-<td>The percentage BLADUS earns on a booking, paid by the host. Guests pay no BLADUS fee.</td>
+<td>The percentage BLADUS earns on a booking, paid by the host from its deposit when the booking is confirmed. Guests pay no BLADUS fee. Base: the accommodation subtotal after discounts, without cleaning fee and taxes.</td>
+</tr>
+<tr>
+<td>Commission follows the refund</td>
+<td>The rule for cancellations (DEC-018, revised 2026-11-13): the host gets back the same share of the commission as the share of the subtotal refunded to the guest. Villa example: 50% refunded, so 3,330 of 6,660 DZD comes back and BLADUS keeps 3,330 DZD. Host cancellation returns all of it.</td>
 </tr>
 <tr>
 <td>Cursor (pagination)</td>
 <td>A bookmark returned by the API (for example the last message id) so the next request asks only for what came after it.</td>
+</tr>
+<tr>
+<td>Database role</td>
+<td>A login inside PostgreSQL with its own rights. BLADUS uses two: <code>bladus_migrator</code> owns the tables and runs migrations; <code>bladus_app</code> runs the app and may only read and add rows in the ledger and audit tables.</td>
 </tr>
 <tr>
 <td>Double-entry ledger</td>
@@ -128,7 +140,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Endpoint</td>
-<td>One API address with one method, for example <code>POST /api/v1/bookings</code> (create a booking).</td>
+<td>One API address with one method, for example <code>POST /api/v1/me/bookings</code> (create a booking).</td>
 </tr>
 <tr>
 <td>ETag / If-Match</td>
@@ -136,11 +148,15 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>Exclusion constraint</td>
-<td>A PostgreSQL rule that refuses overlapping date ranges for the same unit.</td>
+<td>A PostgreSQL rule that refuses overlapping date ranges for the same unit. BLADUS uses it for homes and vehicles; rooms, beds and seats use counters instead.</td>
 </tr>
 <tr>
 <td>Feature flag</td>
 <td>A setting that turns a feature on or off without changing code (for example the dormant payment endpoints).</td>
+</tr>
+<tr>
+<td>Four-eyes (rolling total)</td>
+<td>A money action that needs a second admin. For top-ups it applies when the host&#39;s total of top-ups in the last 24 hours passes 500,000 DZD, so splitting a deposit into small ones does not avoid it.</td>
 </tr>
 <tr>
 <td>Gantt chart</td>
@@ -155,8 +171,8 @@ section.doc{page-break-before:always;padding:0}
 <td>A date range that includes the first day and excludes the last: <code>[check-in, check-out)</code>. Check-out day is free for the next guest.</td>
 </tr>
 <tr>
-<td>HMAC hash</td>
-<td>A one-way fingerprint made with a secret key; used to compare ID or phone numbers without storing them in clear.</td>
+<td>HMAC hash / pepper</td>
+<td>A one-way fingerprint made with a secret key; used to compare codes, tokens, ID or phone numbers without storing them in clear. The secret key is the <strong>pepper</strong> (<code>HASH_PEPPER</code>), kept outside the database; a plain SHA-256 of a short value is never used.</td>
 </tr>
 <tr>
 <td>Hold</td>
@@ -175,12 +191,20 @@ section.doc{page-break-before:always;padding:0}
 <td>A tool that fails the build if one Django app imports another it is not allowed to use.</td>
 </tr>
 <tr>
+<td>Inventory conflict</td>
+<td>A record opened when a hotel&#39;s own system says it has fewer rooms than BLADUS already holds or sold for a night. BLADUS keeps the sold rooms and the admin decides what to do.</td>
+</tr>
+<tr>
 <td>k6</td>
 <td>A load-testing tool that simulates many users to check response times.</td>
 </tr>
 <tr>
 <td>KYC</td>
 <td>Know your customer: checking identity and business documents.</td>
+</tr>
+<tr>
+<td><code>lib/data</code> seam</td>
+<td>The folder of data functions both apps call; each becomes an API call.</td>
 </tr>
 <tr>
 <td>MFA / TOTP / passkey</td>
@@ -199,16 +223,24 @@ section.doc{page-break-before:always;padding:0}
 <td>One application split internally into separate parts with clear rules about who talks to whom.</td>
 </tr>
 <tr>
+<td>On-call</td>
+<td>The person who answers alerts outside office hours, with a short written procedure (runbook) for each common problem. See <a href="09b-operations.html">09b-operations.md</a>.</td>
+</tr>
+<tr>
 <td>OpenAPI</td>
 <td>A standard file (<code>openapi.yaml</code>) describing every endpoint, from which typed client code is generated.</td>
+</tr>
+<tr>
+<td>Orchestrator</td>
+<td>The tool that starts the server programs and restarts them when they stop. BLADUS uses Docker Compose with systemd on one server for M0 to M2.</td>
 </tr>
 <tr>
 <td>Organisation</td>
 <td>An agency, hotel or hostel business with team members.</td>
 </tr>
 <tr>
-<td>Outbox</td>
-<td>A table where the backend writes &#39;send this email&#39; or &#39;refresh search&#39; in the same save as the change; workers send them afterwards, so nothing is lost.</td>
+<td>Outbox / outbox message</td>
+<td>A table (<code>outbox_message</code>) where the backend writes &#39;send this email&#39; or &#39;push this booking to the hotel&#39; in the same save as the change; workers send them afterwards and retry, so nothing is lost. A message that failed 8 times becomes <strong>dead</strong> and shows in the admin queue, where it can be retried.</td>
 </tr>
 <tr>
 <td>OWASP API Top 10</td>
@@ -239,6 +271,14 @@ section.doc{page-break-before:always;padding:0}
 <td>Role-based access control: rights come from a role (owner, manager, moderator...).</td>
 </tr>
 <tr>
+<td>Reconciliation</td>
+<td>The nightly job <code>reconcile_balances</code> that recomputes every balance from the ledger lines and alerts the admins if a stored balance differs.</td>
+</tr>
+<tr>
+<td>Refund obligation</td>
+<td>Money a host owes a guest after a cancellation, with a due date (7 days by default). The host declares it paid, the guest confirms or disputes. While one is overdue, the host loses instant booking and cannot accept requests.</td>
+</tr>
+<tr>
 <td>REST</td>
 <td>A common style of API where each address names a thing (<code>/bookings</code>) and the method says what to do (GET read, POST create, PATCH change, DELETE remove).</td>
 </tr>
@@ -252,7 +292,7 @@ section.doc{page-break-before:always;padding:0}
 </tr>
 <tr>
 <td>RPO / RTO</td>
-<td>Recovery point objective (how much data we may lose, here 15 minutes) and recovery time objective (how long until service is back, here 4 hours).</td>
+<td>Recovery point objective (how much data we may lose, here 5 minutes) and recovery time objective (how long until service is back, here 1 hour). See <a href="09b-operations.html">09b-operations.md</a>.</td>
 </tr>
 <tr>
 <td>SATIM</td>
@@ -275,6 +315,10 @@ section.doc{page-break-before:always;padding:0}
 <td>Marking a row as deleted instead of removing it, so it can be restored.</td>
 </tr>
 <tr>
+<td>SSRF</td>
+<td>Server-side request forgery: tricking a server into calling an internal address. BLADUS checks every URL a host gives (hotel system, iCal link): https only, public addresses only, checked again at each fetch.</td>
+</tr>
+<tr>
 <td>State machine</td>
 <td>The allowed list of statuses and the allowed moves between them.</td>
 </tr>
@@ -291,8 +335,28 @@ section.doc{page-break-before:always;padding:0}
 <td>A table linking each requirement to its rules, tables, endpoints, tests and milestone, so nothing is forgotten.</td>
 </tr>
 <tr>
+<td>Trigger</td>
+<td>A small function PostgreSQL runs automatically before or after a write; it can refuse the write. Used for blocked days and for the insert-only ledger and audit tables.</td>
+</tr>
+<tr>
+<td>Trigram search (<code>pg_trgm</code>)</td>
+<td>A way to compare texts by their 3-letter pieces, so <code>tizi wezou</code> still finds <code>Tizi Ouzou</code>. Used instead of full-text search because PostgreSQL has no Arabic stemmer.</td>
+</tr>
+<tr>
+<td>UUIDv7 / display reference</td>
+<td>Every record id is a UUIDv7: a long, random-looking but time-ordered id. People see short <strong>display references</strong> instead (<code>BLD-2026-7K2M9Q</code> for a booking, <code>LST-...</code> for a listing); those are only for display and search.</td>
+</tr>
+<tr>
+<td>VPS</td>
+<td>Virtual private server: a rented virtual machine in a data centre.</td>
+</tr>
+<tr>
 <td>Vertical</td>
 <td>A product family: homes, hotels, experiences, vehicles, trips.</td>
+</tr>
+<tr>
+<td>Wallet adjustment</td>
+<td>A manual correction of a host&#39;s deposit by an admin, with a reason, at most 1,000,000 DZD, posted only after a second admin approves.</td>
 </tr>
 <tr>
 <td>Webhook</td>
@@ -311,7 +375,8 @@ section.doc{page-break-before:always;padding:0}
 <h2 id="check-yourself">Check yourself</h2>
 <ul>
 <li><input disabled="" type="checkbox"> What is the difference between an endpoint and an API?</li>
-<li><input disabled="" type="checkbox"> What do RPO and RTO mean for BLADUS (15 minutes, 4 hours)?</li>
+<li><input disabled="" type="checkbox"> What do RPO and RTO mean for BLADUS (5 minutes, 1 hour)?</li>
+<li><input disabled="" type="checkbox"> In the villa example, how much commission comes back to the host when the guest gets half the nights refunded?</li>
 <li><input disabled="" type="checkbox"> Why does the outbox exist?</li>
 <li><input disabled="" type="checkbox"> What is a gate in the roadmap?</li>
 <li><input disabled="" type="checkbox"> What is a half-open date range, and why does it allow back-to-back stays?</li>

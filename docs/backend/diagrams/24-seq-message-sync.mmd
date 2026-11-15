@@ -8,15 +8,15 @@ sequenceDiagram
     participant A as Django API
     participant DB as PostgreSQL
     G->>W: Opens a conversation
-    W->>A: GET /conversations/{id}/messages?after=0
-    A->>DB: messages of the conversation with id greater than 0
-    A-->>W: messages and next cursor 1042
+    W->>A: GET /conversations/{conversation_id}/messages
+    A->>DB: latest messages of the conversation
+    A-->>W: messages, the last id is the cursor (UUIDv7, ordered by time)
     loop every 5 to 15 s while open
-        W->>A: GET /conversations/{id}/messages?after=1042
+        W->>A: GET /conversations/{conversation_id}/messages?after=last_id
         A-->>W: only new messages (often none)
     end
     G->>W: Types a message containing a phone number
-    W->>A: POST /conversations/{id}/messages
+    W->>A: POST /conversations/{conversation_id}/messages
     A->>A: detects contact info, booking not confirmed yet
     A->>DB: stores body and masked body, flags it
     A-->>W: 201

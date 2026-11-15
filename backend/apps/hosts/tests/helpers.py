@@ -39,3 +39,54 @@ def set_status(account: HostAccount, status: str) -> HostAccount:
 def approved(account: HostAccount) -> HostAccount:
     """Shortcut: mark the host account approved."""
     return set_status(account, VerificationStatus.APPROVED)
+
+
+def sample_answer(field: dict):
+    """A valid answer for one onboarding field of the seeded flows (by type, with a few known ids)."""
+    field_id, kind = field["id"], field["type"]
+    if "Email" in field_id:
+        return "contact@example.dz"
+    if "Phone" in field_id:
+        return "+213555000111"
+    if field_id in ("checkInTime", "checkOutTime"):
+        return "14:00"
+    if kind == "select":
+        return field["options"][0]["value"]
+    if kind in ("multi_select", "amenities"):
+        return [field["options"][0]["value"]] if field.get("options") else ["wifi"]
+    if kind == "number":
+        return 2
+    if kind == "toggle":
+        return True
+    if kind in ("image_upload", "file_upload"):
+        return ["upload-1"]
+    if kind == "location":
+        return {"lat": 36.75, "lng": 3.06}
+    return "Sample answer"
+
+
+def onboarding_answers(host_type: str, **overrides) -> dict:
+    """Every required answer of the published flow of ``host_type``, plus ``overrides`` (approval mode: request)."""
+    from apps.config.selectors import published_flow
+    from apps.config.services import approval_field, flow_fields
+
+    steps = published_flow(host_type).steps
+    approval = approval_field(steps)
+    answers = {fid: sample_answer(f) for fid, f in flow_fields(steps).items() if f.get("required")}
+    answers[approval["id"]] = "request"
+    answers.update(overrides)
+    return answers
+
+
+def onboard(client, host_type: str, **overrides):
+    """Save a complete draft through the API and submit it; returns the submit response."""
+    from apps.config.selectors import published_flow
+
+    steps = published_flow(host_type).steps
+    res = client.put(
+        f"/api/v1/host/onboarding/drafts/{host_type}",
+        {"current_step": steps[-1]["id"], "answers": onboarding_answers(host_type, **overrides)},
+        format="json",
+    )
+    assert res.status_code == 200, res.data
+    return client.post(f"/api/v1/host/onboarding/drafts/{host_type}/submit")

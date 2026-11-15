@@ -171,7 +171,7 @@ op("get", f"{A}/listings/map", "searchListingsMap", "Map pins for the current se
    ["SRC-02"], ["BR-SRC-03"], query=SEARCH_Q, resp=obj({"pins": arr(ref("MapPin")), "truncated": BOOL}, ["pins", "truncated"]))
 op("get", f"{A}/listings/{{listing_id}}", "getListing", "Public listing page", T, "optional",
    ["LST-06", "LST-10", "LST-11", "SRC-06"], ["BR-SRC-01", "BR-SRC-03", "BR-BKG-02"], resp=ref("ListingDetail"), etag=True,
-   desc="`listing_id` is the UUID or the reference (LST-XXXXXX). 404 for unpublished listings, except for members of the owning host account (they see a preview).")
+   desc="`listing_id` is the UUIDv7 id (DEC-031); the reference LST-XXXXXX is for display and search only. 404 for unpublished listings, except for members of the owning host account (they see a preview).")
 op("get", f"{A}/listings/{{listing_id}}/availability", "getListingAvailability", "Free nights, units or slots for a period", T, "public",
    ["AVL-04", "AVL-02", "LST-11"], ["BR-AVL-04", "BR-AVL-05", "BR-AVL-02"],
    query=[qp("from", DATE, "First day (default today).", ), qp("to", DATE, "Last day, exclusive; max 400 days after from."),
@@ -203,7 +203,7 @@ op("get", f"{A}/trips", "searchTrips", "Search agency trips", T, "optional",
    resp=cursor_of(ref("TripCard")))
 op("get", f"{A}/trips/{{trip_id}}", "getTrip", "Public trip page (path accepts the trip id or its slug)", T, "optional",
    ["TRP-02", "TRP-03"], ["BR-SRC-01"], resp=ref("TripDetail"), etag=True,
-   desc="`trip_id` is the UUID or the reference. Old website slugs redirect (301) to the reference.")
+   desc="`trip_id` is the UUIDv7 id (DEC-031). Old website slugs are redirected by the website, not the API.")
 op("get", f"{A}/trips/{{trip_id}}/departures", "listTripDepartures", "Upcoming departures with seats left", T, "public",
    ["TRP-03", "BKG-09"], ["BR-TRP-02"], query=[qp("from", DATE, "Default today."), qp("to", DATE, "Optional end.")],
    resp=list_of(ref("Departure")), desc="Replaces seatsSoldByDeparture: seats_left is computed by the database counters.")
@@ -261,26 +261,37 @@ op("put", f"{A}/me/notification-preferences", "replaceMyNotificationPreferences"
 
 T = "me.bookings"
 op("post", f"{A}/me/bookings", "createBooking", "Book from a quote (instant or request)", T, "user",
-   ["BKG-01", "BKG-02", "BKG-05", "BKG-06", "BKG-09", "BKG-10", "AVL-01", "AVL-02", "PAY-03", "ACC-01"],
-   ["BR-BKG-01", "BR-BKG-02", "BR-BKG-03", "BR-BKG-07", "BR-AVL-01", "BR-AVL-02", "BR-TRP-02", "BR-PRC-01", "BR-PAY-04", "BR-PAY-10", "BR-SYS-01", "BR-ACC-01"],
+   ["BKG-01", "BKG-02", "BKG-05", "BKG-06", "BKG-09", "BKG-10", "BKG-12", "AVL-01", "AVL-02", "AVL-07", "PAY-03", "PAY-14", "ACC-01"],
+   ["BR-BKG-01", "BR-BKG-02", "BR-BKG-03", "BR-BKG-07", "BR-BKG-08", "BR-AVL-01", "BR-AVL-02", "BR-AVL-07", "BR-TRP-02", "BR-PRC-01", "BR-PAY-04", "BR-PAY-10", "BR-PAY-14", "BR-CAN-07", "BR-SYS-01", "BR-ACC-01"],
    body=ref("BookingCreate"), resp=ref("GuestBooking"), status=201, idem="required", conflict=True, rate=True,
-   desc="One database transaction: re-price the quote, lock inventory (exclusion constraint for single units, atomic counter update for pools and seats), resolve approval mode, create the booking with its snapshot, post the commission if confirmed, write outbox events.\n\n"
-        "Errors: 403 `phone_verification_required`; 403 `cannot_book_own_listing`; 409 `dates_unavailable` / `not_enough_units` / `seats_unavailable` (lost the race); "
+   desc="One database transaction, in lock order (BR-PAY-14): lock the host wallet balance row and check the floor and overdue refunds; lock the listing row; re-price the quote; take stock (exclusion constraint and blocked-day trigger for single units, one conditional counter update for pools and seats); resolve approval mode; create the booking with its snapshot; post the commission if confirmed; write outbox messages (including `inventory.push` for a connected hotel).\n\n"
+        "Errors: 403 `phone_verification_required`; 403 `cannot_book_own_listing`; 409 `too_many_open_bookings` (BR-BKG-08); 409 `dates_unavailable` / `not_enough_units` / `seats_unavailable` (lost the race or blocked day); "
         "409 `price_changed` (body has the new `quote`); 409 `quote_expired`; 409 `idempotency_in_progress`; 422 `idempotency_key_reused` (same key, different body).")
 op("get", f"{A}/me/bookings", "listMyBookings", "My bookings (trips page)", T, "user", ["BKG-07"], ["BR-BKG-06"],
    query=[qp("status", arr(ref("BookingStatus")), "Filter."), qp("when", {"type": "string", "enum": ["upcoming", "past", "all"], "default": "all"}, "Time filter."),
           P("Cursor"), P("Limit")], resp=cursor_of(ref("GuestBooking")))
 op("get", f"{A}/me/bookings/{{booking_id}}", "getMyBooking", "One of my bookings", T, "user", ["BKG-07", "BKG-08", "NFR-12"], ["BR-SRC-03", "BR-BKG-07"], resp=ref("GuestBooking"),
-   desc="`booking_id` is the UUID or the reference BLD-YYYY-XXXXXX. 404 if it is not mine.")
+   desc="`booking_id` is the UUIDv7 id (DEC-031); the reference BLD-YYYY-XXXXXX is shown to people and searchable with `q` on list endpoints. 404 if it is not mine. The check-in code is included once confirmed.")
 op("get", f"{A}/me/bookings/{{booking_id}}/cancellation-preview", "previewMyBookingCancellation", "What I would get back if I cancel now", T, "user",
    ["CAN-01"], ["BR-CAN-01", "BR-CAN-02"], resp=ref("CancellationPreview"))
 op("post", f"{A}/me/bookings/{{booking_id}}/cancel", "cancelMyBooking", "Cancel my booking or withdraw my request", T, "user",
-   ["CAN-01", "CAN-04", "BKG-05"], ["BR-CAN-01", "BR-CAN-02", "BR-PAY-05", "BR-BKG-06"], body=ref("GuestCancel"), body_required=False,
+   ["CAN-01", "CAN-04", "CAN-05", "BKG-05"], ["BR-CAN-01", "BR-CAN-02", "BR-CAN-06", "BR-PAY-05", "BR-BKG-06"], body=ref("GuestCancel"), body_required=False,
    resp=ref("GuestBooking"), idem="optional", conflict=True,
-   desc="pending: withdraw (nothing to refund). confirmed: refund by the snapshot policy; commission on the refunded share goes back to the host wallet. 409 `booking_not_cancellable` (after check-in time, or final state), 409 `refund_changed`.")
+   desc="pending: withdraw (nothing to refund). confirmed: refund by the snapshot policy; the host gets back apply_bp(commission, refund_bp) (BR-PAY-05, example 8a: 3,330 of 6,660 DZD); a refund obligation opens when the refund is above 0 (BR-CAN-06). 409 `booking_not_cancellable` (after check-in time, or final state), 409 `refund_changed`.")
 op("post", f"{A}/me/bookings/{{booking_id}}/review", "createMyReview", "Review a completed stay", T, "user",
-   ["REV-01"], ["BR-REV-01", "BR-REV-02"], body=ref("ReviewCreate"), resp=ref("Review"), status=201, conflict=True,
-   desc="Only for a completed booking, within 14 days after check-out, once (409 `review_exists`, 422 `review_window_closed`).")
+   ["REV-01", "BKG-13"], ["BR-REV-01", "BR-REV-02", "BR-BKG-09"], body=ref("ReviewCreate"), resp=ref("Review"), status=201, conflict=True,
+   desc="Only for a completed booking whose stay was confirmed (409 `stay_not_confirmed`, BR-BKG-09), within 14 days after check-out, once (409 `review_exists`, 422 `review_window_closed`).")
+op("post", f"{A}/me/bookings/{{booking_id}}/confirm-stay", "confirmMyStay", "Confirm that my stay took place", T, "user",
+   ["BKG-13"], ["BR-BKG-09"], resp=ref("GuestBooking"), idem="optional", conflict=True,
+   desc="Allowed after check-in time on a confirmed or completed booking (409 `stay_not_started` before check-in time, 409 `booking_not_confirmed`). Repeating it returns the booking unchanged. Sets stay_confirmed_via = guest.")
+op("get", f"{A}/me/refunds", "listMyRefunds", "Refunds hosts owe me", T, "user", ["CAN-05"], ["BR-CAN-06", "BR-CAN-07"],
+   query=[qp("status", arr(ref("RefundObligationStatus")), "Filter."), P("Cursor"), P("Limit")], resp=cursor_of(ref("RefundObligation")))
+op("post", f"{A}/me/refunds/{{refund_id}}/confirm-received", "confirmMyRefundReceived", "Confirm I received the refund", T, "user", ["CAN-05"], ["BR-CAN-06"],
+   resp=ref("RefundObligation"), idem="optional", conflict=True,
+   desc="open or declared to settled; posts the `refund_settled` memo transaction. 409 `refund_not_open`.")
+op("post", f"{A}/me/refunds/{{refund_id}}/dispute", "disputeMyRefund", "Say the refund was not received", T, "user", ["CAN-05"], ["BR-CAN-06", "BR-CAN-07"],
+   body=ref("RefundDispute"), resp=ref("RefundObligation"), conflict=True,
+   desc="declared to disputed (the host must pay and declare again; the due date does not move). 409 `refund_not_declared`.")
 op("post", f"{A}/me/bookings/{{booking_id}}/dispute", "openMyDispute", "Open a dispute about a booking", T, "user",
    ["BKG-11"], ["BR-CAN-05"], body=ref("DisputeCreate"), resp=ref("Dispute"), status=201, conflict=True, release="R2",
    desc="Until 14 days after check-out (422 `dispute_window_closed`).")
@@ -517,17 +528,20 @@ op("get", f"{A}/host/bookings", "listHostBookings", "Bookings of the active host
 op("get", f"{A}/host/bookings/{{booking_id}}", "getHostBooking", "One booking of the active host account", T, "host", ["BKG-07", "BKG-08"], ["BR-ORG-05", "BR-SRC-03"],
    resp=ref("HostBooking"), perm="bookings.view")
 op("post", f"{A}/host/bookings/{{booking_id}}/accept", "acceptBookingRequest", "Accept a pending request", T, "host",
-   ["BKG-02", "PAY-03", "PAY-04", "PAY-07", "ORG-05"], ["BR-BKG-03", "BR-BKG-06", "BR-PAY-04", "BR-PAY-06", "BR-PAY-10", "BR-ORG-05", "BR-NTF-01"],
+   ["BKG-02", "PAY-03", "PAY-04", "PAY-07", "PAY-14", "CAN-05", "ORG-05"], ["BR-BKG-03", "BR-BKG-06", "BR-PAY-04", "BR-PAY-06", "BR-PAY-10", "BR-PAY-14", "BR-CAN-07", "BR-ORG-05", "BR-NTF-01"],
    body=ref("HostAccept"), body_required=False, resp=ref("HostBooking"), perm="bookings.respond", idem="optional", conflict=True,
-   desc="pending to confirmed in one transaction with the commission posting. 409 `booking_not_pending`, `request_expired`, `wallet_below_credit_floor`; 403 `permission_denied` for agents and guides (DEC-009).")
+   desc="pending to confirmed in one transaction with the commission posting, same lock order as booking creation (wallet balance row first, BR-PAY-14). 409 `booking_not_pending`, `request_expired`, `wallet_below_credit_floor`, `refund_overdue` (BR-CAN-07); 403 `permission_denied` for agents and guides (DEC-009).")
 op("post", f"{A}/host/bookings/{{booking_id}}/decline", "declineBookingRequest", "Decline a pending request", T, "host",
    ["BKG-02", "CAN-04", "ORG-05"], ["BR-BKG-03", "BR-BKG-06", "BR-PAY-05", "BR-NTF-01"], body=ref("HostDecline"), resp=ref("HostBooking"),
    perm="bookings.respond", idem="optional", conflict=True, desc="Reason code required. Dates are released at once.")
 op("get", f"{A}/host/bookings/{{booking_id}}/cancellation-preview", "previewHostCancellation", "What a host cancellation means", T, "host",
    ["CAN-02"], ["BR-CAN-03", "BR-PAY-05"], resp=ref("CancellationPreview"), perm="bookings.cancel_as_host")
 op("post", f"{A}/host/bookings/{{booking_id}}/cancel", "cancelBookingAsHost", "Cancel a confirmed booking as host", T, "host",
-   ["CAN-02", "CAN-04"], ["BR-CAN-03", "BR-PAY-05", "BR-NTF-01"], body=ref("HostCancel"), resp=ref("HostBooking"),
-   perm="bookings.cancel_as_host", idem="optional", conflict=True, desc="Full refund owed to the guest, full commission reversal, host cancellation counter +1.")
+   ["CAN-02", "CAN-04", "CAN-05"], ["BR-CAN-03", "BR-CAN-06", "BR-PAY-05", "BR-NTF-01"], body=ref("HostCancel"), resp=ref("HostBooking"),
+   perm="bookings.cancel_as_host", idem="optional", conflict=True, desc="Full total owed to the guest (a refund obligation opens, BR-CAN-06), full commission returned, host cancellation counter +1.")
+op("post", f"{A}/host/bookings/{{booking_id}}/confirm-stay", "confirmStayAsHost", "Confirm the guest arrived (check-in code)", T, "host",
+   ["BKG-13"], ["BR-BKG-09"], body=ref("StayConfirmByHost"), resp=ref("HostBooking"), perm="bookings.view", idem="optional", conflict=True, rate=True,
+   desc="The host types the 6-digit code the guest shows on arrival. Wrong code: 400 `invalid_code`; 5 wrong codes lock this booking for 1 hour (429). 409 `booking_not_confirmed`. Repeating it returns the booking unchanged. Sets stay_confirmed_via = host_code.")
 op("post", f"{A}/host/bookings/{{booking_id}}/guest-review", "reviewGuest", "Review the guest", T, "host", ["REV-02"], ["BR-REV-02"],
    body=ref("ReviewCreate"), resp=ref("Review"), status=201, perm="bookings.respond", conflict=True, release="R2")
 op("post", f"{A}/host/bookings/{{booking_id}}/dispute", "openHostDispute", "Open a dispute as host", T, "host", ["BKG-11"], ["BR-CAN-05"],
@@ -544,9 +558,14 @@ op("get", f"{A}/host/wallet", "getHostWallet", "Commission wallet of the active 
 op("get", f"{A}/host/wallet/entries", "listHostWalletEntries", "Wallet history", T, "host", ["PAY-08", "PAY-01"], ["BR-PAY-02", "BR-PAY-03"],
    query=[qp("kind", arr(ref("LedgerTxKind")), "Filter."), qp("from", DATE, "Filter."), qp("to", DATE, "Filter."), P("Cursor"), P("Limit")],
    resp=cursor_of(ref("WalletEntry")), perm="wallet.view")
-op("post", f"{A}/host/wallet/topups", "startOnlineTopup", "Top up the wallet online (CIB, Edahabia)", T, "host", ["PAY-06"], ["BR-PAY-08"],
-   body=ref("OnlineTopupCreate"), resp=ref("OnlineTopupCheckout"), status=201, perm="wallet.view", idem="required", release="R2",
-   desc="Credited only by the verified gateway webhook. 404 while the `online_topup` flag is off.")
+# No online top-up endpoint in v1 (DEC-019, DEC-031): removed on 2026-11-13. Host top-ups are recorded by an admin.
+op("get", f"{A}/host/refunds", "listHostRefunds", "Refunds the active host account owes guests", T, "host", ["CAN-05"], ["BR-CAN-06", "BR-CAN-07"],
+   query=[qp("status", arr(ref("RefundObligationStatus")), "Filter."), qp("overdue", BOOL, "Only overdue ones."), P("Cursor"), P("Limit")],
+   resp=cursor_of(ref("RefundObligation")), perm="bookings.view",
+   desc="While one is overdue, instant booking is off and requests cannot be accepted (BR-CAN-07).")
+op("post", f"{A}/host/refunds/{{refund_id}}/declare-paid", "declareHostRefundPaid", "Declare a refund paid to the guest", T, "host", ["CAN-05"], ["BR-CAN-06"],
+   body=ref("RefundDeclare"), resp=ref("RefundObligation"), perm="bookings.cancel_as_host", idem="optional", conflict=True,
+   desc="open or disputed to declared, with the transfer reference. The guest is asked to confirm. 409 `refund_not_open`.")
 op("get", f"{A}/host/earnings", "getHostEarnings", "Earnings dashboard", T, "host", ["RPT-03"], ["BR-RPT-02"],
    query=[qp("from", DATE, "Start (default first day of the year)."), qp("to", DATE, "End (default today).")], resp=ref("Earnings"), perm="wallet.view")
 op("get", f"{A}/host/invoices", "listHostInvoices", "Commission invoices", T, "host", ["PAY-11"], ["BR-PAY-12"], query=[P("Cursor"), P("Limit")],
@@ -561,8 +580,8 @@ op("post", f"{A}/host/payouts", "requestHostPayout", "Ask for a payout", T, "hos
 # WEBHOOKS
 # ===========================================================================
 op("post", f"{A}/webhooks/gateway/{{provider}}", "receiveGatewayWebhook", "Payment gateway callback", "webhooks", "webhook",
-   ["PAY-09", "PAY-06", "PAY-10"], ["BR-SYS-02", "BR-PAY-08"], body=OBJ, resp=ref("GatewayEventAck"), dormant=True, release="R2",
-   desc="DORMANT until online top-up (R2) or guest payments (M2 to M4) are switched on; 404 before that. The raw body is stored first, then the signature is checked (HMAC-SHA256 of the raw body with the provider secret), then the event is deduplicated by (provider, event_id) and processed once by a worker. Always answers 200 quickly, also for duplicates.")
+   ["PAY-09", "PAY-10"], ["BR-SYS-02", "BR-PAY-08"], body=OBJ, resp=ref("GatewayEventAck"), dormant=True, release="R2",
+   desc="DORMANT until online payment exists (guest payments, M2 to M4; DEC-019); 404 before that. There is no online top-up in v1. The raw body is stored first, then the signature is checked (HMAC-SHA256 of the raw body with the provider secret), then the event is deduplicated by (provider, event_id) and processed once by a worker. Always answers 200 quickly, also for duplicates.")
 
 # ===========================================================================
 # ADMIN (staff only, MFA required): /api/v1/admin/*
@@ -699,15 +718,20 @@ op("get", f"{AD}/bookings", "adminListBookings", "All bookings with facets", T, 
 op("get", f"{AD}/bookings/{{booking_id}}", "adminGetBooking", "One booking with its event history", T, "staff", ["BKG-05", "BKG-06"], ["BR-BKG-06", "BR-BKG-07"],
    resp=ref("AdminBooking"), perm="bookings.view")
 op("post", f"{AD}/bookings/{{booking_id}}/cancel", "adminCancelBooking", "Cancel a booking as staff", T, "staff", ["CAN-03", "CAN-04"], ["BR-CAN-04", "BR-PAY-05", "BR-STF-02"],
-   body=ref("AdminCancel"), resp=ref("AdminBooking"), perm="bookings.cancel", idem="optional", conflict=True)
+   body=ref("AdminCancel"), resp=ref("AdminBooking"), perm="bookings.cancel", idem="optional", conflict=True,
+   desc="Commission returned for a refund R: round_half_up(commission x clamp(R - cleaning - taxes, 0, base) / base) (BR-CAN-04, BR-PAY-05). A refund obligation opens when R > 0.")
 op("post", f"{AD}/bookings/{{booking_id}}/refunds", "adminRefundBooking", "Record a full or partial refund", T, "staff", ["CAN-03", "CAN-04", "PAY-01"],
    ["BR-CAN-04", "BR-PAY-02", "BR-PAY-05", "BR-SYS-01", "BR-STF-02"], body=ref("RefundCreate"), resp=ref("AdminBooking"), status=201, perm="bookings.refund",
    idem="required", conflict=True, desc="Partial refunds add up and never exceed the total (422 `refund_exceeds_total`). In M1 the refund is owed by the host; commission is adjusted in the ledger.")
 op("post", f"{AD}/bookings/{{booking_id}}/dispute/resolve", "adminResolveDispute", "Resolve a dispute", T, "staff", ["BKG-11"], ["BR-CAN-05", "BR-STF-02"],
    body=ref("DisputeResolve"), resp=ref("AdminBooking"), perm="bookings.dispute (+ bookings.refund unless declined)", idem="optional", conflict=True, release="R2")
-op("get", f"{AD}/refunds", "adminListRefunds", "All refunds", T, "staff", ["CAN-03"], ["BR-CAN-04"],
-   query=[qp("host_account", UUID, "Filter."), qp("kind", STR, "Filter."), qp("from", DATE, "Filter."), qp("to", DATE, "Filter."), P("Page"), P("PageSize")],
-   resp=page_of(ref("AdminRefund")), perm="bookings.view or wallets.view")
+op("get", f"{AD}/refunds", "adminListRefunds", "Refund obligations (e.g. overdue ones)", T, "staff", ["CAN-03", "CAN-05"], ["BR-CAN-04", "BR-CAN-06", "BR-CAN-07"],
+   query=[qp("overdue", BOOL, "Only overdue obligations (open or disputed, due date passed)."), qp("status", arr(ref("RefundObligationStatus")), "Filter."),
+          qp("host_account", UUID, "Filter."), qp("from", DATE, "Filter."), qp("to", DATE, "Filter."), P("Page"), P("PageSize")],
+   resp=page_of(ref("RefundObligation")), perm="bookings.view")
+op("post", f"{AD}/refunds/{{refund_id}}/settle", "adminSettleRefund", "Settle a refund obligation with proof", T, "staff", ["CAN-05"], ["BR-CAN-06", "BR-STF-02"],
+   body=ref("RefundSettle"), resp=ref("RefundObligation"), perm="bookings.refund", idem="optional", conflict=True,
+   desc="Any open, declared or disputed obligation to settled, with a note and optional uploaded proof; posts `refund_settled`; audited. 409 `refund_not_open` when already settled.")
 
 T = "admin.users"
 op("get", f"{AD}/users", "adminListUsers", "Users (guests and hosts as people)", T, "staff", ["ACC-08", "MOD-07"], ["BR-ACC-01"],
@@ -752,18 +776,26 @@ op("get", f"{AD}/ledger/transactions", "adminListLedgerTransactions", "Ledger tr
    query=[qp("host_account", UUID, "Filter."), qp("kind", arr(ref("LedgerTxKind")), "Filter."), qp("booking", STR, "Booking id or reference."),
           qp("from", DATE, "Filter."), qp("to", DATE, "Filter."), qp("q", STR, "Description or receipt."), P("Page"), P("PageSize")],
    resp=page_of(ref("LedgerTransaction")), perm="wallets.view")
-op("post", f"{AD}/ledger/adjustments", "adminCreateAdjustment", "Correct a wallet with an adjustment transaction", T, "staff", ["PAY-01"], ["BR-PAY-02", "BR-STF-03", "BR-STF-02"],
-   body=ref("AdjustmentCreate"), resp=ref("LedgerTransaction"), status=201, perm="ledger.adjust (new)", idem="required", conflict=True,
-   desc="Never edits old entries: posts a new balanced transaction (optionally linked to the one it corrects).")
+op("get", f"{AD}/wallet-adjustments", "adminListWalletAdjustments", "Manual wallet adjustments", T, "staff", ["PAY-13"], ["BR-PAY-13"],
+   query=[qp("status", arr(ref("AdjustmentStatus")), "Filter."), qp("host_account", UUID, "Filter."), P("Page"), P("PageSize")],
+   resp=page_of(ref("WalletAdjustment")), perm="wallets.view")
+op("post", f"{AD}/wallet-adjustments", "adminCreateWalletAdjustment", "Ask for a manual wallet adjustment", T, "staff", ["PAY-13", "PAY-01"], ["BR-PAY-13", "BR-PAY-02", "BR-STF-03", "BR-STF-02"],
+   body=ref("AdjustmentCreate"), resp=ref("WalletAdjustment"), status=201, perm="ledger.adjust", idem="required", conflict=True,
+   desc="Creates a pending_approval adjustment; nothing is posted until a second admin approves (DEC-022). 422 `adjustment_too_large` above 1,000,000 DZD; 422 for amount 0.")
+op("post", f"{AD}/wallet-adjustments/{{adjustment_id}}/approve", "adminApproveWalletAdjustment", "Second approval of a wallet adjustment", T, "staff", ["PAY-13"], ["BR-PAY-13", "BR-PAY-02", "BR-STF-02"],
+   resp=ref("WalletAdjustment"), perm="ledger.adjust", idem="optional", conflict=True,
+   desc="The approver must differ from the requester (403 `four_eyes_required`). Posts one balanced `adjustment` transaction (host wallet against `adjustments`). 409 `adjustment_not_pending`.")
+op("post", f"{AD}/wallet-adjustments/{{adjustment_id}}/reject", "adminRejectWalletAdjustment", "Reject a wallet adjustment", T, "staff", ["PAY-13"], ["BR-PAY-13", "BR-STF-02"],
+   body=ref("Reason"), resp=ref("WalletAdjustment"), perm="ledger.adjust", conflict=True)
 op("post", f"{AD}/wallets/{{host_account_id}}/topups", "adminCreateTopup", "Record a manual wallet top-up", T, "staff", ["PAY-05", "PAY-02"],
    ["BR-PAY-07", "BR-PAY-02", "BR-SYS-01", "BR-STF-02"], body=ref("TopupCreate"), resp=ref("Topup"), status=201, perm="wallets.recharge", idem="required", conflict=True,
-   desc="Up to the four-eyes threshold the top-up is approved and posted at once. Above it, status is pending_approval and nothing is posted until a second finance user approves. 409 `receipt_already_used` (same method and receipt).")
+   desc="If the host's rolling 24-hour top-up total (pending + approved, including this one) stays within the four-eyes threshold (500,000 DZD), the top-up is approved and posted at once. Above it, status is pending_approval and nothing is posted until a second admin approves (BR-PAY-07). 409 `receipt_already_used` (same method and receipt).")
 op("get", f"{AD}/topups", "adminListTopups", "Top-ups (e.g. waiting for a second approval)", T, "staff", ["PAY-05"], ["BR-PAY-07"],
    query=[qp("status", arr(ref("TopupStatus")), "Filter."), qp("method", arr(ref("TopupMethod")), "Filter."), qp("host_account", UUID, "Filter."), P("Page"), P("PageSize")],
    resp=page_of(ref("Topup")), perm="wallets.view")
 op("post", f"{AD}/topups/{{topup_id}}/approve", "adminApproveTopup", "Second approval of a large top-up (four-eyes)", T, "staff", ["PAY-05"], ["BR-PAY-07", "BR-PAY-02", "BR-STF-02"],
    resp=ref("Topup"), perm="wallets.recharge", idem="optional", conflict=True,
-   desc="The approver must be a different staff user from the requester (403 `four_eyes_same_user`). 409 `topup_not_pending`. Posts the ledger transaction and notifies the host.")
+   desc="The approver must always be a different admin from the requester (403 `four_eyes_same_user`). 409 `topup_not_pending`. Posts the ledger transaction and notifies the host.")
 op("post", f"{AD}/topups/{{topup_id}}/reject", "adminRejectTopup", "Reject a pending top-up", T, "staff", ["PAY-05"], ["BR-PAY-07", "BR-STF-02"],
    body=ref("Reason"), resp=ref("Topup"), perm="wallets.recharge", conflict=True)
 op("get", f"{AD}/commission-rates", "adminGetCommissionRates", "Default commission rates per host type", T, "staff", ["PAY-04", "CFG-01"], ["BR-PAY-06"],
@@ -779,6 +811,21 @@ for verb, opid, summ, body in [("approve", "adminApprovePayout", "Approve a payo
                                ("mark-sent", "adminMarkPayoutSent", "Mark a payout as sent", obj({"bank_reference": STR}, ["bank_reference"]))]:
     op("post", f"{AD}/payouts/{{payout_id}}/{verb}", opid, summ, T, "staff", ["PAY-10"], ["BR-PAY-11", "BR-PAY-09", "BR-STF-02"], body=body, body_required=body is not None,
        resp=ref("Payout"), perm="payouts.approve", conflict=True, dormant=True, release="Later", desc="DORMANT (model M4). 404 while the `payouts` flag is off.")
+
+T = "admin.hosts"
+op("get", f"{AD}/inventory-conflicts", "adminListInventoryConflicts", "Hotel sync conflicts (rooms already sold)", T, "staff", ["HST-09"], ["BR-HST-07"],
+   query=[qp("status", arr(ref("InventoryConflictStatus")), "Filter (default open)."), qp("host_account", UUID, "Filter."), P("Page"), P("PageSize")],
+   resp=page_of(ref("InventoryConflict")), perm="hosts.view")
+op("post", f"{AD}/inventory-conflicts/{{conflict_id}}/resolve", "adminResolveInventoryConflict", "Resolve a hotel sync conflict", T, "staff", ["HST-09"], ["BR-HST-07", "BR-STF-02"],
+   body=ref("InventoryConflictResolve"), resp=ref("InventoryConflict"), perm="hosts.approve", conflict=True,
+   desc="Records how the admin solved it (note required; accept the clamp, or the booking was moved or cancelled with the guest). The room-night total is never set below held + booked. 409 `conflict_resolved`.")
+T = "admin.audit"
+op("get", f"{AD}/outbox", "adminListOutbox", "Outgoing messages (e.g. dead ones)", T, "staff", ["NTF-05", "HST-09"], ["BR-SYS-03", "BR-HST-07"],
+   query=[qp("status", arr(ref("OutboxStatus")), "Filter, e.g. dead."), qp("topic", STR, "Filter, e.g. inventory.push."), P("Page"), P("PageSize")],
+   resp=page_of(ref("OutboxMessage")), perm="settings.manage")
+op("post", f"{AD}/outbox/{{message_id}}/retry", "adminRetryOutboxMessage", "Retry a dead outgoing message", T, "staff", ["NTF-05"], ["BR-SYS-03", "BR-STF-02"],
+   resp=ref("OutboxMessage"), perm="settings.manage", conflict=True,
+   desc="dead to pending with attempts reset and next_attempt_at = now; audited. Handlers are idempotent, so a retry never sends twice. 409 `outbox_not_dead`.")
 
 T = "admin.settings"
 op("get", f"{AD}/settings", "adminGetSettings", "Current platform settings", T, "staff", ["CFG-01"], ["BR-CFG-01"], resp=ref("PlatformSettings"), perm="settings.manage",

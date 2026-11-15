@@ -2,8 +2,8 @@
 
 > **In plain words**
 > This is the plan for the database: which tables exist, how they link, and which rules the database itself enforces.
-> It has 77 tables in 14 groups. The full column list is in [05b-data-dictionary.md](05b-data-dictionary.md) and the machine-readable version in [schema.dbml](schema.dbml).
-> The most important ideas: one "host account" for every kind of host; the database refuses double bookings; money is kept in a ledger that is never edited.
+> It has 83 tables in 14 groups. The full column list is in [05b-data-dictionary.md](05b-data-dictionary.md) and the machine-readable version in [schema.dbml](schema.dbml).
+> The most important ideas: one "host account" for every kind of host; the database refuses double bookings (section 6 says exactly how, case by case); money is kept in a ledger that is never edited.
 > Each big choice is written as a short decision record (ADR) with the options we rejected.
 > At the end: how today's demo data maps onto the new tables, what to seed first, and how the busiest queries will run.
 
@@ -14,6 +14,9 @@
 - **Index**: a lookup structure that makes searches fast, like the index at the back of a book.
 - **Partial index**: an index (often unique) that applies only to rows matching a condition, e.g. "only active owners".
 - **GiST / GIN**: PostgreSQL index types for ranges, map points, arrays and text search.
+- **Trigger**: a small function PostgreSQL runs automatically before or after a write; it can refuse the write.
+- **Trigram (`pg_trgm`)**: a way to compare texts by their 3-letter pieces, so `tizi wezou` still finds `Tizi Ouzou`; works for Arabic without a stemmer.
+- **Database role**: a login inside PostgreSQL with its own rights (which tables it may read, insert, change).
 - **Migration**: a versioned script that creates or changes tables. Not written yet (no backend code in this phase).
 
 Inputs: [01-system-inventory.md](01-system-inventory.md), [03-requirements.md](03-requirements.md), [04-business-rules.md](04-business-rules.md), research [02-research.md](02-research.md) section B.
@@ -31,12 +34,12 @@ Inputs: [01-system-inventory.md](01-system-inventory.md), [03-requirements.md](0
 | inventory | listing_day, room_type_night, experience_slot | What is free, and at what price, per day or slot |
 | trips | trip, trip_itinerary_day, trip_departure | Agency multi-day products |
 | pricing | quote, tax_rate | Server-computed prices |
-| bookings | booking, booking_event, refund, dispute | Reservations and their history |
-| ledger | ledger_account, ledger_transaction, ledger_entry, account_balance, wallet_topup, gateway_event, payment\*, payout\*, invoice | Money (\* dormant until the money model changes) |
+| bookings | booking, booking_event, refund, refund_obligation, dispute | Reservations, their history and the refunds hosts owe |
+| ledger | ledger_account, ledger_transaction, ledger_entry, account_balance, wallet_topup, wallet_adjustment, gateway_event, payment\*, payout\*, invoice | Money (\* dormant until the money model changes) |
 | reviews | review, review_reply, review_report | Reviews after stays |
-| messaging, notifications | conversation, conversation_participant, message, notification, notification_preference, outbox_event, delivery_log | Messages, alerts, reliable sending |
+| messaging, notifications | conversation, conversation_participant, message, notification, notification_preference, outbox_message, delivery_log | Messages, alerts, reliable sending |
 | media | media_asset | Photos and private documents |
-| trust, config, audit, privacy, core | incident_record, otp_send_log, calendar_feed (inventory), reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc | Staff work, settings, history, legal requests, system safety |
+| trust, config, audit, privacy, core, integrations | incident_record, otp_send_log, calendar_feed (inventory), property_integration, integration_sync_log, inventory_conflict, property_service, reason_code, moderation_case, moderation_decision, change_request_item, platform_settings, onboarding_flow_version, onboarding_draft, coupon, coupon_redemption, audit_event, export_job, data_subject_request, idempotency_record, listing_search_doc | Staff work, settings, history, legal requests, system safety |
 
 Diagrams: [diagrams/erd-00-overview](diagrams/README.md) shows the 26 core tables; one diagram per group follows (Phase 4).
 
@@ -46,7 +49,7 @@ Diagrams: [diagrams/erd-00-overview](diagrams/README.md) shows the 26 core table
 
 | Topic | Convention | Why |
 |---|---|---|
-| IDs | UUIDv7 (time-ordered) made by the app; human references for people (`BLD-2026-7K2M9Q`, `LST-...`) | Not guessable (BR security API1), sortable, no `Date.now()` collisions |
+| IDs | **One scheme (DEC-031)**: every table the app writes has a UUIDv7 primary key (time-ordered) made by the app, including history, ledger, message, notification, outbox and audit rows (no more `bigint` counters). Human references (`BLD-2026-7K2M9Q` bookings, `LST-7K2M9Q` listings, `TRP-...` trips) are only for display and search; API paths take the UUID. The geography reference tables keep the official state codes. | Not guessable (BR security API1), sortable (works as a cursor), no `Date.now()` collisions |
 | Money | `BIGINT` centimes in columns ending `_minor`, plus `currency char(3)` | Exact sums (ADR-006) |
 | Rates | integer basis points `_bp` (1,200 = 12%) | No float rounding |
 | Time | `timestamptz` in UTC; stay nights as `date` / `daterange` in Africa/Algiers | BR-SYS-05 |
@@ -69,11 +72,12 @@ Each ADR: the context, the decision, the options rejected, the consequences.
 - **Rejected**: (a) host fields on `user` (cannot represent organisations); (b) only organisations, with a "solo organisation" per individual (confusing for individuals, more rows, forces team concepts on solo hosts).
 - **Consequences**: one wallet per host account; Karim's individual hosting and his agency have separate wallets and commission rates; the API carries an "active host account" header.
 
-### ADR-002: Database-enforced availability, two mechanisms
-- **Context**: double booking must be impossible (AVL-01, AVL-02); today it relies on single-threaded JavaScript.
-- **Decision**: single units (homes, vehicles) use a `daterange` on `booking` with an **exclusion constraint**; pooled units (hotel room types, hostel beds, experience slots, trip departures) use **counter rows** (`room_type_night`, `experience_slot`, `trip_departure`) with `CHECK (held + booked <= total)` and an atomic conditional `UPDATE`.
+### ADR-002: Database-enforced availability, three mechanisms (corrected 2026-11-13, DEC-020)
+- **Context**: double booking must be impossible (AVL-01, AVL-02, AVL-07); today it relies on single-threaded JavaScript.
+- **Decision**: (1) single units (homes, vehicles) use a `daterange` on `booking` with an **exclusion constraint**, plus a service lock on the listing row; (2) pooled units (hotel room types, hostel beds, experience slots, trip departures) use **counter rows** (`room_type_night`, `experience_slot`, `trip_departure`) with `CHECK (held + booked <= total)` and one conditional `UPDATE`, **no exclusion constraint**; (3) blocked days (`listing_day.is_blocked`) and single-unit bookings are kept apart by **two triggers** (BR-AVL-07), with the same check in the services after the listing row lock.
+- **Correction**: earlier versions said "the database refuses every overlap". That was not true for blocked days (no constraint linked `listing_day` and `booking`) and the exclusion constraint never covered pools. Section 6 now lists the exact guarantee per case.
 - **Rejected**: (a) application locks only (lost under multiple servers); (b) one row per physical room for hotels (heavier; hosts do not assign rooms at booking time); (c) Redis counters (not transactional with the booking).
-- **Consequences**: concurrent requests for the last unit: exactly one succeeds, the other gets `409 dates_unavailable`. Counter rows are created 18 months ahead by a job.
+- **Consequences**: concurrent requests for the last unit: exactly one succeeds, the other gets `409 dates_unavailable`. Counter rows are created 18 months ahead by a job. A hotel sync can never push `total` below `held + booked` (BR-HST-07).
 
 ### ADR-003: One booking table with typed targets
 - **Context**: bookings target a listing, a room type, an experience slot or a trip departure.
@@ -92,7 +96,7 @@ Each ADR: the context, the decision, the options rejected, the consequences.
 
 ### ADR-006: Money in centimes with a double-entry ledger
 - **Context**: DEC-001 (prepaid commission now, maybe collected payments later); research B.17 and A.5.
-- **Decision**: `ledger_account`, `ledger_transaction`, `ledger_entry` (insert-only, sum to zero per transaction, enforced by a deferred trigger) and `account_balance` cache. Amounts in centimes.
+- **Decision**: `ledger_account`, `ledger_transaction`, `ledger_entry` (insert-only, sum to zero per transaction, enforced by a deferred trigger) and `account_balance` cache for host wallets. Amounts in centimes. Insert-only is enforced by triggers and by the role split (`bladus_migrator` owns, `bladus_app` may only SELECT and INSERT, DEC-026); the nightly `reconcile_balances` job checks the caches. No platform balance row is updated on the booking path; revenue is a SUM (DEC-023).
 - **Rejected**: single-sided wallet rows (both apps today: cannot prove that money balances); `DECIMAL` with django-money (repository archived 2026).
 - **Consequences**: M2 to M4 only add accounts and transaction kinds; no schema rewrite. Corrections are reversing transactions.
 
@@ -114,12 +118,12 @@ Each ADR: the context, the decision, the options rejected, the consequences.
 - **Decision**: `platform_settings` and `onboarding_flow_version` store a validated JSON document per version; old versions stay readable.
 - **Rejected**: one column per setting (migration per setting); key-value rows (no validation, no atomic versions).
 
-### ADR-011: Search table, PostgreSQL only
-- **Decision**: `listing_search_doc` holds one denormalised row per published listing, refreshed through the outbox; queries combine it with live availability (research B.7).
-- **Rejected**: external search engine at launch.
+### ADR-011: Search table, PostgreSQL only, trigram not full-text
+- **Decision**: `listing_search_doc` holds one denormalised row per published listing, refreshed through the outbox; queries combine it with live availability (research B.7). Text matching uses `pg_trgm` trigram similarity on `search_text` (GIN `gin_trgm_ops`) plus `unaccent`, with GIN trigram indexes on listing titles and commune names (DEC-030, BR-SRC-05).
+- **Rejected**: external search engine at launch; PostgreSQL full-text (`tsvector`): it has no Arabic stemmer, so Arabic and Darija queries would miss.
 
 ### ADR-012: Audit as a hash-chained, insert-only table plus automatic row history
-- **Decision**: `audit_event` (human "who did what") with `prev_hash`/`hash`, monthly partitions, no UPDATE/DELETE grant; django-pghistory tables for automatic row history of bookings, listings, memberships, settings (research B.11).
+- **Decision**: `audit_event` (human "who did what") with `prev_hash`/`hash`, monthly partitions, a trigger that refuses UPDATE and DELETE, only SELECT and INSERT for `bladus_app` (REVOKE alone does not stop the table owner, so the owner is a different role), daily export to write-once storage; django-pghistory tables for automatic row history of bookings, listings, memberships, settings (research B.11).
 - **Rejected**: signal-based history only (misses bulk updates).
 
 ### ADR-013: Geography as reference tables with provenance
@@ -147,12 +151,15 @@ Each ADR: the context, the decision, the options rejected, the consequences.
 | `booking` | One reservation with its frozen prices, commission and policy. |
 | `booking_event` | Every status change of a booking, in order. |
 | `ledger_*` | Money movements written as balanced entries; balances are sums. |
-| `wallet_topup` | A host's deposit recorded by finance staff, with its receipt reference. |
+| `wallet_topup` | A host's deposit recorded by an admin, with its receipt reference. |
+| `wallet_adjustment` | A manual correction of a host wallet, posted only after a second admin approves. |
+| `refund_obligation` | Money a host owes a guest after a cancellation, with a due date and its status. |
+| `inventory_conflict` | A hotel sync asked for fewer rooms than BLADUS already sold; the admin decides. |
 | `review` | A rating and comment after a completed booking. |
 | `conversation` / `message` | Message threads between guest and host. |
 | `moderation_case` | One item in a staff queue (a host to verify, a listing to review, a report). |
 | `audit_event` | A tamper-evident record of who did what. |
-| `outbox_event` | A message to send after a change is saved (notification, email, search refresh). |
+| `outbox_message` | A message to send after a change is saved (notification, email, SMS, search refresh, hotel push), retried until sent or `dead`. |
 
 ---
 
@@ -160,15 +167,18 @@ Each ADR: the context, the decision, the options rejected, the consequences.
 
 1. Guest asks for a price: a `quote` row (30 minutes).
 2. Guest books with an `Idempotency-Key`: `idempotency_record` locks the key.
-3. In one transaction: insert `booking` (status `pending` or `confirmed`), reserve inventory (exclusion constraint or counter `UPDATE`), insert `booking_event`, and if confirmed post the commission `ledger_transaction` (2 entries) and update `account_balance`; insert `outbox_event` rows (notify host and guest, refresh search).
+3. In one transaction, in this lock order (BR-PAY-14): lock the host wallet `account_balance` row and check the floor and overdue refunds; lock the listing row; insert `booking` (status `pending` or `confirmed`), reserve inventory (exclusion constraint and blocked-day trigger, or counter `UPDATE`), insert `booking_event`, and if confirmed post the commission `ledger_transaction` (2 entries) and update the host wallet `account_balance`; insert `outbox_message` rows (notify host and guest, refresh search, `inventory.push` for a connected hotel).
 4. Commit. Workers send notifications from the outbox.
-5. Jobs later: expire pending (`expired`, release counters), complete after check-out (`completed`), open review window.
+5. Jobs later: expire pending (`expired`, release counters), complete after check-out (`completed`), open review window (a review also needs `stay_confirmed_at`).
+6. Cancellation: `commission_reversal` for the share of the commission that follows the refund (BR-PAY-05), a `refund` row and a `refund_obligation` with the `refund_due` memo posting (BR-CAN-06).
 
 ---
 
 ## 6. Constraints the database enforces (SQL sketch)
 
-These are written as SQL for clarity; they will become Django `Meta.constraints` or migration operations in the build phase.
+These are written as SQL for clarity; they will become Django `Meta.constraints` or migration operations in the build phase. The same block is appended to [schema.sql](schema.sql).
+
+**What the database guarantees against double booking** (DEC-020): single units, exclusion constraint on `booking`; room pools, slots and departures, CHECK on counters (no exclusion constraint); blocked days versus single-unit bookings, triggers `listing_day_block_guard` and `booking_blocked_day_guard`. The services check the same rules first (after locking the listing row) so the user gets a clear error code.
 
 ```sql
 -- Extensions
@@ -237,7 +247,90 @@ END $$ LANGUAGE plpgsql;
 CREATE CONSTRAINT TRIGGER ledger_entry_balanced AFTER INSERT ON ledger_entry
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ledger_tx_balanced();
 ALTER TABLE ledger_entry ADD CONSTRAINT ledger_entry_nonzero CHECK (amount_minor <> 0);
-REVOKE UPDATE, DELETE ON ledger_entry, ledger_transaction, audit_event, booking_event FROM bladus_app;
+
+-- DEC-026: insert-only tables, refused for every role (also the table owner)
+CREATE FUNCTION refuse_change() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION '% on % is not allowed (insert-only table)', TG_OP, TG_TABLE_NAME;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER ledger_transaction_insert_only BEFORE UPDATE OR DELETE ON ledger_transaction
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER ledger_entry_insert_only BEFORE UPDATE OR DELETE ON ledger_entry
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER audit_event_insert_only BEFORE UPDATE OR DELETE ON audit_event
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+CREATE TRIGGER booking_event_insert_only BEFORE UPDATE OR DELETE ON booking_event
+  FOR EACH ROW EXECUTE FUNCTION refuse_change();
+
+-- DEC-026: role split. The owner runs migrations; the app cannot change ledger or audit rows.
+CREATE ROLE bladus_migrator LOGIN;            -- owns every table, used only by migrations
+CREATE ROLE bladus_app LOGIN;                 -- the Django app at run time
+-- (every table is created by bladus_migrator, so bladus_app is never an owner)
+GRANT USAGE ON SCHEMA public TO bladus_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO bladus_app;
+REVOKE UPDATE, DELETE, TRUNCATE ON ledger_transaction, ledger_entry, audit_event, booking_event FROM bladus_app;
+GRANT SELECT, INSERT ON ledger_transaction, ledger_entry, audit_event, booking_event TO bladus_app;
+
+-- BR-AVL-07 (a): never block a day that a single-unit booking holds
+CREATE FUNCTION listing_day_block_guard() RETURNS trigger AS $$
+BEGIN
+  IF NEW.is_blocked AND EXISTS (
+       SELECT 1 FROM booking b
+        WHERE b.listing_id = NEW.listing_id AND b.inventory_kind = 'single'
+          AND b.status IN ('awaiting_payment','pending','confirmed','completed','disputed')
+          AND b.stay @> NEW.day) THEN
+    RAISE EXCEPTION 'dates_booked' USING ERRCODE = '23P01';
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER listing_day_block_guard BEFORE INSERT OR UPDATE OF is_blocked ON listing_day
+  FOR EACH ROW EXECUTE FUNCTION listing_day_block_guard();
+
+-- BR-AVL-07 (b): never place or move a single-unit booking onto a blocked day
+CREATE FUNCTION booking_blocked_day_guard() RETURNS trigger AS $$
+BEGIN
+  IF NEW.inventory_kind = 'single'
+     AND NEW.status IN ('awaiting_payment','pending','confirmed','completed','disputed')
+     AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM NEW.status OR OLD.stay IS DISTINCT FROM NEW.stay)
+     AND EXISTS (SELECT 1 FROM listing_day d
+                  WHERE d.listing_id = NEW.listing_id AND d.is_blocked AND NEW.stay @> d.day) THEN
+    RAISE EXCEPTION 'dates_unavailable' USING ERRCODE = '23P01';
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+CREATE TRIGGER booking_blocked_day_guard BEFORE INSERT OR UPDATE OF status, stay ON booking
+  FOR EACH ROW EXECUTE FUNCTION booking_blocked_day_guard();
+-- Both services lock the listing row first (SELECT ... FOR UPDATE), so the two triggers never race.
+
+-- BR-BKG-09: stay confirmation only on a confirmed or finished booking
+ALTER TABLE booking ADD CONSTRAINT booking_stay_confirmed_ok CHECK (
+  stay_confirmed_at IS NULL OR status IN ('confirmed','completed','disputed'));
+
+-- BR-PAY-13: manual adjustments, capped and four-eyes
+ALTER TABLE wallet_adjustment ADD CONSTRAINT adjustment_amount_ok
+  CHECK (amount_minor <> 0 AND abs(amount_minor) <= 100000000);
+ALTER TABLE wallet_adjustment ADD CONSTRAINT adjustment_four_eyes
+  CHECK (approved_by_id IS NULL OR approved_by_id <> requested_by_id);
+ALTER TABLE wallet_topup ADD CONSTRAINT topup_four_eyes
+  CHECK (approved_by_id IS NULL OR approved_by_id <> requested_by_id);
+
+-- BR-CAN-06: refund obligations
+ALTER TABLE refund_obligation ADD CONSTRAINT refund_obligation_amount_ok CHECK (amount_minor > 0);
+CREATE INDEX refund_obligation_overdue ON refund_obligation (due_at) WHERE status IN ('open','disputed');
+
+-- BR-HST-07: one open conflict per room-night
+CREATE UNIQUE INDEX inventory_conflict_one_open ON inventory_conflict (room_type_id, night) WHERE status = 'open';
+
+-- BR-SYS-03: outbox
+ALTER TABLE outbox_message ADD CONSTRAINT outbox_attempts_ok CHECK (attempts BETWEEN 0 AND 8);
+
+-- BR-SRC-05: trigram search (no tsvector; PostgreSQL has no Arabic stemmer)
+CREATE INDEX listing_title_trgm ON listing USING gin (lower(unaccent_immutable(title)) gin_trgm_ops);
+CREATE INDEX search_doc_text_trgm ON listing_search_doc USING gin (search_text gin_trgm_ops);
+CREATE INDEX commune_name_fr_trgm ON commune USING gin (lower(unaccent_immutable(name_fr)) gin_trgm_ops);
+CREATE INDEX commune_name_en_trgm ON commune USING gin (lower(name_en) gin_trgm_ops);
+CREATE INDEX commune_name_ar_trgm ON commune USING gin (name_ar gin_trgm_ops);
+-- unaccent_immutable: an IMMUTABLE SQL wrapper around unaccent('unaccent', text), needed to index it
 
 -- BR-PAY-04: commission posted once per booking
 CREATE UNIQUE INDEX ledger_one_commission ON ledger_transaction (booking_id) WHERE kind = 'commission';
@@ -266,15 +359,16 @@ Targets from NFR-01 and NFR-02. "Plan" is the expected PostgreSQL strategy; it w
 | Q4 | Create booking (transaction) | medium | constraint indexes, `idempotency_record` unique | row locks on counters only | 600 ms |
 | Q5 | Host bookings list by host account + status + dates | high | `booking (host_account_id, status, check_in_at)` | index range scan | 200 ms |
 | Q6 | Guest bookings | high | `booking (guest_id, created_at DESC)` | index scan | 150 ms |
-| Q7 | Message sync since cursor | very high (polling) | `message (conversation_id, id)`; `conversation_participant (user_id)` | index range `id > cursor` | 100 ms |
+| Q7 | Message sync since cursor | very high (polling) | `message (conversation_id, id)` (UUIDv7 ids sort by time); `conversation_participant (user_id)` | index range `id > cursor` | 100 ms |
 | Q8 | Unread notifications | very high | `notification (user_id, read_at, id)` | index only | 50 ms |
 | Q9 | Moderation queue by kind, oldest first | medium | `moderation_case (status, kind, submitted_at)` | index scan | 200 ms |
 | Q10 | Wallet balance and last entries | medium | `account_balance` PK; `ledger_entry (account_id, id DESC)` | PK + index scan | 100 ms |
 | Q11 | Expire pending requests (job, every 5 min) | job | partial `booking (request_expires_at) WHERE status = 'pending'` | index range | 1 s |
 | Q12 | Complete stays (job) | job | partial `booking (check_out_at) WHERE status = 'confirmed'` | index range | 1 s |
-| Q13 | Outbox dispatch | constant | `outbox_event (status, next_attempt_at)` with `FOR UPDATE SKIP LOCKED` | index range | 50 ms |
+| Q13 | Outbox dispatch | constant | `outbox_message (status, next_attempt_at)` with `FOR UPDATE SKIP LOCKED` | index range | 50 ms |
 | Q14 | Admin lists with facets (listings, hosts, bookings) | medium | B-tree on filter columns; counts via `GROUP BY` on the filtered set | bitmap scans | 400 ms |
-| Q15 | Commune autocomplete | high | GIN trigram on `unaccent(name_fr)`, `name_ar` | GIN | 50 ms |
+| Q15 | Commune autocomplete and text search | high | GIN trigram (`gin_trgm_ops`) on `unaccent(name_fr)`, `name_en`, `name_ar`, listing `title` and `listing_search_doc.search_text` | GIN, `similarity()` ordering | 50 ms |
+| Q17 | Overdue refunds of a host (on booking and accept) | medium | `refund_obligation (host_account_id, status, due_at)`; partial `(due_at) WHERE status IN ('open','disputed')` | index range | 10 ms |
 | Q16 | Audit by object | low | `audit_event (object_type, object_id, occurred_at)` on monthly partitions | partition pruning | 300 ms |
 
 Growth estimate for capacity planning (first two years, assumption): 20,000 listings, 500,000 bookings, 5 million `room_type_night` rows (18 months x 10,000 room types x ~30 nights per month), 10 million messages, 20 million ledger entries. All fit comfortably on one PostgreSQL primary with 8 vCPU / 32 GB; partition `audit_event` and `message` by month when they pass 50 million rows.
@@ -338,11 +432,11 @@ The apps run on demo data only. Nothing real is migrated: the demo seeds are re-
 |---|---|---|---|
 | 1 | Extensions, enums | migrations | |
 | 2 | `wilaya`, `daira`, `commune` | el-amin-dev/algeria-wilayas-communes (CC0) names + ihahachi/Algeria-Cities (MIT) coordinates; keep `source` | 69 / ~591 / 1,541 |
-| 3 | `staff_permission`, `staff_role_permission` | admin `lib/permissions.ts` matrix | 34 permissions x 5 roles |
+| 3 | `staff_permission`, `staff_role_permission` | admin `lib/permissions.ts` permission list | one role, admin, with every permission (DEC-016) |
 | 4 | `amenity`, `category`, `property_type` | merge of the three vocabularies, translated | ~80 / ~20 / ~25 |
 | 5 | `cancellation_policy` v1 | BR-CAN-01 | 3 |
 | 6 | `reason_code` | admin reasons + new catalogue | ~60 |
-| 7 | `platform_settings` v1 | defaults: 1,200 / 1,500 / 1,800 / 1,000 bp; request TTL 24; credit limit 20,000 DZD | 1 |
+| 7 | `platform_settings` v1 | defaults: 1,200 / 1,500 / 1,800 / 1,000 bp; request TTL 24; credit limit 20,000 DZD; four-eyes 500,000 DZD (rolling 24 h); adjustment cap 1,000,000 DZD; refund due 7 days; 3 pending requests and 6 upcoming bookings per guest; SMS budget 5,000 per day | 1 |
 | 8 | `onboarding_flow_version` v1 per host type | website `lib/onboarding-config.ts` converted to canonical types | 4 |
 | 9 | Demo fixtures (dev and staging only) | website demo users (Yacine, Amina, Karim...), admin staff (Nadia...), 18 listings, 4 trips, reservations, wallets | factory_boy factories; never in production |
 | 10 | `room_type_night` rows | job generating 18 months ahead | computed |
@@ -358,10 +452,20 @@ Production seeds are only steps 1 to 8. Demo passwords exist only in dev fixture
 - `incident_record` (breach register and 5-day clock, PRV-05), `calendar_feed` (iCal, AVL-06), `otp_send_log` (one-time code sends, ACC-02). These closed decision T5.
 - [schema.sql](schema.sql): the PostgreSQL rendering of `schema.dbml` produced by the official DBML tool.
 
+## Changes on 2026-11-13 (external review)
+
+- New tables: `refund_obligation` (DEC-024), `wallet_adjustment` (DEC-022), `inventory_conflict` (DEC-021); `outbox_event` renamed `outbox_message` with `last_error` and status `dead` (DEC-029). Total 83 tables.
+- `booking`: `check_in_code`, `stay_confirmed_at`, `stay_confirmed_via` (DEC-028).
+- Ledger: account kinds `host_refund_payable`, `guest_refund_clearing`; transaction kinds `refund_due`, `refund_settled` (`adjustment` already existed).
+- Triggers for blocked days (BR-AVL-07) and for the insert-only ledger, audit and booking history tables; role split `bladus_migrator` / `bladus_app` (DEC-026); trigram indexes instead of `tsvector` columns (DEC-030).
+- One id scheme (DEC-031): the former `bigint` counters (`booking_event`, `ledger_entry`, `message`, `notification`, `outbox_message`, `delivery_log`, `audit_event`, `otp_send_log`, `integration_sync_log`) are now UUIDv7.
+- The double-booking claim is corrected (ADR-002 and section 6).
+
 ## Check yourself
 
 - [ ] What does `host_account` replace, and which disagreement does it solve?
 - [ ] Two guests click "Reserve" on the last hotel room at the same second. Which constraint decides, and what does the loser see?
+- [ ] A host blocks a day that a guest booked one second earlier. What stops it?
 - [ ] Why does the ledger refuse `UPDATE`? How is a mistake corrected?
 - [ ] Which tables are dormant until the money model changes?
 - [ ] Which index makes message polling cheap?
