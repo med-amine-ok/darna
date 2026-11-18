@@ -1,0 +1,167 @@
+# Render Blueprint for the BLADUS backend (Django API in backend/).
+# Render > New > Blueprint > pick this repository. Full guide: backend/DEPLOY.md
+#
+# Region: Ohio, next to the Neon database (us-east-2), so each query takes
+# about a millisecond. Values marked "sync: false" are secrets you type in the
+# Render dashboard when the Blueprint is created; they never go into Git.
+
+envVarGroups:
+  - name: bladus-backend-env
+    envVars:
+      # --- Core -------------------------------------------------------------
+      - key: PYTHON_VERSION
+        value: "3.13.5"
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: HASH_PEPPER
+        generateValue: true
+      - key: INTEGRATION_KEYS
+        sync: false # a Fernet key, see DEPLOY.md (python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false # api.bladus.dz,.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false # https://bladus.dz,https://admin.bladus.dz
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false # https://api.bladus.dz
+      - key: FRONTEND_URL
+        sync: false # https://bladus.dz
+      - key: TRUSTED_PROXY_HOPS
+        value: "1" # Render's proxy appends the caller's address to X-Forwarded-For
+      - key: LOG_LEVEL
+        value: INFO
+      # --- Database (Neon) --------------------------------------------------
+      - key: DATABASE_URL
+        sync: false # Neon pooled connection string (host contains -pooler)
+      - key: DATABASE_DIRECT_URL
+        sync: false # Neon direct connection string (same host without -pooler)
+      # --- Sign-in -----------------------------------------------------------
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URIS
+        value: https://bladus.dz/api/auth/google/callback
+      - key: STAFF_MFA_REQUIRED
+        value: "False" # owner's decision for now; set True before real staff use the admin
+      # --- Email (SMTP provider) ---------------------------------------------
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        value: "BLADUS <no-reply@bladus.dz>"
+      # --- Files: uploads off until storage (R2/S3) and a virus scanner exist --
+      - key: MEDIA_UPLOADS_ENABLED
+        value: "False"
+
+services:
+  # Shared counters for rate limits, login lockouts and SMS budget.
+  - type: keyvalue
+    name: bladus-redis
+    region: ohio
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # only Render services in this account can connect
+
+  # The API: https://<name>.onrender.com/api/v1/ (then api.bladus.dz).
+  - type: web
+    name: bladus-backend
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    preDeployCommand: python manage.py migrate --noinput
+    startCommand: gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --access-logfile -
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - fromGroup: bladus-backend-env
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: bladus-redis
+          property: connectionString
+
+  # Scheduled jobs (backend/README.md "Scheduled jobs"), grouped by timing.
+  - type: cron
+    name: bladus-outbox
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    schedule: "* * * * *" # every minute: send queued emails, SMS and hotel updates, with retries
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py run_outbox
+    envVars:
+      - fromGroup: bladus-backend-env
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: bladus-redis, property: connectionString }
+
+  - type: cron
+    name: bladus-bookings-jobs
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    schedule: "*/5 * * * *" # every 5 minutes: expire unanswered requests, complete finished stays
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py expire_requests && python manage.py complete_stays
+    envVars:
+      - fromGroup: bladus-backend-env
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: bladus-redis, property: connectionString }
+
+  - type: cron
+    name: bladus-moderation-sync
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    schedule: "*/15 * * * *" # every 15 minutes: open moderation cases for items waiting for review
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py sync_moderation_cases
+    envVars:
+      - fromGroup: bladus-backend-env
+
+  - type: cron
+    name: bladus-reviews-hourly
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    schedule: "0 * * * *" # every hour: publish reviews whose 14-day window ended
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py publish_reviews
+    envVars:
+      - fromGroup: bladus-backend-env
+
+  - type: cron
+    name: bladus-nightly
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    schedule: "0 1 * * *" # 01:00 UTC (02:00 Algeria): ledger check (fails loudly on a difference), ratings rebuild
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py reconcile_balances && python manage.py publish_reviews --recompute
+    envVars:
+      - fromGroup: bladus-backend-env
+
+  - type: cron
+    name: bladus-monthly-invoices
+    runtime: python
+    region: ohio
+    plan: starter
+    rootDir: backend
+    schedule: "0 2 1 * *" # 1st of each month, 02:00 UTC: commission invoices of the past month
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py monthly_invoices
+    envVars:
+      - fromGroup: bladus-backend-env

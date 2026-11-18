@@ -6,6 +6,7 @@ format the answer. The dev-only route ``/media/_local/<token>`` plays the role
 of the object store when the local backend is active (hidden from Swagger).
 """
 
+from django.conf import settings
 from django.http import FileResponse, Http404, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -16,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from apps.core.errors import ForbiddenError
+from apps.core.errors import DomainError, ForbiddenError
 
 from . import hooks, services
 from .models import MediaPurpose
@@ -49,6 +50,16 @@ def _workspace_id(request, purpose: str):
     return hooks.workspace_resolver(request)
 
 
+def require_uploads_enabled() -> None:
+    """
+    503 ``uploads_disabled`` while file uploads are switched off
+    (settings.MEDIA_UPLOADS_ENABLED=False: no storage or virus scanner yet).
+    Reading files that already exist keeps working.
+    """
+    if not getattr(settings, "MEDIA_UPLOADS_ENABLED", True):
+        raise DomainError("File uploads are not available yet.", code="uploads_disabled", status_code=503)
+
+
 class UploadCreateView(APIView):
     """``POST /media/uploads``: get a presigned upload URL (createUpload)."""
 
@@ -59,6 +70,7 @@ class UploadCreateView(APIView):
                    operation_id="createUpload")
     def post(self, request):
         """Check purpose, type and size (422 ``file_type_not_allowed`` / ``file_too_large``) and open a slot."""
+        require_uploads_enabled()
         data = UploadRequestSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         values = data.validated_data
@@ -88,6 +100,7 @@ class MediaCompleteView(APIView):
     @extend_schema(request=None, responses={202: MediaSerializer}, tags=["media"], operation_id="completeUpload")
     def post(self, request, media_id):
         """Run the checks (BR-MED-01, BR-MED-02); 409 ``upload_missing`` or ``upload_already_completed``."""
+        require_uploads_enabled()
         asset = services.complete_upload(request.user, media_id)
         return Response(MediaSerializer(asset).data, status=status.HTTP_202_ACCEPTED)
 

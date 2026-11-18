@@ -1,12 +1,29 @@
-# BLADUS backend dependencies (first version). Pin exact versions before production.
-Django>=5.2,<5.3
-djangorestframework>=3.16
-drf-spectacular>=0.28
-django-filter
-django-cors-headers
-django-environ
-argon2-cffi
-cryptography>=44
-psycopg[binary]>=3.2
-pytest
-pytest-django
+# BLADUS backend: runtime dependencies, pinned to the versions tested (see requirements-dev.txt for tests).
+# Upgrade deliberately: change a pin, run the tests, then deploy.
+
+# Web framework and API
+Django==5.2.5
+djangorestframework==3.16.1
+drf-spectacular==0.28.0
+django-filter==25.1
+django-cors-headers==4.7.0
+django-environ==0.12.0
+
+# Database (PostgreSQL on Neon), cache (Redis on Render)
+psycopg2-binary==2.9.10
+redis==6.4.0
+
+# Security: password hashing, encryption, Google sign-in tokens, authenticator codes
+argon2-cffi==25.1.0
+cryptography==48.0.0
+PyJWT==2.10.1
+pyotp==2.9.0
+
+# Outside services: HTTP calls (Google), S3-compatible storage, image processing
+requests==2.32.4
+boto3==1.43.8
+pillow==12.3.0
+
+# Production server: gunicorn runs the app, whitenoise serves admin and Swagger static files
+gunicorn==23.0.0
+whitenoise==6.9.0

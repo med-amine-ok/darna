@@ -8,3 +8,4 @@ htmlcov/
 
 # Local uploads and CSV exports (development)
 var/
+staticfiles/

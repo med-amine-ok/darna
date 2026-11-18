@@ -119,6 +119,8 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves the Django admin and Swagger static files from gunicorn (no separate file server).
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -168,6 +170,11 @@ _database_url = env.str("DATABASE_URL", default="")
 _direct_url = env.str("DATABASE_DIRECT_URL", default="")
 if _direct_url and (_wants_direct or not _database_url):
     _database_url = _direct_url
+# Tests run on a local SQLite file by default (fast, nothing shared). Run them
+# on PostgreSQL (Neon) on purpose with TESTS_USE_DATABASE_URL=1: they then use
+# a separate test database there, one run at a time.
+if "pytest" in sys.modules and not env.bool("TESTS_USE_DATABASE_URL", default=False):
+    _database_url = ""
 DATABASES = {
     "default": env.db_url_config(_database_url) if _database_url else env.db_url_config(f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
@@ -226,6 +233,17 @@ USE_TZ = True
 BUSINESS_TIME_ZONE = "Africa/Algiers"
 
 STATIC_URL = "static/"
+# ``collectstatic`` gathers the admin and Swagger assets here at build time;
+# whitenoise serves them compressed, with long cache headers on hashed names.
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        if not DEBUG
+        else "django.contrib.staticfiles.storage.StaticFilesStorage"
+    },
+}
 
 # ---------------------------------------------------------------------------
 # API (Django REST Framework)
@@ -370,10 +388,19 @@ EXPORTS_ROOT = env.str("EXPORTS_ROOT", default=str(BASE_DIR / "var" / "exports")
 MEDIA_STORAGE_BACKEND = env.str("MEDIA_STORAGE_BACKEND", default="local")  # local or s3
 MEDIA_LOCAL_ROOT = env.str("MEDIA_LOCAL_ROOT", default=str(BASE_DIR / "var" / "media"))
 MEDIA_SCANNER = env.str("MEDIA_SCANNER", default="")  # dotted path; empty = development stub (BR-MED-02)
-if not DEBUG and MEDIA_STORAGE_BACKEND == "local":
-    raise RuntimeError("Set MEDIA_STORAGE_BACKEND=s3 (and the MEDIA_S3_* variables) before running with DJANGO_DEBUG=False.")
-if not DEBUG and not MEDIA_SCANNER:
-    raise RuntimeError("Set MEDIA_SCANNER to a real virus scanner before running with DJANGO_DEBUG=False.")
+# File uploads (POST /media/uploads...) can be switched off: the first release
+# adds photos by web address, so production may start before storage and a
+# virus scanner exist. When they are on, both must be real (no local disk, no stub).
+MEDIA_UPLOADS_ENABLED = env.bool("MEDIA_UPLOADS_ENABLED", default=True)
+if not DEBUG and MEDIA_UPLOADS_ENABLED and MEDIA_STORAGE_BACKEND == "local":
+    raise RuntimeError(
+        "Set MEDIA_STORAGE_BACKEND=s3 (and the MEDIA_S3_* variables), or MEDIA_UPLOADS_ENABLED=False, "
+        "before running with DJANGO_DEBUG=False."
+    )
+if not DEBUG and MEDIA_UPLOADS_ENABLED and not MEDIA_SCANNER:
+    raise RuntimeError(
+        "Set MEDIA_SCANNER to a real virus scanner, or MEDIA_UPLOADS_ENABLED=False, before running with DJANGO_DEBUG=False."
+    )
 # The MEDIA_S3_* values (endpoint, region, keys, buckets) are read from the
 # environment by apps.media.storage.setting(); see .env.example.
 
@@ -382,4 +409,54 @@ if not DEBUG and not MEDIA_SCANNER:
 GATEWAY_WEBHOOK_SECRETS = {
     "chargily": env.str("CHARGILY_WEBHOOK_SECRET", default=""),
     "slickpay": env.str("SLICKPAY_WEBHOOK_SECRET", default=""),
+}
+
+# ---------------------------------------------------------------------------
+# Production hardening (DJANGO_DEBUG=False): HTTPS, cookies, proxies, cache, logs
+# ---------------------------------------------------------------------------
+# Browser origins allowed to POST to Django's own forms (the Django admin).
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
+if not DEBUG:
+    # Render (and Caddy) end HTTPS and forward plain HTTP with this header.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    # The health check is called by Render over plain HTTP inside its network.
+    SECURE_REDIRECT_EXEMPT = [r"^api/v1/health$"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Browsers remember to use HTTPS only (start with one day; raise to a year once all is stable).
+    SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=86400)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = "same-origin"
+    X_FRAME_OPTIONS = "DENY"
+
+# Shared cache for rate limits, login lockouts and SMS counters (BR-ACC-05):
+# with several server processes these counts must be shared, so production
+# uses Redis (Render Key Value). Without REDIS_URL each process counts alone.
+REDIS_URL = env.str("REDIS_URL", default="")
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": "bladus",
+            "TIMEOUT": 300,
+        }
+    }
+
+# Logs go to standard output, where Render (and Docker) collect them.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
+    "root": {"handlers": ["console"], "level": env.str("LOG_LEVEL", default="INFO")},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        # Bots probing with fake Host headers get a 400; no stack trace for each one.
+        "django.security.DisallowedHost": {"handlers": [], "level": "CRITICAL", "propagate": False},
+    },
 }

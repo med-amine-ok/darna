@@ -186,3 +186,10 @@ def test_s3_presigned_upload_url_without_network():
     assert "X-Amz-Signature" in ticket["url"] and "bladus-quarantine" in ticket["url"]
     url = storage.signed_url("private", "document/x.pdf", expires_at=timezone.now() + timedelta(minutes=5))
     assert "X-Amz-Expires=" in url
+
+
+def test_uploads_switched_off_answer_503(settings, user_client):
+    """With MEDIA_UPLOADS_ENABLED=False new uploads are refused cleanly (first release without storage)."""
+    settings.MEDIA_UPLOADS_ENABLED = False
+    res = user_client.post("/api/v1/media/uploads", {"purpose": "avatar", "mime_type": "image/jpeg", "size_bytes": 1000}, format="json")
+    assert res.status_code == 503 and res.data["code"] == "uploads_disabled"

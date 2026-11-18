@@ -1,0 +1,4 @@
+# Tests and local tools (not installed on Render).
+-r requirements.txt
+pytest==8.4.1
+pytest-django==4.11.1
