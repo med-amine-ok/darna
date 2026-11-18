@@ -17,6 +17,16 @@ import { cookies, headers } from "next/headers";
  * - 204 answers return null.
  */
 
+/**
+ * Next.js signals "this page depends on the request" by throwing from
+ * cookies()/headers() during the build; those errors carry a `digest` and
+ * must reach Next.js, or the page is wrongly built as a fixed page. Only a
+ * plain "no request here" error may be swallowed.
+ */
+export function rethrowNextSignal(error: unknown): void {
+  if (error && typeof error === "object" && "digest" in error) throw error;
+}
+
 export const API_BASE = (process.env.BACKEND_API_URL || "http://localhost:8000/api/v1").replace(/\/+$/, "");
 
 /** httpOnly cookie holding the Django session token (never readable by scripts). */
@@ -69,8 +79,9 @@ export interface ApiOptions {
 export function currentApiToken(): string | null {
   try {
     return cookies().get(API_TOKEN_COOKIE)?.value || null;
-  } catch {
-    return null; // called outside a request scope (build time)
+  } catch (error) {
+    rethrowNextSignal(error);
+    return null; // called outside a request scope
   }
 }
 
@@ -81,7 +92,8 @@ function currentLocale(): string {
     if (fromCookie) return fromCookie;
     const fromPath = headers().get("x-next-intl-locale");
     if (fromPath) return fromPath;
-  } catch {
+  } catch (error) {
+    rethrowNextSignal(error);
     /* outside a request */
   }
   return "fr";

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
+import { rethrowNextSignal } from "@/lib/api/client";
 
 /**
  * Best-effort client IP for rate limiting and the audit trail.
@@ -15,7 +16,8 @@ export function getClientIp(): string {
     if (first) return first.slice(0, 64);
     const real = h.get("x-real-ip")?.trim();
     if (real) return real.slice(0, 64);
-  } catch {
+  } catch (error) {
+    rethrowNextSignal(error);
     // headers() is unavailable outside a request scope
   }
   return "unknown";

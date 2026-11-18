@@ -1,7 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import { ApiError, api } from "@/lib/api/client";
+import { ApiError, api, rethrowNextSignal } from "@/lib/api/client";
 import type { ApiPendingSession, ApiStaffSession } from "@/lib/api/staff";
 import { getClientIp } from "./client-ip";
 
@@ -27,7 +27,8 @@ function forwardedHeaders(): Record<string, string> {
   try {
     const ua = headers().get("user-agent");
     if (ua) out["User-Agent"] = ua.slice(0, 400);
-  } catch {
+  } catch (error) {
+    rethrowNextSignal(error);
     /* outside a request */
   }
   return out;

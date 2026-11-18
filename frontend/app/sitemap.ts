@@ -6,7 +6,9 @@ import { getTrips } from "@/lib/data/trips";
 import { getPublicOrganizations } from "@/lib/api/public-organization";
 import { ORG_PROFILE_PATH } from "@/lib/host-profile";
 
-export const revalidate = 3600;
+// Built on request, never during "next build": the build machine (Vercel) cannot
+// reach the API, and a sitemap frozen at build time would stay empty.
+export const dynamic = "force-dynamic";
 
 function entry(path: string, priority: number, lastModified?: string): MetadataRoute.Sitemap[number] {
   return {

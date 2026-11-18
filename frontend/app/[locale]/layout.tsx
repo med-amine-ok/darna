@@ -41,6 +41,11 @@ interface LocaleLayoutProps {
   };
 }
 
+// Every page shows who is signed in (menu, favourites) and reads live data from
+// the API, so nothing is built in advance: each request renders fresh.
+// (Without this, "next build" tried to pre-build pages and failed on them.)
+export const dynamic = "force-dynamic";
+
 export default async function LocaleLayout({
   children,
   params: { locale },
