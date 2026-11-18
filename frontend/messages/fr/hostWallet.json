@@ -32,7 +32,8 @@
   "filters": {
     "all": "Toute l’activité",
     "recharge": "Dépôts (+)",
-    "commission": "Commissions (−)"
+    "commission": "Commissions (−)",
+    "adjustment": "Ajustements"
   },
   "table": {
     "caption": "Transactions du portefeuille",
@@ -45,5 +46,22 @@
   "commission": "Commission",
   "bookingRef": "Réservation : {id}",
   "noTransactions": "Aucune transaction à afficher.",
-  "howItWorksShort": "Fonctionnement du solde"
+  "howItWorksShort": "Fonctionnement du solde",
+  "adjustment": "Ajustement",
+  "loadFailedTitle": "Votre dépôt n'a pas pu être chargé",
+  "loadFailedBody": "Le service ne répond pas pour le moment. Veuillez réessayer dans un instant.",
+  "contactSupportToTopUp": "Pour recharger, contactez le support BLADUS : un administrateur BLADUS enregistre votre virement et crédite votre dépôt.",
+  "creditLimitLine": "Les nouvelles réservations sont suspendues quand le dépôt passe sous moins {amount}.",
+  "bookingsPausedTitle": "Nouvelles réservations suspendues",
+  "bookingsPausedBody": "Votre dépôt est sous la limite autorisée. Rechargez-le pour accepter de nouveau des réservations.",
+  "overviewTitle": "Revenus et factures",
+  "earningsCompleted": "Séjours terminés",
+  "earningsUpcoming": "Séjours à venir",
+  "earningsCommission": "Commission payée",
+  "earningsRefundsOwed": "Remboursements dus",
+  "invoicesTitle": "Factures de commission",
+  "noInvoices": "Aucune facture pour le moment.",
+  "invoicePdf": "PDF",
+  "payoutsOffTitle": "Pas de versements sur BLADUS",
+  "payoutsOffBody": "Les voyageurs vous paient directement : BLADUS ne détient jamais votre argent et n'a donc rien à vous verser."
 }

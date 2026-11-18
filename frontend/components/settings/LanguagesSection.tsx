@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { usePathname, useRouter } from "@/navigation";
 import { BrandCheckIcon } from "@/components/icons";
 import { FOCUS_RING, SectionHeader, SettingsCard } from "./settingsUi";
+import { setPreferredLocaleAction } from "@/app/actions/account";
 
 /** Language names are shown in their own language (autonyms), so they are not translated. */
 const LANGUAGES = [
@@ -57,7 +58,11 @@ export default function LanguagesSection() {
                   key={l.code}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => router.replace(pathname, { locale: l.code })}
+                  onClick={() => {
+                    // Emails and SMS follow this choice too (best effort; the page language changes anyway).
+                    setPreferredLocaleAction(l.code).catch(() => undefined);
+                    router.replace(pathname, { locale: l.code });
+                  }}
                   className={optionClass(active)}
                 >
                   {active && check}

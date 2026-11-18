@@ -2,17 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { localeAlternates, OG_LOCALE } from "@/lib/site";
-import { getListings, getPublicListingById } from "@/lib/data/listings";
-import { getUserById } from "@/lib/data/auth";
-import { getOrganizationById } from "@/lib/data/organizations";
-import { orgProfileHref, userProfileHref, type HostProfileLink } from "@/lib/host-profile";
+import { cache } from "react";
+import { getListings, getPublicAvailability, getPublicListingById } from "@/lib/data/listings";
+import { ORG_PROFILE_PATH, userProfileHref, type HostProfileLink } from "@/lib/host-profile";
 import { getSessionUser } from "@/lib/server/session";
 import { getHostContext } from "@/lib/server/host-context";
 import { hostOwnsListing } from "@/lib/server/authz";
-import { toPublicUser } from "@/lib/server/dto";
+import { getPublicProfile, toPublicUserFromApi } from "@/lib/api/people";
 import { getReviewsByListingId } from "@/lib/data/reviews";
-import { getListingAvailability } from "@/lib/data/reservations";
-import { priceOverridesFor } from "@/lib/data/calendar";
 import ListingClient from "@/components/listing/ListingClient";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +21,12 @@ interface ListingPageProps {
   };
 }
 
+// Draft or paused listings are only visible to their owner. Cached so metadata and page share one lookup.
+const loadListing = cache(async (listingId: string) => {
+  const hostCtx = await getHostContext();
+  return getPublicListingById(listingId, (l) => Boolean(hostCtx && hostOwnsListing(hostCtx, l)));
+});
+
 function excerpt(text: string | undefined, max = 160): string {
   const clean = (text || "").replace(/\s+/g, " ").trim();
   return clean.length > max ? `${clean.slice(0, max - 1).trimEnd()}…` : clean;
@@ -32,8 +35,8 @@ function excerpt(text: string | undefined, max = 160): string {
 export async function generateMetadata({ params: { locale, listingId } }: ListingPageProps): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: "listing" });
   // Public projection only: drafts/suspended listings are never described to crawlers.
-  const listing = await getPublicListingById(listingId);
-  if (!listing) {
+  const listing = await loadListing(listingId);
+  if (!listing || listing.status !== "active") {
     return { title: t("meta.notFoundTitle"), robots: { index: false, follow: false } };
   }
   const title = listing.city
@@ -64,35 +67,39 @@ export async function generateMetadata({ params: { locale, listingId } }: Listin
 }
 
 export default async function ListingPage({ params }: ListingPageProps) {
-  // Drafts / suspended listings are only visible to their owner.
-  const hostCtx = await getHostContext();
-  const listing = await getPublicListingById(params.listingId, (l) => Boolean(hostCtx && hostOwnsListing(hostCtx, l)));
+  const listing = await loadListing(params.listingId);
 
   if (!listing) {
     notFound();
   }
 
-  const currentUser = await getSessionUser();
-  const hostRecord = listing.hostUserId ? await getUserById(listing.hostUserId) : null;
+  // Who offers the listing (public card of the API), linked to the public page of its host category.
+  const [currentUser, profile, reviews, calendar, sameVertical] = await Promise.all([
+    getSessionUser(),
+    listing.ownerType === "individual" && listing.hostUserId ? getPublicProfile(listing.hostUserId) : Promise.resolve(null),
+    getReviewsByListingId(listing.id),
+    getPublicAvailability(listing),
+    getListings({ vertical: listing.category, limit: 12 }),
+  ]);
   // Public projection only: no email / phone / address in client props.
-  const host = hostRecord ? toPublicUser(hostRecord) : null;
-  // Who offers the listing, linked to the profile page of its host category.
-  const organization = listing.organizationId ? await getOrganizationById(listing.organizationId) : null;
-  const hostProfile: HostProfileLink | null = organization
-    ? { kind: organization.businessCategory, name: organization.name, image: null, href: orgProfileHref(organization) }
-    : host
-      ? { kind: "individual", name: host.name || "", image: host.image, href: userProfileHref(host.id) }
-      : null;
-  const reviews = await getReviewsByListingId(listing.id);
+  const host = profile ? toPublicUserFromApi(profile) : null;
+  const orgCategory = listing.businessCategory;
+  const hostProfile: HostProfileLink | null =
+    listing.ownerType === "organization" && orgCategory && listing.organizationSlug
+      ? {
+          kind: orgCategory,
+          name: listing.hostName || "",
+          image: null,
+          href: `${ORG_PROFILE_PATH[orgCategory]}/${encodeURIComponent(listing.organizationSlug)}`,
+        }
+      : host
+        ? { kind: "individual", name: host.name || "", image: host.image, href: userProfileHref(host.id, host.handle) }
+        : null;
 
-  // Booked + host-blocked nights and per-date prices, built server-side.
-  const availability = await getListingAvailability(listing);
-  const priceOverrides = listing.roomTypes && listing.roomTypes.length > 0 ? {} : priceOverridesFor(listing.id);
-
-  // Fetch similar listings in same vertical/wilaya
-  const allInVertical = await getListings({ vertical: listing.category });
-  const similarListings = allInVertical
+  // Similar listings: same vertical, same wilaya first.
+  const similarListings = sameVertical
     .filter((l) => l.id !== listing.id)
+    .sort((a, b) => Number(b.wilayaCode === listing.wilayaCode) - Number(a.wilayaCode === listing.wilayaCode))
     .slice(0, 4);
 
   return (
@@ -105,8 +112,8 @@ export default async function ListingPage({ params }: ListingPageProps) {
         reviews={reviews}
         similarListings={similarListings}
         currentUser={currentUser}
-        availability={availability}
-        priceOverrides={priceOverrides}
+        availability={calendar.availability}
+        priceOverrides={listing.roomTypes && listing.roomTypes.length > 0 ? {} : calendar.priceOverrides}
       />
     </div>
   );

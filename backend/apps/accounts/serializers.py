@@ -91,7 +91,7 @@ class MeSerializer(serializers.ModelSerializer):
             "id", "email", "email_verified", "phone", "phone_verified",
             "first_name_latin", "last_name_latin", "full_name_ar", "display_name",
             "bio", "spoken_languages", "home_commune", "address_line",
-            "preferred_locale", "status", "is_admin", "is_host", "has_mfa", "date_joined",
+            "preferred_locale", "status", "is_admin", "is_host", "has_mfa", "date_joined", "handle",
         ]
         read_only_fields = fields
 
@@ -121,6 +121,10 @@ class MeUpdateSerializer(serializers.Serializer):
     home_commune = serializers.PrimaryKeyRelatedField(queryset=Commune.objects.all(), required=False, allow_null=True)
     address_line = serializers.CharField(required=False, allow_blank=True, max_length=255)
     preferred_locale = serializers.ChoiceField(choices=["en", "fr", "ar"], required=False)
+    handle = serializers.CharField(
+        required=False, max_length=30,
+        help_text="Public profile link name: 3 to 30 lower-case letters, digits or hyphens (ACC-06).",
+    )
 
 
 class OrganizationRefSerializer(serializers.Serializer):
@@ -152,7 +156,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
         """Model and fields this serializer reads or writes."""
         model = User
         fields = [
-            "id", "display_name", "avatar_url", "bio", "spoken_languages", "joined_year", "is_host",
+            "id", "handle", "display_name", "avatar_url", "bio", "spoken_languages", "joined_year", "is_host",
             "identity_verified", "host_rating_avg", "host_review_count", "organizations",
         ]
 
@@ -580,4 +584,31 @@ class FavoritePageSerializer(serializers.Serializer):
     results = FavoriteSerializer(many=True)
     next_cursor = serializers.CharField(allow_null=True)
     has_more = serializers.BooleanField()
+
+
+class GoogleSignInSerializer(serializers.Serializer):
+    """Body of ``POST /auth/google`` (ACC-10): what Google returned to the website, plus the PKCE verifier."""
+
+    code = serializers.CharField(max_length=2048)
+    code_verifier = serializers.CharField(min_length=43, max_length=128)
+    redirect_uri = serializers.URLField(max_length=255)
+    accept_terms_version = serializers.CharField(required=False, allow_blank=True, max_length=32)
+    locale = serializers.ChoiceField(choices=["en", "fr", "ar"], default="fr")
+
+
+class AuthProvidersSerializer(serializers.Serializer):
+    """``GET /auth/providers``: which outside sign-ins are on, with the public Google client id."""
+
+    google_enabled = serializers.BooleanField()
+    google_client_id = serializers.CharField(allow_blank=True)
+
+
+class SocialAccountSerializer(serializers.Serializer):
+    """A connected sign-in account shown in Settings (ACC-10)."""
+
+    id = serializers.UUIDField()
+    provider = serializers.CharField()
+    email = serializers.EmailField()
+    created_at = serializers.DateTimeField()
+    last_login_at = serializers.DateTimeField(allow_null=True)
 

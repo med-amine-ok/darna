@@ -47,11 +47,22 @@ def commune_ref(commune, locale: str = "fr") -> dict | None:
 
 
 def host_public_card(host_account) -> dict:
-    """What guests see about a host: name, type, rating. No contact data before a booking."""
+    """
+    What guests see about a host: name, type, rating. No contact data before a booking.
+
+    ``organization_id`` and ``organization_slug`` link an organisation host to
+    its public page (``GET /organizations/{slug}``); ``user_id`` links an
+    individual host to its public profile (``GET /users/{id}``). Both pages are
+    public already, so these ids reveal nothing new.
+    """
+    org = host_account.organization if host_account.organization_id else None
     return {
         "id": str(host_account.id), "display_name": host_account.display_name, "host_type": host_account.host_type,
         "rating_avg": float(host_account.rating_avg) if host_account.rating_avg is not None else None,
         "review_count": host_account.review_count, "verified": host_account.is_approved,
+        "organization_id": str(org.id) if org else None,
+        "organization_slug": org.slug if org else None,
+        "user_id": str(host_account.user_id) if host_account.user_id else None,
     }
 
 
@@ -475,6 +486,13 @@ class ListingCardSerializer(serializers.ModelSerializer):
     instant_bookable = serializers.SerializerMethodField()
     host_type = serializers.SerializerMethodField()
     rating_avg = serializers.SerializerMethodField()
+    # Search facts (read-only, additive): what the website's search filters count and match on.
+    amenity_slugs = serializers.SerializerMethodField()
+    cancellation_policy_code = serializers.SerializerMethodField()
+    star_rating = serializers.SerializerMethodField()
+    vehicle_summary = serializers.SerializerMethodField()
+    experience_summary = serializers.SerializerMethodField()
+    host_card = serializers.SerializerMethodField()
 
     class Meta:
         """Which model and fields this serializer uses."""
@@ -482,7 +500,41 @@ class ListingCardSerializer(serializers.ModelSerializer):
         model = Listing
         fields = ("id", "reference", "vertical", "experience_type", "title", "property_type", "commune",
                   "location_public", "cover_photo", "price_from", "price_unit", "rating_avg", "review_count",
-                  "instant_bookable", "host_type")
+                  "instant_bookable", "host_type", "capacity_guests", "bedrooms", "bathrooms", "amenity_slugs",
+                  "cancellation_policy_code", "star_rating", "vehicle_summary", "experience_summary", "host_card")
+
+    def get_amenity_slugs(self, obj) -> list[str]:
+        """Slugs of the listing amenities (uses the prefetch of ``public_listings`` when present)."""
+        return sorted(link.amenity.slug for link in obj.amenity_links.all())
+
+    def get_cancellation_policy_code(self, obj) -> str | None:
+        """flexible, moderate or strict."""
+        return obj.cancellation_policy.code if obj.cancellation_policy_id else None
+
+    def get_star_rating(self, obj) -> int | None:
+        """Hotel stars of the organisation, when it has some."""
+        org = obj.host_account.organization if obj.host_account.organization_id else None
+        return org.star_rating if org else None
+
+    def get_vehicle_summary(self, obj) -> dict | None:
+        """Seats, transmission and fuel of a vehicle (filters), else null."""
+        detail = getattr(obj, "vehicle_detail", None) if obj.vertical == Vertical.VEHICLE else None
+        if detail is None:
+            return None
+        return {"make": detail.make, "model": detail.model, "year": detail.year, "seats": detail.seats,
+                "transmission": detail.transmission, "fuel": detail.fuel}
+
+    def get_experience_summary(self, obj) -> dict | None:
+        """Length, languages and group size of an experience (filters), else null."""
+        detail = getattr(obj, "experience_detail", None) if obj.vertical == Vertical.EXPERIENCE else None
+        if detail is None:
+            return None
+        return {"duration_minutes": detail.duration_minutes, "languages": detail.languages,
+                "max_group": detail.max_group}
+
+    def get_host_card(self, obj) -> dict:
+        """Public card of the host (name, type, links to its public page)."""
+        return host_public_card(obj.host_account)
 
     def get_commune(self, obj) -> dict | None:
         """Commune and wilaya names in the caller's language."""
@@ -534,8 +586,7 @@ class ListingDetailSerializer(ListingCardSerializer):
         """Which model and fields this serializer uses."""
 
         fields = ListingCardSerializer.Meta.fields + (
-            "description", "source_language", "category", "capacity_guests", "bedrooms", "beds", "bathrooms",
-            "surface_m2", "cleaning_fee", "weekly_discount_bp", "monthly_discount_bp", "min_nights", "max_nights",
+            "description", "source_language", "category", "beds", "surface_m2", "cleaning_fee", "weekly_discount_bp", "monthly_discount_bp", "min_nights", "max_nights",
             "advance_notice_days", "available_from", "available_until", "check_in_time", "check_out_time",
             "house_rules", "amenities", "photos", "room_types", "services", "cancellation_policy", "host",
             "vehicle_detail", "experience_detail",

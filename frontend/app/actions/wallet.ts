@@ -3,21 +3,45 @@
 import type { Wallet } from "@/types";
 import { ActionResult, actionFail, actionOk } from "@/lib/action-result";
 import { getHostContext } from "@/lib/server/host-context";
-import { getRateForHostType, getWalletByOwner } from "@/lib/data/wallet";
+import { failFromError } from "@/lib/api/errors";
+import { arePayoutsEnabled, getMyEarnings, getMyInvoices, getMyWallet } from "@/lib/data/wallet";
+import type { HostEarnings, HostInvoice, WalletStatus } from "@/lib/api/wallet";
 
 /**
- * Read-only: the prepaid wallet of the current host (their org's wallet for
- * agency/hotel/hostel hosts). The owner is derived from the session.
+ * Read-only: the prepaid deposit of the active host workspace (the
+ * organisation's for agency/hotel/hostel hosts), resolved by the backend from
+ * the session; the browser never chooses it.
  */
-export async function getMyWalletAction(): Promise<ActionResult<{ wallet: Wallet | null; commissionRate: number }>> {
+export async function getMyWalletAction(): Promise<
+  ActionResult<{ wallet: Wallet | null; commissionRate: number; status: WalletStatus | null }>
+> {
   const ctx = await getHostContext();
   if (!ctx) return actionFail("UNAUTHENTICATED");
+  try {
+    const owner = ctx.isOrgHost && ctx.organization
+      ? { id: ctx.organization.id, ownerType: "organization" as const, name: ctx.organization.name, hostType: ctx.hostType }
+      : { id: ctx.user.id, ownerType: "user" as const, name: ctx.user.name, hostType: ctx.hostType };
+    const { wallet, status } = await getMyWallet(owner);
+    return actionOk({ wallet, commissionRate: status.commissionRate, status });
+  } catch (error) {
+    return failFromError(error, "getMyWalletAction");
+  }
+}
 
-  const wallet = ctx.isOrgHost
-    ? ctx.organization
-      ? await getWalletByOwner(ctx.organization.id, "organization")
-      : null
-    : await getWalletByOwner(ctx.user.id, "user");
-  const commissionRate = getRateForHostType(wallet?.hostType || ctx.hostType);
-  return actionOk({ wallet, commissionRate });
+/** Commission invoices, earnings summary and whether payouts exist, for the wallet statement. */
+export async function getMyMoneyOverviewAction(): Promise<
+  ActionResult<{ invoices: HostInvoice[]; earnings: HostEarnings | null; payoutsEnabled: boolean }>
+> {
+  const ctx = await getHostContext();
+  if (!ctx) return actionFail("UNAUTHENTICATED");
+  try {
+    const [invoices, earnings, payoutsEnabled] = await Promise.all([
+      getMyInvoices(),
+      getMyEarnings().catch(() => null),
+      arePayoutsEnabled().catch(() => false),
+    ]);
+    return actionOk({ invoices, earnings, payoutsEnabled });
+  } catch (error) {
+    return failFromError(error, "getMyMoneyOverviewAction");
+  }
 }

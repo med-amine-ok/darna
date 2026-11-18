@@ -45,7 +45,7 @@ import { canCancelBooking, canRefundBooking, refundedSoFar } from "@/lib/domain/
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Booking } from "@/lib/types";
-import { WILAYAS, getWilayaLabel, getWilayaName } from "@/lib/utils/wilayas";
+import { getWilayaName } from "@/lib/utils/wilayas";
 
 export interface BookingsClientProps {
   initialStatus?: string;
@@ -82,7 +82,11 @@ export default function BookingsClient({
   const [isLoading, setIsLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedWilaya, setSelectedWilaya] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(10);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(selectedBookingIdFromUrl);
@@ -113,7 +117,6 @@ export default function BookingsClient({
         await exportBookings({
           status: currentStatus,
           vertical: vertParam !== "all" ? vertParam : undefined,
-          wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
           search: searchQuery || undefined,
         })
       );
@@ -149,8 +152,7 @@ export default function BookingsClient({
       const res = unwrap(await listBookings({
         status: currentStatus,
         vertical: vertParam !== "all" ? vertParam : undefined,
-        wilayaCode: selectedWilaya !== "all" ? selectedWilaya : undefined,
-        search: searchQuery || undefined,
+        search: debouncedSearch || undefined,
         page,
         pageSize,
       }));
@@ -167,7 +169,7 @@ export default function BookingsClient({
     } finally {
       setIsLoading(false);
     }
-  }, [currentVertical, currentStatus, selectedWilaya, page, pageSize, searchQuery, addToast, tCommon]);
+  }, [currentVertical, currentStatus, page, pageSize, debouncedSearch, addToast, tCommon]);
 
   useEffect(() => {
     fetchData();
@@ -185,13 +187,13 @@ export default function BookingsClient({
     updateUrl({ selected: null });
   };
 
-  // Vertical tabs with counts (Mockup 11: Toutes 1,248 · Hébergements 642 · Expériences 238 · Voyages 156 · Voitures 212)
+  // Vertical tabs. The API counts bookings per status only, so only "all" carries a count.
   const verticalTabs: TabItem[] = [
-    { id: "all", label: t("verticalTabs.all"), count: 1248 },
-    { id: "stays", label: t("verticalTabs.stays"), count: 642, icon: <Home className="w-3.5 h-3.5" aria-hidden="true" /> },
-    { id: "experiences", label: t("verticalTabs.experiences"), count: 238, icon: <Compass className="w-3.5 h-3.5" aria-hidden="true" /> },
-    { id: "trips", label: t("verticalTabs.trips"), count: 156, icon: <Plane className="w-3.5 h-3.5" aria-hidden="true" /> },
-    { id: "cars", label: t("verticalTabs.cars"), count: 212, icon: <Car className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "all", label: t("verticalTabs.all"), count: facets.status?.all },
+    { id: "stays", label: t("verticalTabs.stays"), icon: <Home className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "experiences", label: t("verticalTabs.experiences"), icon: <Compass className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "trips", label: t("verticalTabs.trips"), icon: <Plane className="w-3.5 h-3.5" aria-hidden="true" /> },
+    { id: "cars", label: t("verticalTabs.cars"), icon: <Car className="w-3.5 h-3.5" aria-hidden="true" /> },
   ];
 
   // Table columns (Mockup 11)
@@ -277,7 +279,7 @@ export default function BookingsClient({
           </div>
           <div className="text-[11px] text-primary-600 flex items-center gap-1 whitespace-nowrap">
             <MapPin className="w-3 h-3 text-secondary" aria-hidden="true" />
-            <span>{getWilayaName(row.wilayaCode, locale)}</span>
+            <span>{row.commune || (row.wilayaCode ? getWilayaName(row.wilayaCode, locale) : "-")}</span>
           </div>
         </div>
       ),
@@ -375,10 +377,6 @@ export default function BookingsClient({
           variant="line"
         />
 
-        <div className="hidden sm:flex items-center gap-2 h-9 px-3 rounded-xl bg-white shadow-e1 text-xs text-primary-700 tabular-nums whitespace-nowrap mb-2">
-          <Calendar className="w-4 h-4 text-secondary" aria-hidden="true" />
-          <span>{t("dateRange", { from: formatDate("2024-03-01", locale), to: formatDate("2024-03-31", locale) })}</span>
-        </div>
       </div>
 
       {/* 3. Filter Bar (Mockup 11) */}
@@ -405,25 +403,11 @@ export default function BookingsClient({
               updateUrl({ status: val === "all" ? null : val, page: "1" });
             },
           },
-          {
-            id: "wilaya",
-            label: t("wilayaFilter"),
-            value: selectedWilaya,
-            options: [
-              { value: "all", label: t("allWilayas") },
-              ...WILAYAS.map((w) => ({ value: w.code, label: getWilayaLabel(w, locale) })),
-            ],
-            onChange: (val) => {
-              setSelectedWilaya(val);
-              setPage(1);
-            },
-          },
         ]}
         onOpenAdvanced={() => setIsFilterDrawerOpen(true)}
-        hasActiveFilters={currentStatus !== "all" || selectedWilaya !== "all" || !!searchQuery}
+        hasActiveFilters={currentStatus !== "all" || !!searchQuery}
         onReset={() => {
           setSearchQuery("");
-          setSelectedWilaya("all");
           updateUrl({ status: null, vertical: null, page: "1" });
         }}
       />
@@ -544,7 +528,7 @@ export default function BookingsClient({
                   <h4 className="font-semibold text-sm text-primary-900">{selectedBooking.listingTitle}</h4>
                   <div className="flex items-center gap-1 text-xs text-secondary-700 mt-0.5">
                     <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>{getWilayaName(selectedBooking.wilayaCode, locale)}</span>
+                    <span>{selectedBooking.commune || (selectedBooking.wilayaCode ? getWilayaName(selectedBooking.wilayaCode, locale) : "-")}</span>
                   </div>
                 </div>
 
@@ -612,7 +596,7 @@ export default function BookingsClient({
                     <div className="text-xs text-primary-800 pt-2 border-t border-primary/[0.06] space-y-1">
                       <div className="flex items-center gap-2">
                         <Phone className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
-                        <span dir="ltr">{selectedBooking.guestPhone || "+213 555 12 34 56"}</span>
+                        <span dir="ltr">{selectedBooking.guestPhone || "-"}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />

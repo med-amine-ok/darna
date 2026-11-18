@@ -12,7 +12,11 @@ import { AnimatePresence, m } from "framer-motion";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "@/navigation";
 import { Notification } from "@/types";
-import { markNotificationReadAction, markAllNotificationsReadAction } from "@/app/actions/notifications";
+import {
+  getMyNotificationsAction,
+  markNotificationReadAction,
+  markAllNotificationsReadAction,
+} from "@/app/actions/notifications";
 import { toast } from "react-toastify";
 import {
   BrandBellIcon,
@@ -22,6 +26,7 @@ import {
   BrandShieldIcon,
   BrandCheckDoubleIcon,
   BrandChevronRightIcon,
+  BrandStarIcon,
 } from "@/components/icons";
 import { AccountHeader } from "@/components/profile/AccountShell";
 import { Button, KitEmptyState, cn, focusRingInset } from "@/components/ui";
@@ -29,6 +34,12 @@ import { STAGGER, spring } from "@/lib/motion";
 
 interface NotificationsClientProps {
   initialNotifications: Notification[];
+  /** Unread total from the server (all pages, not just the first). */
+  initialUnreadCount?: number;
+  /** Cursor of the next page (null when everything is shown). */
+  initialNextCursor?: string | null;
+  /** The API could not be reached: show an error instead of "no notifications". */
+  loadFailed?: boolean;
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -40,20 +51,58 @@ const typeStyles: Record<string, { tile: string; Icon: typeof BrandBellIcon }> =
   message: { tile: "bg-tertiary-200 text-tertiary-900", Icon: BrandMessageIcon },
   price: { tile: "bg-accent-100 text-accent-800", Icon: BrandTagIcon },
   system: { tile: "bg-primary/[0.08] text-primary-800", Icon: BrandShieldIcon },
+  review: { tile: "bg-tertiary-100 text-primary-800", Icon: BrandStarIcon },
 };
 const fallbackStyle = { tile: "bg-primary/[0.06] text-primary-700", Icon: BrandBellIcon };
 
-export default function NotificationsClient({ initialNotifications }: NotificationsClientProps) {
+export default function NotificationsClient({
+  initialNotifications,
+  initialUnreadCount,
+  initialNextCursor = null,
+  loadFailed = false,
+}: NotificationsClientProps) {
   const t = useTranslations("notifications");
   const format = useFormatter();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [markingAll, setMarkingAll] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+  const [loadingMore, setLoadingMore] = useState(false);
+  /** Unread rows not loaded yet (older pages), so the badge counts every unread notification. */
+  const [unseenUnread, setUnseenUnread] = useState(
+    Math.max(0, (initialUnreadCount ?? 0) - initialNotifications.filter((n) => !n.read).length),
+  );
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length + unseenUnread;
+
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await getMyNotificationsAction(nextCursor);
+      if (!result.ok) {
+        toast.error(t("loadFailedTitle"));
+        return;
+      }
+      const known = new Set(notifications.map((n) => n.id));
+      const fresh = result.data.items.filter((n) => !known.has(n.id));
+      setNotifications((prev) => [...prev, ...fresh]);
+      setUnseenUnread((prev) => Math.max(0, prev - fresh.filter((n) => !n.read).length));
+      setNextCursor(result.data.hasMore ? result.data.nextCursor : null);
+    } catch {
+      toast.error(t("loadFailedTitle"));
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleMarkAsRead = async (id: string, link?: string) => {
+    const target = notifications.find((n) => n.id === id);
+    if (target?.read) {
+      if (link) router.push(link);
+      return;
+    }
     const result = await markNotificationReadAction(id);
     if (!result.ok) {
       toast.error(t("updateFailed"));
@@ -74,6 +123,7 @@ export default function NotificationsClient({ initialNotifications }: Notificati
       return;
     }
     setJustCleared(true);
+    setUnseenUnread(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     toast.success(t("allMarkedRead"));
   };
@@ -208,7 +258,20 @@ export default function NotificationsClient({ initialNotifications }: Notificati
       />
 
       <div className="mt-8 sm:mt-10">
-        {notifications.length === 0 ? (
+        {loadFailed && notifications.length === 0 ? (
+          <div role="alert" className="rounded-3xl bg-white shadow-e1">
+            <KitEmptyState
+              variant="generic"
+              title={t("loadFailedTitle")}
+              description={t("loadFailedBody")}
+              action={
+                <Button variant="secondary" size="sm" onClick={() => router.refresh()}>
+                  {t("retry")}
+                </Button>
+              }
+            />
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="rounded-3xl bg-white shadow-e1">
             <KitEmptyState variant="generic" title={t("emptyTitle")} description={t("emptyBody")} />
           </div>
@@ -216,6 +279,13 @@ export default function NotificationsClient({ initialNotifications }: Notificati
           <div className="space-y-8">
             {today.length > 0 && renderGroup("notifications-today", t("today"), today, 0)}
             {earlier.length > 0 && renderGroup("notifications-earlier", t("earlier"), earlier, today.length)}
+            {nextCursor && (
+              <div className="flex justify-center">
+                <Button variant="tertiary" size="sm" loading={loadingMore} onClick={handleLoadMore}>
+                  {t("loadMore")}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

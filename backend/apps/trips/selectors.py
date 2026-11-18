@@ -43,13 +43,15 @@ def upcoming_departures(trip: Trip) -> QuerySet:
 
 
 def search_trips(*, trip_type: str | None = None, wilaya: int | None = None, max_price: int | None = None,
-                 date_from: date | None = None, date_to: date | None = None, sort: str | None = None) -> QuerySet:
+                 date_from: date | None = None, date_to: date | None = None, sort: str | None = None,
+                 host_account=None) -> QuerySet:
     """
     Public trip search (``GET /trips``).
 
     Filters: ``trip_type`` (comma list), ``wilaya`` of the start commune,
     ``max_price`` (centimes per person, on the trip price), ``from``/``to``:
-    the trip must have an open future departure overlapping that period.
+    the trip must have an open future departure overlapping that period;
+    ``host_account``: only the trips of one agency (its public page).
     Sort: ``price``, ``-price``, ``rating``, ``newest`` (default).
     """
     qs = public_trips()
@@ -57,6 +59,8 @@ def search_trips(*, trip_type: str | None = None, wilaya: int | None = None, max
         qs = qs.filter(trip_type__in=types)
     if wilaya:
         qs = qs.filter(start_commune__wilaya_id=wilaya)
+    if host_account:
+        qs = qs.filter(host_account_id=host_account)
     if max_price is not None:
         qs = qs.filter(price_per_person_minor__lte=max_price)
     if date_from or date_to:

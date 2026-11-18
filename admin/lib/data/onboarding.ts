@@ -1,56 +1,64 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import { OnboardingConfig, HostType, OnboardingStepConfig, AdminActor } from "@/lib/types";
-import { assertCan } from "@/lib/permissions";
-import { logAudit } from "./audit";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { api } from "@/lib/api/client";
+import { logReadError, write } from "@/lib/api/mapping";
+import { toApiSteps, toStepConfig, type ApiFlowVersion } from "@/lib/api/onboarding";
+import type { AdminActor, HostType, OnboardingConfig, OnboardingStepConfig } from "@/lib/types";
 
-export async function getOnboardingConfig(): Promise<OnboardingConfig> {
-  await delay(120);
-  return JSON.parse(JSON.stringify(store.onboardingConfig));
+/**
+ * Host onboarding wizards, from the Django API (/admin/onboarding-flows).
+ * Each host type has versioned flows: the screen edits the draft (or the
+ * published version when there is no draft); saving writes the draft and
+ * publishes it as the next immutable version (BR-CFG-02, BR-CFG-03).
+ */
+
+const HOST_TYPES: HostType[] = ["individual", "agency", "hotel", "hostel"];
+
+async function versionsOf(hostType: HostType): Promise<ApiFlowVersion[]> {
+  const answer = await api<{ results: ApiFlowVersion[] }>(`/admin/onboarding-flows/${hostType}/versions`);
+  return answer.results ?? [];
 }
 
+/** The version the editor starts from: the draft, else the published one. */
+function current(versions: ApiFlowVersion[]): ApiFlowVersion | null {
+  return versions.find((v) => v.status === "draft") ?? versions.find((v) => v.status === "published") ?? null;
+}
+
+export async function getOnboardingConfig(): Promise<OnboardingConfig> {
+  const perType = await Promise.all(
+    HOST_TYPES.map(async (ht) => {
+      try {
+        return [ht, await versionsOf(ht)] as const;
+      } catch (error) {
+        logReadError(`onboarding flow ${ht}`, error);
+        return [ht, [] as ApiFlowVersion[]] as const;
+      }
+    }),
+  );
+  let version = 0;
+  let updatedAt = "";
+  const flows = {} as OnboardingConfig["flows"];
+  for (const [ht, versions] of perType) {
+    const cur = current(versions);
+    const published = versions.find((v) => v.status === "published");
+    if (published) {
+      version = Math.max(version, published.version);
+      if (published.published_at && published.published_at > updatedAt) updatedAt = published.published_at;
+    }
+    flows[ht] = { steps: (cur?.steps ?? []).map(toStepConfig) };
+  }
+  return { version, updatedAt: updatedAt || new Date(0).toISOString(), publishedBy: "", flows };
+}
+
+/** Save the steps as the draft, then publish it. Validation errors of the backend come back as 422. */
 export async function updateOnboardingFlow(
   hostType: HostType,
   steps: OnboardingStepConfig[],
-  actor: AdminActor
+  _actor: AdminActor,
 ): Promise<OnboardingConfig> {
-  assertCan(actor.role, "onboarding.edit");
-  await delay(200);
-
-  // Enforcement: Solo flow capped at 2 pages
-  if (hostType === "individual" && steps.length > 2) {
-    throw new Error("Individual host onboarding flow is strictly capped at a maximum of 2 pages.");
-  }
-
-  const prev = JSON.parse(JSON.stringify(store.onboardingConfig));
-  const newConfig: OnboardingConfig = {
-    ...store.onboardingConfig,
-    version: store.onboardingConfig.version + 1,
-    updatedAt: new Date().toISOString(),
-    publishedBy: actor.name,
-    flows: {
-      ...store.onboardingConfig.flows,
-      [hostType]: {
-        ...store.onboardingConfig.flows[hostType],
-        steps,
-      },
-    },
-  };
-
-  store.onboardingConfig = newConfig;
-
-  await logAudit(
-    actor,
-    "ONBOARDING_CONFIG_PUBLISH",
-    "onboarding",
-    hostType,
-    `Published version ${newConfig.version} for ${hostType} host flow (${steps.length} steps)`,
-    prev.flows[hostType],
-    newConfig.flows[hostType]
-  );
-
-  return newConfig;
+  const before = current(await versionsOf(hostType));
+  const body = { steps: toApiSteps(steps, before?.steps ?? []) };
+  await write(() => api(`/admin/onboarding-flows/${hostType}/draft`, { method: "PUT", body }));
+  await write(() => api(`/admin/onboarding-flows/${hostType}/publish`, { method: "POST" }));
+  return getOnboardingConfig();
 }

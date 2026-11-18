@@ -40,6 +40,15 @@
         "cd /d ../admin && npx next dev -p 3012"
       ],
       "port": 3012
+    },
+    {
+      "name": "bladus-backend",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd /d ../backend && python manage.py runserver 8000"
+      ],
+      "port": 8000
     }
   ]
 }

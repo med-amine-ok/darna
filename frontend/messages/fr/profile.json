@@ -47,7 +47,8 @@
     "languages": "Langues parlées",
     "saveButton": "Enregistrer les modifications",
     "saving": "Enregistrement...",
-    "saveSuccess": "Profil mis à jour avec succès !"
+    "saveSuccess": "Profil mis à jour avec succès !",
+    "phoneInSettings": "Modifiez votre téléphone dans les Paramètres, où nous le confirmons par SMS."
   },
   "settings": {
     "title": "Paramètres & Notifications",
@@ -147,5 +148,18 @@
       "vehicle": "Véhicules"
     },
     "businesses": "Établissements gérés par cet hôte"
+  },
+  "profileLink": {
+    "title": "Votre lien de profil",
+    "hint": "Partagez-le avec les hôtes et les voyageurs. Il montre seulement votre profil public, jamais votre e-mail, téléphone ou adresse.",
+    "copy": "Copier le lien",
+    "copied": "Lien du profil copié.",
+    "change": "Modifier",
+    "label": "Nom dans votre lien",
+    "rules": "3 à 30 lettres minuscules, chiffres ou tirets. L'ancien lien ne fonctionne plus après le changement.",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "saved": "Votre lien de profil a été mis à jour.",
+    "shareTitle": "Mon profil BLADUS"
   }
 }

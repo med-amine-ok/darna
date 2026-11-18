@@ -33,11 +33,15 @@
     "colDate": "Joined / invited",
     "colActions": "Actions",
     "roleFor": "Role for {name}",
-    "rolesOwnerOnly": "Only the owner can change roles"
+    "rolesOwnerOnly": "Only the owner can change roles",
+    "empty": "No team members to show yet."
   },
   "status": {
     "active": "Active",
-    "pending": "Invitation pending"
+    "pending": "Invitation pending",
+    "accepted": "Accepted",
+    "expired": "Expired",
+    "revoked": "Cancelled"
   },
   "actions": {
     "resendFor": "Resend invitation to {name}",
@@ -75,7 +79,7 @@
     "adminHint": "Listings, fleet & team management",
     "sending": "Sending…",
     "send": "Send invitation",
-    "description": "They get an email invitation and join your workspace with the role you choose."
+    "description": "You get an invitation link to send them. They join your workspace with the role you choose."
   },
   "removeDialog": {
     "title": "Revoke team access",
@@ -97,7 +101,36 @@
     "memberRemoved": "Team member access revoked.",
     "removeFailed": "Couldn't remove the member.",
     "resendComingSoon": "Invitation emails are coming soon. For now, share the invitation with {email} directly.",
-    "ownershipTransferred": "Ownership transferred."
+    "ownershipTransferred": "Ownership transferred.",
+    "inviteCreated": "Invitation created for {email}.",
+    "invitationRevoked": "Invitation cancelled."
   },
-  "eyebrow": "Team"
+  "eyebrow": "Team",
+  "memberFallback": "Team member",
+  "invitations": {
+    "title": "Invitations",
+    "count": "{count, plural, =0 {No pending invitation} one {# pending invitation} other {# pending invitations}}",
+    "empty": "No invitations yet. Invite a teammate to share the workspace.",
+    "expires": "Expires on {date}",
+    "revoke": "Cancel invitation",
+    "revokeFor": "Cancel the invitation of {email}",
+    "revokeTitle": "Cancel this invitation?",
+    "revokeMessage": "The invitation link sent to {email} will stop working."
+  },
+  "linkDialog": {
+    "title": "Share the invitation link",
+    "description": "Invitation emails are not sent yet. Send this link to {email} yourself: they sign in with that email and join your team.",
+    "label": "Invitation link",
+    "once": "This link is shown only once and works for 7 days. If you lose it, cancel the invitation and create a new one.",
+    "done": "Done",
+    "copy": "Copy link",
+    "copied": "Link copied.",
+    "copyFailed": "Couldn't copy the link. Select it and copy it by hand."
+  },
+  "accept": {
+    "metaTitle": "Join a team",
+    "title": "Join the team",
+    "description": "You were invited to join an organisation on BLADUS. You will join it as {email} and can switch to its workspace from the host menu.",
+    "join": "Join the team"
+  }
 }

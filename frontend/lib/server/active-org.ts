@@ -1,6 +1,6 @@
 import "server-only";
 import type { Membership, Organization, User } from "@/types";
-import { getMembershipsForUser, getOrganizationById } from "@/lib/data/organizations";
+import { getHostContext } from "./host-context";
 
 export interface ActiveOrganization {
   organization: Organization;
@@ -8,20 +8,16 @@ export interface ActiveOrganization {
 }
 
 /**
- * Resolves the organization a user acts for, ONLY through their active
- * memberships. `preferredOrgId` (from the signed session or the user record)
- * is honoured only if the user is actually a member of it.
+ * The organisation the signed-in user acts for, from the backend's active
+ * workspace (GET /me/workspaces, GET /host/organization). To act for another
+ * organisation, switch the workspace with refreshSession(user, organizationId).
+ * Kept for older callers; new code uses getHostContext().
  */
 export async function resolveActiveOrganization(
-  user: Pick<User, "id">,
-  preferredOrgId?: string | null
+  _user?: Pick<User, "id">,
+  _preferredOrgId?: string | null,
 ): Promise<ActiveOrganization | null> {
-  const memberships = await getMembershipsForUser(user.id);
-  if (memberships.length === 0) return null;
-
-  const chosen =
-    (preferredOrgId && memberships.find((m) => m.organizationId === preferredOrgId)) || memberships[0];
-  const organization = await getOrganizationById(chosen.organizationId);
-  if (!organization) return null;
-  return { organization, membership: chosen };
+  const ctx = await getHostContext();
+  if (!ctx?.organization || !ctx.membership) return null;
+  return { organization: ctx.organization, membership: ctx.membership };
 }

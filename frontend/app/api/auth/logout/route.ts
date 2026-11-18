@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { endSession } from "@/lib/server/session";
 import { actionFail } from "@/lib/action-result";
+import { MFA_PENDING_COOKIE } from "@/lib/api/account";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
     const res = NextResponse.json({ success: true });
     res.cookies.set("darna_mode", "", { path: "/", maxAge: 0 });
     // Remove identity cookies left over from the old unsigned-cookie scheme.
+    res.cookies.set(MFA_PENDING_COOKIE, "", { path: "/", maxAge: 0 });
     for (const legacy of ["darna_user_id", "darna_host_type", "darna_agency_id"]) {
       res.cookies.set(legacy, "", { path: "/", maxAge: 0 });
     }

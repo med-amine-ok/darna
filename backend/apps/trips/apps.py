@@ -9,3 +9,9 @@ class TripsConfig(AppConfig):
     name = "apps.trips"
     label = "trips"
     default_auto_field = "django.db.models.BigAutoField"
+
+    def ready(self) -> None:
+        """Register the favourite hooks with accounts (ACC-09)."""
+        from . import favorites
+
+        favorites.connect()

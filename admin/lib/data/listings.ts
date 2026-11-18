@@ -1,20 +1,32 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import { Listing, ListingStatus, PaginatedResult, AdminActor, Permission } from "@/lib/types";
-import { assertCan } from "@/lib/permissions";
-import {
-  canTransitionListing,
-  isValidReason,
-  normalizeListingStatus,
-  LISTING_STATUSES_REQUIRING_REASON,
-  type CanonicalListingStatus,
-} from "@/lib/domain/transitions";
-import { toCsv, type CsvExport } from "@/lib/utils/csv";
-import { logAudit, logExport } from "./audit";
-import { DomainError, ValidationError } from "./errors";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { ApiError, api, apiAll, apiOrNull } from "@/lib/api/client";
+import { logReadError, write } from "@/lib/api/mapping";
+import {
+  toApiStatus,
+  toApiVertical,
+  toListing,
+  toListingFromRow,
+  type ApiAdminListing,
+  type ApiAdminListingRow,
+} from "@/lib/api/listings";
+import { toListingFromTrip, type ApiAdminTrip } from "@/lib/api/trips";
+import { Listing, ListingStatus, PaginatedResult, AdminActor } from "@/lib/types";
+import { normalizeListingStatus } from "@/lib/domain/transitions";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { logExport } from "./audit";
+import { DomainError } from "./errors";
+
+/**
+ * Listings and trips of the admin console, read from and written to the
+ * Django API (/admin/listings, /admin/trips). Status changes, permissions,
+ * reasons and the audit trail are enforced by the backend.
+ *
+ * The queue endpoint only filters by status, vertical and host and its rows
+ * are light (no price, place, rating). The other filters of the screens are
+ * applied here: rows are read in full (page by page) and, when a filter or
+ * sort needs detail fields, the detail of each candidate row is read (capped).
+ */
 
 export interface ListingFilterParams {
   status?: string; // "all" | ListingStatus
@@ -40,6 +52,12 @@ export interface ListingFilterParams {
   pageSize?: number;
 }
 
+/** Pages of 50 rows read from a queue endpoint (2,000 rows). */
+const MAX_QUEUE_PAGES = 40;
+/** Most listing details read for one list request (filters and sorts on detail fields). */
+const DETAIL_CAP = 120;
+const DETAIL_CONCURRENCY = 8;
+
 function countBy(rows: Listing[], key: (l: Listing) => string | undefined): Record<string, number> {
   const out: Record<string, number> = {};
   for (const l of rows) {
@@ -60,181 +78,244 @@ export function matchListingStatus(listingStatus: string, filterStatus: string):
   const lStatus = (listingStatus || "").toLowerCase();
   const fStatus = filterStatus.toLowerCase();
 
-  // "pending" <===> "pending_review"
   if (fStatus === "pending" || fStatus === "pending_review") {
     return lStatus === "pending" || lStatus === "pending_review";
   }
-
-  // "published" <===> "approved"
   if (fStatus === "published" || fStatus === "approved") {
     return lStatus === "published" || lStatus === "approved";
   }
-
-  // "refused" <===> "rejected"
   if (fStatus === "refused" || fStatus === "rejected") {
     return lStatus === "refused" || lStatus === "rejected";
   }
-
   return lStatus === fStatus;
 }
 
-export async function listListings(
-  params: ListingFilterParams = {}
-): Promise<PaginatedResult<Listing>> {
-  await delay(200);
+// ------------------------------------------------------------------- reads
 
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 12;
+async function listingRows(vertical: string | undefined, deleted: boolean): Promise<Listing[]> {
+  const rows = await apiAll<ApiAdminListingRow>(
+    "/admin/listings",
+    { query: { vertical: vertical ? toApiVertical(vertical) : undefined, deleted: deleted ? "true" : undefined } },
+    MAX_QUEUE_PAGES,
+  );
+  return rows.map(toListingFromRow);
+}
 
-  let filtered = [...store.listings];
+async function tripRows(deleted: boolean): Promise<Listing[]> {
+  const rows = await apiAll<ApiAdminTrip>(
+    "/admin/trips",
+    { query: { deleted: deleted ? "true" : undefined } },
+    MAX_QUEUE_PAGES,
+  );
+  return rows.map(toListingFromTrip);
+}
 
-  // 1. Status Filter (Bidirectional normalization between DB and UI terms)
+/** Every row of one vertical ("all" = listings and trips). */
+async function rowsOf(vertical: string | undefined, deleted: boolean): Promise<Listing[]> {
+  if (vertical === "trip") return tripRows(deleted);
+  if (vertical) return listingRows(vertical, deleted);
+  const [listings, trips] = await Promise.all([listingRows(undefined, deleted), tripRows(deleted)]);
+  return [...listings, ...trips];
+}
+
+async function fetchListingDetail(id: string): Promise<Listing | null> {
+  const raw = await apiOrNull<ApiAdminListing>(`/admin/listings/${encodeURIComponent(id)}`);
+  return raw ? toListing(raw) : null;
+}
+
+/** Replaces queue rows by their full detail (trips are already complete), a few at a time. */
+async function enrich(rows: Listing[]): Promise<Listing[]> {
+  const out = [...rows];
+  const todo = rows.map((row, index) => ({ row, index })).filter(({ row }) => row.category !== "trip");
+  for (let i = 0; i < todo.length; i += DETAIL_CONCURRENCY) {
+    const chunk = todo.slice(i, i + DETAIL_CONCURRENCY);
+    const details = await Promise.all(
+      chunk.map(({ row }) =>
+        fetchListingDetail(row.id).catch((error) => {
+          logReadError(`listing ${row.id}`, error);
+          return null;
+        }),
+      ),
+    );
+    chunk.forEach(({ index }, k) => {
+      const detail = details[k];
+      if (detail) out[index] = detail;
+    });
+  }
+  return out;
+}
+
+/** enrich() on the first DETAIL_CAP rows; the rest stay light (very large exports). */
+async function enrichCapped(rows: Listing[]): Promise<Listing[]> {
+  if (rows.length <= DETAIL_CAP) return enrich(rows);
+  return [...(await enrich(rows.slice(0, DETAIL_CAP))), ...rows.slice(DETAIL_CAP)];
+}
+
+const active = (v: string | undefined | null) => Boolean(v && v !== "all");
+
+/** Filters and sorts that need fields the queue rows do not carry. */
+function needsDetail(params: ListingFilterParams): boolean {
+  const wilaya = Array.isArray(params.wilayaCode) ? params.wilayaCode.length > 0 : active(params.wilayaCode);
+  return (
+    wilaya ||
+    (params.minPrice ?? 0) > 0 ||
+    (params.maxPrice ?? 0) > 0 ||
+    active(params.approvalMode) ||
+    params.isFeatured !== undefined ||
+    (params.minCapacity ?? 0) > 0 ||
+    (params.minBedrooms ?? 0) > 0 ||
+    active(params.amenity) ||
+    active(params.experienceType) ||
+    params.sortBy === "price" ||
+    params.sortBy === "rating"
+  );
+}
+
+function applyRowFilters(rows: Listing[], params: ListingFilterParams): Listing[] {
+  let filtered = rows;
   if (params.status && params.status !== "all") {
     filtered = filtered.filter((l) => matchListingStatus(l.status, params.status!));
   }
-
-  // 2. Vertical Filter
-  if (params.vertical && params.vertical !== "all") {
-    filtered = filtered.filter((l) => l.category === params.vertical);
-  }
-
-  // 3. Host Type
   if (params.hostType && params.hostType !== "all") {
     filtered = filtered.filter((l) => l.hostType === params.hostType);
-  }
-
-  // 4. Wilaya
-  if (params.wilayaCode && params.wilayaCode !== "all") {
-    const codes = Array.isArray(params.wilayaCode) ? params.wilayaCode : [params.wilayaCode];
-    if (codes.length > 0) {
-      filtered = filtered.filter((l) => codes.includes(l.wilayaCode));
-    }
-  }
-
-  // 5. Price Range
-  if (params.minPrice !== undefined && params.minPrice > 0) {
-    filtered = filtered.filter((l) => l.price >= params.minPrice!);
-  }
-  if (params.maxPrice !== undefined && params.maxPrice > 0) {
-    filtered = filtered.filter((l) => l.price <= params.maxPrice!);
-  }
-
-  // 6. Search
-  if (params.search?.trim()) {
-    const q = params.search.toLowerCase();
-    filtered = filtered.filter((l) => {
-      const matchTitle = l.title.toLowerCase().includes(q);
-      const matchHost = l.hostName.toLowerCase().includes(q);
-      const matchCity = l.city.toLowerCase().includes(q);
-      const matchType = l.propertyType.toLowerCase().includes(q);
-      return matchTitle || matchHost || matchCity || matchType;
-    });
-  }
-
-  // 7. Flags & Features
-  if (params.approvalMode && params.approvalMode !== "all") {
-    filtered = filtered.filter((l) => l.bookingApprovalMode === params.approvalMode);
-  }
-  if (params.isFeatured !== undefined) {
-    filtered = filtered.filter((l) => l.isFeatured === params.isFeatured);
-  }
-  if (params.isReported !== undefined) {
-    filtered = filtered.filter((l) => l.isReported === params.isReported);
-  }
-  if (params.minCapacity && params.minCapacity > 0) {
-    filtered = filtered.filter((l) => l.guestCapacity >= params.minCapacity!);
-  }
-  if (params.minBedrooms && params.minBedrooms > 0) {
-    filtered = filtered.filter((l) => (l.bedroomCount || 0) >= params.minBedrooms!);
-  }
-  if (params.amenity && params.amenity !== "all") {
-    filtered = filtered.filter((l) => l.amenities.includes(params.amenity!));
-  }
-  if (params.experienceType && params.experienceType !== "all") {
-    filtered = filtered.filter((l) => l.experienceType === params.experienceType);
   }
   if (params.tripType && params.tripType !== "all") {
     filtered = filtered.filter((l) => l.tripType === params.tripType);
   }
+  if (params.isReported === true) {
+    // The backend has no "reported" flag on listings: nothing matches.
+    filtered = [];
+  }
+  if (params.search?.trim()) {
+    const q = params.search.trim().toLowerCase();
+    filtered = filtered.filter(
+      (l) =>
+        l.title.toLowerCase().includes(q) ||
+        l.hostName.toLowerCase().includes(q) ||
+        (l.formattedId ?? "").toLowerCase().includes(q) ||
+        l.city.toLowerCase().includes(q) ||
+        l.propertyType.toLowerCase().includes(q),
+    );
+  }
+  return filtered;
+}
 
-  // Facets - Scoped to vertical if provided, with alias support for both UI and DB keys
-  const scopedListings = params.vertical && params.vertical !== "all"
-    ? store.listings.filter((l) => l.category === params.vertical)
-    : store.listings;
+function applyDetailFilters(rows: Listing[], params: ListingFilterParams): Listing[] {
+  let filtered = rows;
+  if (params.wilayaCode && params.wilayaCode !== "all") {
+    const codes = Array.isArray(params.wilayaCode) ? params.wilayaCode : [params.wilayaCode];
+    if (codes.length > 0) filtered = filtered.filter((l) => codes.includes(l.wilayaCode));
+  }
+  if (params.minPrice !== undefined && params.minPrice > 0) filtered = filtered.filter((l) => l.price >= params.minPrice!);
+  if (params.maxPrice !== undefined && params.maxPrice > 0) filtered = filtered.filter((l) => l.price <= params.maxPrice!);
+  if (params.approvalMode && params.approvalMode !== "all") {
+    filtered = filtered.filter((l) => l.bookingApprovalMode === params.approvalMode);
+  }
+  if (params.isFeatured !== undefined) filtered = filtered.filter((l) => l.isFeatured === params.isFeatured);
+  if (params.minCapacity && params.minCapacity > 0) filtered = filtered.filter((l) => l.guestCapacity >= params.minCapacity!);
+  if (params.minBedrooms && params.minBedrooms > 0) {
+    filtered = filtered.filter((l) => (l.bedroomCount || 0) >= params.minBedrooms!);
+  }
+  if (params.amenity && params.amenity !== "all") filtered = filtered.filter((l) => l.amenities.includes(params.amenity!));
+  if (params.experienceType && params.experienceType !== "all") {
+    filtered = filtered.filter((l) => l.experienceType === params.experienceType);
+  }
+  return filtered;
+}
 
-  const countByStatus = (statusKey: string) =>
-    scopedListings.filter((l) => matchListingStatus(l.status, statusKey)).length;
-
-  const facets: Record<string, Record<string, number>> = {
-    status: {
-      all: scopedListings.length,
-      pending: countByStatus("pending"),
-      pending_review: countByStatus("pending_review"),
-      approved: countByStatus("approved"),
-      published: countByStatus("published"),
-      changes_requested: countByStatus("changes_requested"),
-      rejected: countByStatus("rejected"),
-      refused: countByStatus("refused"),
-      suspended: countByStatus("suspended"),
-      archived: countByStatus("archived"),
-      draft: countByStatus("draft"),
-    },
-    vertical: {
-      all: store.listings.length,
-      home: store.listings.filter((l) => l.category === "home").length,
-      hotel: store.listings.filter((l) => l.category === "hotel").length,
-      experience: store.listings.filter((l) => l.category === "experience").length,
-      vehicle: store.listings.filter((l) => l.category === "vehicle").length,
-      trip: store.listings.filter((l) => l.category === "trip").length,
-    },
-    // Counts per canonical type (lib/catalog-types.ts), scoped like the status facet.
-    experienceType: countBy(scopedListings, (l) => l.experienceType),
-    tripType: countBy(scopedListings, (l) => l.tripType),
-  };
-
-  // Sorting
+function sortRows(rows: Listing[], params: ListingFilterParams): Listing[] {
   const sortBy = params.sortBy || "created";
   const order = params.sortOrder === "asc" ? 1 : -1;
-
-  filtered.sort((a, b) => {
+  return [...rows].sort((a, b) => {
     if (sortBy === "price") return (a.price - b.price) * order;
     if (sortBy === "rating") return (a.rating - b.rating) * order;
     if (sortBy === "bookings") return (a.bookingsCount - b.bookingsCount) * order;
     return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * order;
   });
+}
 
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize).map((l) => {
-    let formattedId = l.formattedId;
-    if (!formattedId) {
-      const numPart = l.id.replace("lst_", "").padStart(5, "0");
-      if (l.category === "home" || l.category === "hotel") formattedId = `#H${numPart}`;
-      else if (l.category === "experience") formattedId = `#EXP${numPart.slice(-4)}`;
-      else if (l.category === "trip") formattedId = `#T${numPart.slice(-4)}`;
-      else if (l.category === "vehicle") formattedId = `#V${numPart.slice(-4)}`;
-      else formattedId = `#L${numPart}`;
-    }
-    return {
-      ...l,
-      formattedId,
-    };
-  });
-
+function statusFacet(rows: Listing[]): Record<string, number> {
+  const count = (key: string) => rows.filter((l) => matchListingStatus(l.status, key)).length;
   return {
-    rows,
-    total,
-    page,
-    pageSize,
-    totalPages,
-    facets,
+    all: rows.length,
+    pending: count("pending"),
+    pending_review: count("pending_review"),
+    approved: count("approved"),
+    published: count("published"),
+    changes_requested: count("changes_requested"),
+    rejected: count("rejected"),
+    refused: count("refused"),
+    suspended: count("suspended"),
+    archived: count("archived"),
+    draft: count("draft"),
   };
 }
 
+function emptyResult(page: number, pageSize: number): PaginatedResult<Listing> {
+  return { rows: [], total: 0, page, pageSize, totalPages: 1, facets: { status: {}, vertical: {}, experienceType: {}, tripType: {} } };
+}
+
+export async function listListings(params: ListingFilterParams = {}): Promise<PaginatedResult<Listing>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.max(1, params.pageSize || 12);
+  const vertical = params.vertical && params.vertical !== "all" ? params.vertical : undefined;
+  const wantsDeleted = Boolean(params.status && params.status.split(",").some((s) => s.trim() === "deleted"));
+
+  try {
+    // Every live row (all verticals, for the vertical facet), plus deleted rows when asked.
+    const [all, deleted] = await Promise.all([
+      rowsOf(undefined, false),
+      wantsDeleted ? rowsOf(vertical, true) : Promise.resolve([] as Listing[]),
+    ]);
+    let scoped = vertical ? all.filter((l) => l.category === vertical) : all;
+
+    // Experience types are only in the detail: read them for the experience screens.
+    if (vertical === "experience") scoped = await enrichCapped(scoped);
+
+    const facets: Record<string, Record<string, number>> = {
+      status: statusFacet(scoped),
+      vertical: {
+        all: all.length,
+        home: all.filter((l) => l.category === "home").length,
+        hotel: all.filter((l) => l.category === "hotel").length,
+        experience: all.filter((l) => l.category === "experience").length,
+        vehicle: all.filter((l) => l.category === "vehicle").length,
+        trip: all.filter((l) => l.category === "trip").length,
+      },
+      experienceType: countBy(scoped, (l) => l.experienceType),
+      tripType: countBy(scoped, (l) => l.tripType),
+    };
+
+    let filtered = applyRowFilters([...scoped, ...deleted], params);
+    if (needsDetail(params)) {
+      if (filtered.length > DETAIL_CAP) {
+        console.warn(`[listings] detail filters applied to the first ${DETAIL_CAP} of ${filtered.length} rows`);
+      }
+      filtered = applyDetailFilters(await enrich(filtered.slice(0, DETAIL_CAP)), params);
+    }
+    filtered = sortRows(filtered, params);
+
+    const total = filtered.length;
+    const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);
+    // Rows still light (no filter needed the detail): read the detail of this page only.
+    const rows = needsDetail(params) || vertical === "experience" ? pageRows : await enrichCapped(pageRows);
+    return { rows, total, page, pageSize, totalPages: Math.ceil(total / pageSize) || 1, facets };
+  } catch (error) {
+    logReadError("listListings", error);
+    return emptyResult(page, pageSize);
+  }
+}
+
 export async function getListingById(id: string): Promise<Listing | null> {
-  await delay(150);
-  const listing = store.listings.find((l) => l.id === id);
-  return listing ? { ...listing } : null;
+  try {
+    const listing = await fetchListingDetail(id);
+    if (listing) return listing;
+    const trip = await apiOrNull<ApiAdminTrip>(`/admin/trips/${encodeURIComponent(id)}`);
+    return trip ? toListingFromTrip(trip) : null;
+  } catch (error) {
+    logReadError(`getListingById ${id}`, error);
+    return null;
+  }
 }
 
 /** Full filtered listing list (all pages) as CSV; audited. */
@@ -252,158 +333,114 @@ export async function exportListings(params: ListingFilterParams, actor: AdminAc
   return { filename: `darna_listings_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
 }
 
-function permissionForListingTarget(status: CanonicalListingStatus): Permission {
-  switch (status) {
-    case "rejected":
-      return "listings.reject";
-    case "suspended":
-    case "archived":
-      return "listings.suspend";
-    case "deleted":
-      return "listings.delete";
-    default:
-      return "listings.approve";
-  }
-}
+// ------------------------------------------------------------------ writes
+
+const listingPath = (id: string) => `/admin/listings/${encodeURIComponent(id)}`;
+const tripPath = (id: string) => `/admin/trips/${encodeURIComponent(id)}`;
+
+const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404;
 
 /**
- * Single guarded entry point for listing status changes: permission for the
- * target status, mandatory reason (reject / suspend / request changes), and
- * the allowed-transition map. Soft delete remembers the previous status.
+ * Runs a listing write; an id the listing endpoints do not know is tried as a
+ * trip (the screens show trips as listings of the "trip" vertical).
  */
-async function transitionListing(
+async function onListingOrTrip(
   id: string,
-  target: ListingStatus,
-  actor: AdminActor,
-  opts: { reason?: string; auditAction: string; notePrefix?: string }
+  listingCall: () => Promise<ApiAdminListing | null>,
+  tripCall: () => Promise<ApiAdminTrip>,
 ): Promise<Listing> {
-  const to = normalizeListingStatus(target);
-  assertCan(actor.role, permissionForListingTarget(to));
-  if (LISTING_STATUSES_REQUIRING_REASON.includes(to) && !isValidReason(opts.reason)) {
-    throw new ValidationError(`A reason is required to move a listing to ${to}`);
-  }
-  await delay(200);
-
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new DomainError("Listing not found");
-  const prev = { ...store.listings[idx] };
-  if (!canTransitionListing(prev.status, to)) {
-    throw new DomainError(`Cannot move a listing from ${prev.status} to ${to}`);
-  }
-
-  const next: Listing = {
-    ...prev,
-    status: to,
-    statusBeforeDelete: to === "deleted" ? prev.status : prev.statusBeforeDelete,
-    updatedAt: new Date().toISOString(),
-    adminNotes: opts.reason?.trim()
-      ? [...prev.adminNotes, `${opts.notePrefix ?? to}: ${opts.reason.trim()}`]
-      : prev.adminNotes,
-  };
-  store.listings[idx] = next;
-
-  await logAudit(
-    actor,
-    opts.auditAction,
-    "listing",
-    id,
-    `Listing "${prev.title}": ${prev.status} -> ${to}${opts.reason?.trim() ? ` (${opts.reason.trim()})` : ""}`,
-    { status: prev.status },
-    { status: to }
-  );
-
-  return { ...next };
-}
-
-export async function approveListing(id: string, actor: AdminActor): Promise<Listing> {
-  return transitionListing(id, "approved", actor, { auditAction: "LISTING_APPROVE" });
-}
-
-export async function rejectListing(id: string, reason: string, actor: AdminActor): Promise<Listing> {
-  return transitionListing(id, "rejected", actor, { reason, auditAction: "LISTING_REJECT", notePrefix: "Rejected" });
-}
-
-export async function requestChangesListing(id: string, notes: string, actor: AdminActor): Promise<Listing> {
-  return transitionListing(id, "changes_requested", actor, {
-    reason: notes,
-    auditAction: "LISTING_REQUEST_CHANGES",
-    notePrefix: "Changes requested",
+  return write(async () => {
+    try {
+      const raw = await listingCall();
+      if (raw) return toListing(raw);
+      const reread = await api<ApiAdminListing>(listingPath(id));
+      return toListing(reread);
+    } catch (error) {
+      if (!isNotFound(error)) throw error;
+      return toListingFromTrip(await tripCall());
+    }
   });
 }
 
-export async function suspendListing(id: string, reason: string, actor: AdminActor): Promise<Listing> {
-  return transitionListing(id, "suspended", actor, { reason, auditAction: "LISTING_SUSPEND", notePrefix: "Suspended" });
+function tripStatus(id: string, status: string, reason?: string): Promise<ApiAdminTrip> {
+  return api<ApiAdminTrip>(`${tripPath(id)}/status`, { method: "POST", body: { status, reason: reason || undefined } });
 }
 
-export async function deleteListing(id: string, actor: AdminActor): Promise<Listing> {
-  return transitionListing(id, "deleted", actor, { auditAction: "LISTING_DELETE" });
+function listingAction(id: string, action: string, reason?: string): Promise<ApiAdminListing> {
+  return api<ApiAdminListing>(`${listingPath(id)}/${action}`, { method: "POST", body: reason ? { reason } : {} });
 }
 
-/** deleted → the status the listing had before deletion (pending_review if unknown). */
-export async function restoreListing(id: string, actor: AdminActor): Promise<Listing> {
-  assertCan(actor.role, "listings.delete");
-  await delay(200);
+export async function approveListing(id: string, _actor: AdminActor): Promise<Listing> {
+  return onListingOrTrip(id, () => listingAction(id, "approve"), () => tripStatus(id, "published"));
+}
 
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new DomainError("Listing not found");
-  const prev = { ...store.listings[idx] };
-  if (prev.status !== "deleted") throw new DomainError(`Only deleted listings can be restored (status ${prev.status})`);
+export async function rejectListing(id: string, reason: string, _actor: AdminActor): Promise<Listing> {
+  return onListingOrTrip(id, () => listingAction(id, "reject", reason), () => tripStatus(id, "rejected", reason));
+}
 
-  const restored: ListingStatus =
-    prev.statusBeforeDelete && prev.statusBeforeDelete !== "deleted" ? prev.statusBeforeDelete : "pending_review";
-  const next: Listing = { ...prev, status: restored, statusBeforeDelete: undefined, updatedAt: new Date().toISOString() };
-  store.listings[idx] = next;
-
-  await logAudit(
-    actor,
-    "LISTING_RESTORE",
-    "listing",
+export async function requestChangesListing(id: string, notes: string, _actor: AdminActor): Promise<Listing> {
+  return onListingOrTrip(
     id,
-    `Restored listing "${prev.title}" to ${restored}`,
-    { status: prev.status },
-    { status: restored }
+    () => listingAction(id, "request-changes", notes),
+    () => tripStatus(id, "changes_requested", notes),
   );
-
-  return { ...next };
 }
 
-export async function featureListing(
-  id: string,
-  isFeatured: boolean,
-  actor: AdminActor
-): Promise<Listing> {
-  assertCan(actor.role, "listings.feature");
-  await delay(200);
+export async function suspendListing(id: string, reason: string, _actor: AdminActor): Promise<Listing> {
+  return onListingOrTrip(id, () => listingAction(id, "suspend", reason), () => tripStatus(id, "suspended", reason));
+}
 
-  const idx = store.listings.findIndex((l) => l.id === id);
-  if (idx === -1) throw new DomainError("Listing not found");
-
-  const prev = { ...store.listings[idx] };
-  if (isFeatured && normalizeListingStatus(prev.status) !== "approved") {
-    throw new DomainError("Only approved listings can be featured");
-  }
-  store.listings[idx] = { ...prev, isFeatured };
-
-  await logAudit(
-    actor,
-    isFeatured ? "LISTING_FEATURE" : "LISTING_UNFEATURE",
-    "listing",
+export async function deleteListing(id: string, _actor: AdminActor): Promise<Listing> {
+  return onListingOrTrip(
     id,
-    `${isFeatured ? "Featured" : "Unfeatured"} listing: ${prev.title}`,
-    { isFeatured: prev.isFeatured },
-    { isFeatured }
+    async () => {
+      await api<null>(listingPath(id), { method: "DELETE" });
+      return null; // 204: read the listing back
+    },
+    () => tripStatus(id, "deleted"),
   );
-
-  return { ...store.listings[idx] };
 }
 
-/** Generic status change used by the vertical list pages (same guards as above). */
+/** deleted -> the status the listing had before deletion (backend rule). */
+export async function restoreListing(id: string, _actor: AdminActor): Promise<Listing> {
+  return onListingOrTrip(
+    id,
+    () => listingAction(id, "restore"),
+    async () => {
+      const trip = await api<ApiAdminTrip>(tripPath(id));
+      if (!trip.deleted_at) throw new DomainError("Only deleted trips can be restored");
+      return tripStatus(id, trip.status_before_delete || "draft");
+    },
+  );
+}
+
+export async function featureListing(id: string, isFeatured: boolean, _actor: AdminActor): Promise<Listing> {
+  return write(async () => {
+    try {
+      return toListing(
+        await api<ApiAdminListing>(`${listingPath(id)}/featured`, { method: "PUT", body: { is_featured: isFeatured } }),
+      );
+    } catch (error) {
+      if (isNotFound(error)) throw new DomainError("Trips cannot be featured");
+      throw error;
+    }
+  });
+}
+
+/** Generic status change used by the vertical list pages (the backend checks the move and the reason). */
 export async function updateListingStatus(
   id: string,
   status: ListingStatus,
   actor: AdminActor,
   reason?: string
 ): Promise<Listing> {
-  if (normalizeListingStatus(status) === "deleted") return deleteListing(id, actor);
-  return transitionListing(id, status, actor, { reason, auditAction: "LISTING_STATUS_CHANGE" });
+  const target = normalizeListingStatus(status);
+  if (target === "deleted") return deleteListing(id, actor);
+  const apiStatus = toApiStatus(target);
+  const body = { status: apiStatus, reason: reason?.trim() || undefined };
+  return onListingOrTrip(
+    id,
+    () => api<ApiAdminListing>(`${listingPath(id)}/status`, { method: "POST", body }),
+    () => tripStatus(id, apiStatus, body.reason),
+  );
 }

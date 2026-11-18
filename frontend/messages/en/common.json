@@ -61,5 +61,7 @@
   "monthPicker": "Choose month",
   "yearPicker": "Choose year",
   "dateRange": "{start} – {end}",
-  "listSeparator": "{a} · {b}"
+  "listSeparator": "{a} · {b}",
+  "dataLoadFailedTitle": "Some information could not be loaded",
+  "dataLoadFailedBody": "The service is not answering right now, so this list may be incomplete. Please try again in a moment."
 }

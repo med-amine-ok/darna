@@ -16,9 +16,10 @@ export const SCOPES = {
   host: [
     "host", "hostFlow", "hostWallet", "hostToday", "hostCalendar", "hostBookings",
     "hostListings", "hostSettings", "hostTrips", "hostNav", "agencyRegistration",
-    "agencyTeam", "agencySettings", "messages", "reservations", "profile", "settings",
+    "agencyTeam", "agencySettings", "messages", "reservations", "profile", "settings", "notifications",
   ],
-  settings: ["settings"],
+  // The settings page embeds the notification preferences card.
+  settings: ["settings", "notifications"],
   profile: ["profile"],
   help: ["help"],
   messages: ["messages"],

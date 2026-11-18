@@ -29,6 +29,7 @@ import { dateFnsLocale } from "@/lib/i18n/date-locale";
 import { dur, ease } from "@/lib/motion";
 import {
   Badge,
+  Banner,
   Button,
   Card,
   Dialog,
@@ -61,8 +62,10 @@ interface HostCalendarClientProps {
   hostListings: Listing[];
   reservations: Reservation[];
   currentUser?: User | null;
-  /** Persisted blocked dates / per-date prices for the host's listings. */
+  /** Persisted blocked dates / per-date prices for the host's listings (GET /host/calendar). */
   overrides: DateAvailabilityOverride[];
+  /** The bookings could not be loaded (show an error, not an empty calendar). */
+  loadFailed?: boolean;
 }
 
 /** Statuses that occupy a night on the host calendar. */
@@ -85,12 +88,31 @@ const HATCH: React.CSSProperties = {
     "repeating-linear-gradient(135deg, rgba(46,58,47,0.07) 0px, rgba(46,58,47,0.07) 2px, transparent 2px, transparent 7px)",
 };
 
-function overrideMaps(overrides: DateAvailabilityOverride[]) {
+/**
+ * Maps keyed "listingId_YYYY-MM-DD". Homes and vehicles have whole-listing
+ * rows. Hotels and hostels have one row per room type: with a room type
+ * selected its own nights are shown; with "all" a night is blocked only when
+ * every room type is closed, and special prices are shown per room type only.
+ */
+function overrideMaps(overrides: DateAvailabilityOverride[], roomTypeId: string, roomTypeCount: Record<string, number>) {
   const blocked: Record<string, boolean> = {};
   const prices: Record<string, number> = {};
+  const closedRooms: Record<string, number> = {};
   for (const o of overrides) {
-    if (o.isBlocked) blocked[`${o.listingId}_${o.date}`] = true;
-    if (typeof o.customPrice === "number") prices[`${o.listingId}_${o.date}`] = o.customPrice;
+    const key = `${o.listingId}_${o.date}`;
+    if (!o.roomTypeId) {
+      if (o.isBlocked) blocked[key] = true;
+      if (typeof o.customPrice === "number") prices[key] = o.customPrice;
+    } else if (roomTypeId === "all") {
+      if (o.isBlocked) closedRooms[key] = (closedRooms[key] || 0) + 1;
+    } else if (o.roomTypeId === roomTypeId) {
+      if (o.isBlocked) blocked[key] = true;
+      if (typeof o.customPrice === "number") prices[key] = o.customPrice;
+    }
+  }
+  for (const [key, count] of Object.entries(closedRooms)) {
+    const listingId = key.slice(0, key.lastIndexOf("_"));
+    if (count >= (roomTypeCount[listingId] || Infinity)) blocked[key] = true;
   }
   return { blocked, prices };
 }
@@ -112,7 +134,7 @@ const LISTING_COLORS = [
   { dot: "bg-tertiary-600", pill: "bg-tertiary-200 text-tertiary-900" },
 ];
 
-export default function HostCalendarClient({ hostListings, reservations, overrides }: HostCalendarClientProps) {
+export default function HostCalendarClient({ hostListings, reservations, overrides, loadFailed = false }: HostCalendarClientProps) {
   const t = useTranslations("hostCalendar");
   const tHost = useTranslations("host.calendar");
   const tCommon = useTranslations("common");
@@ -138,23 +160,23 @@ export default function HostCalendarClient({ hostListings, reservations, overrid
   const [selectedListingId, setSelectedListingId] = useState<string>("all");
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>("all");
 
-  // Persisted overrides, keyed "listingId_YYYY-MM-DD" (saved through server actions).
-  const initialMaps = useMemo(() => overrideMaps(overrides), [overrides]);
-  const [blockedDates, setBlockedDates] = useState<Record<string, boolean>>(initialMaps.blocked);
-  const [priceOverrides, setPriceOverrides] = useState<Record<string, number>>(initialMaps.prices);
+  // Persisted calendar rows from the API; the maps below are derived for the selected room type.
+  const [calendarRows, setCalendarRows] = useState<DateAvailabilityOverride[]>(overrides);
+  const roomTypeCount = useMemo(
+    () => Object.fromEntries(safeListings.map((l) => [l.id, l.roomTypes?.length ?? 0])),
+    [safeListings]
+  );
+  const { blocked: blockedDates, prices: priceOverrides } = useMemo(
+    () => overrideMaps(calendarRows, selectedRoomTypeId, roomTypeCount),
+    [calendarRows, selectedRoomTypeId, roomTypeCount]
+  );
   const [isSaving, setIsSaving] = useState(false);
 
-  // Replace one listing's entries with the server's current state.
+  // Replace one listing's rows with the server's current state.
   const applyServerOverrides = (listingId: string, rows: DateAvailabilityOverride[]) => {
-    const maps = overrideMaps(rows);
-    const strip = <T,>(prev: Record<string, T>, next: Record<string, T>) => {
-      const out: Record<string, T> = {};
-      for (const [k, v] of Object.entries(prev)) if (!k.startsWith(`${listingId}_`)) out[k] = v;
-      return { ...out, ...next };
-    };
-    setBlockedDates((prev) => strip(prev, maps.blocked));
-    setPriceOverrides((prev) => strip(prev, maps.prices));
+    setCalendarRows((prev) => [...prev.filter((o) => o.listingId !== listingId), ...rows]);
   };
+  const roomTypeParam = selectedRoomTypeId !== "all" ? selectedRoomTypeId : undefined;
 
   // Single day dialog
   const [activeDay, setActiveDay] = useState<Date | null>(null);
@@ -307,7 +329,7 @@ export default function HostCalendarClient({ hostListings, reservations, overrid
     if (!targetListingId || isSaving || dates.length === 0) return false;
     setIsSaving(true);
     try {
-      const result = await setListingDatesBlockedAction({ listingId: targetListingId, dates, blocked });
+      const result = await setListingDatesBlockedAction({ listingId: targetListingId, roomTypeId: roomTypeParam, dates, blocked });
       if (!result.ok) {
         toast.error(errorText(result));
         return false;
@@ -347,7 +369,7 @@ export default function HostCalendarClient({ hostListings, reservations, overrid
     if (!targetListingId || isSaving || dates.length === 0) return false;
     setIsSaving(true);
     try {
-      const result = await setListingDatePriceAction({ listingId: targetListingId, dates, price });
+      const result = await setListingDatePriceAction({ listingId: targetListingId, roomTypeId: roomTypeParam, dates, price });
       if (!result.ok) {
         toast.error(errorText(result));
         return false;
@@ -1053,6 +1075,11 @@ export default function HostCalendarClient({ hostListings, reservations, overrid
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      {loadFailed && (
+        <Banner tone="danger" title={tCommon("dataLoadFailedTitle")} className="mb-6">
+          {tCommon("dataLoadFailedBody")}
+        </Banner>
+      )}
       {/* Header */}
       <header className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 enter-up">

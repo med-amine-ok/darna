@@ -15,12 +15,14 @@ export const ORG_PROFILE_PATH: Record<PublicOrganization["businessCategory"], st
   hostel: "/hostels",
 };
 
-export function orgProfileHref(org: Pick<PublicOrganization, "id" | "businessCategory">): string {
-  return `${ORG_PROFILE_PATH[org.businessCategory]}/${encodeURIComponent(org.id)}`;
+/** Profile link of an organisation: its public slug when known, else its id (the API accepts both). */
+export function orgProfileHref(org: Pick<PublicOrganization, "id" | "businessCategory"> & { slug?: string }): string {
+  return `${ORG_PROFILE_PATH[org.businessCategory]}/${encodeURIComponent(org.slug || org.id)}`;
 }
 
-export function userProfileHref(userId: string): string {
-  return `/users/${encodeURIComponent(userId)}`;
+/** Profile link of a person: their handle when known (/users/karim-m), else their id (both work). */
+export function userProfileHref(userIdOrHandle: string, handle?: string | null): string {
+  return `/users/${encodeURIComponent(handle || userIdOrHandle)}`;
 }
 
 /** Who a listing is offered by, as shown on listing pages (built server-side). */

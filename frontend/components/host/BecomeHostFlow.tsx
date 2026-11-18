@@ -14,7 +14,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/navigation";
 import {
   completeHostOnboardingAction,
-  HostOnboardingInput,
+  discardHostDraftAction,
+  saveHostDraftAction,
+  type HostOnboardingInput,
 } from "@/app/actions/host";
 import { createMyListingAction } from "@/app/actions/listings";
 import type { ActionResult } from "@/lib/action-result";
@@ -26,17 +28,12 @@ import {
   type HostOffer,
 } from "@/lib/catalog-types";
 import { allowedOffersFor } from "@/lib/host-types";
-import {
-  clearHostDraft,
-  readHostDraft,
-  writeHostDraft,
-} from "@/lib/client/user-storage";
 import { useLoginModal } from "@/hook/useLoginModal";
 import Counter from "@/components/inputs/Counter";
 import { toast } from "react-toastify";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
 import { getOnboardingSteps } from "@/lib/onboarding-config";
-import { OnboardingStepConfig } from "@/types";
+import type { HostType, OnboardingStepConfig } from "@/types";
 import DynamicStepFields from "./DynamicStepFields";
 import {
   BrandAlertCircleIcon,
@@ -103,8 +100,8 @@ type WorkspaceType = "individual" | "agency" | "hotel" | "hostel";
 interface BecomeHostFlowProps {
   initialStep?: string;
   initialHostType?: WorkspaceType | null;
-  /** Session user id (from the server page), used only to key the local draft. */
-  currentUserId: string;
+  /** Session user id (from the server page). Drafts now live on the server; kept for callers. */
+  currentUserId?: string;
   /**
    * "onboarding" (default): /become-a-host, becoming a host.
    * "create": /host/listings/new, an existing host adds an offer. Only the
@@ -116,6 +113,14 @@ interface BecomeHostFlowProps {
   workspaceType?: WorkspaceType;
   /** Create mode: preselected offer (e.g. ?offer=experience). */
   initialOffer?: string | null;
+  /** Published flows from the API (GET /onboarding-flows); a missing type uses the local copy. */
+  flowSteps?: Partial<Record<HostType, OnboardingStepConfig[]>>;
+  /** The draft in progress saved on the server (PUT /host/onboarding/drafts), restored on open. */
+  initialDraft?: {
+    hostType: HostType;
+    stepIndex: number;
+    answers: Record<string, unknown>;
+  } | null;
 }
 
 /** Default listing type (category value) when a vertical is picked. */
@@ -161,10 +166,11 @@ function movePhoto(list: string[], from: number, to: number): string[] {
 export default function BecomeHostFlow({
   initialStep = "0",
   initialHostType = null,
-  currentUserId,
   mode = "onboarding",
   workspaceType = "individual",
   initialOffer = null,
+  flowSteps,
+  initialDraft = null,
 }: BecomeHostFlowProps) {
   const isCreate = mode === "create";
   // Create mode: what this workspace may publish. Onboarding: individuals only get homes and vehicles.
@@ -238,8 +244,8 @@ export default function BecomeHostFlow({
           : isAgencyFlow
             ? "agency"
             : "individual");
-    setConfiguredSteps(getOnboardingSteps(currentHostType));
-  }, [hostType, activeFlow, isAgencyFlow, isHotelFlow, isHostelFlow, isCreate]);
+    setConfiguredSteps(getOnboardingSteps(currentHostType, flowSteps?.[currentHostType]));
+  }, [hostType, activeFlow, isAgencyFlow, isHotelFlow, isHostelFlow, isCreate, flowSteps]);
 
   const renderDynamicFieldsForStep = (stepId: string) => {
     const stepCfg = configuredSteps.find((s) => s.id === stepId);
@@ -421,68 +427,152 @@ export default function BecomeHostFlow({
     mainRef.current?.querySelector<HTMLElement>("[data-step-heading]")?.focus();
   }, [activeFlow, currentStep, agencyStep, hotelStep, hostelStep]);
 
-  // Load draft from localStorage on mount
+  // Restore the draft saved on the server (answers are keyed by flow field id = the state names below).
   useEffect(() => {
-    // Create mode starts fresh: the saved draft belongs to the onboarding flow.
-    if (isCreate) return;
-    if (typeof window !== "undefined") {
-      const draft = readHostDraft(currentUserId) as Record<string, any> | null;
-      if (draft) {
-        try {
-          if (draft.title) setTitle(draft.title);
-          if (draft.description) setDescription(draft.description);
-          if (draft.price) setPrice(draft.price);
-          if (draft.wilaya) setWilaya(draft.wilaya);
-          if (draft.city) setCity(draft.city);
-          if (draft.address) setAddress(draft.address);
-          if (draft.photos && draft.photos.length > 0) setPhotos(draft.photos);
-          // Individuals publish homes and vehicles only (older drafts could hold an experience).
-          if (draft.vertical === "home" || draft.vertical === "vehicle") {
-            setVertical(draft.vertical);
-            if (draft.category) setCategory(draft.category);
-          }
-          if (draft.placement) setPlacement(draft.placement);
-          if (draft.guestCount) setGuestCount(draft.guestCount);
-          if (draft.bedroomCount) setBedroomCount(draft.bedroomCount);
-          if (draft.bedsCount) setBedsCount(draft.bedsCount);
-          if (draft.bathroomCount) setBathroomCount(draft.bathroomCount);
-          if (draft.selectedAmenities)
-            setSelectedAmenities(draft.selectedAmenities);
-          if (draft.latlng) setLatlng(draft.latlng);
-          if (typeof draft.instantBook === "boolean")
-            setInstantBook(draft.instantBook);
-          if (draft.cancellationPolicy)
-            setCancellationPolicy(draft.cancellationPolicy);
-          // Agency fields
-          if (draft.businessName) setBusinessName(draft.businessName);
-          if (draft.businessType) setBusinessType(draft.businessType);
-          if (draft.regNumber) setRegNumber(draft.regNumber);
-          if (draft.businessEmail) setBusinessEmail(draft.businessEmail);
-          if (draft.businessPhone) setBusinessPhone(draft.businessPhone);
-          if (draft.headquarters) setHeadquarters(draft.headquarters);
-          if (draft.teamSize) setTeamSize(draft.teamSize);
-          if (draft.teamInvites) setTeamInvites(draft.teamInvites);
-
-          // Restore flow state if not overridden by explicit URL step
-          if (initialStep === "0" || !initialStep) {
-            if (draft.hostType) setHostType(draft.hostType);
-            if (draft.activeFlow) {
-              setActiveFlow(draft.activeFlow);
-            } else if (draft.isAgencyFlow) {
-              setActiveFlow("agency");
-            }
-            if (draft.agencyStep) setAgencyStep(draft.agencyStep);
-            if (draft.hotelStep) setHotelStep(draft.hotelStep);
-            if (draft.hostelStep) setHostelStep(draft.hostelStep);
-            if (draft.currentStep && draft.currentStep > 0)
-              setCurrentStep(draft.currentStep);
-            if (draft.customFieldsData)
-              setCustomFieldsData(draft.customFieldsData);
-          }
-        } catch {}
+    // Create mode starts fresh: drafts belong to the onboarding flow.
+    if (isCreate || !initialDraft) return;
+    const a = initialDraft.answers as Record<string, any>;
+    const str = (v: unknown) => (typeof v === "string" ? v : "");
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : null);
+    try {
+      if (str(a.title)) setTitle(a.title);
+      if (str(a.description)) setDescription(a.description);
+      if (num(a.price)) setPrice(a.price);
+      if (str(a.wilaya)) setWilaya(a.wilaya);
+      if (str(a.city)) setCity(a.city);
+      if (str(a.address)) setAddress(a.address);
+      if (list(a.photos)?.length) setPhotos(list(a.photos)!);
+      // Individuals publish homes and vehicles only.
+      if (a.vertical === "home" || a.vertical === "vehicle") {
+        setVertical(a.vertical);
+        if (str(a.category)) setCategory(a.category);
       }
-    }
-  }, [initialStep, currentUserId, isCreate]);
+      if (str(a.placement)) setPlacement(a.placement);
+      if (num(a.guestCount)) setGuestCount(a.guestCount);
+      if (num(a.bedroomCount)) setBedroomCount(a.bedroomCount);
+      if (num(a.bedsCount)) setBedsCount(a.bedsCount);
+      if (num(a.bathroomCount)) setBathroomCount(a.bathroomCount);
+      if (list(a.selectedAmenities)) setSelectedAmenities(list(a.selectedAmenities)!);
+      if (a.instantBook === "instant" || a.instantBook === "request") setInstantBook(a.instantBook === "instant");
+      if (a.cancellationPolicy === "flexible" || a.cancellationPolicy === "moderate" || a.cancellationPolicy === "strict") {
+        setCancellationPolicy(a.cancellationPolicy);
+      }
+      // Agency
+      if (str(a.businessName)) setBusinessName(a.businessName);
+      if (str(a.businessType)) setBusinessType(a.businessType);
+      if (str(a.regNumber)) setRegNumber(a.regNumber);
+      if (str(a.businessEmail)) setBusinessEmail(a.businessEmail);
+      if (str(a.businessPhone)) setBusinessPhone(a.businessPhone);
+      if (str(a.headquarters)) setHeadquarters(a.headquarters);
+      if (a.teamSize === "1" || a.teamSize === "2-10" || a.teamSize === "11-50" || a.teamSize === "50+") setTeamSize(a.teamSize);
+      // Hotel
+      if (str(a.hotelName)) setHotelName(a.hotelName);
+      if (Number(a.hotelStarRating) >= 1) setHotelStarRating(Number(a.hotelStarRating));
+      if (str(a.hotelCity)) setHotelCity(a.hotelCity);
+      if (str(a.hotelAddress)) setHotelAddress(a.hotelAddress);
+      if (str(a.hotelRegNumber)) setHotelRegNumber(a.hotelRegNumber);
+      if (str(a.hotelTaxId)) setHotelTaxId(a.hotelTaxId);
+      if (str(a.checkInTime)) setCheckInTime(a.checkInTime);
+      if (str(a.checkOutTime)) setCheckOutTime(a.checkOutTime);
+      if (list(a.hotelAmenities)) setHotelAmenities(list(a.hotelAmenities)!);
+      if (a.hotelBookingMode === "instant" || a.hotelBookingMode === "request") setHotelBookingMode(a.hotelBookingMode);
+      // Hostel
+      if (str(a.hostelName)) setHostelName(a.hostelName);
+      if (str(a.hostelCity)) setHostelCity(a.hostelCity);
+      if (str(a.hostelAddress)) setHostelAddress(a.hostelAddress);
+      if (str(a.hostelRegNumber)) setHostelRegNumber(a.hostelRegNumber);
+      if (str(a.curfewPolicy)) setCurfewPolicy(a.curfewPolicy);
+      if (str(a.agePolicy)) setAgePolicy(a.agePolicy);
+      if (list(a.hostelFacilities)) setHostelFacilities(list(a.hostelFacilities)!);
+      if (a.hostelBookingMode === "instant" || a.hostelBookingMode === "request") setHostelBookingMode(a.hostelBookingMode);
+      // Questions added by BLADUS staff (rendered by DynamicStepFields).
+      setCustomFieldsData(a);
+
+      // Restore the position unless the URL asked for a specific step.
+      if (initialStep === "0" || !initialStep) {
+        const step = initialDraft.stepIndex + 1;
+        setHostType(initialDraft.hostType);
+        if (initialDraft.hostType === "individual") {
+          setActiveFlow("individual");
+          setCurrentStep(Math.max(1, step));
+        } else {
+          setActiveFlow(initialDraft.hostType);
+          if (initialDraft.hostType === "agency") setAgencyStep(Math.max(1, step));
+          if (initialDraft.hostType === "hotel") setHotelStep(Math.max(1, step));
+          if (initialDraft.hostType === "hostel") setHostelStep(Math.max(1, step));
+        }
+      }
+    } catch {}
+    // Restore once, on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** The host type of the flow on screen (the draft is kept per host type). */
+  const flowHostType: HostType = isAgencyFlow ? "agency" : isHotelFlow ? "hotel" : isHostelFlow ? "hostel" : "individual";
+
+  /**
+   * Every answer on screen, keyed by the field ids of the published flows
+   * (the server keeps only the ids of this host type's flow and checks the values).
+   */
+  const collectAnswers = (): Record<string, unknown> => ({
+    ...customFieldsData,
+    vertical,
+    category,
+    placement,
+    wilaya,
+    city,
+    address,
+    guestCount,
+    bedroomCount,
+    bedsCount,
+    bathroomCount,
+    selectedAmenities,
+    photos,
+    title,
+    description,
+    instantBook: instantBook ? "instant" : "request",
+    price,
+    cancellationPolicy,
+    businessName,
+    businessType,
+    regNumber,
+    businessEmail,
+    businessPhone,
+    headquarters,
+    teamSize,
+    // Agencies confirm each booking unless a staff-added question says otherwise.
+    agencyBookingMode: customFieldsData.agencyBookingMode ?? "request",
+    hotelName,
+    hotelStarRating: String(hotelStarRating),
+    hotelTotalRooms,
+    hotelCity,
+    hotelAddress,
+    hotelRegNumber,
+    hotelTaxId,
+    checkInTime,
+    checkOutTime,
+    hotelAmenities,
+    hotelBookingMode,
+    hostelName,
+    hostelDormBeds,
+    hostelPrivateRooms,
+    hostelCity,
+    hostelAddress,
+    hostelRegNumber,
+    curfewPolicy,
+    agePolicy,
+    hostelFacilities,
+    hostelBookingMode,
+  });
+
+  /** Position of the screen in the flow (0-based), for the server draft. */
+  const flowStepIndex = () => {
+    if (isAgencyFlow) return agencyStep - 1;
+    if (isHotelFlow) return hotelStep - 1;
+    if (isHostelFlow) return hostelStep - 1;
+    return Math.max(0, currentStep - 1);
+  };
 
   const exitHref = isCreate ? "/host/listings" : "/";
   const handleHeaderExitClick = () => {
@@ -499,89 +589,36 @@ export default function BecomeHostFlow({
     router.push(exitHref);
   };
 
-  const handleExecuteSaveAndExit = () => {
-    if (typeof window !== "undefined") {
-      const draft = {
-        hostType,
-        activeFlow,
-        isAgencyFlow,
-        isHotelFlow,
-        isHostelFlow,
-        currentStep: activeFlow !== "individual" ? 0 : currentStep,
-        agencyStep,
-        hotelStep,
-        hostelStep,
-        category,
-        vertical,
-        placement,
-        wilaya,
-        city,
-        address,
-        latlng,
-        guestCount,
-        bedroomCount,
-        bedsCount,
-        bathroomCount,
-        selectedAmenities,
-        photos,
-        title,
-        description,
-        price,
-        instantBook,
-        cancellationPolicy,
-        businessName,
-        businessType,
-        regNumber,
-        businessEmail,
-        businessPhone,
-        headquarters,
-        teamSize,
-        teamInvites,
-        hotelName,
-        hotelStarRating,
-        hotelTotalRooms,
-        checkInTime,
-        checkOutTime,
-        hotelAmenities,
-        hotelRegNumber,
-        hotelTaxId,
-        hotelAddress,
-        hotelCity,
-        hotelPhone,
-        hotelEmail,
-        hotelBookingMode,
-        hotelTeamInvites,
-        hostelName,
-        hostelCity,
-        hostelAddress,
-        hostelDormBeds,
-        hostelPrivateRooms,
-        hostelTotalBeds,
-        hostelFacilities,
-        curfewPolicy,
-        agePolicy,
-        hostelRegNumber,
-        hostelTaxId,
-        hostelEmail,
-        hostelPhone,
-        hostelBookingMode,
-        hostelTeamInvites,
-        customFieldsData,
-      };
-      writeHostDraft(currentUserId, draft);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const handleExecuteSaveAndExit = async () => {
+    if (isSavingDraft) return;
+    setIsSavingDraft(true);
+    try {
+      const result = await saveHostDraftAction(flowHostType, flowStepIndex(), collectAnswers());
+      if (!result.ok) {
+        if (result.code === "UNAUTHENTICATED") openLoginModal();
+        toast.error(errorText(result));
+        return;
+      }
       toast.info(t("draftSaved"));
       setIsExitDialogOpen(false);
       router.push("/");
+    } catch {
+      toast.error(t("errors.generic"));
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
-  const handleExecuteDiscard = () => {
-    if (typeof window !== "undefined") {
-      clearHostDraft(currentUserId);
-      toast.info(t("discarded"));
-      setIsExitDialogOpen(false);
-      router.push("/");
+  const handleExecuteDiscard = async () => {
+    try {
+      await discardHostDraftAction(flowHostType);
+    } catch {
+      /* nothing saved yet is fine */
     }
+    toast.info(t("discarded"));
+    setIsExitDialogOpen(false);
+    router.push("/");
   };
 
   /** Adds a photo URL to a gallery, clearing the URL input. */
@@ -637,7 +674,6 @@ export default function BecomeHostFlow({
         return false;
       }
 
-      if (!isCreate) clearHostDraft(currentUserId);
       try {
         localStorage.setItem("darna_mode", "host");
       } catch {}
@@ -668,7 +704,7 @@ export default function BecomeHostFlow({
     submitWith(() => createMyListingAction(listing), t("create.published"));
 
   /** Hotel/hostel: registers the organization (onboarding) or only adds the property (create mode). */
-  const submitOrgOrProperty = (input: HostOnboardingInput, successMessage: string) =>
+  const submitOrgOrProperty = (input: HostOnboardingInput & { property?: unknown }, successMessage: string) =>
     isCreate && "property" in input && input.property && typeof input.property === "object"
       ? submitListing(input.property as Record<string, unknown>)
       : submitOnboarding(input, successMessage);
@@ -771,7 +807,15 @@ export default function BecomeHostFlow({
       await submitListing(listing);
       return;
     }
-    await submitOnboarding({ hostType: "individual", listing }, t("review.published"));
+    // Become a host first (the server submits the onboarding draft), then publish the
+    // first listing in the new workspace (a separate request, so it sees that workspace).
+    await submitWith(async () => {
+      const onboarded = await completeHostOnboardingAction({ hostType: "individual", answers: collectAnswers() });
+      if (!onboarded.ok) return onboarded;
+      const created = await createMyListingAction(listing);
+      if (!created.ok) toast.warn(t("errors.listingAfterOnboarding", { reason: errorText(created) }));
+      return onboarded;
+    }, t("review.published"));
   };
 
   const handleRegisterAgency = async () => {
@@ -790,16 +834,8 @@ export default function BecomeHostFlow({
     const ok = await submitOnboarding(
       {
         hostType: "agency",
-        organization: {
-          name: businessName.trim(),
-          businessRegistrationNumber: regNumber.trim(),
-          businessType: businessType || "Licensed Tourism Agency",
-          businessEmail: businessEmail.trim(),
-          businessPhone: businessPhone.trim(),
-          address: headquarters.trim(),
-          teamSizeEstimate: teamSize,
-          invitedMembers: teamInvites.filter((inv) => inv.email.trim()),
-        },
+        answers: collectAnswers(),
+        organization: { teamSizeEstimate: teamSize },
       },
       tAgency("success"),
       { autoRedirect: false },
@@ -835,25 +871,27 @@ export default function BecomeHostFlow({
 
     // Note: the generated property/room descriptions below are stored listing
     // content (server data), not UI copy, so they are intentionally not localized here.
+    if (!isCreate) {
+      // The hotel itself (rooms, prices) is added afterwards from the host space.
+      await submitOnboarding(
+        {
+          hostType: "hotel",
+          answers: collectAnswers(),
+          organization: {
+            businessEmail: hotelEmail.trim(),
+            businessPhone: hotelPhone.trim(),
+            hotelAmenities,
+            totalRoomCount: hotelTotalRooms,
+          },
+        },
+        t("hotel.success"),
+      );
+      return;
+    }
     await submitOrgOrProperty(
       {
         hostType: "hotel",
-        organization: {
-          name,
-          businessRegistrationNumber: hotelRegNumber.trim(),
-          businessType: "Hotel & Resort",
-          businessEmail: hotelEmail.trim(),
-          businessPhone: hotelPhone.trim(),
-          address: hotelAddress.trim(),
-          teamSizeEstimate: "11-50",
-          invitedMembers: hotelTeamInvites.filter((inv) => inv.email.trim()),
-          hotelStarRating,
-          totalRoomCount: hotelTotalRooms,
-          checkInTime,
-          checkOutTime,
-          hotelAmenities,
-          bookingApprovalMode: hotelBookingMode,
-        },
+        answers: {},
         // Public property listing (room type ids are minted on the server).
         property: {
           title: name,
@@ -940,24 +978,27 @@ export default function BecomeHostFlow({
           ];
     const name = hostelName.trim();
 
+    if (!isCreate) {
+      // The hostel itself (dorms, beds, prices) is added afterwards from the host space.
+      await submitOnboarding(
+        {
+          hostType: "hostel",
+          answers: collectAnswers(),
+          organization: {
+            businessEmail: hostelEmail.trim(),
+            businessPhone: hostelPhone.trim(),
+            hostelFacilities,
+            totalRoomCount: hostelTotalBeds,
+          },
+        },
+        t("hostel.success"),
+      );
+      return;
+    }
     await submitOrgOrProperty(
       {
         hostType: "hostel",
-        organization: {
-          name,
-          businessRegistrationNumber: hostelRegNumber.trim(),
-          businessType: "Hostel & Backpacker Accommodation",
-          businessEmail: hostelEmail.trim(),
-          businessPhone: hostelPhone.trim(),
-          address: hostelAddress.trim(),
-          teamSizeEstimate: "2-10",
-          invitedMembers: hostelTeamInvites.filter((inv) => inv.email.trim()),
-          totalRoomCount: hostelTotalBeds,
-          hostelFacilities,
-          curfewPolicy,
-          agePolicy,
-          bookingApprovalMode: hostelBookingMode,
-        },
+        answers: {},
         property: {
           title: name,
           description: `${name} is a vibrant traveler community located in the historic heart of ${hostelCity || "Algiers"}. Enjoy panoramic rooftop views, shared kitchen, and cultural social evenings.`,

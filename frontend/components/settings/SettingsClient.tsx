@@ -3,17 +3,16 @@
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
-import { User } from "@/types";
+import type { NotificationPreference, User } from "@/types";
+import { requestDataAction } from "@/app/actions/account";
+import { useActionError } from "@/hook/useActionError";
 import {
   BrandUserIcon,
   BrandShieldIcon,
   BrandEyeIcon,
   BrandBellIcon,
-  BrandReceiptIcon,
   BrandCreditCardIcon,
   BrandGlobeIcon,
-  BrandKeyIcon,
-  BrandBriefcaseIcon,
   BrandFilterIcon,
   BrandSparklesIcon,
 } from "@/components/icons";
@@ -30,16 +29,12 @@ import SecuritySection from "./SecuritySection";
 import NotificationsSection from "./NotificationsSection";
 import PaymentsSection from "./PaymentsSection";
 import LanguagesSection from "./LanguagesSection";
-import {
-  BookingPermissionsSection,
-  PrivacySection,
-  ProHostingSection,
-  TaxesSection,
-  TravelForWorkSection,
-} from "./HostingSections";
+import { PrivacySection, ProHostingSection } from "./HostingSections";
 
 interface SettingsClientProps {
   currentUser?: User | null;
+  /** Notification switches loaded by the page; null when the API could not be reached. */
+  notificationPreferences?: NotificationPreference[] | null;
 }
 
 type SectionId =
@@ -48,11 +43,8 @@ type SectionId =
   | "security"
   | "privacy"
   | "notifications"
-  | "taxes"
   | "payments"
   | "languages"
-  | "booking_permissions"
-  | "travel_for_work"
   | "pro_hosting";
 
 type NavItem = { id: SectionId; labelKey: string; icon: typeof BrandUserIcon; isNew?: boolean };
@@ -62,37 +54,34 @@ const NAV_ITEMS: NavItem[] = [
   { id: "security", labelKey: "nav.security", icon: BrandShieldIcon },
   { id: "privacy", labelKey: "nav.privacy", icon: BrandEyeIcon },
   { id: "notifications", labelKey: "nav.notifications", icon: BrandBellIcon },
-  { id: "taxes", labelKey: "nav.taxes", icon: BrandReceiptIcon },
   { id: "payments", labelKey: "nav.payments", icon: BrandCreditCardIcon },
   { id: "languages", labelKey: "nav.languages", icon: BrandGlobeIcon },
   { id: "accessibility", labelKey: "nav.accessibility", icon: BrandSparklesIcon },
-  { id: "booking_permissions", labelKey: "nav.bookingPermissions", icon: BrandKeyIcon, isNew: true },
-  { id: "travel_for_work", labelKey: "nav.travelForWork", icon: BrandBriefcaseIcon },
 ];
 
 const HOSTING_ITEM: NavItem = { id: "pro_hosting", labelKey: "nav.proHosting", icon: BrandFilterIcon };
 
-export default function SettingsClient({ currentUser }: SettingsClientProps) {
+export default function SettingsClient({ currentUser, notificationPreferences = null }: SettingsClientProps) {
   const t = useTranslations("settings");
+  const errorText = useActionError();
 
   const [activeSection, setActiveSection] = useState<SectionId>("personal");
   const [isDeactivateAccountOpen, setIsDeactivateAccountOpen] = useState(false);
-  const [cardToRemove, setCardToRemove] = useState<string | null>(null);
 
   const panelId = (id: SectionId) => `settings-panel-${id}`;
 
   // Panels stay mounted (hidden when inactive) so unsaved edits survive switching sections.
   const panels: { id: SectionId; node: React.ReactNode }[] = [
     { id: "personal", node: <PersonalSection currentUser={currentUser} /> },
-    { id: "security", node: <SecuritySection onDeactivate={() => setIsDeactivateAccountOpen(true)} /> },
-    { id: "notifications", node: <NotificationsSection /> },
-    { id: "payments", node: <PaymentsSection onRemoveCard={setCardToRemove} /> },
+    {
+      id: "security",
+      node: <SecuritySection email={currentUser?.email ?? ""} hasMfa={Boolean(currentUser?.hasMfa)} onDeactivate={() => setIsDeactivateAccountOpen(true)} />,
+    },
+    { id: "notifications", node: <NotificationsSection preferences={notificationPreferences} /> },
+    { id: "payments", node: <PaymentsSection /> },
     { id: "languages", node: <LanguagesSection /> },
     { id: "accessibility", node: <AccessibilitySection /> },
-    { id: "booking_permissions", node: <BookingPermissionsSection /> },
-    { id: "taxes", node: <TaxesSection /> },
     { id: "privacy", node: <PrivacySection /> },
-    { id: "travel_for_work", node: <TravelForWorkSection /> },
     { id: "pro_hosting", node: <ProHostingSection /> },
   ];
 
@@ -207,26 +196,20 @@ export default function SettingsClient({ currentUser }: SettingsClientProps) {
         message={t("dialogs.deactivateMessage")}
         confirmLabel={t("dialogs.deactivateConfirm")}
         cancelLabel={t("dialogs.deactivateCancel")}
-        onConfirm={() => {
+        onConfirm={async () => {
           setIsDeactivateAccountOpen(false);
-          toast.info(t("dialogs.deactivateSoon"));
+          // A deletion request: BLADUS closes the account and erases the data within 30 days (BR-PRV-02).
+          try {
+            const result = await requestDataAction("deletion");
+            if (!result.ok) toast.error(errorText(result));
+            else toast.success(t("dialogs.deletionRequested"));
+          } catch {
+            toast.error(t("errors.saveFailed"));
+          }
         }}
         onCancel={() => setIsDeactivateAccountOpen(false)}
       />
 
-      <ConfirmDialog
-        isOpen={!!cardToRemove}
-        variant="destructive"
-        title={t("dialogs.removeCardTitle")}
-        message={cardToRemove ? t("dialogs.removeCardMessage", { card: cardToRemove }) : ""}
-        confirmLabel={t("dialogs.removeCardConfirm")}
-        cancelLabel={t("dialogs.removeCardCancel")}
-        onConfirm={() => {
-          setCardToRemove(null);
-          toast.success(t("dialogs.cardRemoved"));
-        }}
-        onCancel={() => setCardToRemove(null)}
-      />
     </div>
   );
 }

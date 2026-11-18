@@ -57,7 +57,8 @@
     "refunded": "Refunded",
     "partial": "Partial refund {amount}",
     "voided": "Not charged",
-    "none": "No refund"
+    "none": "No refund",
+    "owed": "Refund owed {amount}"
   },
   "fallbackListingTitle": "Algerian Stay",
   "listingImageAlt": "Photo of {title}",
@@ -103,7 +104,10 @@
     "negative": "− {amount}",
     "net": "Your Net Payout",
     "download": "Print invoice",
-    "done": "Done"
+    "done": "Done",
+    "paymentChannelDirect": "Paid by the guest directly to you",
+    "discount": "Length-of-stay discount",
+    "stayConfirmed": "Stay confirmed"
   },
   "declineDialog": {
     "title": "Decline Booking Request",
@@ -127,7 +131,14 @@
     "message": "Cancelling a confirmed reservation will notify the guest immediately and issue an automatic SATIM Edahabia/CIB refund. Frequent cancellations can affect your Superhost standing on BLADUS.",
     "callout": "BLADUS host policy guarantees a full refund to the guest if the host cancels.",
     "confirm": "Cancel booking",
-    "keep": "Keep reservation"
+    "keep": "Keep reservation",
+    "messageDirect": "Cancelling a confirmed reservation notifies the guest at once. Under the BLADUS host policy the guest gets a full refund, which you pay back directly. Frequent cancellations can affect your standing on BLADUS.",
+    "reasonLabel": "Reason for cancelling (shared with the guest)",
+    "reasonPlaceholder": "For example: the property is no longer available on these dates.",
+    "previewRefund": "Refund you owe the guest",
+    "previewCommission": "Commission returned to your deposit",
+    "previewLoading": "Calculating the refund...",
+    "previewUnavailable": "The refund could not be calculated. The cancellation still follows the BLADUS host policy."
   },
   "toast": {
     "datesBlocked": "Dates blocked on your calendar! New bookings are prevented.",
@@ -144,5 +155,14 @@
   "requestHeading": "Booking request, reply before it expires",
   "noListingsTitle": "No bookings yet",
   "noListingsText": "Bookings appear here once you publish a listing. Create your first listing to get started.",
-  "createFirstListing": "Create your first listing"
+  "createFirstListing": "Create your first listing",
+  "paymentDirect": "Paid to you directly",
+  "checkIn": {
+    "button": "Check in guest",
+    "title": "Confirm the guest's arrival",
+    "message": "Ask the guest for the 6-digit check-in code shown in their booking and enter it here.",
+    "codeLabel": "Check-in code",
+    "confirm": "Confirm arrival",
+    "success": "Arrival confirmed."
+  }
 }

@@ -1,6 +1,8 @@
 """Read-only queries of the hosts app (no writes here)."""
 
-from django.db.models import Case, F, QuerySet, When
+import uuid
+
+from django.db.models import Case, F, Q, QuerySet, When
 
 from .models import (
     HostAccount,
@@ -51,15 +53,24 @@ def public_organization(slug: str) -> Organization | None:
     An organisation visitors may see, by slug, or ``None``.
 
     Only organisations that are not deleted and whose host account is
-    approved (BR-SRC-01: unapproved or suspended hosts are hidden).
+    approved (BR-SRC-01: unapproved or suspended hosts are hidden). When
+    no slug matches and ``slug`` is a UUID, the organisation id or its host
+    account id is also accepted (links built from ids keep working).
     """
-    return (
+    visible = (
         Organization.objects.alive()
         .select_related("host_account", "commune", "commune__wilaya")
-        .filter(slug=slug, host_account__verification_status=VerificationStatus.APPROVED,
+        .filter(host_account__verification_status=VerificationStatus.APPROVED,
                 host_account__deleted_at__isnull=True)
-        .first()
     )
+    org = visible.filter(slug=slug).first()
+    if org is not None:
+        return org
+    try:
+        key = uuid.UUID(str(slug))
+    except ValueError:
+        return None
+    return visible.filter(Q(id=key) | Q(host_account__id=key)).first()
 
 
 def members_of(org: Organization) -> QuerySet[Membership]:

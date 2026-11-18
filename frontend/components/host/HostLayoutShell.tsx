@@ -12,7 +12,7 @@ interface HostLayoutShellProps {
   currentUser: User | null;
   organization: Organization | null;
   /** Organizations the user can switch to. */
-  workspaces?: { id: string; name: string; businessCategory?: string }[];
+  workspaces?: { id: string; name: string; businessCategory?: string; isActive?: boolean }[];
   hostType?: "individual" | "agency" | "hotel" | "hostel" | null;
 }
 

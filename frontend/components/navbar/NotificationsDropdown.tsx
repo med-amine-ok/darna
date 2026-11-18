@@ -20,6 +20,7 @@ import {
   BrandShieldIcon,
   BrandCheckIcon,
   BrandChevronRightIcon,
+  BrandStarIcon,
 } from "@/components/icons";
 
 type Group = "today" | "week" | "earlier";
@@ -29,6 +30,7 @@ const typeStyle: Record<string, { tint: string; Icon: React.ComponentType<IconPr
   message: { tint: "bg-tertiary-100 text-primary-700", Icon: BrandMessageIcon },
   price: { tint: "bg-accent-50 text-accent-700", Icon: BrandTagIcon },
   system: { tint: "bg-primary/[0.06] text-primary-800", Icon: BrandShieldIcon },
+  review: { tint: "bg-tertiary-100 text-primary-800", Icon: BrandStarIcon },
 };
 
 /** Bell + popover: notifications grouped by day (Today · This week · Earlier) with unread dots. */
@@ -39,24 +41,32 @@ export default function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  /** Unread total from the server (all notifications, not only the ones listed here). */
+  const [unreadCount, setUnreadCount] = useState(0);
 
+  // Load on mount and again each time the panel opens (new notifications since the last look).
   useEffect(() => {
     let isMounted = true;
     (async () => {
       try {
         // Scoped to the logged-in user on the server; logged-out users get none.
         const result = await getMyNotificationsAction();
-        if (isMounted) setNotifications(result.ok ? result.data : []);
+        if (!isMounted) return;
+        if (result.ok) {
+          setNotifications(result.data.items);
+          setUnreadCount(result.data.unreadCount);
+        } else if (result.code === "UNAUTHENTICATED") {
+          setNotifications([]);
+          setUnreadCount(0);
+        }
       } catch {
-        if (isMounted) setNotifications([]);
+        // Keep what is shown; the next open tries again.
       }
     })();
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  }, [isOpen]);
 
   const dateOf = (n: Notification) => {
     const d = new Date(n.createdAt || n.timestamp || "");
@@ -86,10 +96,14 @@ export default function NotificationsDropdown() {
   }, [notifications]);
 
   const handleOpenItem = async (id: string, link?: string) => {
-    const result = await markNotificationReadAction(id);
-    if (!result.ok) {
-      toast.error(t("notificationsUpdateFailed"));
-      return;
+    const wasUnread = notifications.some((n) => n.id === id && !n.read);
+    if (wasUnread) {
+      const result = await markNotificationReadAction(id);
+      if (!result.ok) {
+        toast.error(t("notificationsUpdateFailed"));
+        return;
+      }
+      setUnreadCount((count) => Math.max(0, count - 1));
     }
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     if (link) {
@@ -106,6 +120,7 @@ export default function NotificationsDropdown() {
       toast.error(t("notificationsUpdateFailed"));
       return;
     }
+    setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     toast.success(t("allNotificationsRead"));
   };

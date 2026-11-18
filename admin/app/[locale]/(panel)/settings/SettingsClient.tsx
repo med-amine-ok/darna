@@ -5,14 +5,16 @@ import { useTranslations } from "next-intl";
 import { Bell, Save, Languages, ShieldCheck, Sliders } from "lucide-react";
 import {
   getPlatformSettings,
+  listSettingsVersions,
   updatePlatformSettings,
 } from "@/lib/actions/settings";
+import type { SettingsVersion } from "@/lib/types";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
-import { formatNumber } from "@/lib/utils/format";
+import { formatDate, formatNumber } from "@/lib/utils/format";
 
 export interface SettingsClientProps {
   locale: string;
@@ -116,36 +118,34 @@ export default function SettingsClient({
   const t = useTranslations("settings");
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [saving, setSaving] = useState(false);
-  const platformNameId = useId();
-  const serviceFeeId = useId();
-  const sessionTimeoutId = useId();
+  const ttlId = useId();
+  const creditId = useId();
+  const fourEyesId = useId();
 
-  // Form states
-  const [platformName, setPlatformName] = useState("BLADUS");
-  const [serviceFeePercent, setServiceFeePercent] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(120);
-
-  // Notifications states
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(false);
-  const [instantBookingNotifications, setInstantBookingNotifications] =
-    useState(true);
+  const [instantBooking, setInstantBooking] = useState(false);
+  const [requestTtlHours, setRequestTtlHours] = useState(24);
+  const [creditLimitDzd, setCreditLimitDzd] = useState(0);
+  const [topupFourEyesDzd, setTopupFourEyesDzd] = useState(0);
+  const [version, setVersion] = useState<{ n: number; at: string | null; by: string | null }>({ n: 0, at: null, by: null });
+  const [history, setHistory] = useState<SettingsVersion[]>([]);
 
   const { success, error } = useToast();
   const can = useCan();
 
   const loadData = useCallback(async () => {
     try {
-      const data = unwrap(await getPlatformSettings());
-      setPlatformName(data.platformName);
-      setServiceFeePercent(
-        0,
-      );
-      setMaintenanceMode(data.maintenanceMode);
-      setTwoFactorEnabled(data.security?.twoFactorRequired || false);
-      setSessionTimeoutMinutes(data.security?.sessionTimeoutMinutes || 120);
+      const [data, versions] = await Promise.all([getPlatformSettings(), listSettingsVersions(1)]);
+      const settings = unwrap(data);
+      setMaintenanceMode(settings.maintenanceMode);
+      setInstantBooking(settings.instantBookingPlatformWide);
+      setRequestTtlHours(settings.requestTtlHours ?? 24);
+      setCreditLimitDzd(settings.creditLimitDzd ?? 0);
+      setTopupFourEyesDzd(settings.topupFourEyesDzd ?? 0);
+      setVersion({ n: settings.settingsVersion ?? 0, at: settings.settingsUpdatedAt ?? null, by: settings.settingsUpdatedBy ?? null });
+      if (versions.ok) setHistory(versions.data.rows);
+      setLoaded(true);
     } catch (err) {
       error(t("toasts.loadFailed"), errorMessage(err));
     }
@@ -160,16 +160,15 @@ export default function SettingsClient({
     try {
       unwrap(
         await updatePlatformSettings({
-          platformName,
-          serviceFeePercent,
           maintenanceMode,
-          security: {
-            sessionTimeoutMinutes,
-            twoFactorRequired: twoFactorEnabled,
-          },
+          instantBookingPlatformWide: instantBooking,
+          requestTtlHours,
+          creditLimitDzd,
+          topupFourEyesDzd,
         }),
       );
       success(t("toasts.saved"), t("toasts.savedHint"));
+      loadData();
     } catch (err) {
       error(t("toasts.saveFailed"), errorMessage(err));
     } finally {
@@ -183,7 +182,7 @@ export default function SettingsClient({
         title={t("title")}
         subtitle={t("subtitle")}
         actions={
-          can("settings.manage")
+          can("settings.manage") && loaded
             ? [
                 {
                   label: saving ? t("saving") : t("saveSettings"),
@@ -227,55 +226,107 @@ export default function SettingsClient({
       {activeTab === "general" && (
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
-            <h2 className="font-semibold text-primary text-base">
-              {t("identity.title")}
-            </h2>
-
+            <h2 className="font-semibold text-primary text-base">{t("platform.title")}</h2>
+            <p className="text-[11px] text-neutral-500">
+              {version.n > 0
+                ? t("platform.version", {
+                    version: version.n,
+                    date: version.at ? formatDate(version.at, locale) : "-",
+                    name: version.by ?? "-",
+                  })
+                : t("platform.defaults")}
+            </p>
             <div>
-              <label
-                htmlFor={platformNameId}
-                className="block text-xs font-semibold text-primary mb-1"
-              >
-                {t("platformName")}
+              <label htmlFor={ttlId} className="block text-xs font-semibold text-primary mb-1">
+                {t("platform.requestTtl")}
               </label>
               <input
-                id={platformNameId}
-                type="text"
-                value={platformName}
-                onChange={(e) => setPlatformName(e.target.value)}
-                className={`w-full bg-darnaBg/30 ${INPUT_CLASS}`}
+                id={ttlId}
+                type="number"
+                min={1}
+                max={168}
+                value={requestTtlHours}
+                onChange={(e) => setRequestTtlHours(Number(e.target.value))}
+                className={`w-32 font-mono ${INPUT_CLASS}`}
               />
             </div>
-
             <div>
-              <p className="block text-xs font-semibold text-primary mb-1">
-                {t("serviceFee")}
-              </p>
+              <label htmlFor={creditId} className="block text-xs font-semibold text-primary mb-1">
+                {t("platform.creditLimit")}
+              </label>
+              <input
+                id={creditId}
+                type="number"
+                min={0}
+                step={100}
+                value={creditLimitDzd}
+                onChange={(e) => setCreditLimitDzd(Number(e.target.value))}
+                className={`w-40 font-mono ${INPUT_CLASS}`}
+              />
+              <p className="text-[11px] text-neutral-500 mt-1">{t("platform.creditLimitHint")}</p>
+            </div>
+            <div>
+              <label htmlFor={fourEyesId} className="block text-xs font-semibold text-primary mb-1">
+                {t("platform.fourEyes")}
+              </label>
+              <input
+                id={fourEyesId}
+                type="number"
+                min={0}
+                step={1000}
+                value={topupFourEyesDzd}
+                onChange={(e) => setTopupFourEyesDzd(Number(e.target.value))}
+                className={`w-40 font-mono ${INPUT_CLASS}`}
+              />
+              <p className="text-[11px] text-neutral-500 mt-1">{t("platform.fourEyesHint")}</p>
+            </div>
+            <div>
+              <p className="block text-xs font-semibold text-primary mb-1">{t("serviceFee")}</p>
               {/* Fixed policy: travellers never pay BLADUS; revenue comes from host commissions. */}
-              <p
-                id={serviceFeeId}
-                className="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 font-mono text-sm font-semibold text-secondary-700"
-              >
+              <p className="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 font-mono text-sm font-semibold text-secondary-700">
                 0 %
               </p>
-              <p
-                id={`${serviceFeeId}-hint`}
-                className="text-[11px] text-neutral-500 mt-1"
-              >
-                {t("identity.serviceFeeHint")}
-              </p>
+              <p className="text-[11px] text-neutral-500 mt-1">{t("identity.serviceFeeHint")}</p>
             </div>
           </section>
 
-          <section className="bg-white p-6 rounded-2xl space-y-3 shadow-e1">
-            <SwitchRow
-              emphasized
-              label={t("maintenance")}
-              hint={t("identity.maintenanceHint")}
-              checked={maintenanceMode}
-              onChange={setMaintenanceMode}
-            />
-          </section>
+          <div className="space-y-4">
+            <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
+              <SwitchRow
+                emphasized
+                label={t("maintenance")}
+                hint={t("identity.maintenanceHint")}
+                checked={maintenanceMode}
+                onChange={setMaintenanceMode}
+              />
+              <div className="pt-4 border-t border-primary/[0.08]">
+                <SwitchRow
+                  label={t("platform.instantBooking")}
+                  hint={t("platform.instantBookingHint")}
+                  checked={instantBooking}
+                  onChange={setInstantBooking}
+                />
+              </div>
+            </section>
+
+            <section className="bg-white p-6 rounded-2xl space-y-3 shadow-e1">
+              <h2 className="font-semibold text-primary text-sm">{t("platform.history")}</h2>
+              {history.length === 0 ? (
+                <p className="text-xs text-neutral-500">{t("platform.noHistory")}</p>
+              ) : (
+                <ul className="divide-y divide-primary/[0.06] text-xs">
+                  {history.map((v) => (
+                    <li key={v.version} className="py-2 flex justify-between gap-3">
+                      <span className="font-semibold text-primary">v{v.version}</span>
+                      <span className="text-primary-600">
+                        {v.createdBy ?? "-"} · {v.createdAt ? formatDate(v.createdAt, locale) : "-"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
         </div>
       )}
 
@@ -322,76 +373,22 @@ export default function SettingsClient({
 
       {/* Notifications */}
       {activeTab === "notifications" && (
-        <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
-          <h2 className="font-semibold text-primary text-base">
-            {t("notifications.title")}
-          </h2>
-          <div className="pt-1 divide-y divide-primary/[0.06]">
-            <div className="py-3">
-              <SwitchRow
-                label={t("notifications.email")}
-                hint={t("notifications.emailHint")}
-                checked={emailAlerts}
-                onChange={setEmailAlerts}
-              />
-            </div>
-            <div className="py-3">
-              <SwitchRow
-                label={t("notifications.sms")}
-                hint={t("notifications.smsHint")}
-                checked={smsAlerts}
-                onChange={setSmsAlerts}
-              />
-            </div>
-            <div className="py-3">
-              <SwitchRow
-                label={t("notifications.panel")}
-                hint={t("notifications.panelHint")}
-                checked={instantBookingNotifications}
-                onChange={setInstantBookingNotifications}
-              />
-            </div>
-          </div>
+        <section className="bg-white p-6 rounded-2xl space-y-2 shadow-e1">
+          <h2 className="font-semibold text-primary text-base">{t("notifications.title")}</h2>
+          <p className="text-xs text-neutral-600">{t("platform.notificationsInfo")}</p>
         </section>
       )}
 
       {/* Security */}
       {activeTab === "security" && (
-        <section className="bg-white p-6 rounded-2xl space-y-4 shadow-e1">
-          <h2 className="font-semibold text-primary text-base">
-            {t("securityPolicy.title")}
-          </h2>
-
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor={sessionTimeoutId}
-                className="block text-xs font-semibold text-primary mb-1"
-              >
-                {t("sessionTimeout")}
-              </label>
-              <input
-                id={sessionTimeoutId}
-                type="number"
-                min="15"
-                max="480"
-                value={sessionTimeoutMinutes}
-                onChange={(e) =>
-                  setSessionTimeoutMinutes(Number(e.target.value))
-                }
-                className={`w-32 font-mono ${INPUT_CLASS}`}
-              />
-            </div>
-
-            <div className="pt-4 border-t border-primary/[0.08]">
-              <SwitchRow
-                label={t("twoFactor")}
-                hint={t("securityPolicy.twoFactorHint")}
-                checked={twoFactorEnabled}
-                onChange={setTwoFactorEnabled}
-              />
-            </div>
-          </div>
+        <section className="bg-white p-6 rounded-2xl space-y-3 shadow-e1">
+          <h2 className="font-semibold text-primary text-base">{t("securityPolicy.title")}</h2>
+          <ul className="space-y-2 text-xs text-primary-700 list-disc ps-5">
+            <li>{t("platform.securityMfa")}</li>
+            <li>{t("platform.securityIdle")}</li>
+            <li>{t("platform.securityMax")}</li>
+            <li>{t("platform.securityLock")}</li>
+          </ul>
         </section>
       )}
     </div>

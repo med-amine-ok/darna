@@ -81,7 +81,8 @@
     "totalAmount": "Montant total",
     "totalWithEur": "{dzd} ({eur})",
     "download": "Imprimer le reçu",
-    "close": "Fermer"
+    "close": "Fermer",
+    "discount": "Réduction longue durée"
   },
   "paymentStatus": {
     "paid": "Payé intégralement",
@@ -181,5 +182,47 @@
     "reserved": "Expédition réservée ! Préparez vos bagages pour l'Algérie.",
     "bookFailed": "Échec de la réservation. Veuillez vérifier les informations."
   },
-  "eyebrow": "Vos voyages"
+  "eyebrow": "Vos voyages",
+  "payAtHost": "Payé directement à l'hôte",
+  "totalDue": "Total",
+  "cancelPreviewLoading": "Calcul de votre remboursement...",
+  "cancelPreviewFailed": "Le remboursement n'a pas pu être calculé pour le moment. Veuillez réessayer dans un instant.",
+  "checkInCode": "Code d'arrivée",
+  "checkInCodeHelp": "Montrez ce code à votre hôte à votre arrivée.",
+  "address": "Adresse",
+  "hostPhone": "Hôte {name}",
+  "confirmStay": "Confirmer mon séjour",
+  "toastStayConfirmed": "Merci, votre séjour est confirmé.",
+  "refundReceived": "Je l'ai reçu",
+  "refundNotReceived": "Pas reçu",
+  "refundNotReceivedPrompt": "Expliquez-nous brièvement ce qui s'est passé avec ce remboursement.",
+  "toastRefundConfirmed": "Merci, le remboursement est marqué comme reçu.",
+  "toastRefundDisputed": "Le support BLADUS va examiner ce remboursement.",
+  "refundStatus": {
+    "open": "Remboursement dû par l'hôte",
+    "declared": "L'hôte indique avoir remboursé",
+    "confirmed": "Remboursement reçu",
+    "disputed": "Remboursement en cours d'examen",
+    "settled": "Remboursement réglé",
+    "overdue": "Remboursement en retard"
+  },
+  "report": {
+    "button": "Signaler un problème",
+    "title": "Signaler un problème",
+    "description": "Le support BLADUS examinera la réservation et vous contactera, vous et l'hôte.",
+    "reasonLabel": "Quel est le problème ?",
+    "reasons": {
+      "not_as_described": "Non conforme à l'annonce",
+      "no_show": "L'hôte ne s'est pas présenté",
+      "cleanliness": "Propreté",
+      "safety": "Sécurité",
+      "refund": "Remboursement",
+      "other": "Autre chose"
+    },
+    "statementLabel": "Décrivez le problème",
+    "statementHelp": "Au moins 20 caractères.",
+    "tooShort": "Veuillez décrire le problème en au moins 20 caractères.",
+    "submit": "Envoyer au support",
+    "success": "Votre signalement a été envoyé au support BLADUS."
+  }
 }

@@ -24,18 +24,7 @@ Other scripts: `npm run build`, `npm run start`, `npm run lint`,
 | ---------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
 | `DARNA_SESSION_SECRET` | Production: yes (32+ chars). Dev: no, an insecure fallback is used with a console warning. | HMAC-SHA256 key that signs the `darna_session` cookie. |
 
-## Demo accounts
-
-There is no backend yet: data comes from an in-memory mock store seeded from
-`lib/mock-data` (it resets when the dev server restarts). Every seeded account
-uses the password **`darna-demo-2026`**.
-
-| Email                                              | Role                                         |
-| -------------------------------------------------- | -------------------------------------------- |
-| `yacine.traveler@bladus.dz`                         | Guest / traveler                             |
-| `amina.benali@bladus.dz`                            | Individual host                              |
-| `karim.mansouri@bladus.dz`                          | Agency owner (Atlas Escapes) and hotel owner |
-| `sofiane.mebarki@gmail.com`, `leila.hadj@yahoo.fr` | Guests                                       |
+                                      |
 
 The login page also has one-click demo buttons. New accounts can be created
 from the sign-up modal (passwords are hashed with scrypt in the mock store;

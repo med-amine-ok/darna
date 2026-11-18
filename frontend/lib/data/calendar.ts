@@ -1,76 +1,85 @@
-// TODO: replace with Supabase query
 import "server-only";
 import type { DateAvailabilityOverride } from "@/types";
-import { newId } from "@/lib/ids";
-import type { DateKey } from "@/lib/booking/dates";
+import { api } from "@/lib/api/client";
+import { toMinor } from "@/lib/api/bookings";
+import { toOverrides, type ApiHostCalendar } from "@/lib/api/calendar";
+import { addDaysToKey, todayKey, type DateKey } from "@/lib/booking/dates";
 import type { PriceOverrides } from "@/lib/booking/pricing";
-import { clone, globalStore, removeWhere } from "./_store";
 
 /**
- * Host calendar overrides: one row per (listing, date) with a blocked flag
- * and/or a custom nightly price. Callers (server actions) check ownership.
+ * Host calendars from the Django API (backend apps/inventory): blocked days
+ * and special prices per listing (and per room type for hotels and hostels).
+ * The backend checks that the listing belongs to the active workspace.
  */
-const SEED_OVERRIDES: DateAvailabilityOverride[] = [
-  { id: "ovr_01", listingId: "lst_tipaza_villa", date: "2026-11-24", isBlocked: true, note: "Host maintenance" },
-  { id: "ovr_02", listingId: "lst_tipaza_villa", date: "2026-11-21", isBlocked: false, customPrice: 22000, note: "Peak weekend" },
-  { id: "ovr_03", listingId: "lst_tipaza_villa", date: "2026-11-22", isBlocked: false, customPrice: 22000, note: "Peak weekend" },
-];
 
-const overridesTable = globalStore<DateAvailabilityOverride[]>("__darna_calendar_overrides__", () =>
-  SEED_OVERRIDES.map(clone)
-);
+/** Window the host screens load: one month back, one year ahead (the API allows 400 days). */
+const PAST_DAYS = 31;
+const FUTURE_DAYS = 365;
+/** The API takes at most 50 listing ids per call. */
+const MAX_IDS = 50;
 
-export async function getAvailabilityOverrides(listingId: string): Promise<DateAvailabilityOverride[]> {
-  return clone(overridesTable.filter((ov) => ov.listingId === listingId));
-}
-
-export async function getOverridesForListings(listingIds: string[]): Promise<DateAvailabilityOverride[]> {
-  const ids = new Set(listingIds);
-  return clone(overridesTable.filter((ov) => ids.has(ov.listingId)));
-}
-
-/** Synchronous helpers for the booking engine (same request, no latency). */
-export function blockedDateKeys(listingId: string): Set<DateKey> {
-  return new Set(overridesTable.filter((o) => o.listingId === listingId && o.isBlocked).map((o) => o.date));
-}
-
-export function priceOverridesFor(listingId: string): PriceOverrides {
-  const out: PriceOverrides = {};
-  for (const o of overridesTable) {
-    if (o.listingId === listingId && !o.isBlocked && typeof o.customPrice === "number") out[o.date] = o.customPrice;
+async function hostCalendar(listingIds: string[]): Promise<DateAvailabilityOverride[]> {
+  if (listingIds.length === 0) return [];
+  const today = todayKey();
+  const from = addDaysToKey(today, -PAST_DAYS);
+  const to = addDaysToKey(today, FUTURE_DAYS);
+  const out: DateAvailabilityOverride[] = [];
+  for (let i = 0; i < listingIds.length; i += MAX_IDS) {
+    const answer = await api<ApiHostCalendar>("/host/calendar", {
+      query: { listing_ids: listingIds.slice(i, i + MAX_IDS), from, to },
+    });
+    out.push(...toOverrides(answer));
   }
   return out;
 }
 
-function upsert(listingId: string, date: DateKey): DateAvailabilityOverride {
-  let row = overridesTable.find((o) => o.listingId === listingId && o.date === date);
-  if (!row) {
-    row = { id: newId("ovr"), listingId, date, isBlocked: false };
-    overridesTable.push(row);
-  }
-  return row;
+/** Blocked days and special prices of one of the host's listings. Throws on API failure. */
+export async function getAvailabilityOverrides(listingId: string): Promise<DateAvailabilityOverride[]> {
+  return hostCalendar([listingId]);
 }
 
-function pruneEmpty(listingId: string) {
-  removeWhere(overridesTable, (o) => o.listingId === listingId && !o.isBlocked && o.customPrice === undefined);
+/** Blocked days and special prices of several of the host's listings. Never throws (logs, returns []). */
+export async function getOverridesForListings(listingIds: string[]): Promise<DateAvailabilityOverride[]> {
+  try {
+    return await hostCalendar(listingIds);
+  } catch (error) {
+    console.error("[getOverridesForListings]", error);
+    return [];
+  }
 }
 
-export async function setDatesBlocked(listingId: string, dates: DateKey[], blocked: boolean): Promise<DateAvailabilityOverride[]> {
-  for (const date of dates) {
-    const row = upsert(listingId, date);
-    row.isBlocked = blocked;
-  }
-  pruneEmpty(listingId);
-  return getAvailabilityOverrides(listingId);
+export interface CalendarTarget {
+  listingId: string;
+  /** Room types of a hotel or hostel listing; their nights are edited one room type at a time. */
+  roomTypeIds?: string[];
 }
 
-/** `price: null` removes the override (back to the listing's standard price). */
-export async function setDatePrice(listingId: string, dates: DateKey[], price: number | null): Promise<DateAvailabilityOverride[]> {
-  for (const date of dates) {
-    const row = upsert(listingId, date);
-    if (price === null) delete row.customPrice;
-    else row.customPrice = price;
+function roomTargets(target: CalendarTarget): (string | null)[] {
+  return target.roomTypeIds && target.roomTypeIds.length > 0 ? target.roomTypeIds : [null];
+}
+
+/** Close or reopen days (PUT /host/listings/{id}/calendar/blocks). Throws ApiError (409 dates_booked...). */
+export async function setDatesBlocked(target: CalendarTarget, dates: DateKey[], blocked: boolean): Promise<DateAvailabilityOverride[]> {
+  for (const roomTypeId of roomTargets(target)) {
+    await api(`/host/listings/${encodeURIComponent(target.listingId)}/calendar/blocks`, {
+      method: "PUT",
+      body: { dates, blocked, ...(roomTypeId ? { room_type_id: roomTypeId } : {}) },
+    });
   }
-  pruneEmpty(listingId);
-  return getAvailabilityOverrides(listingId);
+  return getAvailabilityOverrides(target.listingId);
+}
+
+/** Set (DZD) or remove (`null`) a special price (PUT /host/listings/{id}/calendar/prices). */
+export async function setDatePrice(target: CalendarTarget, dates: DateKey[], price: number | null): Promise<DateAvailabilityOverride[]> {
+  for (const roomTypeId of roomTargets(target)) {
+    await api(`/host/listings/${encodeURIComponent(target.listingId)}/calendar/prices`, {
+      method: "PUT",
+      body: {
+        dates,
+        price_override: price === null ? null : { amount_minor: toMinor(price), currency: "DZD" },
+        ...(roomTypeId ? { room_type_id: roomTypeId } : {}),
+      },
+    });
+  }
+  return getAvailabilityOverrides(target.listingId);
 }

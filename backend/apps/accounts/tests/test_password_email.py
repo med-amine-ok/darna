@@ -75,3 +75,21 @@ def test_public_profile_hides_contacts_and_inactive_accounts(api, user):
     staff = make_user(email="ops@bladus.dz", is_staff=True)
     StaffProfile.objects.create(user=staff, status=StaffStatus.ACTIVE)
     assert api.get(f"/api/v1/users/{staff.id}").status_code == 404
+
+
+def test_email_resend_sends_the_link_again_to_an_unverified_user():
+    """The signed-in user gets a new verification email; a verified one gets nothing; anonymous is refused."""
+    user = make_user(email="resend@x.dz", password=PASSWORD)
+    user.email_verified_at = None
+    user.save(update_fields=["email_verified_at"])
+    mail.outbox.clear()
+    assert client_for(user).post("/api/v1/auth/email/resend").status_code == 204
+    assert len(mail.outbox) == 1 and "verify-email?key=" in mail.outbox[0].body
+    user.refresh_from_db()
+    from django.utils import timezone
+    user.email_verified_at = timezone.now()
+    user.save(update_fields=["email_verified_at"])
+    mail.outbox.clear()
+    assert client_for(user).post("/api/v1/auth/email/resend").status_code == 204
+    assert len(mail.outbox) == 0
+    assert APIClient().post("/api/v1/auth/email/resend").status_code == 401

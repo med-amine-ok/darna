@@ -1,21 +1,31 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import { Host, PaginatedResult, AdminActor, Permission } from "@/lib/types";
-import { assertCan } from "@/lib/permissions";
-import { canHostAction, isValidReason, type HostAction } from "@/lib/domain/transitions";
-import { isValidCommissionRate } from "@/lib/pricing";
-import { toCsv, type CsvExport } from "@/lib/utils/csv";
-import { logAudit, logExport } from "./audit";
-import { computeWalletAggregates, getHostBalance } from "./ledger";
-import { DomainError, ValidationError } from "./errors";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { api, apiAll, apiOrNull } from "@/lib/api/client";
+import { logReadError, write } from "@/lib/api/mapping";
+import {
+  toBackendHostStatuses,
+  toHost,
+  toHostExtras,
+  type ApiAdminHost,
+  type ApiAdminWallet,
+  type HostExtras,
+} from "@/lib/api/hosts";
+import type { AdminActor, Host, PaginatedResult } from "@/lib/types";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { ValidationError } from "./errors";
+
+/**
+ * Host accounts, from the Django API (/admin/hosts, /admin/documents,
+ * /admin/wallets for balances). The backend filters by verification status
+ * and host type; the other screen filters (search, approval mode, balance)
+ * are applied here on the fetched rows. The backend checks every staff
+ * permission again and writes the audit trail itself.
+ */
 
 export interface HostFilterParams {
   category?: string; // "all" | ProviderCategory
   hostType?: string; // "all" | HostType
-  status?: string; // "all" | HostStatus
+  status?: string; // "all" | HostStatus (comma list allowed)
   verificationStatus?: string;
   wilayaCode?: string | string[];
   search?: string;
@@ -35,141 +45,97 @@ export interface HostFilterParams {
   pageSize?: number;
 }
 
+/** Most hosts read for one list screen (pages of 50). */
+const MAX_HOST_PAGES = 10;
+
 export function getProviderCategory(h: Host): "host" | "hotel_hostel" | "travel_agency" | "experience_company" | "rental_agency" {
   if (h.providerCategory) return h.providerCategory;
   if (h.hostType === "hotel" || h.hostType === "hostel") return "hotel_hostel";
   if (h.hostType === "agency" && h.verticalsOffered?.includes("trip")) return "travel_agency";
   if (h.verticalsOffered?.includes("vehicle")) return "rental_agency";
   if (h.verticalsOffered?.includes("experience")) return "experience_company";
+  if (h.hostType === "agency") return "travel_agency";
   return "host";
 }
 
-export async function listHosts(
-  params: HostFilterParams = {}
-): Promise<PaginatedResult<Host>> {
-  await delay(200);
-
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 12;
-
-  const matchStatus = (hStatus: string, filterStatus?: string) => {
-    if (!filterStatus || filterStatus === "all") return true;
-    const parts = filterStatus.split(",").map((s) => s.trim().toLowerCase());
-    return parts.includes(hStatus.toLowerCase());
-  };
-
-  // Wallet balances are always derived from the ledger.
-  const aggregates = computeWalletAggregates();
-  const withBalances: Host[] = store.hosts.map((h) => ({ ...h, walletBalance: aggregates.get(h.id)?.balance ?? 0 }));
-
-  // Base filtering across all filters EXCEPT category (for category facets)
-  let baseline = [...withBalances];
-
-  // 1. Host Type Tab
-  if (params.hostType && params.hostType !== "all") {
-    baseline = baseline.filter((h) => h.hostType === params.hostType);
+async function walletsByHost(): Promise<Map<string, ApiAdminWallet>> {
+  try {
+    const rows = await apiAll<ApiAdminWallet>("/admin/wallets", {}, MAX_HOST_PAGES);
+    return new Map(rows.map((w) => [w.host_account_id, w]));
+  } catch (error) {
+    logReadError("admin wallets for hosts", error);
+    return new Map();
   }
+}
 
-  // 2. Status (supports comma-separated)
+async function walletOf(hostId: string): Promise<ApiAdminWallet | null> {
+  try {
+    return await apiOrNull<ApiAdminWallet>(`/admin/wallets/${encodeURIComponent(hostId)}`);
+  } catch (error) {
+    logReadError("admin wallet", error);
+    return null;
+  }
+}
+
+function matches(h: Host, params: HostFilterParams): boolean {
   if (params.status && params.status !== "all") {
-    baseline = baseline.filter((h) => matchStatus(h.status, params.status));
+    const wanted = params.status.split(",").map((s) => s.trim().toLowerCase());
+    if (!wanted.includes(h.status)) return false;
   }
-
-  // 3. Verification
-  if (params.verificationStatus && params.verificationStatus !== "all") {
-    baseline = baseline.filter((h) => h.verificationStatus === params.verificationStatus);
+  if (params.verificationStatus && params.verificationStatus !== "all" && h.verificationStatus !== params.verificationStatus) {
+    return false;
   }
-
-  // 4. Wilayas (support single or array)
-  if (params.wilayaCode && params.wilayaCode !== "all") {
-    const codes = Array.isArray(params.wilayaCode) ? params.wilayaCode : [params.wilayaCode];
-    if (codes.length > 0) {
-      baseline = baseline.filter((h) => codes.includes(h.wilayaCode));
-    }
-  }
-
-  // 5. Search
   if (params.search?.trim()) {
-    const q = params.search.toLowerCase();
-    baseline = baseline.filter((h) => {
-      const matchName = h.ownerName.toLowerCase().includes(q);
-      const matchBiz = (h.businessName || "").toLowerCase().includes(q);
-      const matchEmail = h.email.toLowerCase().includes(q);
-      const matchPhone = h.phone.toLowerCase().includes(q);
-      const matchCity = h.city.toLowerCase().includes(q);
-      return matchName || matchBiz || matchEmail || matchPhone || matchCity;
-    });
+    const q = params.search.trim().toLowerCase();
+    const hay = [h.ownerName, h.businessName, h.email, h.phone, h.id, h.formattedId].filter(Boolean).join(" ").toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  if (params.approvalMode && params.approvalMode !== "all" && h.bookingApprovalMode !== params.approvalMode) return false;
+  if (params.minRating && params.minRating > 0 && h.rating < params.minRating) return false;
+  if (params.onlyNegativeBalance && h.walletBalance >= 0) return false;
+  return true;
+}
+
+/** Every host account the API returns (deleted ones excluded by the backend unless asked). */
+async function fetchAllHosts(): Promise<Host[]> {
+  const [rows, wallets] = await Promise.all([
+    apiAll<ApiAdminHost>("/admin/hosts", {}, MAX_HOST_PAGES),
+    walletsByHost(),
+  ]);
+  return rows.map((raw) => {
+    const host = toHost(raw, wallets.get(raw.host_account_id || raw.id));
+    return { ...host, providerCategory: getProviderCategory(host) };
+  });
+}
+
+function countBy(rows: Host[], key: (h: Host) => string, keys: string[]): Record<string, number> {
+  const out: Record<string, number> = { all: rows.length };
+  for (const k of keys) out[k] = 0;
+  for (const row of rows) {
+    const k = key(row);
+    out[k] = (out[k] ?? 0) + 1;
+  }
+  return out;
+}
+
+export async function listHosts(params: HostFilterParams = {}): Promise<PaginatedResult<Host>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.max(1, Math.min(params.pageSize || 12, 500));
+  let all: Host[];
+  try {
+    all = await fetchAllHosts();
+  } catch (error) {
+    logReadError("admin hosts", error);
+    return { rows: [], total: 0, page, pageSize, totalPages: 1, facets: {} };
   }
 
-  // 6. Approval Mode
-  if (params.approvalMode && params.approvalMode !== "all") {
-    baseline = baseline.filter((h) => h.bookingApprovalMode === params.approvalMode);
-  }
+  const baseline = all.filter((h) => matches(h, params));
+  const byType = params.hostType && params.hostType !== "all" ? baseline.filter((h) => h.hostType === params.hostType) : baseline;
+  const filtered =
+    params.category && params.category !== "all" ? byType.filter((h) => getProviderCategory(h) === params.category) : byType;
 
-  // 7. Verticals Offered
-  if (params.vertical && params.vertical !== "all") {
-    baseline = baseline.filter((h) => h.verticalsOffered.includes(params.vertical as any));
-  }
-
-  // 8. Rating & Activity
-  if (params.minRating && params.minRating > 0) {
-    baseline = baseline.filter((h) => h.rating >= params.minRating!);
-  }
-  if (params.minBookings && params.minBookings > 0) {
-    baseline = baseline.filter((h) => h.bookingsCount >= params.minBookings!);
-  }
-  if (params.minListings && params.minListings > 0) {
-    baseline = baseline.filter((h) => h.listingsCount >= params.minListings!);
-  }
-  if (params.onlyNegativeBalance) {
-    baseline = baseline.filter((h) => h.walletBalance < 0);
-  }
-
-  // 9. Hotel stars / Agency trips
-  if (params.minStars && params.minStars > 0) {
-    baseline = baseline.filter((h) => (h.hotelMetadata?.starRating || 0) >= params.minStars!);
-  }
-  if (params.hasTrips) {
-    baseline = baseline.filter((h) => !!h.agencyMetadata?.hasTrips);
-  }
-
-  // Compute category facets dynamically based on baseline matching current filters
-  const facets: Record<string, Record<string, number>> = {
-    category: {
-      all: baseline.length,
-      host: baseline.filter((h) => getProviderCategory(h) === "host").length,
-      hotel_hostel: baseline.filter((h) => getProviderCategory(h) === "hotel_hostel").length,
-      travel_agency: baseline.filter((h) => getProviderCategory(h) === "travel_agency").length,
-      experience_company: baseline.filter((h) => getProviderCategory(h) === "experience_company").length,
-      rental_agency: baseline.filter((h) => getProviderCategory(h) === "rental_agency").length,
-    },
-    hostType: {
-      all: store.hosts.length,
-      individual: store.hosts.filter((h) => h.hostType === "individual").length,
-      agency: store.hosts.filter((h) => h.hostType === "agency").length,
-      hotel: store.hosts.filter((h) => h.hostType === "hotel").length,
-      hostel: store.hosts.filter((h) => h.hostType === "hostel").length,
-    },
-    status: {
-      all: store.hosts.length,
-      applied: store.hosts.filter((h) => h.status === "applied").length,
-      under_review: store.hosts.filter((h) => h.status === "under_review").length,
-      approved: store.hosts.filter((h) => h.status === "approved").length,
-      rejected: store.hosts.filter((h) => h.status === "rejected").length,
-      suspended: store.hosts.filter((h) => h.status === "suspended").length,
-      banned: store.hosts.filter((h) => h.status === "banned").length,
-    },
-  };
-
-  // Now apply category filter to get final results
-  let filtered = params.category && params.category !== "all"
-    ? baseline.filter((h) => getProviderCategory(h) === params.category)
-    : baseline;
-
-  // Sorting
   const sortBy = params.sortBy || "joined";
   const order = params.sortOrder === "asc" ? 1 : -1;
-
   filtered.sort((a, b) => {
     if (sortBy === "rating") return (a.rating - b.rating) * order;
     if (sortBy === "listings") return (a.listingsCount - b.listingsCount) * order;
@@ -178,187 +144,157 @@ export async function listHosts(
     return (new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()) * order;
   });
 
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize).map((h) => ({
-    ...h,
-    providerCategory: getProviderCategory(h),
-    formattedId: h.formattedId || `#P${h.id.replace("hst_", "").padStart(5, "0")}`,
-  }));
+  const facets: Record<string, Record<string, number>> = {
+    category: countBy(byType, getProviderCategory, ["host", "hotel_hostel", "travel_agency", "experience_company", "rental_agency"]),
+    hostType: countBy(baseline, (h) => h.hostType, ["individual", "agency", "hotel", "hostel"]),
+    status: countBy(all, (h) => h.status, ["applied", "under_review", "approved", "rejected", "suspended", "banned"]),
+  };
 
+  const total = filtered.length;
   return {
-    rows,
+    rows: filtered.slice((page - 1) * pageSize, page * pageSize),
     total,
     page,
     pageSize,
-    totalPages,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
     facets,
   };
 }
 
 export async function getHostById(id: string): Promise<Host | null> {
-  await delay(150);
-  const host = store.hosts.find((h) => h.id === id);
-  return host ? { ...host, walletBalance: getHostBalance(host.id) } : null;
+  const detail = await getHostDetail(id);
+  return detail?.host ?? null;
 }
 
-/** Full filtered host list (all pages) as CSV; audited. */
-export async function exportHosts(params: HostFilterParams, actor: AdminActor): Promise<CsvExport> {
-  const result = await listHosts({ ...params, page: 1, pageSize: Number.MAX_SAFE_INTEGER });
+/** One host with its documents, checklist, credit floor and wallet state. Null when unknown or unreachable. */
+export async function getHostDetail(id: string): Promise<{ host: Host; extras: HostExtras } | null> {
+  try {
+    const [raw, wallet] = await Promise.all([
+      apiOrNull<ApiAdminHost>(`/admin/hosts/${encodeURIComponent(id)}`),
+      walletOf(id),
+    ]);
+    if (!raw) return null;
+    const host = toHost(raw, wallet);
+    return { host: { ...host, providerCategory: getProviderCategory(host) }, extras: toHostExtras(raw, wallet) };
+  } catch (error) {
+    logReadError("admin host", error);
+    return null;
+  }
+}
+
+/** Full filtered host list (all pages) as CSV. */
+export async function exportHosts(params: HostFilterParams, _actor: AdminActor): Promise<CsvExport> {
+  const result = await listHosts({ ...params, page: 1, pageSize: 500 });
   const rows = result.rows;
   const csv = toCsv(
-    ["ID", "Owner", "Business", "Email", "Phone", "Host Type", "Category", "Status", "Verification", "Wilaya", "City", "Rating", "Listings", "Bookings", "Wallet Balance (DZD)", "Commission (%)", "Joined"],
+    ["ID", "Owner", "Business", "Email", "Phone", "Host Type", "Status", "Verification", "Rating", "Wallet Balance (DZD)", "Commission (%)", "Joined"],
     rows.map((h) => [
-      h.formattedId || h.id, h.ownerName, h.businessName, h.email, h.phone, h.hostType, h.providerCategory, h.status,
-      h.verificationStatus, h.wilayaCode, h.city, h.rating, h.listingsCount, h.bookingsCount, h.walletBalance,
-      h.commissionRate, h.joinedAt,
-    ])
+      h.id, h.ownerName, h.businessName, h.email, h.phone, h.hostType, h.status,
+      h.verificationStatus, h.rating, h.walletBalance, h.commissionRate, h.joinedAt,
+    ]),
   );
-  await logExport(actor, "hosts", rows.length, { ...params });
-  return { filename: `darna_hosts_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
+  return { filename: `bladus_hosts_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
 }
 
-const HOST_ACTION_PERMISSION: Record<HostAction, Permission> = {
-  approve: "hosts.approve",
-  reject: "hosts.reject",
-  suspend: "hosts.suspend",
-  unsuspend: "hosts.suspend",
-  ban: "hosts.delete",
-  delete: "hosts.delete",
-  restore: "hosts.delete",
-};
+type HostDecision = "approve" | "reject" | "request-changes" | "suspend" | "unsuspend" | "ban";
 
-const HOST_ACTION_AUDIT: Record<HostAction, string> = {
-  approve: "HOST_APPROVE",
-  reject: "HOST_REJECT",
-  suspend: "HOST_SUSPEND",
-  unsuspend: "HOST_UNSUSPEND",
-  ban: "HOST_BAN",
-  delete: "HOST_DELETE",
-  restore: "HOST_RESTORE",
-};
-
-const HOST_ACTIONS_REQUIRING_REASON: readonly HostAction[] = ["reject", "suspend", "ban"];
-
-/**
- * Single guarded entry point for host moderation. Validates permission, the
- * mandatory reason, and the allowed-transition map (lib/domain/transitions)
- * before writing; soft delete remembers the previous status and restore
- * returns to it.
- */
-async function transitionHost(id: string, action: HostAction, actor: AdminActor, reason?: string): Promise<Host> {
-  assertCan(actor.role, HOST_ACTION_PERMISSION[action]);
-  if (HOST_ACTIONS_REQUIRING_REASON.includes(action) && !isValidReason(reason)) {
-    throw new ValidationError(`A reason is required to ${action} a host`);
-  }
-  await delay(200);
-
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new DomainError("Host not found");
-  const prev = { ...store.hosts[idx] };
-  if (!canHostAction(prev.status, action)) {
-    throw new DomainError(`Cannot ${action} a host whose status is ${prev.status}`);
-  }
-
-  let next: Host;
-  switch (action) {
-    case "approve":
-      next = { ...prev, status: "approved", verificationStatus: "verified" };
-      break;
-    case "reject":
-      next = { ...prev, status: "rejected", adminNotes: [...prev.adminNotes, `Rejected: ${reason}`] };
-      break;
-    case "suspend":
-      next = { ...prev, status: "suspended", adminNotes: [...prev.adminNotes, `Suspended: ${reason}`] };
-      break;
-    case "unsuspend":
-      next = { ...prev, status: "approved" };
-      break;
-    case "ban":
-      next = { ...prev, status: "banned", adminNotes: [...prev.adminNotes, `Banned: ${reason}`] };
-      break;
-    case "delete":
-      next = { ...prev, status: "deleted", statusBeforeDelete: prev.status };
-      break;
-    case "restore": {
-      const restored = prev.statusBeforeDelete && prev.statusBeforeDelete !== "deleted" ? prev.statusBeforeDelete : "under_review";
-      next = { ...prev, status: restored, statusBeforeDelete: undefined };
-      break;
-    }
-  }
-  store.hosts[idx] = next;
-
-  await logAudit(
-    actor,
-    HOST_ACTION_AUDIT[action],
-    "host",
-    id,
-    `${action} host ${prev.ownerName} (${prev.status} -> ${next.status})${reason ? `: ${reason}` : ""}`,
-    { status: prev.status },
-    { status: next.status }
+async function decide(id: string, action: HostDecision, reason?: string): Promise<Host> {
+  const raw = await write(() =>
+    api<ApiAdminHost>(`/admin/hosts/${encodeURIComponent(id)}/${action}`, {
+      method: "POST",
+      body: reason ? { reason } : {},
+    }),
   );
-
-  return { ...next, walletBalance: getHostBalance(next.id) };
+  return toHost(raw, await walletOf(id));
 }
 
-export async function approveHost(id: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "approve", actor);
+export async function approveHost(id: string, _actor: AdminActor): Promise<Host> {
+  return decide(id, "approve");
 }
 
-export async function rejectHost(id: string, reason: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "reject", actor, reason);
+export async function rejectHost(id: string, reason: string, _actor: AdminActor): Promise<Host> {
+  return decide(id, "reject", reason);
 }
 
-export async function suspendHost(id: string, reason: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "suspend", actor, reason);
+export async function requestHostChanges(id: string, reason: string, _actor: AdminActor): Promise<Host> {
+  return decide(id, "request-changes", reason);
 }
 
-export async function unsuspendHost(id: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "unsuspend", actor);
+export async function suspendHost(id: string, reason: string, _actor: AdminActor): Promise<Host> {
+  return decide(id, "suspend", reason);
 }
 
-export async function banHost(id: string, reason: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "ban", actor, reason);
+export async function unsuspendHost(id: string, _actor: AdminActor): Promise<Host> {
+  return decide(id, "unsuspend");
 }
 
-export async function deleteHost(id: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "delete", actor);
+export async function banHost(id: string, reason: string, _actor: AdminActor): Promise<Host> {
+  return decide(id, "ban", reason);
 }
 
-export async function restoreHost(id: string, actor: AdminActor): Promise<Host> {
-  return transitionHost(id, "restore", actor);
+/** Soft delete (409 has_future_bookings while bookings are upcoming). */
+export async function deleteHost(id: string, _actor: AdminActor): Promise<Host> {
+  const before = await getHostById(id);
+  await write(() => api(`/admin/hosts/${encodeURIComponent(id)}`, { method: "DELETE" }));
+  return before ? { ...before, status: "deleted", statusBeforeDelete: before.status } : ({ id, status: "deleted" } as Host);
 }
 
-export async function overrideCommission(
-  id: string,
-  newRate: number,
-  actor: AdminActor
-): Promise<Host> {
-  assertCan(actor.role, "hosts.commission_override");
-  if (!isValidCommissionRate(newRate)) {
+export async function restoreHost(id: string, _actor: AdminActor): Promise<Host> {
+  const raw = await write(() => api<ApiAdminHost>(`/admin/hosts/${encodeURIComponent(id)}/restore`, { method: "POST" }));
+  return toHost(raw, await walletOf(id));
+}
+
+/** Own commission rate for one host, in percent (0 to 100, 2 decimals) with the reason the backend requires. */
+export async function overrideCommission(id: string, newRate: number, _actor: AdminActor, reason?: string): Promise<Host> {
+  const rateBp = Math.round(newRate * 100);
+  if (!Number.isInteger(rateBp) || rateBp < 0 || rateBp > 10_000) {
     throw new ValidationError("Commission rate must be between 0 and 100 with at most 2 decimals");
   }
-  await delay(200);
-
-  const idx = store.hosts.findIndex((h) => h.id === id);
-  if (idx === -1) throw new DomainError("Host not found");
-
-  const prev = { ...store.hosts[idx] };
-  store.hosts[idx] = {
-    ...store.hosts[idx],
-    commissionRate: newRate,
-    isCommissionOverridden: true,
-  };
-
-  await logAudit(
-    actor,
-    "HOST_COMMISSION_OVERRIDE",
-    "host",
-    id,
-    `Overrode commission rate to ${newRate}% for host ${prev.ownerName}`,
-    { commissionRate: prev.commissionRate, isCommissionOverridden: prev.isCommissionOverridden ?? false },
-    { commissionRate: newRate, isCommissionOverridden: true }
+  const raw = await write(() =>
+    api<ApiAdminHost>(`/admin/hosts/${encodeURIComponent(id)}/commission-override`, {
+      method: "PUT",
+      body: { rate_bp: rateBp, reason: reason ?? "" },
+    }),
   );
+  return toHost(raw, await walletOf(id));
+}
 
-  return { ...store.hosts[idx], walletBalance: getHostBalance(id) };
+/** Back to the default rate of the host type. */
+export async function clearCommissionOverride(id: string, _actor: AdminActor): Promise<Host | null> {
+  await write(() => api(`/admin/hosts/${encodeURIComponent(id)}/commission-override`, { method: "DELETE" }));
+  return getHostById(id);
+}
+
+/** The host's own credit floor (how far below zero the wallet may go), in dinars, with a reason. */
+export async function setCreditLimit(id: string, amountDzd: number, reason: string, _actor: AdminActor): Promise<Host> {
+  const raw = await write(() =>
+    api<ApiAdminHost>(`/admin/hosts/${encodeURIComponent(id)}/credit-limit-override`, {
+      method: "PUT",
+      body: { credit_limit: { amount_minor: Math.round(amountDzd * 100), currency: "DZD" }, reason },
+    }),
+  );
+  return toHost(raw, await walletOf(id));
+}
+
+/** A 5-minute link to a KYC document; every call is audited by the backend (BR-MED-02). */
+export async function getDocumentUrl(documentId: string, _actor: AdminActor): Promise<{ url: string; expiresAt: string }> {
+  const answer = await write(() =>
+    api<{ url: string; expires_at: string }>(`/admin/documents/${encodeURIComponent(documentId)}/url`),
+  );
+  return { url: answer.url, expiresAt: answer.expires_at };
+}
+
+export async function reviewDocument(
+  documentId: string,
+  approve: boolean,
+  reason: string | undefined,
+  _actor: AdminActor,
+): Promise<{ id: string; status: string }> {
+  const answer = await write(() =>
+    api<{ id: string; status: string }>(
+      `/admin/documents/${encodeURIComponent(documentId)}/${approve ? "approve" : "reject"}`,
+      { method: "POST", body: reason ? { reason } : {} },
+    ),
+  );
+  return { id: answer.id, status: answer.status };
 }

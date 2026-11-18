@@ -24,7 +24,7 @@ import {
   BrandClockIcon,
   BrandChartIcon,
 } from "@/components/icons";
-import { Badge, Button, Card, Input, KitEmptyState, StatCard, Tabs, TabPanel, cn } from "@/components/ui";
+import { Badge, Button, Card, Input, KitEmptyState, StatCard, Tabs, TabPanel, Textarea, cn } from "@/components/ui";
 import type { BadgeTone } from "@/components/ui";
 import { useActionError } from "@/hook/useActionError";
 
@@ -77,12 +77,13 @@ export default function ReservationsClient({ initialReservations, listings }: Re
   const [searchQuery, setSearchQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
 
   const matchesSearch = (r: Reservation) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const listingTitle = r.listing?.title.toLowerCase() || "";
-    return listingTitle.includes(q) || r.id.toLowerCase().includes(q);
+    const listingTitle = (r.listing?.title || r.title || "").toLowerCase();
+    return listingTitle.includes(q) || `${r.reference ?? ""} ${r.id}`.toLowerCase().includes(q);
   };
   const filtered = reservations.filter(
     (r) => (filterStatus === "all" || r.status === filterStatus) && matchesSearch(r)
@@ -101,20 +102,25 @@ export default function ReservationsClient({ initialReservations, listings }: Re
   const handleStatusChange = async (id: string, newStatus: "confirmed" | "cancelled") => {
     setIsProcessing(id);
     try {
-      const result = await respondToReservationAction(id, newStatus === "confirmed" ? "confirm" : "decline");
+      const result =
+        newStatus === "confirmed"
+          ? await respondToReservationAction(id, "confirm")
+          : await respondToReservationAction(id, "decline", declineReason);
       if (!result.ok) {
         toast.error(errorText(result));
-        return;
+        return false;
       }
-      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: result.data.status } : r)));
+      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, ...result.data, listing: r.listing } : r)));
       router.refresh();
       if (newStatus === "confirmed") {
         toast.success(t("toastAccepted"));
       } else {
         toast.info(t("toastDeclined"));
       }
+      return true;
     } catch {
       toast.error(t("toastUpdateFailed"));
+      return false;
     } finally {
       setIsProcessing(null);
     }
@@ -190,7 +196,7 @@ export default function ReservationsClient({ initialReservations, listings }: Re
             {filtered.map((res, i) => {
               const listing = res.listing;
               const coverImage = listing?.imageSrc?.[0] || "/assets/placeholder.jpg";
-              const title = listing?.title || t("propertyFallback");
+              const title = listing?.title || res.title || t("propertyFallback");
               const busy = isProcessing === res.id;
 
               return (
@@ -214,7 +220,7 @@ export default function ReservationsClient({ initialReservations, listings }: Re
                             {t(`status.${res.status}`)}
                           </Badge>
                           <span className="font-mono text-meta text-primary-500">
-                            {t("reservationId", { id: res.id })}
+                            {t("reservationId", { id: res.reference ?? res.id.slice(0, 8).toUpperCase() })}
                           </span>
                         </div>
                         <h2 className="text-title text-primary-900 line-clamp-1">
@@ -251,7 +257,7 @@ export default function ReservationsClient({ initialReservations, listings }: Re
                               size="sm"
                               disabled={busy}
                               onClick={() => setDecliningId(res.id)}
-                              aria-label={t("declineAria", { id: res.id })}
+                              aria-label={t("declineAria", { id: res.reference ?? res.id })}
                               leadingIcon={<BrandCloseIcon size={16} aria-hidden="true" />}
                               className="!text-red-700 ring-1 ring-inset ring-red-200 hover:!bg-red-50"
                             >
@@ -263,7 +269,7 @@ export default function ReservationsClient({ initialReservations, listings }: Re
                               loading={busy && !decliningId}
                               disabled={busy}
                               onClick={() => handleStatusChange(res.id, "confirmed")}
-                              aria-label={t("acceptAria", { id: res.id })}
+                              aria-label={t("acceptAria", { id: res.reference ?? res.id })}
                               leadingIcon={<BrandCheckIcon size={16} aria-hidden="true" />}
                             >
                               {t("accept")}
@@ -298,13 +304,33 @@ export default function ReservationsClient({ initialReservations, listings }: Re
         cancelLabel={t("declineKeep")}
         isLoading={isProcessing === decliningId}
         onConfirm={async () => {
-          if (decliningId) {
-            await handleStatusChange(decliningId, "cancelled");
+          if (!decliningId) return;
+          if (!declineReason.trim()) {
+            toast.error(errorText({ code: "REASON_REQUIRED" }));
+            return;
+          }
+          if (await handleStatusChange(decliningId, "cancelled")) {
             setDecliningId(null);
+            setDeclineReason("");
           }
         }}
-        onCancel={() => setDecliningId(null)}
-      />
+        onCancel={() => {
+          setDecliningId(null);
+          setDeclineReason("");
+        }}
+      >
+        <div className="mt-4">
+          <Textarea
+            id="reservations-decline-reason"
+            label={t("declineReasonLabel")}
+            rows={2}
+            required
+            maxLength={2000}
+            value={declineReason}
+            onChange={(e) => setDeclineReason(e.target.value)}
+          />
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

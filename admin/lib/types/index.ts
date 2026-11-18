@@ -139,6 +139,10 @@ export interface AdminUser {
   status?: "active" | "invited" | "deactivated";
   invitedAt?: string;
   invitedBy?: string;
+  /** True when the staff member has an authenticator app (backend StaffMember.mfa_enrolled). */
+  mfaEnrolled?: boolean;
+  /** Backend staff role code ("admin" today). */
+  backendRole?: string;
 }
 
 /**
@@ -152,6 +156,8 @@ export interface AdminActor {
   role: AdminRole;
   /** Client IP of the request, for the audit trail. */
   ip?: string;
+  /** Permissions of the staff session (GET /admin/auth/session); preferred over the role table. */
+  permissions?: Permission[];
 }
 
 /** Who an audit entry is attributed to (an admin, or an anonymous sign-in attempt). */
@@ -196,7 +202,11 @@ export type Permission =
   | "reports.export"
   | "audit.view"
   | "team.manage"
-  | "settings.manage";
+  | "settings.manage"
+  | "kyc.view_documents"
+  | "privacy.handle_requests"
+  | "ledger.adjust"
+  | "reports.view";
 
 export type HostStatus =
   | "applied"
@@ -467,6 +477,10 @@ export interface Booking {
     resolvedBy: string;
   };
   adminNotes: string[];
+  /** Raw backend status (pending, confirmed, declined, expired, cancelled, completed). */
+  apiStatus?: string;
+  /** Commune name from the booking snapshot (the API has no wilaya code on bookings). */
+  commune?: string;
 }
 
 export type BookingPaymentStatus = "paid" | "partially_refunded" | "refunded" | "pending" | "failed";
@@ -492,6 +506,12 @@ export interface ReviewItem {
   status: ReviewStatus;
   flagReason?: string;
   flaggedBy?: string;
+  /** When the oldest open report was filed (API). */
+  flaggedAt?: string;
+  /** Number of open reports (API). */
+  openReports?: number;
+  /** BLD reference of the reviewed booking (API). */
+  bookingReference?: string;
   createdAt: string;
   hostReply?: {
     comment: string;
@@ -524,6 +544,8 @@ export interface WalletTransaction {
   receiptReference?: string;
   adminActor?: string;
   createdAt: string;
+  /** Raw backend ledger transaction kind (wallet_topup, commission, refund_due...). */
+  kind?: string;
 }
 
 export interface HostWallet {
@@ -543,6 +565,12 @@ export interface HostWallet {
   lastTransactionAt: string;
   isNegative: boolean;
   commissionRate?: number;
+  /** How far below zero the wallet may go (DZD, API credit_limit). */
+  creditLimitDzd?: number;
+  /** Backend wallet state: ok, negative or below_floor. */
+  walletState?: string;
+  /** "override" when the host has its own commission rate. */
+  commissionRateSource?: "default" | "override";
 }
 
 export interface PayoutRequest {
@@ -662,6 +690,8 @@ export interface CategoryItem {
   listingCount: number;
   isActive: boolean;
   order: number;
+  /** Vertical as the API names it (the API also has "hostel", shown under "hotel" here). */
+  apiVertical?: string;
 }
 
 export interface PromotionCoupon {
@@ -681,6 +711,10 @@ export interface PromotionCoupon {
   scope?: "all" | ListingVertical;
   targetWilayas?: string[];
   targetHostTypes?: HostType[];
+  /** Raw on/off switch of the coupon (API is_active); status may still be "expired". */
+  isActive?: boolean;
+  /** Who pays the discount (API funded_by). */
+  fundedBy?: "platform" | "host";
 }
 
 export interface PlatformSettings {
@@ -702,6 +736,38 @@ export interface PlatformSettings {
     sessionTimeoutMinutes?: number;
     twoFactorRequired?: boolean;
   };
+  /** Hours a host has to answer a booking request (backend request_ttl_hours). */
+  requestTtlHours?: number;
+  /** Default credit floor of host wallets, in dinars (backend credit_limit_minor). */
+  creditLimitDzd?: number;
+  /** Top-ups above this amount need a second admin, in dinars (backend topup_four_eyes_minor). */
+  topupFourEyesDzd?: number;
+  /** Settings version in force, its date and author. */
+  settingsVersion?: number;
+  settingsUpdatedAt?: string | null;
+  settingsUpdatedBy?: string | null;
+}
+
+/** One version of the platform settings history (GET /admin/settings/versions). */
+export interface SettingsVersion {
+  version: number;
+  createdAt: string | null;
+  createdBy: string | null;
+  data: Record<string, unknown>;
+}
+
+/** A data protection request (backend DataSubjectRequestAdmin, BR-PRV-02). */
+export interface DataRequest {
+  id: string;
+  kind: string;
+  status: string;
+  dueAt: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  userId: string | null;
+  userName: string;
+  notes: string | null;
+  handledBy: string | null;
 }
 
 export interface PaginatedResult<T> {

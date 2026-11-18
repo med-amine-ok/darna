@@ -158,3 +158,16 @@ def test_br_acc_04_plain_session_for_staff_cannot_reach_admin_api(api):
     assert session.scope == "web" and session.mfa_verified_at is None
     api.credentials(HTTP_AUTHORIZATION=f"Bearer {raw}")
     assert api.get("/api/v1/admin/users").status_code in (401, 403)
+
+
+def test_br_sys_07_forwarded_ip_trusted_only_from_known_proxies(rf, settings):
+    """X-Forwarded-For is ignored by default; with N trusted proxies the Nth entry from the right is used."""
+    from apps.accounts.views import client_ip
+
+    request = rf.get("/", HTTP_X_FORWARDED_FOR="6.6.6.6, 203.0.113.9", REMOTE_ADDR="10.0.0.2")
+    settings.TRUSTED_PROXY_HOPS = 0
+    assert client_ip(request) == "10.0.0.2"
+    settings.TRUSTED_PROXY_HOPS = 1
+    assert client_ip(request) == "203.0.113.9"
+    spoof_only = rf.get("/", HTTP_X_FORWARDED_FOR="", REMOTE_ADDR="10.0.0.2")
+    assert client_ip(spoof_only) == "10.0.0.2"

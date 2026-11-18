@@ -9,6 +9,9 @@ const intlMiddleware = createMiddleware({
   localePrefix: "always",
 });
 
+/** Same name as API_TOKEN_COOKIE in lib/api/client.ts. */
+const API_TOKEN_COOKIE = "bladus_api_token";
+
 // "/trips" itself (the guest's bookings) is private; "/trips/<id>" is a public trip page.
 const PROTECTED_USER_EXACT = ["/trips"];
 
@@ -36,9 +39,10 @@ function redirectTo(
 }
 
 /**
- * Coarse, cookie-only route guards. The session is verified (HMAC) here, but
- * pages and server actions still re-check everything against the server
- * store, the middleware is only a fast first line of defence.
+ * Coarse, cookie-only route guards. The session claim is verified (HMAC) here,
+ * but pages and server actions still ask the Django API, which is the
+ * authority (a revoked token signs the person out there). The middleware is
+ * only a fast first line of defence.
  */
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -47,9 +51,11 @@ export default async function middleware(request: NextRequest) {
   const locale = localeMatch?.[1] || defaultLocale;
   const pathWithoutLocale = localeMatch ? localeMatch[2] || "/" : pathname;
 
-  const session = await verifySession(
-    request.cookies.get(SESSION_COOKIE)?.value,
-  );
+  // Signed in = a valid signed claim AND the Django token cookie
+  // (lib/api/client.ts API_TOKEN_COOKIE; not imported here: that module is server-only).
+  const session = request.cookies.get(API_TOKEN_COOKIE)?.value
+    ? await verifySession(request.cookies.get(SESSION_COOKIE)?.value)
+    : null;
 
   const isProtectedUserRoute =
     PROTECTED_USER_EXACT.includes(pathWithoutLocale) ||

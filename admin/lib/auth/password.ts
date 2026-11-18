@@ -1,34 +1,21 @@
 import "server-only";
 
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-
 /**
- * Password hashing for the mock credential store. Stored format:
- *   scrypt$<saltHex>$<hashHex>
- * Same shape a real DB column would hold, so swapping the store for a table
- * does not change the verification code.
+ * Staff passwords are hashed and checked by the Django API only; this app
+ * never stores or compares them. What stays here is the input policy used
+ * before a password is sent (sign-in length cap, staff password rules of
+ * POST /admin/auth/invitations/accept: 12 to 256 characters).
  */
 
-const KEY_LEN = 64;
+export const MAX_PASSWORD_LEN = 256;
+export const MIN_STAFF_PASSWORD_LEN = 12;
 
-export function hashPassword(password: string): string {
-  const salt = randomBytes(16);
-  const hash = scryptSync(password, salt, KEY_LEN);
-  return `scrypt$${salt.toString("hex")}$${hash.toString("hex")}`;
+/** Trims nothing (spaces are part of a password) and caps the length. */
+export function normalisePasswordInput(value: unknown): string {
+  return typeof value === "string" ? value.slice(0, MAX_PASSWORD_LEN) : "";
 }
 
-export function verifyPassword(password: string, stored: string): boolean {
-  const [scheme, saltHex, hashHex] = stored.split("$");
-  if (scheme !== "scrypt" || !saltHex || !hashHex) return false;
-  const expected = Buffer.from(hashHex, "hex");
-  const actual = scryptSync(password, Buffer.from(saltHex, "hex"), expected.length);
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
-}
-
-// Used when the email is unknown so the response time does not reveal
-// whether an account exists.
-let dummyHash: string | null = null;
-export function burnPasswordCheck(password: string): void {
-  if (!dummyHash) dummyHash = hashPassword(randomBytes(16).toString("hex"));
-  verifyPassword(password, dummyHash);
+/** True when a new staff password meets the backend's length rule. */
+export function isAcceptableStaffPassword(value: string): boolean {
+  return value.length >= MIN_STAFF_PASSWORD_LEN && value.length <= MAX_PASSWORD_LEN;
 }

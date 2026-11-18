@@ -45,7 +45,7 @@ def trip_reviews(trip_key) -> tuple[QuerySet, object]:
 
 def user_reviews(user_id, *, role: str = "host") -> QuerySet:
     """
-    Public reviews of a person (``GET /users/{id}/reviews``).
+    Public reviews of a person (``GET /users/{id or handle}/reviews``).
 
     ``role=author``: published reviews the person wrote as a guest.
     ``role=host``: published guest reviews received on the person's own
@@ -53,9 +53,10 @@ def user_reviews(user_id, *, role: str = "host") -> QuerySet:
     """
     try:
         user_id = uuid.UUID(str(user_id))
-    except ValueError as exc:
-        raise NotFoundError("User not found.") from exc
-    if not User.objects.filter(pk=user_id, deleted_at__isnull=True).exists():
+    except ValueError:
+        # A profile handle (ACC-06) instead of the id.
+        user_id = User.objects.filter(handle=str(user_id).lower()).values_list("pk", flat=True).first()
+    if not user_id or not User.objects.filter(pk=user_id, deleted_at__isnull=True).exists():
         raise NotFoundError("User not found.")
     if role == "author":
         return published_guest_reviews().filter(author_id=user_id)

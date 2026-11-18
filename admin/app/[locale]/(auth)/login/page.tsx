@@ -1,8 +1,9 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { RECOVERY_SHOWN_COOKIE } from "@/lib/auth/cookies";
 import { getCurrentAdmin } from "@/lib/auth/current-admin";
 import { normalizeLocale, safeReturnTo } from "@/lib/auth/return-to";
-import { listDevDemoAccounts } from "@/lib/data/credentials";
-import LoginForm, { type DemoAccount } from "./LoginForm";
+import LoginForm from "./LoginForm";
 import { pageMetadata } from "@/lib/metadata";
 
 export const generateMetadata = pageMetadata("login");
@@ -17,17 +18,15 @@ export default async function LoginPage({
   const locale = normalizeLocale(params.locale);
   const rawReturnTo = typeof searchParams.returnTo === "string" ? searchParams.returnTo : undefined;
   const returnTo = safeReturnTo(rawReturnTo, locale);
+  const expired = searchParams.expired === "1";
 
-  // Already signed in with a session that is still valid against the admin
-  // store -> skip the form. (Done here rather than in middleware, which can
-  // only see the JWT and would loop on revoked/deactivated sessions.)
-  if (await getCurrentAdmin()) {
+  // Already signed in with a session the backend still accepts -> skip the form.
+  // (Done here rather than in middleware, which only sees that a cookie exists.)
+  // Not while the one-time recovery codes are on screen after an enrolment.
+  const showingRecovery = cookies().get(RECOVERY_SHOWN_COOKIE)?.value === "1";
+  if (!showingRecovery && (await getCurrentAdmin())) {
     redirect(returnTo);
   }
 
-  // Quick-fill demo accounts exist only in `next dev`. Only emails/roles are
-  // sent to the client; the password is fetched on click by a dev-only action.
-  const demoAccounts: DemoAccount[] = await listDevDemoAccounts();
-
-  return <LoginForm returnTo={returnTo} demoAccounts={demoAccounts} />;
+  return <LoginForm returnTo={returnTo} expired={expired} />;
 }

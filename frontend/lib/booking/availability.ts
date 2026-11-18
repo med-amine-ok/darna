@@ -9,13 +9,44 @@ import { addDaysToKey, isDateKey, nightsBetween, eachNightKey, type DateKey } fr
 import { roomTypeInventory } from "./pricing";
 import type { ActionError } from "@/lib/action-result";
 
-/** Server-built availability passed to the booking calendars as props. */
+/** One open session of an experience (GET /listings/{id}/availability). */
+export interface ListingSlot {
+  id: string;
+  /** Local (Algeria) date of the start. */
+  date: DateKey;
+  startsAt: string;
+  endsAt: string;
+  seatsTotal: number;
+  seatsLeft: number;
+  /** Price per person, DZD. */
+  price: number;
+}
+
+/**
+ * Availability passed to the booking calendars as props, built on the server
+ * from GET /listings/{id}/availability (lib/data/reservations.ts).
+ */
 export interface ListingAvailability {
   today: DateKey;
   /** Booked or blocked nights for whole-listing bookings (homes, vehicles, experiences). */
   unavailable: DateKey[];
   /** Fully booked or blocked nights per room type (hotels, hostels). */
   unavailableByRoomType: Record<string, DateKey[]>;
+  /** Rooms or beds left per room type and night (hotels, hostels). */
+  unitsLeftByRoomType?: Record<string, Record<DateKey, number>>;
+  /** Nightly price per room type and night, DZD, as the backend prices it (hotels, hostels). */
+  priceByRoomType?: Record<string, Record<DateKey, number>>;
+  /** Open sessions (experiences); a booking needs one of them. */
+  slots?: ListingSlot[];
+  /** First day after the known window (exclusive). */
+  until?: DateKey;
+}
+
+/** Sessions of an experience on one date that still have seats for `guests` people. */
+export function slotsOn(availability: ListingAvailability, date: DateKey, guests = 1): ListingSlot[] {
+  return (availability.slots ?? [])
+    .filter((s) => s.date === date && s.seatsLeft >= Math.max(1, guests))
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 
 /** Booking kinds that reserve the whole listing for a date range. */

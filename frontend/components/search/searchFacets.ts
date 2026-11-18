@@ -67,6 +67,9 @@ export function verticalOf(l: Pick<Listing, "category" | "businessCategory" | "t
 
 export function toFacet(l: Listing): ListingFacet {
   const place = locatePlace(l);
+  // The API gives the wilaya code of the commune; the local table only knows a few communes.
+  if (l.wilayaCode) place.wilaya = l.wilayaCode;
+  if (l.commune) place.commune = l.commune;
   return {
     price: l.price,
     vertical: verticalOf(l),
@@ -103,6 +106,8 @@ export function toTripFacet(t: Trip): TripFacet {
     if (month >= 1 && month <= 12) months.add(month);
   }
   const place = locatePlace(t);
+  if (t.wilayaCode) place.wilaya = t.wilayaCode;
+  if (t.commune) place.commune = t.commune;
   return {
     price: t.pricePerPerson,
     wilaya: place.wilaya,
@@ -137,7 +142,7 @@ export const AMENITY_GROUPS: Record<string, string[]> = {
   pool: ["pool"],
   freeParking: ["parking", "valet"],
   kitchen: ["kitchen"],
-  seaView: ["sea view", "bay view"],
+  seaView: ["sea view", "bay view", "beach access"],
   breakfast: ["breakfast"],
   spa: ["spa", "hammam", "jacuzzi", "hot tub"],
   gym: ["gym"],
@@ -149,7 +154,7 @@ export const AMENITY_GROUPS: Record<string, string[]> = {
   heating: ["heating"],
   elevator: ["elevator"],
   tv: ["tv"],
-  washer: ["laundry", "washer"],
+  washer: ["laundry", "washer", "washing machine"],
   lockers: ["locker"],
   airportTransfer: ["airport transfer"],
 };
@@ -361,7 +366,7 @@ export function matchesType(f: Pick<ListingFacet, "type" | "businessCategory" | 
   if (pt === "hostel") return f.businessCategory === "hostel" || f.type.includes("hostel");
   if (pt === "entire home" || pt === "entire") return f.businessCategory !== "hotel" && f.businessCategory !== "hostel" && !f.units.includes("bed");
   if (pt === "private room" || pt === "private_room") return f.type.includes("room") || f.units.includes("room");
-  if (pt === "riad") return f.type.includes("riad") || f.type.includes("ksar") || f.type.includes("heritage");
+  if (pt === "riad") return f.type.includes("riad") || f.type.includes("ksar") || f.type.includes("heritage") || f.type.includes("traditional");
   return f.type === pt || f.businessCategory === pt;
 }
 

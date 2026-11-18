@@ -81,7 +81,8 @@
     "totalAmount": "المبلغ الإجمالي",
     "totalWithEur": "{dzd} ({eur})",
     "download": "طباعة الإيصال",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "discount": "خصم الإقامة الطويلة"
   },
   "paymentStatus": {
     "paid": "مدفوع بالكامل",
@@ -181,5 +182,47 @@
     "reserved": "تم حجز الرحلة! جهّز حقائبك لاكتشاف الجزائر.",
     "bookFailed": "تعذّر حجز الرحلة. يرجى التحقق من التفاصيل."
   },
-  "eyebrow": "رحلاتك"
+  "eyebrow": "رحلاتك",
+  "payAtHost": "يُدفع للمضيف مباشرة",
+  "totalDue": "المجموع",
+  "cancelPreviewLoading": "جارٍ حساب المبلغ المسترد...",
+  "cancelPreviewFailed": "تعذّر حساب المبلغ المسترد حالياً. يرجى المحاولة بعد قليل.",
+  "checkInCode": "رمز الوصول",
+  "checkInCodeHelp": "أظهر هذا الرمز لمضيفك عند وصولك.",
+  "address": "العنوان",
+  "hostPhone": "المضيف {name}",
+  "confirmStay": "تأكيد إقامتي",
+  "toastStayConfirmed": "شكراً، تم تأكيد إقامتك.",
+  "refundReceived": "استلمته",
+  "refundNotReceived": "لم أستلمه",
+  "refundNotReceivedPrompt": "أخبرنا باختصار بما حدث مع هذا الاسترداد.",
+  "toastRefundConfirmed": "شكراً، تم تسجيل الاسترداد كمستلم.",
+  "toastRefundDisputed": "سيراجع دعم BLADUS هذا الاسترداد.",
+  "refundStatus": {
+    "open": "استرداد مستحق على المضيف",
+    "declared": "يقول المضيف إنه دفع الاسترداد",
+    "confirmed": "تم استلام الاسترداد",
+    "disputed": "الاسترداد قيد المراجعة",
+    "settled": "تمت تسوية الاسترداد",
+    "overdue": "الاسترداد متأخر"
+  },
+  "report": {
+    "button": "الإبلاغ عن مشكلة",
+    "title": "الإبلاغ عن مشكلة",
+    "description": "سيراجع دعم BLADUS الحجز ويتواصل معك ومع المضيف.",
+    "reasonLabel": "ما المشكلة؟",
+    "reasons": {
+      "not_as_described": "لا يطابق الوصف",
+      "no_show": "المضيف لم يحضر",
+      "cleanliness": "النظافة",
+      "safety": "السلامة",
+      "refund": "الاسترداد",
+      "other": "شيء آخر"
+    },
+    "statementLabel": "صف المشكلة",
+    "statementHelp": "20 حرفاً على الأقل.",
+    "tooShort": "يرجى وصف المشكلة في 20 حرفاً على الأقل.",
+    "submit": "إرسال إلى الدعم",
+    "success": "تم إرسال بلاغك إلى دعم BLADUS."
+  }
 }

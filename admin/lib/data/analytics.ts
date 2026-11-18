@@ -1,217 +1,115 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import { WILAYAS } from "@/lib/utils/wilayas";
+
+import { api } from "@/lib/api/client";
+import { logReadError } from "@/lib/api/mapping";
+import {
+  emptyAttention,
+  emptyCharts,
+  emptyKpis,
+  toAttention,
+  toCharts,
+  toKpis,
+  type AttentionItems,
+  type DashboardCharts,
+  type DashboardKpis,
+  type RawAttention,
+  type RawCharts,
+  type RawKpiReport,
+} from "@/lib/api/analytics";
 import type { AdminActor } from "@/lib/types";
 import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { DomainError, ValidationError } from "./errors";
 import { logExport } from "./audit";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export type { AttentionItems, DashboardCharts, DashboardKpis, KpiValue, MonthPoint } from "@/lib/api/analytics";
 
-export async function getDashboardKPIs(period: string = "30d") {
-  await delay(150);
+/** Periods the screens offer. "today" is sent as a custom one-day window. */
+export const ANALYTICS_PERIODS = ["today", "7d", "30d", "90d", "1y"] as const;
+export type AnalyticsPeriod = (typeof ANALYTICS_PERIODS)[number];
 
-  const multiplier = period === "7d" ? 0.28 : period === "90d" ? 2.6 : period === "1y" ? 9.4 : 1.0;
-
-  const validBookings = store.bookings.filter((b) => b.status !== "cancelled");
-  const totalGrossVolumeDzd = Math.round(
-    validBookings.reduce((sum, b) => sum + b.totalAmountDzd, 0) * multiplier
+/** Today's date in Algeria (the backend counts days in Africa/Algiers). */
+function algiersToday(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Algiers", year: "numeric", month: "2-digit", day: "2-digit" }).format(
+    new Date(),
   );
-  const commissionRevenueDzd = Math.round(
-    validBookings.reduce((sum, b) => sum + b.commissionAmountDzd, 0) * multiplier
-  );
-  const serviceFeesDzd = Math.round(
-    validBookings.reduce((sum, b) => sum + b.serviceFeeDzd, 0) * multiplier
-  );
-  const netPlatformRevenueDzd = commissionRevenueDzd + serviceFeesDzd;
-
-  const totalBookingsCount = Math.round(validBookings.length * multiplier);
-  const activeListingsCount = store.listings.filter((l) => l.status === "approved").length;
-  const newHostsCount = Math.round(store.hosts.filter((h) => h.status === "approved").length * (multiplier > 1 ? 1 : 0.4));
-  const newUsersCount = Math.round(store.users.length * (multiplier > 1 ? 1 : 0.35));
-
-  return {
-    netPlatformRevenueDzd,
-    totalGrossVolumeDzd,
-    commissionRevenueDzd,
-    totalBookingsCount,
-    activeListingsCount,
-    newHostsCount,
-    newUsersCount,
-    occupancyRatePercent: 78.4,
-    cancellationRatePercent: 4.8,
-    avgResponseTimeMinutes: 24,
-    trends: {
-      revenue: "+18.2%",
-      volume: "+22.4%",
-      bookings: "+15.6%",
-      listings: "+11.2%",
-      hosts: "+24.0%",
-      users: "+31.8%",
-    },
-  };
 }
 
-export async function getDashboardCharts(period: string = "30d") {
-  await delay(180);
-
-  // Monthly revenue trend (last 6 months)
-  const monthlyRevenue = [
-    { month: "May", revenue: 1450000, bookings: 54, signups: 160 },
-    { month: "Jun", revenue: 2180000, bookings: 78, signups: 280 },
-    { month: "Jul", revenue: 3450000, bookings: 124, signups: 460 },
-    { month: "Aug", revenue: 4120000, bookings: 156, signups: 580 },
-    { month: "Sep", revenue: 2890000, bookings: 98, signups: 390 },
-    { month: "Oct", revenue: 2640000, bookings: 92, signups: 340 },
-  ];
-
-  // Host Categories Financial & Net Performance computed from store
-  const hostTypes = [
-    { key: "individual", name: "Individual (Solo)", fill: "#0E6FAD", defaultRate: 12 },
-    { key: "agency", name: "Tourism Agencies", fill: "#0B57D0", defaultRate: 15 },
-    { key: "hotel", name: "Hotels & Palaces", fill: "#152C52", defaultRate: 18 },
-    { key: "hostel", name: "Youth Hostels", fill: "#D3DCE8", defaultRate: 10 },
-  ];
-
-  const hostCategoryPerformance = hostTypes.map((ht) => {
-    const categoryBookings = store.bookings.filter(
-      (b) => b.hostType === ht.key && b.status !== "cancelled"
-    );
-    const categoryHosts = store.hosts.filter(
-      (h) => h.hostType === ht.key && h.status === "approved"
-    );
-    const categoryListings = store.listings.filter(
-      (l) => l.hostType === ht.key && l.status === "approved"
-    );
-
-    const grossVolumeDzd = categoryBookings.reduce((sum, b) => sum + b.totalAmountDzd, 0);
-    const platformCommissionDzd = categoryBookings.reduce((sum, b) => sum + b.commissionAmountDzd, 0);
-    const hostNetPayoutDzd = categoryBookings.reduce((sum, b) => sum + b.hostPayoutDzd, 0);
-    const bookingsCount = categoryBookings.length;
-    const avgBookingValueDzd = bookingsCount > 0 ? Math.round(grossVolumeDzd / bookingsCount) : 0;
-    const avgHostNetDzd = categoryHosts.length > 0 ? Math.round(hostNetPayoutDzd / categoryHosts.length) : 0;
-    const effectiveCommissionRate = grossVolumeDzd > 0 
-      ? Math.round((platformCommissionDzd / grossVolumeDzd) * 1000) / 10 
-      : ht.defaultRate;
-
-    return {
-      key: ht.key,
-      name: ht.name,
-      fill: ht.fill,
-      defaultRate: ht.defaultRate,
-      effectiveCommissionRate,
-      bookingsCount,
-      activeHostsCount: categoryHosts.length,
-      activeListingsCount: categoryListings.length,
-      grossVolumeDzd,
-      platformCommissionDzd,
-      hostNetPayoutDzd,
-      avgBookingValueDzd,
-      avgHostNetDzd,
-    };
-  });
-
-  // Revenue by Host Type for Recharts
-  const revenueByHostType = hostCategoryPerformance.map((hcp) => ({
-    name: hcp.name,
-    key: hcp.key,
-    revenue: hcp.grossVolumeDzd,
-    platformNet: hcp.platformCommissionDzd,
-    hostNet: hcp.hostNetPayoutDzd,
-    bookings: hcp.bookingsCount,
-    fill: hcp.fill,
-  }));
-
-  // Revenue by Vertical
-  const revenueByVertical = [
-    { name: "Homes & Stays", count: store.listings.filter((l) => l.category === "home").length, fill: "#152C52" },
-    { name: "Hotels & Hostels", count: store.listings.filter((l) => l.category === "hotel").length, fill: "#0E6FAD" },
-    { name: "Sahara Expeditions", count: store.listings.filter((l) => l.category === "trip").length, fill: "#0B57D0" },
-    { name: "4x4 Overlanders", count: store.listings.filter((l) => l.category === "vehicle").length, fill: "#D3DCE8" },
-    { name: "Cultural Tours", count: store.listings.filter((l) => l.category === "experience").length, fill: "#3A63A3" },
-  ];
-
-  // Bookings by Wilaya (Top 10)
-  const wilayaCounts: Record<string, number> = {};
-  store.bookings.forEach((b) => {
-    wilayaCounts[b.wilayaCode] = (wilayaCounts[b.wilayaCode] || 0) + 1;
-  });
-
-  const bookingsByWilaya = Object.entries(wilayaCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
-    .map(([code, count]) => {
-      const w = WILAYAS.find((item) => item.code === code);
-      return {
-        wilayaCode: code,
-        wilayaName: w ? `${w.code} - ${w.nameEn}` : code,
-        bookings: count,
-      };
-    });
-
-  return {
-    monthlyRevenue,
-    revenueByHostType,
-    hostCategoryPerformance,
-    revenueByVertical,
-    bookingsByWilaya,
-  };
+function periodQuery(period: string): Record<string, string> {
+  if (!(ANALYTICS_PERIODS as readonly string[]).includes(period)) {
+    throw new ValidationError(`Unknown period ${period}`);
+  }
+  if (period === "today") {
+    const today = algiersToday();
+    return { period: "custom", from: today, to: today };
+  }
+  return { period };
 }
 
-export async function getAttentionItems() {
-  await delay(120);
-
-  const pendingHosts = store.hosts.filter((h) => h.status === "under_review" || h.status === "applied");
-  const pendingListings = store.listings.filter((l) => l.status === "pending_review");
-  const flaggedReviews = store.reviews.filter((r) => r.status === "flagged");
-  const disputedBookings = store.bookings.filter((b) => b.status === "disputed");
-
-  return {
-    pendingHostsCount: pendingHosts.length,
-    pendingListingsCount: pendingListings.length,
-    flaggedReviewsCount: flaggedReviews.length,
-    disputedBookingsCount: disputedBookings.length,
-    totalAttentionCount:
-      pendingHosts.length + pendingListings.length + flaggedReviews.length + disputedBookings.length,
-    topItems: [
-      ...pendingHosts.slice(0, 3).map((h) => ({
-        id: h.id,
-        type: "host" as const,
-        title: `Host Approval: ${h.ownerName}`,
-        subtitle: `${h.hostType.toUpperCase()} in ${h.city}`,
-        href: `/hosts/${h.id}`,
-        time: h.joinedAt,
-      })),
-      ...pendingListings.slice(0, 3).map((l) => ({
-        id: l.id,
-        type: "listing" as const,
-        title: `Listing Review: ${l.title}`,
-        subtitle: `${l.category.toUpperCase()} · ${l.price} DZD`,
-        href: `/listings/${l.id}`,
-        time: l.createdAt,
-      })),
-      ...disputedBookings.slice(0, 2).map((b) => ({
-        id: b.id,
-        type: "booking" as const,
-        title: `Dispute: ${b.reference}`,
-        subtitle: `${b.guestName} vs ${b.hostName}`,
-        href: `/bookings/${b.id}`,
-        time: b.createdAt,
-      })),
-    ],
-  };
+/** KPIs of a period with the previous period. Never throws: a failed read answers `available: false`. */
+export async function getDashboardKPIs(period: string = "30d"): Promise<DashboardKpis> {
+  try {
+    return toKpis(await api<RawKpiReport>("/admin/analytics/kpis", { query: periodQuery(period) }));
+  } catch (error) {
+    logReadError("analytics.kpis", error);
+    return emptyKpis();
+  }
 }
 
-/** KPI summary report as CSV (computed server-side); the export is audited. */
-export async function exportKpiReport(
-  reportName: string,
-  period: string,
-  actor: AdminActor
-): Promise<CsvExport> {
+/** Chart series of a period. Never throws: a failed read answers `available: false`. */
+export async function getDashboardCharts(period: string = "30d"): Promise<DashboardCharts> {
+  try {
+    return toCharts(await api<RawCharts>("/admin/analytics/charts", { query: periodQuery(period) }));
+  } catch (error) {
+    logReadError("analytics.charts", error);
+    return emptyCharts();
+  }
+}
+
+/** Dashboard "needs your attention" counters. Never throws. */
+export async function getAttentionItems(): Promise<AttentionItems> {
+  try {
+    return toAttention(await api<RawAttention>("/admin/dashboard/attention"));
+  } catch (error) {
+    logReadError("dashboard.attention", error);
+    return emptyAttention();
+  }
+}
+
+/** KPI summary report as CSV, built server-side from the live KPIs; the export is audited. */
+export async function exportKpiReport(reportName: string, period: string, actor: AdminActor): Promise<CsvExport> {
   const k = await getDashboardKPIs(period);
+  if (!k.available) throw new DomainError("The statistics cannot be read right now. Try again in a moment.");
   const csv = toCsv(
-    ["Report", "Period", "Platform Net Revenue (DZD)", "Gross Bookings (DZD)", "Commission Revenue (DZD)", "Bookings", "Active Listings", "Generated At"],
-    [[reportName, period, k.netPlatformRevenueDzd, k.totalGrossVolumeDzd, k.commissionRevenueDzd, k.totalBookingsCount, k.activeListingsCount, new Date().toISOString()]]
+    [
+      "Report",
+      "From",
+      "To",
+      "Bookings",
+      "Gross booking value (DZD)",
+      "BLADUS net commission (DZD)",
+      "Active listings",
+      "Hosts with sales",
+      "New users",
+      "Cancellation rate (%)",
+      "Average response time (min)",
+      "Generated At",
+    ],
+    [
+      [
+        reportName,
+        k.from,
+        k.to,
+        k.bookings.value,
+        k.grossBookingValueDzd.value,
+        k.commissionNetDzd.value,
+        k.activeListings.value,
+        k.activeHosts.value,
+        k.newUsers.value,
+        k.cancellationRatePercent.value,
+        k.responseTimeMinutes?.value ?? "",
+        new Date().toISOString(),
+      ],
+    ],
   );
   await logExport(actor, "kpi_report", 1, { reportName, period });
   const slug = reportName.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "report";

@@ -3,10 +3,10 @@
   "subtitle": "Configure Algerian bank payouts (CCP / bank RIB), booking rules, host identity and communication channels.",
   "tabs": {
     "ariaLabel": "Host settings sections",
-    "payouts": "Payout accounts & history",
-    "identity": "Host type & legal status",
+    "payouts": "Payouts",
+    "identity": "Account & verification",
     "defaults": "Booking defaults",
-    "notifications": "Guest communication"
+    "notifications": "Notifications"
   },
   "channels": {
     "CCP": "Algérie Poste CCP",
@@ -104,5 +104,48 @@
     "agencyUpgradeRequested": "Agency upgrade requested. Our team will verify your Trade Register (RC).",
     "communicationSaved": "Communication preferences saved."
   },
-  "eyebrow": "Host settings"
+  "eyebrow": "Host settings",
+  "account": {
+    "loadFailed": "Your host account could not be loaded. Please try again in a moment.",
+    "approvedOn": "Approved on {date}",
+    "submittedOn": "Sent for review on {date}",
+    "documentsTitle": "Verification documents",
+    "documentsHelp": "BLADUS staff check these documents before approving your host account.",
+    "defaultsDescription": "The approval mode new listings start with.",
+    "perListing": "Advance notice, check-in times and cancellation policy are set on each listing.",
+    "commission": "BLADUS commission on your bookings: {rate}%",
+    "payoutsOff": "Payouts through BLADUS are not available yet: guests pay you directly. Commission is settled through your host wallet.",
+    "unavailable": "Not available",
+    "notificationsHelp": "Choose which booking, message and review alerts you receive by email, SMS and push.",
+    "notificationsLink": "Open notification preferences",
+    "status": {
+      "applied": "Application received",
+      "under_review": "Under review",
+      "changes_requested": "Changes requested",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Suspended",
+      "banned": "Banned"
+    },
+    "docStatus": {
+      "approved": "Approved",
+      "pending": "Being checked",
+      "rejected": "Rejected",
+      "missing": "Missing"
+    },
+    "docs": {
+      "national_id": "National ID card",
+      "passport": "Passport",
+      "property_proof": "Proof of ownership or lease",
+      "commercial_register": "Commerce register (RC)",
+      "tax_card_nif": "Tax card (NIF)",
+      "statistics_nis": "Statistics number (NIS)",
+      "tourism_licence": "Tourism licence",
+      "hotel_classification": "Hotel classification",
+      "operating_authorisation": "Operating authorisation",
+      "vehicle_registration": "Vehicle registration",
+      "vehicle_insurance": "Vehicle insurance",
+      "other": "Other document"
+    }
+  }
 }

@@ -401,5 +401,8 @@
     "agency": "Agence de voyages",
     "hotel": "Hôtel",
     "hostel": "Auberge"
-  }
+  },
+  "discount": "Réduction longue durée",
+  "sessionLabel": "Séance",
+  "sessionOption": "{time} ({seats, plural, one {# place restante} other {# places restantes}})"
 }

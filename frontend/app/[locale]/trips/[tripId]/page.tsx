@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getPublicTripById } from "@/lib/data/trips";
-import { seatsSoldByDeparture } from "@/lib/data/reservations";
+import { getPublicTripById, getTripSeatsSold } from "@/lib/data/trips";
 import { getHostContext } from "@/lib/server/host-context";
 import { hostOwnsTrip } from "@/lib/server/authz";
 import { todayKey } from "@/lib/booking/dates";
@@ -40,7 +39,7 @@ export async function generateMetadata({ params: { tripId, locale } }: TripPageP
   }
 
   const description = excerpt(trip.description || t("meta.tripDescriptionFallback", { city: trip.city }));
-  const path = `/trips/${trip.id}`;
+  const path = `/trips/${trip.slug || trip.id}`;
   const images = trip.coverPhoto ? [{ url: trip.coverPhoto, alt: trip.title }] : undefined;
 
   return {
@@ -73,14 +72,14 @@ export default async function TripDetailPage({ params }: TripPageProps) {
     notFound();
   }
 
-  const currentUser = await getSessionUser();
+  const [currentUser, seatsSold] = await Promise.all([getSessionUser(), getTripSeatsSold(trip)]);
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-darnaBg">
       <TripDetailClient
         trip={trip}
         currentUser={currentUser}
-        seatsSold={seatsSoldByDeparture(trip.id)}
+        seatsSold={seatsSold}
         today={todayKey()}
       />
     </div>

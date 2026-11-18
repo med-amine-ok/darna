@@ -59,14 +59,14 @@ export default function CategoriesManagerClient({
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const all = unwrap(await listCategories());
+      const all = unwrap(await listCategories({ vertical: defaultVertical }));
       setCategories(all);
     } catch (err: unknown) {
       addToast({ title: tCommon("error"), description: errorMessage(err), variant: "danger" });
     } finally {
       setIsLoading(false);
     }
-  }, [addToast, tCommon]);
+  }, [addToast, tCommon, defaultVertical]);
 
   useEffect(() => {
     loadData();
@@ -74,7 +74,7 @@ export default function CategoriesManagerClient({
 
   const handleToggle = async (cat: CategoryItem) => {
     try {
-      unwrap(await toggleCategoryStatus(cat.id));
+      unwrap(await toggleCategoryStatus(cat.id, !cat.isActive));
       addToast({ title: t("statusUpdated"), variant: "info" });
       loadData();
     } catch (err: unknown) {

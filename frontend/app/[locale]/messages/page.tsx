@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { getConversations, getMessages } from "@/lib/data/conversations";
+import { getConversationList, getMessagePage } from "@/lib/data/conversations";
 import { getSessionUser } from "@/lib/server/session";
 import MessagesClient from "@/components/messages/MessagesClient";
 
@@ -24,16 +24,23 @@ export default async function MessagesPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/messages`);
   }
 
-  const conversations = await getConversations(currentUser.id);
+  // My own threads as a guest (host threads live in /host/messages).
+  const list = await getConversationList(currentUser.id, "guest");
 
-  // Load initial messages for first conversation if available
-  const initialConvId = conversations[0]?.id;
-  const initialMessages = initialConvId ? await getMessages(initialConvId) : [];
+  // Latest messages of the first thread, if any (an API failure shows an empty thread, not a crash).
+  const initialConvId = list.conversations[0]?.id;
+  const firstPage = initialConvId
+    ? await getMessagePage(initialConvId, currentUser.id, "guest").catch(() => null)
+    : null;
 
   return (
     <MessagesClient
-      initialConversations={conversations}
-      initialMessages={initialMessages}
+      side="guest"
+      initialConversations={list.conversations}
+      initialNextCursor={list.hasMore ? list.nextCursor : null}
+      initialMessages={firstPage?.messages ?? []}
+      initialHasMoreMessages={firstPage?.hasMore ?? false}
+      loadFailed={Boolean(list.failed)}
       currentUser={currentUser}
     />
   );

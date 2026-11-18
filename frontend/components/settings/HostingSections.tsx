@@ -4,92 +4,34 @@ import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { BrandArrowRightIcon, BrandDownloadIcon } from "@/components/icons";
-import { Input } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import { Card } from "@/components/ui/Surface";
-import { LINK_BUTTON_CLASS, SectionHeader, SettingsCard, SettingsList, SwitchRow } from "./settingsUi";
+import { requestDataAction } from "@/app/actions/account";
+import { useActionError } from "@/hook/useActionError";
+import { LINK_BUTTON_CLASS, SectionHeader, SettingsCard } from "./settingsUi";
 
-export function BookingPermissionsSection() {
-  const t = useTranslations("settings");
-  const [instantBook, setInstantBook] = useState(true);
-  const [requireId, setRequireId] = useState(true);
-  const [requireReviews, setRequireReviews] = useState(false);
-
-  return (
-    <section aria-labelledby="settings-booking-title" className="space-y-6">
-      <SectionHeader id="settings-booking-title" title={t("booking.title")} description={t("booking.description")} />
-      <SettingsCard>
-        <SettingsList>
-          <SwitchRow
-            label={t("booking.instantBook")}
-            description={t("booking.instantBookDescription")}
-            checked={instantBook}
-            onChange={setInstantBook}
-          />
-          <SwitchRow
-            label={t("booking.requireId")}
-            description={t("booking.requireIdDescription")}
-            checked={requireId}
-            onChange={setRequireId}
-          />
-          <SwitchRow
-            label={t("booking.requireReviews")}
-            description={t("booking.requireReviewsDescription")}
-            checked={requireReviews}
-            onChange={setRequireReviews}
-          />
-        </SettingsList>
-      </SettingsCard>
-    </section>
-  );
-}
-
-export function TaxesSection() {
-  const t = useTranslations("settings");
-  return (
-    <section aria-labelledby="settings-taxes-title" className="space-y-6">
-      <SectionHeader id="settings-taxes-title" title={t("taxes.title")} description={t("taxes.description")} />
-      <SettingsCard>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            toast.success(t("taxes.saved"));
-          }}
-          className="flex flex-col gap-4 sm:flex-row sm:items-start"
-        >
-          <Input
-            id="settings-nif"
-            label={t("taxes.nifLabel")}
-            type="text"
-            inputMode="numeric"
-            dir="ltr"
-            placeholder="001234567890123"
-            className="text-start"
-            containerClassName="sm:max-w-sm"
-          />
-          <Button type="submit" variant="secondary" className="sm:mt-1">
-            {t("taxes.save")}
-          </Button>
-        </form>
-      </SettingsCard>
-    </section>
-  );
-}
-
+/** Privacy: ask for a copy of my data (POST /me/data-requests kind "access", answered within 30 days). */
 export function PrivacySection() {
   const t = useTranslations("settings");
-  const [searchIndexing, setSearchIndexing] = useState(true);
+  const errorText = useActionError();
+  const [busy, setBusy] = useState(false);
+
+  const requestExport = async () => {
+    setBusy(true);
+    try {
+      const result = await requestDataAction("access");
+      if (!result.ok) toast.error(errorText(result));
+      else toast.success(t("privacy.exportRequested"));
+    } catch {
+      toast.error(t("errors.saveFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section aria-labelledby="settings-privacy-title" className="space-y-6">
       <SectionHeader id="settings-privacy-title" title={t("privacy.title")} description={t("privacy.description")} />
-      <SettingsCard>
-        <SwitchRow
-          label={t("privacy.searchIndexing")}
-          description={t("privacy.searchIndexingDescription")}
-          checked={searchIndexing}
-          onChange={setSearchIndexing}
-        />
-      </SettingsCard>
       <SettingsCard>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -99,31 +41,14 @@ export function PrivacySection() {
           <Button
             type="button"
             variant="tertiary"
+            loading={busy}
             leadingIcon={<BrandDownloadIcon size={16} aria-hidden="true" />}
-            onClick={() => toast.info(t("privacy.exportRequested"))}
+            onClick={requestExport}
             className="shrink-0"
           >
             {t("privacy.exportZip")}
           </Button>
         </div>
-      </SettingsCard>
-    </section>
-  );
-}
-
-export function TravelForWorkSection() {
-  const t = useTranslations("settings");
-  const [workTravelEnabled, setWorkTravelEnabled] = useState(false);
-  return (
-    <section aria-labelledby="settings-work-title" className="space-y-6">
-      <SectionHeader id="settings-work-title" title={t("work.title")} description={t("work.description")} />
-      <SettingsCard>
-        <SwitchRow
-          label={t("work.enable")}
-          description={t("work.enableDescription")}
-          checked={workTravelEnabled}
-          onChange={setWorkTravelEnabled}
-        />
       </SettingsCard>
     </section>
   );

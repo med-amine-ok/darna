@@ -32,7 +32,8 @@
   "filters": {
     "all": "كل النشاط",
     "recharge": "الإيداعات (+)",
-    "commission": "العمولات (−)"
+    "commission": "العمولات (−)",
+    "adjustment": "التسويات"
   },
   "table": {
     "caption": "معاملات المحفظة",
@@ -45,5 +46,22 @@
   "commission": "عمولة",
   "bookingRef": "الحجز: {id}",
   "noTransactions": "لا توجد معاملات لعرضها.",
-  "howItWorksShort": "كيف يعمل الرصيد"
+  "howItWorksShort": "كيف يعمل الرصيد",
+  "adjustment": "تسوية",
+  "loadFailedTitle": "تعذّر تحميل رصيد الضمان",
+  "loadFailedBody": "الخدمة لا تستجيب حالياً. يرجى المحاولة بعد قليل.",
+  "contactSupportToTopUp": "للشحن، تواصل مع دعم BLADUS: يسجّل أحد مسؤولي BLADUS تحويلك ويضيفه إلى رصيدك.",
+  "creditLimitLine": "تتوقف الحجوزات الجديدة عندما ينخفض الرصيد تحت سالب {amount}.",
+  "bookingsPausedTitle": "الحجوزات الجديدة متوقفة",
+  "bookingsPausedBody": "رصيد الضمان أقل من الحد المسموح. اشحنه لقبول حجوزات جديدة مرة أخرى.",
+  "overviewTitle": "الأرباح والفواتير",
+  "earningsCompleted": "إقامات منتهية",
+  "earningsUpcoming": "إقامات قادمة",
+  "earningsCommission": "العمولة المدفوعة",
+  "earningsRefundsOwed": "استردادات مستحقة",
+  "invoicesTitle": "فواتير العمولة",
+  "noInvoices": "لا توجد فواتير بعد.",
+  "invoicePdf": "PDF",
+  "payoutsOffTitle": "لا توجد تحويلات على BLADUS",
+  "payoutsOffBody": "يدفع لك الضيوف مباشرة، لذلك لا تحتفظ BLADUS بأموالك ولا يوجد ما يُحوَّل إليك."
 }

@@ -52,6 +52,21 @@ export interface BookingQuote {
   total: number;
 }
 
+/**
+ * A price computed by the backend (POST /quotes, lib/api/bookings.ts) in the
+ * BookingQuote shape the widgets render, plus what the booking needs. The
+ * booking widgets show only this; the local quote functions below are kept
+ * for older callers and are not used to show a price to book.
+ */
+export interface ServerQuote extends BookingQuote {
+  quoteId: string;
+  expiresAt: string;
+  /** Length-of-stay discount, DZD. */
+  discount: number;
+  approvalMode: "instant" | "request";
+  cancellationPolicy?: import("@/types").CancellationPolicy;
+}
+
 /** The single rounding rule for money: integer DZD. */
 export function roundDzd(amount: number): number {
   return Number.isFinite(amount) ? Math.round(amount) : 0;

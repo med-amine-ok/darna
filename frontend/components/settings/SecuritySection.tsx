@@ -14,8 +14,18 @@ import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Feedback";
 import { dur, ease } from "@/lib/motion";
 import { SectionHeader, SettingsCard, SettingsList } from "./settingsUi";
+import TwoFactorCard from "./TwoFactorCard";
+import SignInMethodsCard from "./SignInMethodsCard";
 
-export default function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
+export default function SecuritySection({
+  onDeactivate,
+  hasMfa = false,
+  email = "",
+}: {
+  onDeactivate: () => void;
+  hasMfa?: boolean;
+  email?: string;
+}) {
   const t = useTranslations("settings");
   const errorText = useActionError();
 
@@ -121,6 +131,10 @@ export default function SecuritySection({ onDeactivate }: { onDeactivate: () => 
           </div>
         </form>
       </SettingsCard>
+
+      <SignInMethodsCard email={email} />
+
+      <TwoFactorCard enabled={hasMfa} />
 
       <SettingsCard title={t("security.sessionsTitle")}>
         <SettingsList>

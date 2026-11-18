@@ -4,18 +4,18 @@ import React, { useId, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/navigation";
-import { Organization, Membership, MembershipRole, User } from "@/types";
+import { Organization, Membership, MembershipRole, OrganizationInvitation, User } from "@/types";
 import { orgPermissions } from "@/lib/host-types";
 import {
   inviteMemberAction,
   changeMemberRoleAction,
   removeMemberAction,
+  revokeInvitationAction,
   transferOwnershipAction,
 } from "@/app/actions/organizations";
 import {
   BrandUserAddIcon,
   BrandTrashIcon,
-  BrandRefreshIcon,
   BrandBadgeCheckIcon,
   BrandClockIcon,
   BrandArrowLeftIcon,
@@ -51,6 +51,8 @@ import { useActionError } from "@/hook/useActionError";
 interface AgencyTeamClientProps {
   organization: Organization;
   initialMembers: Membership[];
+  /** Invitations of the organisation (owners and admins only; empty for other roles). */
+  initialInvitations?: OrganizationInvitation[];
   currentUser?: User | null;
   /** Viewer's role in the organization; controls which actions are offered. */
   currentRole?: MembershipRole | null;
@@ -59,6 +61,7 @@ interface AgencyTeamClientProps {
 export default function AgencyTeamClient({
   organization,
   initialMembers,
+  initialInvitations = [],
   currentRole = null,
 }: AgencyTeamClientProps) {
   const t = useTranslations("agencyTeam");
@@ -69,6 +72,11 @@ export default function AgencyTeamClient({
   const canChangeRoles = orgPermissions.canChangeRoles(currentRole);
   const canTransfer = orgPermissions.canTransferOwnership(currentRole);
   const [members, setMembers] = useState<Membership[]>(initialMembers);
+  const [invitations, setInvitations] = useState<OrganizationInvitation[]>(initialInvitations);
+  /** Link of the invitation just created: the backend shows its token once and sends no email yet. */
+  const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
+  const [invitationToRevoke, setInvitationToRevoke] = useState<OrganizationInvitation | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
@@ -82,7 +90,7 @@ export default function AgencyTeamClient({
 
   // Stats
   const activeCount = members.filter((m) => m.status === "active").length;
-  const pendingCount = members.filter((m) => m.status === "invited").length;
+  const pendingCount = invitations.filter((i) => i.status === "pending").length;
 
   const ids = {
     inviteEmail: `${baseId}-invite-email`,
@@ -90,7 +98,7 @@ export default function AgencyTeamClient({
     readOnlyInvite: `${baseId}-invite-readonly`,
   };
 
-  const displayName = (m: Membership) => m.name || m.email.split("@")[0];
+  const displayName = (m: Membership) => m.name || m.email.split("@")[0] || t("memberFallback");
   const roleLabel = (role: MembershipRole) =>
     role === "owner" ? t("roleOwner") : role === "admin" ? t("roleAdmin") : t("roleManager");
 
@@ -120,8 +128,14 @@ export default function AgencyTeamClient({
         return;
       }
 
-      setMembers((prev) => [result.data, ...prev]);
-      toast.success(t("toasts.inviteSent", { email: inviteEmail.trim() }));
+      setInvitations((prev) => [result.data.invitation, ...prev]);
+      if (result.data.token) {
+        setInviteLink({
+          email: result.data.invitation.email,
+          url: `${window.location.origin}/${locale}/invitations/accept?token=${encodeURIComponent(result.data.token)}`,
+        });
+      }
+      toast.success(t("toasts.inviteCreated", { email: inviteEmail.trim() }));
       closeInvite();
       setInviteEmail("");
       setInviteName("");
@@ -176,9 +190,47 @@ export default function AgencyTeamClient({
     }
   };
 
-  // Resend invite (no email delivery in the mock backend yet)
-  const handleResend = (email: string) => {
-    toast.info(t("toasts.resendComingSoon", { email }));
+  const executeRevokeInvitation = async () => {
+    if (!invitationToRevoke) return;
+    setIsRevoking(true);
+    try {
+      const result = await revokeInvitationAction(invitationToRevoke.id);
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      setInvitations((prev) => prev.map((i) => (i.id === invitationToRevoke.id ? { ...i, status: "revoked" } : i)));
+      toast.success(t("toasts.invitationRevoked"));
+    } finally {
+      setIsRevoking(false);
+      setInvitationToRevoke(null);
+    }
+  };
+
+  const copyInviteLink = async () => {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink.url);
+      toast.success(t("linkDialog.copied"));
+    } catch {
+      toast.error(t("linkDialog.copyFailed"));
+    }
+  };
+
+  const invitationStatusBadge = (status: OrganizationInvitation["status"]) => {
+    if (status === "pending")
+      return (
+        <Badge tone="warning" icon={<BrandClockIcon size={12} aria-hidden="true" />}>
+          {t("status.pending")}
+        </Badge>
+      );
+    if (status === "accepted")
+      return (
+        <Badge tone="success" dot>
+          {t("status.accepted")}
+        </Badge>
+      );
+    return <Badge tone="sand">{status === "expired" ? t("status.expired") : t("status.revoked")}</Badge>;
   };
 
   const executeTransferOwnership = async () => {
@@ -353,9 +405,11 @@ export default function AgencyTeamClient({
                       <span className="truncate">{name}</span>
                       {member.role === "owner" && <Badge tone="ink">{t("roleOwner")}</Badge>}
                     </p>
-                    <p className="truncate text-meta text-primary-600">
-                      <bdi dir="ltr">{member.email}</bdi>
-                    </p>
+                    {member.email && (
+                      <p className="truncate text-meta text-primary-600">
+                        <bdi dir="ltr">{member.email}</bdi>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -397,25 +451,10 @@ export default function AgencyTeamClient({
                 </div>
 
                 <p className="text-meta tabular-nums text-primary-600">
-                  {member.joinedAt
-                    ? formatDate(member.joinedAt, locale)
-                    : t("invitedOn", {
-                        date: formatDate(member.createdAt, locale, { day: "numeric", month: "short" }),
-                      })}
+                  {member.joinedAt ? formatDate(member.joinedAt, locale) : ""}
                 </p>
 
                 <div className="flex items-center gap-1 md:w-24 md:justify-end">
-                  {member.status === "invited" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleResend(member.email)}
-                      aria-label={t("actions.resendFor", { name })}
-                      leadingIcon={<BrandRefreshIcon size={14} aria-hidden="true" />}
-                    >
-                      {t("resend")}
-                    </Button>
-                  )}
                   {menuItems.length > 0 && (
                     <DropdownMenu
                       ariaLabel={t("actions.menuFor", { name })}
@@ -434,7 +473,61 @@ export default function AgencyTeamClient({
             );
           })}
         </ul>
+        {members.length === 0 && (
+          <p className="px-6 py-8 text-center text-body text-primary-600">{t("table.empty")}</p>
+        )}
       </Card>
+
+      {/* Invitations (owners and admins) */}
+      {canInvite && (
+        <Card as="section" padding="none" radius="3xl" className="mb-8 overflow-hidden" aria-labelledby={`${baseId}-invites-title`}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/[0.08] px-5 py-4 sm:px-6">
+            <h2 id={`${baseId}-invites-title`} className="font-serif text-heading text-primary-900">
+              {t("invitations.title")}
+            </h2>
+            <span className="text-meta text-primary-600">{t("invitations.count", { count: pendingCount })}</span>
+          </div>
+          {invitations.length === 0 ? (
+            <p className="px-6 py-8 text-center text-body text-primary-600">{t("invitations.empty")}</p>
+          ) : (
+            <ul className="divide-y divide-primary/[0.06]">
+              {invitations.map((invitation) => (
+                <li
+                  key={invitation.id}
+                  className="grid grid-cols-1 gap-3 px-5 py-4 sm:px-6 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center md:gap-4"
+                >
+                  <p className="flex min-w-0 items-center gap-2 text-body font-semibold text-primary-900">
+                    <BrandMailIcon size={16} aria-hidden="true" className="shrink-0 text-secondary-700" />
+                    <bdi dir="ltr" className="truncate">
+                      {invitation.email || invitation.phone}
+                    </bdi>
+                  </p>
+                  <span className="text-meta text-primary-700">{roleLabel(invitation.role)}</span>
+                  <span>{invitationStatusBadge(invitation.status)}</span>
+                  <span className="text-meta tabular-nums text-primary-600">
+                    {invitation.status === "pending"
+                      ? t("invitations.expires", { date: formatDate(invitation.expiresAt, locale, { day: "numeric", month: "short" }) })
+                      : t("invitedOn", { date: formatDate(invitation.createdAt, locale, { day: "numeric", month: "short" }) })}
+                  </span>
+                  <div className="flex md:w-24 md:justify-end">
+                    {invitation.status === "pending" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setInvitationToRevoke(invitation)}
+                        aria-label={t("invitations.revokeFor", { email: invitation.email || invitation.phone || "" })}
+                        leadingIcon={<BrandTrashIcon size={14} aria-hidden="true" />}
+                      >
+                        {t("invitations.revoke")}
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
 
       {/* Roles guide */}
       <section aria-labelledby={`${baseId}-matrix-title`}>
@@ -529,6 +622,49 @@ export default function AgencyTeamClient({
         isLoading={isRemoving}
         onConfirm={executeRemoveMember}
         onCancel={() => setMemberToRemove(null)}
+      />
+
+      {/* Invitation link, shown once (no invitation email is sent yet) */}
+      <Dialog
+        isOpen={!!inviteLink}
+        onClose={() => setInviteLink(null)}
+        title={t("linkDialog.title")}
+        description={inviteLink ? t("linkDialog.description", { email: inviteLink.email }) : undefined}
+        showClose
+        size="sm"
+      >
+        <div className="mt-6 space-y-4">
+          <Input
+            id={`${baseId}-invite-link`}
+            label={t("linkDialog.label")}
+            dir="ltr"
+            readOnly
+            value={inviteLink?.url ?? ""}
+            onFocus={(e) => e.currentTarget.select()}
+          />
+          <p className="text-meta text-primary-600">{t("linkDialog.once")}</p>
+          <DialogFooter>
+            <Button type="button" variant="tertiary" size="md" onClick={() => setInviteLink(null)}>
+              {t("linkDialog.done")}
+            </Button>
+            <Button type="button" variant="primary" size="md" onClick={copyInviteLink}>
+              {t("linkDialog.copy")}
+            </Button>
+          </DialogFooter>
+        </div>
+      </Dialog>
+
+      {/* Revoke invitation */}
+      <ConfirmDialog
+        isOpen={!!invitationToRevoke}
+        variant="destructive"
+        title={t("invitations.revokeTitle")}
+        message={invitationToRevoke ? t("invitations.revokeMessage", { email: invitationToRevoke.email || invitationToRevoke.phone || "" }) : ""}
+        confirmLabel={t("invitations.revoke")}
+        cancelLabel={t("cancel")}
+        isLoading={isRevoking}
+        onConfirm={executeRevokeInvitation}
+        onCancel={() => setInvitationToRevoke(null)}
       />
 
       {/* Transfer ownership */}

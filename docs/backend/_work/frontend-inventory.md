@@ -27,7 +27,7 @@ Legend for status: **built** = UI + server action/data function round trip works
 | Public organization profile (agency / hotel / hostel) | `app/[locale]/{agencies,hotels,hostels}/[organizationId]/page.tsx`, `components/agency/orgProfilePage.tsx`, `AgencyProfileClient.tsx` | partial | Shows org facts, active team members, active listings, agency trips. Shows unverified orgs too (only a "pending verification" label, `messages/en/agencyPublic.json`). Category mismatch redirects 308 to the right route (`orgProfilePage.tsx:59-61`). No contact form. |
 | Help center (FAQ search, categories, helpful vote, contact form) | `app/[locale]/help/page.tsx`, `components/help/HelpClient.tsx` | mocked-only | 6 static articles in messages; feedback vote toast (`HelpClient.tsx:105`); contact form is a `setTimeout` + toast (`HelpClient.tsx:119-125`). |
 | Register (email + password) | `components/models/LoginModal.tsx` (`AuthPanel`), `app/api/auth/register/route.ts` | built | Min password 8 (`lib/auth/password-rules.ts:2`). No email verification. |
-| Login | `app/[locale]/login/page.tsx`, `LoginForm.tsx`, `LoginModal.tsx`, `app/api/auth/login/route.ts` | built | Demo quick-login buttons with hardcoded password `darna-demo-2026` (`LoginModal.tsx:46-51`). |
+(`LoginModal.tsx:46-51`). |
 | Forgot password, social login, phone login | `LoginModal.tsx:330`, `:360`, `:374` | mocked-only | Toasts (`forgotPasswordSoon`, `socialSimulated`, `phoneSimulated`). |
 | Language switch (en / fr / ar, RTL) | `components/navbar/LanguageSwitcher.tsx`, `middleware.ts`, `i18n.ts` | built | 36 namespaces, 3417 keys per locale, full parity en/fr/ar (checked by script). |
 | Currency display (DZD + approximate EUR) | `hook/useCurrency.ts`, `lib/currency.ts:1`, `components/common/PriceDisplay.tsx` | partial | Fixed rate `DEFAULT_EUR_TO_DZD = 152.47` (`lib/currency.ts:1`); no live rate source. |
@@ -153,7 +153,7 @@ Row counts are seed counts. "Store" = globalThis key.
 | isIdentityVerified | boolean | no verification flow |
 | yearsHosting, responseRate, responseTime | number, number, string | stored static, should be derived |
 
-Seed rows: `usr_amina` (host individual, also owns 2 hostel orgs), `usr_karim` (host agency, owns agency + 2 hotels, also has 3 individual listings), `usr_yacine` (guest), `usr_admin` (admin), `usr_sofiane` (guest), `usr_leila` (guest). Credentials table (`auth.ts:39-44`, store `__darna_credentials__`): `userId -> "scrypt$salt$hash"`, all seeded users share `DEMO_PASSWORD = "darna-demo-2026"` (`auth.ts:14`).
+
 
 PublicUser (`types.ts:30-43`) = projection without email, phone, address, favoriteIds, organizationId, bookingApprovalMode.
 

@@ -1,60 +1,32 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import type { NetworkSearchParams } from "@/lib/types";
-import { Listing, ListingVertical, HostType } from "@/lib/types";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import type { NetworkSearchParams } from "@/lib/types";
+import { listListings } from "./listings";
 
 export type { NetworkSearchParams } from "@/lib/types";
 
+/**
+ * Network explorer: the marketplace seen with guest-like filters, read
+ * through the admin listings module (Django /admin/listings). Property type
+ * is not an admin listing filter yet, so it is matched on the rows.
+ */
 export async function searchNetwork(params: NetworkSearchParams = {}) {
-  await delay(180);
-
   const vertical = params.vertical || "home";
-  let results = store.listings.filter((l) => l.category === vertical);
-
-  // Filter by Wilaya / destination
-  if (params.wilayaCode && params.wilayaCode !== "all") {
-    results = results.filter((l) => l.wilayaCode === params.wilayaCode);
-  }
-
-  if (params.destination?.trim()) {
-    const dest = params.destination.toLowerCase();
-    results = results.filter(
-      (l) =>
-        l.city.toLowerCase().includes(dest) ||
-        l.title.toLowerCase().includes(dest) ||
-        l.wilayaCode === dest
-    );
-  }
-
-  // Filter by guests
-  if (params.guests && params.guests > 1) {
-    results = results.filter((l) => l.guestCapacity >= params.guests!);
-  }
-
-  // Filter by price
-  if (params.minPrice) {
-    results = results.filter((l) => l.price >= params.minPrice!);
-  }
-  if (params.maxPrice) {
-    results = results.filter((l) => l.price <= params.maxPrice!);
-  }
-
-  // Filter by host type
-  if (params.hostType && params.hostType !== "all") {
-    results = results.filter((l) => l.hostType === params.hostType);
-  }
-
-  // Filter by property type
-  if (params.propertyType && params.propertyType !== "all") {
-    results = results.filter((l) => l.propertyType === params.propertyType);
-  }
-
-  return {
-    results,
-    total: results.length,
+  const page = await listListings({
     vertical,
-  };
+    status: "approved",
+    wilayaCode: params.wilayaCode && params.wilayaCode !== "all" ? params.wilayaCode : undefined,
+    search: params.destination?.trim() || undefined,
+    minCapacity: params.guests && params.guests > 1 ? params.guests : undefined,
+    minPrice: params.minPrice || undefined,
+    maxPrice: params.maxPrice || undefined,
+    hostType: params.hostType && params.hostType !== "all" ? params.hostType : undefined,
+    page: 1,
+    pageSize: 60,
+  });
+  const results =
+    params.propertyType && params.propertyType !== "all"
+      ? page.rows.filter((l) => l.propertyType === params.propertyType)
+      : page.rows;
+  return { results, total: params.propertyType && params.propertyType !== "all" ? results.length : page.total, vertical };
 }

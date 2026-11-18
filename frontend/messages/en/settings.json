@@ -39,7 +39,7 @@
     "preferredNameSaved": "Preferred name updated.",
     "email": "Email address",
     "saveAndVerify": "Save & verify",
-    "emailChangeSoon": "Changing your email is coming soon.",
+    "emailChangeSoon": "To change your email address, contact BLADUS support.",
     "phone": "Phone number",
     "phoneSaved": "Phone number saved.",
     "identity": "Identity verification",
@@ -49,7 +49,21 @@
     "residentialAddressSaved": "Residential address updated.",
     "mailingAddress": "Mailing address",
     "mailingAddressPlaceholder": "P.O. box or alternative postal address",
-    "mailingAddressSaved": "Mailing address updated."
+    "mailingAddressSaved": "Mailing address updated.",
+    "arabicName": "Full name in Arabic",
+    "arabicNamePlaceholder": "As written on your ID card",
+    "arabicNameSaved": "Arabic name saved.",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "resendLink": "Resend link",
+    "emailLinkSent": "We sent a new confirmation link to your email.",
+    "sendCode": "Send code",
+    "phoneCodeSent": "We texted you a 6-digit code.",
+    "phoneCode": "Code received by SMS",
+    "verifyPhone": "Verify",
+    "phoneVerifiedToast": "Phone number verified.",
+    "identityPhoneVerified": "Phone number verified",
+    "identityPending": "Verify your phone number to book and to host"
   },
   "security": {
     "title": "Login & security",
@@ -105,7 +119,10 @@
     "bnaAccount": "BNA bank account (Banque Nationale d'Algérie)",
     "ribLabel": "RIB:",
     "editRibSoon": "Editing your bank RIB is coming soon.",
-    "editRibLabel": "Edit bank RIB"
+    "editRibLabel": "Edit bank RIB",
+    "unavailable": "Not available",
+    "onlineOff": "Online payment is not available on BLADUS yet. You pay your host directly, as agreed in the booking.",
+    "payoutsOff": "Payouts through BLADUS are not available yet. Hosts receive payment directly from their guests."
   },
   "languages": {
     "title": "Languages & currency",
@@ -149,7 +166,7 @@
     "downloadData": "Download your personal data",
     "downloadDataDescription": "Get a copy of your bookings, reviews and messages",
     "exportZip": "Export ZIP",
-    "exportRequested": "Data export requested."
+    "exportRequested": "Request sent. We will send you a copy of your data within 30 days."
   },
   "work": {
     "title": "Travel for work",
@@ -175,7 +192,7 @@
   },
   "dialogs": {
     "deactivateTitle": "Deactivate account",
-    "deactivateMessage": "Are you sure you want to deactivate your BLADUS account? Your profile, reviews and active listings will be hidden until you sign in again.",
+    "deactivateMessage": "BLADUS will close your account and erase your personal data within 30 days, except what the law requires us to keep. Upcoming bookings must be finished or cancelled first.",
     "deactivateConfirm": "Deactivate account",
     "deactivateCancel": "Keep account active",
     "deactivateSoon": "Account deactivation is coming soon. Please contact support for now.",
@@ -183,7 +200,8 @@
     "removeCardMessage": "Are you sure you want to remove {card} from your BLADUS account? You will need to enter your card details again for future bookings.",
     "removeCardConfirm": "Remove card",
     "removeCardCancel": "Keep card",
-    "cardRemoved": "Payment card removed from your account."
+    "cardRemoved": "Payment card removed from your account.",
+    "deletionRequested": "Deletion request sent. We will confirm by email within 30 days."
   },
   "eyebrow": "Your account",
   "accessibility": {
@@ -193,5 +211,41 @@
     "reduceMotionDescription": "Turn off entrance animations, parallax and moving effects. By default BLADUS follows your device setting.",
     "previewFull": "Animations are on, unless your device asks for less motion.",
     "previewReduced": "Motion is reduced on this device."
+  },
+  "twoFactor": {
+    "title": "Two-step verification",
+    "description": "Ask for a code from an authenticator app each time you log in.",
+    "on": "On",
+    "off": "Off",
+    "enabled": "Your account is protected by an authenticator app.",
+    "enabledSince": "Protected by an authenticator app since {date}.",
+    "start": "Set up an authenticator app",
+    "step1": "Install an authenticator app on your phone (for example Google Authenticator or Microsoft Authenticator).",
+    "step2": "Add a new account in the app and enter this setup key:",
+    "openApp": "Or open it in the authenticator app on this device",
+    "step3": "Enter the 6-digit code the app shows.",
+    "codeLabel": "6-digit code",
+    "confirm": "Turn on",
+    "enabledToast": "Two-step verification is on.",
+    "failed": "Two-step verification could not be set up. Please try again.",
+    "recoveryIntro": "Keep these recovery codes somewhere safe. Each one lets you log in once if you lose your phone. They are shown only now.",
+    "copy": "Copy codes",
+    "copied": "Recovery codes copied.",
+    "savedThem": "I saved them"
+  },
+  "signInMethods": {
+    "title": "Sign-in methods",
+    "google": "Google",
+    "connectedAs": "Connected as {email}",
+    "since": "since {date}",
+    "notConnected": "Not connected",
+    "connect": "Connect Google",
+    "disconnect": "Disconnect",
+    "disconnected": "Google was disconnected.",
+    "connectHint": "Use the Google account with the same email as your BLADUS account ({email}).",
+    "loadError": "Your sign-in methods could not be loaded.",
+    "password": "Password",
+    "passwordSet": "Set",
+    "passwordNotSet": "Not set: you sign in with Google"
   }
 }

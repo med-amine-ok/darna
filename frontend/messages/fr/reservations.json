@@ -53,5 +53,6 @@
   "declineKeep": "Conserver la demande",
   "eyebrow": "Espace hôte",
   "kpiLabel": "Aperçu des réservations",
-  "kpiNotAvailable": "n.d."
+  "kpiNotAvailable": "n.d.",
+  "declineReasonLabel": "Motif du refus (transmis au voyageur)"
 }

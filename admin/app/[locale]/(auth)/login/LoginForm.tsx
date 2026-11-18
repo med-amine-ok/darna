@@ -3,86 +3,172 @@
 import React, { useId, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { Lock, Mail, ShieldAlert } from "lucide-react";
+import { Copy, KeyRound, Lock, Mail, ShieldAlert, ShieldCheck, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
-import { loginAction, getDemoCredentials } from "@/lib/actions/auth";
+import {
+  cancelLoginAction,
+  enrolAuthenticatorAction,
+  finishEnrolmentAction,
+  loginAction,
+  verifySecondFactorAction,
+  type LoginError,
+} from "@/lib/actions/auth";
 import { imagery, withParams } from "@/lib/imagery";
-import type { AdminRole } from "@/lib/types";
 
-export interface DemoAccount {
-  email: string;
-  role: AdminRole;
+type Step =
+  | { kind: "password" }
+  | { kind: "mfa" }
+  | { kind: "enrol"; secret: string; totpUrl: string }
+  | { kind: "recovery"; codes: string[]; returnTo: string };
+
+function isRedirect(err: unknown): boolean {
+  return Boolean(
+    err &&
+      typeof err === "object" &&
+      "digest" in err &&
+      String((err as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT"),
+  );
+}
+
+/** Secret grouped by 4 characters, easier to type into an authenticator app. */
+function groupSecret(secret: string): string {
+  return secret.replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim();
 }
 
 export default function LoginForm({
   returnTo,
-  demoAccounts,
+  expired = false,
 }: {
   /** Already validated on the server (relative path only). */
   returnTo: string;
-  /** Non-empty only in development. */
-  demoAccounts: DemoAccount[];
+  /** The previous session ended (30 minutes idle, 8 hours, or revoked). */
+  expired?: boolean;
 }) {
   const locale = useLocale();
   const t = useTranslations("login");
-  const tRoles = useTranslations("roles");
 
+  const [step, setStep] = useState<Step>({ kind: "password" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const errorId = useId();
-  const errorProps = error
-    ? { "aria-invalid": true as const, "aria-describedby": errorId }
-    : {};
+  const errorProps = error ? { "aria-invalid": true as const, "aria-describedby": errorId } : {};
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const showError = (res: LoginError) => {
+    switch (res.error) {
+      case "rateLimited":
+        setError(t("errors.rateLimited", { seconds: res.retryAfterSecs }));
+        break;
+      case "invalidCredentials":
+        setError(t("errors.invalidCredentials"));
+        break;
+      case "invalidCode":
+        setError(t("errors.invalidCode"));
+        break;
+      case "expired":
+        setError(t("errors.stepExpired"));
+        setStep({ kind: "password" });
+        setCode("");
+        break;
+      case "alreadyEnrolled":
+        setError(t("errors.alreadyEnrolled"));
+        setStep({ kind: "mfa" });
+        setCode("");
+        break;
+      default:
+        setError(t("errors.unexpected"));
+    }
+  };
+
+  const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-
-    // Read the fields from the form itself: browser/password-manager autofill fills the
-    // inputs without always firing onChange, so React state can be empty or stale.
+    // Read the fields from the form itself: autofill does not always fire onChange.
     const form = new FormData(e.currentTarget as HTMLFormElement);
     const formData = new FormData();
     formData.set("email", String(form.get("email") ?? email).trim());
     formData.set("password", String(form.get("password") ?? password));
     formData.set("locale", locale);
     formData.set("returnTo", returnTo);
-
     try {
-      // On success the action sets the httpOnly cookie and redirects
-      // server-side to the validated returnTo, so it only returns on failure.
+      // When no authenticator code is needed, the action signs in and redirects (it does not return).
       const res = await loginAction(formData);
-      if (res?.error === "rateLimited") {
-        setError(t("errors.rateLimited", { seconds: res.retryAfterSecs }));
-      } else if (res?.error === "invalidCredentials") {
-        setError(t("errors.invalidCredentials"));
-      } else if (res?.error) {
-        setError(t("errors.unexpected"));
+      if ("step" in res) {
+        setPassword("");
+        setCode("");
+        setStep(res.step === "mfa" ? { kind: "mfa" } : { kind: "enrol", secret: res.secret, totpUrl: res.totpUrl });
+      } else {
+        showError(res);
       }
-      setIsLoading(false);
-    } catch (err) {
-      // redirect() surfaces as a thrown control-flow error in some versions; let it through.
-      if (err && typeof err === "object" && "digest" in err && String((err as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")) {
-        throw err;
-      }
+    } catch {
       setError(t("errors.unexpected"));
-      setIsLoading(false);
+    }
+    setIsLoading(false);
+  };
+
+  const handleCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.set("code", code);
+    formData.set("locale", locale);
+    formData.set("returnTo", returnTo);
+    try {
+      if (step.kind === "enrol") {
+        const res = await enrolAuthenticatorAction(formData);
+        if ("step" in res) {
+          setStep({ kind: "recovery", codes: res.recoveryCodes, returnTo: res.returnTo });
+        } else {
+          showError(res);
+        }
+      } else {
+        // On success the action sets the session cookie and redirects server-side.
+        const res = await verifySecondFactorAction(formData);
+        if (res) showError(res);
+      }
+    } catch (err) {
+      if (isRedirect(err)) throw err;
+      setError(t("errors.unexpected"));
+    }
+    setIsLoading(false);
+  };
+
+  const backToPassword = async () => {
+    setError(null);
+    setCode("");
+    setStep({ kind: "password" });
+    try {
+      await cancelLoginAction();
+    } catch {
+      /* the pending cookie expires by itself */
     }
   };
 
-  // Development only (demoAccounts is empty in production builds).
-  const fillQuickAccount = async (accountEmail: string) => {
-    setError(null);
-    const creds = await getDemoCredentials(accountEmail);
-    if (creds) {
-      setEmail(creds.email);
-      setPassword(creds.password);
+  const copyCodes = async (codes: string[]) => {
+    try {
+      await navigator.clipboard.writeText(codes.join("\n"));
+      setCopied(true);
+    } catch {
+      setCopied(false);
     }
   };
+
+  const iconClass = "w-5 h-5 stroke-[1.75]";
+  const heading =
+    step.kind === "mfa"
+      ? { icon: <ShieldCheck className={iconClass} aria-hidden="true" />, title: t("mfaTitle"), subtitle: t("mfaSubtitle") }
+      : step.kind === "enrol"
+        ? { icon: <Smartphone className={iconClass} aria-hidden="true" />, title: t("enrolTitle"), subtitle: t("enrolSubtitle") }
+        : step.kind === "recovery"
+          ? { icon: <KeyRound className={iconClass} aria-hidden="true" />, title: t("recoveryTitle"), subtitle: t("recoverySubtitle") }
+          : { icon: <Lock className={iconClass} aria-hidden="true" />, title: t("title"), subtitle: t("subtitle") };
 
   return (
     <div className="min-h-[100dvh] bg-darnaBg grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
@@ -161,11 +247,20 @@ export default function LoginForm({
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-e3 text-start enter-up">
             <div className="pb-6">
               <div className="w-11 h-11 rounded-xl bg-primary-800 text-white flex items-center justify-center mb-5 shadow-e1 shadow-highlight">
-                <Lock className="w-5 h-5 stroke-[1.75]" aria-hidden="true" />
+                {heading.icon}
               </div>
-              <h1 className="font-serif text-heading text-primary-900">{t("title")}</h1>
-              <p className="text-meta text-primary-600 mt-1.5">{t("subtitle")}</p>
+              <h1 className="font-serif text-heading text-primary-900">{heading.title}</h1>
+              <p className="text-meta text-primary-600 mt-1.5">{heading.subtitle}</p>
             </div>
+
+            {expired && step.kind === "password" && !error && (
+              <div
+                role="status"
+                className="mb-4 p-3 rounded-xl bg-darnaBg-100 ring-1 ring-inset ring-primary/10 text-xs text-primary-800"
+              >
+                {t("sessionExpired")}
+              </div>
+            )}
 
             {/* Live region stays mounted so screen readers announce each new error. */}
             <div role="alert" aria-live="assertive" aria-atomic="true">
@@ -179,57 +274,127 @@ export default function LoginForm({
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4" aria-busy={isLoading}>
-              <Input
-                label={t("emailLabel")}
-                type="email"
-                name="email"
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@bladus.dz"
-                required
-                {...errorProps}
-                leftIcon={<Mail className="w-4 h-4" aria-hidden="true" />}
-              />
+            {step.kind === "password" && (
+              <form onSubmit={handlePassword} className="space-y-4" aria-busy={isLoading}>
+                <Input
+                  label={t("emailLabel")}
+                  type="email"
+                  name="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@bladus.dz"
+                  required
+                  {...errorProps}
+                  leftIcon={<Mail className="w-4 h-4" aria-hidden="true" />}
+                />
+                <Input
+                  label={t("passwordLabel")}
+                  type="password"
+                  name="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  required
+                  {...errorProps}
+                  leftIcon={<Lock className="w-4 h-4" aria-hidden="true" />}
+                />
+                <Button type="submit" variant="primary" size="lg" className="w-full mt-2" isLoading={isLoading}>
+                  {t("submitButton")}
+                </Button>
+              </form>
+            )}
 
-              <Input
-                label={t("passwordLabel")}
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                required
-                {...errorProps}
-                leftIcon={<Lock className="w-4 h-4" aria-hidden="true" />}
-              />
-
-              <Button type="submit" variant="primary" size="lg" className="w-full mt-2" isLoading={isLoading}>
-                {t("submitButton")}
-              </Button>
-            </form>
-
-            {/* Quick demo pre-fills (development only) */}
-            {demoAccounts.length > 0 && (
-              <div className="mt-6 pt-5 border-t border-primary/[0.06]">
-                <span id={`${errorId}-demo`} className="text-eyebrow uppercase font-semibold text-primary-500 block mb-2.5">
-                  {t("demoSeeds")}
-                </span>
-                <div className="grid grid-cols-3 gap-2" role="group" aria-labelledby={`${errorId}-demo`}>
-                  {demoAccounts.map((acc) => (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      onClick={() => fillQuickAccount(acc.email)}
-                      aria-label={t("demoFillLabel", { role: tRoles(acc.role), email: acc.email })}
-                      className="px-2 min-h-[36px] rounded-xl bg-darnaBg-100 text-xs font-semibold text-primary-800 hover:bg-darnaBg-300/70 transition-colors duration-fast active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-                    >
-                      {tRoles(acc.role)}
-                    </button>
-                  ))}
+            {step.kind === "enrol" && (
+              <div className="space-y-3 mb-4 text-meta text-primary-700">
+                <ol className="list-decimal ps-5 space-y-1.5">
+                  <li>{t("enrolStep1")}</li>
+                  <li>{t("enrolStep2")}</li>
+                  <li>{t("enrolStep3")}</li>
+                </ol>
+                <div className="rounded-xl bg-darnaBg-100 p-3">
+                  <p className="text-eyebrow uppercase font-semibold text-primary-500">{t("enrolSecretLabel")}</p>
+                  <p className="mt-1 font-mono text-sm tracking-wider text-primary-900 break-all select-all" dir="ltr">
+                    {groupSecret(step.secret)}
+                  </p>
+                  <a
+                    href={step.totpUrl}
+                    className="mt-2 inline-block text-xs font-semibold text-accent-700 underline underline-offset-2"
+                  >
+                    {t("enrolOpenApp")}
+                  </a>
                 </div>
+              </div>
+            )}
+
+            {(step.kind === "mfa" || step.kind === "enrol") && (
+              <form onSubmit={handleCode} className="space-y-4" aria-busy={isLoading}>
+                <Input
+                  label={step.kind === "mfa" ? t("codeLabel") : t("enrolCodeLabel")}
+                  type="text"
+                  name="code"
+                  inputMode={step.kind === "enrol" ? "numeric" : "text"}
+                  autoComplete="one-time-code"
+                  autoFocus
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="123456"
+                  maxLength={32}
+                  required
+                  dir="ltr"
+                  helperText={step.kind === "mfa" ? t("codeHelp") : undefined}
+                  {...errorProps}
+                  leftIcon={<KeyRound className="w-4 h-4" aria-hidden="true" />}
+                />
+                <Button type="submit" variant="primary" size="lg" className="w-full mt-2" isLoading={isLoading}>
+                  {step.kind === "mfa" ? t("verifyButton") : t("enrolButton")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={backToPassword}
+                  className="w-full text-xs font-semibold text-primary-600 hover:text-primary-900 min-h-[36px]"
+                >
+                  {t("backToPassword")}
+                </button>
+              </form>
+            )}
+
+            {step.kind === "recovery" && (
+              <div className="space-y-4">
+                <ul
+                  className="grid grid-cols-2 gap-2 rounded-xl bg-darnaBg-100 p-3 font-mono text-sm text-primary-900"
+                  dir="ltr"
+                  aria-label={t("recoveryTitle")}
+                >
+                  {step.codes.map((c) => (
+                    <li key={c} className="select-all">
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-accent-800">{t("recoveryWarning")}</p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => copyCodes(step.codes)}
+                  leftIcon={<Copy className="w-4 h-4" aria-hidden="true" />}
+                >
+                  {copied ? t("recoveryCopied") : t("recoveryCopy")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  onClick={async () => {
+                    await finishEnrolmentAction();
+                    window.location.assign(step.returnTo);
+                  }}
+                >
+                  {t("recoveryContinue")}
+                </Button>
               </div>
             )}
           </div>

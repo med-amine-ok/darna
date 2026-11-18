@@ -19,7 +19,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import type { AdminSessionValue } from "@/components/auth/AdminSessionProvider";
 import { logoutAction } from "@/lib/actions/auth";
 import { canAccessPath } from "@/lib/route-permissions";
-import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 
 export interface HeaderProps {
   currentUser?: AdminSessionValue | null;
@@ -31,15 +31,6 @@ export interface HeaderProps {
   isTrainingMode?: boolean;
   onToggleTrainingMode?: () => void;
 }
-
-/** Sample notifications (UI demo only): text lives in header.sampleNotifications.<id>. */
-const SAMPLE_NOTIFICATIONS = [
-  { id: "newValidation", minutesAgo: 10 },
-  { id: "tripPending", minutesAgo: 45 },
-  { id: "reviewReported", minutesAgo: 120 },
-] as const;
-
-type SampleNotificationId = (typeof SAMPLE_NOTIFICATIONS)[number]["id"];
 
 /** Route prefix → header.searchPlaceholders.<key> */
 const SEARCH_PLACEHOLDER_KEYS: ReadonlyArray<readonly [string, string]> = [
@@ -60,6 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
   onStartTour,
   isTrainingMode = false,
   onToggleTrainingMode,
+  approvalsCount = 0,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -69,7 +61,6 @@ export const Header: React.FC<HeaderProps> = ({
   const tRoles = useTranslations("roles");
   const tUi = useTranslations("ui");
   const format = useFormatter();
-  const now = useNow({ updateInterval: 60_000 });
 
   const uid = useId();
   const notificationsPanelId = `${uid}-notifications`;
@@ -78,7 +69,6 @@ export const Header: React.FC<HeaderProps> = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [openPopover, setOpenPopover] = useState<OpenPopover>(null);
-  const [readIds, setReadIds] = useState<ReadonlySet<SampleNotificationId>>(() => new Set());
 
   const notificationsWrapRef = useRef<HTMLDivElement>(null);
   const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
@@ -122,11 +112,9 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const markAllNotificationsAsRead = () => {
-    setReadIds(new Set(SAMPLE_NOTIFICATIONS.map((n) => n.id)));
-  };
-
-  const unreadCount = SAMPLE_NOTIFICATIONS.filter((n) => !readIds.has(n.id)).length;
+  // The bell shows what really waits for staff: open moderation cases
+  // (the same count as the sidebar badge, from GET /admin/moderation/counts).
+  const unreadCount = approvalsCount > 0 ? approvalsCount : 0;
 
   const placeholderKey =
     SEARCH_PLACEHOLDER_KEYS.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "default";
@@ -241,43 +229,21 @@ export const Header: React.FC<HeaderProps> = ({
                 <h2 id={notificationsTitleId} className="text-sm font-semibold text-primary-900">
                   {tUi("notifications")}
                 </h2>
-                {unreadCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={markAllNotificationsAsRead}
-                    className="text-[11px] text-secondary-700 hover:underline font-semibold flex items-center gap-1 cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600"
-                  >
-                    <Check className="w-3 h-3" aria-hidden="true" />
-                    <span>{tHeader("markAllRead")}</span>
-                  </button>
-                )}
               </div>
               <ul className="space-y-2 mt-2 max-h-72 overflow-y-auto">
-                {SAMPLE_NOTIFICATIONS.map((notif) => {
-                  const read = readIds.has(notif.id);
-                  return (
-                    <li
-                      key={notif.id}
-                      className={`relative p-2.5 ps-4 rounded-xl text-xs transition-colors duration-fast ${
-                        read ? "text-primary-600" : "bg-darnaBg-100 text-primary-800"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        {!read && <span aria-hidden="true" className="absolute start-1.5 top-4 w-1.5 h-1.5 rounded-full bg-accent-500" />}
-                        <span className="font-semibold text-primary-900">
-                          {!read && <span className="sr-only">{tHeader("unread")}: </span>}
-                          {tHeader(`sampleNotifications.${notif.id}.title`)}
-                        </span>
-                        <span className="text-[11px] text-primary-500 shrink-0 tabular-nums">
-                          {format.relativeTime(now.getTime() - notif.minutesAgo * 60_000, now)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-primary-600 mt-0.5">
-                        {tHeader(`sampleNotifications.${notif.id}.description`)}
-                      </p>
-                    </li>
-                  );
-                })}
+                {approvalsCount > 0 ? (
+                  <li className="relative p-2.5 ps-4 rounded-xl text-xs bg-darnaBg-100 text-primary-800">
+                    <span aria-hidden="true" className="absolute start-1.5 top-4 w-1.5 h-1.5 rounded-full bg-accent-500" />
+                    <Link href="/approvals" onClick={closePopover} className="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600">
+                      <span className="font-semibold text-primary-900">
+                        {tHeader("reviewQueueTitle", { count: approvalsCount })}
+                      </span>
+                      <p className="text-xs text-primary-600 mt-0.5">{tHeader("reviewQueueBody")}</p>
+                    </Link>
+                  </li>
+                ) : (
+                  <li className="p-2.5 text-xs text-primary-600">{tHeader("noNotifications")}</li>
+                )}
               </ul>
             </div>
           )}

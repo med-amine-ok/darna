@@ -1,13 +1,10 @@
-import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getUserById } from "@/lib/data/auth";
-import { getListings } from "@/lib/data/listings";
-import { getMembershipsForUser, getOrganizationById } from "@/lib/data/organizations";
+import { getPublicListingsByHost } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
 import { getSessionUser } from "@/lib/server/session";
-import { toPublicUser } from "@/lib/server/dto";
+import { loadPublicProfile, toPublicUserFromApi } from "@/lib/api/people";
 import { formatDate } from "@/lib/i18n/date-locale";
 import { OG_LOCALE, localeAlternates } from "@/lib/site";
 import UserProfileClient from "@/components/profile/UserProfileClient";
@@ -19,7 +16,7 @@ interface UserPageProps {
 }
 
 // Shared by generateMetadata and the page so the user is fetched once per request.
-const loadUser = cache((id: string) => getUserById(id));
+const loadUser = (id: string) => loadPublicProfile(decodeURIComponent(id));
 
 function excerpt(text: string | undefined, max = 160) {
   if (!text) return undefined;
@@ -40,8 +37,9 @@ export async function generateMetadata({ params }: UserPageProps): Promise<Metad
   }
 
   // Only public fields (name, bio, avatar) are exposed in metadata.
-  const publicUser = toPublicUser(user);
-  const path = `/users/${encodeURIComponent(publicUser.id)}`;
+  const publicUser = toPublicUserFromApi(user);
+  // One canonical address per person: their handle (ACC-06), so shared links and search engines agree.
+  const path = `/users/${encodeURIComponent(publicUser.handle || publicUser.id)}`;
   const title = publicUser.name;
   const description =
     excerpt(publicUser.bio) ||
@@ -87,23 +85,19 @@ export default async function UserPublicProfilePage({ params }: UserPageProps) {
   }
 
   const isOwner = currentUser?.id === user.id;
-  const [allListings, reviews, memberships] = await Promise.all([getListings(), getReviewsByUserId(user.id), getMembershipsForUser(user.id)]);
-  const userListings = allListings.filter((l) => l.hostUserId === user.id && !l.organizationId);
-  // Verified businesses this person owns (hotel, hostel or agency), each with its own profile page.
-  const owned = await Promise.all(
-    memberships.filter((m) => m.role === "owner" && m.status === "active").map((m) => getOrganizationById(m.organizationId))
-  );
-  const businesses = owned
-    .filter((o): o is NonNullable<typeof o> => Boolean(o && o.verificationStatus === "verified"))
-    .map((o) => ({ id: o.id, name: o.name, businessCategory: o.businessCategory }));
+  const [listings, reviews] = await Promise.all([getPublicListingsByHost({ userId: user.id }), getReviewsByUserId(user.id)]);
+  // Organisations the person belongs to (hotel, hostel or agency), each with its own public page (by slug).
+  const businesses = (user.organizations ?? [])
+    .filter((o) => o.role === "owner" && (o.business_category === "agency" || o.business_category === "hotel" || o.business_category === "hostel"))
+    .map((o) => ({ id: o.slug, name: o.display_name, businessCategory: o.business_category as "agency" | "hotel" | "hostel" }));
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
         <UserProfileClient
           // Owners get their full record; everyone else only the public projection.
-          user={isOwner ? user : toPublicUser(user)}
-          listings={userListings}
+          user={isOwner && currentUser ? currentUser : toPublicUserFromApi(user)}
+          listings={listings}
           businesses={businesses}
           reviews={reviews}
           isOwner={isOwner}

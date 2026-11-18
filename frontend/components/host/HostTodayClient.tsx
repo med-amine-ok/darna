@@ -17,6 +17,7 @@ import HostWalletWidget from "./HostWalletWidget";
 import {
   Avatar,
   Badge,
+  Banner,
   Button,
   Card,
   KitEmptyState,
@@ -51,6 +52,8 @@ interface HostTodayClientProps {
   initialReservations: Reservation[];
   listings: Listing[];
   reviews: Review[];
+  /** The bookings could not be loaded (show an error, not empty figures). */
+  loadFailed?: boolean;
 }
 
 type Period = "month" | "30days" | "year";
@@ -76,9 +79,11 @@ export default function HostTodayClient({
   initialReservations,
   listings,
   reviews,
+  loadFailed = false,
 }: HostTodayClientProps) {
   const t = useTranslations("hostToday");
   const tHost = useTranslations("host");
+  const tCommon = useTranslations("common");
   const errorText = useActionError();
   const locale = useLocale();
 
@@ -129,17 +134,17 @@ export default function HostTodayClient({
     ? { overall: reviewSummary.overall, count: hostReviews.length }
     : listingRating;
 
-  const handleStatusChange = async (id: string, newStatus: "confirmed" | "cancelled") => {
+  // Accept here; declining needs a reason, which the bookings page asks for.
+  const handleAccept = async (id: string) => {
     setIsProcessing(id);
     try {
-      const result = await respondToReservationAction(id, newStatus === "confirmed" ? "confirm" : "decline");
+      const result = await respondToReservationAction(id, "confirm");
       if (!result.ok) {
         toast.error(errorText(result));
         return;
       }
-      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: result.data.status } : r)));
-      if (newStatus === "confirmed") toast.success(t("toast.accepted"));
-      else toast.info(t("toast.declined"));
+      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, ...result.data, listing: r.listing } : r)));
+      toast.success(t("toast.accepted"));
     } catch {
       toast.error(t("toast.updateFailed"));
     } finally {
@@ -165,6 +170,11 @@ export default function HostTodayClient({
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      {loadFailed && (
+        <Banner tone="danger" title={tCommon("dataLoadFailedTitle")}>
+          {tCommon("dataLoadFailedBody")}
+        </Banner>
+      )}
       {/* Greeting */}
       <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
@@ -239,7 +249,7 @@ export default function HostTodayClient({
                   </span>
                   <div className="min-w-0">
                     <h3 className="truncate text-body font-semibold text-primary-900">
-                      {t("requestFor", { title: req.listing?.title || "" })}
+                      {t("requestFor", { title: req.listing?.title || req.title || "" })}
                     </h3>
                     <p className="mt-0.5 text-meta text-primary-600">
                       {t.rich("requestDetails", {
@@ -257,7 +267,7 @@ export default function HostTodayClient({
                     variant="confirm"
                     loading={isProcessing === req.id}
                     disabled={isProcessing === req.id}
-                    onClick={() => handleStatusChange(req.id, "confirmed")}
+                    onClick={() => handleAccept(req.id)}
                     leadingIcon={<BrandCheckIcon size={16} aria-hidden="true" />}
                   >
                     {t("acceptRequest")}
@@ -267,7 +277,7 @@ export default function HostTodayClient({
                     variant="tertiary"
                     className="!text-red-700 ring-1 ring-inset ring-red-200 hover:!bg-red-50"
                     disabled={isProcessing === req.id}
-                    onClick={() => handleStatusChange(req.id, "cancelled")}
+                    href="/host/bookings"
                     leadingIcon={<BrandCloseIcon size={16} aria-hidden="true" />}
                   >
                     {tHost("today.decline")}
@@ -390,7 +400,7 @@ export default function HostTodayClient({
                 </Badge>
                 {currentlyHosting.slice(0, 3).map((stay) => (
                   <span key={stay.id} className="text-meta text-primary-700">
-                    <bdi>{stay.listing?.title}</bdi>
+                    <bdi>{stay.listing?.title || stay.title}</bdi>
                     <span className="text-primary-500">
                       {" "}
                       · {t("stayEnds", { date: formatDateKey(stay.endDate, locale, { month: "short", day: "numeric" }) })}
@@ -451,7 +461,7 @@ export default function HostTodayClient({
                             </Badge>
                           </div>
                           <h3 className="mt-1 truncate text-body font-semibold text-primary-900">
-                            <bdi>{stay.listing?.title}</bdi>
+                            <bdi>{stay.listing?.title || stay.title}</bdi>
                           </h3>
                           <p className="text-meta text-primary-600">
                             {t("guestsNights", {

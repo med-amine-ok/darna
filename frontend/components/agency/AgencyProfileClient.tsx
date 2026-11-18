@@ -8,7 +8,10 @@ import { imagery } from "@/lib/imagery";
 import ListingCard from "@/components/listing/ListingCard";
 import TripCard from "@/components/trips/TripCard";
 import { RevealGroup, RevealItem, Reveal } from "@/components/motion/Reveal";
-import { Avatar, Badge, Banner, Card, KitEmptyState } from "@/components/ui";
+import { Avatar, Badge, Banner, Button, Card, KitEmptyState } from "@/components/ui";
+import { toast } from "react-toastify";
+import { orgProfileHref } from "@/lib/host-profile";
+import { absoluteUrl, shareLink } from "@/lib/client/share";
 import ProfileHero, { realImage } from "@/components/profile/ProfileHero";
 import {
   BrandClockIcon,
@@ -20,6 +23,7 @@ import {
   BrandBuildingIcon,
   BrandLightningIcon,
   BrandCompassIcon,
+  BrandShareIcon,
 } from "@/components/icons";
 
 /**
@@ -76,6 +80,14 @@ function Facts({ rows }: { rows: { label: string; value: React.ReactNode }[] }) 
 export default function AgencyProfileClient({ organization, members, listings, trips = [] }: AgencyProfileClientProps) {
   const t = useTranslations("agencyPublic");
   const locale = useLocale();
+  const tCommon = useTranslations("common");
+
+  // Share the organisation's own public page (/agencies|/hotels|/hostels/<slug>).
+  const handleShare = async () => {
+    const outcome = await shareLink({ url: absoluteUrl(orgProfileHref(organization), locale), title: organization.name });
+    if (outcome === "copied") toast.success(t("linkCopied"));
+    else if (outcome === "failed") toast.error(t("copyFailed"));
+  };
   const category = organization.businessCategory;
   const isPending = !organization.isVerified;
   const hasRating = typeof organization.rating === "number" && organization.rating > 0;
@@ -100,7 +112,8 @@ export default function AgencyProfileClient({ organization, members, listings, t
           ]
         : [
             { label: t("roomsAndDorms"), value: organization.totalRoomCount ?? listings.length, format: num },
-            { label: t("teamMembers"), value: members.length, format: num },
+            // The API does not publish team members: the stat only shows when a list is given.
+            ...(members.length > 0 ? [{ label: t("teamMembers"), value: members.length, format: num }] : []),
             ratingStat,
             reviewsStat,
           ];
@@ -206,6 +219,11 @@ export default function AgencyProfileClient({ organization, members, listings, t
         }
         stats={stats}
         statsLabel={t(`statsLabel.${category}`)}
+        actions={
+          <Button variant="tertiary" size="sm" leadingIcon={<BrandShareIcon size={16} />} onClick={handleShare}>
+            {tCommon("share")}
+          </Button>
+        }
       >
         {isPending && (
           <Banner tone="warning" title={t("reviewTitle")} className="mt-6">
@@ -303,6 +321,7 @@ export default function AgencyProfileClient({ organization, members, listings, t
             </Reveal>
           )}
 
+          {members.length > 0 && (
           <Reveal delay={0.06}>
             <Card as="section" aria-labelledby="org-team">
               <div className="flex items-center justify-between gap-3">
@@ -325,6 +344,7 @@ export default function AgencyProfileClient({ organization, members, listings, t
               </ul>
             </Card>
           </Reveal>
+          )}
 
           <Reveal delay={0.08}>
             <Card as="section" variant="sunken" aria-labelledby="org-contact" className="relative overflow-hidden">

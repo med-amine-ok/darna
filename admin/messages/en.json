@@ -35,7 +35,8 @@
     "rows": "Rows per page",
     "page": "Page",
     "of": "of",
-    "results": "results"
+    "results": "results",
+    "retry": "Please reload the page or try again in a moment."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -199,22 +200,11 @@
     "myProfileSecurity": "My profile & security",
     "guidedTour": "Guided tour",
     "helpCenter": "Help center",
-    "sampleNotifications": {
-      "newValidation": {
-        "title": "New validation request",
-        "description": "Villa les Oliviers (Ahmed Benali) in Tizi Ouzou"
-      },
-      "tripPending": {
-        "title": "Trip awaiting approval",
-        "description": "Tassili n'Ajjer expedition by Sahara Tours"
-      },
-      "reviewReported": {
-        "title": "Guest review reported",
-        "description": "Comment reported on Hôtel El Aurassi"
-      }
-    },
     "notificationsUnread": "{count, plural, one {# unread notification} other {# unread notifications}}",
-    "searchShort": "Search"
+    "searchShort": "Search",
+    "reviewQueueTitle": "{count, plural, one {# item waits for review} other {# items wait for review}}",
+    "reviewQueueBody": "Hosts, listings, trips and documents in the moderation queue.",
+    "noNotifications": "Nothing needs your attention right now."
   },
   "commandPalette": {
     "placeholder": "Type a query, host name, wilaya, or command...",
@@ -432,7 +422,21 @@
       "description": "Fewer choices, faster work: secondary pages are now grouped under “Manage”.",
       "guideLink": "Where did my page go?",
       "dismiss": "Dismiss banner"
-    }
+    },
+    "loadError": "These figures cannot be loaded right now. Try again in a moment.",
+    "comparisonNone": "Nothing to compare with the previous {period}",
+    "kpiActiveHosts": "Hosts with sales",
+    "kpiActiveHostsHint": "Hosts with at least one confirmed or completed booking in the period.",
+    "chartVolumeTitle": "Money paid by guests, month by month",
+    "chartVolumeSubtitle": "Confirmed and completed bookings of the last 12 months, by check-in month",
+    "axisMonth": "Month",
+    "axisAmount": "Amount",
+    "chartWilayasTitleNeutral": "Wilayas with the most bookings",
+    "chartWilayasSubtitle30d": "Confirmed and completed bookings of the last 30 days",
+    "noChartData": "No bookings in this period yet.",
+    "notAvailable": "Not available",
+    "occupancyUnavailable": "BLADUS does not measure occupancy yet.",
+    "responseNoData": "No booking request was answered in this period."
   },
   "hosts": {
     "title": "Partners & Hosts",
@@ -591,14 +595,18 @@
         "amount": "Amount (DZD)",
         "receiptRef": "Receipt / wire reference",
         "receiptPlaceholder": "e.g. BNA-VIR-891244",
-        "creditWallet": "Credit wallet"
+        "creditWallet": "Credit wallet",
+        "resetToDefault": "Back to the default rate",
+        "openWallet": "Open the wallet of this host"
       },
       "history": {
         "title": "Partner action history",
         "verifiedBy": "Account verified by {name}",
         "idApproved": "Identity document approved",
-        "applicationSubmitted": "Partner application submitted"
-      }
+        "applicationSubmitted": "Partner application submitted",
+        "openAudit": "See every action on this host in the audit log"
+      },
+      "openFullPage": "Open the full host page"
     }
   },
   "listings": {
@@ -1026,7 +1034,8 @@
       "login": "Account sign-in",
       "loginMeta": "Today at {time} (IP: {ip})",
       "bookingMade": "Booking made {ref}",
-      "rating": "Rated {rating} out of 5"
+      "rating": "Rated {rating} out of 5",
+      "openBookings": "Open the bookings of this person"
     },
     "filters": {
       "allStatuses": "All statuses",
@@ -1034,6 +1043,30 @@
       "guestOnly": "Guests only",
       "guestAndHost": "Guest & host",
       "allWilayas": "All wilayas"
+    },
+    "dataRequests": {
+      "title": "Data protection requests",
+      "subtitle": "Access, correction, deletion and opposition requests, nearest deadline first.",
+      "empty": "No request",
+      "emptyHint": "Requests sent by guests and hosts from their account appear here.",
+      "meta": "Received {created} · due {due} · {status}",
+      "complete": "Mark as done",
+      "reject": "Refuse",
+      "closed": "Request closed",
+      "closeFailed": "Could not close the request",
+      "deletionWarning": "Completing a deletion request anonymises the account. This cannot be undone.",
+      "kinds": {
+        "access": "Access",
+        "rectification": "Correction",
+        "deletion": "Deletion",
+        "opposition": "Opposition"
+      },
+      "statuses": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "completed": "Done",
+        "rejected": "Refused"
+      }
     }
   },
   "bookings": {
@@ -1186,6 +1219,14 @@
     "ctxLocation": "Location",
     "rulesTitle": "Moderation rules",
     "rulesText": "Defamatory reviews, hate speech or reviews containing personal contact details may be removed without notice.",
+    "hideTitle": "Hide this review",
+    "hideDesc": "The review leaves the public pages. Write why (at least 10 characters); the reason is kept in the audit log.",
+    "ctxBooking": "Booking",
+    "disputesElsewhere": {
+      "title": "Booking disputes are handled in Bookings",
+      "desc": "A dispute belongs to a booking, not to a review. Open the bookings screen and filter on disputed bookings to resolve them.",
+      "cta": "Open bookings"
+    },
     "deleteTitle": "Delete review",
     "deleteDesc": "This review will be removed from the database and will no longer appear on the listing page.",
     "toast": {
@@ -1200,7 +1241,7 @@
       "flagDismissedDesc": "The review has been confirmed as compliant.",
       "dismissFailed": "Failed to dismiss the flag",
       "deleted": "Review deleted",
-      "deletedDesc": "Soft-deleted. It can be recovered from the trash.",
+      "deletedDesc": "Removed for good. It cannot be restored.",
       "deleteFailed": "Delete failed"
     }
   },
@@ -1334,6 +1375,9 @@
     "toggleStatus": "Toggle status of {code}",
     "deleteCode": "Delete code {code}",
     "featured": {
+      "perListingTitle": "Featured placements are set per listing",
+      "perListingDesc": "Open a listing in the Listings screen to feature it or remove it from the featured places. A list of every placement is not available yet.",
+      "openListings": "Open listings",
       "title": "Homepage featured placements",
       "subtitle": "Manage listings sponsored or featured by the moderation team.",
       "add": "Add a featured placement",
@@ -1527,7 +1571,12 @@
       "nowActive": "{name} is now active.",
       "nowDeactivated": "{name} has been deactivated.",
       "actionProhibited": "Action not allowed"
-    }
+    },
+    "mfaOn": "Authenticator set up",
+    "mfaOff": "No authenticator yet",
+    "mfaReset": "Reset 2FA",
+    "mfaResetLabel": "Reset the two-step verification of {name}",
+    "mfaResetDone": "{name} will set up a new authenticator at the next sign-in."
   },
   "settings": {
     "title": "Platform Settings",
@@ -1578,32 +1627,81 @@
       "saved": "Settings saved",
       "savedHint": "The platform configuration has been updated.",
       "saveFailed": "Could not save settings"
+    },
+    "platform": {
+      "title": "Platform rules",
+      "version": "Version {version}, saved {date} by {name}",
+      "defaults": "Default values (never changed yet)",
+      "requestTtl": "Hours a host has to answer a booking request",
+      "creditLimit": "Default credit floor of host wallets (DZD)",
+      "creditLimitHint": "How far below zero a host wallet may go before new bookings are blocked.",
+      "fourEyes": "Second approval for top-ups above (DZD)",
+      "fourEyesHint": "Wallet top-ups above this amount must be approved by a second admin.",
+      "instantBooking": "Instant booking",
+      "instantBookingHint": "Lets hosts accept bookings without a manual answer.",
+      "history": "Change history",
+      "noHistory": "No change saved yet.",
+      "notificationsInfo": "Notification channels are sent by the platform automatically; there is nothing to configure here yet.",
+      "securityMfa": "Every staff account signs in with a password and a code from an authenticator app.",
+      "securityIdle": "A staff session ends after 30 minutes without activity.",
+      "securityMax": "A staff session ends after 8 hours in any case.",
+      "securityLock": "Repeated wrong passwords or codes lock the sign-in for a minute."
     }
   },
   "login": {
     "title": "Control Center Login",
-    "subtitle": "Sign in with your authorized BLADUS staff credentials",
+    "subtitle": "Sign in with your BLADUS staff account.",
     "emailLabel": "Staff Email Address",
     "passwordLabel": "Password",
-    "submitButton": "Authenticate & Enter",
+    "submitButton": "Continue",
     "demoSeeds": "Demo Seed Accounts:",
     "footerText": "© 2026 BLADUS Technologies DZ. Restricted access for authorized staff only.",
     "errors": {
       "invalidCredentials": "Invalid email or password.",
       "rateLimited": "Too many sign-in attempts. Please wait {seconds} seconds and try again.",
-      "unexpected": "Something went wrong while signing in. Please try again."
+      "unexpected": "Something went wrong while signing in. Please try again.",
+      "invalidCode": "This code is not valid. Check the time on your phone and try again.",
+      "stepExpired": "The sign-in took too long. Please enter your email and password again.",
+      "alreadyEnrolled": "An authenticator app is already set up for this account. Enter its code."
     },
     "adminBadge": "Admin",
     "demoFillLabel": "Fill in the {role} demo account ({email})",
     "panelEyebrow": "Algeria, from the coast to the Tassili",
     "panelTitle": "Every stay, trip and host, looked after with care.",
-    "panelImagesAlt": "Photographs of Djanet, Ghardaïa and the bay of Algiers"
+    "panelImagesAlt": "Photographs of Djanet, Ghardaïa and the bay of Algiers",
+    "sessionExpired": "Your session ended (30 minutes without activity, or signed out elsewhere). Please sign in again.",
+    "mfaTitle": "Two-step verification",
+    "mfaSubtitle": "Enter the 6-digit code from your authenticator app.",
+    "codeLabel": "Verification code",
+    "codeHelp": "Lost your phone? Enter one of your recovery codes instead.",
+    "verifyButton": "Verify and sign in",
+    "backToPassword": "Back to email and password",
+    "enrolTitle": "Set up your authenticator app",
+    "enrolSubtitle": "Staff accounts need a second factor. This is done once.",
+    "enrolStep1": "Open an authenticator app (Google Authenticator, Microsoft Authenticator, Aegis, 1Password...).",
+    "enrolStep2": "Add an account with the setup key below, or open the link on this device.",
+    "enrolStep3": "Type the 6-digit code the app shows.",
+    "enrolSecretLabel": "Setup key",
+    "enrolOpenApp": "Open in my authenticator app",
+    "enrolCodeLabel": "6-digit code from the app",
+    "enrolButton": "Confirm and continue",
+    "recoveryTitle": "Your recovery codes",
+    "recoverySubtitle": "Each code works once if you lose access to your authenticator app.",
+    "recoveryWarning": "These codes are shown only now. Store them somewhere safe before you continue.",
+    "recoveryCopy": "Copy the codes",
+    "recoveryCopied": "Codes copied",
+    "recoveryContinue": "I saved them, open the panel"
   },
   "auth": {
     "forbidden": {
       "title": "Access restricted",
       "description": "Your role does not have permission to view this section. Contact a Super Admin if you need access.",
       "backHome": "Back to dashboard"
+    },
+    "unavailable": {
+      "title": "The service cannot be reached",
+      "description": "The BLADUS server did not answer. Your session is kept; try again in a moment.",
+      "retry": "Try again"
     }
   },
   "actions": {
@@ -1632,7 +1730,8 @@
     "suspendHostDescription": "Their listings will be temporarily hidden from travelers.",
     "reactivate": "Reactivate",
     "invalidRate": "Rate must be between 0 and 100 % with at most 2 decimals.",
-    "invalidAmount": "Enter a whole amount between 1 and {max}."
+    "invalidAmount": "Enter a whole amount between 1 and {max}.",
+    "approve": "Approve"
   },
   "payments": {
     "title": "Payments & Finance",
@@ -1779,7 +1878,7 @@
     "refundConfirm": "Refund {amount}",
     "refundDone": "Refund issued",
     "cancelTitle": "Cancel booking {reference}?",
-    "cancelDescription": "Pending and confirmed bookings only. Refunds are issued separately.",
+    "cancelDescription": "Pending and confirmed bookings only. Cancelling a confirmed booking owes the guest everything not yet refunded; the host pays it back.",
     "cancelDone": "Booking cancelled",
     "disputeTitle": "Resolve dispute on {reference}",
     "disputeDescription": "Choose the outcome. Refunds are written to the ledger; a declined dispute returns the booking to its normal lifecycle.",
@@ -1815,7 +1914,18 @@
     "verificationDocuments": "Verification documents",
     "uploaded": "Uploaded {date}",
     "viewFile": "View file",
-    "viewFileLabel": "View file {title} (opens in a new tab)"
+    "viewFileLabel": "View file {title} (opens in a new tab)",
+    "noDocuments": "No document uploaded yet.",
+    "approveDocument": "Approve",
+    "requiredDocuments": "Required documents",
+    "openWallet": "Open the wallet",
+    "creditLimitTitle": "Credit floor",
+    "creditLimitCurrent": "The wallet may go down to minus {amount}.",
+    "creditLimitLabel": "New credit floor (DZD)",
+    "creditLimitSave": "Save the credit floor",
+    "creditLimitSaved": "Credit floor saved",
+    "legalTitle": "Legal identity",
+    "reviews": "Reviews"
   },
   "search": {
     "title": "Global search & BLADUS network",
@@ -2277,7 +2387,9 @@
         "about": "About this stay",
         "noDescription": "No description provided for this stay.",
         "calendarText": "Availability and seasonal rates are managed for this stay.",
-        "calendarLink": "Open the full calendar"
+        "calendarLink": "Open the full calendar",
+        "noBookings": "No bookings for this stay yet.",
+        "bookingsLoadError": "Bookings could not be loaded."
       },
       "advanced": {
         "title": "Advanced stay filters",
@@ -3324,6 +3436,16 @@
           "desc": "Breakdown of nights, average prices and guest origins."
         }
       }
+    },
+    "live": {
+      "loading": "Loading the statistics...",
+      "loadError": "The statistics cannot be loaded right now.",
+      "retry": "Try again",
+      "noData": "No bookings in this period yet.",
+      "periodNote": "Last 30 days, confirmed and completed bookings. Amounts in DZD.",
+      "volumeChartLabel": "Money paid by guests per month: {values}",
+      "bookings": "{count, plural, one {{value} booking} other {{value} bookings}}",
+      "commission": "BLADUS commission: {value}"
     }
   },
   "help": {
@@ -3929,5 +4051,121 @@
       "listings": "Listings"
     },
     "total": "Total"
+  },
+  "financeApi": {
+    "kpiPendingTopups": "Top-ups awaiting approval",
+    "overviewTopups": "Top-ups this month",
+    "overviewTopupsHint": "Approved deposits credited to host wallets since {date}.",
+    "switchedOff": "Switched off",
+    "escrowOff": "Online payment is switched off: guests pay hosts directly and BLADUS holds no guest money.",
+    "payoutsOffTitle": "Payouts are switched off",
+    "payoutsOffDesc": "BLADUS does not pay hosts in this version: guests pay hosts directly. Payout requests will appear here once the feature is switched on.",
+    "loadFailed": "Could not load this list.",
+    "statusFilter": "Status",
+    "all": "All",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectHint": "Give a reason of at least 10 characters.",
+    "ownRequest": "Recorded by you: another admin must approve it.",
+    "tabs": {
+      "topups": "Top-ups",
+      "adjustments": "Adjustments",
+      "invoices": "Invoices",
+      "sync": "Sync health"
+    },
+    "approvalStatus": {
+      "pending_approval": "Waiting for a second admin",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "methods": {
+      "ccp_transfer": "CCP transfer",
+      "bank_transfer": "Bank transfer",
+      "baridimob": "BaridiMob",
+      "cash_office": "Cash at the office"
+    },
+    "cols": {
+      "receipt": "Receipt",
+      "requestedBy": "Recorded by",
+      "dueAt": "Due",
+      "period": "Period",
+      "number": "Number",
+      "amountHt": "Excl. VAT",
+      "vat": "VAT",
+      "amountTtc": "Incl. VAT",
+      "night": "Night",
+      "roomType": "Room type",
+      "sold": "Sold",
+      "external": "Reported by the hotel",
+      "source": "Source",
+      "topic": "Topic",
+      "attempts": "Attempts",
+      "lastError": "Last error",
+      "reason": "Reason",
+      "amountOwed": "Amount owed",
+      "created": "Created"
+    },
+    "topups": {
+      "title": "Wallet top-ups",
+      "hint": "Deposits recorded by admins. Large amounts wait for a second admin (four-eyes rule).",
+      "empty": "No top-ups match this filter.",
+      "approved": "Top-up approved and wallet credited",
+      "rejected": "Top-up rejected",
+      "rejectTitle": "Reject this top-up?",
+      "rejectDesc": "Top-up of {amount} for {host}. Nothing is credited.",
+      "pending": "Recorded, waiting for a second admin",
+      "pendingDesc": "This amount passes the four-eyes threshold: another admin must approve it before the wallet is credited."
+    },
+    "adjust": {
+      "title": "Wallet adjustments",
+      "hint": "Manual corrections of a host deposit. Every adjustment needs a reason and a second admin.",
+      "empty": "No adjustments match this filter.",
+      "request": "Request an adjustment",
+      "dialogTitle": "Request a wallet adjustment",
+      "dialogDesc": "Signed amount in DZD: positive adds to the deposit, negative takes from it. A second admin must approve it.",
+      "host": "Host",
+      "amount": "Amount (DZD, signed)",
+      "reason": "Reason (10 characters or more)",
+      "submit": "Send for approval",
+      "done": "Adjustment requested",
+      "approved": "Adjustment approved",
+      "rejected": "Adjustment rejected",
+      "rejectTitle": "Reject this adjustment?",
+      "invalidAmount": "Enter a non-zero whole amount."
+    },
+    "refunds": {
+      "hint": "Refunds hosts owe guests after cancellations or disputes. BLADUS does not hold the money: it follows the debt until it is settled.",
+      "status": {
+        "open": "Owed",
+        "declared": "Declared paid by the host",
+        "disputed": "Disputed by the guest",
+        "settled": "Settled"
+      },
+      "overdue": "Overdue",
+      "overdueOnly": "Overdue only",
+      "settle": "Settle",
+      "settleTitle": "Settle this refund?",
+      "settleDesc": "Confirm that the guest received {amount} for booking {reference}. Note the proof you checked.",
+      "settled": "Refund settled"
+    },
+    "invoices": {
+      "title": "Commission invoices",
+      "hint": "Monthly commission invoices per host. PDF files are not generated yet.",
+      "empty": "No invoices yet."
+    },
+    "sync": {
+      "conflictsTitle": "Inventory conflicts",
+      "conflictsHint": "Nights where a hotel system reported fewer rooms than BLADUS already sold.",
+      "conflictsEmpty": "No inventory conflicts.",
+      "resolve": "Resolve",
+      "resolveTitle": "Resolve this conflict?",
+      "resolveDesc": "Describe what was done with the overbooked night.",
+      "resolved": "Conflict resolved",
+      "outboxTitle": "Outgoing messages",
+      "outboxHint": "Deliveries to partner systems. Dead messages need a retry.",
+      "outboxEmpty": "No messages match this filter.",
+      "retry": "Retry",
+      "retried": "Message queued again"
+    }
   }
 }

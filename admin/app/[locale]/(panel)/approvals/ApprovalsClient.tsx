@@ -22,9 +22,7 @@ import {
   MapPin,
   RotateCcw,
 } from "lucide-react";
-import { getApprovalsInbox } from "@/lib/actions/approvals";
-import { approveHost, rejectHost } from "@/lib/actions/hosts";
-import { approveListing, rejectListing } from "@/lib/actions/listings";
+import { bulkDecideCases, decideCase, getApprovalsInbox } from "@/lib/actions/approvals";
 import { hideReview, dismissFlag } from "@/lib/actions/reviews";
 import { resolveDispute } from "@/lib/actions/bookings";
 import { unwrap } from "@/lib/actions/result";
@@ -97,6 +95,10 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
   const [rejectReasonTemplate, setRejectReasonTemplate] = useState<RejectionTemplate>(REJECTION_TEMPLATES[0]);
   const [rejectCustomNote, setRejectCustomNote] = useState("");
   const [caseToReject, setCaseToReject] = useState<ModerationCase | null>(null);
+  // Reject reasons of the backend catalogue (MOD-03), by action (reject_host, reject_listing...).
+  const [reasonCatalogue, setReasonCatalogue] = useState<Record<string, { code: string; label: string }[]>>({});
+  const [rejectReasonCode, setRejectReasonCode] = useState<string>("");
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const { success, error, info } = useToast();
   const can = useCan();
@@ -117,7 +119,16 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
     dispute: "bookings.dispute",
   };
   const canApprove = (item: ModerationCase) => can(APPROVE_PERMISSION[item.type]);
-  const canReject = (item: ModerationCase) => item.type !== "document" && can(REJECT_PERMISSION[item.type]);
+  const canReject = (item: ModerationCase) => can(REJECT_PERMISSION[item.type]);
+
+  // Catalogue action of a reject decision for the case being rejected.
+  const REJECT_ACTION: Record<string, string> = {
+    host_verification: "reject_host",
+    listing_review: "reject_listing",
+    trip_review: "reject_trip",
+    document: "reject_document",
+  };
+  const rejectReasons = (caseToReject && reasonCatalogue[REJECT_ACTION[caseToReject.details?.kind] ?? ""]) || [];
 
   const loadInbox = useCallback(async (tab: string) => {
     setLoading(true);
@@ -125,6 +136,8 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
       const data = unwrap(await getApprovalsInbox(tab));
       setCases(data.items);
       setCounts(data.counts);
+      setReasonCatalogue(data.reasons ?? {});
+      setLoadFailed(Boolean(data.failed));
       setSelectedIndex(-1);
       setSelectedCase(null);
       setSelectedIds([]);
@@ -268,19 +281,14 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
   const handleApprove = async (item: ModerationCase) => {
     if (!canApprove(item)) return;
     try {
-      if (item.type === "host") {
-        unwrap(await approveHost(item.entityId));
-      } else if (item.type === "listing") {
-        unwrap(await approveListing(item.entityId));
+      if (item.type === "host" || item.type === "listing" || item.type === "document") {
+        unwrap(await decideCase(item.id, "approve"));
       } else if (item.type === "review") {
         unwrap(await dismissFlag(item.entityId));
       } else if (item.type === "dispute") {
         // Disputes need an explicit outcome (full / partial refund or decline) and a note.
         setDisputeCase(item);
         return;
-      } else if (item.type === "document") {
-        // Document approve
-        unwrap(await approveHost(item.details?.host?.id || item.entityId));
       }
 
       success(
@@ -302,6 +310,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
     if (!canReject(item)) return;
     setCaseToReject(item);
     setRejectReasonTemplate(REJECTION_TEMPLATES[0]);
+    setRejectReasonCode("");
     setRejectCustomNote("");
     setRejectDialogOpen(true);
   };
@@ -309,16 +318,15 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
   // Submit Rejection with mandatory reason
   const submitRejection = async () => {
     if (!caseToReject) return;
-    const templateText = t(`reject.templates.${rejectReasonTemplate}`);
+    const catalogueReason = rejectReasons.find((r) => r.code === rejectReasonCode);
+    const templateText = catalogueReason ? catalogueReason.label : t(`reject.templates.${rejectReasonTemplate}`);
     const fullReason = rejectCustomNote.trim()
       ? t("reject.withNote", { template: templateText, note: rejectCustomNote.trim() })
       : templateText;
 
     try {
-      if (caseToReject.type === "host") {
-        unwrap(await rejectHost(caseToReject.entityId, fullReason));
-      } else if (caseToReject.type === "listing") {
-        unwrap(await rejectListing(caseToReject.entityId, fullReason));
+      if (caseToReject.type === "host" || caseToReject.type === "listing" || caseToReject.type === "document") {
+        unwrap(await decideCase(caseToReject.id, "reject", fullReason, catalogueReason?.code ?? null));
       } else if (caseToReject.type === "review") {
         unwrap(await hideReview(caseToReject.entityId));
       } else if (caseToReject.type === "dispute") {
@@ -343,10 +351,22 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
   const handleBulkApprove = async () => {
     const itemsToApprove = cases.filter((c) => selectedIds.includes(c.id) && canApprove(c));
     try {
+      const caseIds = itemsToApprove
+        .filter((c) => c.type === "host" || c.type === "listing" || c.type === "document")
+        .map((c) => c.id);
+      let failedIds: string[] = [];
+      if (caseIds.length) {
+        const results = unwrap(await bulkDecideCases(caseIds, "approve"));
+        failedIds = results.filter((r) => !r.ok).map((r) => r.id);
+      }
       for (const item of itemsToApprove) {
-        if (item.type === "host") unwrap(await approveHost(item.entityId));
-        else if (item.type === "listing") unwrap(await approveListing(item.entityId));
-        else if (item.type === "review") unwrap(await dismissFlag(item.entityId));
+        if (item.type === "review") unwrap(await dismissFlag(item.entityId));
+      }
+      if (failedIds.length) {
+        error(t("toast.bulkFailed"), `${failedIds.length} / ${caseIds.length}`);
+        setCases((prev) => prev.filter((c) => !selectedIds.includes(c.id) || failedIds.includes(c.id)));
+        setSelectedIds(failedIds);
+        return;
       }
       success(
         t("toast.bulkApproved", { count: itemsToApprove.length }),
@@ -372,7 +392,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
   const tabs = [
     { key: "hosts", label: t("tabHosts"), count: counts.hosts, icon: Building },
     { key: "listings", label: t("tabListings"), count: counts.listings, icon: Home },
-   
+    { key: "documents", label: t("tabDocs"), count: counts.documents, icon: CheckCheck },
     { key: "reviews", label: t("tabReviews"), count: counts.reviews, icon: Star },
     { key: "disputes", label: t("tabDisputes"), count: counts.disputes, icon: AlertTriangle },
   ];
@@ -780,7 +800,11 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
               </div>
             ) : (
               <div className="bg-white rounded-2xl shadow-e1">
-                <EmptyState title={t("caughtUpTitle")} description={t("caughtUpDesc")} />
+                {loadFailed ? (
+                  <EmptyState title={t("toast.loadFailed")} description={tCommon("retry")} />
+                ) : (
+                  <EmptyState title={t("caughtUpTitle")} description={t("caughtUpDesc")} />
+                )}
               </div>
             )
           ) : (
@@ -1131,6 +1155,21 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
             <label htmlFor="approvals-reject-template" className="block text-xs font-semibold text-primary-900 mb-1.5">
               {t("reject.templateLabel")}
             </label>
+            {rejectReasons.length > 0 ? (
+              <select
+                id="approvals-reject-template"
+                value={rejectReasonCode}
+                onChange={(e) => setRejectReasonCode(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-primary/[0.12] text-xs bg-white text-primary focus:outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-accent-600"
+              >
+                <option value="">{t(`reject.templates.${rejectReasonTemplate}`)}</option>
+                {rejectReasons.map((r) => (
+                  <option key={r.code} value={r.code}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
             <select
               id="approvals-reject-template"
               value={rejectReasonTemplate}
@@ -1143,6 +1182,7 @@ export default function ApprovalsClient({ initialTab = "hosts", locale }: Props)
                 </option>
               ))}
             </select>
+            )}
           </div>
 
           <div>

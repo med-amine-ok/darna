@@ -23,7 +23,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from apps.audit import services as audit
-from apps.core.errors import ConflictError, DomainError, NotFoundError
+from apps.core.errors import ConflictError, DomainError, ForbiddenError, NotFoundError
 from apps.core.timeutils import business_datetime, business_today
 
 from . import extensions
@@ -414,6 +414,25 @@ def change_password(user: User, *, current_password: str, new_password: str, kee
     revoke_all_sessions(user, keep=keep_session)
 
 
+def _checked_handle(user: User, value) -> str:
+    """
+    A new profile handle (ACC-06): lower-cased, 422 ``invalid_handle`` when the
+    shape is wrong or the word is reserved, 409 ``handle_taken`` when someone
+    else has it.
+    """
+    from .handles import is_valid
+
+    handle = str(value or "").strip().lower()
+    if not is_valid(handle):
+        raise DomainError(
+            "A profile link name has 3 to 30 lower-case letters, digits or hyphens.",
+            code="invalid_handle", errors={"handle": ["3 to 30 characters: a-z, 0-9 and single hyphens."]},
+        )
+    if User.objects.exclude(pk=user.pk).filter(handle=handle).exists():
+        raise ConflictError("This profile link name is already taken.", code="handle_taken")
+    return handle
+
+
 def update_profile(user: User, **fields) -> User:
     """
     Update the editable profile fields (ACC-06).
@@ -424,8 +443,10 @@ def update_profile(user: User, **fields) -> User:
     """
     allowed = {
         "first_name_latin", "last_name_latin", "full_name_ar", "bio",
-        "spoken_languages", "home_commune", "address_line", "preferred_locale",
+        "spoken_languages", "home_commune", "address_line", "preferred_locale", "handle",
     }
+    if "handle" in fields:
+        fields = {**fields, "handle": _checked_handle(user, fields["handle"])}
     changed = []
     for name, value in fields.items():
         if name in allowed:
@@ -816,6 +837,23 @@ STAFF_INVITATION_TTL_HOURS = 72
 MIN_ACTIVE_ADMINS = 2
 
 
+def _staff_mfa_required() -> bool:
+    """``settings.STAFF_MFA_REQUIRED``: do staff need the authenticator step (BR-ACC-04)? Off for now."""
+    return getattr(settings, "STAFF_MFA_REQUIRED", True)
+
+
+def _activate_without_mfa(profile: StaffProfile) -> None:
+    """
+    With the authenticator step switched off, an accepted invitation (or a
+    reactivation) makes the staff account active at once; with it on, the
+    enrolment does that.
+    """
+    if profile.status == StaffStatus.INVITED and not profile.invitation_token_hash:
+        profile.status = StaffStatus.ACTIVE
+        profile.activated_at = timezone.now()
+        profile.save(update_fields=["status", "activated_at"])
+
+
 def staff_can_sign_in(user: User) -> bool:
     """True for a staff user whose profile is active, or invited with the invitation already accepted."""
     profile = StaffProfile.objects.filter(user=user).first()
@@ -832,10 +870,12 @@ def staff_login(
     """
     Staff sign-in, step 1: the password (adminLogin, STF-05).
 
-    Always opens a ``staff`` session waiting for the second factor: the
-    authenticator code, or the enrolment of one when the staff member has
-    none yet (BR-ACC-04). Non-staff accounts and every other failure get the
-    same 400 ``invalid_credentials``; failures count towards BR-ACC-05.
+    With ``settings.STAFF_MFA_REQUIRED`` on, opens a ``staff`` session
+    waiting for the second factor: the authenticator code, or the enrolment
+    of one when the staff member has none yet (BR-ACC-04). With it off (the
+    current decision, while the team is small), the password alone opens a
+    complete staff session. Non-staff accounts and every other failure get
+    the same 400 ``invalid_credentials``; failures count towards BR-ACC-05.
     """
     identifier = email or phone or ""
     _check_not_locked(identifier, ip)
@@ -847,7 +887,13 @@ def staff_login(
         _record_failure(identifier, ip)
         raise DomainError("Wrong email or password.", code="invalid_credentials")
     _clear_failures(identifier)
-    session, raw = SessionToken.issue(user, ip=ip, user_agent=user_agent, scope=SessionScope.STAFF, mfa_pending=True)
+    mfa_required = _staff_mfa_required()
+    session, raw = SessionToken.issue(user, ip=ip, user_agent=user_agent, scope=SessionScope.STAFF, mfa_pending=mfa_required)
+    if not mfa_required:
+        profile = StaffProfile.objects.filter(user=user).first()
+        if profile is not None:
+            _activate_without_mfa(profile)
+        User.objects.filter(pk=user.pk).update(last_login=timezone.now())
     return user, session, raw
 
 
@@ -899,8 +945,10 @@ def accept_staff_invitation(
     """
     Accept a staff invitation and set the password (adminAcceptInvitation, STF-02).
 
-    Opens a ``staff`` session waiting for the second factor: the next step is
-    the TOTP enrolment, which activates the account (BR-ACC-04). Errors: 400
+    With ``STAFF_MFA_REQUIRED`` on, opens a ``staff`` session waiting for the
+    second factor: the next step is the TOTP enrolment, which activates the
+    account (BR-ACC-04). With it off, the account is active and the session
+    complete at once. Errors: 400
     ``invalid_token`` (unknown or expired), 409 ``invitation_used``.
     """
     profile = None
@@ -925,7 +973,10 @@ def accept_staff_invitation(
     profile.invitation_expires_at = None
     profile.save(update_fields=["invitation_token_hash", "invitation_expires_at"])
     audit.record(actor=user, action="STAFF_INVITE_ACCEPT", obj=profile, object_type="staff_profile", ip=ip)
-    session, raw = SessionToken.issue(user, ip=ip, user_agent=user_agent, scope=SessionScope.STAFF, mfa_pending=True)
+    mfa_required = _staff_mfa_required()
+    if not mfa_required:
+        _activate_without_mfa(profile)
+    session, raw = SessionToken.issue(user, ip=ip, user_agent=user_agent, scope=SessionScope.STAFF, mfa_pending=mfa_required)
     return user, session, raw
 
 
@@ -997,7 +1048,9 @@ def activate_staff(*, actor: User, staff_id, ip: str | None = None) -> StaffProf
     profile = _staff_profile_for_update(staff_id)
     if profile.status != StaffStatus.DEACTIVATED:
         raise ConflictError("This staff member is not deactivated.", code="not_deactivated")
-    profile.status = StaffStatus.ACTIVE if user_has_mfa(profile.user) else StaffStatus.INVITED
+    profile.status = (
+        StaffStatus.ACTIVE if user_has_mfa(profile.user) or not _staff_mfa_required() else StaffStatus.INVITED
+    )
     profile.deactivated_at = None
     if profile.status == StaffStatus.ACTIVE:
         profile.activated_at = timezone.now()
@@ -1205,3 +1258,127 @@ def add_favorite(user: User, *, target_type: str, target_id) -> None:
 def remove_favorite(user: User, *, target_type: str, target_id) -> None:
     """Remove a favourite; removing a missing one is fine (removeMyFavorite)."""
     Favorite.objects.filter(user=user, target_type=target_type, target_id=target_id).delete()
+
+
+# ---------------------------------------------------------------------------
+# Continue with Google (ACC-10)
+# ---------------------------------------------------------------------------
+GOOGLE_LOCALES = {"en", "fr", "ar"}
+
+
+@transaction.atomic
+def google_sign_in(
+    *,
+    code: str,
+    code_verifier: str,
+    redirect_uri: str,
+    accept_terms_version: str | None = None,
+    locale: str = "fr",
+    ip: str | None = None,
+    user_agent: str = "",
+) -> tuple[User, SessionToken, str, bool]:
+    """
+    Sign in (or sign up) with Google; returns ``(user, session, raw_token, created)``.
+
+    1. The redirect address must be one registered for this app
+       (``settings.GOOGLE_REDIRECT_URIS``), 400 ``invalid_redirect_uri``.
+    2. The one-time code is traded and the ID token verified
+       (:mod:`apps.accounts.google`).
+    3. The account is, in order: the one already linked to this Google
+       account; else the BLADUS account with the same email, linked now,
+       only when Google says the email is verified; else a new account
+       (email counted as verified, terms consent recorded, no password).
+    4. A normal website session opens; with an authenticator app enrolled
+       it waits for the code (BR-ACC-04), like a password sign-in.
+
+    Staff accounts cannot use Google (403 ``google_staff_account``);
+    suspended or banned ones are refused (403 ``account_disabled``).
+    """
+    from . import google
+    from .models import SocialAccount, SocialProvider
+
+    if not google.is_configured():
+        raise DomainError("Sign in with Google is not available.", code="google_disabled")
+    if redirect_uri not in settings.GOOGLE_REDIRECT_URIS:
+        raise DomainError("This sign-in address is not allowed.", code="invalid_redirect_uri")
+    if not code or not code_verifier:
+        raise DomainError("The Google sign-in is incomplete.", code="invalid")
+
+    identity = google.verify_id_token(
+        google.exchange_code(code=code, code_verifier=code_verifier, redirect_uri=redirect_uri)
+    )
+    now = timezone.now()
+    link = (
+        SocialAccount.objects.select_for_update()
+        .select_related("user")
+        .filter(provider=SocialProvider.GOOGLE, subject=identity.subject)
+        .first()
+    )
+    created = False
+    if link is not None:
+        user = link.user
+    else:
+        if not identity.email or not identity.email_verified:
+            raise DomainError("Your Google email is not verified.", code="google_email_unverified")
+        user = User.objects.select_for_update().filter(email__iexact=identity.email).first()
+        if user is None:
+            user = User.objects.create_user(
+                email=identity.email,
+                password=None,
+                first_name_latin=identity.given_name,
+                last_name_latin=identity.family_name,
+                preferred_locale=locale if locale in GOOGLE_LOCALES else "fr",
+            )
+            user.email_verified_at = now
+            user.save(update_fields=["email_verified_at"])
+            if accept_terms_version:
+                for document in ("terms", "privacy"):
+                    ConsentRecord.objects.create(
+                        user=user, document=document, version=accept_terms_version, accepted=True,
+                        ip=ip, user_agent=user_agent,
+                    )
+            created = True
+        else:
+            if user.is_staff:
+                raise ForbiddenError("Staff accounts sign in with their password.", code="google_staff_account")
+            if user.email_verified_at is None:
+                # Someone may have registered this email without owning it (account
+                # pre-hijacking). Google proves the real owner: close the old way in.
+                user.set_unusable_password()
+                user.email_verified_at = now
+                user.save(update_fields=["password", "email_verified_at"])
+                revoke_all_sessions(user)
+                audit.record(actor=user, action="ACCOUNT_RECLAIMED_WITH_GOOGLE", obj=user, ip=ip)
+        link = SocialAccount.objects.create(
+            user=user, provider=SocialProvider.GOOGLE, subject=identity.subject, email=identity.email
+        )
+        audit.record(actor=user, action="SOCIAL_ACCOUNT_LINK", obj=user, after={"provider": "google"}, ip=ip)
+
+    if not user.is_active:
+        raise ForbiddenError("This account cannot sign in.", code="account_disabled")
+    link.email = identity.email or link.email
+    link.last_login_at = now
+    link.save(update_fields=["email", "last_login_at"])
+    session, raw = open_login_session(user, ip=ip, user_agent=user_agent)
+    return user, session, raw, created
+
+
+@transaction.atomic
+def unlink_social_account(user: User, account_id) -> None:
+    """
+    Disconnect Google from the account (ACC-10). Refused with 409
+    ``last_sign_in_method`` when the account has no password: the person
+    would lock themselves out (they can set a password with "forgot password" first).
+    """
+    from .models import SocialAccount
+
+    link = SocialAccount.objects.select_for_update().filter(pk=account_id, user=user).first()
+    if link is None:
+        raise NotFoundError("This connected account does not exist.")
+    if not user.has_usable_password():
+        raise ConflictError(
+            "Set a password before disconnecting Google, or you could not sign in any more.",
+            code="last_sign_in_method",
+        )
+    link.delete()
+    audit.record(actor=user, action="SOCIAL_ACCOUNT_UNLINK", obj=user, after={"provider": link.provider})

@@ -75,9 +75,9 @@
     "message": "Your message",
     "messagePlaceholder": "Describe your issue, including your reservation details...",
     "messageRequired": "Enter a message.",
-    "submit": "Send message to support",
+    "submit": "Write to support",
     "sending": "Sending...",
-    "sent": "Message sent! A BLADUS support agent will reply within 2 hours."
+    "sent": "Your email app opened with your message. Send it from there and BLADUS support will reply by email."
   },
   "channels": {
     "title": "Direct contact channels",

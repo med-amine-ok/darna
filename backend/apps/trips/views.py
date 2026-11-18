@@ -5,6 +5,8 @@ Host endpoints need ``trips.manage`` (BR-ORG-05) and are scoped by
 ``ctx.host_account``; admin endpoints use ``IsAdmin`` and are audited.
 """
 
+import uuid
+
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -14,7 +16,7 @@ from rest_framework.views import APIView
 from apps.accounts.permissions import IsAdmin
 from apps.catalog.api import page_schema, paginated, query_bool, query_date, query_int
 from apps.catalog.serializers import AdminStatusChangeSerializer, HostStatusChangeSerializer
-from apps.core.errors import NotFoundError
+from apps.core.errors import DomainError, NotFoundError
 from apps.hosts.context import get_host_context
 
 from . import selectors, services
@@ -35,8 +37,19 @@ from .serializers import (
 # ---------------------------------------------------------------------------
 # Public
 # ---------------------------------------------------------------------------
+def _uuid_param(request, name: str) -> str | None:
+    """An optional UUID query parameter; 400 ``invalid`` when it is not a UUID."""
+    raw = request.query_params.get(name) or None
+    if raw:
+        try:
+            uuid.UUID(raw)
+        except ValueError as exc:
+            raise DomainError("Invalid query parameter.", code="invalid", errors={name: ["Must be a UUID."]}) from exc
+    return raw
+
+
 class TripSearchView(APIView):
-    """``GET /trips``: filters ``trip_type``, ``wilaya``, ``max_price``, ``from``/``to``, ``sort``."""
+    """``GET /trips``: filters ``trip_type``, ``wilaya``, ``max_price``, ``from``/``to``, ``host_account``, ``sort``."""
 
     permission_classes = [AllowAny]
     serializer_class = TripCardSerializer
@@ -47,6 +60,7 @@ class TripSearchView(APIView):
             trip_type=request.query_params.get("trip_type"), wilaya=query_int(request, "wilaya"),
             max_price=query_int(request, "max_price", minimum=0), date_from=query_date(request, "from"),
             date_to=query_date(request, "to"), sort=request.query_params.get("sort"),
+            host_account=_uuid_param(request, "host_account"),
         )
         return paginated(request, qs, TripCardSerializer)
 

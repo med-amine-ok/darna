@@ -1,10 +1,14 @@
 "use client";
 
-import React, { useState, useMemo, useId } from "react";
+import React, { useState, useMemo, useId, useEffect } from "react";
 import Image from "next/image";
 import { Link, useRouter } from "@/navigation";
 import { Reservation, Listing, User } from "@/types";
-import { respondToReservationAction } from "@/app/actions/bookings";
+import {
+  confirmGuestStayAction,
+  getHostCancellationPreviewAction,
+  respondToReservationAction,
+} from "@/app/actions/bookings";
 import {
   BrandBanIcon,
   BrandCalendarIcon,
@@ -34,6 +38,7 @@ import { formatDate, formatNumber } from "@/lib/i18n/date-locale";
 import {
   Avatar,
   Badge,
+  Banner,
   Button,
   Card,
   Dialog,
@@ -57,7 +62,12 @@ interface HostBookingsClientProps {
   currentUser?: User | null;
   /** Host-blocked date keys per listing (server-built). */
   blockedByListing?: Record<string, string[]>;
+  /** The bookings could not be loaded (show an error, not an empty list). */
+  loadFailed?: boolean;
 }
+
+/** Cancellation preview figures for the host dialog (from the backend). */
+type HostCancelPreview = { refundAmount: number; commissionReturned: number } | "loading" | "failed" | null;
 
 type TabType = "all" | "upcoming" | "current" | "past" | "cancelled" | "pending";
 
@@ -71,17 +81,18 @@ function getReservationCategory(res: Reservation, todayStr: string): TabType {
   return "upcoming";
 }
 
-const FALLBACK_LISTING_IMAGE = "https://images.unsplash.com/photo-1580587771525-78b9dba3b914";
 
 export default function HostBookingsClient({
   initialReservations,
   hostListings,
   currentUser,
   blockedByListing = {},
+  loadFailed = false,
 }: HostBookingsClientProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("hostBookings");
+  const tCommon = useTranslations("common");
   const errorText = useActionError();
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
   const [selectedTab, setSelectedTab] = useState<TabType>("all");
@@ -93,6 +104,10 @@ export default function HostBookingsClient({
   const [declineReasonOption, setDeclineReasonOption] = useState<string>("dates_unavailable");
   const [customDeclineReason, setCustomDeclineReason] = useState<string>("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelPreview, setCancelPreview] = useState<HostCancelPreview>(null);
+  const [checkInId, setCheckInId] = useState<string | null>(null);
+  const [checkInCode, setCheckInCode] = useState("");
 
   const baseId = useId();
   const miniCalendarId = `${baseId}-mini-calendar`;
@@ -101,6 +116,43 @@ export default function HostBookingsClient({
   const listingFilterId = `${baseId}-listing-filter`;
   const tabsId = `host-bookings${baseId.replace(/:/g, "")}`;
   const customReasonId = `${baseId}-custom-reason`;
+  const cancelReasonId = `${baseId}-cancel-reason`;
+  const checkInCodeId = `${baseId}-check-in-code`;
+
+  // What a host cancellation would refund, asked from the backend when the dialog opens.
+  useEffect(() => {
+    if (!cancellingId) {
+      setCancelPreview(null);
+      return;
+    }
+    let live = true;
+    setCancelPreview("loading");
+    getHostCancellationPreviewAction(cancellingId)
+      .then((result) => {
+        if (!live) return;
+        setCancelPreview(
+          result.ok
+            ? { refundAmount: result.data.refundAmount, commissionReturned: result.data.commissionReturned }
+            : "failed"
+        );
+      })
+      .catch(() => {
+        if (live) setCancelPreview("failed");
+      });
+    return () => {
+      live = false;
+    };
+  }, [cancellingId]);
+
+  /** Actions the backend allows now (falls back to the status for rows without the list). */
+  const can = (res: Reservation, action: "accept" | "decline" | "cancel" | "confirm_stay") =>
+    res.allowedActions
+      ? res.allowedActions.includes(action)
+      : action === "cancel"
+      ? res.status === "confirmed"
+      : action === "confirm_stay"
+      ? false
+      : res.status === "pending";
 
   const closeDetail = () => setSelectedReservation(null);
 
@@ -200,8 +252,8 @@ export default function HostBookingsClient({
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const guestName = (res.user?.name || "").toLowerCase();
-        const listingTitle = (res.listing?.title || "").toLowerCase();
-        const code = res.id.toLowerCase();
+        const listingTitle = (res.listing?.title || res.title || "").toLowerCase();
+        const code = `${res.reference ?? ""} ${res.id}`.toLowerCase();
         if (!guestName.includes(q) && !listingTitle.includes(q) && !code.includes(q)) {
           return false;
         }
@@ -220,7 +272,7 @@ export default function HostBookingsClient({
         toast.error(errorText(result));
         return;
       }
-      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, status: result.data.status } : r)));
+      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, ...result.data, listing: r.listing } : r)));
       toast.success(t("toast.confirmed"));
       router.refresh();
     } catch {
@@ -252,9 +304,8 @@ export default function HostBookingsClient({
           r.id === id
             ? {
                 ...r,
-                status: result.data.status,
-                declineReason: result.data.declineReason,
-                paymentStatus: result.data.paymentStatus,
+                ...result.data,
+                listing: r.listing,
               }
             : r
         )
@@ -277,18 +328,15 @@ export default function HostBookingsClient({
   const handleCancel = async (id: string) => {
     setActionLoading(id);
     try {
-      const result = await respondToReservationAction(id, "cancel");
+      const result = await respondToReservationAction(id, "cancel", cancelReason);
       if (!result.ok) {
         toast.error(errorText(result));
         return;
       }
-      setReservations((prev) =>
-        prev.map((r) =>
-          r.id === id ? { ...r, status: result.data.status, paymentStatus: result.data.paymentStatus } : r
-        )
-      );
+      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, ...result.data, listing: r.listing } : r)));
       toast.info(t("toast.cancelled"));
       setCancellingId(null);
+      setCancelReason("");
       if (selectedReservation?.id === id) {
         setSelectedReservation(null);
       }
@@ -300,14 +348,31 @@ export default function HostBookingsClient({
     }
   };
 
+  const handleCheckIn = async () => {
+    if (!checkInId) return;
+    const id = checkInId;
+    setActionLoading(id);
+    try {
+      const result = await confirmGuestStayAction(id, checkInCode);
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      setReservations((prev) => prev.map((r) => (r.id === id ? { ...r, ...result.data, listing: r.listing } : r)));
+      toast.success(t("checkIn.success"));
+      setCheckInId(null);
+      setCheckInCode("");
+      router.refresh();
+    } catch {
+      toast.error(errorText({ code: "SERVER_ERROR" }));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // DEC-001: BLADUS collects nothing; after a cancellation the host owes the refund directly.
   const refundLabel = (res: Reservation) =>
-    res.paymentStatus === "refunded"
-      ? t("refund.refunded")
-      : res.paymentStatus === "partially_refunded"
-      ? t("refund.partial", { amount: money(res.refundAmount ?? 0) })
-      : res.paymentStatus === "voided"
-      ? t("refund.voided")
-      : t("refund.none");
+    (res.refundAmount ?? 0) > 0 ? t("refund.owed", { amount: money(res.refundAmount ?? 0) }) : t("refund.none");
 
   const hasActiveFilters = !!searchQuery || selectedListingId !== "all" || selectedTab !== "all";
 
@@ -331,7 +396,8 @@ export default function HostBookingsClient({
     ? formatDate(selectedReservation.user.createdAt, locale, { year: "numeric" })
     : "";
 
-  const reference = (id: string) => id.replace(/^res_/, "").replace(/_/g, "-").toUpperCase();
+  /** People-facing reference (BLD-...); the UUID stays in URLs and API calls only. */
+  const referenceOf = (res: Reservation) => res.reference ?? res.id.slice(0, 8).toUpperCase();
 
   const statusBadge = (res: Reservation, cat: TabType) => {
     switch (res.status) {
@@ -377,11 +443,13 @@ export default function HostBookingsClient({
     }
   };
 
-  const paymentTone = (status?: string): "success" | "danger" | "warning" =>
-    status === "paid" || !status ? "success" : status === "refunded" ? "danger" : "warning";
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      {loadFailed && (
+        <Banner tone="danger" title={tCommon("dataLoadFailedTitle")} className="mb-6">
+          {tCommon("dataLoadFailedBody")}
+        </Banner>
+      )}
       {/* Header */}
       <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="enter-up min-w-0">
@@ -593,7 +661,7 @@ export default function HostBookingsClient({
               {filteredReservations.map((res, index) => {
                 const guest = res.user;
                 const listing = res.listing;
-                const listingTitle = listing?.title || t("fallbackListingTitle");
+                const listingTitle = listing?.title || res.title || t("fallbackListingTitle");
                 const guestName = guest?.name || t("guestFallback");
                 const cat = getReservationCategory(res, todayStr);
                 const payout = computeHostPayout(res);
@@ -632,20 +700,22 @@ export default function HostBookingsClient({
                       {/* Listing + guest */}
                       <div className="flex min-w-0 flex-1 items-start gap-4">
                         <div className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-xl bg-tertiary-100 sm:w-24">
+{listing?.imageSrc?.[0] && (
                           <Image
-                            src={listing?.imageSrc?.[0] || FALLBACK_LISTING_IMAGE}
+                            src={listing.imageSrc[0]}
                             alt={t("listingImageAlt", { title: listingTitle })}
                             fill
                             sizes="96px"
                             className="object-cover transition-transform [transition-duration:700ms] ease-out group-hover:scale-[1.04]"
                           />
+                          )}
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="mb-1.5 flex min-w-0 flex-wrap items-center gap-2">
                             {statusBadge(res, cat)}
-                            <span className="text-meta tabular-nums text-primary-500" dir="ltr" title={res.id}>
-                              {t("reference", { code: reference(res.id) })}
+                            <span className="text-meta tabular-nums text-primary-500" dir="ltr">
+                              {t("reference", { code: referenceOf(res) })}
                             </span>
                           </div>
                           <h3 className="truncate text-title text-primary-900">{listingTitle}</h3>
@@ -692,9 +762,11 @@ export default function HostBookingsClient({
                             })}
                           </p>
                         </div>
-                        <Badge tone={paymentTone(res.paymentStatus)} className="shrink-0 lg:mt-2">
-                          {t("paymentLabel", { status: t(`paymentStatus.${res.paymentStatus || "paid"}`) })}
-                        </Badge>
+                        {(res.status === "confirmed" || res.status === "completed") && (
+                          <Badge tone="success" className="shrink-0 lg:mt-2">
+                            {t("paymentDirect")}
+                          </Badge>
+                        )}
                       </div>
 
                       {/* Actions */}
@@ -706,6 +778,7 @@ export default function HostBookingsClient({
                             </Badge>
                           ) : (
                             <>
+                              {can(res, "accept") && (
                               <Button
                                 variant="confirm"
                                 size="md"
@@ -717,6 +790,8 @@ export default function HostBookingsClient({
                               >
                                 {t("accept")}
                               </Button>
+                              )}
+                              {can(res, "decline") && (
                               <Button
                                 variant="tertiary"
                                 size="md"
@@ -727,6 +802,7 @@ export default function HostBookingsClient({
                               >
                                 {t("decline")}
                               </Button>
+                              )}
                             </>
                           )
                         ) : (
@@ -751,7 +827,21 @@ export default function HostBookingsClient({
                             >
                               <BrandMessageIcon size={18} aria-hidden="true" />
                             </Link>
-                            {res.status === "confirmed" && cat !== "past" && (
+                            {can(res, "confirm_stay") && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                  setCheckInCode("");
+                                  setCheckInId(res.id);
+                                }}
+                                aria-haspopup="dialog"
+                                leadingIcon={<BrandCheckIcon size={15} aria-hidden="true" />}
+                              >
+                                {t("checkIn.button")}
+                              </Button>
+                            )}
+                            {can(res, "cancel") && (
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -781,8 +871,8 @@ export default function HostBookingsClient({
         title={t("detail.title")}
         description={
           selectedReservation ? (
-            <span dir="ltr" className="tabular-nums" title={selectedReservation.id}>
-              {t("reference", { code: reference(selectedReservation.id) })}
+            <span dir="ltr" className="tabular-nums">
+              {t("reference", { code: referenceOf(selectedReservation) })}
             </span>
           ) : undefined
         }
@@ -834,10 +924,13 @@ export default function HostBookingsClient({
 
             <dl className="divide-y divide-primary/[0.08] text-body">
               {[
-                [t("detail.listing"), selectedReservation.listing?.title],
+                [t("detail.listing"), selectedReservation.listing?.title || selectedReservation.title],
                 [t("detail.dates"), formatDateRange(selectedReservation.startDate, selectedReservation.endDate, locale)],
                 [t("detail.guests"), t("guestsCount", { count: selectedReservation.guestsCount })],
-                [t("detail.paymentChannel"), selectedReservation.paymentMethod || t("detail.paymentChannelDefault")],
+                [t("detail.paymentChannel"), t("detail.paymentChannelDirect")],
+                ...(selectedReservation.stayConfirmedAt
+                  ? [[t("detail.stayConfirmed"), formatDate(selectedReservation.stayConfirmedAt, locale)]]
+                  : []),
               ].map(([label, value]) => (
                 <div key={String(label)} className="flex items-center justify-between gap-4 py-2.5">
                   <dt className="text-primary-600">{label}</dt>
@@ -861,6 +954,12 @@ export default function HostBookingsClient({
                       <span>{t("detail.subtotal")}</span>
                       <span>{money(p.subtotal)}</span>
                     </div>
+                    {p.discount > 0 && (
+                      <div className={row}>
+                        <span>{t("detail.discount")}</span>
+                        <span>{t("detail.negative", { amount: money(p.discount) })}</span>
+                      </div>
+                    )}
                     {p.cleaningFee > 0 && (
                       <div className={row}>
                         <span>{t("detail.cleaningFee")}</span>
@@ -946,21 +1045,89 @@ export default function HostBookingsClient({
         </div>
       </ConfirmDialog>
 
-      {/* Cancel confirmation */}
+      {/* Cancel confirmation: refund from the backend preview, reason required by the backend. */}
       <ConfirmDialog
         isOpen={!!cancellingId}
         variant="destructive"
         title={t("cancelDialog.title")}
-        message={t("cancelDialog.message")}
-        callout={t("cancelDialog.callout")}
+        message={t("cancelDialog.messageDirect")}
+        callout={
+          cancelPreview === "loading" ? (
+            <p>{t("cancelDialog.previewLoading")}</p>
+          ) : cancelPreview === "failed" || cancelPreview === null ? (
+            <p>{t("cancelDialog.previewUnavailable")}</p>
+          ) : (
+            <dl className="space-y-1.5 tabular-nums">
+              <div className="flex justify-between gap-4">
+                <dt>{t("cancelDialog.previewRefund")}</dt>
+                <dd className="font-semibold text-primary-900">{money(cancelPreview.refundAmount)}</dd>
+              </div>
+              {cancelPreview.commissionReturned > 0 && (
+                <div className="flex justify-between gap-4">
+                  <dt>{t("cancelDialog.previewCommission")}</dt>
+                  <dd className="font-semibold text-primary-900">{money(cancelPreview.commissionReturned)}</dd>
+                </div>
+              )}
+            </dl>
+          )
+        }
         confirmLabel={t("cancelDialog.confirm")}
         cancelLabel={t("cancelDialog.keep")}
         isLoading={actionLoading === cancellingId}
         onConfirm={() => {
-          if (cancellingId) handleCancel(cancellingId);
+          if (!cancellingId) return;
+          if (cancelReason.trim()) handleCancel(cancellingId);
+          else toast.error(errorText({ code: "REASON_REQUIRED" }));
         }}
-        onCancel={() => setCancellingId(null)}
-      />
+        onCancel={() => {
+          setCancellingId(null);
+          setCancelReason("");
+        }}
+      >
+        <div className="mt-4">
+          <Textarea
+            id={cancelReasonId}
+            label={t("cancelDialog.reasonLabel")}
+            rows={2}
+            required
+            maxLength={2000}
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder={t("cancelDialog.reasonPlaceholder")}
+          />
+        </div>
+      </ConfirmDialog>
+
+      {/* Check-in: the host enters the guest's 6-digit code (review R13). */}
+      <ConfirmDialog
+        isOpen={!!checkInId}
+        title={t("checkIn.title")}
+        message={t("checkIn.message")}
+        confirmLabel={t("checkIn.confirm")}
+        cancelLabel={t("cancelDialog.keep")}
+        isLoading={actionLoading === checkInId}
+        onConfirm={() => {
+          if (/^[0-9]{6}$/.test(checkInCode.trim())) handleCheckIn();
+          else toast.error(errorText({ code: "STAY_CODE_INVALID" }));
+        }}
+        onCancel={() => {
+          setCheckInId(null);
+          setCheckInCode("");
+        }}
+      >
+        <div className="mt-4">
+          <Input
+            id={checkInCodeId}
+            label={t("checkIn.codeLabel")}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            dir="ltr"
+            value={checkInCode}
+            onChange={(e) => setCheckInCode(e.target.value.replace(/[^0-9]/g, ""))}
+          />
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

@@ -17,7 +17,6 @@ import {
   ExternalLink,
   MapPin,
   Star,
-  ShieldCheck,
   Tag,
   Maximize2,
   RotateCcw,
@@ -40,7 +39,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { listListings, approveListing, updateListingStatus } from "@/lib/actions/listings";
 import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
 import { formatDzd, formatNumber, intlLocale } from "@/lib/utils/format";
-import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { NOT_SET, panelSpecs, policyName } from "@/components/features/listings/panelSpecs";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
@@ -143,6 +142,7 @@ export default function ExperiencesListClient() {
   const statusActions = useListingStatusActions(() => fetchData());
 
   const selectedExp = data.find((e) => e.id === selectedExpId) || null;
+  const expPanel = selectedExp ? panelSpecs(selectedExp) : ({} as ReturnType<typeof panelSpecs>);
 
   const handleSelectExp = (exp: Listing) => {
     setSelectedExpId(exp.id);
@@ -157,20 +157,16 @@ export default function ExperiencesListClient() {
   const formatRating = (rating: number) =>
     new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
 
-  const formatTime = (hour: number, minute: number) =>
-    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(
-      new Date(2000, 0, 1, hour, minute)
-    );
 
   // KPI Strip (Mockup 07: 238 Total · 46 En attente · 162 Publiées · 18 Suspendues · 12 Refusées)
   const statusFacets = facets["status"] || {};
-  const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
+  const totalCount = statusFacets.all ?? total;
 
   const kpis: KpiCardItem[] = [
     {
       id: "all",
       label: t("kpi.total"),
-      value: totalCount || 238,
+      value: totalCount,
       icon: <Compass className="w-5 h-5" />,
       colorVariant: "neutral",
     },
@@ -659,14 +655,16 @@ export default function ExperiencesListClient() {
                         {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoTile label={t("about.category")} value={selectedExp.category ? tVerticals(selectedExp.category) : t("categoryOptions.culture")} />
-                        <InfoTile label={t("about.maxGroup")} value={t("about.people", { count: selectedExp.guestCapacity })} />
-                        <InfoTile label={t("about.difficulty")} value={t("about.difficultyModerate")} />
-                        <InfoTile label={t("about.languages")} value="FR, AR, EN" />
+                        <InfoTile label={t("about.category")} value={tVerticals(selectedExp.category)} />
+                        <InfoTile
+                          label={t("about.maxGroup")}
+                          value={expPanel.max_group || selectedExp.guestCapacity ? t("about.people", { count: expPanel.max_group || selectedExp.guestCapacity }) : NOT_SET}
+                        />
+                        <InfoTile label={t("about.languages")} value={expPanel.languages?.length ? expPanel.languages.map((l) => l.toUpperCase()).join(", ") : NOT_SET} />
                       </div>
                     </div>
 
-                    {/* Price & Discounts Section */}
+                    {/* Price Section */}
                     <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2.5">
                       <div className="text-xs font-semibold text-primary flex items-center justify-between">
                         <span>{t("pricing.title")}</span>
@@ -677,22 +675,8 @@ export default function ExperiencesListClient() {
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
                         <div>
-                          <span className="text-primary-600 block">{t("pricing.groupDiscount")}</span>
-                          <span className="font-medium text-secondary-700">
-                            {t("pricing.discountValue", { percent: DISCOUNTS.group, price: formatDzd(applyDiscount(selectedExp.price, DISCOUNTS.group), locale) })}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.commission")}</span>
-                          <span className="font-medium text-secondary-700">{t("pricing.commissionIncluded", { rate: 12 })}</span>
-                        </div>
-                        <div>
                           <span className="text-primary-600 block">{t("pricing.cancellation")}</span>
-                          <span className="font-medium text-primary">{t("pricing.cancellationFlexible", { hours: 24 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.prepayment")}</span>
-                          <span className="font-medium text-primary">{t("pricing.prepaymentSecure")}</span>
+                          <span className="font-medium text-primary">{policyName(expPanel.cancellationPolicy, locale)}</span>
                         </div>
                       </div>
                     </div>
@@ -706,19 +690,9 @@ export default function ExperiencesListClient() {
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
                           <span className="text-primary-600 block">{t("schedule.totalDuration")}</span>
-                          <span className="font-medium text-primary">{t("schedule.hours", { count: 3 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.departureTimes")}</span>
-                          <span className="font-medium text-primary">{formatTime(9, 0)} / {formatTime(14, 30)}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.operatingDays")}</span>
-                          <span className="font-medium text-primary">{t("schedule.everyDay")}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.advanceNotice")}</span>
-                          <span className="font-medium text-secondary-700">{t("schedule.hoursInAdvance", { count: 24 })}</span>
+                          <span className="font-medium text-primary">
+                            {expPanel.duration_minutes ? t("schedule.hours", { count: Math.round((expPanel.duration_minutes / 60) * 10) / 10 }) : NOT_SET}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -742,10 +716,6 @@ export default function ExperiencesListClient() {
                           <div className="text-sm font-medium text-primary">{selectedExp.hostName}</div>
                           <div className="text-xs text-primary-600 flex items-center gap-1.5">
                             <span>{tHostTypes(selectedExp.hostType)}</span>
-                            <span aria-hidden="true">•</span>
-                            <span className="text-secondary-700 flex items-center gap-0.5">
-                              <ShieldCheck className="w-3 h-3" aria-hidden="true" /> {t("host.certified")}
-                            </span>
                           </div>
                         </div>
                       </div>

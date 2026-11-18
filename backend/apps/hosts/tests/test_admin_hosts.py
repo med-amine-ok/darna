@@ -139,3 +139,20 @@ def test_old_admin_routes_are_gone(admin_client):
     doc = HostDocument.objects.get()
     assert admin_client.post(f"/api/v1/admin/host-documents/{doc.id}/approve").status_code == 404
     assert admin_client.patch(host_url(hotel, "commission"), {"commission_rate_override_bp": 1}).status_code == 404
+
+
+def test_admin_users_is_host_filter_splits_guests_and_hosts(admin_client):
+    """GET /admin/users?is_host=true|false works (the hosts app registers the filter)."""
+    from apps.hosts.tests.helpers import make_org, owner_of
+    from conftest import make_user
+
+    account = make_org()
+    host = owner_of(account)
+    guest = make_user(email="only-guest@example.dz")
+    hosts = admin_client.get("/api/v1/admin/users", {"is_host": "true"})
+    guests = admin_client.get("/api/v1/admin/users", {"is_host": "false"})
+    assert hosts.status_code == 200 and guests.status_code == 200
+    host_ids = {row["id"] for row in hosts.data["results"]}
+    guest_ids = {row["id"] for row in guests.data["results"]}
+    assert str(host.id) in host_ids and str(host.id) not in guest_ids
+    assert str(guest.id) in guest_ids and str(guest.id) not in host_ids

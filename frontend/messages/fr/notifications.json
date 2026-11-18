@@ -12,5 +12,32 @@
   "earlier": "Plus tôt",
   "justNow": "À l'instant",
   "unread": "Non lue",
-  "eyebrow": "Votre compte"
+  "eyebrow": "Votre compte",
+  "loadMore": "Afficher les notifications plus anciennes",
+  "loadFailedTitle": "Impossible de charger vos notifications",
+  "loadFailedBody": "Le service ne répond pas pour le moment. Réessayez dans un instant.",
+  "retry": "Réessayer",
+  "prefs": {
+    "title": "Préférences de notification",
+    "subtitle": "Choisissez comment BLADUS vous contacte en dehors de l'application. Les notifications s'affichent toujours ici.",
+    "loadFailed": "Impossible de charger vos préférences.",
+    "saved": "Préférences enregistrées.",
+    "locked": "Nécessaire pour vos réservations et votre sécurité : ne peut pas être désactivé.",
+    "topic": "Sujet",
+    "channels": {
+      "email": "E-mail",
+      "sms": "SMS",
+      "push": "Push"
+    },
+    "groups": {
+      "booking": "Réservations",
+      "refund": "Remboursements",
+      "review": "Avis",
+      "message": "Messages",
+      "verification": "Vérification hôte",
+      "listing": "Annonces",
+      "wallet": "Portefeuille",
+      "other": "Autres"
+    }
+  }
 }

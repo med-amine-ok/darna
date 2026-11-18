@@ -81,7 +81,8 @@
     "totalAmount": "Total amount",
     "totalWithEur": "{dzd} ({eur})",
     "download": "Print receipt",
-    "close": "Close"
+    "close": "Close",
+    "discount": "Length-of-stay discount"
   },
   "paymentStatus": {
     "paid": "Paid in full",
@@ -181,5 +182,47 @@
     "reserved": "Expedition reserved! Pack your bags for Algeria.",
     "bookFailed": "Failed to book trip. Please check the details."
   },
-  "eyebrow": "Your journeys"
+  "eyebrow": "Your journeys",
+  "payAtHost": "Paid directly to the host",
+  "totalDue": "Total",
+  "cancelPreviewLoading": "Calculating your refund...",
+  "cancelPreviewFailed": "We could not calculate the refund right now. Please try again in a moment.",
+  "checkInCode": "Check-in code",
+  "checkInCodeHelp": "Show this code to your host when you arrive.",
+  "address": "Address",
+  "hostPhone": "Host {name}",
+  "confirmStay": "Confirm my stay",
+  "toastStayConfirmed": "Thank you, your stay is confirmed.",
+  "refundReceived": "I received it",
+  "refundNotReceived": "Not received",
+  "refundNotReceivedPrompt": "Tell us briefly what happened with this refund.",
+  "toastRefundConfirmed": "Thank you, the refund is marked as received.",
+  "toastRefundDisputed": "BLADUS support will look into this refund.",
+  "refundStatus": {
+    "open": "Refund owed by the host",
+    "declared": "Host says the refund was paid",
+    "confirmed": "Refund received",
+    "disputed": "Refund under review",
+    "settled": "Refund settled",
+    "overdue": "Refund overdue"
+  },
+  "report": {
+    "button": "Report a problem",
+    "title": "Report a problem",
+    "description": "BLADUS support will review the booking and contact you and the host.",
+    "reasonLabel": "What went wrong?",
+    "reasons": {
+      "not_as_described": "Not as described",
+      "no_show": "Host did not show up",
+      "cleanliness": "Cleanliness",
+      "safety": "Safety",
+      "refund": "Refund",
+      "other": "Something else"
+    },
+    "statementLabel": "Describe the problem",
+    "statementHelp": "At least 20 characters.",
+    "tooShort": "Please describe the problem in at least 20 characters.",
+    "submit": "Send to support",
+    "success": "Your report was sent to BLADUS support."
+  }
 }

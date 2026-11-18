@@ -2,6 +2,7 @@ import { hostPageMetadata } from "@/components/host/hostMetadata";
 import { redirect } from "next/navigation";
 import { requireHostContext } from "@/lib/server/host-context";
 import AgencySettingsClient from "@/components/host/AgencySettingsClient";
+import { api } from "@/lib/api/client";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,13 @@ export default async function AgencySettingsPage({ params }: { params: { locale:
     redirect(`/${locale}/host/settings`);
   }
 
+  // The booking approval mode is a setting of the host account (GET /host/account).
+  const account = await api<{ default_approval_mode?: "instant" | "request" }>("/host/account").catch(() => null);
+  const organization = { ...ctx.organization, bookingApprovalMode: account?.default_approval_mode ?? ctx.organization.bookingApprovalMode };
+
   return (
     <AgencySettingsClient
-      organization={ctx.organization}
+      organization={organization}
       currentUser={ctx.user}
       currentRole={ctx.membership?.role ?? null}
     />

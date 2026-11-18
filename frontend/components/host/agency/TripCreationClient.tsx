@@ -133,11 +133,8 @@ export default function TripCreationClient({ organization }: TripCreationClientP
   const [maxGroupSize, setMaxGroupSize] = useState<number>(8);
   const [meetingPoint, setMeetingPoint] = useState(() => t("create.defaults.meetingPoint"));
   const [pricePerPerson, setPricePerPerson] = useState<number>(55000);
-  const [departureDates, setDepartureDates] = useState<string[]>([
-    "2026-11-05",
-    "2026-11-20",
-    "2026-12-05",
-  ]);
+  // The agency adds its own departure dates (fixed sample dates went stale and the API refuses past dates).
+  const [departureDates, setDepartureDates] = useState<string[]>([]);
   const [newDateInput, setNewDateInput] = useState("");
 
   // Step 4: Inclusions, Exclusions & Policy

@@ -8,8 +8,18 @@ Django 5.2 + Django REST Framework. Design documents: `../docs/backend/`
 ```bash
 python manage.py migrate
 python manage.py createsuperuser
+python manage.py seed_demo      # optional: the demo world of the website and admin panel
 python manage.py runserver
 ```
+
+`seed_demo` loads the geography and the taxonomy, then creates the demo users,
+hosts, organisations, listings, trips, bookings, conversations, reviews and
+deposits through the services (about a minute). Running it again changes
+nothing; to rebuild, start from a fresh database. Every demo account (for example
+`yacine.traveler@bladus.dz`, `amina.benali@bladus.dz`, `karim.mansouri@bladus.dz`)
+uses the demo password of `frontend/lib/data/auth.ts`. Staff accounts
+(`admin@bladus.dz`, `moderator@`, `support@`, `finance@`, `analyst@bladus.dz`)
+have no authenticator yet: the first admin sign-in asks to enrol one (BR-ACC-04).
 
 API: `http://localhost:8000/api/v1/`
 Interactive Swagger UI: `http://localhost:8000/swagger/` or `http://localhost:8000/api/docs/`

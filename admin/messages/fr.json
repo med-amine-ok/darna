@@ -35,7 +35,8 @@
     "rows": "Lignes par page",
     "page": "Page",
     "of": "sur",
-    "results": "résultats"
+    "results": "résultats",
+    "retry": "Rechargez la page ou réessayez dans un instant."
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -199,22 +200,11 @@
     "myProfileSecurity": "Mon profil & sécurité",
     "guidedTour": "Visite guidée",
     "helpCenter": "Centre d’aide",
-    "sampleNotifications": {
-      "newValidation": {
-        "title": "Nouvelle demande de validation",
-        "description": "Villa les Oliviers (Ahmed Benali) à Tizi Ouzou"
-      },
-      "tripPending": {
-        "title": "Voyage en attente d’approbation",
-        "description": "Expédition Tassili n’Ajjer par Sahara Tours"
-      },
-      "reviewReported": {
-        "title": "Signalement d’avis client",
-        "description": "Commentaire signalé sur Hôtel El Aurassi"
-      }
-    },
     "notificationsUnread": "{count, plural, one {# notification non lue} other {# notifications non lues}}",
-    "searchShort": "Rechercher"
+    "searchShort": "Rechercher",
+    "reviewQueueTitle": "{count, plural, one {# élément attend une vérification} other {# éléments attendent une vérification}}",
+    "reviewQueueBody": "Hôtes, annonces, circuits et documents dans la file de modération.",
+    "noNotifications": "Rien ne demande votre attention pour le moment."
   },
   "commandPalette": {
     "placeholder": "Rechercher une entité, hôte, wilaya ou commande...",
@@ -432,7 +422,21 @@
       "description": "Moins d'options, plus de rapidité : les pages secondaires sont regroupées sous « Gérer ».",
       "guideLink": "Où est passée mon ancienne page ?",
       "dismiss": "Masquer ce bandeau"
-    }
+    },
+    "loadError": "Ces chiffres ne peuvent pas être chargés pour le moment. Réessayez dans un instant.",
+    "comparisonNone": "Rien à comparer avec la période précédente ({period})",
+    "kpiActiveHosts": "Hôtes avec des ventes",
+    "kpiActiveHostsHint": "Hôtes ayant au moins une réservation confirmée ou terminée sur la période.",
+    "chartVolumeTitle": "Montants payés par les voyageurs, mois par mois",
+    "chartVolumeSubtitle": "Réservations confirmées et terminées des 12 derniers mois, par mois d'arrivée",
+    "axisMonth": "Mois",
+    "axisAmount": "Montant",
+    "chartWilayasTitleNeutral": "Wilayas avec le plus de réservations",
+    "chartWilayasSubtitle30d": "Réservations confirmées et terminées des 30 derniers jours",
+    "noChartData": "Aucune réservation sur cette période pour l'instant.",
+    "notAvailable": "Non disponible",
+    "occupancyUnavailable": "BLADUS ne mesure pas encore le taux d'occupation.",
+    "responseNoData": "Aucune demande de réservation n'a reçu de réponse sur cette période."
   },
   "hosts": {
     "title": "Partenaires & Hôtes",
@@ -591,14 +595,18 @@
         "amount": "Montant (DZD)",
         "receiptRef": "Référence du reçu / virement",
         "receiptPlaceholder": "ex. BNA-VIR-891244",
-        "creditWallet": "Créditer le portefeuille"
+        "creditWallet": "Créditer le portefeuille",
+        "resetToDefault": "Revenir au taux par défaut",
+        "openWallet": "Ouvrir le portefeuille de cet hôte"
       },
       "history": {
         "title": "Historique des actions du partenaire",
         "verifiedBy": "Compte vérifié par {name}",
         "idApproved": "Pièce d'identité approuvée",
-        "applicationSubmitted": "Candidature partenaire soumise"
-      }
+        "applicationSubmitted": "Candidature partenaire soumise",
+        "openAudit": "Voir toutes les actions sur cet hôte dans le journal d'audit"
+      },
+      "openFullPage": "Ouvrir la fiche complète de l'hôte"
     }
   },
   "listings": {
@@ -1026,7 +1034,8 @@
       "login": "Connexion au compte",
       "loginMeta": "Aujourd'hui à {time} (IP : {ip})",
       "bookingMade": "Réservation effectuée {ref}",
-      "rating": "Note de {rating} sur 5"
+      "rating": "Note de {rating} sur 5",
+      "openBookings": "Ouvrir les réservations de cette personne"
     },
     "filters": {
       "allStatuses": "Tous les statuts",
@@ -1034,6 +1043,30 @@
       "guestOnly": "Voyageurs uniquement",
       "guestAndHost": "Voyageur & Hôte",
       "allWilayas": "Toutes les wilayas"
+    },
+    "dataRequests": {
+      "title": "Demandes sur les données personnelles",
+      "subtitle": "Demandes d'accès, de rectification, de suppression et d'opposition, échéance la plus proche en premier.",
+      "empty": "Aucune demande",
+      "emptyHint": "Les demandes envoyées par les voyageurs et les hôtes depuis leur compte apparaissent ici.",
+      "meta": "Reçue le {created} · échéance {due} · {status}",
+      "complete": "Marquer comme traitée",
+      "reject": "Refuser",
+      "closed": "Demande clôturée",
+      "closeFailed": "Impossible de clôturer la demande",
+      "deletionWarning": "Traiter une demande de suppression anonymise le compte. Cette action est irréversible.",
+      "kinds": {
+        "access": "Accès",
+        "rectification": "Rectification",
+        "deletion": "Suppression",
+        "opposition": "Opposition"
+      },
+      "statuses": {
+        "open": "Ouverte",
+        "in_progress": "En cours",
+        "completed": "Traitée",
+        "rejected": "Refusée"
+      }
     }
   },
   "bookings": {
@@ -1186,6 +1219,14 @@
     "ctxLocation": "Localisation",
     "rulesTitle": "Règles de modération",
     "rulesText": "Les avis diffamatoires, contenant des propos haineux ou des coordonnées personnelles peuvent être supprimés sans délai.",
+    "hideTitle": "Masquer cet avis",
+    "hideDesc": "L'avis quitte les pages publiques. Indiquez pourquoi (10 caractères minimum) ; le motif est conservé dans le journal d'audit.",
+    "ctxBooking": "Réservation",
+    "disputesElsewhere": {
+      "title": "Les litiges se traitent dans Réservations",
+      "desc": "Un litige concerne une réservation, pas un avis. Ouvrez l'écran des réservations et filtrez sur les réservations en litige pour les résoudre.",
+      "cta": "Ouvrir les réservations"
+    },
     "deleteTitle": "Supprimer l'avis",
     "deleteDesc": "Cet avis sera supprimé de la base et ne figurera plus sur la fiche de l'annonce.",
     "toast": {
@@ -1200,7 +1241,7 @@
       "flagDismissedDesc": "L'avis est confirmé conforme.",
       "dismissFailed": "Erreur de signalement",
       "deleted": "Avis supprimé",
-      "deletedDesc": "Supprimé temporairement. Récupérable dans la corbeille.",
+      "deletedDesc": "Supprimé définitivement. Il ne peut pas être restauré.",
       "deleteFailed": "Échec de suppression"
     }
   },
@@ -1334,6 +1375,9 @@
     "toggleStatus": "Changer le statut de {code}",
     "deleteCode": "Supprimer le code {code}",
     "featured": {
+      "perListingTitle": "La mise en avant se règle annonce par annonce",
+      "perListingDesc": "Ouvrez une annonce dans l'écran Annonces pour la mettre en avant ou la retirer. La liste de toutes les mises en avant n'est pas encore disponible.",
+      "openListings": "Ouvrir les annonces",
       "title": "Mises en avant sur la page d'accueil",
       "subtitle": "Gérez les annonces sponsorisées ou mises en vedette par la modération.",
       "add": "Ajouter une mise en avant",
@@ -1527,7 +1571,12 @@
       "nowActive": "{name} est désormais actif.",
       "nowDeactivated": "{name} a été désactivé.",
       "actionProhibited": "Action non autorisée"
-    }
+    },
+    "mfaOn": "Authentificateur configuré",
+    "mfaOff": "Pas encore d'authentificateur",
+    "mfaReset": "Réinitialiser la 2FA",
+    "mfaResetLabel": "Réinitialiser la vérification en deux étapes de {name}",
+    "mfaResetDone": "{name} configurera un nouvel authentificateur à la prochaine connexion."
   },
   "settings": {
     "title": "Paramètres de la Plateforme",
@@ -1578,32 +1627,81 @@
       "saved": "Paramètres enregistrés",
       "savedHint": "La configuration de la plateforme a été mise à jour.",
       "saveFailed": "Échec de l'enregistrement"
+    },
+    "platform": {
+      "title": "Règles de la plateforme",
+      "version": "Version {version}, enregistrée le {date} par {name}",
+      "defaults": "Valeurs par défaut (jamais modifiées)",
+      "requestTtl": "Heures dont dispose un hôte pour répondre à une demande",
+      "creditLimit": "Plancher de crédit par défaut des portefeuilles hôtes (DZD)",
+      "creditLimitHint": "Jusqu'où un portefeuille hôte peut descendre sous zéro avant le blocage des nouvelles réservations.",
+      "fourEyes": "Seconde validation des recharges au-delà de (DZD)",
+      "fourEyesHint": "Les recharges au-delà de ce montant doivent être validées par un second administrateur.",
+      "instantBooking": "Réservation instantanée",
+      "instantBookingHint": "Permet aux hôtes d'accepter les réservations sans réponse manuelle.",
+      "history": "Historique des modifications",
+      "noHistory": "Aucune modification enregistrée.",
+      "notificationsInfo": "Les notifications sont envoyées automatiquement par la plateforme ; rien n'est encore paramétrable ici.",
+      "securityMfa": "Chaque compte de l'équipe se connecte avec un mot de passe et un code d'application d'authentification.",
+      "securityIdle": "Une session équipe se termine après 30 minutes sans activité.",
+      "securityMax": "Une session équipe se termine dans tous les cas après 8 heures.",
+      "securityLock": "Des mots de passe ou codes erronés répétés bloquent la connexion pendant une minute."
     }
   },
   "login": {
     "title": "Connexion Centre de Contrôle",
-    "subtitle": "Connectez-vous avec vos identifiants autorisés du personnel BLADUS",
+    "subtitle": "Connectez-vous avec votre compte équipe BLADUS.",
     "emailLabel": "Adresse Email Professionnelle",
     "passwordLabel": "Mot de Passe",
-    "submitButton": "S'authentifier & Accéder",
+    "submitButton": "Continuer",
     "demoSeeds": "Comptes Démo Préconfigurés :",
     "footerText": "© 2026 BLADUS Technologies DZ. Accès restreint au personnel habilité.",
     "errors": {
       "invalidCredentials": "E-mail ou mot de passe incorrect.",
       "rateLimited": "Trop de tentatives de connexion. Veuillez patienter {seconds} secondes puis réessayer.",
-      "unexpected": "Une erreur est survenue lors de la connexion. Veuillez réessayer."
+      "unexpected": "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
+      "invalidCode": "Ce code n'est pas valide. Vérifiez l'heure de votre téléphone et réessayez.",
+      "stepExpired": "La connexion a pris trop de temps. Saisissez à nouveau votre e-mail et votre mot de passe.",
+      "alreadyEnrolled": "Une application d'authentification est déjà configurée pour ce compte. Saisissez son code."
     },
     "adminBadge": "Admin",
     "demoFillLabel": "Remplir avec le compte démo {role} ({email})",
     "panelEyebrow": "L'Algérie, de la côte au Tassili",
     "panelTitle": "Chaque séjour, voyage et hôte, suivi avec soin.",
-    "panelImagesAlt": "Photographies de Djanet, Ghardaïa et de la baie d'Alger"
+    "panelImagesAlt": "Photographies de Djanet, Ghardaïa et de la baie d'Alger",
+    "sessionExpired": "Votre session est terminée (30 minutes sans activité, ou déconnexion ailleurs). Veuillez vous reconnecter.",
+    "mfaTitle": "Vérification en deux étapes",
+    "mfaSubtitle": "Saisissez le code à 6 chiffres de votre application d'authentification.",
+    "codeLabel": "Code de vérification",
+    "codeHelp": "Téléphone perdu ? Saisissez plutôt l'un de vos codes de secours.",
+    "verifyButton": "Vérifier et se connecter",
+    "backToPassword": "Retour à l'e-mail et au mot de passe",
+    "enrolTitle": "Configurez votre application d'authentification",
+    "enrolSubtitle": "Les comptes de l'équipe exigent un second facteur. Cette étape se fait une seule fois.",
+    "enrolStep1": "Ouvrez une application d'authentification (Google Authenticator, Microsoft Authenticator, Aegis, 1Password...).",
+    "enrolStep2": "Ajoutez un compte avec la clé ci-dessous, ou ouvrez le lien sur cet appareil.",
+    "enrolStep3": "Saisissez le code à 6 chiffres affiché par l'application.",
+    "enrolSecretLabel": "Clé de configuration",
+    "enrolOpenApp": "Ouvrir dans mon application d'authentification",
+    "enrolCodeLabel": "Code à 6 chiffres de l'application",
+    "enrolButton": "Confirmer et continuer",
+    "recoveryTitle": "Vos codes de secours",
+    "recoverySubtitle": "Chaque code fonctionne une fois si vous perdez l'accès à votre application.",
+    "recoveryWarning": "Ces codes ne sont affichés qu'une seule fois. Conservez-les en lieu sûr avant de continuer.",
+    "recoveryCopy": "Copier les codes",
+    "recoveryCopied": "Codes copiés",
+    "recoveryContinue": "Je les ai enregistrés, ouvrir le panneau"
   },
   "auth": {
     "forbidden": {
       "title": "Accès restreint",
       "description": "Votre rôle ne vous permet pas de consulter cette section. Contactez un Super Administrateur si vous avez besoin d’un accès.",
       "backHome": "Retour au tableau de bord"
+    },
+    "unavailable": {
+      "title": "Le service est injoignable",
+      "description": "Le serveur BLADUS n'a pas répondu. Votre session est conservée ; réessayez dans un instant.",
+      "retry": "Réessayer"
     }
   },
   "actions": {
@@ -1632,7 +1730,8 @@
     "suspendHostDescription": "Ses annonces seront temporairement masquées aux voyageurs.",
     "reactivate": "Réactiver",
     "invalidRate": "Le taux doit être compris entre 0 et 100 % avec au plus 2 décimales.",
-    "invalidAmount": "Saisissez un montant entier entre 1 et {max}."
+    "invalidAmount": "Saisissez un montant entier entre 1 et {max}.",
+    "approve": "Approuver"
   },
   "payments": {
     "title": "Paiements & Finances",
@@ -1779,7 +1878,7 @@
     "refundConfirm": "Rembourser {amount}",
     "refundDone": "Remboursement effectué",
     "cancelTitle": "Annuler la réservation {reference} ?",
-    "cancelDescription": "Uniquement pour les réservations en attente ou confirmées. Le remboursement se fait séparément.",
+    "cancelDescription": "Uniquement pour les réservations en attente ou confirmées. Annuler une réservation confirmée doit au voyageur tout ce qui n'est pas encore remboursé ; l'hôte le rembourse.",
     "cancelDone": "Réservation annulée",
     "disputeTitle": "Résoudre le litige sur {reference}",
     "disputeDescription": "Choisissez l'issue. Les remboursements sont inscrits au grand livre ; un litige rejeté remet la réservation dans son cycle normal.",
@@ -1815,7 +1914,18 @@
     "verificationDocuments": "Documents de vérification",
     "uploaded": "Téléversé le {date}",
     "viewFile": "Voir le fichier",
-    "viewFileLabel": "Voir le fichier {title} (nouvel onglet)"
+    "viewFileLabel": "Voir le fichier {title} (nouvel onglet)",
+    "noDocuments": "Aucun document envoyé pour le moment.",
+    "approveDocument": "Approuver",
+    "requiredDocuments": "Documents requis",
+    "openWallet": "Ouvrir le portefeuille",
+    "creditLimitTitle": "Plancher de crédit",
+    "creditLimitCurrent": "Le portefeuille peut descendre jusqu'à moins {amount}.",
+    "creditLimitLabel": "Nouveau plancher de crédit (DZD)",
+    "creditLimitSave": "Enregistrer le plancher",
+    "creditLimitSaved": "Plancher de crédit enregistré",
+    "legalTitle": "Identité légale",
+    "reviews": "Avis"
   },
   "search": {
     "title": "Recherche globale & réseau BLADUS",
@@ -2277,7 +2387,9 @@
         "about": "À propos de ce logement",
         "noDescription": "Aucune description fournie pour cet hébergement.",
         "calendarText": "Disponibilités et tarifs saisonniers gérés pour cet hébergement.",
-        "calendarLink": "Consulter le calendrier complet"
+        "calendarLink": "Consulter le calendrier complet",
+        "noBookings": "Aucune réservation pour ce logement pour l'instant.",
+        "bookingsLoadError": "Les réservations n'ont pas pu être chargées."
       },
       "advanced": {
         "title": "Filtres avancés des hébergements",
@@ -3324,6 +3436,16 @@
           "desc": "Répartition des nuitées, prix moyens et origines des voyageurs."
         }
       }
+    },
+    "live": {
+      "loading": "Chargement des statistiques...",
+      "loadError": "Les statistiques ne peuvent pas être chargées pour le moment.",
+      "retry": "Réessayer",
+      "noData": "Aucune réservation sur cette période pour l'instant.",
+      "periodNote": "30 derniers jours, réservations confirmées et terminées. Montants en DZD.",
+      "volumeChartLabel": "Montants payés par les voyageurs par mois : {values}",
+      "bookings": "{count, plural, one {{value} réservation} other {{value} réservations}}",
+      "commission": "Commission BLADUS : {value}"
     }
   },
   "help": {
@@ -3929,5 +4051,121 @@
       "listings": "Annonces"
     },
     "total": "Total"
+  },
+  "financeApi": {
+    "kpiPendingTopups": "Recharges en attente de validation",
+    "overviewTopups": "Recharges du mois",
+    "overviewTopupsHint": "Dépôts validés crédités aux portefeuilles des hôtes depuis le {date}.",
+    "switchedOff": "Désactivé",
+    "escrowOff": "Le paiement en ligne est désactivé : les voyageurs paient les hôtes directement et BLADUS ne détient aucun fonds.",
+    "payoutsOffTitle": "Les versements sont désactivés",
+    "payoutsOffDesc": "BLADUS ne verse pas d'argent aux hôtes dans cette version : les voyageurs paient les hôtes directement. Les demandes de versement apparaîtront ici une fois la fonction activée.",
+    "loadFailed": "Impossible de charger cette liste.",
+    "statusFilter": "Statut",
+    "all": "Tous",
+    "approve": "Valider",
+    "reject": "Refuser",
+    "rejectHint": "Indiquez un motif d'au moins 10 caractères.",
+    "ownRequest": "Enregistrée par vous : un autre administrateur doit la valider.",
+    "tabs": {
+      "topups": "Recharges",
+      "adjustments": "Ajustements",
+      "invoices": "Factures",
+      "sync": "Synchronisation"
+    },
+    "approvalStatus": {
+      "pending_approval": "En attente d'un second administrateur",
+      "approved": "Validée",
+      "rejected": "Refusée"
+    },
+    "methods": {
+      "ccp_transfer": "Virement CCP",
+      "bank_transfer": "Virement bancaire",
+      "baridimob": "BaridiMob",
+      "cash_office": "Espèces au bureau"
+    },
+    "cols": {
+      "receipt": "Reçu",
+      "requestedBy": "Enregistrée par",
+      "dueAt": "Échéance",
+      "period": "Période",
+      "number": "Numéro",
+      "amountHt": "HT",
+      "vat": "TVA",
+      "amountTtc": "TTC",
+      "night": "Nuit",
+      "roomType": "Type de chambre",
+      "sold": "Vendues",
+      "external": "Déclarées par l'hôtel",
+      "source": "Source",
+      "topic": "Sujet",
+      "attempts": "Tentatives",
+      "lastError": "Dernière erreur",
+      "reason": "Motif",
+      "amountOwed": "Montant dû",
+      "created": "Créé le"
+    },
+    "topups": {
+      "title": "Recharges de portefeuille",
+      "hint": "Dépôts enregistrés par les administrateurs. Les montants élevés attendent un second administrateur (règle des quatre yeux).",
+      "empty": "Aucune recharge pour ce filtre.",
+      "approved": "Recharge validée et portefeuille crédité",
+      "rejected": "Recharge refusée",
+      "rejectTitle": "Refuser cette recharge ?",
+      "rejectDesc": "Recharge de {amount} pour {host}. Rien n'est crédité.",
+      "pending": "Enregistrée, en attente d'un second administrateur",
+      "pendingDesc": "Ce montant dépasse le seuil des quatre yeux : un autre administrateur doit le valider avant le crédit du portefeuille."
+    },
+    "adjust": {
+      "title": "Ajustements de portefeuille",
+      "hint": "Corrections manuelles du dépôt d'un hôte. Chaque ajustement exige un motif et un second administrateur.",
+      "empty": "Aucun ajustement pour ce filtre.",
+      "request": "Demander un ajustement",
+      "dialogTitle": "Demander un ajustement de portefeuille",
+      "dialogDesc": "Montant signé en DZD : positif pour ajouter au dépôt, négatif pour en retirer. Un second administrateur doit le valider.",
+      "host": "Hôte",
+      "amount": "Montant (DZD, signé)",
+      "reason": "Motif (10 caractères ou plus)",
+      "submit": "Envoyer pour validation",
+      "done": "Ajustement demandé",
+      "approved": "Ajustement validé",
+      "rejected": "Ajustement refusé",
+      "rejectTitle": "Refuser cet ajustement ?",
+      "invalidAmount": "Saisissez un montant entier non nul."
+    },
+    "refunds": {
+      "hint": "Remboursements dus par les hôtes aux voyageurs après une annulation ou un litige. BLADUS ne détient pas l'argent : la dette est suivie jusqu'à son règlement.",
+      "status": {
+        "open": "Dû",
+        "declared": "Déclaré payé par l'hôte",
+        "disputed": "Contesté par le voyageur",
+        "settled": "Réglé"
+      },
+      "overdue": "En retard",
+      "overdueOnly": "En retard uniquement",
+      "settle": "Régler",
+      "settleTitle": "Régler ce remboursement ?",
+      "settleDesc": "Confirmez que le voyageur a reçu {amount} pour la réservation {reference}. Notez la preuve vérifiée.",
+      "settled": "Remboursement réglé"
+    },
+    "invoices": {
+      "title": "Factures de commission",
+      "hint": "Factures mensuelles de commission par hôte. Les fichiers PDF ne sont pas encore générés.",
+      "empty": "Aucune facture pour l'instant."
+    },
+    "sync": {
+      "conflictsTitle": "Conflits d'inventaire",
+      "conflictsHint": "Nuits pour lesquelles un système hôtelier a déclaré moins de chambres que BLADUS n'en a vendu.",
+      "conflictsEmpty": "Aucun conflit d'inventaire.",
+      "resolve": "Résoudre",
+      "resolveTitle": "Résoudre ce conflit ?",
+      "resolveDesc": "Décrivez ce qui a été fait pour la nuit en surréservation.",
+      "resolved": "Conflit résolu",
+      "outboxTitle": "Messages sortants",
+      "outboxHint": "Envois vers les systèmes partenaires. Les messages morts doivent être relancés.",
+      "outboxEmpty": "Aucun message pour ce filtre.",
+      "retry": "Relancer",
+      "retried": "Message remis en file"
+    }
   }
 }

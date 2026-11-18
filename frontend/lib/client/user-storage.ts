@@ -1,45 +1,14 @@
 /**
- * Per-user browser storage. Anything personal kept in localStorage is keyed
- * by user id and wiped on logout, so a shared computer never shows the
- * previous user's drafts.
+ * Per-user browser storage. Personal data lives on the server; logout wipes
+ * the UI preferences and any legacy copies kept in localStorage, so a shared
+ * computer never shows the previous user's data.
  */
 
+/**
+ * Become-a-host drafts now live on the server (PUT /host/onboarding/drafts);
+ * this prefix is only kept so logout wipes copies left by older versions.
+ */
 const HOST_DRAFT_PREFIX = "darna_host_draft";
-
-export function hostDraftKey(userId: string): string {
-  return `${HOST_DRAFT_PREFIX}:${userId}`;
-}
-
-export function readHostDraft(
-  userId: string | null | undefined,
-): Record<string, unknown> | null {
-  if (!userId || typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(hostDraftKey(userId));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-export function writeHostDraft(
-  userId: string,
-  draft: Record<string, unknown>,
-): void {
-  try {
-    localStorage.setItem(hostDraftKey(userId), JSON.stringify(draft));
-  } catch {
-    // storage full / disabled, drafts are best-effort
-  }
-}
-
-export function clearHostDraft(userId: string): void {
-  try {
-    localStorage.removeItem(hostDraftKey(userId));
-  } catch {}
-}
 
 /** Keys (or key prefixes) that hold per-user data or legacy identity values. */
 const USER_SCOPED_PREFIXES = [
@@ -47,7 +16,11 @@ const USER_SCOPED_PREFIXES = [
   "darna_favorites",
   "darna_mode",
   "darna_agency_id",
-  // Legacy client-side wallet copies (wallets now live on the server only).
+  // Legacy client-side copies (onboarding config, wallets now live on the server only).
+  "darna_onboarding_config_individual",
+  "darna_onboarding_config_agency",
+  "darna_onboarding_config_hotel",
+  "darna_onboarding_config_hostel",
   "darna_host_wallets_v1",
   "darna_commission_rates_v1",
 ];

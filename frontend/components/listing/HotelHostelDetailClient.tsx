@@ -14,12 +14,13 @@ import ListingCarouselCard from "@/components/home/ListingCarouselCard";
 import { AnimatedNumber, Avatar, Badge, Banner, Button, Dialog, KitEmptyState, Pill, Sheet, Textarea } from "@/components/ui";
 import { useLoginModal } from "@/hook/useLoginModal";
 import { useActionError } from "@/hook/useActionError";
-import { createBookingAction } from "@/app/actions/bookings";
-import { isRequestToBook as computeIsRequestToBook, quoteListingBooking } from "@/lib/booking/pricing";
+import { createBookingAction, type BookingSelection } from "@/app/actions/bookings";
+import { isRequestToBook as computeIsRequestToBook, roomTypePrice } from "@/lib/booking/pricing";
+import { useServerQuote } from "@/hook/useServerQuote";
 import { maxGuestsFor, maxUnitsFor, validateListingRequest, type ListingAvailability } from "@/lib/booking/availability";
 import { getStayRules } from "@/lib/booking/config";
 import { getCancellationPolicy } from "@/lib/booking/cancellation";
-import { addDaysToKey, formatDateKey, fromDateKey, isDateKey, toDateKey, type DateKey } from "@/lib/booking/dates";
+import { addDaysToKey, formatDateKey, fromDateKey, isDateKey, nightsBetween, toDateKey, type DateKey } from "@/lib/booking/dates";
 import { formatDzd } from "@/lib/currency";
 import { formatRating } from "@/lib/i18n/date-locale";
 import { summarizeReviews } from "@/lib/reviews";
@@ -180,20 +181,7 @@ export default function HotelHostelDetailClient({
   const disabledDates = useMemo(() => unavailableKeys.map(fromDateKey), [unavailableKeys]);
   const unavailableSet = useMemo(() => new Set(unavailableKeys), [unavailableKeys]);
 
-  // Same pure functions the server uses when the booking is created.
-  const quote = useMemo(
-    () =>
-      quoteListingBooking({
-        listing,
-        startDate: startKey,
-        endDate: endKey,
-        guestCount,
-        unitCount,
-        selectedRoomTypeId: selectedRoom?.id,
-      }),
-    [listing, startKey, endKey, guestCount, unitCount, selectedRoom]
-  );
-  const validationError = useMemo(
+  const rulesError = useMemo(
     () =>
       selectedRoom
         ? validateListingRequest({
@@ -206,40 +194,74 @@ export default function HotelHostelDetailClient({
         : ("NO_ROOMS" as const),
     [listing, selectedRoom, startKey, endKey, guestCount, unitCount, today, unavailableSet]
   );
+
+  // The price shown is the backend's quote for exactly this selection (POST /quotes).
+  const selection = useMemo<BookingSelection | null>(
+    () =>
+      rulesError || !selectedRoom
+        ? null
+        : {
+            kind: "listing",
+            listingId: listing.id,
+            startDate: startKey,
+            endDate: endKey,
+            guestCount,
+            unitCount,
+            selectedRoomTypeId: selectedRoom.id,
+            model: isBedUnit ? "per_bed_night" : "per_room_night",
+          },
+    [rulesError, selectedRoom, listing.id, startKey, endKey, guestCount, unitCount, isBedUnit]
+  );
+  const { quote: serverQuote, loading: quoteLoading, error: quoteError } = useServerQuote(selection);
+  const validationError = rulesError ?? quoteError;
+  // Counts for the labels come from the selection; every amount comes from the server quote.
+  const quote = serverQuote ?? {
+    nights: Math.max(0, nightsBetween(startKey, endKey)),
+    quantity: unitCount,
+    unitPrice: selectedRoom ? roomTypePrice(selectedRoom) : listing.price,
+    subtotal: 0,
+    discount: 0,
+    cleaningFee: 0,
+    taxes: 0,
+    total: 0,
+  };
+  const canReserve = Boolean(serverQuote) && !validationError && !quoteLoading;
   const validationMessage =
     validationError === "NO_ROOMS" ? tp("noBookableRooms") : validationError ? errorText(validationError) : null;
 
-  // Per-room price for the stay (one room / bed) and availability for the chosen nights.
+  // Per-room price for the stay (one room / bed) from the backend's nightly prices, and rooms left.
   const roomOffers = useMemo(
     () =>
       Object.fromEntries(
         availableRooms.map((room) => {
-          const q = quoteListingBooking({
-            listing,
-            startDate: startKey,
-            endDate: endKey,
-            guestCount: 1,
-            unitCount: 1,
-            selectedRoomTypeId: room.id,
-          });
+          const nightly = availability.priceByRoomType?.[room.id] ?? {};
+          const unitsLeft = availability.unitsLeftByRoomType?.[room.id] ?? {};
+          let stayPrice = 0;
+          let left = Infinity;
+          for (let d = startKey; d < endKey; d = addDaysToKey(d, 1)) {
+            stayPrice += nightly[d] ?? roomTypePrice(room);
+            if (unitsLeft[d] !== undefined) left = Math.min(left, unitsLeft[d]);
+          }
           const blocked = new Set(availability.unavailableByRoomType[room.id] || []);
           return [
             room.id,
             {
-              stayPrice: q.subtotal,
-              left: room.availableInventory ?? maxUnitsFor(room),
+              stayPrice,
+              left: Number.isFinite(left) ? left : room.availableInventory ?? maxUnitsFor(room),
               soldOut: room.isAvailable === false || hasBlockedNight(startKey, endKey, blocked),
             },
           ];
         })
       ),
-    [availableRooms, listing, startKey, endKey, availability.unavailableByRoomType]
+    [availableRooms, startKey, endKey, availability]
   );
 
   const money = (amount: number) => formatDzd(amount, locale);
   const fmtShort = (key: DateKey) => formatDateKey(key, locale, { month: "short", day: "numeric" });
   const datesLabel = tCommon("dateRange", { start: fmtShort(startKey), end: fmtShort(endKey) });
-  const isRequestToBook = computeIsRequestToBook(listing);
+  const isRequestToBook = serverQuote ? serverQuote.approvalMode === "request" : computeIsRequestToBook(listing);
+  // Amounts before the server answered are not shown as numbers.
+  const quoted = (amount: number) => (serverQuote ? money(amount) : quoteLoading ? "…" : "–");
   const policy = getCancellationPolicy(listing.cancellationPolicy);
 
   const unitSummary = isBedUnit
@@ -262,19 +284,15 @@ export default function HotelHostelDetailClient({
       toast.error(validationMessage);
       return;
     }
+    if (!serverQuote || !selection) return;
 
     setIsReserving(true);
     try {
       // Price, fees, availability and approval mode are decided on the server.
       const result = await createBookingAction({
-        kind: "listing",
-        listingId: listing.id,
-        startDate: startKey,
-        endDate: endKey,
-        guestCount,
-        unitCount,
+        ...selection,
+        quoteId: serverQuote.quoteId,
         guestMessage: guestMessage.trim() || undefined,
-        selectedRoomTypeId: selectedRoom?.id,
       });
 
       if (!result.ok) {
@@ -290,7 +308,7 @@ export default function HotelHostelDetailClient({
           { label: t("success.room"), value: selectedRoom?.name ?? "" },
           { label: t("success.dates"), value: datesLabel },
           { label: isBedUnit ? tp("bedsLabel") : t("guests"), value: unitSummary },
-          { label: tCommon("total"), value: money(quote.total) },
+          { label: tCommon("total"), value: money(result.data.totalPrice) },
         ],
       });
     } catch {
@@ -470,24 +488,30 @@ export default function HotelHostelDetailClient({
             nights: t("nightsCount", { count: quote.nights }),
           })}
         </span>
-        <AnimatedNumber value={quote.subtotal} format={money} className="tabular-nums shrink-0" />
+        <AnimatedNumber value={quote.subtotal} format={quoted} className="tabular-nums shrink-0" />
       </div>
+      {serverQuote && serverQuote.discount > 0 && (
+        <div className="flex justify-between gap-4">
+          <span>{t("discount")}</span>
+          <span className="tabular-nums">−{money(serverQuote.discount)}</span>
+        </div>
+      )}
       {quote.cleaningFee > 0 && (
         <div className="flex justify-between gap-4">
           <span>{t("cleaningFee")}</span>
-          <AnimatedNumber value={quote.cleaningFee} format={money} className="tabular-nums" />
+          <AnimatedNumber value={quote.cleaningFee} format={quoted} className="tabular-nums" />
         </div>
       )}
       <NoGuestFees />
       {quote.taxes > 0 && (
         <div className="flex justify-between gap-4">
           <span>{t("taxes")}</span>
-          <AnimatedNumber value={quote.taxes} format={money} className="tabular-nums" />
+          <AnimatedNumber value={quote.taxes} format={quoted} className="tabular-nums" />
         </div>
       )}
       <div className="flex justify-between items-baseline gap-4 font-semibold text-title text-primary-900 border-t border-primary/10 pt-4">
         <span>{tCommon("total")}</span>
-        <AnimatedNumber value={quote.total} format={money} className="tabular-nums" />
+        <AnimatedNumber value={quote.total} format={quoted} className="tabular-nums" />
       </div>
     </div>
   );
@@ -754,7 +778,7 @@ export default function HotelHostelDetailClient({
 
               {bookingFields(false)}
 
-              <Button size="lg" fullWidth variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserveRoom} loading={isReserving} disabled={Boolean(validationError)}>
+              <Button size="lg" fullWidth variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserveRoom} loading={isReserving} disabled={!canReserve}>
                 {ctaLabel}
               </Button>
               <p className="text-center text-meta text-primary-500">{tp("notChargedUntilConfirmed")}</p>
@@ -814,12 +838,12 @@ export default function HotelHostelDetailClient({
         footer={
           <div className="flex items-center justify-between gap-4">
             <p className="min-w-0">
-              <AnimatedNumber value={quote.total} format={money} className="block font-semibold text-title text-primary-900 tabular-nums" />
+              <AnimatedNumber value={quote.total} format={quoted} className="block font-semibold text-title text-primary-900 tabular-nums" />
               <span className="block text-meta text-primary-500 truncate">
                 {datesLabel} · {unitSummary}
               </span>
             </p>
-            <Button size="lg" variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserveRoom} loading={isReserving} disabled={Boolean(validationError)} className="shrink-0">
+            <Button size="lg" variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserveRoom} loading={isReserving} disabled={!canReserve} className="shrink-0">
               {isRequestToBook ? tp("requestRoom") : t("reserve")}
             </Button>
           </div>

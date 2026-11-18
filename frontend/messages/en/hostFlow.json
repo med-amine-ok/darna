@@ -476,7 +476,8 @@
     "hostelName": "Please enter your hostel name.",
     "hostelAddress": "Please enter the hostel address.",
     "experienceType": "Please choose an experience type.",
-    "description": "Add a short description so travellers know what to expect."
+    "description": "Add a short description so travellers know what to expect.",
+    "listingAfterOnboarding": "Your host account is created, but the listing could not be published ({reason}). Add it from your host space."
   },
   "discarded": "Unsaved changes discarded.",
   "units": {

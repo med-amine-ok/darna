@@ -26,8 +26,11 @@ export default async function ProfilePage({
   }
 
   // The owner sees all of their own listings, drafts included.
-  const userListings = await getHostListings({ userId: currentUser.id });
-  const reviews = await getReviewsByUserId(currentUser.id);
+  // An API failure shows empty lists, never a crashed page.
+  const [userListings, reviews] = await Promise.all([
+    getHostListings({ userId: currentUser.id }).catch(() => []),
+    getReviewsByUserId(currentUser.id).catch(() => []),
+  ]);
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">

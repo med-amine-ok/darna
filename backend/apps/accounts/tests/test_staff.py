@@ -15,6 +15,12 @@ from conftest import client_for, make_user
 pytestmark = pytest.mark.django_db
 
 
+@pytest.fixture(autouse=True)
+def _staff_mfa_on(settings):
+    """These tests cover the staff authenticator step, so they run with it switched on."""
+    settings.STAFF_MFA_REQUIRED = True
+
+
 def staff_sign_in(email: str, secret: str) -> tuple[APIClient, dict]:
     """Run both staff sign-in steps; returns a client with the staff token and the StaffSession body."""
     api = APIClient()

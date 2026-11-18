@@ -53,5 +53,6 @@
   "declineKeep": "Keep request",
   "eyebrow": "Hosting",
   "kpiLabel": "Reservation overview",
-  "kpiNotAvailable": "n/a"
+  "kpiNotAvailable": "n/a",
+  "declineReasonLabel": "Reason for declining (shared with the guest)"
 }

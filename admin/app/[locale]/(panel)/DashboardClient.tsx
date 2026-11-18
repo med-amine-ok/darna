@@ -42,19 +42,28 @@ import { getWilayaName } from "@/lib/utils/wilayas";
 import { WhatChangedBanner } from "@/components/features/dashboard/WhatChangedBanner";
 import { useGlossary } from "@/lib/glossary";
 import { useLocale, useTranslations } from "next-intl";
+import type { AttentionItems, DashboardCharts, DashboardKpis, KpiValue, MonthPoint } from "@/lib/data/analytics";
+
+type DashboardPeriod = "today" | "7d" | "30d";
 
 export interface DashboardClientProps {
-  initialKpis: any;
-  initialCharts: any;
-  attention: any;
+  /** Live KPIs of the three periods of the switch (each may be `available: false`). */
+  kpisByPeriod: Record<DashboardPeriod, DashboardKpis>;
+  /** Chart series of the last 30 days (wilayas, partner types). */
+  charts: DashboardCharts;
+  /** Monthly series of the last 12 months, or null when it could not be read. */
+  monthly: MonthPoint[] | null;
+  attention: AttentionItems;
   recentAudit: any[];
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export default function DashboardClient({
-  initialKpis,
-  initialCharts,
+  kpisByPeriod,
+  charts,
+  monthly,
   attention,
-  recentAudit,
 }: DashboardClientProps) {
   const locale = useLocale() as "en" | "fr" | "ar";
   const t = useTranslations("dashboard");
@@ -72,7 +81,7 @@ export default function DashboardClient({
   }, []);
 
   // Period switch: strictly 3 options per §3.1.C: "Today", "7d", "30d" (default: 30d)
-  const [period, setPeriod] = useState<"today" | "7d" | "30d">("30d");
+  const [period, setPeriod] = useState<DashboardPeriod>("30d");
 
   // View mode: Simple view (default for new admins) vs Detailed view
   const [viewMode, setViewMode] = useState<"simple" | "detailed">("simple");
@@ -99,16 +108,8 @@ export default function DashboardClient({
     } catch {}
   };
 
-  // Multiplier for the 3 allowed periods
-  const multiplier = period === "today" ? 0.08 : period === "7d" ? 0.28 : 1.0;
-
-  const bookingsCount = Math.max(1, Math.round(128 * multiplier));
-  const moneyPaidDzd = Math.round(2450000 * multiplier);
-  const darnaEarningsDzd = Math.round(310000 * multiplier);
-  const newHostsCount = Math.max(
-    1,
-    Math.round(14 * (period === "today" ? 0.15 : multiplier)),
-  );
+  const kpis = kpisByPeriod[period];
+  const kpisMissing = !kpis.available;
 
   const firstName = currentAdmin?.name?.split(" ")[0] ?? "";
   const hour = now?.getHours();
@@ -134,11 +135,11 @@ export default function DashboardClient({
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
-  // Attention counters
-  const pendingHosts = attention.pendingHostsCount || 3;
-  const pendingListings = attention.pendingListingsCount || 5;
-  const flaggedReviews = attention.flaggedReviewsCount || 1;
-  const disputedBookings = attention.disputedBookingsCount || 0;
+  // Attention counters (live moderation queues)
+  const pendingHosts = attention.pendingHostsCount;
+  const pendingListings = attention.pendingListingsCount;
+  const flaggedReviews = attention.flaggedReviewsCount;
+  const disputedBookings = attention.disputedBookingsCount;
   const hasPendingItems =
     pendingHosts + pendingListings + flaggedReviews + disputedBookings > 0;
 
@@ -146,38 +147,82 @@ export default function DashboardClient({
   const comparisonPeriod = t(`comparisonPeriods.${period}`);
 
   // Single daily takeaway summary sentence
-  const daySummaryText = hasPendingItems
-    ? t("daySummaryNeeds", { hosts: pendingHosts, listings: pendingListings })
-    : t("daySummaryCaughtUp");
+  const daySummaryText = !attention.available
+    ? t("loadError")
+    : hasPendingItems
+      ? t("daySummaryNeeds", { hosts: pendingHosts, listings: pendingListings })
+      : t("daySummaryCaughtUp");
 
-  // Chart 1: Bookings over time (Single area series, plain axis labels)
-  // Weekday labels come from fixed UTC dates (2024-01-07 is a Sunday) so the
-  // server and the client render the same text.
-  const weekdayFormatter = new Intl.DateTimeFormat(intlLocale(locale), {
-    weekday: "short",
+  /** Comparison sentence and arrow of one KPI against the previous period. */
+  const compare = (value: KpiValue, higherIsGood = true) => {
+    if (kpisMissing) {
+      return { comparisonSentence: t("loadError"), comparisonDirection: "flat" as const, comparisonVariant: "neutral" as const };
+    }
+    if (value.changePercent === null) {
+      return {
+        comparisonSentence: t("comparisonNone", { period: comparisonPeriod }),
+        comparisonDirection: "flat" as const,
+        comparisonVariant: "neutral" as const,
+      };
+    }
+    const pct = Math.round(Math.abs(value.changePercent));
+    if (pct === 0) {
+      return {
+        comparisonSentence: t("comparisonSame", { period: comparisonPeriod }),
+        comparisonDirection: "flat" as const,
+        comparisonVariant: "neutral" as const,
+      };
+    }
+    const up = value.changePercent > 0;
+    return {
+      comparisonSentence: t(up ? "comparisonMore" : "comparisonFewer", {
+        percent: formatNumber(pct, locale),
+        period: comparisonPeriod,
+      }),
+      comparisonDirection: up ? ("up" as const) : ("down" as const),
+      comparisonVariant: up === higherIsGood ? ("good" as const) : ("bad" as const),
+    };
+  };
+
+  // Chart 1: money paid by guests per check-in month (last 12 months, live).
+  const monthFormatter = new Intl.DateTimeFormat(intlLocale(locale), {
+    month: "short",
+    year: "2-digit",
     timeZone: "UTC",
   });
-  const bookingsData = [14, 19, 16, 24, 31, 38, 28].map((bookings, i) => ({
-    day: weekdayFormatter.format(new Date(Date.UTC(2024, 0, 7 + i))),
-    bookings,
+  const bookingsData = (monthly ?? []).map((p) => {
+    const [y, mo] = p.month.split("-").map(Number);
+    return { day: monthFormatter.format(new Date(Date.UTC(y, (mo || 1) - 1, 1))), bookings: p.grossDzd };
+  });
+  const hasMonthlyData = bookingsData.some((row) => row.bookings > 0);
+  const commissionSpark = (monthly ?? []).map((p) => p.commissionDzd);
+  const grossSpark = (monthly ?? []).map((p) => p.grossDzd);
+
+  // Chart 2: Top 5 Wilayas (sold bookings, last 30 days, live)
+  const top5Wilayas = charts.bookingsByWilaya
+    .slice(0, 5)
+    .map((w) => ({ name: getWilayaName(w.wilayaCode, locale) || w.wilayaName, bookings: w.bookings }));
+
+  // Partner type breakdown (last 30 days, live)
+  const tiers = charts.revenueByHostType.map((r) => ({
+    type: r.key,
+    commission: r.commissionDzd,
+    count: charts.bookingsByHostType.find((b) => b.key === r.key)?.bookings ?? 0,
   }));
-  // Chart 2: Top 5 Wilayas as horizontal bars with direct values
-  const top5Wilayas = [
-    { code: "31", bookings: 42 },
-    { code: "16", bookings: 38 },
-    { code: "42", bookings: 27 },
-    { code: "06", bookings: 19 },
-    { code: "25", bookings: 14 },
-  ].map((w) => ({ name: getWilayaName(w.code, locale), bookings: w.bookings }));
+
+  /** "N days" since the oldest waiting item of a card, or null when unknown. */
+  const waitingSince = (iso: string | null) => {
+    if (!iso || !now) return null;
+    const days = Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / DAY_MS));
+    return t("waitingDays", { count: days, value: formatNumber(days, locale) });
+  };
+
   // Attention cards configuration (§3.1.B)
   const attentionCards = [
     {
       title: t("attentionCards.hosts"),
       count: pendingHosts,
-      oldestWaiting: t("waitingDays", {
-        count: 3,
-        value: formatNumber(3, locale),
-      }),
+      oldestWaiting: waitingSince(attention.oldestSince.hosts),
       buttonText: t("reviewHosts"),
       href: "/approvals?tab=hosts",
       icon: Building,
@@ -186,10 +231,7 @@ export default function DashboardClient({
     {
       title: t("attentionCards.listings"),
       count: pendingListings,
-      oldestWaiting: t("waitingDays", {
-        count: 2,
-        value: formatNumber(2, locale),
-      }),
+      oldestWaiting: waitingSince(attention.oldestSince.listings),
       buttonText: t("reviewListings"),
       href: "/approvals?tab=listings",
       icon: Home,
@@ -198,10 +240,7 @@ export default function DashboardClient({
     {
       title: t("attentionCards.reviews"),
       count: flaggedReviews,
-      oldestWaiting: t("waitingDays", {
-        count: 1,
-        value: formatNumber(1, locale),
-      }),
+      oldestWaiting: waitingSince(attention.oldestSince.reviews),
       buttonText: t("checkReviews"),
       href: "/reviews?status=flagged",
       icon: Star,
@@ -210,10 +249,7 @@ export default function DashboardClient({
     {
       title: t("attentionCards.bookings"),
       count: disputedBookings,
-      oldestWaiting:
-        disputedBookings > 0
-          ? t("waitingDays", { count: 1, value: formatNumber(1, locale) })
-          : null,
+      oldestWaiting: waitingSince(attention.oldestSince.disputes),
       buttonText: t("seeBookings"),
       href: "/bookings?tab=disputed",
       icon: AlertOctagon,
@@ -423,81 +459,55 @@ export default function DashboardClient({
           </div>
         </div>
 
-        {/* Exactly 4 Miller KPI cards */}
+        {/* Exactly 4 Miller KPI cards (live, with the previous period) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* 1. Bookings */}
           <KpiCard
             title={t("kpiBookings")}
-            value={`${formatNumber(bookingsCount, locale)}`}
-            comparisonSentence={t("comparisonMore", {
-              percent: formatNumber(period === "30d" ? 12 : 5, locale),
-              period: comparisonPeriod,
-            })}
-            comparisonDirection="up"
-            comparisonVariant="good"
+            value={kpisMissing ? "-" : formatNumber(kpis.bookings.value, locale)}
+            {...compare(kpis.bookings)}
             helpTooltip={{
               definition: getDefinition("bookingsCount", locale),
               howItIsCounted: getHowItIsCounted("bookingsCount", locale),
             }}
             icon={<Calendar className="w-4 h-4" />}
-            sparklineData={[12, 18, 22, 28, 35, 42, 54, bookingsCount]}
+            sparklineData={[]}
           />
 
           {/* 2. Money paid by guests */}
           <KpiCard
             title={t("kpiMoneyPaid")}
-            value={formatDzd(moneyPaidDzd, locale)}
-            comparisonSentence={
-              period === "30d"
-                ? t("comparisonMore", {
-                    percent: formatNumber(8, locale),
-                    period: comparisonPeriod,
-                  })
-                : t("comparisonSame", { period: comparisonPeriod })
-            }
-            comparisonDirection={period === "30d" ? "up" : "flat"}
-            comparisonVariant="good"
+            value={kpisMissing ? "-" : formatDzd(kpis.grossBookingValueDzd.value, locale)}
+            {...compare(kpis.grossBookingValueDzd)}
             helpTooltip={{
               definition: getDefinition("gmv", locale),
               howItIsCounted: getHowItIsCounted("gmv", locale),
             }}
             icon={<Wallet className="w-4 h-4" />}
-            sparklineData={[140, 180, 210, 260, 310, 390, 480, 520]}
+            sparklineData={grossSpark}
           />
 
           {/* 3. BLADUS earnings */}
           <KpiCard
             title={t("kpiEarnings")}
-            value={formatDzd(darnaEarningsDzd, locale)}
-            comparisonSentence={t("comparisonMore", {
-              percent: formatNumber(period === "30d" ? 10 : 4, locale),
-              period: comparisonPeriod,
-            })}
-            comparisonDirection="up"
-            comparisonVariant="good"
+            value={kpisMissing ? "-" : formatDzd(kpis.commissionNetDzd.value, locale)}
+            {...compare(kpis.commissionNetDzd)}
             helpTooltip={{
               definition: getDefinition("commission", locale),
               howItIsCounted: getHowItIsCounted("commission", locale),
             }}
             icon={<ShieldCheck className="w-4 h-4" />}
-            sparklineData={[25, 32, 40, 48, 55, 62, 70, 78]}
+            sparklineData={commissionSpark}
           />
 
-          {/* 4. New hosts */}
+          {/* 4. Hosts with sales (the API has no "new hosts" count) */}
           <KpiCard
-            title={t("kpiNewHosts")}
-            value={`${formatNumber(newHostsCount, locale)}`}
-            comparisonSentence={t("comparisonSame", {
-              period: comparisonPeriod,
-            })}
-            comparisonDirection="flat"
-            comparisonVariant="neutral"
-            helpTooltip={{
-              definition: getDefinition("newHosts", locale),
-              howItIsCounted: getHowItIsCounted("newHosts", locale),
-            }}
+            title={t("kpiActiveHosts")}
+            value={kpisMissing ? "-" : formatNumber(kpis.activeHosts.value, locale)}
+            {...compare(kpis.activeHosts)}
+            helpTooltip={{ definition: t("kpiActiveHostsHint") }}
             icon={<Users className="w-4 h-4" />}
-            sparklineData={[2, 3, 4, 3, 5, 4, 6, newHostsCount]}
+            sparklineData={[]}
           />
         </div>
       </section>
@@ -513,10 +523,10 @@ export default function DashboardClient({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-title font-semibold text-primary-900">
-                  {t("chartBookingsTitle")}
+                  {t("chartVolumeTitle")}
                 </h3>
                 <p className="text-xs text-primary-500 mt-0.5">
-                  {t("chartBookingsSubtitle")}
+                  {t("chartVolumeSubtitle")}
                 </p>
               </div>
 
@@ -534,15 +544,19 @@ export default function DashboardClient({
               </button>
             </div>
 
-            {showBookingsTable ? (
+            {!hasMonthlyData ? (
+              <p className="text-sm text-primary-500 py-10 text-center">
+                {monthly === null ? t("loadError") : t("noChartData")}
+              </p>
+            ) : showBookingsTable ? (
               /* Accessible Data Table alternative */
               <div className="rounded-xl overflow-hidden text-xs ring-1 ring-inset ring-primary/[0.06]">
                 <table className="w-full text-start">
                   <thead className="bg-darnaBg-100 text-primary-600 font-semibold">
                     <tr>
-                      <th className="px-4 py-2.5 text-start">{t("axisDay")}</th>
+                      <th className="px-4 py-2.5 text-start">{t("axisMonth")}</th>
                       <th className="px-4 py-2.5 text-end">
-                        {t("axisBookings")}
+                        {t("axisAmount")}
                       </th>
                     </tr>
                   </thead>
@@ -556,7 +570,7 @@ export default function DashboardClient({
                           {row.day}
                         </td>
                         <td className="px-4 py-2 text-end text-primary-900 font-semibold tabular-nums">
-                          {formatNumber(row.bookings, locale)}
+                          {formatDzd(row.bookings, locale)}
                         </td>
                       </tr>
                     ))}
@@ -610,11 +624,13 @@ export default function DashboardClient({
                     />
                     <YAxis
                       orientation={isRtl ? "right" : "left"}
-                      tickFormatter={(v: number) => formatNumber(v, locale)}
+                      tickFormatter={(v: number) =>
+                        new Intl.NumberFormat(intlLocale(locale), { notation: "compact" }).format(v)
+                      }
                       tick={{ fontSize: 12, fill: "#3A63A3" }}
                       axisLine={false}
                       tickLine={false}
-                      width={44}
+                      width={52}
                     />
                     <RechartsTooltip
                       cursor={{
@@ -633,13 +649,7 @@ export default function DashboardClient({
                                 {payload[0].payload.day}
                               </span>
                               <span className="text-primary-600 font-medium tabular-nums">
-                                {t("chartTooltipBookings", {
-                                  count: Number(payload[0].value),
-                                  value: formatNumber(
-                                    Number(payload[0].value),
-                                    locale,
-                                  ),
-                                })}
+                                {formatDzd(Number(payload[0].value), locale)}
                               </span>
                             </div>
                           );
@@ -674,10 +684,10 @@ export default function DashboardClient({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-title font-semibold text-primary-900">
-                  {t("chartWilayasTitle")}
+                  {t("chartWilayasTitleNeutral")}
                 </h3>
                 <p className="text-xs text-primary-500 mt-0.5">
-                  {t("chartWilayasSubtitle")}
+                  {t("chartWilayasSubtitle30d")}
                 </p>
               </div>
 
@@ -695,7 +705,11 @@ export default function DashboardClient({
               </button>
             </div>
 
-            {showWilayasTable ? (
+            {top5Wilayas.length === 0 ? (
+              <p className="text-sm text-primary-500 py-10 text-center">
+                {charts.available ? t("noChartData") : t("loadError")}
+              </p>
+            ) : showWilayasTable ? (
               /* Accessible Data Table alternative */
               <div className="rounded-xl overflow-hidden text-xs ring-1 ring-inset ring-primary/[0.06]">
                 <table className="w-full text-start">
@@ -740,7 +754,7 @@ export default function DashboardClient({
                           {w.name}
                         </span>
                         <span className="font-semibold text-primary-900 tabular-nums whitespace-nowrap">
-                          {t("staysCount", {
+                          {t("chartTooltipBookings", {
                             count: w.bookings,
                             value: formatNumber(w.bookings, locale),
                           })}
@@ -821,41 +835,13 @@ export default function DashboardClient({
                 <span>{t("tiersTitle")}</span>
               </h4>
 
+              {!charts.available ? (
+                <p className="text-xs text-primary-500">{t("loadError")}</p>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {(
-                  [
-                    {
-                      type: "individual",
-                      volume: 1120000,
-                      commission: 134400,
-                      rate: 12,
-                      count: 64,
-                    },
-                    {
-                      type: "agency",
-                      volume: 680000,
-                      commission: 102000,
-                      rate: 15,
-                      count: 32,
-                    },
-                    {
-                      type: "hotel",
-                      volume: 490000,
-                      commission: 88200,
-                      rate: 18,
-                      count: 22,
-                    },
-                    {
-                      type: "hostel",
-                      volume: 160000,
-                      commission: 16000,
-                      rate: 10,
-                      count: 10,
-                    },
-                  ] as const
-                ).map((tier, i) => (
+                {tiers.map((tier) => (
                   <div
-                    key={i}
+                    key={tier.type}
                     className="p-3.5 rounded-2xl bg-white shadow-e1 space-y-1.5 text-xs text-start"
                   >
                     <span className="font-semibold text-primary-900 block">
@@ -863,21 +849,8 @@ export default function DashboardClient({
                     </span>
                     <div className="text-xs text-primary-600 space-y-0.5">
                       <p>
-                        {t.rich("tier.total", {
-                          value: formatDzd(tier.volume, locale),
-                          b: (chunks) => (
-                            <strong className="text-primary-900">
-                              {chunks}
-                            </strong>
-                          ),
-                        })}
-                      </p>
-                      <p>
                         {t.rich("tier.darna", {
-                          value: t("tier.commissionValue", {
-                            amount: formatDzd(tier.commission, locale),
-                            rate: formatNumber(tier.rate, locale),
-                          }),
+                          value: formatDzd(tier.commission, locale),
                           b: (chunks) => (
                             <strong className="text-primary">{chunks}</strong>
                           ),
@@ -897,19 +870,20 @@ export default function DashboardClient({
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
-            {/* Breakdown 2: Stay Metrics */}
+            {/* Breakdown 2: Stay Metrics (selected period) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="p-4 rounded-2xl bg-white text-start space-y-1 shadow-e1">
                 <span className="text-xs font-medium text-primary-600">
                   {getPlainTerm("occupancy", locale)}
                 </span>
-                <div className="text-[1.75rem] leading-tight font-serif text-primary-900 tabular-nums">
-                  {percentFormatter.format(0.784)}
+                <div className="text-[1.75rem] leading-tight font-serif text-primary-400">
+                  {t("notAvailable")}
                 </div>
                 <p className="text-xs text-primary-500">
-                  {getDefinition("occupancy", locale)}
+                  {t("occupancyUnavailable")}
                 </p>
               </div>
 
@@ -918,7 +892,9 @@ export default function DashboardClient({
                   {getPlainTerm("cancellationRate", locale)}
                 </span>
                 <div className="text-[1.75rem] leading-tight font-serif text-primary-900 tabular-nums">
-                  {percentFormatter.format(0.048)}
+                  {kpisMissing
+                    ? "-"
+                    : percentFormatter.format(kpis.cancellationRatePercent.value / 100)}
                 </div>
                 <p className="text-xs text-primary-500">
                   {getDefinition("cancellationRate", locale)}
@@ -930,10 +906,14 @@ export default function DashboardClient({
                   {t("avgResponseTitle")}
                 </span>
                 <div className="text-[1.75rem] leading-tight font-serif text-primary-900 tabular-nums">
-                  {t("avgResponseValue", { minutes: formatNumber(24, locale) })}
+                  {kpisMissing
+                    ? "-"
+                    : kpis.responseTimeMinutes
+                      ? t("avgResponseValue", { minutes: formatNumber(kpis.responseTimeMinutes.value, locale) })
+                      : t("notAvailable")}
                 </div>
                 <p className="text-xs text-primary-500">
-                  {t("avgResponseHint")}
+                  {kpis.responseTimeMinutes || kpisMissing ? t("avgResponseHint") : t("responseNoData")}
                 </p>
               </div>
             </div>

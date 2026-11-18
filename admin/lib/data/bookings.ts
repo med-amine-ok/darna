@@ -1,17 +1,21 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import { Booking, PaginatedResult, AdminActor, DisputeOutcome } from "@/lib/types";
-import { assertCan } from "@/lib/permissions";
-import { canCancelBooking, canTransitionBooking, refundableAmount, isValidReason } from "@/lib/domain/transitions";
-import { toCsv, type CsvExport } from "@/lib/utils/csv";
-import { logAudit, logExport } from "./audit";
-import { appendLedgerEntry } from "./ledger";
-import { DomainError, ValidationError } from "./errors";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { api, apiAll, apiOrNull, newIdempotencyKey, totalOf } from "@/lib/api/client";
+import { filterValue, logReadError, moneyInput, write } from "@/lib/api/mapping";
+import { hasOpenDispute, matchesVertical, toBooking, type ApiAdminBooking } from "@/lib/api/bookings";
+import type { Booking, PaginatedResult, AdminActor, DisputeOutcome } from "@/lib/types";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { logExport } from "./audit";
+
+/**
+ * Admin bookings, read from and written to the Django API
+ * (/admin/bookings, /admin/bookings/{id}, cancel, refunds, dispute/resolve).
+ * Permissions are checked by lib/actions (runAction) and again by the backend.
+ */
 
 export interface BookingFilterParams {
+  /** Only bookings of this listing (sent to the API as ?listing=). */
+  listingId?: string;
   status?: string; // "all" | BookingStatus
   vertical?: string;
   hostType?: string;
@@ -26,128 +30,172 @@ export interface BookingFilterParams {
   pageSize?: number;
 }
 
-function filterBookings(params: BookingFilterParams): Booking[] {
-  let filtered = [...store.bookings];
+/** Most rows read when a filter the API does not offer must be applied here. */
+const LOCAL_SCAN_PAGES = 20; // 20 x 50 = 1,000 bookings
 
-  // 1. Status Filter
-  if (params.status && params.status !== "all") {
-    filtered = filtered.filter((b) => b.status === params.status);
+/** Backend statuses behind one admin status (declined and expired show as cancelled). */
+function apiStatusFilter(status: string | undefined): string | undefined {
+  switch (status) {
+    case "pending":
+    case "confirmed":
+    case "completed":
+      return status;
+    case "cancelled":
+      return "cancelled,declined,expired";
+    default:
+      return undefined;
   }
-
-  // 2. Vertical
-  if (params.vertical && params.vertical !== "all") {
-    filtered = filtered.filter((b) => b.vertical === params.vertical);
-  }
-
-  // 3. Host Type
-  if (params.hostType && params.hostType !== "all") {
-    filtered = filtered.filter((b) => b.hostType === params.hostType);
-  }
-
-  // 4. Wilaya
-  if (params.wilayaCode && params.wilayaCode !== "all") {
-    filtered = filtered.filter((b) => b.wilayaCode === params.wilayaCode);
-  }
-
-  // 5. Payment Status & Approval Mode
-  if (params.paymentStatus && params.paymentStatus !== "all") {
-    filtered = filtered.filter((b) => b.paymentStatus === params.paymentStatus);
-  }
-  if (params.approvalMode && params.approvalMode !== "all") {
-    filtered = filtered.filter((b) => b.approvalMode === params.approvalMode);
-  }
-
-  // 6. Search
-  if (params.search?.trim()) {
-    const q = params.search.toLowerCase();
-    filtered = filtered.filter((b) => {
-      const matchRef = b.reference.toLowerCase().includes(q);
-      const matchGuest = b.guestName.toLowerCase().includes(q);
-      const matchHost = b.hostName.toLowerCase().includes(q);
-      const matchListing = b.listingTitle.toLowerCase().includes(q);
-      return matchRef || matchGuest || matchHost || matchListing;
-    });
-  }
-
-  // 7. Saved view: Pending Host Approval > 24h
-  if (params.pendingOver24h) {
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    filtered = filtered.filter(
-      (b) => b.status === "pending" && new Date(b.createdAt).getTime() < oneDayAgo
-    );
-  }
-
-  // Sorting
-  const sortBy = params.sortBy || "created";
-  const order = params.sortOrder === "asc" ? 1 : -1;
-
-  filtered.sort((a, b) => {
-    if (sortBy === "amount") return (a.totalAmountDzd - b.totalAmountDzd) * order;
-    if (sortBy === "checkIn") return (new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime()) * order;
-    return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * order;
-  });
-
-  return filtered;
 }
 
-export async function listBookings(
-  params: BookingFilterParams = {}
-): Promise<PaginatedResult<Booking>> {
-  await delay(190);
+const REFERENCE_RE = /^[A-Z]{2,5}-[0-9A-Z-]{4,}$/i;
 
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 12;
+/** True when the filters can be answered by one page of the API. */
+function serverSide(params: BookingFilterParams): boolean {
+  const status = filterValue(params.status);
+  const search = params.search?.trim();
+  return (
+    !filterValue(params.vertical) &&
+    !filterValue(params.hostType) &&
+    !filterValue(params.wilayaCode) &&
+    !filterValue(params.paymentStatus) &&
+    !filterValue(params.approvalMode) &&
+    !params.pendingOver24h &&
+    status !== "disputed" &&
+    status !== "refunded" &&
+    (!search || REFERENCE_RE.test(search)) &&
+    (params.sortBy ?? "created") === "created" &&
+    params.sortOrder !== "asc"
+  );
+}
 
-  const filtered = filterBookings(params);
-
-  // Facets
-  const facets: Record<string, Record<string, number>> = {
-    status: {
-      all: store.bookings.length,
-      confirmed: store.bookings.filter((b) => b.status === "confirmed").length,
-      completed: store.bookings.filter((b) => b.status === "completed").length,
-      pending: store.bookings.filter((b) => b.status === "pending").length,
-      cancelled: store.bookings.filter((b) => b.status === "cancelled").length,
-      disputed: store.bookings.filter((b) => b.status === "disputed").length,
-      refunded: store.bookings.filter((b) => b.status === "refunded").length,
-    },
-    vertical: {
-      all: store.bookings.length,
-      home: store.bookings.filter((b) => b.vertical === "home").length,
-      hotel: store.bookings.filter((b) => b.vertical === "hotel").length,
-      experience: store.bookings.filter((b) => b.vertical === "experience").length,
-      vehicle: store.bookings.filter((b) => b.vertical === "vehicle").length,
-      trip: store.bookings.filter((b) => b.vertical === "trip").length,
-    },
-  };
-
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
-
+function baseQuery(params: BookingFilterParams) {
+  const search = params.search?.trim();
   return {
-    rows,
-    total,
-    page,
-    pageSize,
-    totalPages,
-    facets,
+    status: apiStatusFilter(filterValue(params.status)),
+    reference: search && REFERENCE_RE.test(search) ? search : undefined,
+    listing: params.listingId || undefined,
   };
+}
+
+function applyLocalFilters(rows: ApiAdminBooking[], params: BookingFilterParams): Booking[] {
+  const status = filterValue(params.status);
+  const vertical = filterValue(params.vertical);
+  const hostType = filterValue(params.hostType);
+  const paymentStatus = filterValue(params.paymentStatus);
+  const approvalMode = filterValue(params.approvalMode);
+  const q = params.search?.trim().toLowerCase();
+  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+  let out = rows
+    .filter((raw) => !vertical || matchesVertical(raw, vertical))
+    .filter((raw) => status !== "disputed" || hasOpenDispute(raw))
+    .map(toBooking);
+  if (status) out = out.filter((b) => b.status === status);
+  if (hostType) out = out.filter((b) => b.hostType === hostType);
+  if (paymentStatus) out = out.filter((b) => b.paymentStatus === paymentStatus);
+  if (approvalMode) out = out.filter((b) => b.approvalMode === approvalMode);
+  // The API has no wilaya on bookings: a wilaya filter can only match nothing.
+  if (filterValue(params.wilayaCode)) out = out.filter((b) => b.wilayaCode === params.wilayaCode);
+  if (q) {
+    out = out.filter(
+      (b) =>
+        b.reference.toLowerCase().includes(q) ||
+        b.guestName.toLowerCase().includes(q) ||
+        b.hostName.toLowerCase().includes(q) ||
+        b.listingTitle.toLowerCase().includes(q)
+    );
+  }
+  if (params.pendingOver24h) {
+    out = out.filter((b) => b.status === "pending" && Date.parse(b.createdAt) < dayAgo);
+  }
+
+  const sortBy = params.sortBy || "created";
+  const order = params.sortOrder === "asc" ? 1 : -1;
+  out.sort((a, b) => {
+    if (sortBy === "amount") return (a.totalAmountDzd - b.totalAmountDzd) * order;
+    if (sortBy === "checkIn") return (Date.parse(a.checkInDate) - Date.parse(b.checkInDate)) * order;
+    return (Date.parse(a.createdAt) - Date.parse(b.createdAt)) * order;
+  });
+  return out;
+}
+
+/** Every booking matching the filters (up to LOCAL_SCAN_PAGES pages of the API). */
+async function scanBookings(params: BookingFilterParams): Promise<Booking[]> {
+  const raw = await apiAll<ApiAdminBooking>("/admin/bookings", { query: baseQuery(params) }, LOCAL_SCAN_PAGES);
+  return applyLocalFilters(raw, params);
+}
+
+/** Status counts for the tabs: one tiny request per backend status. */
+async function statusFacets(): Promise<Record<string, number>> {
+  const count = async (status?: string) =>
+    totalOf(await api<unknown>("/admin/bookings", { query: { status, page_size: 1 } }));
+  const [all, pending, confirmed, completed, cancelled] = await Promise.all([
+    count(),
+    count("pending"),
+    count("confirmed"),
+    count("completed"),
+    count("cancelled,declined,expired"),
+  ]);
+  return { all, pending, confirmed, completed, cancelled };
+}
+
+export async function listBookings(params: BookingFilterParams = {}): Promise<PaginatedResult<Booking>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 12));
+  try {
+    const facetsPromise = statusFacets().catch((error) => {
+      logReadError("bookings facets", error);
+      return {} as Record<string, number>;
+    });
+
+    let result: PaginatedResult<Booking>;
+    if (serverSide(params)) {
+      const answer = await api<{ count: number; results: ApiAdminBooking[] }>("/admin/bookings", {
+        query: { ...baseQuery(params), page, page_size: pageSize },
+      });
+      const total = totalOf(answer);
+      result = {
+        rows: (answer?.results ?? []).map(toBooking),
+        total,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      };
+    } else {
+      const all = await scanBookings(params);
+      result = {
+        rows: all.slice((page - 1) * pageSize, page * pageSize),
+        total: all.length,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(all.length / pageSize)),
+      };
+    }
+    const status = await facetsPromise;
+    return { ...result, facets: { status } };
+  } catch (error) {
+    logReadError("listBookings", error);
+    throw error; // the screen shows its error toast and empty table
+  }
 }
 
 export async function getBookingById(id: string): Promise<Booking | null> {
-  await delay(150);
-  const booking = store.bookings.find((b) => b.id === id);
-  return booking ? { ...booking } : null;
+  try {
+    const raw = await apiOrNull<ApiAdminBooking>(`/admin/bookings/${encodeURIComponent(id)}`);
+    return raw ? toBooking(raw) : null;
+  } catch (error) {
+    logReadError("getBookingById", error);
+    return null;
+  }
 }
 
 export async function exportBookings(params: BookingFilterParams, actor: AdminActor): Promise<CsvExport> {
-  const rows = filterBookings(params);
+  const rows = await write(() => scanBookings(params));
   const csv = toCsv(
-    ["Reference", "Status", "Payment Status", "Vertical", "Listing", "Host", "Guest", "Guest Email", "Wilaya", "Check-in", "Check-out", "Nights", "Base (DZD)", "Service Fee (DZD)", "Total (DZD)", "Commission (DZD)", "Host Payout (DZD)", "Refunded (DZD)", "Created"],
+    ["Reference", "Status", "Backend Status", "Vertical", "Listing", "Host", "Guest", "Check-in", "Check-out", "Nights", "Subtotal (DZD)", "Fees (DZD)", "Total (DZD)", "Commission (DZD)", "Host Share (DZD)", "Refund Owed (DZD)", "Created"],
     rows.map((b) => [
-      b.reference, b.status, b.paymentStatus, b.vertical, b.listingTitle, b.hostName, b.guestName, b.guestEmail,
-      b.wilayaCode, b.checkInDate, b.checkOutDate, b.nightsCount, b.basePriceDzd, b.serviceFeeDzd, b.totalAmountDzd,
+      b.reference, b.status, b.apiStatus, b.vertical, b.listingTitle, b.hostName, b.guestName,
+      b.checkInDate, b.checkOutDate, b.nightsCount, b.basePriceDzd, b.serviceFeeDzd, b.totalAmountDzd,
       b.commissionAmountDzd, b.hostPayoutDzd, b.refundedAmountDzd ?? 0, b.createdAt,
     ])
   );
@@ -155,192 +203,51 @@ export async function exportBookings(params: BookingFilterParams, actor: AdminAc
   return { filename: `darna_bookings_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
 }
 
-function findBooking(id: string): number {
-  const idx = store.bookings.findIndex((b) => b.id === id);
-  if (idx === -1) throw new DomainError("Booking not found");
-  return idx;
-}
+const bookingPath = (id: string) => `/admin/bookings/${encodeURIComponent(id)}`;
 
-/** pending | confirmed → cancelled. Completed / cancelled / refunded bookings can't be cancelled. */
-export async function cancelBooking(
-  id: string,
-  reason: string,
-  actor: AdminActor
-): Promise<Booking> {
-  assertCan(actor.role, "bookings.cancel");
-  if (!isValidReason(reason)) throw new ValidationError("A cancellation reason is required");
-  await delay(200);
-
-  const idx = findBooking(id);
-  const prev = { ...store.bookings[idx] };
-  if (!canCancelBooking(prev)) {
-    throw new DomainError(`A ${prev.status} booking cannot be cancelled`);
-  }
-  store.bookings[idx] = {
-    ...prev,
-    status: "cancelled",
-    cancelledAt: new Date().toISOString(),
-    adminNotes: [...prev.adminNotes, `Admin cancelled: ${reason}`],
-  };
-
-  await logAudit(
-    actor,
-    "BOOKING_CANCEL",
-    "booking",
-    id,
-    `Admin cancelled booking ${prev.reference}: ${reason}`,
-    { status: prev.status },
-    { status: "cancelled" }
+/** pending | confirmed -> cancelled. A confirmed booking gets its whole total owed back by default. */
+export async function cancelBooking(id: string, reason: string, _actor: AdminActor): Promise<Booking> {
+  const raw = await write(() =>
+    api<ApiAdminBooking>(`${bookingPath(id)}/cancel`, {
+      method: "POST",
+      body: { reason },
+      idempotencyKey: newIdempotencyKey(),
+    })
   );
-
-  return { ...store.bookings[idx] };
+  return toBooking(raw);
 }
 
-/**
- * Applies a refund to booking `idx` (no await inside, so it is atomic in the
- * single-threaded mock): validates 0 < amount <= total - refundedSoFar
- * (integer DZD), updates refundedAmountDzd / paymentStatus / status, and
- * writes a `booking_refund` ledger entry clawing back the host share.
- */
-function applyRefund(idx: number, amount: number, note: string, actor: AdminActor): { prev: Booking; next: Booking } {
-  const prev = { ...store.bookings[idx] };
-  const remaining = refundableAmount(prev);
-  if (remaining <= 0) {
-    throw new DomainError(`Booking ${prev.reference} is not refundable (status ${prev.status}, payment ${prev.paymentStatus})`);
-  }
-  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
-    throw new ValidationError("Refund amount must be a positive whole number of DZD");
-  }
-  if (amount > remaining) {
-    throw new DomainError(`Refund of ${amount} DZD exceeds the refundable balance of ${remaining} DZD`);
-  }
-
-  const refundedAmountDzd = (prev.refundedAmountDzd ?? 0) + amount;
-  const full = refundedAmountDzd >= prev.totalAmountDzd;
-  if (full && !canTransitionBooking(prev.status, "refunded")) {
-    throw new DomainError(`A ${prev.status} booking cannot move to refunded`);
-  }
-  const now = new Date().toISOString();
-
-  // Host share of the refunded amount (the host payout is a share of the total paid).
-  const hostShare = prev.totalAmountDzd > 0 ? Math.round((amount * prev.hostPayoutDzd) / prev.totalAmountDzd) : 0;
-  const host = store.hosts.find((h) => h.id === prev.hostId);
-  if (host && hostShare > 0) {
-    appendLedgerEntry({
-      host,
-      type: "booking_refund",
-      amount: -hostShare,
-      description: `Refund ${amount} DZD to guest on ${prev.reference} (host share): ${note}`,
-      bookingRef: prev.reference,
-      adminActor: actor.name,
-    });
-  }
-
-  const next: Booking = {
-    ...prev,
-    status: full ? "refunded" : prev.status,
-    paymentStatus: full ? "refunded" : "partially_refunded",
-    refundedAmountDzd,
-    refundedAt: now,
-    adminNotes: [...prev.adminNotes, `Refund of ${amount} DZD issued: ${note}`],
-  };
-  store.bookings[idx] = next;
-  return { prev, next };
-}
-
-export async function refundBooking(
-  id: string,
-  amount: number,
-  reason: string,
-  actor: AdminActor
-): Promise<Booking> {
-  assertCan(actor.role, "bookings.refund");
-  if (!isValidReason(reason)) throw new ValidationError("A refund reason is required");
-  await delay(200);
-
-  const idx = findBooking(id);
-  const { prev, next } = applyRefund(idx, amount, reason, actor);
-
-  await logAudit(
-    actor,
-    next.status === "refunded" ? "BOOKING_REFUND" : "BOOKING_PARTIAL_REFUND",
-    "booking",
-    id,
-    `Issued refund of ${amount} DZD for booking ${prev.reference}: ${reason}`,
-    { status: prev.status, paymentStatus: prev.paymentStatus, refundedAmountDzd: prev.refundedAmountDzd ?? 0 },
-    { status: next.status, paymentStatus: next.paymentStatus, refundedAmountDzd: next.refundedAmountDzd }
+/** Full or partial refund owed by the host (BR-CAN-04). Amount in DZD, sent as centimes. */
+export async function refundBooking(id: string, amount: number, reason: string, _actor: AdminActor): Promise<Booking> {
+  const raw = await write(() =>
+    api<ApiAdminBooking>(`${bookingPath(id)}/refunds`, {
+      method: "POST",
+      body: { amount: moneyInput(amount), reason },
+      idempotencyKey: newIdempotencyKey(),
+    })
   );
-
-  return { ...next };
+  return toBooking(raw);
 }
 
-/**
- * disputed -> resolution:
- *  - refund_full:    refund the whole remaining amount -> refunded
- *  - refund_partial: refund `amount` (0 < amount < remaining) -> back to its
- *                    lifecycle status (completed if check-out passed, else confirmed)
- *  - declined:       no refund -> back to its lifecycle status
- */
+/** Closes the open dispute of a booking (BR-CAN-05). */
 export async function resolveDispute(
   id: string,
   outcome: DisputeOutcome,
   note: string,
-  actor: AdminActor,
+  _actor: AdminActor,
   amount?: number
 ): Promise<Booking> {
-  assertCan(actor.role, "bookings.dispute");
-  if (outcome !== "declined") assertCan(actor.role, "bookings.refund");
-  if (!isValidReason(note)) throw new ValidationError("A resolution note is required");
-  await delay(200);
-
-  const idx = findBooking(id);
-  const before = { ...store.bookings[idx] };
-  if (before.status !== "disputed") {
-    throw new DomainError(`Booking ${before.reference} is not under dispute (status ${before.status})`);
-  }
-
-  const lifecycleStatus: Booking["status"] =
-    new Date(before.checkOutDate).getTime() < Date.now() ? "completed" : "confirmed";
-
-  let refundAmountDzd = 0;
-  if (outcome === "refund_full") {
-    refundAmountDzd = refundableAmount(before);
-    if (refundAmountDzd <= 0) throw new DomainError("Nothing left to refund on this booking");
-    applyRefund(idx, refundAmountDzd, `Dispute resolved (full refund): ${note}`, actor);
-  } else if (outcome === "refund_partial") {
-    const remaining = refundableAmount(before);
-    if (amount === undefined) throw new ValidationError("A partial refund amount is required");
-    if (amount >= remaining) {
-      throw new DomainError(`A partial refund must be lower than the refundable balance of ${remaining} DZD; use a full refund instead`);
-    }
-    refundAmountDzd = amount;
-    applyRefund(idx, amount, `Dispute resolved (partial refund): ${note}`, actor);
-  }
-
-  const current = store.bookings[idx];
-  const finalStatus: Booking["status"] = outcome === "refund_full" ? "refunded" : lifecycleStatus;
-  store.bookings[idx] = {
-    ...current,
-    status: finalStatus,
-    disputeResolution: {
-      outcome,
-      refundAmountDzd,
-      note,
-      resolvedAt: new Date().toISOString(),
-      resolvedBy: actor.name,
-    },
-    adminNotes: [...current.adminNotes, `Dispute ${outcome === "declined" ? "declined" : "resolved"}: ${note}`],
-  };
-
-  await logAudit(
-    actor,
-    outcome === "declined" ? "BOOKING_DISPUTE_DECLINED" : "BOOKING_DISPUTE_RESOLVED",
-    "booking",
-    id,
-    `Dispute on ${before.reference} -> ${outcome}${refundAmountDzd ? ` (${refundAmountDzd} DZD refunded)` : ""}: ${note}`,
-    { status: before.status, refundedAmountDzd: before.refundedAmountDzd ?? 0 },
-    { status: finalStatus, outcome, refundedAmountDzd: store.bookings[idx].refundedAmountDzd ?? 0 }
+  const raw = await write(() =>
+    api<ApiAdminBooking>(`${bookingPath(id)}/dispute/resolve`, {
+      method: "POST",
+      body: {
+        outcome,
+        note,
+        refund_amount: outcome === "refund_partial" && amount ? moneyInput(amount) : null,
+      },
+      idempotencyKey: newIdempotencyKey(),
+    })
   );
-
-  return { ...store.bookings[idx] };
+  return toBooking(raw);
 }
+

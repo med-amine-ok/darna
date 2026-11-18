@@ -114,5 +114,7 @@
     "shared_kitchen": "Cuisine partagée",
     "laundry": "Laverie",
     "desert_tours": "Sorties dans le désert"
-  }
+  },
+  "linkCopied": "Lien de la page copié.",
+  "copyFailed": "Le lien n'a pas pu être copié."
 }

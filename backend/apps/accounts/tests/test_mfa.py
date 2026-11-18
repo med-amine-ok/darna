@@ -9,6 +9,12 @@ from apps.accounts.tests.conftest import enrol, totp_code
 from conftest import make_user
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def _staff_mfa_on(settings):
+    """These tests cover the staff authenticator step, so they run with it switched on."""
+    settings.STAFF_MFA_REQUIRED = True
 PASSWORD = "Str0ng-pass-123"
 
 

@@ -42,7 +42,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { listListings, approveListing, updateListingStatus } from "@/lib/actions/listings";
 import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
 import { formatDate, formatDzd, intlLocale } from "@/lib/utils/format";
-import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
@@ -53,8 +52,10 @@ import { TRIP_TYPES, tripTypeLabel } from "@/lib/catalog-types";
 const SPLIT_HIDDEN_COLUMNS = ["id", "destination", "departure", "duration"];
 
 
-// Mock schedule shown until trips carry real departure data.
-const MOCK_DEPARTURE = "2024-11-15";
+/** Trip fields carried in Listing.specs by the API mapper (lib/api/trips.ts). */
+type TripSpecs = { durationDays?: number; groupMax?: number; nextDeparture?: string | null; inclusions?: string[] };
+const tripSpecs = (l: Listing): TripSpecs => (l.specs ?? {}) as TripSpecs;
+const NOT_SET = "-";
 
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
@@ -163,23 +164,24 @@ export default function TripsListClient() {
   const formatRating = (rating: number) =>
     new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
 
-  const formatTime = (hour: number, minute: number) =>
-    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(
-      new Date(2000, 0, 1, hour, minute)
-    );
-
-  const departureLabel = formatDate(MOCK_DEPARTURE, locale);
-  const durationLabel = t("duration", { days: 5, nights: 4 });
+  const departureLabel = (trip: Listing) => {
+    const next = tripSpecs(trip).nextDeparture;
+    return next ? formatDate(next, locale) : NOT_SET;
+  };
+  const durationLabel = (trip: Listing) => {
+    const days = tripSpecs(trip).durationDays;
+    return days ? t("duration", { days, nights: Math.max(0, days - 1) }) : NOT_SET;
+  };
 
   // KPI Strip (Mockup 02: 156 Tous · 98 Publiés · 24 En attente · 12 Suspendus · 8 Refusés · 14 Brouillons)
   const statusFacets = facets["status"] || {};
-  const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
+  const totalCount = statusFacets.all ?? total;
 
   const kpis: KpiCardItem[] = [
     {
       id: "all",
       label: t("kpi.total"),
-      value: totalCount || 156,
+      value: totalCount,
       icon: <Plane className="w-5 h-5" />,
       colorVariant: "neutral",
     },
@@ -277,17 +279,17 @@ export default function TripsListClient() {
     {
       key: "departure",
       header: t("columns.departure"),
-      render: () => (
+      render: (row) => (
         <div className="text-xs text-primary-800 flex items-center gap-1 whitespace-nowrap tabular-nums">
           <Calendar className="w-3.5 h-3.5 text-primary-500" aria-hidden="true" />
-          <span>{departureLabel}</span>
+          <span>{departureLabel(row)}</span>
         </div>
       ),
     },
     {
       key: "duration",
       header: t("columns.duration"),
-      render: () => <span className="text-xs text-primary">{durationLabel}</span>,
+      render: (row) => <span className="text-xs text-primary">{durationLabel(row)}</span>,
     },
     {
       key: "price",
@@ -663,14 +665,16 @@ export default function TripsListClient() {
                         {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoTile label={t("about.departureDate")} value={departureLabel} />
-                        <InfoTile label={t("about.duration")} value={durationLabel} />
-                        <InfoTile label={t("about.maxGroup")} value={t("about.maxPeople", { count: 12 })} />
-                        <InfoTile label={t("about.difficulty")} value={t("about.difficultyModerate")} />
+                        <InfoTile label={t("about.departureDate")} value={departureLabel(selectedTrip)} />
+                        <InfoTile label={t("about.duration")} value={durationLabel(selectedTrip)} />
+                        <InfoTile
+                          label={t("about.maxGroup")}
+                          value={tripSpecs(selectedTrip).groupMax ? t("about.maxPeople", { count: tripSpecs(selectedTrip).groupMax! }) : NOT_SET}
+                        />
                       </div>
                     </div>
 
-                    {/* Price & Discounts Section */}
+                    {/* Price Section */}
                     <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2.5">
                       <div className="text-xs font-semibold text-primary flex items-center justify-between">
                         <span>{t("pricing.title")}</span>
@@ -679,51 +683,17 @@ export default function TripsListClient() {
                           <span className="text-[11px] text-primary-600">{t("pricing.perPerson")}</span>
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.earlyBird")}</span>
-                          <span className="font-medium text-secondary-700">
-                            {t("pricing.discountValue", { percent: DISCOUNTS.group, price: formatDzd(applyDiscount(selectedTrip.price, DISCOUNTS.group), locale) })}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.commission")}</span>
-                          <span className="font-medium text-secondary-700">{t("pricing.commissionIncluded", { rate: 12 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.deposit")}</span>
-                          <span className="font-medium text-primary">{t("pricing.depositValue", { percent: 30 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.cancellation")}</span>
-                          <span className="font-medium text-primary">{t("pricing.cancellationValue", { days: 7 })}</span>
-                        </div>
-                      </div>
                     </div>
 
-                    {/* Time & Schedule Section */}
+                    {/* Meeting point */}
                     <div className="bg-darnaBg-100 p-3.5 rounded-xl space-y-2">
                       <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-secondary" aria-hidden="true" />
                         <span>{t("schedule.title")}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.gathering")}</span>
-                          <span className="font-medium text-primary">{t("schedule.gatheringValue", { time: formatTime(7, 30) })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.return")}</span>
-                          <span className="font-medium text-primary">{t("schedule.returnValue", { time: formatTime(18, 0) })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.dailyWalk")}</span>
-                          <span className="font-medium text-primary">{t("schedule.dailyWalkValue", { min: 3, max: 4 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.meetingPoint")}</span>
-                          <span className="font-medium text-secondary-700">{t("schedule.meetingPointValue", { city: selectedTrip.city })}</span>
-                        </div>
+                      <div className="text-[11px]">
+                        <span className="text-primary-600 block">{t("schedule.meetingPoint")}</span>
+                        <span className="font-medium text-secondary-700">{selectedTrip.address || NOT_SET}</span>
                       </div>
                     </div>
 
@@ -732,24 +702,23 @@ export default function TripsListClient() {
                         {t("agency.title")}
                       </div>
                       <div className="text-sm font-medium text-primary">{selectedTrip.hostName}</div>
-                      <div className="text-xs text-secondary-700 flex items-center gap-1 mt-0.5">
-                        <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t("agency.licensed")}
-                      </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
-                        {t("highlights.title")}
-                      </h4>
-                      <ul className="space-y-1.5 text-xs text-primary">
-                        {(["bivouac", "fullBoard", "transport"] as const).map((key) => (
-                          <li key={key} className="flex items-center gap-2">
-                            <Check className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
-                            <span>{t(`highlights.${key}`)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {(tripSpecs(selectedTrip).inclusions ?? []).length > 0 && (
+                      <div>
+                        <h4 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-500 mb-1.5">
+                          {t("highlights.title")}
+                        </h4>
+                        <ul className="space-y-1.5 text-xs text-primary">
+                          {(tripSpecs(selectedTrip).inclusions ?? []).map((item) => (
+                            <li key={item} className="flex items-center gap-2">
+                              <Check className="w-3.5 h-3.5 text-secondary" aria-hidden="true" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                     {/* Description Section */}
                     <div>

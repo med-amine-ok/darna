@@ -29,6 +29,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { formatDzd, formatDate, formatNumber } from "@/lib/utils/format";
+import { Link } from "@/navigation";
 
 export interface PromotionsClientProps {
   locale: string;
@@ -41,12 +42,6 @@ const FOCUS_RING =
 const FIELD =
   "w-full rounded-xl bg-white border border-primary/[0.12] p-2.5 text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
 
-// Mock featured placements (titles are listing data; labels are translated at render time).
-const FEATURED_PLACEMENTS = [
-  { id: "f1", title: "Villa Hydra avec piscine", badgeKey: "featured", placeKey: "homeHeader", until: "2024-04-30", clicks: 1240 },
-  { id: "f2", title: "Circuit Tassili & Djanet 7J", badgeKey: "favorite", placeKey: "tours", until: "2024-05-15", clicks: 890 },
-  { id: "f3", title: "Hyundai Tucson 2023", badgeKey: "topRenter", placeKey: "carsCarousel", until: "2024-04-20", clicks: 640 },
-] as const;
 
 export default function PromotionsClient({
   locale,
@@ -74,6 +69,7 @@ export default function PromotionsClient({
   const [promoToDelete, setPromoToDelete] = useState<PromotionCoupon | null>(null);
 
   const { success, error, info } = useToast();
+
   const can = useCan();
   const canManage = can("promotions.manage");
 
@@ -98,7 +94,7 @@ export default function PromotionsClient({
 
   const handleToggle = async (p: PromotionCoupon) => {
     try {
-      const updated = unwrap(await togglePromotionStatus(p.id));
+      const updated = unwrap(await togglePromotionStatus(p.id, p.isActive === undefined ? undefined : !p.isActive));
       success(
         t("toast.statusUpdated"),
         t("toast.statusUpdatedDesc", { code: p.code, status: statusLabel(updated.status) })
@@ -125,7 +121,8 @@ export default function PromotionsClient({
           minSpendDzd: minSpend,
           maxUses,
           status: "active",
-          expiresAt: new Date(expiresAt).toISOString(),
+          // End of the chosen day, local time.
+          expiresAt: expiresAt ? new Date(`${expiresAt}T23:59:59`).toISOString() : undefined,
         }
       ));
       success(t("toast.created"));
@@ -181,15 +178,6 @@ export default function PromotionsClient({
       colorVariant: "tertiary" as const,
       active: false,
     },
-    {
-      id: "featured",
-      label: t("kpi.featured"),
-      value: 12,
-      icon: Flame,
-      colorVariant: "accent" as const,
-      active: activeTab === "featured",
-      onClick: () => setActiveTab("featured"),
-    },
   ];
 
   return (
@@ -212,7 +200,7 @@ export default function PromotionsClient({
       <Tabs
         items={[
           { id: "coupons", label: t("tabCoupons"), count: promotions.length, icon: <Tag className="w-4 h-4" aria-hidden="true" /> },
-          { id: "featured", label: t("tabFeatured"), count: 12, icon: <Flame className="w-4 h-4" aria-hidden="true" /> },
+          { id: "featured", label: t("tabFeatured"), icon: <Flame className="w-4 h-4" aria-hidden="true" /> },
         ]}
         activeId={activeTab}
         onChange={setActiveTab}
@@ -288,7 +276,7 @@ export default function PromotionsClient({
                       })}
                     </td>
                     <td className="py-3 px-4 tabular-nums text-neutral-500 whitespace-nowrap">
-                      {formatDate(p.expiresAt, locale)}
+                      {p.expiresAt ? formatDate(p.expiresAt, locale) : t("none")}
                     </td>
                     <td className="py-3 px-4">
                       <button
@@ -330,49 +318,25 @@ export default function PromotionsClient({
         </div>
       )}
 
-      {/* Featured Placements Tab */}
+      {/* Featured Placements Tab: placements are set per listing (Listings screen); no placement list API yet. */}
       {activeTab === "featured" && (
         <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="font-semibold text-primary text-base">{t("featured.title")}</h3>
-              <p className="text-xs text-neutral-500 mt-1">
-                {t("featured.subtitle")}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<PlusCircle className="w-4 h-4" aria-hidden="true" />}
-              onClick={() => success(t("featured.selectListing"))}
-            >
-              {t("featured.add")}
-            </Button>
+          <div>
+            <h3 className="font-semibold text-primary text-base">{t("featured.title")}</h3>
+            <p className="text-xs text-neutral-500 mt-1">{t("featured.subtitle")}</p>
           </div>
-
-          <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            {FEATURED_PLACEMENTS.map((f) => (
-              <li key={f.id} className="p-4 rounded-xl bg-darnaBg-100 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-xs text-primary">{f.title}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-secondary/15 text-secondary">
-                    {t(`featured.badge.${f.badgeKey}`)}
-                  </span>
-                </div>
-                <p className="text-[11px] text-neutral-500">
-                  {t("featured.placement", { place: t(`featured.place.${f.placeKey}`) })}
-                </p>
-                <div className="flex items-center justify-between pt-2 border-t border-primary/[0.08] text-[11px]">
-                  <span className="text-neutral-500">
-                    {t("featured.until", { date: formatDate(f.until, locale) })}
-                  </span>
-                  <span className="font-semibold text-primary">
-                    {t("featured.clicks", { count: f.clicks })}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <EmptyState
+            title={t("featured.perListingTitle")}
+            description={t("featured.perListingDesc")}
+            action={
+              <Link
+                href="/listings"
+                className={`inline-flex items-center px-4 py-2 text-xs font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 ${FOCUS_RING}`}
+              >
+                {t("featured.openListings")}
+              </Link>
+            }
+          />
         </div>
       )}
 

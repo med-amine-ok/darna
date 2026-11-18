@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AccountPage } from "@/components/profile/AccountShell";
 import Button from "@/components/ui/Button";
+import { Banner } from "@/components/ui";
 import { getSessionUser } from "@/lib/server/session";
 import { getHostContext, hostOwnerKey } from "@/lib/server/host-context";
-import { getReservations } from "@/lib/data/reservations";
+import { attachListings, loadHostReservations } from "@/lib/data/reservations";
 import { getHostListings } from "@/lib/data/listings";
 import ReservationsClient from "@/components/reservations/ReservationsClient";
 
@@ -35,11 +36,13 @@ export default async function ReservationsPage({ params }: { params: { locale: s
   }
 
   const owner = hostOwnerKey(ctx);
-  const [reservations, listings, t] = await Promise.all([
-    getReservations({ hostId: owner.userId, organizationId: owner.organizationId }),
+  const [{ data: rows, failed }, listings, t, tc] = await Promise.all([
+    loadHostReservations(),
     getHostListings(owner),
     getTranslations({ locale, namespace: "reservations" }),
+    getTranslations({ locale, namespace: "common" }),
   ]);
+  const reservations = attachListings(rows, listings);
 
   return (
     <AccountPage
@@ -53,6 +56,11 @@ export default async function ReservationsPage({ params }: { params: { locale: s
         </Button>
       }
     >
+      {failed && (
+        <Banner tone="danger" title={tc("dataLoadFailedTitle")} className="mb-6">
+          {tc("dataLoadFailedBody")}
+        </Banner>
+      )}
       <ReservationsClient initialReservations={reservations} listings={listings} />
     </AccountPage>
   );

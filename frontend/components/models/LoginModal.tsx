@@ -16,13 +16,12 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useLoginModal } from "@/hook/useLoginModal";
 import { useRegisterModal } from "@/hook/useRegisterModal";
 import { useActionError, type ActionErrorLike } from "@/hook/useActionError";
 import {
-  BrandAppleIcon,
   BrandEyeIcon,
   BrandEyeOffIcon,
   BrandGoogleIcon,
@@ -44,13 +43,7 @@ import { TEST_MODE } from "@/lib/test-mode";
 
 export type AuthMode = "login" | "signup";
 
-/** Seeded demo accounts (password documented in README.md). */
-const DEMO_PASSWORD = "darna-demo-2026";
-const DEMO_ACCOUNTS = [
-  { email: "yacine.traveler@bladus.dz", key: "demoTraveler", name: "Yacine" },
-  { email: "amina.benali@bladus.dz", key: "demoHost", name: "Amina" },
-  { email: "karim.mansouri@bladus.dz", key: "demoAgency", name: "Karim" },
-] as const;
+
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Time the success check stays on screen before we navigate away. */
@@ -70,10 +63,21 @@ async function postAuth(path: string, payload: Record<string, string>) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new AuthError(data);
-  return data as { user?: { name?: string } };
+  return data as { user?: { name?: string }; mfaRequired?: boolean };
 }
 
 type FieldErrors = { name?: string; email?: string; password?: string };
+
+/** Reasons the Google callback can send back (texts in auth.google.errors.*). */
+const GOOGLE_ERRORS = new Set([
+  "google_cancelled",
+  "google_failed",
+  "google_unavailable",
+  "google_disabled",
+  "google_email_unverified",
+  "google_staff_account",
+  "account_disabled",
+]);
 
 export interface AuthPanelProps {
   mode: AuthMode;
@@ -89,6 +93,7 @@ export interface AuthPanelProps {
 
 export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, titleAs = "h2", titleId }: AuthPanelProps) {
   const t = useTranslations("auth");
+  const locale = useLocale();
   const errorText = useActionError();
   const formId = useId();
   const isSignup = mode === "signup";
@@ -102,6 +107,9 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  /** Second step of a sign-in protected by an authenticator app (BR-ACC-04). */
+  const [mfaStep, setMfaStep] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
   const doneTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => () => clearTimeout(doneTimer.current), []);
@@ -110,7 +118,66 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
   useEffect(() => {
     setFieldErrors({});
     setError(null);
+    setMfaStep(false);
+    setMfaCode("");
   }, [mode]);
+
+  const askSecondFactor = () => {
+    setPassword("");
+    setMfaCode("");
+    setError(null);
+    setMfaStep(true);
+  };
+
+  // Back from "Continue with Google" (/api/auth/google/callback): ?mfa=1 asks for the
+  // authenticator code, ?error=google_* explains why Google sign-in did not finish.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mfa") === "1") {
+      askSecondFactor();
+      return;
+    }
+    const code = params.get("error");
+    if (code && GOOGLE_ERRORS.has(code)) setError(t(`google.errors.${code}`));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Full-page trip to Google; the callback brings the visitor back to where they were. */
+  const continueWithGoogle = () => {
+    const params = new URLSearchParams(window.location.search);
+    const back = params.get("callbackUrl") || `${window.location.pathname}${window.location.search}`;
+    window.location.assign(
+      `/api/auth/google/start?${new URLSearchParams({ locale, callbackUrl: back }).toString()}`,
+    );
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading || success) return;
+    const code = mfaCode.replace(/\s/g, "");
+    if (!code) {
+      setError(t("mfa.codeRequired"));
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    try {
+      const data = await postAuth("/api/auth/2fa", { code });
+      const userName = typeof data.user?.name === "string" ? data.user.name : "";
+      setIsLoading(false);
+      finish(userName ? t("welcomeBackName", { name: userName }) : t("welcomeToast"));
+    } catch (err) {
+      setIsLoading(false);
+      const body = err instanceof AuthError ? err.body : null;
+      if (body?.code === "UNAUTHENTICATED") {
+        // The pending sign-in expired: start again from the password.
+        setMfaStep(false);
+        setError(t("mfa.expired"));
+        return;
+      }
+      setError(errorText(body, t("mfa.failed")));
+    }
+  };
 
   const finish = (message: string) => {
     setSuccess(true);
@@ -146,6 +213,11 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         finish(t("welcomeName", { name: userName }));
       } else {
         const data = await postAuth("/api/auth/login", { email: email.trim(), password });
+        if (data.mfaRequired) {
+          setIsLoading(false);
+          askSecondFactor();
+          return;
+        }
         const userName = typeof data.user?.name === "string" ? data.user.name : "";
         setIsLoading(false);
         finish(userName ? t("welcomeBackName", { name: userName }) : t("welcomeToast"));
@@ -158,23 +230,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
     }
   };
 
-  const handleQuickDemo = async (demoEmail: string) => {
-    if (isLoading || success) return;
-    onModeChange("login");
-    setEmail(demoEmail);
-    setPassword(DEMO_PASSWORD);
-    setFieldErrors({});
-    setError(null);
-    setIsLoading(true);
-    try {
-      const data = await postAuth("/api/auth/login", { email: demoEmail, password: DEMO_PASSWORD });
-      setIsLoading(false);
-      finish(t("loggedInAs", { name: data.user?.name || demoEmail }));
-    } catch {
-      setIsLoading(false);
-      setError(t("errors.demo"));
-    }
-  };
+
 
   const clearFieldError = (key: keyof FieldErrors) =>
     setFieldErrors((cur) => (cur[key] ? { ...cur, [key]: undefined } : cur));
@@ -213,32 +269,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         </AnimatePresence>
       </div>
 
-      {showDemo && (
-        <div
-          role="group"
-          aria-labelledby={`${formId}-demo`}
-          className="mt-5 rounded-2xl bg-tertiary-100/70 p-3.5 ring-1 ring-tertiary-300/60"
-        >
-          <p id={`${formId}-demo`} className="text-meta font-semibold text-primary-800">
-            {t("demoTitle")}
-          </p>
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <Button
-                key={acc.email}
-                type="button"
-                variant="tertiary"
-                size="sm"
-                disabled={busy}
-                onClick={() => handleQuickDemo(acc.email)}
-                className="flex-1 basis-[8.5rem]"
-              >
-                {t(acc.key, { name: acc.name })}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
+      
 
       <AnimatePresence initial={false}>
         {error && (
@@ -254,6 +285,42 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         )}
       </AnimatePresence>
 
+      {mfaStep ? (
+        <form onSubmit={handleMfaSubmit} noValidate className="mt-5 flex flex-col gap-4" aria-busy={isLoading}>
+          <div>
+            <p className="text-title font-semibold text-primary-900">{t("mfa.title")}</p>
+            <p className="mt-1 text-meta text-primary-600">{t("mfa.subtitle")}</p>
+          </div>
+          <Input
+            id={`${formId}-mfa`}
+            label={t("mfa.codeLabel")}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            value={mfaCode}
+            disabled={busy}
+            onChange={(e) => {
+              setMfaCode(e.target.value);
+              setError(null);
+            }}
+          />
+          <p className="text-meta text-primary-600">{t("mfa.recoveryHint")}</p>
+          <Button type="submit" size="lg" fullWidth loading={isLoading} success={success}>
+            {success ? t("successButton") : t("mfa.submit")}
+          </Button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setMfaStep(false);
+              setError(null);
+            }}
+            className="self-center rounded text-meta font-semibold text-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+          >
+            <span className="link-underline pb-0.5">{t("mfa.back")}</span>
+          </button>
+        </form>
+      ) : (
       <form onSubmit={handleSubmit} noValidate className="mt-5 flex flex-col gap-4" aria-busy={isLoading}>
         <AnimatePresence initial={false}>
           {isSignup && (
@@ -347,26 +414,22 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
           {success ? t("successButton") : isSignup ? t("createAccount") : t("submit")}
         </Button>
       </form>
+      )}
 
       <Divider label={t("orContinueWith")} className="my-6" />
 
-      <div className="grid grid-cols-3 gap-2.5">
-        {(["Google", "Apple"] as const).map((provider) => (
-          <Button
-            key={provider}
-            type="button"
-            variant="tertiary"
-            aria-label={t("signInWith", { provider })}
-            title={t("signInWith", { provider })}
-            onClick={() => toast.info(t("socialSimulated", { provider }))}
-          >
-            {provider === "Google" ? (
-              <BrandGoogleIcon size={20} aria-hidden="true" />
-            ) : (
-              <BrandAppleIcon size={20} className="text-primary-900" aria-hidden="true" />
-            )}
-          </Button>
-        ))}
+      <div className="grid grid-cols-2 gap-2.5">
+        <Button
+          type="button"
+          variant="tertiary"
+          aria-label={t("signInWith", { provider: "Google" })}
+          title={t("signInWith", { provider: "Google" })}
+          onClick={continueWithGoogle}
+          disabled={busy}
+        >
+          <BrandGoogleIcon size={20} aria-hidden="true" />
+          <span className="ms-2 text-sm font-semibold">Google</span>
+        </Button>
         <Button
           type="button"
           variant="tertiary"
@@ -377,6 +440,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
           <BrandPhoneIcon size={20} className="text-secondary-700" aria-hidden="true" />
         </Button>
       </div>
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-primary-500">{t("google.terms")}</p>
 
       <p className="mt-6 text-center text-meta text-primary-600">
         {isSignup ? t("haveAccount") : t("noAccount")}{" "}

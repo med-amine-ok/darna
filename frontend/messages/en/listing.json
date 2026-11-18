@@ -401,5 +401,8 @@
     "agency": "Travel agency",
     "hotel": "Hotel",
     "hostel": "Hostel"
-  }
+  },
+  "discount": "Length-of-stay discount",
+  "sessionLabel": "Session",
+  "sessionOption": "{time} ({seats, plural, one {# seat left} other {# seats left}})"
 }

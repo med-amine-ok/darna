@@ -18,10 +18,12 @@ import {
   Car,
   Home,
   Plane,
+  RefreshCw,
 } from "lucide-react";
 import { getDashboardKPIs, getDashboardCharts } from "@/lib/actions/analytics";
 import { unwrap } from "@/lib/actions/result";
 import { exportKpiReport } from "@/lib/actions/analytics";
+import type { DashboardCharts, DashboardKpis } from "@/lib/data/analytics";
 import { downloadCsv } from "@/lib/utils/download";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KpiStrip } from "@/components/ui/KpiStrip";
@@ -36,11 +38,6 @@ export interface StatsClientProps {
   initialTab?: "overview" | "providers" | "services" | "wilayas" | "revenue" | "reports";
 }
 
-interface DashboardKpis {
-  totalGrossVolumeDzd?: number;
-  netPlatformRevenueDzd?: number;
-}
-
 // Report ids are sent to the server export action; labels live in stats.reports.items.<key>.
 const REPORT_KEYS = [
   "Comptabilite_Mensuelle",
@@ -49,56 +46,48 @@ const REPORT_KEYS = [
   "Performance_Territoriale",
 ] as const;
 
-const MONTHLY_VOLUME = [45, 62, 58, 80, 95, 110, 88, 125, 140, 132, 160, 175];
-
-const VERTICAL_SHARES = [
-  { key: "stays", share: 0.52, bar: "bg-primary-800" },
-  { key: "trips", share: 0.22, bar: "bg-primary-800" },
-  { key: "cars", share: 0.16, bar: "bg-primary-800" },
-  { key: "experiences", share: 0.1, bar: "bg-primary-800" },
+/** Offers sold (API keys) grouped into the four business verticals of the screen. */
+const VERTICAL_GROUPS = [
+  { key: "stays", offers: ["stays", "home", "hotel", "hostel"], icon: Home, iconClass: "text-secondary" },
+  { key: "trips", offers: ["trip"], icon: Plane, iconClass: "text-primary" },
+  { key: "cars", offers: ["vehicle"], icon: Car, iconClass: "text-tertiary" },
+  { key: "experiences", offers: ["experience"], icon: Compass, iconClass: "text-accent" },
 ] as const;
 
-const PROVIDERS = [
-  { key: "individual", count: 326, rate: 12 },
-  { key: "agency", count: 48, rate: 15 },
-  { key: "hotel", count: 64, rate: 18 },
-  { key: "carRental", count: 86, rate: 15 },
-] as const;
+const HOST_TYPES = ["individual", "agency", "hotel", "hostel"] as const;
 
-const WILAYA_ROWS = [
-  { code: "16", listings: 420, bookings: 480, volume: 5600000, share: 0.38 },
-  { code: "31", listings: 280, bookings: 310, volume: 3800000, share: 0.26 },
-  { code: "33", listings: 94, bookings: 160, volume: 2900000, share: 0.2 },
-  { code: "06", listings: 120, bookings: 110, volume: 1400000, share: 0.1 },
-];
-
-const REVENUE_SPLIT = [
-  { key: "individual", amount: 945000 },
-  { key: "agency", amount: 540000 },
-  { key: "carRental", amount: 360000 },
-] as const;
+type LoadState = "loading" | "ready" | "error";
 
 export default function StatsClient({
   locale,
   initialTab = "overview",
 }: StatsClientProps) {
   const t = useTranslations("stats");
+  const tHostTypes = useTranslations("hostTypes");
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [period] = useState("30d");
   const tActionsExport = useTranslations("actions");
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
+  const [charts, setCharts] = useState<DashboardCharts | null>(null);
+  const [yearCharts, setYearCharts] = useState<DashboardCharts | null>(null);
+  const [state, setState] = useState<LoadState>("loading");
 
   const { success, error: errorToast } = useToast();
 
   const loadData = useCallback(async () => {
+    setState("loading");
     try {
-      const [kpiData] = await Promise.all([
+      const [kpiData, chartData, yearData] = await Promise.all([
         getDashboardKPIs(period).then(unwrap),
         getDashboardCharts(period).then(unwrap),
+        getDashboardCharts("1y").then(unwrap),
       ]);
-      setKpis(kpiData as DashboardKpis);
+      setKpis(kpiData);
+      setCharts(chartData);
+      setYearCharts(yearData);
+      setState(kpiData.available || chartData.available ? "ready" : "error");
     } catch {
-      // Keep the demo figures when the analytics action is unavailable.
+      setState("error");
     }
   }, [period]);
 
@@ -120,11 +109,44 @@ export default function StatsClient({
     }
   };
 
+  const ready = state === "ready";
+  const kpisOk = ready && !!kpis?.available;
+  const chartsOk = ready && !!charts?.available;
+  const dash = "-";
+
+  // Sold bookings of the period (confirmed and completed), from the cross tab.
+  const soldBookings = charts?.bookingsByOffer.reduce((s, o) => s + o.bookings, 0) ?? 0;
+  const wilayaRows = charts?.bookingsByWilaya ?? [];
+  const wilayaTotal = wilayaRows.reduce((s, w) => s + w.bookings, 0);
+
+  const monthly = yearCharts?.available ? yearCharts.monthly : [];
+  const monthFormatter = new Intl.DateTimeFormat(intlLocale(locale), { month: "short", timeZone: "UTC" });
+  const monthLabel = (ym: string) => {
+    const [y, mo] = ym.split("-").map(Number);
+    return monthFormatter.format(new Date(Date.UTC(y, (mo || 1) - 1, 1)));
+  };
+  const monthlyMax = Math.max(0, ...monthly.map((p) => p.grossDzd));
+
+  const verticals = VERTICAL_GROUPS.map((g) => {
+    const offers = g.offers as readonly string[];
+    return {
+      ...g,
+      bookings: (charts?.bookingsByOffer ?? []).filter((o) => offers.includes(o.key)).reduce((s, o) => s + o.bookings, 0),
+      commission: (charts?.revenueByVertical ?? []).filter((o) => offers.includes(o.key)).reduce((s, o) => s + o.commissionDzd, 0),
+    };
+  });
+
+  const providers = HOST_TYPES.map((key) => ({
+    key,
+    bookings: charts?.bookingsByHostType.find((b) => b.key === key)?.bookings ?? 0,
+    commission: charts?.revenueByHostType.find((r) => r.key === key)?.commissionDzd ?? 0,
+  }));
+
   const statKpis = [
     {
       id: "volume",
       label: t("kpi.grossVolume"),
-      value: formatDzd(kpis?.totalGrossVolumeDzd || 14850000, locale),
+      value: kpisOk ? formatDzd(kpis!.grossBookingValueDzd.value, locale) : dash,
       icon: TrendingUp,
       colorVariant: "primary" as const,
       active: activeTab === "revenue",
@@ -133,7 +155,7 @@ export default function StatsClient({
     {
       id: "commissions",
       label: t("kpi.netCommissions"),
-      value: formatDzd(kpis?.netPlatformRevenueDzd || 1845000, locale),
+      value: kpisOk ? formatDzd(kpis!.commissionNetDzd.value, locale) : dash,
       icon: Percent,
       colorVariant: "secondary" as const,
       active: activeTab === "revenue",
@@ -142,7 +164,7 @@ export default function StatsClient({
     {
       id: "bookings",
       label: t("kpi.confirmedBookings"),
-      value: formatNumber(1248, locale),
+      value: chartsOk ? formatNumber(soldBookings, locale) : dash,
       icon: CheckCircle,
       colorVariant: "tertiary" as const,
       active: activeTab === "services",
@@ -151,13 +173,32 @@ export default function StatsClient({
     {
       id: "wilayas",
       label: t("kpi.activeWilayas"),
-      value: formatNumber(58, locale),
+      value: chartsOk ? formatNumber(wilayaRows.length, locale) : dash,
       icon: MapPin,
       colorVariant: "primary" as const,
       active: activeTab === "wilayas",
       onClick: () => setActiveTab("wilayas"),
     },
   ];
+
+  /** Loading, error or empty message for a block; null when the block has data. */
+  const blockState = (ok: boolean, hasData: boolean) => {
+    if (state === "loading") {
+      return <p className="text-sm text-primary-500 py-8 text-center" role="status">{t("live.loading")}</p>;
+    }
+    if (!ok) {
+      return (
+        <div className="py-8 text-center space-y-3" role="alert">
+          <p className="text-sm text-primary-600">{t("live.loadError")}</p>
+          <Button variant="outline" size="sm" onClick={loadData} leftIcon={<RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />}>
+            {t("live.retry")}
+          </Button>
+        </div>
+      );
+    }
+    if (!hasData) return <p className="text-sm text-primary-500 py-8 text-center">{t("live.noData")}</p>;
+    return null;
+  };
 
   return (
     <div className="space-y-6 text-start">
@@ -181,6 +222,7 @@ export default function StatsClient({
       />
 
       <KpiStrip cards={statKpis} />
+      <p className="text-xs text-primary-500">{t("live.periodNote")}</p>
 
       <Tabs
         items={[
@@ -200,161 +242,140 @@ export default function StatsClient({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="p-6 rounded-2xl bg-white space-y-4 shadow-e1">
             <h3 className="font-semibold text-primary-900 text-base">{t("overview.volumeTitle")}</h3>
-            <div
-              role="img"
-              aria-label={t("overview.volumeChartLabel", {
-                values: MONTHLY_VOLUME.map((v) => formatNumber(v, locale)).join(", "),
-              })}
-              className="relative h-64 pt-6"
-            >
-              {/* Quiet gridlines */}
-              <div aria-hidden="true" className="absolute inset-x-0 top-6 bottom-6 flex flex-col justify-between pointer-events-none">
-                {[0, 1, 2, 3].map((g) => (
-                  <div key={g} className="border-t border-primary/[0.06]" />
-                ))}
+            {blockState(ready && !!yearCharts?.available, monthlyMax > 0) ?? (
+              <div
+                role="img"
+                aria-label={t("live.volumeChartLabel", {
+                  values: monthly.map((p) => `${monthLabel(p.month)}: ${formatDzd(p.grossDzd, locale)}`).join(", "),
+                })}
+                className="relative h-64 pt-6"
+              >
+                {/* Quiet gridlines */}
+                <div aria-hidden="true" className="absolute inset-x-0 top-6 bottom-6 flex flex-col justify-between pointer-events-none">
+                  {[0, 1, 2, 3].map((g) => (
+                    <div key={g} className="border-t border-primary/[0.06]" />
+                  ))}
+                </div>
+                <div className="relative h-full flex items-end justify-between gap-1.5 sm:gap-2 px-1">
+                  {monthly.map((p, i) => (
+                    <div key={p.month} className="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group" aria-hidden="true">
+                      <m.div
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: 0.7, ease: ease.out, delay: i * 0.03 }}
+                        style={{ height: `${monthlyMax ? (p.grossDzd / monthlyMax) * 100 : 0}%`, originY: 1 }}
+                        title={formatDzd(p.grossDzd, locale)}
+                        className={`w-full max-w-[28px] rounded-t-md transition-colors duration-fast ${
+                          i === monthly.length - 1 ? "bg-primary-800" : "bg-secondary-600/80 group-hover:bg-secondary-600"
+                        }`}
+                      />
+                      <span className="text-[11px] text-primary-500 tabular-nums h-4 leading-4">{monthLabel(p.month)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="relative h-full flex items-end justify-between gap-1.5 sm:gap-2 px-1">
-                {MONTHLY_VOLUME.map((val, i) => (
-                  <div key={i} className="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group" aria-hidden="true">
-                    <m.div
-                      initial={{ scaleY: 0 }}
-                      animate={{ scaleY: 1 }}
-                      transition={{ duration: 0.7, ease: ease.out, delay: i * 0.03 }}
-                      style={{ height: `${(val / Math.max(...MONTHLY_VOLUME)) * 100}%`, originY: 1 }}
-                      className={`w-full max-w-[28px] rounded-t-md transition-colors duration-fast ${
-                        i === MONTHLY_VOLUME.length - 1 ? "bg-primary-800" : "bg-secondary-600/80 group-hover:bg-secondary-600"
-                      }`}
-                    />
-                    <span className="text-[11px] text-primary-500 tabular-nums h-4 leading-4">
-                      {t("overview.monthShort", { n: i + 1 })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <p className="text-xs text-neutral-500 text-center">
-              {t("overview.avgGrowth", { value: percent(0.184) })}
-            </p>
+            )}
           </div>
 
           <div className="p-6 rounded-2xl bg-white space-y-4 shadow-e1">
             <h3 className="font-semibold text-primary-900 text-base">{t("overview.verticalTitle")}</h3>
-            <div className="space-y-3 pt-2">
-              {VERTICAL_SHARES.map((v) => (
-                <div key={v.key}>
-                  <div className="flex justify-between text-xs font-medium text-primary-700 mb-1.5">
-                    <span>{t(`overview.verticals.${v.key}`)}</span>
-                    <span className="tabular-nums text-primary-900">{percent(v.share)}</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-darnaBg-300 overflow-hidden" aria-hidden="true">
-                    <m.div
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ duration: 0.7, ease: ease.out }}
-                      className={`h-full ${v.bar} rounded-full origin-left rtl:origin-right`}
-                      style={{ width: `${v.share * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            {blockState(chartsOk, soldBookings > 0) ?? (
+              <div className="space-y-3 pt-2">
+                {verticals.map((v) => {
+                  const share = soldBookings ? v.bookings / soldBookings : 0;
+                  return (
+                    <div key={v.key}>
+                      <div className="flex justify-between text-xs font-medium text-primary-700 mb-1.5">
+                        <span>{t(`overview.verticals.${v.key}`)}</span>
+                        <span className="tabular-nums text-primary-900">{percent(share)}</span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-darnaBg-300 overflow-hidden" aria-hidden="true">
+                        <m.div
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ duration: 0.7, ease: ease.out }}
+                          className="h-full bg-primary-800 rounded-full origin-left rtl:origin-right"
+                          style={{ width: `${share * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* By Provider Type */}
-      {activeTab === "providers" && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {PROVIDERS.map((p) => (
-            <div key={p.key} className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
-              <span className="font-semibold text-xs text-primary block">{t(`providers.${p.key}.label`)}</span>
-              <p className="text-2xl font-serif text-primary-900 tabular-nums">
-                {t(`providers.${p.key}.count`, { count: p.count, value: formatNumber(p.count, locale) })}
-              </p>
-              <p className="text-[11px] text-neutral-500">
-                {t("providers.avgRate", { rate: percent(p.rate / 100) })}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      {activeTab === "providers" &&
+        (blockState(chartsOk, true) ?? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {providers.map((p) => (
+              <div key={p.key} className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+                <span className="font-semibold text-xs text-primary block">{tHostTypes(p.key)}</span>
+                <p className="text-2xl font-serif text-primary-900 tabular-nums">
+                  {t("live.bookings", { count: p.bookings, value: formatNumber(p.bookings, locale) })}
+                </p>
+                <p className="text-[11px] text-neutral-500">
+                  {t("live.commission", { value: formatDzd(p.commission, locale) })}
+                </p>
+              </div>
+            ))}
+          </div>
+        ))}
 
       {/* By Service */}
-      {activeTab === "services" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
-            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
-              <Home className="w-4 h-4 text-secondary" aria-hidden="true" /> {t("services.stays")}
-            </div>
-            <p className="text-2xl font-serif text-primary-900 tabular-nums">
-              {t("services.listingsCount", { count: 1248, value: formatNumber(1248, locale) })}
-            </p>
-            <p className="text-xs text-neutral-500">
-              {t("services.avgRating", { value: formatNumber(4.8, locale) })}
-            </p>
+      {activeTab === "services" &&
+        (blockState(chartsOk, true) ?? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {verticals.map((v) => {
+              const Icon = v.icon;
+              return (
+                <div key={v.key} className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
+                  <div className="flex items-center gap-2 text-primary font-semibold text-xs">
+                    <Icon className={`w-4 h-4 ${v.iconClass}`} aria-hidden="true" /> {t(`services.${v.key}`)}
+                  </div>
+                  <p className="text-2xl font-serif text-primary-900 tabular-nums">
+                    {t("live.bookings", { count: v.bookings, value: formatNumber(v.bookings, locale) })}
+                  </p>
+                  <p className="text-xs text-neutral-500">{t("live.commission", { value: formatDzd(v.commission, locale) })}</p>
+                </div>
+              );
+            })}
           </div>
-          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
-            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
-              <Plane className="w-4 h-4 text-primary" aria-hidden="true" /> {t("services.trips")}
-            </div>
-            <p className="text-2xl font-serif text-primary-900 tabular-nums">
-              {t("services.tripsCount", { count: 156, value: formatNumber(156, locale) })}
-            </p>
-            <p className="text-xs text-neutral-500">{t("services.fillRate", { value: percent(0.88) })}</p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
-            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
-              <Car className="w-4 h-4 text-tertiary" aria-hidden="true" /> {t("services.cars")}
-            </div>
-            <p className="text-2xl font-serif text-primary-900 tabular-nums">
-              {t("services.vehiclesCount", { count: 1024, value: formatNumber(1024, locale) })}
-            </p>
-            <p className="text-xs text-neutral-500">
-              {t("services.availability", { value: formatNumber(542, locale) })}
-            </p>
-          </div>
-          <div className="p-5 rounded-2xl bg-white space-y-2 shadow-e1">
-            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
-              <Compass className="w-4 h-4 text-accent" aria-hidden="true" /> {t("services.experiences")}
-            </div>
-            <p className="text-2xl font-serif text-primary-900 tabular-nums">
-              {t("services.activitiesCount", { count: 238, value: formatNumber(238, locale) })}
-            </p>
-            <p className="text-xs text-neutral-500">{t("services.satisfaction", { value: percent(0.98) })}</p>
-          </div>
-        </div>
-      )}
+        ))}
 
       {/* By Wilaya */}
       {activeTab === "wilayas" && (
         <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
           <h3 id="stats-wilayas-title" className="font-semibold text-primary-900 text-base">{t("wilayas.title")}</h3>
-          <div className="relative overflow-x-auto">
-            <table className="w-full text-xs text-start" aria-labelledby="stats-wilayas-title">
-              <thead className="bg-darnaBg-100 text-primary-600 font-semibold">
-                <tr>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.wilaya")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.listings")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.bookings30d")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-end">{t("wilayas.cols.volume")}</th>
-                  <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.share")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-primary/[0.06]">
-                {WILAYA_ROWS.map((row) => (
-                  <tr key={row.code} className="hover:bg-darnaBg-100">
-                    <td className="py-2.5 px-3 font-semibold text-primary">{getWilayaName(row.code, locale)}</td>
-                    <td className="py-2.5 px-3">{formatNumber(row.listings, locale)}</td>
-                    <td className="py-2.5 px-3 tabular-nums whitespace-nowrap">{formatNumber(row.bookings, locale)}</td>
-                    <td className="py-2.5 px-3 font-semibold text-end text-primary-900 tabular-nums whitespace-nowrap">
-                      {formatDzd(row.volume, locale)}
-                    </td>
-                    <td className="py-2.5 px-3 font-semibold text-primary">{percent(row.share)}</td>
+          {blockState(chartsOk, wilayaRows.length > 0) ?? (
+            <div className="relative overflow-x-auto">
+              <table className="w-full text-xs text-start" aria-labelledby="stats-wilayas-title">
+                <thead className="bg-darnaBg-100 text-primary-600 font-semibold">
+                  <tr>
+                    <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.wilaya")}</th>
+                    <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.bookings30d")}</th>
+                    <th scope="col" className="py-2.5 px-3 text-start">{t("wilayas.cols.share")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-primary/[0.06]">
+                  {wilayaRows.map((row) => (
+                    <tr key={row.wilayaCode} className="hover:bg-darnaBg-100">
+                      <td className="py-2.5 px-3 font-semibold text-primary">
+                        {getWilayaName(row.wilayaCode, locale) || row.wilayaName}
+                      </td>
+                      <td className="py-2.5 px-3 tabular-nums whitespace-nowrap">{formatNumber(row.bookings, locale)}</td>
+                      <td className="py-2.5 px-3 font-semibold text-primary">
+                        {percent(wilayaTotal ? row.bookings / wilayaTotal : 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -363,14 +384,16 @@ export default function StatsClient({
         <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
           <h3 className="font-semibold text-primary-900 text-base">{t("revenue.title")}</h3>
           <p className="text-xs text-neutral-500">{t("revenue.subtitle")}</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            {REVENUE_SPLIT.map((r) => (
-              <div key={r.key} className="p-4 rounded-xl bg-darnaBg-100 space-y-1">
-                <span className="text-xs text-neutral-500">{t(`revenue.items.${r.key}`)}</span>
-                <p className="text-2xl font-serif text-primary-900 tabular-nums whitespace-nowrap">{formatDzd(r.amount, locale)}</p>
-              </div>
-            ))}
-          </div>
+          {blockState(chartsOk, true) ?? (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
+              {providers.map((r) => (
+                <div key={r.key} className="p-4 rounded-xl bg-darnaBg-100 space-y-1">
+                  <span className="text-xs text-neutral-500">{tHostTypes(r.key)}</span>
+                  <p className="text-2xl font-serif text-primary-900 tabular-nums whitespace-nowrap">{formatDzd(r.commission, locale)}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

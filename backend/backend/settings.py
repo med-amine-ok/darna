@@ -318,6 +318,26 @@ EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 FRONTEND_URL = env.str("FRONTEND_URL", default="http://localhost:3000")
 
+# Sign in with Google (ACC-10). The client secret stays on the backend; the
+# website only sends the one-time code. GOOGLE_REDIRECT_URIS lists the exact
+# callback addresses registered in Google Cloud Console (comma separated).
+GOOGLE_CLIENT_ID = env.str("GOOGLE_CLIENT_ID", default="")
+GOOGLE_CLIENT_SECRET = env.str("GOOGLE_CLIENT_SECRET", default="")
+GOOGLE_REDIRECT_URIS = env.list(
+    "GOOGLE_REDIRECT_URIS",
+    default=["http://localhost:3000/api/auth/google/callback", "https://bladus.dz/api/auth/google/callback"],
+)
+
+# Staff (admin panel) second step with an authenticator app (BR-ACC-04).
+# Off for now by decision of the owner (2026-11-17): the password alone opens
+# the admin. Turn it on (STAFF_MFA_REQUIRED=True) before real staff use it.
+STAFF_MFA_REQUIRED = env.bool("STAFF_MFA_REQUIRED", default=False)
+
+# Proxies we run in front of Django that append to X-Forwarded-For (for
+# example Caddy, then the website or admin server). 0 = trust no header and
+# use the socket address (accounts.views.client_ip, BR-SYS-07).
+TRUSTED_PROXY_HOPS = env.int("TRUSTED_PROXY_HOPS", default=0)
+
 # CSV exports (apps.audit.exports) and uploads (apps.media.storage). Local
 # folders are for development; production uses S3-compatible storage.
 EXPORTS_ROOT = env.str("EXPORTS_ROOT", default=str(BASE_DIR / "var" / "exports"))

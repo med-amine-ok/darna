@@ -11,11 +11,16 @@ import { Input } from "@/components/ui/Field";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { dur, ease } from "@/lib/motion";
-import { updateProfileAction } from "@/app/actions/account";
+import {
+  requestPhoneCodeAction,
+  resendEmailVerificationAction,
+  updateProfileAction,
+  verifyPhoneAction,
+} from "@/app/actions/account";
 import { useActionError } from "@/hook/useActionError";
 import { LINK_BUTTON_CLASS, SectionHeader, SettingsCard, SettingsList } from "./settingsUi";
 
-type FieldKey = "legalName" | "preferredName" | "email" | "phone" | "resAddress" | "mailingAddress";
+type FieldKey = "legalName" | "arabicName" | "email" | "phone" | "resAddress";
 
 export const maskEmail = (val: string) => {
   const parts = val.split("@");
@@ -125,19 +130,25 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
   const router = useRouter();
 
   const [legalName, setLegalName] = useState(currentUser?.name || "");
-  const [preferredName, setPreferredName] = useState("");
-  const [email, setEmail] = useState(currentUser?.email || "");
+  const [arabicName, setArabicName] = useState(currentUser?.fullNameAr || "");
+  const email = currentUser?.email || "";
+  const emailVerified = Boolean(currentUser?.emailVerified);
   const [phone, setPhone] = useState(currentUser?.phone || "");
+  const phoneVerified = Boolean(currentUser?.phoneVerified);
   const [resAddress, setResAddress] = useState(currentUser?.address || "");
-  const [mailingAddress, setMailingAddress] = useState("");
   const [editingField, setEditingField] = useState<FieldKey | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  /** Phone waiting for the SMS code (after "Send code"). */
+  const [codeSentTo, setCodeSentTo] = useState<string | null>(null);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [isVerifyingPhone, setIsVerifyingPhone] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const toggle = (field: FieldKey) => setEditingField((cur) => (cur === field ? null : field));
 
   /** Persists a profile field on the server; only closes the editor on success. */
   const saveProfileField = async (
-    patch: { name?: string; phone?: string; address?: string },
+    patch: { name?: string; arabicName?: string; address?: string },
     successMessage: string
   ) => {
     setIsSavingProfile(true);
@@ -157,7 +168,62 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
     }
   };
 
+  /** Stores the number (unverified) on the server, which texts a 6-digit code. */
+  const sendPhoneCode = async () => {
+    setIsSavingProfile(true);
+    try {
+      const result = await requestPhoneCodeAction(phone);
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      setPhone(result.data.phone);
+      setCodeSentTo(result.data.phone);
+      setPhoneCode("");
+      setEditingField(null);
+      toast.success(t("personal.phoneCodeSent"));
+    } catch {
+      toast.error(t("errors.saveFailed"));
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const confirmPhoneCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifyingPhone(true);
+    try {
+      const result = await verifyPhoneAction(phoneCode);
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      setCodeSentTo(null);
+      toast.success(t("personal.phoneVerifiedToast"));
+      router.refresh();
+    } catch {
+      toast.error(t("errors.saveFailed"));
+    } finally {
+      setIsVerifyingPhone(false);
+    }
+  };
+
+  const resendEmail = async () => {
+    setIsResending(true);
+    try {
+      const result = await resendEmailVerificationAction();
+      if (!result.ok) toast.error(errorText(result));
+      else toast.success(t("personal.emailLinkSent"));
+    } catch {
+      toast.error(t("errors.saveFailed"));
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const notProvided = t("personal.notProvided");
+  const phoneShownVerified = phoneVerified && !codeSentTo;
+  const phoneAwaitingCode = Boolean(codeSentTo) || (Boolean(currentUser?.phone) && !phoneVerified);
 
   return (
     <section aria-labelledby="settings-personal-title" className="space-y-6">
@@ -184,40 +250,42 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
         />
 
         <EditableField
-          field="preferredName"
-          label={t("personal.preferredName")}
-          display={preferredName || notProvided}
-          isEmpty={!preferredName}
-          editing={editingField === "preferredName"}
-          onToggle={() => toggle("preferredName")}
-          value={preferredName}
-          onChange={setPreferredName}
-          autoComplete="given-name"
-          placeholder={t("personal.preferredNamePlaceholder")}
-          onSave={() => {
-            setEditingField(null);
-            toast.success(t("personal.preferredNameSaved"));
-          }}
+          field="arabicName"
+          label={t("personal.arabicName")}
+          display={arabicName || notProvided}
+          isEmpty={!arabicName}
+          editing={editingField === "arabicName"}
+          onToggle={() => toggle("arabicName")}
+          value={arabicName}
+          onChange={setArabicName}
+          placeholder={t("personal.arabicNamePlaceholder")}
+          saving={isSavingProfile}
+          onSave={() => saveProfileField({ arabicName }, t("personal.arabicNameSaved"))}
         />
 
-        <EditableField
-          field="email"
-          label={t("personal.email")}
-          display={maskEmail(email)}
-          editing={editingField === "email"}
-          onToggle={() => toggle("email")}
-          value={email}
-          onChange={setEmail}
-          type="email"
-          autoComplete="email"
-          saveLabel={t("personal.saveAndVerify")}
-          onSave={() => {
-            // Email changes need a verification flow the mock backend doesn't have yet.
-            setEmail(currentUser?.email || "");
-            setEditingField(null);
-            toast.info(t("personal.emailChangeSoon"));
-          }}
-        />
+        <div className="py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <div className="text-meta font-medium text-primary-600">{t("personal.email")}</div>
+              <div className="mt-0.5 break-words text-body font-medium text-primary-900">
+                {email ? maskEmail(email) : notProvided}
+              </div>
+              {email && (
+                <div className="mt-1.5">
+                  <Badge tone={emailVerified ? "success" : "warning"}>
+                    {emailVerified ? t("personal.verified") : t("personal.notVerified")}
+                  </Badge>
+                </div>
+              )}
+            </div>
+            {email && !emailVerified && (
+              <Button type="button" variant="tertiary" size="sm" loading={isResending} onClick={resendEmail} className="shrink-0">
+                {t("personal.resendLink")}
+              </Button>
+            )}
+          </div>
+          <p className="mt-2 text-meta text-primary-600">{t("personal.emailChangeSoon")}</p>
+        </div>
 
         <EditableField
           field="phone"
@@ -230,21 +298,45 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
           onChange={setPhone}
           type="tel"
           autoComplete="tel"
+          placeholder="+213551234567"
           saving={isSavingProfile}
-          onSave={() => saveProfileField({ phone }, t("personal.phoneSaved"))}
+          saveLabel={t("personal.sendCode")}
+          onSave={sendPhoneCode}
         />
+        {phone && (
+          <div className="pb-4">
+            <Badge tone={phoneShownVerified ? "success" : "warning"}>
+              {phoneShownVerified ? t("personal.verified") : t("personal.notVerified")}
+            </Badge>
+            {phoneAwaitingCode && (
+              <form onSubmit={confirmPhoneCode} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start">
+                <Input
+                  id="settings-phone-code"
+                  label={t("personal.phoneCode")}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={phoneCode}
+                  onChange={(e) => setPhoneCode(e.target.value)}
+                  containerClassName="sm:flex-1"
+                />
+                <Button type="submit" variant="secondary" loading={isVerifyingPhone} className="sm:mt-1">
+                  {t("personal.verifyPhone")}
+                </Button>
+              </form>
+            )}
+          </div>
+        )}
 
         <div className="py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="text-meta font-medium text-primary-600">{t("personal.identity")}</div>
-              <div className="mt-1">
-                <Badge tone="success" icon={<BrandShieldIcon size={14} aria-hidden="true" />}>
-                  {t("personal.identityVerified")}
-                </Badge>
-              </div>
-            </div>
-            <span className="text-meta font-medium text-primary-600">{t("personal.completed")}</span>
+          <div className="text-meta font-medium text-primary-600">{t("personal.identity")}</div>
+          <div className="mt-1">
+            {currentUser?.isIdentityVerified ? (
+              <Badge tone="success" icon={<BrandShieldIcon size={14} aria-hidden="true" />}>
+                {t("personal.identityPhoneVerified")}
+              </Badge>
+            ) : (
+              <Badge tone="warning">{t("personal.identityPending")}</Badge>
+            )}
           </div>
         </div>
 
@@ -260,22 +352,6 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
           autoComplete="street-address"
           saving={isSavingProfile}
           onSave={() => saveProfileField({ address: resAddress }, t("personal.residentialAddressSaved"))}
-        />
-
-        <EditableField
-          field="mailingAddress"
-          label={t("personal.mailingAddress")}
-          display={mailingAddress || notProvided}
-          isEmpty={!mailingAddress}
-          editing={editingField === "mailingAddress"}
-          onToggle={() => toggle("mailingAddress")}
-          value={mailingAddress}
-          onChange={setMailingAddress}
-          placeholder={t("personal.mailingAddressPlaceholder")}
-          onSave={() => {
-            setEditingField(null);
-            toast.success(t("personal.mailingAddressSaved"));
-          }}
         />
       </SettingsList>
       </SettingsCard>

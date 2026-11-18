@@ -41,11 +41,19 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { listListings } from "@/lib/actions/listings";
 import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
 import { formatDzd, intlLocale } from "@/lib/utils/format";
-import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { applyDiscount } from "@/lib/pricing";
+import { NOT_SET, bpToPercent, panelSpecs } from "@/components/features/listings/panelSpecs";
+
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
 import { WILAYAS, getWilayaLabel } from "@/lib/utils/wilayas";
+
+/** Year, fuel and gearbox of a vehicle, from its detail (empty when unknown). */
+const carSpecsLine = (car: Listing) => {
+  const s = panelSpecs(car);
+  return [s.year, s.fuel, s.transmission].filter(Boolean).join(" · ");
+};
 
 /** Low-priority columns hidden while the split detail panel is open (ANALYSIS.md §4). */
 const SPLIT_HIDDEN_COLUMNS = ["id", "category", "location"];
@@ -166,20 +174,16 @@ export default function CarsListClient() {
   const formatRating = (rating: number) =>
     new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating);
 
-  const formatTime = (hour: number, minute: number) =>
-    new Intl.DateTimeFormat(intlLocale(locale), { hour: "2-digit", minute: "2-digit" }).format(
-      new Date(2000, 0, 1, hour, minute)
-    );
 
   // KPI Strip (Mockup 09: 1,024 Véhicules · 542 Disponibles · 186 Réservées · 42 En maintenance · 32 Indisponibles · 86 Agences)
   const statusFacets = facets["status"] || {};
-  const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
+  const totalCount = statusFacets.all ?? total;
 
   const kpis: KpiCardItem[] = [
     {
       id: "all",
       label: t("kpi.total"),
-      value: totalCount || 1024,
+      value: totalCount,
       icon: <Car className="w-5 h-5" />,
       colorVariant: "neutral",
     },
@@ -258,7 +262,7 @@ export default function CarsListClient() {
               {row.title}
             </button>
             <div className="text-xs text-primary-600 mt-0.5">
-              {t("rowSpecs", { year: 2023 })}
+              {carSpecsLine(row) || NOT_SET}
             </div>
           </div>
         </div>
@@ -369,11 +373,12 @@ export default function CarsListClient() {
     },
   ];
 
+  // Real discount tiers of the selected vehicle (weekly / monthly basis points).
+  const carPanel = selectedCar ? panelSpecs(selectedCar) : ({} as ReturnType<typeof panelSpecs>);
   const tiers = [
-    { label: t("tiers.range", { min: 1, max: 3 }), discount: 0 },
-    { label: t("tiers.range", { min: 4, max: 7 }), discount: DISCOUNTS.weekly },
-    { label: t("tiers.range", { min: 8, max: 14 }), discount: DISCOUNTS.biweekly },
-    { label: t("tiers.over", { min: 15 }), discount: DISCOUNTS.monthly },
+    { label: t("pricing.perDayUnit"), discount: 0 },
+    ...(carPanel.weeklyDiscountBp ? [{ label: t("pricing.weeklyDiscount", { percent: bpToPercent(carPanel.weeklyDiscountBp) }), discount: bpToPercent(carPanel.weeklyDiscountBp) }] : []),
+    ...(carPanel.monthlyDiscountBp ? [{ label: t("pricing.monthlyDiscount", { percent: bpToPercent(carPanel.monthlyDiscountBp) }), discount: bpToPercent(carPanel.monthlyDiscountBp) }] : []),
   ];
 
   return (
@@ -656,12 +661,14 @@ export default function CarsListClient() {
                         {t("about.title")}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoTile label={t("about.category")} value={selectedCar.propertyType || t("categoryOptions.suv")} />
-                        <InfoTile label={t("about.year")} value="2023" />
-                        <InfoTile label={t("about.fuel")} value={t("about.fuelDiesel")} />
-                        <InfoTile label={t("about.transmission")} value={t("gearbox.auto")} />
-                        <InfoTile label={t("about.capacity")} value={t("about.seats", { count: 5 })} />
-                        <InfoTile label={t("about.airConditioning")} value={t("about.yes")} />
+                        <InfoTile label={t("about.category")} value={selectedCar.propertyType || NOT_SET} />
+                        <InfoTile label={t("about.year")} value={carPanel.year ? String(carPanel.year) : NOT_SET} />
+                        <InfoTile label={t("about.fuel")} value={carPanel.fuel || NOT_SET} />
+                        <InfoTile
+                          label={t("about.transmission")}
+                          value={carPanel.transmission === "automatic" ? t("gearbox.auto") : carPanel.transmission === "manual" ? t("gearbox.manual") : NOT_SET}
+                        />
+                        <InfoTile label={t("about.capacity")} value={carPanel.seats ? t("about.seats", { count: carPanel.seats }) : NOT_SET} />
                       </div>
                     </div>
 
@@ -675,22 +682,24 @@ export default function CarsListClient() {
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.weeklyDiscount", { percent: DISCOUNTS.weekly })}</span>
-                          <span className="font-medium text-secondary-700">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, DISCOUNTS.weekly), locale) })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.monthlyDiscount", { percent: DISCOUNTS.monthly })}</span>
-                          <span className="font-medium text-secondary-700">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, DISCOUNTS.monthly), locale) })}</span>
-                        </div>
+                        {tiers.slice(1).map((tier) => (
+                          <div key={tier.label}>
+                            <span className="text-primary-600 block">{tier.label}</span>
+                            <span className="font-medium text-secondary-700">{t("pricing.perDay", { price: formatDzd(applyDiscount(selectedCar.price, tier.discount), locale) })}</span>
+                          </div>
+                        ))}
                         <div>
                           <span className="text-primary-600 block">{t("pricing.deposit")}</span>
-                          <span className="font-medium text-primary">{formatDzd(50000, locale)}</span>
+                          <span className="font-medium text-primary">
+                            {carPanel.security_deposit ? formatDzd(carPanel.security_deposit.amount_minor / 100, locale) : NOT_SET}
+                          </span>
                         </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.mileage")}</span>
-                          <span className="font-medium text-secondary-700">{t("pricing.mileageUnlimited", { days: 3 })}</span>
-                        </div>
+                        {typeof carPanel.daily_km_limit === "number" && (
+                          <div>
+                            <span className="text-primary-600 block">{t("pricing.mileage")}</span>
+                            <span className="font-medium text-primary">{`${carPanel.daily_km_limit} km`}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -703,19 +712,19 @@ export default function CarsListClient() {
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
                           <span className="text-primary-600 block">{t("schedule.pickup")}</span>
-                          <span className="font-medium text-primary">{t("schedule.fromTime", { time: formatTime(8, 30) })}</span>
+                          <span className="font-medium text-primary">
+                            {selectedCar.houseRules?.checkInTime ? t("schedule.fromTime", { time: selectedCar.houseRules.checkInTime }) : NOT_SET}
+                          </span>
                         </div>
                         <div>
                           <span className="text-primary-600 block">{t("schedule.return")}</span>
-                          <span className="font-medium text-primary">{t("schedule.beforeTime", { time: formatTime(19, 0) })}</span>
+                          <span className="font-medium text-primary">
+                            {selectedCar.houseRules?.checkOutTime ? t("schedule.beforeTime", { time: selectedCar.houseRules.checkOutTime }) : NOT_SET}
+                          </span>
                         </div>
                         <div>
                           <span className="text-primary-600 block">{t("schedule.minDuration")}</span>
-                          <span className="font-medium text-primary">{t("schedule.minDays", { count: 2 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("schedule.fuelPolicy")}</span>
-                          <span className="font-medium text-secondary-700">{t("schedule.fullToFull")}</span>
+                          <span className="font-medium text-primary">{carPanel.minNights ? t("schedule.minDays", { count: carPanel.minNights }) : NOT_SET}</span>
                         </div>
                       </div>
                     </div>
@@ -725,7 +734,6 @@ export default function CarsListClient() {
                         {t("owner.title")}
                       </div>
                       <div className="text-sm font-medium text-primary">{selectedCar.hostName}</div>
-                      <div className="text-xs text-primary-600">{t("owner.licensed")}</div>
                     </div>
 
                     <div>

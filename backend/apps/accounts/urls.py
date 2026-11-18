@@ -13,11 +13,16 @@ urlpatterns = [
     # Website sign-in
     path("auth/signup", views.SignupView.as_view(), name="auth-signup"),
     path("auth/login", views.LoginView.as_view(), name="auth-login"),
+    path("auth/providers", views.AuthProvidersView.as_view(), name="auth-providers"),
+    path("auth/google", views.GoogleSignInView.as_view(), name="auth-google"),
+    path("me/social-accounts", views.SocialAccountListView.as_view(), name="me-social-accounts"),
+    path("me/social-accounts/<uuid:account_id>", views.SocialAccountDetailView.as_view(), name="me-social-account"),
     path("auth/code/request", views.CodeRequestView.as_view(), name="auth-code-request"),
     path("auth/code/confirm", views.CodeConfirmView.as_view(), name="auth-code-confirm"),
     path("auth/session", views.SessionView.as_view(), name="auth-session"),
     path("auth/phone/verify", views.PhoneVerifyView.as_view(), name="auth-phone-verify"),
     path("auth/email/verify", views.EmailVerifyView.as_view(), name="auth-email-verify"),
+    path("auth/email/resend", views.EmailResendView.as_view(), name="auth-email-resend"),
     path("auth/password/request", views.PasswordRequestView.as_view(), name="auth-password-request"),
     path("auth/password/reset", views.PasswordResetView.as_view(), name="auth-password-reset"),
     path("auth/password/change", views.PasswordChangeView.as_view(), name="auth-password-change"),
@@ -36,7 +41,7 @@ urlpatterns = [
         name="me-favorite",
     ),
     # Public profile
-    path("users/<uuid:user_id>", views.PublicUserView.as_view(), name="user-public"),
+    path("users/<str:user_id>", views.PublicUserView.as_view(), name="user-public"),
     # Staff sign-in
     path("admin/auth/login", views.AdminLoginView.as_view(), name="admin-auth-login"),
     path("admin/auth/2fa/authenticate", views.AdminMfaAuthenticateView.as_view(), name="admin-auth-2fa"),

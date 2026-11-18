@@ -7,19 +7,23 @@
  * slides in from the reading end edge (the site header is hidden via body.mobile-thread-open).
  * Messages are grouped by day with separators, consecutive bubbles from one sender are
  * stacked, and a sent message shows a clock while it is sending, then a check (sent) or a
- * double check (read, from `message.read`).
+ * check once the server stored it (the API does not tell when the other side read it).
+ * Data comes from the Django API through server actions: older messages are paged with a
+ * "load older" button and new ones arrive by polling /conversations/sync (ADR-021).
+ * Contact details are masked by the backend until a booking is confirmed (BR-MSG-01).
  */
 
-import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, m } from "framer-motion";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/navigation";
 import { Conversation, Message, User } from "@/types";
 import {
   getConversationMessagesAction,
+  getConversationsPageAction,
   markConversationReadAction,
   sendMessageAction,
+  syncConversationsAction,
 } from "@/app/actions/messages";
 import { toast } from "react-toastify";
 import {
@@ -33,6 +37,7 @@ import {
   BrandChevronLeftIcon,
   BrandClockIcon,
   BrandExternalLinkIcon,
+  BrandShieldIcon,
 } from "@/components/icons";
 import {
   Avatar,
@@ -61,6 +66,31 @@ interface MessagesClientProps {
   initialMessages?: Message[];
   selectedConversationId?: string;
   currentUser?: User | null;
+  /** guest: my own threads; host: the threads of the active host workspace. */
+  side?: "guest" | "host";
+  /** Older messages exist before the initial ones. */
+  initialHasMoreMessages?: boolean;
+  /** Cursor of the next inbox page (null when the list is complete). */
+  initialNextCursor?: string | null;
+  /** The inbox could not be loaded (API down): show an error, not an empty inbox. */
+  loadFailed?: boolean;
+}
+
+/** Polling interval bounds (the server suggests one in poll_after_ms). */
+const MIN_POLL_MS = 2_000;
+const MAX_POLL_MS = 60_000;
+
+/** Newest activity first. */
+function byActivity(a: Conversation, b: Conversation) {
+  return (b.lastMessageAt || "").localeCompare(a.lastMessageAt || "");
+}
+
+/** Where the subject of a thread lives on the site, if it has a page. */
+function subjectHref(conv?: Conversation) {
+  if (!conv) return null;
+  if (conv.listingId) return `/listings/${conv.listingId}`;
+  if (conv.tripId) return `/trips/${conv.tripId}`;
+  return null;
 }
 
 /** The generic silhouette is not a real photo: show initials on a palette tint instead. */
@@ -79,11 +109,15 @@ export default function MessagesClient({
   initialMessages = [],
   selectedConversationId,
   currentUser,
+  side = "guest",
+  initialHasMoreMessages = false,
+  initialNextCursor = null,
+  loadFailed = false,
 }: MessagesClientProps) {
   const t = useTranslations("messages");
   const format = useFormatter();
   const pathname = usePathname();
-  const isHostMode = pathname?.includes("/host");
+  const isHostMode = side === "host" || pathname?.includes("/host");
   const isRtl = useIsRtl();
   /** Single-pane layout below `md` (list, then a full-screen thread). */
   const isPhone = useMediaQuery("(max-width: 767px)");
@@ -100,6 +134,10 @@ export default function MessagesClient({
   const [isLoadingThread, setIsLoadingThread] = useState(false);
   const [newMessageText, setNewMessageText] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(initialHasMoreMessages);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [listCursor, setListCursor] = useState<string | null>(initialNextCursor);
+  const [isLoadingList, setIsLoadingList] = useState(false);
 
   // Filters & Search
   const [filterType, setFilterType] = useState<"all" | "unread">("all");
@@ -117,14 +155,23 @@ export default function MessagesClient({
   const renderKeys = useRef(new Map<string, string>());
   /** Bubbles added in this session (they animate in; history does not). */
   const freshKeys = useRef(new Set<string>());
+  /** Distance from the bottom to restore after older messages were prepended. */
+  const keepScroll = useRef<number | null>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeId);
+  const activeHref = subjectHref(activeConversation);
+  const activeSubject = activeConversation?.subjectTitle || activeConversation?.listing?.title;
   const otherName = (conv?: Conversation) => conv?.otherUser?.name || t("defaultHostName");
 
-  // Keep the newest message in view.
+  // Keep the newest message in view (or the reading position after loading older ones).
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    if (keepScroll.current !== null) {
+      el.scrollTop = el.scrollHeight - keepScroll.current;
+      keepScroll.current = null;
+      return;
+    }
     el.scrollTo({ top: el.scrollHeight, behavior: freshKeys.current.size ? "smooth" : "auto" });
   }, [messages, activeId]);
 
@@ -150,16 +197,24 @@ export default function MessagesClient({
 
     if (conv.id !== activeId) {
       setMessages([]);
+      setHasMoreMessages(false);
       setIsLoadingThread(true);
-      getConversationMessagesAction(conv.id)
+      getConversationMessagesAction(conv.id, { side })
         .then((result) => {
-          if (result.ok) setMessages(result.data);
-          else toast.error(t("loadFailed"));
+          if (result.ok) {
+            setMessages(result.data.messages);
+            setHasMoreMessages(result.data.hasMore);
+            const newest = result.data.messages[result.data.messages.length - 1];
+            if (newest && (conv.unreadCount?.[currentUserId] || 0) > 0) {
+              markConversationReadAction(conv.id, newest.id).catch(() => {});
+            }
+          } else toast.error(t("loadFailed"));
         })
         .catch(() => toast.error(t("loadFailed")))
         .finally(() => setIsLoadingThread(false));
+    } else if ((conv.unreadCount?.[currentUserId] || 0) > 0) {
+      markConversationReadAction(conv.id).catch(() => {});
     }
-    markConversationReadAction(conv.id).catch(() => {});
 
     // Clear unread count locally
     setConversations((prev) =>
@@ -168,6 +223,137 @@ export default function MessagesClient({
       )
     );
   };
+
+  /** Loads the page of messages just older than the first one shown. */
+  const handleLoadOlder = async () => {
+    if (!activeId || isLoadingOlder) return;
+    const first = messages.find((msg) => msg.conversationId === activeId && !msg.id.startsWith("tmp_"));
+    if (!first) return;
+    const el = scrollerRef.current;
+    const fromBottom = el ? el.scrollHeight - el.scrollTop : 0;
+    setIsLoadingOlder(true);
+    try {
+      const result = await getConversationMessagesAction(activeId, { before: first.id, side });
+      if (!result.ok) {
+        toast.error(t("loadFailed"));
+        return;
+      }
+      keepScroll.current = fromBottom;
+      setMessages((prev) => {
+        const known = new Set(prev.map((msg) => msg.id));
+        return [...result.data.messages.filter((msg) => !known.has(msg.id)), ...prev];
+      });
+      setHasMoreMessages(result.data.hasMore);
+    } catch {
+      toast.error(t("loadFailed"));
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  };
+
+  /** Next page of the inbox list. */
+  const handleLoadMoreConversations = async () => {
+    if (!listCursor || isLoadingList) return;
+    setIsLoadingList(true);
+    try {
+      const result = await getConversationsPageAction(side, listCursor);
+      if (!result.ok) {
+        toast.error(t("loadFailed"));
+        return;
+      }
+      setConversations((prev) => {
+        const known = new Set(prev.map((c) => c.id));
+        return [...prev, ...result.data.conversations.filter((c) => !known.has(c.id))];
+      });
+      setListCursor(result.data.hasMore ? result.data.nextCursor : null);
+    } catch {
+      toast.error(t("loadFailed"));
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  // Polling: ask the server what changed since the last cursor (ADR-021).
+  const activeIdRef = useRef(activeId);
+  activeIdRef.current = activeId;
+  const applySync = useCallback(
+    (changed: Conversation[], incoming: Message[]) => {
+      if (changed.length) {
+        setConversations((prev) => {
+          const map = new Map(prev.map((c) => [c.id, c]));
+          for (const c of changed) map.set(c.id, c);
+          return Array.from(map.values()).sort(byActivity);
+        });
+      }
+      const forActive = incoming.filter((msg) => msg.conversationId === activeIdRef.current);
+      if (forActive.length) {
+        setMessages((prev) => {
+          let next = prev;
+          for (const msg of forActive) {
+            if (next.some((p) => p.id === msg.id)) continue;
+            // My own optimistic bubble may still be pending: replace it instead of doubling it.
+            const pending = msg.clientMessageId
+              ? next.find((p) => p.id.startsWith("tmp_") && p.clientMessageId === msg.clientMessageId)
+              : undefined;
+            if (pending) {
+              renderKeys.current.set(msg.id, pending.id);
+              next = next.map((p) => (p.id === pending.id ? msg : p));
+            } else {
+              freshKeys.current.add(msg.id);
+              next = [...next, msg];
+            }
+          }
+          return next;
+        });
+        const fromOther = forActive.filter((msg) => msg.senderId !== currentUserId);
+        const newest = fromOther[fromOther.length - 1];
+        const convId = activeIdRef.current;
+        if (newest && convId && typeof document !== "undefined" && !document.hidden) {
+          markConversationReadAction(convId, newest.id).catch(() => {});
+          setConversations((prev) =>
+            prev.map((c) => (c.id === convId ? { ...c, unreadCount: { ...(c.unreadCount || {}), [currentUserId]: 0 } } : c)),
+          );
+        }
+      }
+    },
+    [currentUserId],
+  );
+
+  useEffect(() => {
+    if (loadFailed) return;
+    let cancelled = false;
+    let cursor: string | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let delay = 10_000;
+    const tick = async () => {
+      if (cancelled) return;
+      if (typeof document !== "undefined" && document.hidden && cursor) {
+        timer = setTimeout(tick, delay);
+        return;
+      }
+      try {
+        const result = await syncConversationsAction(side, cursor);
+        if (cancelled) return;
+        if (result.ok) {
+          if (cursor) applySync(result.data.conversations, result.data.messages);
+          cursor = result.data.cursor || cursor;
+          delay = Math.min(MAX_POLL_MS, Math.max(MIN_POLL_MS, result.data.pollAfterMs || delay));
+          if (result.data.hasMore) delay = MIN_POLL_MS;
+        } else {
+          // Signed out or no access any more: slow down instead of hammering the server.
+          delay = Math.min(MAX_POLL_MS, delay * 2);
+        }
+      } catch {
+        delay = Math.min(MAX_POLL_MS, delay * 2);
+      }
+      if (!cancelled) timer = setTimeout(tick, delay);
+    };
+    tick();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [side, loadFailed, applySync]);
 
   const handleBack = () => {
     setHasNavigated(true);
@@ -184,7 +370,7 @@ export default function MessagesClient({
       const q = searchQuery.toLocaleLowerCase();
       const name = c.otherUser?.name?.toLocaleLowerCase() || "";
       const lastMsg = c.lastMessage?.toLocaleLowerCase() || "";
-      const listingTitle = c.listing?.title?.toLocaleLowerCase() || "";
+      const listingTitle = (c.subjectTitle || c.listing?.title || "").toLocaleLowerCase();
       if (!name.includes(q) && !lastMsg.includes(q) && !listingTitle.includes(q)) {
         return false;
       }
@@ -203,12 +389,14 @@ export default function MessagesClient({
     const sentText = textToSend.trim();
     if (!customText) setNewMessageText("");
 
-    // Optimistic message
+    // Optimistic message; the client id makes a retry safe and lets polling recognise it.
+    const clientMessageId = globalThis.crypto.randomUUID();
     const tempMsg: Message = {
-      id: `tmp_${globalThis.crypto.randomUUID()}`,
+      id: `tmp_${clientMessageId}`,
+      clientMessageId,
       conversationId: activeId,
       senderId: currentUserId,
-      receiverId: activeConversation?.otherUser?.id || "usr_host",
+      receiverId: activeConversation?.otherUser?.id || "",
       text: sentText,
       createdAt: new Date().toISOString(),
       read: false,
@@ -224,14 +412,22 @@ export default function MessagesClient({
 
     try {
       // Sender and receiver are derived from the session on the server.
-      const result = await sendMessageAction(activeId, sentText);
+      const result = await sendMessageAction(activeId, sentText, { side, clientMessageId });
       if (!result.ok) {
         setMessages((prev) => prev.filter((msg) => msg.id !== tempMsg.id));
-        toast.error(t("sendFailed"));
+        toast.error(result.code === "RATE_LIMITED" ? t("rateLimited") : t("sendFailed"));
+        if (!customText) setNewMessageText(sentText);
         return;
       }
-      renderKeys.current.set(result.data.id, tempMsg.id);
-      setMessages((prev) => prev.map((msg) => (msg.id === tempMsg.id ? result.data : msg)));
+      const sent = result.data;
+      renderKeys.current.set(sent.id, tempMsg.id);
+      // Polling may already have delivered the stored message: never show it twice.
+      setMessages((prev) =>
+        prev.some((msg) => msg.id === sent.id)
+          ? prev.filter((msg) => msg.id !== tempMsg.id)
+          : prev.map((msg) => (msg.id === tempMsg.id ? sent : msg)),
+      );
+      setConversations((prev) => prev.map((c) => (c.id === activeId ? { ...c, lastMessage: sent.text } : c)));
     } catch {
       setMessages((prev) => prev.filter((msg) => msg.id !== tempMsg.id));
       toast.error(t("sendFailed"));
@@ -305,7 +501,9 @@ export default function MessagesClient({
     return out;
   }, [currentMessages, currentUserId]);
 
-  const openers = [t("openerStay"), t("openerCheckIn"), t("openerDirections")];
+  const hasMaskedMessage = currentMessages.some((msg) => msg.isMasked);
+  // Suggested first lines are written for guests; the host side starts from a blank composer.
+  const openers = isHostMode ? [] : [t("openerStay"), t("openerCheckIn"), t("openerDirections")];
   const canSend = Boolean(newMessageText.trim()) && !isSending;
 
   // Phone pane transitions (after the first user navigation only).
@@ -442,7 +640,21 @@ export default function MessagesClient({
 
           {/* Conversation list */}
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3 sm:px-3">
-            {filteredConversations.length === 0 ? (
+            {loadFailed && conversations.length === 0 ? (
+              <div role="alert">
+                <KitEmptyState
+                  compact
+                  variant="generic"
+                  title={t("inboxErrorTitle")}
+                  description={t("inboxErrorBody")}
+                  action={
+                    <Button variant="secondary" size="sm" onClick={() => window.location.reload()}>
+                      {t("retry")}
+                    </Button>
+                  }
+                />
+              </div>
+            ) : filteredConversations.length === 0 ? (
               filterType === "unread" || searchQuery ? (
                 <div role="status">
                   <KitEmptyState
@@ -470,20 +682,23 @@ export default function MessagesClient({
                   compact
                   variant="messages"
                   title={t("trueEmptyTitle")}
-                  description={t("trueEmptySubtitle")}
+                  description={isHostMode ? t("hostEmptySubtitle") : t("trueEmptySubtitle")}
                   action={
-                    <Button href="/search" variant="secondary" size="sm">
-                      {t("exploreHomes")}
-                    </Button>
+                    isHostMode ? undefined : (
+                      <Button href="/search" variant="secondary" size="sm">
+                        {t("exploreHomes")}
+                      </Button>
+                    )
                   }
                 />
               )
             ) : (
+              <>
               <ul aria-label={t("conversationsLabel")} className="space-y-0.5">
                 {filteredConversations.map((conv) => {
                   const isSelected = conv.id === activeId;
                   const unread = conv.unreadCount?.[currentUserId] || 0;
-                  const listing = conv.listing;
+                  const subject = conv.subjectTitle || conv.listing?.title;
                   const name = otherName(conv);
 
                   return (
@@ -550,18 +765,11 @@ export default function MessagesClient({
                             )}
                           </span>
 
-                          {listing && (
-                            <span className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-full bg-white py-0.5 pe-2.5 ps-0.5 shadow-e1">
-                              <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-tertiary-100">
-                                <Image
-                                  src={listing.imageSrc?.[0] || "/assets/placeholder.jpg"}
-                                  alt=""
-                                  fill
-                                  sizes="20px"
-                                  className="object-cover"
-                                />
+                          {subject && (
+                            <span className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-full bg-white px-2.5 py-0.5 shadow-e1">
+                              <span dir="auto" className="truncate text-[0.75rem] font-medium text-primary-700">
+                                {conv.bookingReference ? `${subject} · ${conv.bookingReference}` : subject}
                               </span>
-                              <span dir="auto" className="truncate text-[0.75rem] font-medium text-primary-700">{listing.title}</span>
                             </span>
                           )}
                         </span>
@@ -570,6 +778,14 @@ export default function MessagesClient({
                   );
                 })}
               </ul>
+              {listCursor && !searchQuery && filterType === "all" && (
+                <div className="flex justify-center py-3">
+                  <Button variant="tertiary" size="sm" loading={isLoadingList} onClick={handleLoadMoreConversations}>
+                    {t("loadMoreConversations")}
+                  </Button>
+                </div>
+              )}
+              </>
             )}
           </div>
         </m.section>
@@ -609,21 +825,27 @@ export default function MessagesClient({
                   <Avatar name={otherName(activeConversation)} src={photoOf(activeConversation.otherUser?.image)} size="md" decorative />
                   <div className="min-w-0">
                     <h2 className="truncate text-title font-semibold text-primary-900">{otherName(activeConversation)}</h2>
-                    {activeConversation.listing && (
+                    {activeHref ? (
                       <Link
-                        href={`/listings/${activeConversation.listing.id}`}
+                        href={activeHref}
                         className={`block truncate rounded text-meta text-primary-600 hover:text-accent-700 ${focusRing}`}
                       >
-                        <span className="link-underline">{activeConversation.listing.title}</span>
+                        <span className="link-underline">{activeSubject}</span>
                       </Link>
-                    )}
+                    ) : activeSubject ? (
+                      <p className="truncate text-meta text-primary-600">
+                        {activeConversation.bookingReference
+                          ? `${activeSubject} · ${activeConversation.bookingReference}`
+                          : activeSubject}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {activeConversation.listing && (
+                  {activeHref && (
                     <Button
-                      href={`/listings/${activeConversation.listing.id}`}
+                      href={activeHref}
                       variant="tertiary"
                       size="sm"
                       className="hidden sm:inline-flex"
@@ -682,6 +904,19 @@ export default function MessagesClient({
                   </div>
                 ) : (
                   <div className="mx-auto flex max-w-3xl flex-col">
+                    {hasMoreMessages && (
+                      <div className="flex justify-center pb-2">
+                        <Button variant="tertiary" size="sm" loading={isLoadingOlder} onClick={handleLoadOlder}>
+                          {t("loadOlder")}
+                        </Button>
+                      </div>
+                    )}
+                    {hasMaskedMessage && (
+                      <p className="mb-2 flex items-start gap-2 self-center rounded-2xl bg-white px-4 py-2.5 text-meta text-primary-600 shadow-e1">
+                        <BrandShieldIcon size={16} className="mt-0.5 shrink-0 text-secondary-700" aria-hidden="true" />
+                        <span>{t("maskedNotice")}</span>
+                      </p>
+                    )}
                     {sections.map((section) => (
                       <section key={section.day} aria-label={formatDayLabel(section.label)} className="flex flex-col">
                         <div className="sticky top-0 z-[1] flex justify-center py-3">

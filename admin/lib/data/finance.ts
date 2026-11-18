@@ -1,23 +1,47 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import {
-  HostWallet,
-  WalletTransaction,
-  PayoutRequest,
-  HostType,
-  PaginatedResult,
-  AdminActor,
-} from "@/lib/types";
-import { assertCan } from "@/lib/permissions";
-import { isValidCommissionRate, isValidDzdAmount, MAX_RECHARGE_DZD } from "@/lib/pricing";
-import { isValidReason } from "@/lib/domain/transitions";
-import { toCsv, type CsvExport } from "@/lib/utils/csv";
-import { logAudit, logExport } from "./audit";
-import { appendLedgerEntry, computeWalletAggregates, getHostBalance } from "./ledger";
-import { DomainError, ValidationError } from "./errors";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { ApiError, api, apiAll, newIdempotencyKey, totalOf } from "@/lib/api/client";
+import { logReadError, minor, moneyInput, write } from "@/lib/api/mapping";
+import {
+  toAdjustment,
+  toConflict,
+  toInvoice,
+  toOutbox,
+  toRefund,
+  toTopup,
+  toWallet,
+  type AdjustmentRow,
+  type ApiAdjustment,
+  type ApiAdminWallet,
+  type ApiFinanceSummary,
+  type ApiInventoryConflict,
+  type ApiInvoice,
+  type ApiOutboxMessage,
+  type ApiRefundObligation,
+  type ApiTopup,
+  type ConflictRow,
+  type InvoiceRow,
+  type OutboxRow,
+  type RefundRow,
+  type TopupRow,
+} from "@/lib/api/finance";
+import type { HostWallet, WalletTransaction, PayoutRequest, HostType, PaginatedResult, AdminActor } from "@/lib/types";
+import { toCsv, type CsvExport } from "@/lib/utils/csv";
+import { logExport } from "./audit";
+import { allLedgerTransactions, hostNameMap, listLedgerTransactions } from "./ledger";
+
+export type { AdjustmentRow, ConflictRow, InvoiceRow, OutboxRow, RefundRow, TopupRow };
+
+/**
+ * Admin finance on the Django ledger app (BR-PAY-*). Money is in centimes in
+ * the API and in DZD in the screens. Every money write carries an
+ * Idempotency-Key. Balances, four-eyes rules and limits are enforced by the
+ * backend; the admin app only shows its answers.
+ */
+
+const HOST_TYPES: readonly HostType[] = ["individual", "agency", "hotel", "hostel"];
+
+// ------------------------------------------------------------------ wallets
 
 export interface WalletFilterParams {
   hostType?: string;
@@ -30,86 +54,89 @@ export interface WalletFilterParams {
   pageSize?: number;
 }
 
-/** Every wallet with balance/totals re-derived from the ledger. */
-function derivedWallets(): HostWallet[] {
-  const aggregates = computeWalletAggregates();
-  return store.wallets.map((w) => {
-    const agg = aggregates.get(w.hostId);
-    const balance = agg?.balance ?? 0;
-    return {
-      ...w,
-      balance,
-      isNegative: balance < 0,
-      totalEarned: agg?.totalEarned ?? 0,
-      totalCommissionsPaid: agg?.totalCommissionsPaid ?? 0,
-      totalPayouts: agg?.totalPayouts ?? 0,
-      lastTransactionAt: agg?.lastTransactionAt ?? w.lastTransactionAt,
-    };
-  });
-}
-
-function filterWallets(all: HostWallet[], params: WalletFilterParams): HostWallet[] {
-  let filtered = [...all];
-
-  if (params.hostType && params.hostType !== "all") {
-    filtered = filtered.filter((w) => w.hostType === params.hostType);
-  }
-  if (params.wilayaCode && params.wilayaCode !== "all") {
-    filtered = filtered.filter((w) => w.wilayaCode === params.wilayaCode);
-  }
-  if (params.onlyNegative) {
-    filtered = filtered.filter((w) => w.balance < 0);
-  }
-  if (typeof params.minBalance === "number" && Number.isFinite(params.minBalance)) {
-    filtered = filtered.filter((w) => w.balance >= params.minBalance!);
-  }
-  if (typeof params.maxBalance === "number" && Number.isFinite(params.maxBalance)) {
-    filtered = filtered.filter((w) => w.balance <= params.maxBalance!);
-  }
-  if (params.search?.trim()) {
-    const q = params.search.toLowerCase();
-    filtered = filtered.filter(
-      (w) =>
-        w.ownerName.toLowerCase().includes(q) ||
-        (w.businessName || "").toLowerCase().includes(q) ||
-        w.id.toLowerCase().includes(q)
-    );
-  }
-  filtered.sort((a, b) => b.balance - a.balance);
-  return filtered;
-}
-
-export async function listWallets(
-  params: WalletFilterParams = {}
-): Promise<PaginatedResult<HostWallet>> {
-  await delay(190);
-
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 12;
-  const all = derivedWallets();
-  const filtered = filterWallets(all, params);
-
-  // Facets are computed over ALL wallets with ledger-derived balances.
-  const facets: Record<string, Record<string, number>> = {
-    hostType: {
-      all: all.length,
-      individual: all.filter((w) => w.hostType === "individual").length,
-      agency: all.filter((w) => w.hostType === "agency").length,
-      hotel: all.filter((w) => w.hostType === "hotel").length,
-      hostel: all.filter((w) => w.hostType === "hostel").length,
-    },
-    solvency: {
-      healthy: all.filter((w) => w.balance >= 0).length,
-      negative: all.filter((w) => w.balance < 0).length,
-    },
+function walletQuery(params: WalletFilterParams) {
+  return {
+    host_type: params.hostType && params.hostType !== "all" ? params.hostType : undefined,
+    wilaya: params.wilayaCode && params.wilayaCode !== "all" ? params.wilayaCode : undefined,
+    state: params.onlyNegative ? "negative,below_floor" : undefined,
+    min_balance_minor: Number.isFinite(params.minBalance) ? minor(params.minBalance as number) : undefined,
+    max_balance_minor: Number.isFinite(params.maxBalance) ? minor(params.maxBalance as number) : undefined,
+    q: params.search?.trim() || undefined,
+    ordering: "-balance",
   };
-
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  return { rows, total, page, pageSize, totalPages, facets };
 }
+
+async function walletFacets(): Promise<Record<string, Record<string, number>>> {
+  const count = async (query: Record<string, string>) =>
+    totalOf(await api<unknown>("/admin/wallets", { query: { ...query, page_size: 1 } }));
+  const [all, negative, ...perType] = await Promise.all([
+    count({}),
+    count({ state: "negative,below_floor" }),
+    ...HOST_TYPES.map((h) => count({ host_type: h })),
+  ]);
+  const hostType: Record<string, number> = { all };
+  HOST_TYPES.forEach((h, i) => (hostType[h] = perType[i]));
+  return { hostType, solvency: { healthy: all - negative, negative } };
+}
+
+export async function listWallets(params: WalletFilterParams = {}): Promise<PaginatedResult<HostWallet>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 12));
+  const [answer, facets] = await Promise.all([
+    api<{ count: number; results: ApiAdminWallet[] }>("/admin/wallets", {
+      query: { ...walletQuery(params), page, page_size: pageSize },
+    }),
+    walletFacets().catch((error) => {
+      logReadError("wallet facets", error);
+      return undefined;
+    }),
+  ]);
+  const total = totalOf(answer);
+  return {
+    rows: (answer?.results ?? []).map(toWallet),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    facets,
+  };
+}
+
+/** One host wallet, or null when the host does not exist. */
+export async function getWallet(hostId: string): Promise<HostWallet | null> {
+  try {
+    const raw = await api<ApiAdminWallet>(`/admin/wallets/${encodeURIComponent(hostId)}`);
+    return toWallet(raw);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    logReadError("getWallet", error);
+    return null;
+  }
+}
+
+/** Full filtered wallet list as CSV; audited. */
+export async function exportWallets(params: WalletFilterParams, actor: AdminActor): Promise<CsvExport> {
+  const rows = (await write(() => apiAll<ApiAdminWallet>("/admin/wallets", { query: walletQuery(params) }, 40))).map(toWallet);
+  const csv = toCsv(
+    ["Host ID", "Host", "Host Type", "State", "Balance (DZD)", "Credit Limit (DZD)", "Approved Top-ups (DZD)", "Commission Kept (DZD)", "Commission Rate (%)", "Last Entry"],
+    rows.map((w) => [
+      w.hostId,
+      w.ownerName,
+      w.hostType,
+      w.walletState,
+      w.balance,
+      w.creditLimitDzd,
+      w.totalEarned,
+      w.totalCommissionsPaid,
+      w.commissionRate,
+      w.lastTransactionAt,
+    ])
+  );
+  await logExport(actor, "wallets", rows.length, { ...params });
+  return { filename: `darna_wallets_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
+}
+
+// ------------------------------------------------------------------- ledger
 
 export interface TransactionFilterParams {
   hostId?: string;
@@ -119,269 +146,262 @@ export interface TransactionFilterParams {
   pageSize?: number;
 }
 
-function filterTransactions(params: TransactionFilterParams): WalletTransaction[] {
-  let filtered = [...store.transactions];
-
-  if (params.hostId) {
-    filtered = filtered.filter((t) => t.hostId === params.hostId);
-  }
-  if (params.type && params.type !== "all") {
-    filtered = filtered.filter((t) => t.type === params.type);
-  }
-  if (params.search?.trim()) {
-    const q = params.search.toLowerCase();
-    filtered = filtered.filter(
-      (t) =>
-        t.reference.toLowerCase().includes(q) ||
-        t.hostName.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        (t.bookingRef || "").toLowerCase().includes(q)
-    );
-  }
-  filtered.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return filtered;
-}
-
 export async function listTransactions(params: TransactionFilterParams): Promise<PaginatedResult<WalletTransaction>> {
-  await delay(180);
-
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 15;
-  const filtered = filterTransactions(params);
-
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  return { rows, total, page, pageSize, totalPages };
+  return listLedgerTransactions(params);
 }
 
 /** Full filtered ledger (all pages) as CSV; audited. */
 export async function exportTransactions(params: TransactionFilterParams, actor: AdminActor): Promise<CsvExport> {
-  const rows = filterTransactions(params);
+  const rows = await write(() => allLedgerTransactions(params));
   const csv = toCsv(
-    ["Date", "Reference", "Host", "Host Type", "Type", "Amount (DZD)", "Balance After (DZD)", "Booking Ref", "Receipt Ref", "Description", "Admin"],
-    rows.map((t) => [
-      t.createdAt,
-      t.reference,
-      t.hostName,
-      t.hostType,
-      t.type,
-      t.amount,
-      t.balanceAfter,
-      t.bookingRef,
-      t.receiptReference,
-      t.description,
-      t.adminActor,
-    ])
+    ["Date", "Reference", "Host", "Kind", "Type", "Amount (DZD)", "Booking Ref", "Description", "Posted By"],
+    rows.map((t) => [t.createdAt, t.reference, t.hostName, t.kind, t.type, t.amount, t.bookingRef, t.description, t.adminActor])
   );
   await logExport(actor, "wallet_ledger", rows.length, { ...params });
   return { filename: `darna_ledger_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
 }
 
-/** Full filtered wallet list as CSV; audited. */
-export async function exportWallets(params: WalletFilterParams, actor: AdminActor): Promise<CsvExport> {
-  const rows = filterWallets(derivedWallets(), params);
-  const csv = toCsv(
-    ["Wallet ID", "Host ID", "Owner", "Business", "Host Type", "Wilaya", "Balance (DZD)", "Total Earned (DZD)", "Commissions Paid (DZD)", "Payouts (DZD)", "Last Transaction"],
-    rows.map((w) => [
-      w.id,
-      w.hostId,
-      w.ownerName,
-      w.businessName,
-      w.hostType,
-      w.wilayaCode,
-      w.balance,
-      w.totalEarned,
-      w.totalCommissionsPaid,
-      w.totalPayouts,
-      w.lastTransactionAt,
-    ])
-  );
-  await logExport(actor, "wallets", rows.length, { ...params });
-  return { filename: `darna_wallets_${new Date().toISOString().slice(0, 10)}.csv`, csv, rowCount: rows.length };
+// ------------------------------------------------------------------ top-ups
+
+export type TopupMethod = "ccp_transfer" | "bank_transfer" | "baridimob" | "cash_office";
+export const TOPUP_METHODS: readonly TopupMethod[] = ["ccp_transfer", "bank_transfer", "baridimob", "cash_office"];
+
+export interface RechargeResult {
+  topup: TopupRow;
+  /** Null while the top-up waits for a second admin. */
+  newBalance: number | null;
+  pendingApproval: boolean;
 }
 
+/**
+ * Records a manual top-up (BR-PAY-07). Credited at once, or left
+ * pending_approval when the four-eyes threshold is passed.
+ */
 export async function rechargeWallet(data: {
   hostId: string;
   amount: number;
-  method: string;
+  method: TopupMethod;
   reason: string;
   receiptReference: string;
   actor: AdminActor;
-}): Promise<{ transaction: WalletTransaction; newBalance: number }> {
-  assertCan(data.actor.role, "wallets.recharge");
-  // Defense in depth (lib/actions validates too).
-  if (!isValidDzdAmount(data.amount, 1, MAX_RECHARGE_DZD)) {
-    throw new ValidationError(`Recharge amount must be a whole number between 1 and ${MAX_RECHARGE_DZD} DZD`);
-  }
-  if (!data.receiptReference.trim()) throw new ValidationError("A receipt reference is required");
-  await delay(200);
-
-  const host = store.hosts.find((h) => h.id === data.hostId);
-  if (!host) throw new DomainError("Host not found");
-
-  const currentBalance = getHostBalance(host.id);
-  const tx = appendLedgerEntry({
-    host,
-    type: "wallet_recharge",
-    amount: data.amount,
-    description: `Admin manual recharge (${data.method}): ${data.reason}`,
-    receiptReference: data.receiptReference.trim(),
-    adminActor: data.actor.name,
-  });
-
-  await logAudit(
-    data.actor,
-    "WALLET_RECHARGE",
-    "wallet",
-    `wlt_${data.hostId}`,
-    `Credited ${data.amount} DZD to host ${host.ownerName} (Receipt: ${data.receiptReference})`,
-    { balance: currentBalance },
-    { balance: tx.balanceAfter, transactionId: tx.id }
+}): Promise<RechargeResult> {
+  const raw = await write(() =>
+    api<ApiTopup>(`/admin/wallets/${encodeURIComponent(data.hostId)}/topups`, {
+      method: "POST",
+      body: {
+        amount: moneyInput(data.amount),
+        method: data.method,
+        receipt_reference: data.receiptReference,
+        note: data.reason,
+      },
+      idempotencyKey: newIdempotencyKey(),
+    })
   );
-
-  return { transaction: tx, newBalance: tx.balanceAfter };
+  const topup = toTopup(raw, data.actor.id);
+  return { topup, newBalance: topup.balanceAfterDzd, pendingApproval: topup.status === "pending_approval" };
 }
+
+export async function listTopups(
+  params: { status?: string; hostId?: string; page?: number; pageSize?: number },
+  actor: AdminActor
+): Promise<PaginatedResult<TopupRow>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 10));
+  const answer = await api<{ count: number; results: ApiTopup[] }>("/admin/topups", {
+    query: {
+      status: params.status && params.status !== "all" ? params.status : undefined,
+      host_account: params.hostId || undefined,
+      page,
+      page_size: pageSize,
+    },
+  });
+  const total = totalOf(answer);
+  return {
+    rows: (answer?.results ?? []).map((t) => toTopup(t, actor.id)),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+/** Second admin approves (403 four_eyes_same_user for the admin who recorded it). */
+export async function approveTopup(id: string, actor: AdminActor): Promise<TopupRow> {
+  const raw = await write(() =>
+    api<ApiTopup>(`/admin/topups/${encodeURIComponent(id)}/approve`, {
+      method: "POST",
+      idempotencyKey: newIdempotencyKey(),
+    })
+  );
+  return toTopup(raw, actor.id);
+}
+
+export async function rejectTopup(id: string, reason: string, actor: AdminActor): Promise<TopupRow> {
+  const raw = await write(() =>
+    api<ApiTopup>(`/admin/topups/${encodeURIComponent(id)}/reject`, { method: "POST", body: { reason } })
+  );
+  return toTopup(raw, actor.id);
+}
+
+// -------------------------------------------------------------- adjustments
+
+export async function listAdjustments(
+  params: { status?: string; hostId?: string; page?: number; pageSize?: number },
+  actor: AdminActor
+): Promise<PaginatedResult<AdjustmentRow>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 10));
+  const answer = await api<{ count: number; results: ApiAdjustment[] }>("/admin/wallet-adjustments", {
+    query: {
+      status: params.status && params.status !== "all" ? params.status : undefined,
+      host_account: params.hostId || undefined,
+      page,
+      page_size: pageSize,
+    },
+  });
+  const total = totalOf(answer);
+  return {
+    rows: (answer?.results ?? []).map((a) => toAdjustment(a, actor.id)),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+/** Asks for a signed correction (DZD); nothing moves until a second admin approves. */
+export async function requestAdjustment(
+  data: { hostId: string; amount: number; reason: string },
+  actor: AdminActor
+): Promise<AdjustmentRow> {
+  const raw = await write(() =>
+    api<ApiAdjustment>("/admin/wallet-adjustments", {
+      method: "POST",
+      body: { host_account: data.hostId, amount_minor: minor(data.amount), reason: data.reason },
+      idempotencyKey: newIdempotencyKey(),
+    })
+  );
+  return toAdjustment(raw, actor.id);
+}
+
+export async function approveAdjustment(id: string, actor: AdminActor): Promise<AdjustmentRow> {
+  const raw = await write(() =>
+    api<ApiAdjustment>(`/admin/wallet-adjustments/${encodeURIComponent(id)}/approve`, {
+      method: "POST",
+      idempotencyKey: newIdempotencyKey(),
+    })
+  );
+  return toAdjustment(raw, actor.id);
+}
+
+export async function rejectAdjustment(id: string, reason: string, actor: AdminActor): Promise<AdjustmentRow> {
+  const raw = await write(() =>
+    api<ApiAdjustment>(`/admin/wallet-adjustments/${encodeURIComponent(id)}/reject`, {
+      method: "POST",
+      body: { reason },
+    })
+  );
+  return toAdjustment(raw, actor.id);
+}
+
+// -------------------------------------------------------------- commissions
+
+interface ApiCommissionRates {
+  individual_bp: number;
+  agency_bp: number;
+  hotel_bp: number;
+  hostel_bp: number;
+}
+
+const fromBp = (raw: ApiCommissionRates): Record<HostType, number> => ({
+  individual: raw.individual_bp / 100,
+  agency: raw.agency_bp / 100,
+  hotel: raw.hotel_bp / 100,
+  hostel: raw.hostel_bp / 100,
+});
 
 export async function getCommissionRates(): Promise<Record<HostType, number>> {
-  await delay(100);
-  return { ...store.platformSettings.defaultCommissionRates };
+  return fromBp(await api<ApiCommissionRates>("/admin/commission-rates"));
 }
 
+/** Replaces the four default rates (percent in, basis points to the API); new bookings only. */
 export async function updateCommissionRates(
   rates: Record<HostType, number>,
-  actor: AdminActor
+  _actor: AdminActor
 ): Promise<Record<HostType, number>> {
-  assertCan(actor.role, "commissions.manage");
-  for (const [k, v] of Object.entries(rates)) {
-    if (!isValidCommissionRate(v)) throw new ValidationError(`Invalid commission rate for ${k}`);
-  }
-  await delay(200);
-
-  const prev = { ...store.platformSettings.defaultCommissionRates };
-  store.platformSettings = {
-    ...store.platformSettings,
-    defaultCommissionRates: { ...rates },
-  };
-
-  await logAudit(
-    actor,
-    "COMMISSION_RATES_UPDATE",
-    "setting",
-    "platform_commissions",
-    `Updated platform commission rates: Individual: ${rates.individual}%, Agency: ${rates.agency}%, Hotel: ${rates.hotel}%, Hostel: ${rates.hostel}%`,
-    prev,
-    rates
+  const raw = await write(() =>
+    api<ApiCommissionRates>("/admin/commission-rates", {
+      method: "PUT",
+      body: {
+        individual_bp: Math.round(rates.individual * 100),
+        agency_bp: Math.round(rates.agency * 100),
+        hotel_bp: Math.round(rates.hotel * 100),
+        hostel_bp: Math.round(rates.hostel * 100),
+      },
+    })
   );
-
-  return { ...rates };
+  return fromBp(raw);
 }
 
 // ------------------------------------------------------------------ payouts
 
-export async function listPayouts(params: { status?: string } = {}): Promise<PayoutRequest[]> {
-  await delay(150);
-  let rows = [...store.payouts];
-  if (params.status && params.status !== "all") rows = rows.filter((p) => p.status === params.status);
-  rows.sort((a, b) => {
-    // Pending first, then most recent request.
-    if ((a.status === "pending") !== (b.status === "pending")) return a.status === "pending" ? -1 : 1;
-    return b.requestedAt.localeCompare(a.requestedAt);
-  });
-  return rows.map((p) => ({ ...p, accountDetails: { ...p.accountDetails } }));
+export interface PayoutsAnswer {
+  /** False while payouts are switched off (BR-PAY-11, DEC-019): the API answers 404. */
+  enabled: boolean;
+  rows: PayoutRequest[];
 }
 
-function findPendingPayout(id: string): { idx: number; payout: PayoutRequest } {
-  const idx = store.payouts.findIndex((p) => p.id === id);
-  if (idx === -1) throw new DomainError("Payout request not found");
-  const payout = store.payouts[idx];
-  if (payout.status !== "pending") {
-    throw new DomainError(`Payout ${id} is already ${payout.status}; only pending requests can be processed`);
-  }
-  return { idx, payout };
+interface ApiPayout {
+  id: string;
+  host_account_id: string;
+  amount: { amount_minor: number };
+  status: string;
+  approved_by: { display_name: string } | null;
+  approved_at: string | null;
+  bank_reference: string;
+  rejection_reason: string;
+  created_at: string;
 }
 
-/**
- * pending → approved. Debits the host wallet with a negative `host_payout`
- * ledger entry. Refuses when the ledger balance is insufficient. The status
- * check, balance check, ledger write and status write run synchronously (no
- * await in between) so a second/concurrent approval fails cleanly.
- */
-export async function approvePayout(id: string, actor: AdminActor): Promise<PayoutRequest> {
-  assertCan(actor.role, "payouts.approve");
-  await delay(200);
-
-  // ---- atomic section (no await) ----
-  const { idx, payout } = findPendingPayout(id);
-  const host = store.hosts.find((h) => h.id === payout.hostId);
-  if (!host) throw new DomainError("Host not found for this payout");
-  if (!Number.isInteger(payout.amountDzd) || payout.amountDzd <= 0) {
-    throw new DomainError("Payout amount is invalid");
+export async function listPayouts(params: { status?: string } = {}): Promise<PayoutsAnswer> {
+  try {
+    const [rows, names] = await Promise.all([
+      apiAll<ApiPayout>("/admin/payouts", {
+        query: { status: params.status && params.status !== "all" ? params.status : undefined },
+      }, 4),
+      hostNameMap(),
+    ]);
+    return {
+      enabled: true,
+      rows: rows.map((p) => ({
+        id: p.id,
+        hostId: p.host_account_id,
+        hostName: names.get(p.host_account_id) ?? "",
+        hostType: "individual",
+        amountDzd: p.amount.amount_minor / 100,
+        payoutMethod: "bank_wire",
+        accountDetails: {},
+        status: (p.status === "requested" ? "pending" : p.status) as PayoutRequest["status"],
+        requestedAt: p.created_at,
+        processedAt: p.approved_at ?? undefined,
+        processedBy: p.approved_by?.display_name,
+        rejectionReason: p.rejection_reason || undefined,
+      })),
+    };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return { enabled: false, rows: [] };
+    throw error;
   }
-  const balanceBefore = getHostBalance(host.id);
-  if (balanceBefore < payout.amountDzd) {
-    throw new DomainError(
-      `Insufficient wallet balance: ${balanceBefore} DZD available, ${payout.amountDzd} DZD requested`
-    );
-  }
-  const tx = appendLedgerEntry({
-    host,
-    type: "host_payout",
-    amount: -payout.amountDzd,
-    description: `Payout ${payout.id} via ${payout.payoutMethod}`,
-    adminActor: actor.name,
-  });
-  const updated: PayoutRequest = {
-    ...payout,
-    status: "approved",
-    processedAt: tx.createdAt,
-    processedBy: actor.name,
-    transactionId: tx.id,
-  };
-  store.payouts[idx] = updated;
-  // ---- end atomic section ----
+}
 
-  await logAudit(
-    actor,
-    "PAYOUT_APPROVE",
-    "payout",
-    id,
-    `Approved payout ${id} of ${payout.amountDzd} DZD to ${payout.hostName}`,
-    { status: payout.status, balance: balanceBefore },
-    { status: updated.status, balance: tx.balanceAfter, transactionId: tx.id }
+export async function approvePayout(id: string, _actor: AdminActor): Promise<void> {
+  await write(() =>
+    api(`/admin/payouts/${encodeURIComponent(id)}/approve`, { method: "POST", idempotencyKey: newIdempotencyKey() })
   );
-
-  return { ...updated };
 }
 
-/** pending → rejected (reason required). No ledger movement. */
-export async function rejectPayout(id: string, reason: string, actor: AdminActor): Promise<PayoutRequest> {
-  assertCan(actor.role, "payouts.approve");
-  if (!isValidReason(reason)) throw new ValidationError("A rejection reason is required");
-  await delay(200);
-
-  const { idx, payout } = findPendingPayout(id);
-  const updated: PayoutRequest = {
-    ...payout,
-    status: "rejected",
-    processedAt: new Date().toISOString(),
-    processedBy: actor.name,
-    rejectionReason: reason.trim(),
-  };
-  store.payouts[idx] = updated;
-
-  await logAudit(
-    actor,
-    "PAYOUT_REJECT",
-    "payout",
-    id,
-    `Rejected payout ${id} of ${payout.amountDzd} DZD to ${payout.hostName}: ${reason.trim()}`,
-    { status: payout.status },
-    { status: updated.status }
-  );
-
-  return { ...updated };
+export async function rejectPayout(id: string, reason: string, _actor: AdminActor): Promise<void> {
+  await write(() => api(`/admin/payouts/${encodeURIComponent(id)}/reject`, { method: "POST", body: { reason } }));
 }
 
 // --------------------------------------------------------------------- KPIs
@@ -389,105 +409,156 @@ export async function rejectPayout(id: string, reason: string, actor: AdminActor
 export interface FinanceSummary {
   totalWalletBalanceDzd: number;
   negativeWalletCount: number;
+  belowFloorWalletCount: number;
   walletCount: number;
-  pendingPayoutsDzd: number;
-  pendingPayoutsCount: number;
+  /** Net commission kept this month (taken minus returned). */
   monthCommissionsDzd: number;
-  monthPayoutsDzd: number;
-  monthPayoutsCount: number;
+  monthCommissionsReversedDzd: number;
+  monthTopupsDzd: number;
+  pendingTopupApprovals: number;
+  /** Refunds hosts were told to pay guests this month (memo, DEC-019). */
   refundsTotalDzd: number;
-  refundedBookingsCount: number;
-  /** Guest money held for paid bookings not yet completed (confirmed / disputed). */
+  /** False while payouts and guest payments are switched off (BR-PAY-11). */
+  payoutsEnabled: boolean;
+  pendingPayoutsCount: number;
+  /** Guest money held by BLADUS; always 0 while online payment is off. */
   escrowDzd: number;
   monthStart: string;
 }
 
-/** Aggregates over ALL rows of the store (never a single page). */
 export async function getFinanceSummary(): Promise<FinanceSummary> {
-  await delay(120);
+  const [raw, wallets] = await Promise.all([
+    api<ApiFinanceSummary>("/admin/finance/summary"),
+    api<unknown>("/admin/wallets", { query: { page_size: 1 } }).then(totalOf).catch(() => 0),
+  ]);
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-  const aggregates = computeWalletAggregates();
-  let totalWalletBalanceDzd = 0;
-  let negativeWalletCount = 0;
-  for (const w of store.wallets) {
-    const balance = aggregates.get(w.hostId)?.balance ?? 0;
-    totalWalletBalanceDzd += balance;
-    if (balance < 0) negativeWalletCount++;
-  }
-
-  let monthCommissionsDzd = 0;
-  let monthPayoutsDzd = 0;
-  let monthPayoutsCount = 0;
-  for (const t of store.transactions) {
-    if (t.createdAt < monthStart) continue;
-    if (t.type === "commission_deduction") monthCommissionsDzd += Math.abs(t.amount);
-    if (t.type === "host_payout") {
-      monthPayoutsDzd += Math.abs(t.amount);
-      monthPayoutsCount++;
-    }
-  }
-
-  const pending = store.payouts.filter((p) => p.status === "pending");
-
-  let refundsTotalDzd = 0;
-  let refundedBookingsCount = 0;
-  let escrowDzd = 0;
-  for (const b of store.bookings) {
-    const refunded = b.refundedAmountDzd ?? 0;
-    if (refunded > 0) {
-      refundsTotalDzd += refunded;
-      refundedBookingsCount++;
-    }
-    if (
-      (b.status === "confirmed" || b.status === "disputed") &&
-      (b.paymentStatus === "paid" || b.paymentStatus === "partially_refunded")
-    ) {
-      escrowDzd += b.totalAmountDzd - refunded;
-    }
-  }
-
+  const committed = (raw.commission_this_month?.amount_minor ?? 0) - (raw.commission_reversed_this_month?.amount_minor ?? 0);
   return {
-    totalWalletBalanceDzd,
-    negativeWalletCount,
-    walletCount: store.wallets.length,
-    pendingPayoutsDzd: pending.reduce((s, p) => s + p.amountDzd, 0),
-    pendingPayoutsCount: pending.length,
-    monthCommissionsDzd,
-    monthPayoutsDzd,
-    monthPayoutsCount,
-    refundsTotalDzd,
-    refundedBookingsCount,
-    escrowDzd,
-    monthStart,
+    totalWalletBalanceDzd: (raw.wallets_total?.amount_minor ?? 0) / 100,
+    negativeWalletCount: raw.negative_wallets,
+    belowFloorWalletCount: raw.below_floor_wallets,
+    walletCount: wallets,
+    monthCommissionsDzd: committed / 100,
+    monthCommissionsReversedDzd: (raw.commission_reversed_this_month?.amount_minor ?? 0) / 100,
+    monthTopupsDzd: (raw.topups_this_month?.amount_minor ?? 0) / 100,
+    pendingTopupApprovals: raw.pending_topup_approvals,
+    refundsTotalDzd: (raw.refunds_owed_this_month?.amount_minor ?? 0) / 100,
+    payoutsEnabled: Boolean(raw.dormant),
+    pendingPayoutsCount: raw.dormant?.payouts_pending ?? 0,
+    escrowDzd: (raw.dormant?.escrow_balance?.amount_minor ?? 0) / 100,
+    monthStart: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
   };
 }
 
-/** Bookings with at least one refund, newest first (for the refunds tab). */
-export async function listRefunds(params: { page?: number; pageSize?: number } = {}) {
-  await delay(150);
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 10;
-  const rows = store.bookings
-    .filter((b) => (b.refundedAmountDzd ?? 0) > 0)
-    .sort((a, b) => (b.refundedAt ?? b.cancelledAt ?? b.createdAt).localeCompare(a.refundedAt ?? a.cancelledAt ?? a.createdAt));
-  const total = rows.length;
+// ------------------------------------------------------------------ refunds
+
+/** Refunds hosts owe guests after cancellations (review R8), newest first. */
+export async function listRefunds(
+  params: { page?: number; pageSize?: number; status?: string; overdue?: boolean } = {}
+): Promise<PaginatedResult<RefundRow>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 10));
+  const [answer, names] = await Promise.all([
+    api<{ count: number; results: ApiRefundObligation[] }>("/admin/refunds", {
+      query: {
+        status: params.status && params.status !== "all" ? params.status : undefined,
+        overdue: params.overdue ? "true" : undefined,
+        page,
+        page_size: pageSize,
+      },
+    }),
+    hostNameMap(),
+  ]);
+  const total = totalOf(answer);
   return {
-    rows: rows.slice((page - 1) * pageSize, page * pageSize).map((b) => ({
-      id: b.id,
-      reference: b.reference,
-      guestName: b.guestName,
-      hostName: b.hostName,
-      totalAmountDzd: b.totalAmountDzd,
-      refundedAmountDzd: b.refundedAmountDzd ?? 0,
-      paymentStatus: b.paymentStatus,
-      status: b.status,
-      date: b.refundedAt ?? b.cancelledAt ?? b.createdAt,
-    })),
+    rows: (answer?.results ?? []).map((r) => toRefund(r, names)),
     total,
     page,
     pageSize,
-    totalPages: Math.ceil(total / pageSize) || 1,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
   };
 }
+
+/** Closes a refund debt after checking the proof. */
+export async function settleRefund(id: string, note: string): Promise<RefundRow> {
+  const raw = await write(() =>
+    api<ApiRefundObligation>(`/admin/refunds/${encodeURIComponent(id)}/settle`, {
+      method: "POST",
+      body: { note },
+      idempotencyKey: newIdempotencyKey(),
+    })
+  );
+  return toRefund(raw, await hostNameMap());
+}
+
+// ----------------------------------------------------------------- invoices
+
+export async function listInvoices(
+  params: { hostId?: string; year?: number; page?: number; pageSize?: number } = {}
+): Promise<PaginatedResult<InvoiceRow>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 10));
+  const [answer, names] = await Promise.all([
+    api<{ count: number; results: ApiInvoice[] }>("/admin/invoices", {
+      query: { host_account: params.hostId || undefined, year: params.year, page, page_size: pageSize },
+    }),
+    hostNameMap(),
+  ]);
+  const total = totalOf(answer);
+  return {
+    rows: (answer?.results ?? []).map((i) => toInvoice(i, names)),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+// ---------------------------------------------------- sync health (R3, R14)
+
+export async function listInventoryConflicts(
+  params: { status?: string; page?: number; pageSize?: number } = {}
+): Promise<PaginatedResult<ConflictRow>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 10));
+  const answer = await api<{ count: number; results: ApiInventoryConflict[] }>("/admin/inventory-conflicts", {
+    query: { status: params.status && params.status !== "all" ? params.status : undefined, page, page_size: pageSize },
+  });
+  const total = totalOf(answer);
+  return { rows: (answer?.results ?? []).map(toConflict), total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
+}
+
+export async function resolveInventoryConflict(id: string, note: string): Promise<ConflictRow> {
+  const raw = await write(() =>
+    api<ApiInventoryConflict>(`/admin/inventory-conflicts/${encodeURIComponent(id)}/resolve`, {
+      method: "POST",
+      body: { note },
+    })
+  );
+  return toConflict(raw);
+}
+
+export async function listOutbox(
+  params: { status?: string; topic?: string; page?: number; pageSize?: number } = {}
+): Promise<PaginatedResult<OutboxRow>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 10));
+  const answer = await api<{ count: number; results: ApiOutboxMessage[] }>("/admin/outbox", {
+    query: {
+      status: params.status && params.status !== "all" ? params.status : undefined,
+      topic: params.topic || undefined,
+      page,
+      page_size: pageSize,
+    },
+  });
+  const total = totalOf(answer);
+  return { rows: (answer?.results ?? []).map(toOutbox), total, page, pageSize, totalPages: Math.max(1, Math.ceil(total / pageSize)) };
+}
+
+export async function retryOutbox(id: string): Promise<OutboxRow> {
+  const raw = await write(() =>
+    api<ApiOutboxMessage>(`/admin/outbox/${encodeURIComponent(id)}/retry`, { method: "POST" })
+  );
+  return toOutbox(raw);
+}
+

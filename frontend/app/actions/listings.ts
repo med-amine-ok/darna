@@ -3,105 +3,88 @@
 import { revalidatePath } from "next/cache";
 import type { Listing } from "@/types";
 import { ActionResult, actionFail, actionOk } from "@/lib/action-result";
+import { ApiError } from "@/lib/api/client";
+import { failFromError } from "@/lib/api/errors";
 import { getHostContext, hostMayPublishListing } from "@/lib/server/host-context";
-import { hostOwnsListing } from "@/lib/server/authz";
-import {
-  createListing,
-  deleteListing,
-  getListingById,
-  updateListing,
-} from "@/lib/data/listings";
-import { ListingInputError } from "@/lib/data/_sanitize";
+import { createListing, deleteListing, getHostListingById, updateListing } from "@/lib/data/listings";
+
+/** Listing-specific API refusals with their own message; the rest go through failFromError. */
+function listingFail<T>(error: unknown, where: string): ActionResult<T> {
+  if (error instanceof ApiError) {
+    if (error.code === "experience_type_required" || error.code === "experience_type_not_allowed") {
+      return actionFail("EXPERIENCE_TYPE_REQUIRED");
+    }
+    if (error.code === "listing_incomplete") return actionFail("LISTING_INCOMPLETE");
+  }
+  return failFromError<T>(error, where);
+}
 
 /**
  * An existing host creates a listing from host mode (/host/listings/new).
- * Ownership comes from the session: individuals own it personally, org hosts
- * publish under their active organization. The vertical must be one the
- * workspace may publish (lib/catalog-types.ts HOST_ALLOWED_OFFERS); experience
- * listings carry an `experienceType`, validated by the data layer.
+ * The API creates it in the session's active workspace (POST /host/listings)
+ * and re-checks the offer rule (403 host_offer_not_allowed); the check here
+ * only answers early. It is sent to review unless it is a draft.
  */
-export async function createMyListingAction(
-  input: unknown,
-): Promise<ActionResult<{ id: string }>> {
+export async function createMyListingAction(input: unknown): Promise<ActionResult<{ id: string }>> {
   const ctx = await getHostContext();
   if (!ctx) return actionFail("UNAUTHENTICATED");
   if (ctx.isOrgHost && !ctx.organization) return actionFail("FORBIDDEN");
   if (!input || typeof input !== "object") return actionFail("INVALID_INPUT");
-  if (!hostMayPublishListing(ctx.hostType, input))
-    return actionFail("HOST_OFFER_NOT_ALLOWED");
+  if (!hostMayPublishListing(ctx.hostType, input)) return actionFail("HOST_OFFER_NOT_ALLOWED");
 
-  let listing: Listing;
   try {
-    listing = await createListing(
+    const listing = await createListing(
       ctx.organization
-        ? {
-            hostUserId: ctx.user.id,
-            organizationId: ctx.organization.id,
-            businessCategory: ctx.organization.businessCategory,
-          }
+        ? { hostUserId: ctx.user.id, organizationId: ctx.organization.id, businessCategory: ctx.organization.businessCategory }
         : { hostUserId: ctx.user.id },
       input,
     );
-  } catch (err) {
-    if (err instanceof ListingInputError)
-      return actionFail(err.code, err.params);
-    throw err;
+    revalidatePath("/", "layout");
+    return actionOk({ id: listing.id });
+  } catch (error) {
+    return listingFail(error, "createMyListingAction");
   }
-  revalidatePath("/", "layout");
-  return actionOk({ id: listing.id });
 }
 
 /**
- * Owner edits one of their listings. Only whitelisted content fields are
- * applied (see lib/data/_sanitize.ts), never ids, ownership or stats. A patch
- * may not move a listing into a vertical the workspace can't publish.
+ * Owner edits one of their listings: content fields (PATCH), `status`
+ * ("active" submits or resumes, "draft" pauses or withdraws) and `roomTypes`
+ * (synced with /room-types). The API decides ownership (404 for anyone else).
  */
-export async function updateMyListingAction(
-  listingId: string,
-  patch: unknown,
-): Promise<ActionResult<Listing>> {
+export async function updateMyListingAction(listingId: string, patch: unknown): Promise<ActionResult<Listing>> {
   const ctx = await getHostContext();
   if (!ctx) return actionFail("UNAUTHENTICATED");
+  if (typeof listingId !== "string") return actionFail("INVALID_INPUT");
+  const listing = await getHostListingById(listingId);
+  if (!listing) return actionFail("NOT_FOUND");
 
-  const listing =
-    typeof listingId === "string" ? await getListingById(listingId) : null;
-  if (!listing || !hostOwnsListing(ctx, listing))
-    return actionFail("NOT_FOUND");
-
-  const p =
-    patch && typeof patch === "object" ? (patch as Record<string, unknown>) : null;
-  if (p && p.category !== undefined && p.category !== listing.category) {
-    const roomTypes = p.roomTypes !== undefined ? p.roomTypes : listing.roomTypes;
-    if (!hostMayPublishListing(ctx.hostType, { category: p.category, roomTypes }))
-      return actionFail("HOST_OFFER_NOT_ALLOWED");
+  const p = patch && typeof patch === "object" ? (patch as Record<string, unknown>) : null;
+  if (!p) return actionFail("INVALID_INPUT");
+  if (p.category !== undefined && p.category !== listing.category) {
+    // The API locks the vertical of an existing listing (vertical_locked).
+    return actionFail("HOST_OFFER_NOT_ALLOWED");
   }
 
-  let updated: Listing | null;
   try {
-    updated = await updateListing(listing.id, patch);
-  } catch (err) {
-    if (err instanceof ListingInputError)
-      return actionFail(err.code, err.params);
-    throw err;
+    const updated = await updateListing(listing.id, p);
+    if (!updated) return actionFail("NOT_FOUND");
+    revalidatePath("/", "layout");
+    return actionOk(updated);
+  } catch (error) {
+    return listingFail(error, "updateMyListingAction");
   }
-  if (!updated) return actionFail("NOT_FOUND");
-  revalidatePath("/", "layout");
-  return actionOk(updated);
 }
 
-export async function deleteMyListingAction(
-  listingId: string,
-): Promise<ActionResult<{ id: string }>> {
+export async function deleteMyListingAction(listingId: string): Promise<ActionResult<{ id: string }>> {
   const ctx = await getHostContext();
   if (!ctx) return actionFail("UNAUTHENTICATED");
-
-  const listing =
-    typeof listingId === "string" ? await getListingById(listingId) : null;
-  if (!listing || !hostOwnsListing(ctx, listing))
-    return actionFail("NOT_FOUND");
-
-  const ok = await deleteListing(listing.id);
-  if (!ok) return actionFail("NOT_FOUND");
-  revalidatePath("/", "layout");
-  return actionOk({ id: listing.id });
+  if (typeof listingId !== "string") return actionFail("INVALID_INPUT");
+  try {
+    const ok = await deleteListing(listingId);
+    if (!ok) return actionFail("NOT_FOUND");
+    revalidatePath("/", "layout");
+    return actionOk({ id: listingId });
+  } catch (error) {
+    return listingFail(error, "deleteMyListingAction");
+  }
 }

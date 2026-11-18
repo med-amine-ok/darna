@@ -4,9 +4,11 @@ import { isRedirectError } from "next/dist/client/components/redirect";
 import { isNotFoundError } from "next/dist/client/components/not-found";
 import type { ActionResult } from "@/lib/actions/result";
 import type { AdminActor, Permission } from "@/lib/types";
-import { AuthError, ForbiddenError, requireAdmin, requirePermission } from "./current-admin";
+import { AuthError, ForbiddenError, SessionUnavailableError, requireAdmin, requirePermission } from "./current-admin";
 import { DomainError, ValidationError } from "@/lib/data/errors";
 import { hasPermission } from "@/lib/permissions";
+import { ApiError } from "@/lib/api/client";
+import { clearStaffSession, touchStaffSession } from "./session";
 import { MAX_MONEY_DZD, isValidCommissionRate } from "@/lib/pricing";
 import { MIN_REASON_LENGTH } from "@/lib/domain/transitions";
 
@@ -16,10 +18,13 @@ export class InvalidInputError extends Error {
 
 /**
  * Standard server-action pipeline:
- *   1. resolve the admin from the verified session cookie (store lookup,
- *      must exist and be active, CURRENT role from the store);
+ *   1. resolve the admin from the session cookie (GET /admin/auth/session:
+ *      active staff, second factor checked, permissions from the database);
  *   2. enforce `permission` (null = any signed-in admin);
- *   3. run the data-layer call with the server-derived actor.
+ *   3. run the data-layer call with the server-derived actor (the backend
+ *      checks the permission again and answers 403 otherwise).
+ * A 401 from the backend (expired, 30 minutes idle, revoked) clears the
+ * cookies so the next page load shows the login again.
  */
 export async function runAction<T>(
   permission: Permission | null,
@@ -27,10 +32,29 @@ export async function runAction<T>(
 ): Promise<ActionResult<T>> {
   try {
     const actor = permission ? await requirePermission(permission) : await requireAdmin();
+    touchStaffSession();
     return { ok: true, data: await fn(actor) };
   } catch (err) {
     if (isRedirectError(err) || isNotFoundError(err)) throw err;
-    if (err instanceof AuthError) return { ok: false, code: "unauthenticated", error: err.message };
+    // The backend could not confirm the session (down or rate limited): keep the cookies.
+    if (err instanceof SessionUnavailableError) return { ok: false, code: "failed", error: err.message };
+    if (err instanceof AuthError || (err instanceof ApiError && err.status === 401)) {
+      try {
+        clearStaffSession();
+      } catch {
+        /* cookies are read-only outside actions */
+      }
+      return { ok: false, code: "unauthenticated", error: new AuthError().message };
+    }
+    if (err instanceof ApiError) {
+      if (err.status === 403) return { ok: false, code: "forbidden", error: err.message };
+      if (err.status === 400 || err.status === 422) return { ok: false, code: "invalid", error: err.message };
+      if (err.status === 404 || err.status === 409 || err.status === 410) {
+        return { ok: false, code: "conflict", error: err.message };
+      }
+      console.error(`[server action] api ${err.status} ${err.code}`);
+      return { ok: false, code: "failed", error: err.message };
+    }
     if (err instanceof ForbiddenError) return { ok: false, code: "forbidden", error: err.message };
     if (err instanceof InvalidInputError || err instanceof ValidationError) {
       return { ok: false, code: "invalid", error: err.message };
@@ -100,7 +124,7 @@ export function reason(value: unknown, field = "reason", maxLen = 1000): string 
   return s;
 }
 
-/** Throws ForbiddenError unless the actor's role also grants `permission`. */
+/** Throws ForbiddenError unless the actor's session also grants `permission`. */
 export function requireAlso(actor: AdminActor, permission: Permission): void {
-  if (!hasPermission(actor.role, permission)) throw new ForbiddenError(permission);
+  if (!hasPermission(actor, permission)) throw new ForbiddenError(permission);
 }

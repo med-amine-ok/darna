@@ -173,6 +173,12 @@ def search_filters(request) -> dict:
             uuid.UUID(host_account)
         except ValueError as exc:
             raise _bad("host_account", "Must be a UUID.") from exc
+    host_user = request.query_params.get("host_user") or None
+    if host_user:
+        try:
+            uuid.UUID(host_user)
+        except ValueError as exc:
+            raise _bad("host_user", "Must be a UUID.") from exc
     return {
         "q": q,
         "vertical": request.query_params.get("vertical"),
@@ -188,6 +194,7 @@ def search_filters(request) -> dict:
         "experience_type": _first(request, "experience_type", "exp_type"),
         "host_type": request.query_params.get("host_type"),
         "host_account": host_account,
+        "host_user": host_user,
         "bedrooms_min": query_int(request, "bedrooms_min", minimum=0),
         "bathrooms_min": query_int(request, "bathrooms_min", minimum=0),
         "min_rating": query_decimal(request, "min_rating", minimum=1, maximum=5),
@@ -217,6 +224,7 @@ SEARCH_PARAMETERS = [
     OpenApiParameter("experience_type", str, description="Comma list of experience types."),
     OpenApiParameter("host_type", str, description="Comma list: individual, agency, hotel, hostel."),
     OpenApiParameter("host_account", OpenApiTypes.UUID, description="Only listings of one host account."),
+    OpenApiParameter("host_user", OpenApiTypes.UUID, description="Only listings of one individual host (user id)."),
     OpenApiParameter("bedrooms_min", int, description="Minimum bedrooms."),
     OpenApiParameter("bathrooms_min", int, description="Minimum bathrooms."),
     OpenApiParameter("min_rating", float, description="Minimum average rating, 1 to 5."),

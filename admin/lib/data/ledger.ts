@@ -1,92 +1,81 @@
 import "server-only";
-// TODO: replace with Supabase query (ledger table + per-wallet row lock)
-import { store } from "@/lib/mock-data/store";
-import type { Host, TransactionType, WalletTransaction } from "@/lib/types";
-import { DomainError } from "./errors";
+
+import { cache } from "react";
+import { api, apiAll, totalOf } from "@/lib/api/client";
+import { logReadError } from "@/lib/api/mapping";
+import { KINDS_BY_TYPE, toWalletTransaction, type ApiAdminWallet, type ApiLedgerTransaction } from "@/lib/api/finance";
+import type { PaginatedResult, TransactionType, WalletTransaction } from "@/lib/types";
 
 /**
- * Wallet ledger. A host's balance is ALWAYS the sum of its ledger entries;
- * nothing else (Host.walletBalance, HostWallet.balance) is authoritative.
+ * Double-entry ledger of the backend (GET /admin/ledger/transactions).
+ * Balances are kept by the backend from ledger lines; the admin app never
+ * computes or writes a balance itself.
  */
 
-export interface WalletAggregate {
-  balance: number;
-  totalEarned: number;
-  totalCommissionsPaid: number;
-  totalPayouts: number;
-  lastTransactionAt?: string;
+export interface LedgerFilterParams {
+  hostId?: string;
+  type?: string;
+  /** Booking id or BLD reference. */
+  booking?: string;
+  /** First and last day, YYYY-MM-DD. */
+  from?: string;
+  to?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
 }
-
-/** One pass over the ledger → per-host aggregates. */
-export function computeWalletAggregates(): Map<string, WalletAggregate> {
-  const map = new Map<string, WalletAggregate>();
-  for (const t of store.transactions) {
-    let agg = map.get(t.hostId);
-    if (!agg) {
-      agg = { balance: 0, totalEarned: 0, totalCommissionsPaid: 0, totalPayouts: 0 };
-      map.set(t.hostId, agg);
-    }
-    agg.balance += t.amount;
-    if (t.type === "booking_payment") agg.totalEarned += t.amount;
-    if (t.type === "commission_deduction") agg.totalCommissionsPaid += Math.abs(t.amount);
-    if (t.type === "host_payout") agg.totalPayouts += Math.abs(t.amount);
-    if (!agg.lastTransactionAt || t.createdAt > agg.lastTransactionAt) agg.lastTransactionAt = t.createdAt;
-  }
-  return map;
-}
-
-export function getHostBalance(hostId: string): number {
-  let balance = 0;
-  for (const t of store.transactions) if (t.hostId === hostId) balance += t.amount;
-  return balance;
-}
-
-const REFERENCE_PREFIX: Record<TransactionType, string> = {
-  booking_payment: "TXN-BKG",
-  commission_deduction: "TXN-COM",
-  host_payout: "TXN-PAY",
-  wallet_recharge: "TXN-REC",
-  booking_refund: "TXN-RFD",
-  adjustment: "TXN-ADJ",
-};
 
 /**
- * Appends a ledger entry and returns it. MUST be called synchronously after
- * any balance check (no `await` in between) so check-and-write is atomic in
- * the single-threaded mock; a real DB would use a transaction + row lock.
+ * Host display names by host account id, read once per request from
+ * /admin/wallets (ledger lines and invoices carry only the id).
  */
-export function appendLedgerEntry(input: {
-  host: Pick<Host, "id" | "ownerName" | "businessName" | "hostType">;
-  type: TransactionType;
-  amount: number;
-  description: string;
-  bookingRef?: string;
-  receiptReference?: string;
-  adminActor?: string;
-}): WalletTransaction {
-  if (!Number.isFinite(input.amount) || !Number.isInteger(input.amount) || input.amount === 0) {
-    throw new DomainError("Ledger amounts must be non-zero whole DZD");
+export const hostNameMap = cache(async (): Promise<Map<string, string>> => {
+  try {
+    const rows = await apiAll<ApiAdminWallet>("/admin/wallets", {}, 10);
+    return new Map(rows.map((w) => [w.host_account_id, w.host?.display_name ?? ""]));
+  } catch (error) {
+    logReadError("hostNameMap", error);
+    return new Map();
   }
-  const now = new Date();
-  const balanceAfter = getHostBalance(input.host.id) + input.amount;
-  const suffix = `${now.getTime().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`.toUpperCase();
-  const tx: WalletTransaction = {
-    id: `tx_${now.getTime()}_${Math.floor(Math.random() * 10000)}`,
-    walletId: `wlt_${input.host.id}`,
-    hostId: input.host.id,
-    hostName: input.host.businessName || input.host.ownerName,
-    hostType: input.host.hostType,
-    type: input.type,
-    amount: input.amount,
-    balanceAfter,
-    reference: `${REFERENCE_PREFIX[input.type]}-${suffix}`,
-    description: input.description,
-    bookingRef: input.bookingRef,
-    receiptReference: input.receiptReference,
-    adminActor: input.adminActor,
-    createdAt: now.toISOString(),
+});
+
+function ledgerQuery(params: LedgerFilterParams) {
+  const type = params.type && params.type !== "all" ? (params.type as TransactionType) : undefined;
+  return {
+    host_account: params.hostId || undefined,
+    kind: type ? KINDS_BY_TYPE[type] ?? type : undefined,
+    booking: params.booking || undefined,
+    from: params.from || undefined,
+    to: params.to || undefined,
+    q: params.search?.trim() || undefined,
   };
-  // Newest first, like the seed.
-  store.transactions.unshift(tx);
-  return tx;
+}
+
+/** One page of ledger transactions, newest first. Throws on API failure. */
+export async function listLedgerTransactions(params: LedgerFilterParams = {}): Promise<PaginatedResult<WalletTransaction>> {
+  const page = Math.max(1, params.page || 1);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize || 15));
+  const [answer, names] = await Promise.all([
+    api<{ count: number; results: ApiLedgerTransaction[] }>("/admin/ledger/transactions", {
+      query: { ...ledgerQuery(params), page, page_size: pageSize },
+    }),
+    hostNameMap(),
+  ]);
+  const total = totalOf(answer);
+  return {
+    rows: (answer?.results ?? []).map((tx) => toWalletTransaction(tx, names)),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+/** Every matching transaction (up to maxPages x 50), for CSV exports. */
+export async function allLedgerTransactions(params: LedgerFilterParams = {}, maxPages = 40): Promise<WalletTransaction[]> {
+  const [rows, names] = await Promise.all([
+    apiAll<ApiLedgerTransaction>("/admin/ledger/transactions", { query: ledgerQuery(params) }, maxPages),
+    hostNameMap(),
+  ]);
+  return rows.map((tx) => toWalletTransaction(tx, names));
 }

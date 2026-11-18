@@ -1,11 +1,10 @@
 import "server-only";
 
 import { cache } from "react";
-import { cookies } from "next/headers";
-import { getTeamMemberById } from "@/lib/data/team";
-import { ROLE_PERMISSIONS, hasPermission } from "@/lib/permissions";
+import { hasPermission, toAdminRole } from "@/lib/permissions";
+import { sessionPermissions } from "@/lib/api/staff";
 import type { AdminActor, AdminUser, Permission } from "@/lib/types";
-import { SESSION_COOKIE_NAME, verifySessionToken } from "./session";
+import { fetchStaffSession } from "./session";
 import { getClientIp } from "./client-ip";
 
 export class AuthError extends Error {
@@ -13,6 +12,18 @@ export class AuthError extends Error {
   constructor(message = "Your session has expired. Please sign in again.") {
     super(message);
     this.name = "AuthError";
+  }
+}
+
+/**
+ * The backend could not confirm the session right now (unreachable, 5xx, or
+ * 429 rate limit). The session itself may be fine, so it must not be cleared.
+ */
+export class SessionUnavailableError extends Error {
+  readonly code = "failed" as const;
+  constructor(message = "The service cannot be reached right now. Please try again.") {
+    super(message);
+    this.name = "SessionUnavailableError";
   }
 }
 
@@ -31,47 +42,63 @@ export interface CurrentAdmin {
   email: string;
   role: AdminUser["role"];
   avatar?: string;
+  /** Permissions of the session, read from the database by the backend on every request. */
   permissions: Permission[];
+  /** End of the session (8 hours absolute; the 30 minutes idle limit comes first when unused). */
+  expiresAt?: string;
 }
 
+export type AdminSessionState =
+  | { state: "signed_in"; admin: CurrentAdmin }
+  | { state: "signed_out" }
+  | { state: "unavailable" };
+
 /**
- * Resolves the signed-in admin for this request:
- *   cookie -> verified JWT (sig, exp, iss, aud) -> admin store lookup.
- * Returns null when the token is missing/invalid or the account no longer
- * exists or is deactivated. Role is taken from the store, never from the JWT.
- * Memoised per request with React cache().
+ * Resolves the signed-in admin for this request: cookie token ->
+ * GET /admin/auth/session. Memoised per request with React cache(), so the
+ * layout, guardPage() and server actions share one backend call.
  */
-export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
-  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
-  if (!token) return null;
-  const session = await verifySessionToken(token);
-  if (!session) return null;
-  const admin = await getTeamMemberById(session.userId);
-  if (!admin || !admin.isActive) return null;
+export const getAdminSession = cache(async (): Promise<AdminSessionState> => {
+  const lookup = await fetchStaffSession();
+  if (lookup.state === "signed_out") return { state: "signed_out" };
+  if (lookup.state === "unavailable") return { state: "unavailable" };
+  const { session } = lookup;
+  const user = session.user;
+  if (user.status !== "active" || !session.mfa_verified) return { state: "signed_out" };
   return {
-    id: admin.id,
-    name: admin.name,
-    email: admin.email,
-    role: admin.role,
-    avatar: admin.avatar,
-    permissions: [...(ROLE_PERMISSIONS[admin.role] ?? [])],
+    state: "signed_in",
+    admin: {
+      id: user.user_id,
+      name: user.display_name || user.email,
+      email: user.email,
+      role: toAdminRole(user.role),
+      permissions: sessionPermissions(session),
+      expiresAt: session.expires_at,
+    },
   };
 });
 
+/** The signed-in admin, or null (signed out, expired, idle, revoked, or the API is unreachable). */
+export const getCurrentAdmin = cache(async (): Promise<CurrentAdmin | null> => {
+  const state = await getAdminSession();
+  return state.state === "signed_in" ? state.admin : null;
+});
+
 function toActor(admin: CurrentAdmin): AdminActor {
-  return { id: admin.id, name: admin.name, role: admin.role, ip: getClientIp() };
+  return { id: admin.id, name: admin.name, role: admin.role, ip: getClientIp(), permissions: admin.permissions };
 }
 
-/** Any active, signed-in admin. Throws AuthError otherwise. */
+/** Any active, signed-in admin. Throws AuthError when signed out, SessionUnavailableError when the backend cannot say. */
 export async function requireAdmin(): Promise<AdminActor> {
-  const admin = await getCurrentAdmin();
-  if (!admin) throw new AuthError();
-  return toActor(admin);
+  const state = await getAdminSession();
+  if (state.state === "unavailable") throw new SessionUnavailableError();
+  if (state.state !== "signed_in") throw new AuthError();
+  return toActor(state.admin);
 }
 
-/** Signed-in admin whose CURRENT role grants `permission`. */
+/** Signed-in admin whose session grants `permission` (the backend checks again on every call). */
 export async function requirePermission(permission: Permission): Promise<AdminActor> {
   const actor = await requireAdmin();
-  if (!hasPermission(actor.role, permission)) throw new ForbiddenError(permission);
+  if (!hasPermission(actor, permission)) throw new ForbiddenError(permission);
   return actor;
 }

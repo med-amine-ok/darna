@@ -241,14 +241,18 @@ def admin_user(user_id) -> User | None:
     return User.objects.filter(pk=user_id, is_staff=False).first()
 
 
-def public_user(user_id) -> User | None:
+def public_user(key) -> User | None:
     """
-    A user whose public profile may be shown (getPublicUser).
+    A user whose public profile may be shown (getPublicUser), by id or by handle (ACC-06).
 
     Suspended, banned, deleted and staff accounts are hidden (404), so ids
-    cannot be probed for their state.
+    and handles cannot be probed for their state.
     """
-    return User.objects.filter(
-        pk=user_id, status=UserStatus.ACTIVE, deleted_at__isnull=True, is_staff=False
-    ).first()
+    import uuid
+
+    visible = User.objects.filter(status=UserStatus.ACTIVE, deleted_at__isnull=True, is_staff=False)
+    try:
+        return visible.filter(pk=uuid.UUID(str(key))).first()
+    except ValueError:
+        return visible.filter(handle=str(key).lower()).first()
 

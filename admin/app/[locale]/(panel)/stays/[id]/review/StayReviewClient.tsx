@@ -43,25 +43,25 @@ type CheckResult =
   | "completeFem"
   | "compliant";
 
-/** Checklist (Mockup 04): id → translation key under `stays.review.checks`, result when OK. */
+/** Reviewer checklist (Mockup 04): id → translation key under `stays.review.checks`, result when OK. Starts unchecked: the reviewer ticks what they verified. */
 const INITIAL_CHECKLIST: {
   id: string;
   key: string;
   okResult: CheckResult;
   ok: boolean;
 }[] = [
-  { id: "id_proof", key: "idProof", okResult: "valid", ok: true },
-  { id: "residence_proof", key: "residenceProof", okResult: "valid", ok: true },
-  { id: "property_title", key: "propertyTitle", okResult: "valid", ok: true },
-  { id: "photos", key: "photos", okResult: "compliantPlural", ok: true },
-  { id: "address", key: "address", okResult: "verified", ok: true },
+  { id: "id_proof", key: "idProof", okResult: "valid", ok: false },
+  { id: "residence_proof", key: "residenceProof", okResult: "valid", ok: false },
+  { id: "property_title", key: "propertyTitle", okResult: "valid", ok: false },
+  { id: "photos", key: "photos", okResult: "compliantPlural", ok: false },
+  { id: "address", key: "address", okResult: "verified", ok: false },
   {
     id: "completeness",
     key: "completeness",
     okResult: "completeFem",
-    ok: true,
+    ok: false,
   },
-  { id: "rules", key: "rules", okResult: "compliant", ok: true },
+  { id: "rules", key: "rules", okResult: "compliant", ok: false },
 ];
 
 const HOST_TYPE_KEYS = ["individual", "agency", "hotel", "hostel"];
@@ -318,17 +318,17 @@ export default function StayReviewClient({ stay }: StayReviewClientProps) {
                 },
                 {
                   icon: Bed,
-                  value: String(stay.bedroomCount || 1),
+                  value: stay.bedroomCount !== undefined ? String(stay.bedroomCount) : "-",
                   label: t("fields.bedrooms"),
                 },
                 {
                   icon: Bath,
-                  value: String(stay.bathroomCount || 1),
+                  value: stay.bathroomCount !== undefined ? String(stay.bathroomCount) : "-",
                   label: t("fields.bathrooms"),
                 },
                 {
                   icon: Maximize2,
-                  value: t("values.surface", { value: stay.surfaceM2 || 120 }),
+                  value: stay.surfaceM2 ? t("values.surface", { value: stay.surfaceM2 }) : "-",
                   label: t("fields.surface"),
                 },
               ].map(({ icon: Icon, value, label }) => (
@@ -430,21 +430,19 @@ export default function StayReviewClient({ stay }: StayReviewClientProps) {
                   />
                   <InfoTile
                     label={t("fields.bedrooms")}
-                    value={`${stay.bedroomCount || 1}`}
+                    value={stay.bedroomCount !== undefined ? `${stay.bedroomCount}` : "-"}
                   />
                   <InfoTile
                     label={t("fields.bathrooms")}
-                    value={`${stay.bathroomCount || 1}`}
+                    value={stay.bathroomCount !== undefined ? `${stay.bathroomCount}` : "-"}
                   />
                   <InfoTile
                     label={t("fields.surface")}
-                    value={t("values.surface", {
-                      value: stay.surfaceM2 || 120,
-                    })}
+                    value={stay.surfaceM2 ? t("values.surface", { value: stay.surfaceM2 }) : "-"}
                   />
                   <InfoTile
                     label={t("fields.constructionYear")}
-                    value={`${stay.constructionYear || 2020}`}
+                    value={stay.constructionYear ? `${stay.constructionYear}` : "-"}
                   />
                 </div>
                 <div>

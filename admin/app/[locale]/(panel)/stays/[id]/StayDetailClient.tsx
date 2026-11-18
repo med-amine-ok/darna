@@ -10,11 +10,7 @@ import {
   ChevronRight,
   MapPin,
   Star,
-  ShieldCheck,
-  CheckCircle2,
-  FileText,
   Eye,
-  Download,
   Edit,
   Check,
   RotateCcw,
@@ -29,7 +25,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { approveListing, rejectListing, requestChangesListing, restoreListing, updateListingStatus } from "@/lib/actions/listings";
 import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { canTransitionListing } from "@/lib/domain/transitions";
-import { formatDateTime, formatDzd, formatNumber } from "@/lib/utils/format";
+import { formatDateTime, formatDzd } from "@/lib/utils/format";
 import { useLocale, useTranslations } from "next-intl";
 import { experienceTypeLabel, tripTypeLabel } from "@/lib/catalog-types";
 import { unwrap } from "@/lib/actions/result";
@@ -47,25 +43,7 @@ function errorMessage(err: unknown): string | undefined {
 
 const TAB_IDS = ["overview", "info", "photos", "amenities", "pricing", "rules", "calendar", "documents", "history"] as const;
 
-/** Mock moderation checklist (key → result key), translated at render time. */
-const CHECK_POINTS: { key: string; result: "compliant" | "verified" | "complete" }[] = [
-  { key: "ownerDocuments", result: "compliant" },
-  { key: "photos", result: "verified" },
-  { key: "address", result: "verified" },
-  { key: "amenities", result: "complete" },
-  { key: "pricingPolicy", result: "compliant" },
-  { key: "houseRules", result: "compliant" },
-];
-
-/** Mock owner documents. */
-const OWNER_DOCUMENTS: { key: string; ext: string; sizeMb: number; validated: boolean }[] = [
-  { key: "identity", ext: "PDF", sizeMb: 1.8, validated: true },
-  { key: "propertyTitle", ext: "PDF", sizeMb: 4.2, validated: true },
-  { key: "proofOfAddress", ext: "JPG", sizeMb: 2.1, validated: false },
-];
-
-const iconBtn =
-  "p-1 hover:bg-primary/[0.06] rounded text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
+const NOT_SET = "-";
 
 export default function StayDetailClient({ initialStay, stayId }: StayDetailClientProps) {
   const router = useRouter();
@@ -157,6 +135,7 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
     stay.imageSrc,
     stay.category === "vehicle" ? "car" : stay.category === "experience" ? "experience" : stay.category === "trip" ? "trip" : "stay"
   );
+  const houseRuleTexts: string[] = Array.isArray(stay.specs?.houseRules) ? (stay.specs?.houseRules as string[]) : [];
   const isPublished = stay.status === "approved" || stay.status === "published";
   const isPending = stay.status === "pending_review" || stay.status === "pending";
 
@@ -291,10 +270,10 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
               )}
               <InfoTile label={t("fields.category")} value={stay.category} />
               <InfoTile label={t("detail.guestCapacity")} value={t("detail.people", { count: stay.guestCapacity })} />
-              <InfoTile label={t("fields.bedrooms")} value={`${stay.bedroomCount || 1}`} />
-              <InfoTile label={t("fields.bathrooms")} value={`${stay.bathroomCount || 1}`} />
-              <InfoTile label={t("fields.surface")} value={t("values.surface", { value: stay.surfaceM2 || 120 })} />
-              <InfoTile label={t("fields.constructionYear")} value={`${stay.constructionYear || 2020}`} />
+              <InfoTile label={t("fields.bedrooms")} value={stay.bedroomCount !== undefined ? `${stay.bedroomCount}` : NOT_SET} />
+              <InfoTile label={t("fields.bathrooms")} value={stay.bathroomCount !== undefined ? `${stay.bathroomCount}` : NOT_SET} />
+              <InfoTile label={t("fields.surface")} value={stay.surfaceM2 ? t("values.surface", { value: stay.surfaceM2 }) : NOT_SET} />
+              <InfoTile label={t("fields.constructionYear")} value={stay.constructionYear ? `${stay.constructionYear}` : NOT_SET} />
               <InfoTile label={t("fields.pricePerNight")} value={formatDzd(stay.price, locale)} />
               <InfoTile
                 label={t("fields.approvalMode")}
@@ -351,28 +330,17 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-primary">
               <div className="p-3 bg-darnaBg-100 rounded-xl">
                 <dt className="text-primary-600 block text-[11px]">{t("times.checkIn")}</dt>
-                <dd className="font-semibold text-sm">{t("times.checkInValue", { time: "15:00" })}</dd>
+                <dd className="font-semibold text-sm">{stay.houseRules?.checkInTime ? t("times.checkInValue", { time: stay.houseRules.checkInTime }) : NOT_SET}</dd>
               </div>
               <div className="p-3 bg-darnaBg-100 rounded-xl">
                 <dt className="text-primary-600 block text-[11px]">{t("times.checkOut")}</dt>
-                <dd className="font-semibold text-sm">{t("times.checkOutValue", { time: "11:00" })}</dd>
+                <dd className="font-semibold text-sm">{stay.houseRules?.checkOutTime ? t("times.checkOutValue", { time: stay.houseRules.checkOutTime }) : NOT_SET}</dd>
               </div>
-              <div className="p-3 bg-darnaBg-100 rounded-xl">
-                <dt className="text-primary-600 block text-[11px]">{t("detail.rules.pets")}</dt>
-                <dd className="font-medium text-accent-700">{t("detail.rules.notAllowed")}</dd>
-              </div>
-              <div className="p-3 bg-darnaBg-100 rounded-xl">
-                <dt className="text-primary-600 block text-[11px]">{t("detail.rules.smoking")}</dt>
-                <dd className="font-medium text-accent-700">{t("detail.rules.notAllowed")}</dd>
-              </div>
-              <div className="p-3 bg-darnaBg-100 rounded-xl">
-                <dt className="text-primary-600 block text-[11px]">{t("detail.rules.parties")}</dt>
-                <dd className="font-medium text-accent-700">{t("detail.rules.notAllowed")}</dd>
-              </div>
-              <div className="p-3 bg-darnaBg-100 rounded-xl">
-                <dt className="text-primary-600 block text-[11px]">{t("detail.rules.children")}</dt>
-                <dd className="font-medium text-secondary-700">{t("detail.rules.childFriendly")}</dd>
-              </div>
+              {houseRuleTexts.map((rule) => (
+                <div key={rule} className="p-3 bg-darnaBg-100 rounded-xl sm:col-span-3">
+                  <dd className="font-medium text-primary">{rule}</dd>
+                </div>
+              ))}
             </dl>
           </section>
         </div>
@@ -437,24 +405,6 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
             </div>
           </section>
 
-          {/* Quick checklist */}
-          <section aria-labelledby="stay-checkpoints" className="bg-white rounded-2xl p-5 space-y-3 shadow-e1">
-            <h2 id="stay-checkpoints" className="text-sm font-semibold text-primary-900 pb-2 border-b border-primary/[0.06]">
-              {t("detail.checkpointsTitle")}
-            </h2>
-            <ul className="space-y-2 text-xs">
-              {CHECK_POINTS.map((pt) => (
-                <li key={pt.key} className="flex items-center justify-between p-2 rounded-xl bg-darnaBg-100">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-secondary-700" aria-hidden="true" />
-                    <span className="text-primary font-medium">{t(`detail.checkpoints.${pt.key}`)}</span>
-                  </div>
-                  <span className="text-[11px] text-secondary-700 font-semibold">{t(`detail.checkResults.${pt.result}`)}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
           {/* Host / owner card with verification badges */}
           <section aria-labelledby="stay-host" className="bg-white rounded-2xl p-5 space-y-3 shadow-e1">
             <div className="flex items-center justify-between pb-2 border-b border-primary/[0.06]">
@@ -475,54 +425,8 @@ export default function StayDetailClient({ initialStay, stayId }: StayDetailClie
               </div>
             </div>
 
-            <dl className="space-y-1.5 pt-2 border-t border-primary/[0.08] text-xs">
-              {(["identity", "phone", "email"] as const).map((k) => (
-                <div key={k} className="flex items-center justify-between text-primary-700">
-                  <dt>{t(`detail.verification.${k}`)}</dt>
-                  <dd className="text-secondary-700 font-medium flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" /> {t("host.verified")}
-                  </dd>
-                </div>
-              ))}
-            </dl>
           </section>
 
-          {/* Owner documents list */}
-          <section aria-labelledby="stay-documents" className="bg-white rounded-2xl p-5 space-y-3 shadow-e1">
-            <h2 id="stay-documents" className="text-sm font-semibold text-primary-900 pb-2 border-b border-primary/[0.06]">
-              {t("detail.ownerDocuments")}
-            </h2>
-            <ul className="space-y-2 text-xs">
-              {OWNER_DOCUMENTS.map((doc) => {
-                const name = t(`detail.documents.${doc.key}`);
-                return (
-                  <li key={doc.key} className="flex items-center justify-between p-2.5 rounded-xl bg-darnaBg-100">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-secondary-700" aria-hidden="true" />
-                      <div>
-                        <div className="font-medium text-primary">{name}</div>
-                        <div className="text-[11px] text-primary-600">
-                          {t("detail.fileMeta", { ext: doc.ext, size: formatNumber(doc.sizeMb, locale) })}
-                          {" · "}
-                          <span className={doc.validated ? "text-secondary-700" : "text-amber-800"}>
-                            {doc.validated ? t("detail.docValidated") : t("detail.docToCheck")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button type="button" className={iconBtn} aria-label={t("detail.viewDocument", { name })} title={tCommon("view")}>
-                        <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
-                      <button type="button" className={iconBtn} aria-label={t("detail.downloadDocument", { name })} title={t("detail.download")}>
-                        <Download className="w-3.5 h-3.5" aria-hidden="true" />
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
         </div>
       </div>
 

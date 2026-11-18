@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Search, Download, FileCode } from "lucide-react";
 import { listAuditLogs, exportAuditLogs } from "@/lib/actions/audit";
 import { downloadCsv } from "@/lib/utils/download";
@@ -31,13 +32,8 @@ const ENTITY_TYPES: AuditEntry["entityType"][] = [
   "export",
 ];
 
-const ROLES = [
-  "super_admin",
-  "moderator",
-  "support",
-  "finance",
-  "analyst",
-] as const;
+// The backend tells staff actions (admin) from the others (users, system).
+const ROLES = ["super_admin", "anonymous"] as const;
 
 const FIELD_CLASS =
   "w-full text-xs rounded-xl border border-primary/[0.12] text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] shadow-2xs hover:border-primary/25";
@@ -58,7 +54,9 @@ export default function AuditLogClient({ locale }: Props) {
 
   const [entityTypeFilter, setEntityTypeFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  // ?search= opens the log on one object (links from the host and user screens).
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams?.get("search") ?? "");
 
   // Diff Modal
   const [diffModalOpen, setDiffModalOpen] = useState(false);
@@ -221,7 +219,7 @@ export default function AuditLogClient({ locale }: Props) {
               <option value="all">{t("allRoles")}</option>
               {ROLES.map((role) => (
                 <option key={role} value={role}>
-                  {tRoles(role)}
+                  {roleLabel(role)}
                 </option>
               ))}
             </select>

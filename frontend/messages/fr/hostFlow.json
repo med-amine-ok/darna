@@ -476,7 +476,8 @@
     "hostelName": "Veuillez saisir le nom de votre auberge.",
     "hostelAddress": "Veuillez saisir l’adresse de l’auberge.",
     "experienceType": "Veuillez choisir un type d'expérience.",
-    "description": "Ajoutez une courte description pour que les voyageurs sachent à quoi s'attendre."
+    "description": "Ajoutez une courte description pour que les voyageurs sachent à quoi s'attendre.",
+    "listingAfterOnboarding": "Votre compte hôte est créé, mais l'annonce n'a pas pu être publiée ({reason}). Ajoutez-la depuis votre espace hôte."
   },
   "discarded": "Modifications non enregistrées abandonnées.",
   "units": {

@@ -39,7 +39,7 @@
     "preferredNameSaved": "Prénom d'usage mis à jour.",
     "email": "Adresse e-mail",
     "saveAndVerify": "Enregistrer et vérifier",
-    "emailChangeSoon": "La modification de l'e-mail arrive bientôt.",
+    "emailChangeSoon": "Pour changer d'adresse e-mail, contactez le support BLADUS.",
     "phone": "Numéro de téléphone",
     "phoneSaved": "Numéro de téléphone enregistré.",
     "identity": "Vérification d'identité",
@@ -49,7 +49,21 @@
     "residentialAddressSaved": "Adresse de résidence mise à jour.",
     "mailingAddress": "Adresse postale",
     "mailingAddressPlaceholder": "Boîte postale ou autre adresse postale",
-    "mailingAddressSaved": "Adresse postale mise à jour."
+    "mailingAddressSaved": "Adresse postale mise à jour.",
+    "arabicName": "Nom complet en arabe",
+    "arabicNamePlaceholder": "Comme sur votre carte d'identité",
+    "arabicNameSaved": "Nom en arabe enregistré.",
+    "verified": "Vérifié",
+    "notVerified": "Non vérifié",
+    "resendLink": "Renvoyer le lien",
+    "emailLinkSent": "Nous avons envoyé un nouveau lien de confirmation à votre adresse e-mail.",
+    "sendCode": "Envoyer le code",
+    "phoneCodeSent": "Nous vous avons envoyé un code à 6 chiffres par SMS.",
+    "phoneCode": "Code reçu par SMS",
+    "verifyPhone": "Vérifier",
+    "phoneVerifiedToast": "Numéro de téléphone vérifié.",
+    "identityPhoneVerified": "Numéro de téléphone vérifié",
+    "identityPending": "Vérifiez votre numéro de téléphone pour réserver et pour accueillir"
   },
   "security": {
     "title": "Connexion et sécurité",
@@ -105,7 +119,10 @@
     "bnaAccount": "Compte bancaire BNA (Banque Nationale d'Algérie)",
     "ribLabel": "RIB :",
     "editRibSoon": "La modification du RIB arrive bientôt.",
-    "editRibLabel": "Modifier le RIB bancaire"
+    "editRibLabel": "Modifier le RIB bancaire",
+    "unavailable": "Indisponible",
+    "onlineOff": "Le paiement en ligne n'est pas encore disponible sur BLADUS. Vous payez directement votre hôte, comme convenu lors de la réservation.",
+    "payoutsOff": "Les versements via BLADUS ne sont pas encore disponibles. Les hôtes sont payés directement par leurs voyageurs."
   },
   "languages": {
     "title": "Langues et devise",
@@ -149,7 +166,7 @@
     "downloadData": "Télécharger vos données personnelles",
     "downloadDataDescription": "Obtenez une copie de vos réservations, avis et messages",
     "exportZip": "Exporter en ZIP",
-    "exportRequested": "Export des données demandé."
+    "exportRequested": "Demande envoyée. Nous vous enverrons une copie de vos données sous 30 jours."
   },
   "work": {
     "title": "Voyages d'affaires",
@@ -175,7 +192,7 @@
   },
   "dialogs": {
     "deactivateTitle": "Désactiver le compte",
-    "deactivateMessage": "Voulez-vous vraiment désactiver votre compte BLADUS ? Votre profil, vos avis et vos annonces actives seront masqués jusqu'à votre prochaine connexion.",
+    "deactivateMessage": "BLADUS fermera votre compte et effacera vos données personnelles sous 30 jours, sauf ce que la loi nous oblige à conserver. Les réservations à venir doivent d'abord être terminées ou annulées.",
     "deactivateConfirm": "Désactiver le compte",
     "deactivateCancel": "Garder le compte actif",
     "deactivateSoon": "La désactivation du compte arrive bientôt. Veuillez contacter le support pour le moment.",
@@ -183,7 +200,8 @@
     "removeCardMessage": "Voulez-vous vraiment supprimer {card} de votre compte BLADUS ? Vous devrez saisir à nouveau les informations de votre carte pour vos prochaines réservations.",
     "removeCardConfirm": "Supprimer la carte",
     "removeCardCancel": "Garder la carte",
-    "cardRemoved": "Carte de paiement supprimée de votre compte."
+    "cardRemoved": "Carte de paiement supprimée de votre compte.",
+    "deletionRequested": "Demande de suppression envoyée. Nous vous confirmerons par e-mail sous 30 jours."
   },
   "eyebrow": "Votre compte",
   "accessibility": {
@@ -193,5 +211,41 @@
     "reduceMotionDescription": "Désactive les animations d'apparition, la parallaxe et les effets de mouvement. Par défaut, BLADUS suit le réglage de votre appareil.",
     "previewFull": "Les animations sont actives, sauf si votre appareil demande moins de mouvement.",
     "previewReduced": "Les animations sont réduites sur cet appareil."
+  },
+  "twoFactor": {
+    "title": "Vérification en deux étapes",
+    "description": "Demander un code d'une application d'authentification à chaque connexion.",
+    "on": "Activée",
+    "off": "Désactivée",
+    "enabled": "Votre compte est protégé par une application d'authentification.",
+    "enabledSince": "Protégé par une application d'authentification depuis le {date}.",
+    "start": "Configurer une application d'authentification",
+    "step1": "Installez une application d'authentification sur votre téléphone (par exemple Google Authenticator ou Microsoft Authenticator).",
+    "step2": "Ajoutez un nouveau compte dans l'application et saisissez cette clé :",
+    "openApp": "Ou ouvrez-la dans l'application d'authentification de cet appareil",
+    "step3": "Saisissez le code à 6 chiffres affiché par l'application.",
+    "codeLabel": "Code à 6 chiffres",
+    "confirm": "Activer",
+    "enabledToast": "La vérification en deux étapes est activée.",
+    "failed": "Impossible de configurer la vérification en deux étapes. Réessayez.",
+    "recoveryIntro": "Conservez ces codes de secours en lieu sûr. Chacun permet une connexion si vous perdez votre téléphone. Ils ne sont affichés que maintenant.",
+    "copy": "Copier les codes",
+    "copied": "Codes de secours copiés.",
+    "savedThem": "Je les ai enregistrés"
+  },
+  "signInMethods": {
+    "title": "Méthodes de connexion",
+    "google": "Google",
+    "connectedAs": "Connecté en tant que {email}",
+    "since": "depuis le {date}",
+    "notConnected": "Non connecté",
+    "connect": "Connecter Google",
+    "disconnect": "Déconnecter",
+    "disconnected": "Google a été déconnecté.",
+    "connectHint": "Utilisez le compte Google ayant le même e-mail que votre compte BLADUS ({email}).",
+    "loadError": "Vos méthodes de connexion n'ont pas pu être chargées.",
+    "password": "Mot de passe",
+    "passwordSet": "Défini",
+    "passwordNotSet": "Non défini : vous vous connectez avec Google"
   }
 }

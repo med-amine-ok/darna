@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/server/session";
 import { getHostContext } from "@/lib/server/host-context";
 import BecomeHostFlow from "@/components/host/BecomeHostFlow";
+import { loadFlowConfigs, loadLatestDraft } from "@/lib/api/onboarding";
 
 export const dynamic = "force-dynamic";
 
@@ -29,5 +30,13 @@ export default async function BecomeHostStepPage({
     if (ctx && (!ctx.isOrgHost || ctx.organization)) redirect(`/${locale}/host/listings/new`);
   }
 
-  return <BecomeHostFlow initialStep={params.step} currentUserId={currentUser.id} />;
+  const [flowSteps, initialDraft] = await Promise.all([loadFlowConfigs(), loadLatestDraft()]);
+  return (
+    <BecomeHostFlow
+      initialStep={params.step}
+      currentUserId={currentUser.id}
+      flowSteps={flowSteps}
+      initialDraft={initialDraft}
+    />
+  );
 }

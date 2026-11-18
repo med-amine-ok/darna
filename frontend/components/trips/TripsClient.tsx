@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import Image from "next/image";
 import { Link, useRouter } from "@/navigation";
 import { Reservation } from "@/types";
-import { cancelMyReservationAction } from "@/app/actions/bookings";
+import {
+  answerRefundAction,
+  cancelMyReservationAction,
+  confirmMyStayAction,
+  getMyCancellationPreviewAction,
+  getMyRefundsAction,
+  reportBookingProblemAction,
+  type DisputeReason,
+} from "@/app/actions/bookings";
 import { toast } from "react-toastify";
 import {
   BrandCalendarIcon,
@@ -17,11 +25,11 @@ import {
   BrandCreditCardIcon,
 } from "@/components/icons";
 import ConfirmDialog from "@/components/models/ConfirmDialog";
-import { Badge, Button, Card, Dialog, KitEmptyState, Pill, Tabs, TabPanel, cn } from "@/components/ui";
+import { Badge, Button, Card, Dialog, DialogFooter, KitEmptyState, Pill, Select, Tabs, TabPanel, Textarea, cn } from "@/components/ui";
 import type { BadgeTone } from "@/components/ui";
 import { useLocale, useTranslations } from "next-intl";
 import { useCurrency } from "@/hook/useCurrency";
-import { computeGuestRefund, getCancellationPolicy } from "@/lib/booking/cancellation";
+import { getCancellationPolicy } from "@/lib/booking/cancellation";
 import { formatDateRange } from "@/lib/booking/dates";
 import { useActionError } from "@/hook/useActionError";
 
@@ -53,13 +61,8 @@ const STATUS_TONE: Record<Reservation["status"], { tone: BadgeTone; icon?: "chec
   expired: { tone: "sand" },
 };
 
-const PAYMENT_TONE: Record<string, BadgeTone> = {
-  paid: "success",
-  pending: "warning",
-  refunded: "sand",
-  partially_refunded: "sand",
-  voided: "neutral",
-};
+const REFUND_STATUSES = ["open", "declared", "disputed", "settled"] as const;
+const DISPUTE_REASONS: DisputeReason[] = ["not_as_described", "no_show", "cleanliness", "safety", "refund", "other"];
 
 function policyOf(res: Reservation) {
   return getCancellationPolicy(
@@ -67,13 +70,10 @@ function policyOf(res: Reservation) {
   );
 }
 
-function refundFor(res: Reservation) {
-  return computeGuestRefund({
-    reservation: res,
-    policy: res.cancellationPolicy ?? res.listing?.cancellationPolicy ?? res.trip?.cancellationPolicy,
-    checkInTime: res.tripId ? "00:00" : res.listing?.checkInTime,
-  });
-}
+/** Refund preview from the backend (GET /me/bookings/{id}/cancellation-preview). */
+type CancelPreview = { allowed: boolean; refundAmount: number; refundPercent: number } | "loading" | "failed" | null;
+
+type RefundRow = { id: string; status: string; amount: number; dueAt: string | null; isOverdue: boolean };
 
 /** 16:10 cover with sand placeholder that cross-fades into the photo and zooms slowly on hover. */
 function TripCover({ src, alt }: { src: string; alt: string }) {
@@ -105,9 +105,129 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
   const [selectedReceipt, setSelectedReceipt] = useState<Reservation | null>(null);
   const [cancellingRes, setCancellingRes] = useState<Reservation | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [cancelPreview, setCancelPreview] = useState<CancelPreview>(null);
+  const [refunds, setRefunds] = useState<Record<string, RefundRow>>({});
+  const [reportingRes, setReportingRes] = useState<Reservation | null>(null);
+  const [reportReason, setReportReason] = useState<DisputeReason>("not_as_described");
+  const [reportText, setReportText] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const formId = useId();
 
   const filteredReservations = reservations.filter((r) => tabOf(r.status) === activeTab);
-  const cancelPreview = cancellingRes ? refundFor(cancellingRes) : null;
+
+  // Refunds hosts owe me after cancellations (guests pay hosts directly, DEC-001).
+  useEffect(() => {
+    if (!initialReservations.some((r) => (r.refundAmount ?? 0) > 0)) return;
+    let live = true;
+    getMyRefundsAction()
+      .then((result) => {
+        if (!live || !result.ok) return;
+        setRefunds(Object.fromEntries(result.data.map((f) => [f.bookingId, f])));
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [initialReservations]);
+
+  // What cancelling would refund now, asked from the backend when the dialog opens.
+  useEffect(() => {
+    if (!cancellingRes) {
+      setCancelPreview(null);
+      return;
+    }
+    let live = true;
+    setCancelPreview("loading");
+    getMyCancellationPreviewAction(cancellingRes.id)
+      .then((result) => {
+        if (!live) return;
+        setCancelPreview(
+          result.ok
+            ? { allowed: result.data.allowed, refundAmount: result.data.refundAmount, refundPercent: result.data.refundPercent }
+            : "failed"
+        );
+      })
+      .catch(() => {
+        if (live) setCancelPreview("failed");
+      });
+    return () => {
+      live = false;
+    };
+  }, [cancellingRes]);
+
+  const replaceReservation = (updated: Reservation) =>
+    setReservations((prev) =>
+      prev.map((r) => (r.id === updated.id ? { ...r, ...updated, listing: r.listing, trip: r.trip } : r))
+    );
+
+  const handleConfirmStay = async (res: Reservation) => {
+    setBusyId(res.id);
+    try {
+      const result = await confirmMyStayAction(res.id);
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      replaceReservation(result.data);
+      toast.success(t("toastStayConfirmed"));
+    } catch {
+      toast.error(errorText({ code: "SERVER_ERROR" }));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleRefundAnswer = async (bookingId: string, received: boolean) => {
+    const refund = refunds[bookingId];
+    if (!refund) return;
+    let answer: { received: true } | { received: false; note: string } = { received: true };
+    if (!received) {
+      const note = window.prompt(t("refundNotReceivedPrompt"))?.trim();
+      if (!note) return;
+      answer = { received: false, note };
+    }
+    setBusyId(bookingId);
+    try {
+      const result = await answerRefundAction(refund.id, answer);
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      setRefunds((prev) => ({ ...prev, [bookingId]: result.data }));
+      toast.success(received ? t("toastRefundConfirmed") : t("toastRefundDisputed"));
+    } catch {
+      toast.error(errorText({ code: "SERVER_ERROR" }));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportingRes) return;
+    if (reportText.trim().length < 20) {
+      toast.error(t("report.tooShort"));
+      return;
+    }
+    setBusyId(reportingRes.id);
+    try {
+      const result = await reportBookingProblemAction(reportingRes.id, {
+        side: "guest",
+        reasonCode: reportReason,
+        statement: reportText,
+      });
+      if (!result.ok) {
+        toast.error(errorText(result));
+        return;
+      }
+      toast.success(t("report.success"));
+      setReportingRes(null);
+      setReportText("");
+    } catch {
+      toast.error(errorText({ code: "SERVER_ERROR" }));
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const handleCancel = async () => {
     if (!cancellingRes) return;
@@ -118,18 +238,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
         toast.error(errorText(result));
         return;
       }
-      setReservations((prev) =>
-        prev.map((r) =>
-          r.id === cancellingRes.id
-            ? {
-                ...r,
-                status: result.data.status,
-                paymentStatus: result.data.paymentStatus,
-                refundAmount: result.data.refundAmount,
-              }
-            : r
-        )
-      );
+      replaceReservation(result.data);
       toast.success(
         result.data.refundAmount
           ? t("toastCancelledWithRefund", { amount: formatDzd(result.data.refundAmount) })
@@ -208,12 +317,18 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
             {filteredReservations.map((res, i) => {
               const listing = res.listing;
               const trip = res.trip;
-              const coverImage = listing?.imageSrc?.[0] || trip?.coverPhoto || "/assets/placeholder.jpg";
-              const vertical = trip ? "trip" : listing?.category || "home";
-              const refund = res.status === "confirmed" || res.status === "pending" ? refundFor(res) : null;
-              const title = listing?.title || trip?.title || t("fallbackTitle");
+              const coverImage = listing?.imageSrc?.[0] || trip?.coverPhoto || "";
+              const vertical = trip || res.tripId ? "trip" : listing?.category || "home";
+              const canCancel = res.canCancel ?? (res.status === "confirmed" || res.status === "pending");
+              const title = listing?.title || trip?.title || res.title || t("fallbackTitle");
+              const vertical2 = res.vertical === "hostel" ? "hotel" : res.vertical;
+              const stayStarted = res.checkInAt ? new Date(res.checkInAt).getTime() <= Date.now() : false;
+              const canConfirmStay =
+                (res.status === "confirmed" || res.status === "completed") && !res.stayConfirmedAt && stayStarted;
+              const canReport = res.status === "confirmed" || res.status === "completed" || res.status === "cancelled";
+              const refundRow = refunds[res.id];
               const city = listing?.city || trip?.city;
-              const href = trip ? `/trips/${trip.id}` : `/listings/${res.listingId}`;
+              const href = res.tripId ? `/trips/${res.tripId}` : `/listings/${res.listingId}`;
 
               return (
                 <li
@@ -228,7 +343,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                       aria-hidden="true"
                       className="relative block aspect-[16/10] w-full overflow-hidden bg-tertiary-100"
                     >
-                      <TripCover src={coverImage} alt={t("coverAlt", { title })} />
+                      {coverImage && <TripCover src={coverImage} alt={t("coverAlt", { title })} />}
                       <span
                         aria-hidden="true"
                         className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-primary-900/30 to-transparent"
@@ -236,7 +351,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                     </Link>
                     <div className="pointer-events-none absolute inset-x-3.5 top-3.5 flex items-start justify-between gap-2">
                       <Pill tone="glass" className="shadow-e1">
-                        {verticalLabel(vertical)}
+                        {verticalLabel(listing || trip ? vertical : vertical2 || vertical)}
                       </Pill>
                       {statusBadge(res.status)}
                     </div>
@@ -285,12 +400,10 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                             <BrandCreditCardIcon size={14} aria-hidden="true" />
                             {t("payment")}
                           </dt>
-                          <dd className="mt-1 truncate font-semibold text-primary-900">
-                            {res.paymentMethod || t("defaultPaymentMethod")}
-                          </dd>
+                          <dd className="mt-1 truncate font-semibold text-primary-900">{t("payAtHost")}</dd>
                         </div>
                         <div className="min-w-0">
-                          <dt className="text-primary-600">{t("totalPaid")}</dt>
+                          <dt className="text-primary-600">{t("totalDue")}</dt>
                           <dd className="mt-1 font-semibold tabular-nums text-primary-900">
                             {money(res.totalPrice)}{" "}
                             <span className="font-medium text-primary-500">
@@ -301,10 +414,74 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                       </dl>
 
                       {res.refundAmount !== undefined && res.status === "cancelled" && (
-                        <p className="text-meta text-primary-600">
-                          {t("refundLine", { amount: money(res.refundAmount) })}
-                        </p>
+                        <div className="space-y-2 text-meta text-primary-600">
+                          <p>{t("refundLine", { amount: money(res.refundAmount) })}</p>
+                          {refundRow && (
+                            <p className="flex flex-wrap items-center gap-2">
+                              <Badge tone={refundRow.isOverdue ? "danger" : "sand"}>
+                                {t(
+                                  `refundStatus.${
+                                    REFUND_STATUSES.includes(refundRow.status as (typeof REFUND_STATUSES)[number])
+                                      ? (refundRow.status as (typeof REFUND_STATUSES)[number])
+                                      : "open"
+                                  }`
+                                )}
+                              </Badge>
+                              {refundRow.status === "declared" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    loading={busyId === res.id}
+                                    onClick={() => handleRefundAnswer(res.id, true)}
+                                  >
+                                    {t("refundReceived")}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    disabled={busyId === res.id}
+                                    onClick={() => handleRefundAnswer(res.id, false)}
+                                  >
+                                    {t("refundNotReceived")}
+                                  </Button>
+                                </>
+                              )}
+                            </p>
+                          )}
+                        </div>
                       )}
+
+                      {(res.status === "confirmed" || res.status === "completed") &&
+                        (res.checkInCode || res.hostPhone || res.addressLine) && (
+                          <dl className="space-y-1.5 rounded-xl bg-secondary-50 p-4 text-meta text-primary-700">
+                            {res.checkInCode && !res.stayConfirmedAt && (
+                              <div className="flex items-baseline justify-between gap-3">
+                                <dt>{t("checkInCode")}</dt>
+                                <dd dir="ltr" className="font-mono text-title tracking-widest text-primary-900">
+                                  {res.checkInCode}
+                                </dd>
+                              </div>
+                            )}
+                            {res.addressLine && (
+                              <div className="flex justify-between gap-3">
+                                <dt>{t("address")}</dt>
+                                <dd className="text-end font-semibold text-primary-900">{res.addressLine}</dd>
+                              </div>
+                            )}
+                            {res.hostPhone && (
+                              <div className="flex justify-between gap-3">
+                                <dt>{t("hostPhone", { name: res.hostName ?? "" })}</dt>
+                                <dd dir="ltr" className="font-semibold tabular-nums text-primary-900">
+                                  <a href={`tel:${res.hostPhone}`}>{res.hostPhone}</a>
+                                </dd>
+                              </div>
+                            )}
+                            {res.checkInCode && !res.stayConfirmedAt && (
+                              <p className="pt-1 text-primary-600">{t("checkInCodeHelp")}</p>
+                            )}
+                          </dl>
+                        )}
 
                       <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-primary/[0.08] pt-4">
                         <Button
@@ -323,7 +500,32 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                         >
                           {t("receipt")}
                         </Button>
-                        {refund?.allowed && (
+                        {canConfirmStay && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            loading={busyId === res.id}
+                            onClick={() => handleConfirmStay(res)}
+                            leadingIcon={<BrandCheckIcon size={16} aria-hidden="true" />}
+                          >
+                            {t("confirmStay")}
+                          </Button>
+                        )}
+                        {canReport && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setReportReason("not_as_described");
+                              setReportText("");
+                              setReportingRes(res);
+                            }}
+                            aria-haspopup="dialog"
+                          >
+                            {t("report.button")}
+                          </Button>
+                        )}
+                        {canCancel && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -356,7 +558,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
         message={
           cancellingRes
             ? t.rich("cancelDialogMessage", {
-                title: cancellingRes.listing?.title || cancellingRes.trip?.title || t("fallbackTitle"),
+                title: cancellingRes.listing?.title || cancellingRes.trip?.title || cancellingRes.title || t("fallbackTitle"),
                 dates: formatDateRange(cancellingRes.startDate, cancellingRes.endDate, locale),
                 b: (chunks) => <span className="font-semibold text-primary-900">{chunks}</span>,
               })
@@ -364,9 +566,12 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
         }
         callout={
           cancellingRes &&
-          cancelPreview &&
           (cancellingRes.status === "pending" ? (
             <p>{t("notChargedNote")}</p>
+          ) : cancelPreview === "loading" || cancelPreview === null ? (
+            <p>{t("cancelPreviewLoading")}</p>
+          ) : cancelPreview === "failed" || !cancelPreview.allowed ? (
+            <p>{t("cancelPreviewFailed")}</p>
           ) : (
             <div className="space-y-3">
               <div className="flex items-baseline justify-between gap-4">
@@ -394,6 +599,44 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
         }
       />
 
+      {/* Report a problem to BLADUS support (opens a dispute on the booking). */}
+      <Dialog
+        isOpen={!!reportingRes}
+        onClose={() => setReportingRes(null)}
+        title={t("report.title")}
+        description={t("report.description")}
+        showClose
+        size="md"
+      >
+        <div className="space-y-4">
+          <Select
+            id={`${formId}-reason`}
+            label={t("report.reasonLabel")}
+            value={reportReason}
+            onChange={(e) => setReportReason(e.target.value as DisputeReason)}
+            options={DISPUTE_REASONS.map((reason) => ({ value: reason, label: t(`report.reasons.${reason}`) }))}
+          />
+          <Textarea
+            id={`${formId}-statement`}
+            label={t("report.statementLabel")}
+            helper={t("report.statementHelp")}
+            rows={5}
+            maxLength={4000}
+            showCount
+            value={reportText}
+            onChange={(e) => setReportText(e.target.value)}
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="tertiary" onClick={() => setReportingRes(null)}>
+            {t("receiptDialog.close")}
+          </Button>
+          <Button loading={busyId === reportingRes?.id} onClick={handleReport}>
+            {t("report.submit")}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
       {/* Receipt (printable: only .print-area is printed). */}
       <Dialog
         isOpen={!!selectedReceipt}
@@ -417,20 +660,22 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                 <p className="font-serif text-heading text-primary-900">{t("receiptDialog.title")}</p>
                 <p className="mt-0.5 text-meta text-primary-600">{t("receiptDialog.subtitle")}</p>
               </div>
-              <Badge tone={PAYMENT_TONE[selectedReceipt.paymentStatus ?? "paid"] ?? "neutral"} className="shrink-0">
-                {t(`paymentStatus.${selectedReceipt.paymentStatus ?? "paid"}`)}
+              <Badge tone="neutral" className="shrink-0">
+                {t("payAtHost")}
               </Badge>
             </div>
 
             <dl className="space-y-3 text-body">
               <div className="flex justify-between gap-4">
                 <dt className="text-primary-600">{t("receiptDialog.receiptId")}</dt>
-                <dd className="font-mono text-meta font-semibold text-primary-900">{selectedReceipt.id}</dd>
+                <dd className="font-mono text-meta font-semibold text-primary-900" dir="ltr">
+                  {selectedReceipt.reference ?? selectedReceipt.id.slice(0, 8).toUpperCase()}
+                </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="shrink-0 text-primary-600">{t("receiptDialog.listing")}</dt>
                 <dd className="text-end font-semibold text-primary-900">
-                  {selectedReceipt.listing?.title || selectedReceipt.trip?.title}
+                  {selectedReceipt.listing?.title || selectedReceipt.trip?.title || selectedReceipt.title}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
@@ -441,9 +686,7 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-primary-600">{t("receiptDialog.paymentMethod")}</dt>
-                <dd className="text-end text-primary-900">
-                  {selectedReceipt.paymentMethod || t("defaultPaymentMethod")}
-                </dd>
+                <dd className="text-end text-primary-900">{t("payAtHost")}</dd>
               </div>
             </dl>
 
@@ -453,13 +696,18 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                 <dd>
                   {money(
                     selectedReceipt.subtotal ??
-                      selectedReceipt.totalPrice -
+                      selectedReceipt.totalPrice + (selectedReceipt.discount ?? 0) -
                         (selectedReceipt.cleaningFee ?? 0) -
-                        (selectedReceipt.serviceFee ?? 0) -
                         (selectedReceipt.taxes ?? 0)
                   )}
                 </dd>
               </div>
+              {(selectedReceipt.discount ?? 0) > 0 && (
+                <div className="flex justify-between gap-4 text-primary-700">
+                  <dt>{t("receiptDialog.discount")}</dt>
+                  <dd>{t("receiptDialog.refundedAmount", { amount: money(selectedReceipt.discount ?? 0) })}</dd>
+                </div>
+              )}
               {(selectedReceipt.cleaningFee ?? 0) > 0 && (
                 <div className="flex justify-between gap-4 text-primary-700">
                   <dt>{t("receiptDialog.cleaningFee")}</dt>
@@ -478,10 +726,10 @@ export default function TripsClient({ initialReservations }: TripsClientProps) {
                   <dd>{money(selectedReceipt.taxes ?? 0)}</dd>
                 </div>
               )}
-              {selectedReceipt.refundAmount !== undefined && (
+              {(selectedReceipt.refundAmount ?? 0) > 0 && (
                 <div className="flex justify-between gap-4 font-semibold text-secondary-800">
                   <dt>{t("receiptDialog.refunded")}</dt>
-                  <dd>{t("receiptDialog.refundedAmount", { amount: money(selectedReceipt.refundAmount) })}</dd>
+                  <dd>{t("receiptDialog.refundedAmount", { amount: money(selectedReceipt.refundAmount ?? 0) })}</dd>
                 </div>
               )}
             </dl>

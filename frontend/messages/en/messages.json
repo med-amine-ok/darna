@@ -52,5 +52,13 @@
   "yesterday": "Yesterday",
   "allRead": "All caught up",
   "sendingStatus": "Sending",
-  "composerHint": "Press Enter to send, Shift + Enter for a new line."
+  "composerHint": "Press Enter to send, Shift + Enter for a new line.",
+  "loadOlder": "Load earlier messages",
+  "loadMoreConversations": "Show more conversations",
+  "maskedNotice": "Phone numbers, emails and payment details are hidden until a booking is confirmed, to keep you protected.",
+  "rateLimited": "You are sending messages too quickly. Please wait a moment.",
+  "inboxErrorTitle": "Your messages could not be loaded",
+  "inboxErrorBody": "The service is not answering right now. Please try again in a moment.",
+  "retry": "Try again",
+  "hostEmptySubtitle": "When guests write to you about your listings or bookings, their messages will appear here."
 }

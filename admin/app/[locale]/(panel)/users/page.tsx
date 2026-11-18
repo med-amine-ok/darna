@@ -1,6 +1,8 @@
 import { guardPage } from "@/lib/auth/page-guard";
-import { listUsers } from "@/lib/data/users";
+import { getCurrentAdmin } from "@/lib/auth/current-admin";
+import { listDataRequests, listUsers } from "@/lib/data/users";
 import UsersClient from "./UsersClient";
+import DataRequestsPanel from "./DataRequestsPanel";
 import { pageMetadata } from "@/lib/metadata";
 
 export const generateMetadata = pageMetadata("users");
@@ -17,19 +19,18 @@ export default async function UsersPage({
   const role = typeof searchParams.role === "string" ? searchParams.role : "all";
   const search = typeof searchParams.search === "string" ? searchParams.search : undefined;
 
-  const data = await listUsers({
-    status,
-    role,
-    search,
-    page: 1,
-    pageSize: 12,
-  });
+  const admin = await getCurrentAdmin();
+  const canHandleRequests = Boolean(admin?.permissions.includes("privacy.handle_requests"));
+
+  const [data, requests] = await Promise.all([
+    listUsers({ status, role, search, page: 1, pageSize: 12 }),
+    canHandleRequests ? listDataRequests({ pageSize: 50 }) : Promise.resolve(null),
+  ]);
 
   return (
-    <UsersClient
-      initialData={data}
-      initialStatus={status}
-      initialRole={role}
-    />
+    <div className="space-y-6">
+      <UsersClient initialData={data} initialStatus={status} initialRole={role} />
+      {requests && <DataRequestsPanel initialRows={requests.rows} />}
+    </div>
   );
 }

@@ -3,10 +3,10 @@
   "subtitle": "اضبط تحويلات أرباحك إلى البنوك الجزائرية (CCP / RIB)، وقواعد الحجز، وهويتك كمضيف، وقنوات التواصل.",
   "tabs": {
     "ariaLabel": "أقسام إعدادات المضيف",
-    "payouts": "حسابات الدفع والسجل",
-    "identity": "نوع المضيف والوضع القانوني",
+    "payouts": "التحويلات",
+    "identity": "الحساب والتوثيق",
     "defaults": "إعدادات الحجز الافتراضية",
-    "notifications": "التواصل مع الضيوف"
+    "notifications": "الإشعارات"
   },
   "channels": {
     "CCP": "بريد الجزائر CCP",
@@ -104,5 +104,48 @@
     "agencyUpgradeRequested": "تم إرسال طلب الترقية إلى وكالة. سيتحقق فريقنا من سجلك التجاري (RC).",
     "communicationSaved": "تم حفظ تفضيلات التواصل."
   },
-  "eyebrow": "إعدادات المضيف"
+  "eyebrow": "إعدادات المضيف",
+  "account": {
+    "loadFailed": "تعذر تحميل حساب المضيف. أعد المحاولة بعد قليل.",
+    "approvedOn": "تمت الموافقة في {date}",
+    "submittedOn": "أرسل للمراجعة في {date}",
+    "documentsTitle": "وثائق التوثيق",
+    "documentsHelp": "يتحقق فريق BLADUS من هذه الوثائق قبل الموافقة على حساب المضيف.",
+    "defaultsDescription": "وضع الموافقة الذي تبدأ به إعلاناتك الجديدة.",
+    "perListing": "مهلة الإشعار المسبق وأوقات الوصول وسياسة الإلغاء تضبط في كل إعلان.",
+    "commission": "عمولة BLADUS على حجوزاتك: {rate}%",
+    "payoutsOff": "التحويلات عبر BLADUS غير متاحة بعد: يدفع لك الضيوف مباشرة. تسوى العمولة عبر محفظة المضيف.",
+    "unavailable": "غير متاح",
+    "notificationsHelp": "اختر تنبيهات الحجز والرسائل والتقييمات التي تصلك عبر البريد والرسائل القصيرة والإشعارات.",
+    "notificationsLink": "فتح تفضيلات الإشعارات",
+    "status": {
+      "applied": "تم استلام الطلب",
+      "under_review": "قيد المراجعة",
+      "changes_requested": "مطلوب تعديلات",
+      "approved": "مقبول",
+      "rejected": "مرفوض",
+      "suspended": "موقوف",
+      "banned": "محظور"
+    },
+    "docStatus": {
+      "approved": "مقبولة",
+      "pending": "قيد التحقق",
+      "rejected": "مرفوضة",
+      "missing": "ناقصة"
+    },
+    "docs": {
+      "national_id": "بطاقة التعريف الوطنية",
+      "passport": "جواز السفر",
+      "property_proof": "إثبات الملكية أو عقد الإيجار",
+      "commercial_register": "السجل التجاري",
+      "tax_card_nif": "البطاقة الجبائية (NIF)",
+      "statistics_nis": "الرقم الإحصائي (NIS)",
+      "tourism_licence": "رخصة السياحة",
+      "hotel_classification": "تصنيف الفندق",
+      "operating_authorisation": "رخصة الاستغلال",
+      "vehicle_registration": "البطاقة الرمادية",
+      "vehicle_insurance": "تأمين المركبة",
+      "other": "وثيقة أخرى"
+    }
+  }
 }

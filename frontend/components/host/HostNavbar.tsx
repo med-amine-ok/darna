@@ -31,7 +31,8 @@ interface HostNavbarProps {
   organization?: Organization | null;
   /** Active workspace type (server host context); falls back to the user's host type. */
   hostType?: "individual" | "agency" | "hotel" | "hostel" | null;
-  workspaces?: { id: string; name: string; businessCategory?: string }[];
+  /** Every workspace of the user (GET /me/workspaces), keyed by host account id. */
+  workspaces?: { id: string; name: string; businessCategory?: string; isActive?: boolean }[];
 }
 
 interface HostNavLink {
@@ -106,8 +107,8 @@ export default function HostNavbar({ currentUser, organization, hostType: worksp
       ]
     : [];
 
-  // Workspace switcher: shown when the user belongs to more than one organization.
-  const otherWorkspaces = workspaces.filter((w) => w.id !== organization?.id);
+  // Workspace switcher: shown when the user can act for more than one workspace (solo or organisations).
+  const otherWorkspaces = workspaces.filter((w) => !w.isActive);
   const switchTo = async (id: string) => {
     const result = await switchWorkspaceAction(id);
     if (!result.ok) {
@@ -126,7 +127,7 @@ export default function HostNavbar({ currentUser, organization, hostType: worksp
               label: w.name,
               description: w.businessCategory ? t(`badge.${w.businessCategory}`) : undefined,
               onSelect: () => void switchTo(w.id),
-              icon: icon(BrandBuildingIcon),
+              icon: icon(w.businessCategory === "individual" ? BrandBriefcaseIcon : BrandBuildingIcon),
             }) as DropdownItem
         ),
         { type: "separator" },

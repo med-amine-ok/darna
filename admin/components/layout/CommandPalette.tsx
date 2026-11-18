@@ -59,14 +59,25 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     let active = true;
-    searchGlobalCommandPalette(query).then((res) => {
-      if (active) {
-        setResults(res.ok ? res.data : []);
-        setSelectedIndex(0);
-      }
-    });
+    // Debounced: one backend search (GET /admin/search) after typing pauses; stale answers are ignored.
+    const timer = window.setTimeout(
+      () => {
+        searchGlobalCommandPalette(query)
+          .then((res) => {
+            if (active) {
+              setResults(res.ok ? res.data : []);
+              setSelectedIndex(0);
+            }
+          })
+          .catch(() => {
+            if (active) setResults([]);
+          });
+      },
+      query.trim() ? 250 : 0,
+    );
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
   }, [query, isOpen]);
 

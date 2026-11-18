@@ -1,5 +1,7 @@
 import { guardPage } from "@/lib/auth/page-guard";
-import { getHostById } from "@/lib/data/hosts";
+import { getHostDetail } from "@/lib/data/hosts";
+import { Link } from "@/navigation";
+import { HostDocumentsList, CreditLimitForm } from "./HostDetailActions";
 import { notFound } from "next/navigation";
 import { pageMetadata } from "@/lib/metadata";
 import { getTranslations } from "next-intl/server";
@@ -9,7 +11,6 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { Badge } from "@/components/ui/Badge";
 import { getWilayaName } from "@/lib/utils/wilayas";
 import { formatDzd, formatDate, formatNumber, intlLocale } from "@/lib/utils/format";
-import { FileCheck } from "lucide-react";
 
 export const generateMetadata = pageMetadata("hostDetail");
 
@@ -21,8 +22,9 @@ export default async function HostDetailPage({
   const denied = await guardPage("hosts.view");
   if (denied) return denied;
 
-  const host = await getHostById(id);
-  if (!host) notFound();
+  const detail = await getHostDetail(id);
+  if (!detail) notFound();
+  const { host, extras } = detail;
 
   const t = await getTranslations({ locale, namespace: "hostDetail" });
   const tHostTypes = await getTranslations({ locale, namespace: "hostTypes" });
@@ -52,7 +54,14 @@ export default async function HostDetailPage({
               <Badge variant="secondary">{hostTypeLabel}</Badge>
             </div>
             <p className="text-xs text-primary-600 mt-1">
-              {host.email} · <span dir="ltr">{host.phone}</span> · {getWilayaName(host.wilayaCode, locale)}
+              {host.email}
+              {host.phone && (
+                <>
+                  {" · "}
+                  <span dir="ltr">{host.phone}</span>
+                </>
+              )}
+              {host.wilayaCode && <> · {getWilayaName(host.wilayaCode, locale)}</>}
             </p>
           </div>
         </div>
@@ -78,43 +87,51 @@ export default async function HostDetailPage({
               <dt className="text-primary-600">{t("takeRate")}</dt>
               <dd className="font-semibold font-mono">{commission}</dd>
             </div>
-            <div className="flex justify-between py-1 border-b border-primary/[0.08]">
-              <dt className="text-primary-600">{t("totalBookings")}</dt>
-              <dd className="font-semibold">{formatNumber(host.bookingsCount, locale)}</dd>
-            </div>
             <div className="flex justify-between py-1">
-              <dt className="text-primary-600">{t("activeFleet")}</dt>
-              <dd className="font-semibold">{t("listingsValue", { count: host.listingsCount })}</dd>
+              <dt className="text-primary-600">{t("reviews")}</dt>
+              <dd className="font-semibold">
+                {host.rating ? `${host.rating.toFixed(1)} / 5 · ` : ""}
+                {formatNumber(host.reviewsCount, locale)}
+              </dd>
             </div>
           </dl>
+          <Link
+            href={`/payments/wallets?host=${encodeURIComponent(host.id)}`}
+            className="inline-flex font-semibold text-accent-700 underline underline-offset-2"
+          >
+            {t("openWallet")}
+          </Link>
+          <div className="pt-3 border-t border-primary/[0.08]">
+            <h3 className="font-semibold text-primary text-xs mb-2">{t("creditLimitTitle")}</h3>
+            <CreditLimitForm hostId={host.id} currentDzd={extras.creditLimitDzd} />
+          </div>
+          {extras.legal && (
+            <div className="pt-3 border-t border-primary/[0.08] space-y-1">
+              <h3 className="font-semibold text-primary text-xs">{t("legalTitle")}</h3>
+              {extras.legal.legalName && <p>{extras.legal.legalName}</p>}
+              {extras.legal.rc && <p dir="ltr">RC {extras.legal.rc}</p>}
+              {extras.legal.nif && <p dir="ltr">NIF {extras.legal.nif}</p>}
+              {extras.legal.nis && <p dir="ltr">NIS {extras.legal.nis}</p>}
+              {extras.legal.tourismLicence && <p dir="ltr">{extras.legal.tourismLicence}</p>}
+            </div>
+          )}
         </div>
 
         <div className="md:col-span-2 p-6 rounded-2xl bg-white shadow-e1 space-y-4">
           <h2 className="font-semibold text-primary text-sm">{t("verificationDocuments")}</h2>
-          <ul className="space-y-3">
-            {host.documents.map((doc) => (
-              <li key={doc.id} className="p-3.5 rounded-2xl bg-darnaBg-100 flex items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2.5">
-                  <FileCheck className="w-4 h-4 text-secondary shrink-0" aria-hidden="true" />
-                  <div>
-                    <span className="font-semibold text-primary block">{doc.title}</span>
-                    <span className="text-[11px] text-primary-600">
-                      {t("uploaded", { date: formatDate(doc.uploadedAt, locale) })}
-                    </span>
-                  </div>
-                </div>
-                <a
-                  href={doc.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={t("viewFileLabel", { title: doc.title })}
-                  className="px-3 py-1 rounded-lg border border-primary/[0.08] text-xs font-semibold hover:bg-white transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-                >
-                  {t("viewFile")}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <HostDocumentsList documents={host.documents} />
+          {extras.requiredDocuments.length > 0 && (
+            <div className="pt-2">
+              <h3 className="font-semibold text-primary text-xs mb-2">{t("requiredDocuments")}</h3>
+              <ul className="flex flex-wrap gap-2 text-[11px]">
+                {extras.requiredDocuments.map((d) => (
+                  <li key={d.docType} className="px-2.5 py-1 rounded-full bg-darnaBg-100 text-primary-700">
+                    {d.label}: <strong>{d.status}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

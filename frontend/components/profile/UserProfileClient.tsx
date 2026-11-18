@@ -5,7 +5,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { User, PublicUser, Listing, Review, PublicOrganization, ListingVertical } from "@/types";
 import { Link } from "@/navigation";
-import { orgProfileHref } from "@/lib/host-profile";
+import { orgProfileHref, userProfileHref } from "@/lib/host-profile";
+import { absoluteUrl, shareLink } from "@/lib/client/share";
+import ProfileLinkCard from "./ProfileLinkCard";
 import { updateProfileAction } from "@/app/actions/account";
 import { useActionError } from "@/hook/useActionError";
 import { formatDate, formatNumber, formatRating } from "@/lib/i18n/date-locale";
@@ -74,7 +76,6 @@ export default function UserProfileClient({
   const [name, setName] = useState(user.name);
   const [bio, setBio] = useState(user.bio || "");
   const [address, setAddress] = useState(user.address || "");
-  const [phone, setPhone] = useState(user.phone || "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -88,7 +89,7 @@ export default function UserProfileClient({
     setNameError(null);
     setIsSaving(true);
     try {
-      const result = await updateProfileAction({ name, bio, address, phone, languages: user.languages });
+      const result = await updateProfileAction({ name, bio, address, languages: user.languages });
       if (!result.ok) {
         toast.error(errorText(result));
         return;
@@ -107,13 +108,14 @@ export default function UserProfileClient({
     }
   };
 
+  // Always share the public profile link (/users/<handle>), even from the private /profile page.
   const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      toast.info(t("copied"));
-    } catch {
-      toast.error(t("page.copyFailed"));
-    }
+    const outcome = await shareLink({
+      url: absoluteUrl(userProfileHref(user.id, user.handle), locale),
+      title: t("profileLink.shareTitle"),
+    });
+    if (outcome === "copied") toast.info(t("copied"));
+    else if (outcome === "failed") toast.error(t("page.copyFailed"));
   };
 
   // Review-weighted average of the host's listing ratings; null → "New".
@@ -128,7 +130,16 @@ export default function UserProfileClient({
   const num = (n: number) => formatNumber(n, locale);
   const place = (isOwner && user.address) || t("page.defaultCountry");
   const languagesText = user.languages?.length
-    ? new Intl.ListFormat(locale, { type: "conjunction" }).format(user.languages)
+    ? new Intl.ListFormat(locale, { type: "conjunction" }).format(
+        // The API keeps two-letter codes ("fr"); show them as language names.
+        user.languages.map((code) => {
+          try {
+            return /^[a-z]{2,3}$/.test(code) ? new Intl.DisplayNames([locale], { type: "language" }).of(code) || code : code;
+          } catch {
+            return code;
+          }
+        }),
+      )
     : t("about.notProvided");
 
   const stats: ProfileStat[] = [
@@ -237,6 +248,8 @@ export default function UserProfileClient({
         stats={stats}
         statsLabel={t("page.statsLabel")}
       />
+
+      {isOwner && <ProfileLinkCard userId={user.id} handle={user.handle} />}
 
       <div>
         <Tabs id={tabsId} items={tabs} value={activeTab} onChange={setActiveTab} ariaLabel={t("page.sectionsLabel")} />
@@ -438,8 +451,10 @@ export default function UserProfileClient({
                         label={t("editForm.phone")}
                         autoComplete="tel"
                         dir="ltr"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        value={user.phone || ""}
+                        readOnly
+                        disabled
+                        helper={t("editForm.phoneInSettings")}
                         placeholder={t("editForm.phonePlaceholder")}
                         className="text-start"
                       />

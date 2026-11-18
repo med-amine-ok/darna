@@ -47,7 +47,15 @@ export async function generateMetadata({ params: { locale }, searchParams }: Sea
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const filters = parseSideFilters((key) => (searchParams as Record<string, unknown>)[key]);
-  const sideless = { ...searchParams, minPrice: undefined, maxPrice: undefined, propertyType: undefined, amenities: undefined };
+  const sideless = {
+    ...searchParams,
+    minPrice: undefined,
+    maxPrice: undefined,
+    propertyType: undefined,
+    amenities: undefined,
+    instantBook: undefined,
+    guests: searchParams.guests ? Number(searchParams.guests) : undefined,
+  };
 
   // The base search (destination, dates, guests, vertical) without the side filters: it is
   // the facet pool the sidebar counts from, and the results are that pool once filtered.

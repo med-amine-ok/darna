@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import type { HostType, Membership, Organization, User } from "@/types";
 import { isOrgHostType, OrgHostType, listingOffer } from "@/lib/host-types";
 import { canHostOffer, type HostOffer } from "@/lib/catalog-types";
-import { getSession, getSessionUser } from "./session";
+import { api } from "@/lib/api/client";
+import { activeWorkspace, type ApiWorkspace } from "@/lib/api/me";
+import { membershipFromWorkspace, toOrganization, type ApiOrganization } from "@/lib/api/organization";
+import { getMe, getSessionUser } from "./session";
 import { resolveActiveOrganization } from "./active-org";
 
 export { resolveActiveOrganization };
@@ -28,21 +31,25 @@ export interface HostContext {
  * not a host. For org hosts without an organization, `organization` is null.
  */
 export const getHostContext = cache(async (): Promise<HostContext | null> => {
-  const [session, user] = await Promise.all([getSession(), getSessionUser()]);
-  if (!user || !user.hostType) return null;
+  const bundle = await getMe();
+  if (!bundle) return null;
+  const ws: ApiWorkspace | null = activeWorkspace(bundle.workspaces);
+  if (!ws || !ws.host_type) return null;
+  const user = bundle.user;
 
-  if (!isOrgHostType(user.hostType)) {
-    return { user, hostType: user.hostType, isOrgHost: false, organization: null, membership: null };
+  if (ws.kind !== "organization" || !isOrgHostType(ws.host_type)) {
+    return { user: { ...user, hostType: ws.host_type, organizationId: null }, hostType: ws.host_type, isOrgHost: false, organization: null, membership: null };
   }
 
-  const active = await resolveActiveOrganization(user, session?.organizationId ?? user.organizationId);
-  const hostType: HostType = active?.organization.businessCategory ?? user.hostType;
+  const org = await api<ApiOrganization>("/host/organization").catch(() => null);
+  const membership = membershipFromWorkspace(ws, user);
+  const organization = org ? toOrganization(org, ws.role === "owner" ? user.id : "") : null;
   return {
-    user: { ...user, hostType, organizationId: active?.organization.id ?? null },
-    hostType,
+    user: { ...user, hostType: ws.host_type, organizationId: organization?.id ?? null },
+    hostType: ws.host_type,
     isOrgHost: true,
-    organization: active?.organization ?? null,
-    membership: active?.membership ?? null,
+    organization,
+    membership: organization ? { ...membership, organizationId: organization.id } : null,
   };
 });
 

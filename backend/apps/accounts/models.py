@@ -101,6 +101,10 @@ class User(UUIDModel, SoftDeleteModel, AbstractBaseUser, PermissionsMixin):
     home_commune = models.ForeignKey("geo.Commune", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     address_line = models.CharField(max_length=255, blank=True, help_text="Private; never shown publicly.")
     preferred_locale = models.CharField(max_length=2, default="fr", choices=[("en", "English"), ("fr", "French"), ("ar", "Arabic")])
+    handle = models.CharField(
+        max_length=30, unique=True, null=True, blank=True,
+        help_text="Public profile link name (/users/<handle>), made from the display name; see accounts.handles.",
+    )
     status = models.CharField(max_length=12, choices=UserStatus.choices, default=UserStatus.ACTIVE)
     is_staff = models.BooleanField(default=False, help_text="True for BLADUS admins.")
     date_joined = models.DateTimeField(default=timezone.now)
@@ -128,6 +132,18 @@ class User(UUIDModel, SoftDeleteModel, AbstractBaseUser, PermissionsMixin):
     def __str__(self) -> str:
         """Short readable label used in the Django admin and in logs."""
         return self.email or self.phone_e164 or str(self.id)
+
+    def save(self, *args, **kwargs):
+        """Give every new user a public profile handle (ACC-06) before the first save."""
+        if not self.handle:
+            from .handles import unique_handle
+
+            others = User.objects.exclude(pk=self.pk)
+            self.handle = unique_handle(self.display_name, taken=lambda h: others.filter(handle=h).exists())
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = {*update_fields, "handle"}
+        super().save(*args, **kwargs)
 
     @property
     def display_name(self) -> str:
@@ -574,3 +590,37 @@ class DataSubjectRequest(UUIDModel):
             ),
         ]
         indexes = [models.Index(fields=["status", "due_at"], name="dsr_status_due")]
+
+
+class SocialProvider(models.TextChoices):
+    """Outside sign-in providers (ACC-10). Only Google for now."""
+
+    GOOGLE = "google", "Google"
+
+
+class SocialAccount(UUIDModel):
+    """
+    A Google (or later other) account linked to a BLADUS user (ACC-10).
+
+    ``subject`` is the provider's stable account id (Google ``sub``), never the
+    email: an email can change hands, the subject cannot. One provider account
+    links to one BLADUS user only.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="social_accounts")
+    provider = models.CharField(max_length=16, choices=SocialProvider.choices)
+    subject = models.CharField(max_length=255)
+    email = models.EmailField(max_length=254, blank=True, help_text="Email the provider gave at the last sign-in.")
+    created_at = models.DateTimeField(default=timezone.now)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        """Database options: one link per provider account, one per provider and user."""
+        constraints = [
+            models.UniqueConstraint(fields=["provider", "subject"], name="social_account_provider_subject_unique"),
+            models.UniqueConstraint(fields=["user", "provider"], name="social_account_user_provider_unique"),
+        ]
+
+    def __str__(self) -> str:
+        """Short readable label used in the Django admin and in logs."""
+        return f"{self.provider}:{self.email or self.subject}"

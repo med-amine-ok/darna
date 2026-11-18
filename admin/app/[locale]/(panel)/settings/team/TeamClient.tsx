@@ -4,15 +4,15 @@ import React, { useState, useEffect, useCallback, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Shield, UserPlus, CheckCircle } from "lucide-react";
 import {
-  listTeamMembers,
+  getTeamOverview,
   updateMemberRole,
   toggleMemberActive,
   inviteMember,
+  resetMemberMfa,
 } from "@/lib/actions/team";
 import { unwrap } from "@/lib/actions/result";
 import { useCan, useCurrentAdmin } from "@/components/auth/AdminSessionProvider";
-import { AdminUser, AdminRole } from "@/lib/types";
-import { ROLE_PERMISSIONS } from "@/lib/permissions";
+import { AdminUser, AdminRole, Permission } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { useToast } from "@/components/ui/Toast";
@@ -22,7 +22,13 @@ interface Props {
   locale: string;
 }
 
-const ROLE_KEYS: AdminRole[] = ["super_admin", "moderator", "finance", "support", "analyst"];
+/** A role of the database (GET /admin/staff/roles). */
+interface RoleRow {
+  code: string;
+  role: AdminRole;
+  label: string;
+  permissions: Permission[];
+}
 
 function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
@@ -38,13 +44,14 @@ export default function TeamClient({ locale }: Props) {
   const [members, setMembers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [permissionModalOpen, setPermissionModalOpen] = useState(false);
-  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState<AdminRole>("moderator");
+  const [roleRows, setRoleRows] = useState<RoleRow[]>([]);
+  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState<string>("admin");
 
   // Invite modal
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<AdminRole>("support");
+  const [inviteRole, setInviteRole] = useState<string>("admin");
 
   const { success, error, warning } = useToast();
   const can = useCan();
@@ -59,8 +66,13 @@ export default function TeamClient({ locale }: Props) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const list = unwrap(await listTeamMembers());
-      setMembers(list);
+      const data = unwrap(await getTeamOverview());
+      setMembers(data.members);
+      setRoleRows(data.roles);
+      if (data.roles.length) {
+        setSelectedRoleForMatrix((prev) => (data.roles.some((r) => r.code === prev) ? prev : data.roles[0].code));
+        setInviteRole((prev) => (data.roles.some((r) => r.code === prev) ? prev : data.roles[0].code));
+      }
     } catch (err) {
       error(t("toasts.loadFailed"), errorMessage(err));
     } finally {
@@ -72,10 +84,15 @@ export default function TeamClient({ locale }: Props) {
     loadData();
   }, [loadData]);
 
-  const handleRoleChange = async (userId: string, newRole: AdminRole) => {
+  const roleLabelOf = (code: string) => {
+    const row = roleRows.find((r) => r.code === code);
+    return row ? (tRoles.has(row.role) ? tRoles(row.role) : row.label) : code;
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       const updated = unwrap(await updateMemberRole(userId, newRole));
-      success(t("toasts.roleUpdated"), t("toasts.roleUpdatedBody", { name: updated.name, role: tRoles(newRole) }));
+      success(t("toasts.roleUpdated"), t("toasts.roleUpdatedBody", { name: updated.name, role: roleLabelOf(newRole) }));
       loadData();
     } catch (err) {
       error(t("toasts.roleUpdateFailed"), errorMessage(err));
@@ -97,7 +114,17 @@ export default function TeamClient({ locale }: Props) {
     }
   };
 
-  /** Creates a real (mock) INVITED account on the server: inactive, no password until accepted. */
+  const handleResetMfa = async (user: AdminUser) => {
+    try {
+      unwrap(await resetMemberMfa(user.id));
+      success(t("mfaResetDone", { name: user.name }));
+      loadData();
+    } catch (err) {
+      error(t("toasts.actionProhibited"), errorMessage(err));
+    }
+  };
+
+  /** Creates an invited account on the backend; the person receives a one-time link by email. */
   const handleInvite = async () => {
     if (!inviteName.trim() || !inviteEmail.trim()) {
       setInviteError(t("inviteMissingFields"));
@@ -119,10 +146,10 @@ export default function TeamClient({ locale }: Props) {
     }
   };
 
-  const roles = ROLE_KEYS.map((key) => ({
-    key,
-    label: tRoles(key),
-    desc: t(`roleDescriptions.${key}`),
+  const roles = roleRows.map((r) => ({
+    key: r.code,
+    label: roleLabelOf(r.code),
+    desc: t.has(`roleDescriptions.${r.role}`) ? t(`roleDescriptions.${r.role}`) : r.label,
   }));
 
   const closeInvite = () => {
@@ -212,8 +239,8 @@ export default function TeamClient({ locale }: Props) {
                     <td className="py-3 px-4">
                       <select
                         aria-label={t("roleFor", { name: u.name })}
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.id, e.target.value as AdminRole)}
+                        value={u.backendRole ?? "admin"}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
                         disabled={!canManageTeam || u.id === currentAdminId}
                         className="py-1 px-2.5 rounded-lg border border-primary/[0.12] text-xs font-semibold bg-white text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] disabled:opacity-60 shadow-2xs hover:border-primary/25"
                       >
@@ -237,8 +264,21 @@ export default function TeamClient({ locale }: Props) {
                       >
                         {u.status === "invited" ? t("statusInvited") : u.isActive ? t("statusActive") : t("statusDeactivated")}
                       </span>
+                      <span className="block mt-1 text-[11px] text-primary-600">
+                        {u.mfaEnrolled ? t("mfaOn") : t("mfaOff")}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-end">
+                      {canManageTeam && u.id !== currentAdminId && u.mfaEnrolled && (
+                        <button
+                          type="button"
+                          onClick={() => handleResetMfa(u)}
+                          aria-label={t("mfaResetLabel", { name: u.name })}
+                          className="me-3 text-xs font-semibold text-neutral-600 hover:text-primary underline cursor-pointer rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                        >
+                          {t("mfaReset")}
+                        </button>
+                      )}
                       {canManageTeam && u.id !== currentAdminId && u.status !== "invited" && (
                       <button
                         type="button"
@@ -295,7 +335,7 @@ export default function TeamClient({ locale }: Props) {
           <div className="  rounded-xl overflow-hidden bg-darnaBg-100 p-3 max-h-72 overflow-y-auto">
             <h3 className="text-xs font-semibold text-primary mb-2">{t("matrix.granted")}</h3>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {ROLE_PERMISSIONS[selectedRoleForMatrix].map((perm) => (
+              {(roleRows.find((r) => r.code === selectedRoleForMatrix)?.permissions ?? []).map((perm) => (
                 <li
                   key={perm}
                   dir="ltr"
@@ -388,7 +428,7 @@ export default function TeamClient({ locale }: Props) {
             <select
               id={inviteRoleId}
               value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as AdminRole)}
+              onChange={(e) => setInviteRole(e.target.value)}
               className={FIELD_CLASS}
             >
               {roles.map((r) => (

@@ -69,7 +69,10 @@ def public_listings() -> QuerySet:
         .select_related(
             "host_account", "host_account__organization", "host_account__user",
             "commune", "commune__wilaya", "property_type", "category", "cancellation_policy",
+            "vehicle_detail", "experience_detail",
         )
+        # Card fields (cover photo, amenity slugs) read these lists: one query each per page, not per row.
+        .prefetch_related("photos", "amenity_links__amenity")
     )
 
 
@@ -192,6 +195,7 @@ def search_listings(
     experience_type=None,
     host_type=None,
     host_account=None,
+    host_user=None,
     bedrooms_min: int | None = None,
     bathrooms_min: int | None = None,
     min_rating=None,
@@ -221,6 +225,7 @@ def search_listings(
     - ``amenities``: slugs, the listing must have every one;
     - ``experience_type``: experience types (BR-LST-05);
     - ``host_type``: individual, agency, hotel, hostel; ``host_account``: one host account id;
+      ``host_user``: the solo host account of one user (public profile page);
     - ``bedrooms_min``, ``bathrooms_min``, ``min_rating``;
     - ``instant``: only listings booked without host approval (own or inherited mode);
     - ``featured``: only listings with a live featured placement;
@@ -270,6 +275,8 @@ def search_listings(
         qs = qs.filter(host_type_q(host_types))
     if host_account:
         qs = qs.filter(host_account_id=host_account)
+    if host_user:
+        qs = qs.filter(host_account__user_id=host_user)
     if bedrooms_min is not None:
         qs = qs.filter(bedrooms__gte=bedrooms_min)
     if bathrooms_min is not None:

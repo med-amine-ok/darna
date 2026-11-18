@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { registerUser } from "@/lib/data/auth";
+import { api, ApiError } from "@/lib/api/client";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-rules";
 import { actionFail } from "@/lib/action-result";
 import { startSession } from "@/lib/server/session";
@@ -18,22 +18,45 @@ export async function POST(request: NextRequest) {
     const email = typeof body?.email === "string" ? body.email : "";
     const password = typeof body?.password === "string" ? body.password : "";
 
-    const result = await registerUser({ name: name || email.split("@")[0] || "", email, password });
-    if (!result.ok) {
-      const failure =
-        result.reason === "WEAK_PASSWORD"
-          ? actionFail("PASSWORD_TOO_SHORT", { min: MIN_PASSWORD_LENGTH })
-          : result.reason === "EMAIL_TAKEN"
-          ? actionFail("EMAIL_TAKEN")
-          : actionFail("INVALID_REGISTRATION");
-      return NextResponse.json(failure, { status: result.reason === "EMAIL_TAKEN" ? 409 : 400 });
+    if (!email || !password) {
+      return NextResponse.json(actionFail("INVALID_REGISTRATION"), { status: 400 });
     }
-
-    await startSession(result.user);
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      return NextResponse.json(actionFail("PASSWORD_TOO_SHORT", { min: MIN_PASSWORD_LENGTH }), { status: 400 });
+    }
+    const [firstName, ...rest] = (name || email.split("@")[0] || "").trim().split(/\s+/);
+    let answer: { session_token?: string };
+    try {
+      answer = await api("/auth/signup", {
+        method: "POST",
+        anonymous: true,
+        body: {
+          email,
+          password,
+          first_name: firstName ?? "",
+          last_name: rest.join(" "),
+          locale: request.cookies.get("NEXT_LOCALE")?.value ?? "fr",
+          accept_terms_version: "2026-11",
+        },
+      });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 429) {
+        return NextResponse.json(actionFail("TOO_MANY_ATTEMPTS"), { status: 429 });
+      }
+      if (error instanceof ApiError && error.status < 500) {
+        const taken = error.code === "email_taken" || error.status === 409;
+        return NextResponse.json(actionFail(taken ? "EMAIL_TAKEN" : "INVALID_REGISTRATION"), { status: taken ? 409 : 400 });
+      }
+      throw error;
+    }
+    const user = answer.session_token ? await startSession(answer.session_token) : null;
+    if (!user) {
+      return NextResponse.json(actionFail("REGISTRATION_FAILED"), { status: 500 });
+    }
 
     const res = NextResponse.json({
       success: true,
-      user: { id: result.user.id, name: result.user.name, hostType: null },
+      user: { id: user.id, name: user.name, hostType: null },
     });
     res.cookies.set("darna_mode", "traveler", { path: "/", maxAge: 31536000, sameSite: "lax" });
     return res;

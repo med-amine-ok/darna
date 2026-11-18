@@ -52,5 +52,13 @@
   "yesterday": "Hier",
   "allRead": "Tout est lu",
   "sendingStatus": "Envoi en cours",
-  "composerHint": "Appuyez sur Entrée pour envoyer, Maj + Entrée pour aller à la ligne."
+  "composerHint": "Appuyez sur Entrée pour envoyer, Maj + Entrée pour aller à la ligne.",
+  "loadOlder": "Afficher les messages précédents",
+  "loadMoreConversations": "Afficher plus de conversations",
+  "maskedNotice": "Les numéros de téléphone, e-mails et coordonnées de paiement sont masqués jusqu'à la confirmation d'une réservation, pour votre protection.",
+  "rateLimited": "Vous envoyez des messages trop vite. Patientez un instant.",
+  "inboxErrorTitle": "Impossible de charger vos messages",
+  "inboxErrorBody": "Le service ne répond pas pour le moment. Réessayez dans un instant.",
+  "retry": "Réessayer",
+  "hostEmptySubtitle": "Quand des voyageurs vous écriront au sujet de vos annonces ou réservations, leurs messages apparaîtront ici."
 }

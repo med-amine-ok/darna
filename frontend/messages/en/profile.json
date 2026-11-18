@@ -47,7 +47,8 @@
     "languages": "Languages You Speak",
     "saveButton": "Save Profile Changes",
     "saving": "Saving updates...",
-    "saveSuccess": "Profile successfully updated!"
+    "saveSuccess": "Profile successfully updated!",
+    "phoneInSettings": "Change your phone in Settings, where we confirm it by SMS."
   },
   "settings": {
     "title": "Account & Notification Settings",
@@ -147,5 +148,18 @@
       "vehicle": "Vehicles"
     },
     "businesses": "Businesses run by this host"
+  },
+  "profileLink": {
+    "title": "Your profile link",
+    "hint": "Share it with hosts and travellers. People who open it see only your public profile, never your email, phone or address.",
+    "copy": "Copy link",
+    "copied": "Profile link copied.",
+    "change": "Change",
+    "label": "Name in your link",
+    "rules": "3 to 30 lower-case letters, digits or hyphens. Your old link stops working when you change it.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Your profile link was updated.",
+    "shareTitle": "My BLADUS profile"
   }
 }

@@ -1,5 +1,8 @@
-// TODO: replace with Supabase query
-import { HostType, OnboardingStepConfig, HostTypeOnboardingConfig } from "@/types";
+/**
+ * Local fallback copy of the become-a-host flows (the same content as the
+ * backend fixture apps/config/fixtures/onboarding_flows_v1.json). Client-safe.
+ */
+import type { HostType, OnboardingStepConfig } from "@/types";
 
 export const defaultOnboardingConfigs: Record<HostType, OnboardingStepConfig[]> = {
   individual: [
@@ -1061,53 +1064,12 @@ export const defaultOnboardingConfigs: Record<HostType, OnboardingStepConfig[]> 
   ],
 };
 
-const STORAGE_PREFIX = "darna_onboarding_config_";
-
-export function getOnboardingSteps(hostType: HostType): OnboardingStepConfig[] {
-  if (typeof window !== "undefined") {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_PREFIX}${hostType}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error(`Error loading onboarding steps for ${hostType}:`, e);
-    }
-  }
+/**
+ * Steps of one become-a-host flow. The published flow comes from the API
+ * (GET /onboarding-flows/{host_type}, loaded by the page and passed in as
+ * `fromApi`); the local copy above is used only when the API could not be read.
+ */
+export function getOnboardingSteps(hostType: HostType, fromApi?: OnboardingStepConfig[] | null): OnboardingStepConfig[] {
+  if (fromApi && fromApi.length > 0) return fromApi;
   return defaultOnboardingConfigs[hostType] || defaultOnboardingConfigs.individual;
-}
-
-export function saveOnboardingSteps(hostType: HostType, steps: OnboardingStepConfig[]): void {
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem(`${STORAGE_PREFIX}${hostType}`, JSON.stringify(steps));
-    } catch (e) {
-      console.error(`Error saving onboarding steps for ${hostType}:`, e);
-    }
-  }
-}
-
-export function resetOnboardingSteps(hostType: HostType): OnboardingStepConfig[] {
-  const defaults = defaultOnboardingConfigs[hostType] || defaultOnboardingConfigs.individual;
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem(`${STORAGE_PREFIX}${hostType}`);
-    } catch (e) {
-      console.error(`Error resetting onboarding steps for ${hostType}:`, e);
-    }
-  }
-  return defaults;
-}
-
-export function getAllOnboardingConfigs(): Record<HostType, OnboardingStepConfig[]> {
-  const result: Record<HostType, OnboardingStepConfig[]> = {
-    individual: getOnboardingSteps("individual"),
-    agency: getOnboardingSteps("agency"),
-    hotel: getOnboardingSteps("hotel"),
-    hostel: getOnboardingSteps("hostel"),
-  };
-  return result;
 }

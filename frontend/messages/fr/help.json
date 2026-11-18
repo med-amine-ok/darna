@@ -75,9 +75,9 @@
     "message": "Votre message",
     "messagePlaceholder": "Décrivez votre problème en précisant votre réservation...",
     "messageRequired": "Saisissez un message.",
-    "submit": "Envoyer le message à l'assistance",
+    "submit": "Écrire au support",
     "sending": "Envoi en cours...",
-    "sent": "Message envoyé ! Un conseiller BLADUS vous répondra sous 2 heures."
+    "sent": "Votre application e-mail s'est ouverte avec votre message. Envoyez-le depuis celle-ci, le support BLADUS vous répondra par e-mail."
   },
   "channels": {
     "title": "Nous contacter directement",

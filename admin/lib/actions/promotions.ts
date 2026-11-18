@@ -12,8 +12,11 @@ export async function createPromotion(input: Omit<PromotionCoupon, "id" | "usedC
   return runAction("promotions.manage", (actor) => promotions.createPromotion(obj(input, "promotion"), actor));
 }
 
-export async function togglePromotionStatus(promotionId: string) {
-  return runAction("promotions.manage", (actor) => promotions.togglePromotionStatus(id(promotionId), actor));
+/** `isActive` is the wanted state (the current one is read from the API when omitted). */
+export async function togglePromotionStatus(promotionId: string, isActive?: boolean) {
+  return runAction("promotions.manage", (actor) =>
+    promotions.togglePromotionStatus(id(promotionId), actor, typeof isActive === "boolean" ? isActive : undefined)
+  );
 }
 
 export async function deletePromotion(promotionId: string) {

@@ -4,39 +4,46 @@ import { revalidatePath } from "next/cache";
 import type { Reservation } from "@/types";
 import { ActionResult, actionFail, actionOk } from "@/lib/action-result";
 import { getSessionUser } from "@/lib/server/session";
-import { getHostContextForReservation } from "@/lib/server/authz";
-import { getListingById, isPublicListing } from "@/lib/data/listings";
-import { getTripById } from "@/lib/data/trips";
-import { priceOverridesFor } from "@/lib/data/calendar";
+import { getHostContext } from "@/lib/server/host-context";
+import { ApiError, newIdempotencyKey } from "@/lib/api/client";
+import { bookingCodeFor, bookingFail, type CancellationPreview, type RefundObligation, type ServerQuote } from "@/lib/api/bookings";
 import {
-  cancelReservation,
-  createListingReservation,
-  createTripReservation,
-  getReservationById,
-  getReservationOwner,
-  ReservationConflictError,
-  respondToRequest,
-  seatsSoldByDeparture,
-  unavailableNights,
+  bookQuote,
+  confirmRefundReceived,
+  createQuote,
+  declareRefundPaid,
+  disputeRefund,
+  getHostRefunds,
+  getMyRefunds,
+  getQuote,
+  getTripDepartures,
+  guestCancel,
+  guestCancellationPreview,
+  guestConfirmStay,
+  hostAccept,
+  hostCancel,
+  hostCancellationPreview,
+  hostConfirmStay,
+  hostDecline,
+  openDispute,
+  type QuoteRequest,
 } from "@/lib/data/reservations";
-import {
-  isRequestToBook,
-  quoteListingBooking,
-  quoteTripBooking,
-  selectRoomType,
-} from "@/lib/booking/pricing";
-import {
-  tripEndDate,
-  validateListingRequest,
-  validateTripRequest,
-} from "@/lib/booking/availability";
-import {
-  computeGuestRefund,
-  computeHostRefund,
-} from "@/lib/booking/cancellation";
-import { isDateKey, todayKey } from "@/lib/booking/dates";
+import type { PricingModel } from "@/lib/booking/pricing";
+import { isDateKey } from "@/lib/booking/dates";
 
-export type CreateBookingInput =
+/**
+ * Booking server actions. Prices, availability, status changes and
+ * permissions are decided by the Django API; these actions only check the
+ * session, clean the input and translate API errors into action codes.
+ */
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (value: unknown): value is string => typeof value === "string" && UUID.test(value);
+
+const PRICING_MODELS: PricingModel[] = ["per_night", "per_room_night", "per_bed_night", "per_person", "per_day", "per_traveller"];
+
+/** What the guest picked in a booking widget. Never a price. */
+export type BookingSelection =
   | {
       kind: "listing";
       listingId: string;
@@ -48,259 +55,280 @@ export type CreateBookingInput =
       /** Rooms (hotels) or beds (hostels). */
       unitCount?: number;
       selectedRoomTypeId?: string;
-      guestMessage?: string;
+      /** Experience session (GET /listings/{id}/availability slots). */
+      slotId?: string;
+      /** How the widget labels the price (display only). */
+      model?: PricingModel;
     }
   | {
       kind: "trip";
       tripId: string;
       departureDate: string;
+      /** Departure UUID when known; otherwise found from the date. */
+      departureId?: string;
       guestCount: number;
-      guestMessage?: string;
     };
+
+export type CreateBookingInput = BookingSelection & {
+  /** The quote the guest saw (POST /quotes); a fresh one is asked for when missing or expired. */
+  quoteId?: string;
+  guestMessage?: string;
+};
 
 function cleanCount(value: unknown, max = 500): number | null {
   const n = typeof value === "number" ? value : NaN;
   return Number.isInteger(n) && n >= 1 && n <= max ? n : null;
 }
 
-function cleanMessage(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim()
-    ? value.trim().slice(0, 2000)
-    : undefined;
+function cleanText(value: unknown, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+type Cleaned = { body: QuoteRequest; model?: PricingModel } | { error: ActionResult<never> };
+
+/** Turn a widget selection into the body of POST /quotes. */
+async function quoteBody(input: BookingSelection): Promise<Cleaned> {
+  if (!input || typeof input !== "object") return { error: actionFail("INVALID_INPUT") };
+  const guests = cleanCount(input.guestCount);
+  if (!guests) return { error: actionFail("INVALID_GUESTS") };
+
+  if (input.kind === "listing") {
+    if (!isUuid(input.listingId)) return { error: actionFail("LISTING_UNAVAILABLE") };
+    if (!isDateKey(input.startDate)) return { error: actionFail("INVALID_DATES") };
+    const model = PRICING_MODELS.includes(input.model as PricingModel) ? input.model : undefined;
+    if (input.slotId !== undefined) {
+      if (!isUuid(input.slotId)) return { error: actionFail("INVALID_DATES") };
+      return { body: { listing_id: input.listingId, experience_slot_id: input.slotId, guests }, model };
+    }
+    if (!isDateKey(input.endDate) || input.endDate <= input.startDate) return { error: actionFail("INVALID_DATES") };
+    const body: QuoteRequest = { listing_id: input.listingId, check_in: input.startDate, check_out: input.endDate, guests };
+    if (input.selectedRoomTypeId !== undefined) {
+      if (!isUuid(input.selectedRoomTypeId)) return { error: actionFail("INVALID_ROOM_COUNT") };
+      const units = cleanCount(input.unitCount ?? 1, 10000);
+      if (!units) return { error: actionFail("INVALID_ROOM_COUNT") };
+      body.room_type_id = input.selectedRoomTypeId;
+      body.units = units;
+    }
+    return { body, model };
+  }
+
+  if (input.kind === "trip") {
+    if (typeof input.tripId !== "string" || !input.tripId) return { error: actionFail("TRIP_UNAVAILABLE") };
+    let departureId = isUuid(input.departureId) ? input.departureId : null;
+    if (!departureId) {
+      if (!isDateKey(input.departureDate)) return { error: actionFail("INVALID_DEPARTURE") };
+      const departures = await getTripDepartures(input.tripId);
+      const match = departures.find((d) => d.starts_on === input.departureDate);
+      if (!match) return { error: actionFail("INVALID_DEPARTURE") };
+      departureId = match.id;
+    }
+    return { body: { trip_departure_id: departureId, guests }, model: "per_traveller" };
+  }
+
+  return { error: actionFail("INVALID_INPUT") };
 }
 
 /**
- * Creates a booking for the logged-in user. Dates are validated against the
- * listing's rules and live availability; price, fees, status and approval
- * mode are computed here from server data, nothing money-related or
- * status-related is taken from the client.
+ * Price a selection on the server (POST /quotes). Open to visitors: the
+ * booking widgets show this quote, never a price computed in the browser.
  */
-export async function createBookingAction(
-  input: CreateBookingInput,
-): Promise<ActionResult<Reservation>> {
-  const user = await getSessionUser();
-  if (!user) return actionFail("UNAUTHENTICATED");
-  if (!input || typeof input !== "object") return actionFail("INVALID_INPUT");
-
-  const guestCount = cleanCount(input.guestCount);
-  if (!guestCount) return actionFail("INVALID_GUESTS");
-  const guestMessage = cleanMessage(input.guestMessage);
-  const today = todayKey();
-
+export async function quoteBookingAction(input: BookingSelection): Promise<ActionResult<ServerQuote>> {
   try {
-    if (input.kind === "listing") {
-      const listing =
-        typeof input.listingId === "string"
-          ? await getListingById(input.listingId)
-          : null;
-      // Drafts / suspended listings are never bookable.
-      if (!listing || !isPublicListing(listing))
-        return actionFail("LISTING_UNAVAILABLE");
-      if (listing.hostUserId === user.id && !listing.organizationId) {
-        return actionFail("OWN_LISTING");
-      }
-
-      const startDate = input.startDate;
-      const endDate =
-        listing.category === "experience" ? input.startDate : input.endDate;
-      if (!isDateKey(startDate) || !isDateKey(endDate))
-        return actionFail("INVALID_DATES");
-
-      const roomType = selectRoomType(
-        listing,
-        typeof input.selectedRoomTypeId === "string"
-          ? input.selectedRoomTypeId
-          : null,
-      );
-      const unitCount = roomType
-        ? roomType.bookingUnit === "bed"
-          ? guestCount // one bed per guest
-          : cleanCount(input.unitCount ?? 1, 10000)
-        : undefined;
-      if (roomType && !unitCount) return actionFail("INVALID_ROOM_COUNT");
-
-      const error = validateListingRequest({
-        listing,
-        roomType,
-        request: {
-          startDate,
-          endDate,
-          guestCount,
-          unitCount: unitCount ?? undefined,
-        },
-        today,
-        unavailableNights: unavailableNights(listing, roomType?.id),
-      });
-      if (error) return actionFail(error.code, error.params);
-
-      const quote = quoteListingBooking({
-        listing,
-        startDate,
-        endDate,
-        guestCount,
-        unitCount: unitCount ?? undefined,
-        selectedRoomTypeId: roomType?.id,
-        priceOverrides: roomType ? undefined : priceOverridesFor(listing.id),
-      });
-      if (quote.total <= 0) return actionFail("INVALID_DATES");
-
-      const reservation = await createListingReservation(listing.id, {
-        userId: user.id,
-        startDate,
-        endDate,
-        guestCount,
-        unitCount: unitCount ?? undefined,
-        selectedRoomTypeId: roomType?.id,
-        quote,
-        approvalMode: isRequestToBook(listing) ? "request" : "instant",
-        cancellationPolicy: listing.cancellationPolicy ?? "flexible",
-        guestMessage,
-      });
-      revalidatePath("/", "layout");
-      return actionOk(reservation);
-    }
-
-    if (input.kind === "trip") {
-      const trip =
-        typeof input.tripId === "string"
-          ? await getTripById(input.tripId)
-          : null;
-      if (!trip || trip.status !== "active")
-        return actionFail("TRIP_UNAVAILABLE");
-
-      const departureDate = input.departureDate;
-      const error = validateTripRequest({
-        trip,
-        departureDate,
-        guestCount,
-        seatsSold: isDateKey(departureDate)
-          ? seatsSoldByDeparture(trip.id)[departureDate] || 0
-          : 0,
-        today,
-      });
-      if (error) return actionFail(error.code, error.params);
-
-      const quote = quoteTripBooking({ trip, guestCount });
-      const reservation = await createTripReservation(trip.id, {
-        userId: user.id,
-        startDate: departureDate,
-        endDate: tripEndDate(departureDate, trip.durationDays),
-        guestCount,
-        quote,
-        approvalMode:
-          trip.organization?.bookingApprovalMode === "request"
-            ? "request"
-            : "instant",
-        cancellationPolicy: trip.cancellationPolicy,
-        guestMessage,
-      });
-      revalidatePath("/", "layout");
-      return actionOk(reservation);
-    }
-
-    return actionFail("INVALID_INPUT");
-  } catch (err) {
-    if (err instanceof ReservationConflictError) {
-      return actionFail(
-        err.message === "SEATS_UNAVAILABLE"
-          ? "SEATS_UNAVAILABLE"
-          : "DATES_UNAVAILABLE",
-      );
-    }
-    console.error("[createBookingAction] failed", err);
-    return actionFail("BOOKING_FAILED");
+    const cleaned = await quoteBody(input);
+    if ("error" in cleaned) return cleaned.error;
+    return actionOk(await createQuote(cleaned.body, cleaned.model));
+  } catch (error) {
+    return bookingFail(error, "quoteBookingAction");
   }
 }
 
-/** Guest cancels one of THEIR OWN reservations, under the listing's cancellation policy. */
-export async function cancelMyReservationAction(
-  reservationId: string,
-): Promise<ActionResult<Reservation>> {
+const isQuoteGone = (error: unknown) =>
+  error instanceof ApiError && (error.code === "quote_expired" || error.code === "quote_already_used" || error.status === 404);
+
+/**
+ * Book a quote for the signed-in guest (POST /me/bookings with an
+ * Idempotency-Key). When the quote the guest saw has expired, a new one is
+ * asked for; it is booked only if its total is unchanged, else PRICE_CHANGED.
+ */
+export async function createBookingAction(input: CreateBookingInput): Promise<ActionResult<Reservation>> {
   const user = await getSessionUser();
   if (!user) return actionFail("UNAUTHENTICATED");
+  const guestMessage = cleanText(input?.guestMessage, 2000) || undefined;
+  const idempotencyKey = newIdempotencyKey();
 
-  const owner =
-    typeof reservationId === "string"
-      ? await getReservationOwner(reservationId)
-      : null;
-  if (!owner || owner.guestUserId !== user.id) return actionFail("NOT_FOUND");
+  try {
+    const cleaned = await quoteBody(input);
+    if ("error" in cleaned) return cleaned.error;
 
-  const existing = await getReservationById(reservationId); // settles expired / completed first
-  if (!existing) return actionFail("NOT_FOUND");
+    let reservation: Reservation;
+    if (isUuid(input.quoteId)) {
+      try {
+        reservation = await bookQuote(input.quoteId, guestMessage, idempotencyKey);
+      } catch (error) {
+        if (!isQuoteGone(error)) throw error;
+        const [seen, fresh] = await Promise.all([getQuote(input.quoteId).catch(() => null), createQuote(cleaned.body)]);
+        if (!seen || seen.total !== fresh.total) return actionFail("PRICE_CHANGED");
+        reservation = await bookQuote(fresh.quoteId, guestMessage, newIdempotencyKey());
+      }
+    } else {
+      const fresh = await createQuote(cleaned.body);
+      reservation = await bookQuote(fresh.quoteId, guestMessage, idempotencyKey);
+    }
+    revalidatePath("/", "layout");
+    return actionOk(reservation);
+  } catch (error) {
+    if (error instanceof ApiError && error.status < 500) return actionFail(bookingCodeFor(error));
+    return bookingFail(error, "createBookingAction");
+  }
+}
 
-  const refund = computeGuestRefund({
-    reservation: existing,
-    policy:
-      existing.cancellationPolicy ??
-      existing.listing?.cancellationPolicy ??
-      existing.trip?.cancellationPolicy,
-    checkInTime: existing.tripId ? "00:00" : existing.listing?.checkInTime,
-  });
-  if (!refund.allowed) return actionFail(refund.reason ?? "CONFLICT");
+// ---------------------------------------------------------------------------
+// Guest
+// ---------------------------------------------------------------------------
 
-  const updated = await cancelReservation(reservationId, "guest", refund);
-  if (!updated) return actionFail("NOT_FOUND");
-  revalidatePath("/", "layout");
-  return actionOk(updated);
+async function asGuest<T>(where: string, id: unknown, run: (id: string) => Promise<T>): Promise<ActionResult<T>> {
+  const user = await getSessionUser();
+  if (!user) return actionFail("UNAUTHENTICATED");
+  if (!isUuid(id)) return actionFail("NOT_FOUND");
+  try {
+    return actionOk(await run(id));
+  } catch (error) {
+    return bookingFail(error, where);
+  }
+}
+
+/** What cancelling one of my bookings would refund now (the backend applies the frozen policy). */
+export async function getMyCancellationPreviewAction(reservationId: string): Promise<ActionResult<CancellationPreview>> {
+  return asGuest("getMyCancellationPreviewAction", reservationId, guestCancellationPreview);
+}
+
+/** Guest cancels one of their own bookings. */
+export async function cancelMyReservationAction(reservationId: string, reason?: string): Promise<ActionResult<Reservation>> {
+  const result = await asGuest("cancelMyReservationAction", reservationId, (id) => guestCancel(id, cleanText(reason, 2000)));
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+/** Guest confirms the stay took place (from check-in time on). */
+export async function confirmMyStayAction(reservationId: string): Promise<ActionResult<Reservation>> {
+  const result = await asGuest("confirmMyStayAction", reservationId, guestConfirmStay);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
+
+const DISPUTE_REASONS = ["not_as_described", "no_show", "safety", "cleanliness", "refund", "other"] as const;
+export type DisputeReason = (typeof DISPUTE_REASONS)[number];
+
+/** Report a problem with a booking to BLADUS support (opens a dispute, as guest or as host). */
+export async function reportBookingProblemAction(
+  reservationId: string,
+  input: { side: "guest" | "host"; reasonCode: DisputeReason; statement: string },
+): Promise<ActionResult<null>> {
+  const statement = cleanText(input?.statement, 4000);
+  if (!DISPUTE_REASONS.includes(input?.reasonCode)) return actionFail("INVALID_INPUT");
+  if (statement.length < 20) return actionFail("INVALID_INPUT");
+  const side = input.side === "host" ? "host" : "guest";
+  if (side === "host" && !(await getHostContext())) return actionFail("FORBIDDEN");
+  const result = await asGuest("reportBookingProblemAction", reservationId, (id) =>
+    openDispute(side, id, { reasonCode: input.reasonCode, statement }),
+  );
+  return result.ok ? actionOk(null) : result;
+}
+
+/** Refunds hosts owe me after cancellations. */
+export async function getMyRefundsAction(): Promise<ActionResult<RefundObligation[]>> {
+  const user = await getSessionUser();
+  if (!user) return actionFail("UNAUTHENTICATED");
+  try {
+    return actionOk(await getMyRefunds());
+  } catch (error) {
+    return bookingFail(error, "getMyRefundsAction");
+  }
+}
+
+/** Guest confirms a refund arrived, or says it did not (with a note). */
+export async function answerRefundAction(
+  refundId: string,
+  answer: { received: true } | { received: false; note: string },
+): Promise<ActionResult<RefundObligation>> {
+  if (!answer?.received) {
+    const note = cleanText((answer as { note?: string })?.note, 2000);
+    if (!note) return actionFail("REASON_REQUIRED");
+    return asGuest("answerRefundAction", refundId, (id) => disputeRefund(id, note));
+  }
+  return asGuest("answerRefundAction", refundId, confirmRefundReceived);
+}
+
+// ---------------------------------------------------------------------------
+// Host
+// ---------------------------------------------------------------------------
+
+async function asHost<T>(where: string, id: unknown, run: (id: string) => Promise<T>): Promise<ActionResult<T>> {
+  const ctx = await getHostContext();
+  if (!ctx) return actionFail((await getSessionUser()) ? "FORBIDDEN" : "UNAUTHENTICATED");
+  if (!isUuid(id)) return actionFail("NOT_FOUND");
+  try {
+    return actionOk(await run(id));
+  } catch (error) {
+    return bookingFail(error, where);
+  }
 }
 
 export type HostReservationDecision = "confirm" | "decline" | "cancel";
 
 /**
- * Host (or org member) accepts / declines / cancels a reservation on
- * inventory they own. Expired requests can't be accepted.
+ * Host (or a member of the organisation with the right permission) accepts or
+ * declines a request, or cancels a confirmed booking. `reason` is required by
+ * the backend for declines and cancellations.
  */
 export async function respondToReservationAction(
   reservationId: string,
   decision: HostReservationDecision,
-  declineReason?: string,
+  reason?: string,
 ): Promise<ActionResult<Reservation>> {
-  const user = await getSessionUser();
-  if (!user) return actionFail("UNAUTHENTICATED");
-  if (typeof reservationId !== "string") return actionFail("INVALID_INPUT");
+  const text = cleanText(reason, 2000);
+  if ((decision === "decline" || decision === "cancel") && !text) return actionFail("REASON_REQUIRED");
+  const run =
+    decision === "confirm"
+      ? hostAccept
+      : decision === "decline"
+        ? (id: string) => hostDecline(id, text)
+        : decision === "cancel"
+          ? (id: string) => hostCancel(id, text)
+          : null;
+  if (!run) return actionFail("INVALID_INPUT");
+  const result = await asHost("respondToReservationAction", reservationId, run);
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
 
-  const ctx = await getHostContextForReservation(reservationId);
-  if (!ctx) return actionFail("NOT_FOUND");
+/** What a host cancellation would do now (guest refund, commission returned). */
+export async function getHostCancellationPreviewAction(reservationId: string): Promise<ActionResult<CancellationPreview>> {
+  return asHost("getHostCancellationPreviewAction", reservationId, hostCancellationPreview);
+}
 
-  const existing = await getReservationById(reservationId); // settles expired / completed first
-  if (!existing) return actionFail("NOT_FOUND");
+/** Host enters the guest's 6-digit check-in code on arrival. */
+export async function confirmGuestStayAction(reservationId: string, code: string): Promise<ActionResult<Reservation>> {
+  const clean = cleanText(code, 12).replace(/\s+/g, "");
+  if (!/^[0-9]{6}$/.test(clean)) return actionFail("STAY_CODE_INVALID");
+  const result = await asHost("confirmGuestStayAction", reservationId, (id) => hostConfirmStay(id, clean));
+  if (result.ok) revalidatePath("/", "layout");
+  return result;
+}
 
+/** Refunds the active workspace owes guests. */
+export async function getHostRefundsAction(): Promise<ActionResult<RefundObligation[]>> {
+  if (!(await getHostContext())) return actionFail("FORBIDDEN");
   try {
-    let updated: Reservation | null = null;
-    if (decision === "confirm" || decision === "decline") {
-      if (existing.status === "expired") return actionFail("REQUEST_EXPIRED");
-      if (existing.status !== "pending")
-        return actionFail("REQUEST_NOT_PENDING");
-      updated = await respondToRequest(
-        reservationId,
-        decision === "confirm" ? "confirmed" : "declined",
-        {
-          declineReason:
-            typeof declineReason === "string"
-              ? declineReason.slice(0, 500)
-              : undefined,
-        },
-      );
-    } else if (decision === "cancel") {
-      if (existing.status !== "confirmed") {
-        return actionFail("RESERVATION_NOT_CANCELLABLE");
-      }
-      updated = await cancelReservation(
-        reservationId,
-        "host",
-        computeHostRefund(existing),
-      );
-    } else {
-      return actionFail("INVALID_INPUT");
-    }
-
-    if (!updated) return actionFail("NOT_FOUND");
-    revalidatePath("/", "layout");
-    return actionOk(updated);
-  } catch (err) {
-    if (err instanceof ReservationConflictError)
-      return actionFail("REQUEST_EXPIRED");
-    console.error("[respondToReservationAction] failed", err);
-    return actionFail("SERVER_ERROR");
+    return actionOk(await getHostRefunds());
+  } catch (error) {
+    return bookingFail(error, "getHostRefundsAction");
   }
+}
+
+/** Host declares a refund paid, with the transfer reference. */
+export async function declareRefundPaidAction(refundId: string, paymentReference: string): Promise<ActionResult<RefundObligation>> {
+  const reference = cleanText(paymentReference, 200);
+  if (!reference) return actionFail("INVALID_INPUT");
+  return asHost("declareRefundPaidAction", refundId, (id) => declareRefundPaid(id, reference));
 }

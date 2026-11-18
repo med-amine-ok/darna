@@ -12,5 +12,32 @@
   "earlier": "Earlier",
   "justNow": "Just now",
   "unread": "Unread",
-  "eyebrow": "Your account"
+  "eyebrow": "Your account",
+  "loadMore": "Show older notifications",
+  "loadFailedTitle": "Your notifications could not be loaded",
+  "loadFailedBody": "The service is not answering right now. Please try again in a moment.",
+  "retry": "Try again",
+  "prefs": {
+    "title": "Notification preferences",
+    "subtitle": "Choose how BLADUS reaches you outside the app. Notifications always appear here.",
+    "loadFailed": "Your preferences could not be loaded.",
+    "saved": "Preferences saved.",
+    "locked": "Required for your bookings and safety: cannot be turned off.",
+    "topic": "Topic",
+    "channels": {
+      "email": "Email",
+      "sms": "SMS",
+      "push": "Push"
+    },
+    "groups": {
+      "booking": "Bookings",
+      "refund": "Refunds",
+      "review": "Reviews",
+      "message": "Messages",
+      "verification": "Host verification",
+      "listing": "Listings",
+      "wallet": "Wallet",
+      "other": "Other"
+    }
+  }
 }

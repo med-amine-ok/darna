@@ -1,96 +1,116 @@
-// TODO: replace with Supabase query
 import "server-only";
-import type { CancellationPolicy, HostType, Listing, Reservation, ReservationStatus, RoomType, Trip, User } from "@/types";
-import { newId } from "@/lib/ids";
-import { deductBookingCommission, getBookingCommission, reverseBookingCommission } from "@/lib/data/wallet";
-import { REQUEST_TO_BOOK_TTL_HOURS } from "@/lib/booking/config";
-import { eachNightKey, todayKey, type DateKey } from "@/lib/booking/dates";
-import { effectiveStatus, holdsInventory } from "@/lib/booking/lifecycle";
-import { roomTypeInventory, type BookingQuote } from "@/lib/booking/pricing";
-import { maxGuestsFor, type ListingAvailability } from "@/lib/booking/availability";
-import type { RefundBreakdown } from "@/lib/booking/cancellation";
-import { blockedDateKeys } from "./calendar";
-import { clone, delay } from "./_store";
-import { listingsTable, organizationsTable, reservationsTable, tripsTable, usersTable } from "./_tables";
+import type { Listing, Reservation, ReservationStatus, Trip } from "@/types";
+import { api, apiAll, apiOrNull, newIdempotencyKey } from "@/lib/api/client";
+import {
+  toCancellationPreview,
+  toRefund,
+  toReservation,
+  toServerQuote,
+  type ApiCancellationPreview,
+  type ApiGuestBooking,
+  type ApiHostBooking,
+  type ApiQuote,
+  type ApiRefund,
+  type CancellationPreview,
+  type RefundObligation,
+  type ServerQuote,
+} from "@/lib/api/bookings";
+import { toListingAvailability, type ApiAvailability } from "@/lib/api/calendar";
+import type { PricingModel } from "@/lib/booking/pricing";
+import type { ListingAvailability } from "@/lib/booking/availability";
+import { addDaysToKey, todayKey, type DateKey } from "@/lib/booking/dates";
+import { getListingById } from "./listings";
+import { getTripById } from "./trips";
 
-/** Contact details the HOST of a booking may see about the guest. */
-function guestForHost(userId: string, createdAt: string): User {
-  const user = usersTable.find((u) => u.id === userId);
-  if (user) {
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      image: user.image,
-      role: user.role,
-      createdAt: user.createdAt,
-      favoriteIds: [],
-      isIdentityVerified: user.isIdentityVerified,
-    };
-  }
-  return {
-    id: userId,
-    name: "BLADUS guest",
-    email: "",
-    image: "/assets/avatar.png",
-    role: "guest",
-    createdAt,
-    favoriteIds: [],
-  };
+/**
+ * Bookings, quotes and availability, read from and written to the Django API
+ * (backend apps/bookings, apps/pricing, apps/inventory). The backend is the
+ * authority for prices, availability, status transitions and permissions;
+ * nothing here computes money.
+ *
+ * Reads used by pages never throw: they log and return an empty result, and
+ * the `load*` variants also say whether the read failed so the page can show
+ * an error state instead of a misleading empty one.
+ */
+
+export interface Loaded<T> {
+  data: T;
+  failed: boolean;
 }
 
-function tripFor(res: Reservation): Trip | undefined {
-  return tripsTable.find((t) => t.id === res.tripId || (!!res.tripId && t.id === res.listingId));
+async function loaded<T>(where: string, fallback: T, run: () => Promise<T>): Promise<Loaded<T>> {
+  try {
+    return { data: await run(), failed: false };
+  } catch (error) {
+    console.error(`[${where}]`, error);
+    return { data: fallback, failed: true };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------------
+
+/** Public listings and trips of guest bookings, for photos and links (best effort, at most 40 lookups). */
+async function joinGuestInventory(rows: ApiGuestBooking[]): Promise<Map<string, Listing | Trip | null>> {
+  const ids = new Map<string, "listing" | "trip">();
+  for (const b of rows) {
+    if (b.trip_id) ids.set(b.trip_id, "trip");
+    else if (b.listing_id) ids.set(b.listing_id, "listing");
+  }
+  const found = new Map<string, Listing | Trip | null>();
+  await Promise.all(
+    Array.from(ids.entries())
+      .slice(0, 40)
+      .map(async ([id, kind]) => {
+        const item = await (kind === "trip" ? getTripById(id) : getListingById(id)).catch(() => null);
+        found.set(id, item);
+      }),
+  );
+  return found;
+}
+
+/** The signed-in guest's own bookings, newest first (GET /me/bookings). Throws on API failure. */
+export async function fetchGuestReservations(guestId: string, status?: ReservationStatus): Promise<Reservation[]> {
+  const rows = await apiAll<ApiGuestBooking>("/me/bookings", { query: { status } });
+  const inventory = await joinGuestInventory(rows);
+  return rows.map((b) =>
+    toReservation(b, {
+      guestId,
+      listing: b.trip_id ? null : ((inventory.get(b.listing_id ?? "") as Listing | null) ?? null),
+      trip: b.trip_id ? ((inventory.get(b.trip_id) as Trip | null) ?? null) : null,
+    }),
+  );
+}
+
+/** Bookings of the active host workspace (GET /host/bookings). Throws on API failure. */
+export async function fetchHostReservations(params?: { status?: ReservationStatus; listingId?: string }): Promise<Reservation[]> {
+  const rows = await apiAll<ApiHostBooking>("/host/bookings", {
+    query: { status: params?.status, listing: params?.listingId },
+  });
+  return rows.map((b) => toReservation(b));
+}
+
+/** Attach the host's own listings to their bookings (photos, titles, check-in times). */
+export function attachListings(reservations: Reservation[], listings: Listing[]): Reservation[] {
+  const byId = new Map(listings.map((l) => [l.id, l]));
+  return reservations.map((r) => (r.tripId || r.listing ? r : { ...r, listing: byId.get(r.listingId) }));
+}
+
+export function loadGuestReservations(guestId: string): Promise<Loaded<Reservation[]>> {
+  return loaded("loadGuestReservations", [], () => fetchGuestReservations(guestId));
+}
+
+export function loadHostReservations(): Promise<Loaded<Reservation[]>> {
+  return loaded("loadHostReservations", [], () => fetchHostReservations());
 }
 
 /**
- * Lazily applies clock-based transitions to the stored row:
- * pending past expiresAt -> expired, confirmed past checkout -> completed.
+ * Kept for older callers: `userId` reads the signed-in guest's bookings,
+ * `hostId` / `organizationId` the active host workspace's bookings (the
+ * backend scopes both to the session, the ids only pick the side).
+ * Never throws; an API failure gives an empty list.
  */
-function settle(res: Reservation, now = new Date()): Reservation {
-  const listing = res.tripId ? undefined : listingsTable.find((l) => l.id === res.listingId);
-  const next = effectiveStatus(res, listing?.checkOutTime, now);
-  if (next !== res.status) {
-    if (next === "expired") {
-      res.paymentStatus = "voided";
-      res.respondedAt = res.expiresAt;
-    }
-    res.status = next;
-  }
-  return res;
-}
-
-function populate(res: Reservation): Reservation {
-  const trip = tripFor(res);
-  return clone({
-    ...res,
-    commissionAmount: res.commissionAmount ?? getBookingCommission(res.id) ?? undefined,
-    listing: res.tripId ? undefined : listingsTable.find((l) => l.id === res.listingId),
-    trip,
-    user: guestForHost(res.userId, res.createdAt),
-  });
-}
-
-/** Listing ids + trip ids owned by a host (individual) or an organization. */
-function ownedInventory(owner: { hostId?: string; organizationId?: string }) {
-  const listingIds = new Set(
-    listingsTable
-      .filter((l) =>
-        owner.organizationId
-          ? l.organizationId === owner.organizationId
-          : Boolean(owner.hostId) && l.hostUserId === owner.hostId && !l.organizationId
-      )
-      .map((l) => l.id)
-  );
-  const tripIds = new Set(
-    owner.organizationId
-      ? tripsTable.filter((t) => t.organizationId === owner.organizationId).map((t) => t.id)
-      : []
-  );
-  return { listingIds, tripIds };
-}
-
 export async function getReservations(params?: {
   userId?: string;
   listingId?: string;
@@ -99,352 +119,204 @@ export async function getReservations(params?: {
   organizationId?: string;
   status?: ReservationStatus;
 }): Promise<Reservation[]> {
-  await delay(40);
-
-  const now = new Date();
-  reservationsTable.forEach((r) => settle(r, now));
-  let results = [...reservationsTable];
-
-  if (params?.status) results = results.filter((r) => r.status === params.status);
-  if (params?.userId) results = results.filter((r) => r.userId === params.userId);
-  if (params?.listingId) {
-    results = results.filter((r) => r.listingId === params.listingId || r.tripId === params.listingId);
-  }
-  if (params?.tripId) results = results.filter((r) => r.tripId === params.tripId);
-
-  if (params?.hostId || params?.organizationId) {
-    const { listingIds, tripIds } = ownedInventory(params);
-    results = results.filter(
-      (r) => listingIds.has(r.listingId) || (r.tripId ? tripIds.has(r.tripId) : false)
-    );
-  }
-
-  return results.map(populate);
-}
-
-export async function getReservationById(id: string): Promise<Reservation | null> {
-  await delay(30);
-  const res = reservationsTable.find((r) => r.id === id);
-  return res ? populate(settle(res)) : null;
-}
-
-/** Who owns the inventory a reservation was made on. */
-export async function getReservationOwner(
-  reservationId: string
-): Promise<{ hostUserId: string | null; organizationId: string | null; guestUserId: string } | null> {
-  const res = reservationsTable.find((r) => r.id === reservationId);
-  if (!res) return null;
-  const listing = res.tripId ? undefined : listingsTable.find((l) => l.id === res.listingId);
-  const trip = tripFor(res);
-  return {
-    hostUserId: listing && !listing.organizationId ? listing.hostUserId || null : null,
-    organizationId: listing?.organizationId || trip?.organizationId || null,
-    guestUserId: res.userId,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Inventory / availability
-// ---------------------------------------------------------------------------
-
-export class ReservationConflictError extends Error {
-  constructor(message = "DATES_UNAVAILABLE") {
-    super(message);
-    this.name = "ReservationConflictError";
-  }
-}
-
-function activeListingReservations(listingId: string, now = new Date()): Reservation[] {
-  return reservationsTable.filter((r) => !r.tripId && r.listingId === listingId && holdsInventory(r, now));
-}
-
-/** Room type a stored reservation occupies (legacy rows without one use the first type). */
-function reservationRoomTypeId(res: Reservation, listing: Listing): string | undefined {
-  if (!listing.roomTypes || listing.roomTypes.length === 0) return undefined;
-  return listing.roomTypes.some((r) => r.id === res.selectedRoomTypeId) ? res.selectedRoomTypeId : listing.roomTypes[0].id;
-}
-
-/**
- * Units in use per night: whole-listing stays count 1 per reservation, room
- * types count rooms/beds, experiences count guests on their date.
- */
-function usageByNight(listing: Listing, roomType: RoomType | null, now = new Date()): Map<DateKey, number> {
-  const usage = new Map<DateKey, number>();
-  for (const r of activeListingReservations(listing.id, now)) {
-    let nights: DateKey[];
-    let amount: number;
-    if (listing.category === "experience") {
-      nights = [r.startDate];
-      amount = r.guestsCount;
-    } else if (roomType) {
-      if (reservationRoomTypeId(r, listing) !== roomType.id) continue;
-      nights = eachNightKey(r.startDate, r.endDate);
-      amount = r.unitCount ?? (roomType.bookingUnit === "bed" ? r.guestsCount : 1);
+  try {
+    let rows: Reservation[];
+    if (params?.hostId || params?.organizationId) {
+      rows = await fetchHostReservations({ status: params.status, listingId: params.tripId ? undefined : params.listingId });
+    } else if (params?.userId) {
+      rows = await fetchGuestReservations(params.userId, params.status);
     } else {
-      nights = eachNightKey(r.startDate, r.endDate);
-      amount = 1;
+      return [];
     }
-    for (const n of nights) usage.set(n, (usage.get(n) || 0) + amount);
+    if (params?.tripId) rows = rows.filter((r) => r.tripId === params.tripId);
+    return rows;
+  } catch (error) {
+    console.error("[getReservations]", error);
+    return [];
   }
-  return usage;
 }
 
-function capacityOf(listing: Listing, roomType: RoomType | null): number {
-  if (listing.category === "experience") return maxGuestsFor(listing);
-  if (roomType) return roomTypeInventory(roomType);
-  return 1;
+/** One of the signed-in guest's bookings by UUID, or null. */
+export async function getGuestReservation(id: string): Promise<Reservation | null> {
+  const b = await apiOrNull<ApiGuestBooking>(`/me/bookings/${encodeURIComponent(id)}`);
+  return b ? toReservation(b) : null;
 }
 
-/**
- * Nights that can't be booked for the given unit: host-blocked dates plus
- * nights whose capacity is fully used by confirmed / live pending bookings.
- */
-export function unavailableNights(listing: Listing, roomTypeId?: string | null, now = new Date()): Set<DateKey> {
-  const roomType = listing.roomTypes?.find((r) => r.id === roomTypeId) ?? listing.roomTypes?.[0] ?? null;
-  const out = blockedDateKeys(listing.id);
-  const capacity = capacityOf(listing, roomType);
-  usageByNight(listing, roomType, now).forEach((used, night) => {
-    if (used >= capacity) out.add(night);
-  });
-  return out;
+/** One booking of the active host workspace by UUID, or null. */
+export async function getHostReservation(id: string): Promise<Reservation | null> {
+  const b = await apiOrNull<ApiHostBooking>(`/host/bookings/${encodeURIComponent(id)}`);
+  return b ? toReservation(b) : null;
 }
 
-/** Built server-side and passed to the booking calendar as props. */
-export async function getListingAvailability(listing: Listing): Promise<ListingAvailability> {
-  const now = new Date();
-  const today = todayKey(now);
-  const keep = (s: Set<DateKey>) => Array.from(s).filter((d) => d >= today).sort();
-  const unavailableByRoomType: Record<string, DateKey[]> = {};
-  for (const rt of listing.roomTypes || []) unavailableByRoomType[rt.id] = keep(unavailableNights(listing, rt.id, now));
-  return {
-    today,
-    unavailable: listing.roomTypes && listing.roomTypes.length > 0 ? [] : keep(unavailableNights(listing, null, now)),
-    unavailableByRoomType,
-  };
-}
-
-/** Does any active reservation overlap [start, end) on this whole-listing stay? (search filter) */
-export function isListingFreeForRange(listing: Listing, start: DateKey, end: DateKey): boolean {
-  const nights = eachNightKey(start, end);
-  if (nights.length === 0) return true;
-  const blocked = unavailableNights(listing, null);
-  if (listing.roomTypes && listing.roomTypes.length > 0) {
-    // A property is listed if at least one room type has every night free.
-    const propertyBlocked = blockedDateKeys(listing.id);
-    if (nights.some((n) => propertyBlocked.has(n))) return false;
-    return listing.roomTypes.some((rt) => {
-      const full = unavailableNights(listing, rt.id);
-      return nights.every((n) => !full.has(n));
-    });
-  }
-  return nights.every((n) => !blocked.has(n));
-}
-
-/** Seats sold per departure date (confirmed + live pending). */
-export function seatsSoldByDeparture(tripId: string, now = new Date()): Record<DateKey, number> {
-  const out: Record<DateKey, number> = {};
-  for (const r of reservationsTable) {
-    if (r.tripId !== tripId || !holdsInventory(r, now)) continue;
-    out[r.startDate] = (out[r.startDate] || 0) + r.guestsCount;
-  }
-  return out;
+/** A booking the current user can see, as guest first, then as host. */
+export async function getReservationById(id: string): Promise<Reservation | null> {
+  return (await getGuestReservation(id).catch(() => null)) ?? (await getHostReservation(id).catch(() => null));
 }
 
 // ---------------------------------------------------------------------------
-// Mutations
+// Availability (GET /listings/{id}/availability)
 // ---------------------------------------------------------------------------
 
-export interface CreateReservationInput {
-  userId: string;
-  startDate: DateKey;
-  endDate: DateKey;
-  guestCount: number;
-  quote: BookingQuote;
-  approvalMode: "instant" | "request";
-  cancellationPolicy: CancellationPolicy;
-  guestMessage?: string;
-  paymentMethod?: string;
-}
-
-function buildReservation(
-  input: CreateReservationInput,
-  ids: { listingId: string; tripId?: string; selectedRoomTypeId?: string; unitCount?: number }
-): Reservation {
-  const status: ReservationStatus = input.approvalMode === "request" ? "pending" : "confirmed";
-  const now = new Date();
-  return {
-    id: newId("res"),
-    userId: input.userId,
-    listingId: ids.listingId,
-    tripId: ids.tripId,
-    startDate: input.startDate,
-    endDate: input.endDate,
-    totalPrice: input.quote.total,
-    subtotal: input.quote.subtotal,
-    nightlyPrice: input.quote.averageUnitPrice,
-    cleaningFee: input.quote.cleaningFee,
-    serviceFee: input.quote.serviceFee,
-    taxes: input.quote.taxes,
-    guestsCount: input.guestCount,
-    unitCount: ids.unitCount,
-    status,
-    paymentStatus: status === "pending" ? "pending" : "paid",
-    createdAt: now.toISOString(),
-    paymentMethod: input.paymentMethod || "CIB / Edahabia Card",
-    approvalMode: input.approvalMode,
-    cancellationPolicy: input.cancellationPolicy,
-    expiresAt:
-      input.approvalMode === "request"
-        ? new Date(now.getTime() + REQUEST_TO_BOOK_TTL_HOURS * 60 * 60 * 1000).toISOString()
-        : undefined,
-    guestMessage: input.guestMessage,
-    selectedRoomTypeId: ids.selectedRoomTypeId,
-  };
-}
+/** How far ahead the booking calendars know availability (the API allows 366 days per call). */
+const AVAILABILITY_DAYS = 365;
 
 /**
- * Persists a listing reservation. The capacity check and the insert run in
- * one synchronous block (no await in between), so two concurrent requests
- * can't both take the last unit. Prices come from the server-side quote.
+ * Availability passed to the booking calendars. On an API failure the
+ * calendar opens with no closed days; the backend still refuses a taken date
+ * when the quote is asked for.
  */
-export async function createListingReservation(
-  listingId: string,
-  input: CreateReservationInput & { selectedRoomTypeId?: string; unitCount?: number }
-): Promise<Reservation> {
-  await delay(60);
-  const listing = listingsTable.find((l) => l.id === listingId);
-  if (!listing) throw new ReservationConflictError("LISTING_GONE");
-  const roomType = listing.roomTypes?.find((r) => r.id === input.selectedRoomTypeId) ?? null;
-
-  // --- atomic section: check capacity, then insert ---
-  const blocked = blockedDateKeys(listing.id);
-  const nights = listing.category === "experience" ? [input.startDate] : eachNightKey(input.startDate, input.endDate);
-  if (nights.length === 0 || nights.some((n) => blocked.has(n))) throw new ReservationConflictError();
-  const capacity = capacityOf(listing, roomType);
-  const requested = listing.category === "experience" ? input.guestCount : roomType ? input.unitCount ?? 1 : 1;
-  const usage = usageByNight(listing, roomType);
-  if (nights.some((n) => (usage.get(n) || 0) + requested > capacity)) throw new ReservationConflictError();
-
-  const reservation = buildReservation(input, {
-    listingId: listing.id,
-    selectedRoomTypeId: roomType?.id,
-    unitCount: roomType ? input.unitCount ?? 1 : undefined,
-  });
-  reservationsTable.unshift(reservation);
-  // --- end atomic section ---
-
-  if (reservation.status === "confirmed") await chargeCommission(reservation);
-  return populate(reservation);
-}
-
-/** Persists a trip seat booking after checking the seats left on that departure. */
-export async function createTripReservation(tripId: string, input: CreateReservationInput): Promise<Reservation> {
-  await delay(60);
-  const trip = tripsTable.find((t) => t.id === tripId);
-  if (!trip) throw new ReservationConflictError("TRIP_GONE");
-
-  // --- atomic section ---
-  const sold = seatsSoldByDeparture(trip.id)[input.startDate] || 0;
-  if (sold + input.guestCount > trip.maxGroupSize) throw new ReservationConflictError("SEATS_UNAVAILABLE");
-  const reservation = buildReservation(input, { listingId: trip.id, tripId: trip.id });
-  reservationsTable.unshift(reservation);
-  // --- end atomic section ---
-
-  if (reservation.status === "confirmed") await chargeCommission(reservation);
-  return populate(reservation);
-}
-
-function commissionOwner(res: Reservation): {
-  hostUserId: string | null;
-  organizationId: string | null;
-  hostType: HostType;
-  ownerName?: string;
-} {
-  const listing = res.tripId ? undefined : listingsTable.find((l) => l.id === res.listingId);
-  const trip = tripFor(res);
-  const organizationId = listing?.organizationId || trip?.organizationId || null;
-  const org = organizationId ? organizationsTable.find((o) => o.id === organizationId) : undefined;
-  return {
-    hostUserId: listing && !listing.organizationId ? listing.hostUserId || null : null,
-    organizationId,
-    // Hotels and hostels pay their own rates, not the agency rate.
-    hostType: org?.businessCategory ?? (organizationId ? "agency" : "individual"),
-    ownerName: org?.name,
-  };
-}
-
-/** Commission base: accommodation subtotal (no BLADUS service fee, no cleaning fee, no taxes). */
-function commissionBase(res: Reservation): number {
-  return res.subtotal ?? Math.max(0, res.totalPrice - (res.cleaningFee ?? 0) - (res.serviceFee ?? 0) - (res.taxes ?? 0));
-}
-
-async function chargeCommission(res: Reservation) {
+export async function getListingAvailability(listing: Pick<Listing, "id">): Promise<ListingAvailability> {
+  const today = todayKey();
   try {
-    const result = await deductBookingCommission({
-      bookingId: res.id,
-      commissionBase: commissionBase(res),
-      ...commissionOwner(res),
+    const answer = await api<ApiAvailability>(`/listings/${encodeURIComponent(listing.id)}/availability`, {
+      query: { from: today, to: addDaysToKey(today, AVAILABILITY_DAYS) },
     });
-    const stored = reservationsTable.find((r) => r.id === res.id);
-    if (stored) {
-      stored.commissionAmount = result.amount;
-      stored.commissionRate = result.rate;
-    }
-  } catch (e) {
-    console.error("Failed to deduct booking commission", e);
+    return toListingAvailability(answer);
+  } catch (error) {
+    console.error("[getListingAvailability]", error);
+    return { today, unavailable: [], unavailableByRoomType: {} };
   }
 }
 
-/**
- * Records a cancellation with the refund computed by lib/booking/cancellation.
- * The host's commission is reversed for the refunded share of the subtotal.
- */
-export async function cancelReservation(
-  id: string,
-  by: "guest" | "host",
-  refund: RefundBreakdown
-): Promise<Reservation | null> {
-  await delay(40);
-  const res = reservationsTable.find((r) => r.id === id);
-  if (!res) return null;
+interface ApiDeparture {
+  id: string;
+  starts_on: string;
+  ends_on: string;
+  seats_total: number;
+  seats_left: number;
+  status: string;
+}
 
-  res.status = "cancelled";
-  res.paymentStatus = refund.paymentStatus;
-  res.refundAmount = refund.refundAmount;
-  res.cancelledAt = new Date().toISOString();
-  res.cancelledBy = by;
+/** Upcoming open departures of a public trip (GET /trips/{id}/departures). Throws on API failure. */
+export async function getTripDepartures(tripId: string): Promise<ApiDeparture[]> {
+  const answer = await api<unknown>(`/trips/${encodeURIComponent(tripId)}/departures`);
+  return Array.isArray(answer) ? (answer as ApiDeparture[]) : ((answer as { results?: ApiDeparture[] })?.results ?? []);
+}
 
-  const keepShare = by === "guest" ? 1 - refund.refundPercent / 100 : 0;
+/** Seats already taken per departure date (seats total minus seats left). Empty on API failure. */
+export async function getSeatsSoldByDeparture(tripId: string): Promise<Record<DateKey, number>> {
   try {
-    await reverseBookingCommission(res.id, keepShare);
-    res.commissionAmount = getBookingCommission(res.id) ?? 0;
-  } catch (e) {
-    console.error("Failed to reverse booking commission", e);
+    const out: Record<DateKey, number> = {};
+    for (const d of await getTripDepartures(tripId)) out[d.starts_on] = Math.max(0, d.seats_total - d.seats_left);
+    return out;
+  } catch (error) {
+    console.error("[getSeatsSoldByDeparture]", error);
+    return {};
   }
-  return populate(res);
 }
 
-/** Host accepts or declines a pending request. */
-export async function respondToRequest(
-  id: string,
-  decision: "confirmed" | "declined",
-  extra?: { declineReason?: string }
-): Promise<Reservation | null> {
-  await delay(40);
-  const res = reservationsTable.find((r) => r.id === id);
-  if (!res) return null;
-  settle(res);
-  if (res.status !== "pending") throw new ReservationConflictError("NOT_PENDING");
+// ---------------------------------------------------------------------------
+// Quotes and booking creation
+// ---------------------------------------------------------------------------
 
-  res.status = decision;
-  res.respondedAt = new Date().toISOString();
-  if (decision === "confirmed") {
-    res.paymentStatus = "paid";
-    await chargeCommission(res);
-  } else {
-    res.paymentStatus = "voided";
-    if (extra?.declineReason) res.declineReason = extra.declineReason;
-    await reverseBookingCommission(res.id, 0);
-  }
-  return populate(res);
+/** Body of POST /quotes: exactly one target, never a price (BR-PRC-01). */
+export interface QuoteRequest {
+  listing_id?: string;
+  room_type_id?: string;
+  experience_slot_id?: string;
+  trip_departure_id?: string;
+  check_in?: DateKey;
+  check_out?: DateKey;
+  guests: number;
+  units?: number;
+}
+
+export async function createQuote(body: QuoteRequest, model?: PricingModel): Promise<ServerQuote> {
+  const quote = await api<ApiQuote>("/quotes", { method: "POST", body });
+  return toServerQuote(quote, model);
+}
+
+export async function getQuote(quoteId: string): Promise<ServerQuote | null> {
+  const quote = await apiOrNull<ApiQuote>(`/quotes/${encodeURIComponent(quoteId)}`);
+  return quote ? toServerQuote(quote) : null;
+}
+
+/** POST /me/bookings with a quote. One Idempotency-Key per user action makes retries safe. */
+export async function bookQuote(quoteId: string, guestMessage?: string, idempotencyKey = newIdempotencyKey()): Promise<Reservation> {
+  const booking = await api<ApiGuestBooking>("/me/bookings", {
+    method: "POST",
+    body: { quote_id: quoteId, ...(guestMessage ? { guest_message: guestMessage } : {}) },
+    idempotencyKey,
+  });
+  return toReservation(booking);
+}
+
+// ---------------------------------------------------------------------------
+// Guest lifecycle
+// ---------------------------------------------------------------------------
+
+const meBooking = (id: string) => `/me/bookings/${encodeURIComponent(id)}`;
+const hostBooking = (id: string) => `/host/bookings/${encodeURIComponent(id)}`;
+
+export async function guestCancellationPreview(id: string): Promise<CancellationPreview> {
+  return toCancellationPreview(await api<ApiCancellationPreview>(`${meBooking(id)}/cancellation-preview`));
+}
+
+export async function guestCancel(id: string, reason = ""): Promise<Reservation> {
+  return toReservation(await api<ApiGuestBooking>(`${meBooking(id)}/cancel`, { method: "POST", body: { reason } }));
+}
+
+export async function guestConfirmStay(id: string): Promise<Reservation> {
+  return toReservation(await api<ApiGuestBooking>(`${meBooking(id)}/confirm-stay`, { method: "POST", body: {} }));
+}
+
+export interface DisputeInput {
+  reasonCode: string;
+  statement: string;
+}
+
+export async function openDispute(side: "guest" | "host", id: string, input: DisputeInput): Promise<void> {
+  await api(`${side === "guest" ? meBooking(id) : hostBooking(id)}/dispute`, {
+    method: "POST",
+    body: { reason_code: input.reasonCode, statement: input.statement },
+  });
+}
+
+export async function getMyRefunds(): Promise<RefundObligation[]> {
+  return (await apiAll<ApiRefund>("/me/refunds")).map(toRefund);
+}
+
+export async function confirmRefundReceived(refundId: string): Promise<RefundObligation> {
+  return toRefund(await api<ApiRefund>(`/me/refunds/${encodeURIComponent(refundId)}/confirm-received`, { method: "POST", body: {} }));
+}
+
+export async function disputeRefund(refundId: string, note: string): Promise<RefundObligation> {
+  return toRefund(await api<ApiRefund>(`/me/refunds/${encodeURIComponent(refundId)}/dispute`, { method: "POST", body: { note } }));
+}
+
+// ---------------------------------------------------------------------------
+// Host lifecycle (the backend checks the workspace and the member's permissions)
+// ---------------------------------------------------------------------------
+
+export async function hostAccept(id: string): Promise<Reservation> {
+  return toReservation(await api<ApiHostBooking>(`${hostBooking(id)}/accept`, { method: "POST", body: {} }));
+}
+
+export async function hostDecline(id: string, reason: string): Promise<Reservation> {
+  return toReservation(await api<ApiHostBooking>(`${hostBooking(id)}/decline`, { method: "POST", body: { reason } }));
+}
+
+export async function hostCancellationPreview(id: string): Promise<CancellationPreview> {
+  return toCancellationPreview(await api<ApiCancellationPreview>(`${hostBooking(id)}/cancellation-preview`));
+}
+
+export async function hostCancel(id: string, reason: string): Promise<Reservation> {
+  return toReservation(await api<ApiHostBooking>(`${hostBooking(id)}/cancel`, { method: "POST", body: { reason } }));
+}
+
+export async function hostConfirmStay(id: string, code: string): Promise<Reservation> {
+  return toReservation(await api<ApiHostBooking>(`${hostBooking(id)}/confirm-stay`, { method: "POST", body: { code } }));
+}
+
+export async function getHostRefunds(): Promise<RefundObligation[]> {
+  return (await apiAll<ApiRefund>("/host/refunds")).map(toRefund);
+}
+
+export async function declareRefundPaid(refundId: string, paymentReference: string): Promise<RefundObligation> {
+  return toRefund(
+    await api<ApiRefund>(`/host/refunds/${encodeURIComponent(refundId)}/declare-paid`, {
+      method: "POST",
+      body: { payment_reference: paymentReference },
+    }),
+  );
 }

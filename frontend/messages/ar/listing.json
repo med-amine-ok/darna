@@ -401,5 +401,8 @@
     "agency": "وكالة سفر",
     "hotel": "فندق",
     "hostel": "نُزُل"
-  }
+  },
+  "discount": "خصم الإقامة الطويلة",
+  "sessionLabel": "الحصة",
+  "sessionOption": "{time} ({seats, plural, one {# مقعد متبقٍ} other {# مقاعد متبقية}})"
 }

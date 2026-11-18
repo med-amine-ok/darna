@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useId, useState } from "react";
+import React, { useCallback, useId, useMemo, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Link, useRouter } from "@/navigation";
@@ -8,12 +8,12 @@ import { Trip, User } from "@/types";
 import { getTripCoordinates } from "@/lib/trip-coordinates";
 import Container from "@/components/Container";
 import Counter from "@/components/inputs/Counter";
-import { createBookingAction } from "@/app/actions/bookings";
+import { createBookingAction, type BookingSelection } from "@/app/actions/bookings";
+import { useServerQuote } from "@/hook/useServerQuote";
 import { toast } from "react-toastify";
 import { useLocale, useTranslations } from "next-intl";
 import { useCurrency } from "@/hook/useCurrency";
 import { formatNumber, formatRating } from "@/lib/i18n/date-locale";
-import { quoteTripBooking } from "@/lib/booking/pricing";
 import { tripEndDate, validateTripRequest } from "@/lib/booking/availability";
 import { getCancellationPolicy } from "@/lib/booking/cancellation";
 import { formatDateKey, type DateKey } from "@/lib/booking/dates";
@@ -100,18 +100,27 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
   const agency = trip.organization;
   const nights = Math.max(1, trip.durationDays - 1);
   const agencyApprovalMode = agency?.bookingApprovalMode || "instant";
-  const isRequest = agencyApprovalMode === "request";
+  const isRequestFallback = agencyApprovalMode === "request";
 
-  // Same pure functions the server uses.
-  const quote = quoteTripBooking({ trip, guestCount });
   const policy = getCancellationPolicy(trip.cancellationPolicy);
-  const validationError = validateTripRequest({
+  const rulesError = validateTripRequest({
     trip,
     departureDate: selectedDate,
     guestCount,
     seatsSold: seatsSold[selectedDate] || 0,
     today,
   });
+  // The price shown is the backend's quote for this departure and group (POST /quotes).
+  const selection = useMemo<BookingSelection | null>(
+    () => (rulesError ? null : { kind: "trip", tripId: trip.id, departureDate: selectedDate, guestCount }),
+    [rulesError, trip.id, selectedDate, guestCount]
+  );
+  const { quote: serverQuote, loading: quoteLoading, error: quoteError } = useServerQuote(selection);
+  const validationError = rulesError ?? quoteError;
+  const isRequest = serverQuote ? serverQuote.approvalMode === "request" : isRequestFallback;
+  const quote = serverQuote ?? { subtotal: 0, total: 0 };
+  const canBook = Boolean(serverQuote) && !validationError && !quoteLoading;
+  const quoted = (amount: number) => (serverQuote ? formatDzd(amount) : quoteLoading ? "…" : "–");
   const validationMessage = validationError ? errorText(validationError) : null;
   const agencyName = agency?.name || t("detail.agencyFallback");
   const agencyRating = formatRating(agency?.rating, locale);
@@ -150,15 +159,14 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
       toast.error(validationMessage);
       return;
     }
+    if (!serverQuote || !selection) return;
 
     setIsBooking(true);
     try {
       // Price, dates and approval mode are computed on the server.
       const result = await createBookingAction({
-        kind: "trip",
-        tripId: trip.id,
-        departureDate: selectedDate,
-        guestCount,
+        ...selection,
+        quoteId: serverQuote.quoteId,
         guestMessage: guestMessage.trim() || undefined,
       });
 
@@ -174,7 +182,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
         rows: [
           { label: td("departure"), value: departureLabel(selectedDate) },
           { label: t("detail.travelers"), value: travelersLabel },
-          { label: t("detail.total"), value: formatDzd(quote.total) },
+          { label: t("detail.total"), value: formatDzd(result.data.totalPrice) },
         ],
       });
     } catch {
@@ -266,7 +274,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
       <div className="space-y-3 border-t border-primary/10 pt-5 text-body text-primary-600">
         <div className="flex justify-between gap-4">
           <span>{t("detail.priceTimesTravelers", { price: formatDzd(trip.pricePerPerson), count: guestCount })}</span>
-          <AnimatedNumber value={quote.subtotal} format={formatDzd} className="tabular-nums shrink-0" />
+          <AnimatedNumber value={quote.subtotal} format={quoted} className="tabular-nums shrink-0" />
         </div>
         <div className="flex justify-between gap-4">
           <span>{t("detail.platformFee")}</span>
@@ -274,7 +282,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
         </div>
         <div className="flex justify-between items-baseline gap-4 font-semibold text-title text-primary-900 border-t border-primary/10 pt-4">
           <span>{t("detail.total")}</span>
-          <AnimatedNumber value={quote.total} format={formatDzd} className="tabular-nums" />
+          <AnimatedNumber value={quote.total} format={quoted} className="tabular-nums" />
         </div>
       </div>
       {validationMessage && (
@@ -602,7 +610,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
                     {td("bookTitle")}
                   </h2>
                   <p className="flex items-baseline gap-1.5 flex-wrap">
-                    <AnimatedNumber value={quote.total} format={formatDzd} className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums" />
+                    <AnimatedNumber value={quote.total} format={quoted} className="font-serif text-[1.75rem] leading-none text-primary-900 tabular-nums" />
                     <span className="text-body text-primary-500">{tl("priceSuffix.total")}</span>
                   </p>
                   <p className="mt-1.5 text-meta text-primary-500 tabular-nums">
@@ -622,7 +630,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
                 variant={isRequest ? "primary" : "confirm"}
                 onClick={handleBookTrip}
                 loading={isBooking}
-                disabled={Boolean(validationError)}
+                disabled={!canBook}
                 aria-describedby={validationMessage ? `${errorId}-card` : undefined}
               >
                 {ctaLabel}
@@ -638,7 +646,7 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
 
       {/* Phones and tablets */}
       <MobileBookingBar
-        price={<AnimatedNumber value={quote.total} format={formatDzd} />}
+        price={<AnimatedNumber value={quote.total} format={quoted} />}
         priceSuffix={tl("priceSuffix.total")}
         detail={selectedDate ? `${departureLabel(selectedDate)} · ${travelersLabel}` : t("detail.noDepartures")}
         detailLabel={td("editBooking")}
@@ -658,10 +666,10 @@ export default function TripDetailClient({ trip, currentUser, seatsSold, today }
         footer={
           <div className="flex items-center justify-between gap-4">
             <p className="min-w-0">
-              <AnimatedNumber value={quote.total} format={formatDzd} className="block font-semibold text-title text-primary-900 tabular-nums" />
+              <AnimatedNumber value={quote.total} format={quoted} className="block font-semibold text-title text-primary-900 tabular-nums" />
               <span className="block text-meta text-primary-500 truncate">{travelersLabel}</span>
             </p>
-            <Button size="lg" variant={isRequest ? "primary" : "confirm"} onClick={handleBookTrip} loading={isBooking} disabled={Boolean(validationError)} className="shrink-0">
+            <Button size="lg" variant={isRequest ? "primary" : "confirm"} onClick={handleBookTrip} loading={isBooking} disabled={!canBook} className="shrink-0">
               {ctaLabel}
             </Button>
           </div>

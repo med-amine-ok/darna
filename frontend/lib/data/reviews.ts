@@ -1,114 +1,41 @@
-// TODO: replace with Supabase query
 import "server-only";
 import { Review } from "@/types";
-import { listingsTable } from "./_tables";
+import { ApiError, api, rowsOf } from "@/lib/api/client";
+import { isUuid, toReview, type ApiReview } from "@/lib/api/catalog";
 
-export const mockReviews: Review[] = [
-  {
-    id: "rev_01",
-    listingId: "lst_tipaza_villa",
-    userId: "usr_yacine",
-    rating: 5,
-    cleanliness: 5,
-    accuracy: 5,
-    communication: 5,
-    location: 5,
-    value: 5,
-    comment:
-      "Exceptional stay. The sunrise over the Roman ruins and the Mediterranean breeze made this an unforgettable family weekend. Amina was a thoughtful host.",
-    createdAt: "2024-05-02T16:00:00.000Z",
-    user: {
-      id: "usr_yacine",
-      name: "Yacine Cherif",
-      image: "/assets/avatar.png",
-    },
-  },
-  {
-    id: "rev_02",
-    listingId: "lst_tipaza_villa",
-    userId: "usr_meriem",
-    rating: 4.9,
-    cleanliness: 5,
-    accuracy: 5,
-    communication: 5,
-    location: 5,
-    value: 4.8,
-    comment:
-      "The private olive garden and cliffside patio are even better than the pictures. Impeccable cleanliness and instant check-in.",
-    createdAt: "2024-06-15T10:30:00.000Z",
-    user: {
-      id: "usr_meriem",
-      name: "Meriem Hadj",
-      image: "/assets/avatar.png",
-    },
-  },
-  {
-    id: "rev_03",
-    listingId: "lst_algiers_casbah",
-    userId: "usr_sofiane",
-    rating: 5,
-    cleanliness: 5,
-    accuracy: 5,
-    communication: 5,
-    location: 5,
-    value: 5,
-    comment:
-      "An authentic architectural treasure in the heart of the Casbah. The restored cedar woodwork and central patio fountain are breathtaking.",
-    createdAt: "2024-06-20T14:15:00.000Z",
-    user: {
-      id: "usr_sofiane",
-      name: "Sofiane Boudiaf",
-      image: "/assets/avatar.png",
-    },
-  },
-  {
-    id: "rev_04",
-    listingId: "lst_djanet_tassili",
-    userId: "usr_leila",
-    rating: 5,
-    cleanliness: 5,
-    accuracy: 5,
-    communication: 5,
-    location: 5,
-    value: 5,
-    comment:
-      "Life-changing desert expedition! The Tuareg guides were legendary, food around the campfire was delicious, and the stars in Tassili are out of this world.",
-    createdAt: "2024-07-04T09:00:00.000Z",
-    user: {
-      id: "usr_leila",
-      name: "Leila Zerrouki",
-      image: "/assets/avatar.png",
-    },
-  },
-  {
-    id: "rev_05",
-    listingId: "lst_toyota_landcruiser",
-    userId: "usr_tarek",
-    rating: 5,
-    cleanliness: 5,
-    accuracy: 5,
-    communication: 5,
-    location: 5,
-    value: 5,
-    comment:
-      "The Prado handled our road trip through the Aurès and northern Sahara with zero issues. Clean, powerful, and airport handover was on time.",
-    createdAt: "2024-07-12T18:45:00.000Z",
-    user: {
-      id: "usr_tarek",
-      name: "Tarek Bensaada",
-      image: "/assets/avatar.png",
-    },
-  },
-];
-
-export async function getReviewsByListingId(listingId: string): Promise<Review[]> {
-  await new Promise((resolve) => setTimeout(resolve, 80));
-  return mockReviews.filter((r) => r.listingId === listingId);
+/**
+ * Published reviews from the API (apps/reviews). Cursor pages of at most 50;
+ * the pages show the newest 50. Reads never throw: failures give [].
+ */
+async function reviewPage(path: string, query: Record<string, string | number> = {}): Promise<Review[]> {
+  try {
+    const answer = await api<unknown>(path, { anonymous: true, query: { limit: 50, ...query } });
+    return rowsOf<ApiReview>(answer).map(toReview);
+  } catch (error) {
+    if (!(error instanceof ApiError && (error.status === 404 || error.status === 400))) {
+      console.error(`[reviews] ${path}`, error);
+    }
+    return [];
+  }
 }
 
+export async function getReviewsByListingId(listingId: string): Promise<Review[]> {
+  if (!listingId) return [];
+  return reviewPage(`/listings/${encodeURIComponent(listingId)}/reviews`);
+}
+
+export async function getReviewsByTripId(tripId: string): Promise<Review[]> {
+  if (!tripId) return [];
+  return reviewPage(`/trips/${encodeURIComponent(tripId)}/reviews`);
+}
+
+/** Reviews received as a host plus reviews the person wrote, newest first, without duplicates. */
 export async function getReviewsByUserId(userId: string): Promise<Review[]> {
-  await new Promise((resolve) => setTimeout(resolve, 60));
-  // Reviews written by the user, plus reviews left on listings they host.
-  const hostedIds = new Set(listingsTable.filter((l) => l.hostUserId === userId).map((l) => l.id));
-  return mockReviews.filter((r) => r.userId === userId || hostedIds.has(r.listingId));
+  if (!isUuid(userId)) return [];
+  const path = `/users/${userId}/reviews`;
+  const [received, written] = await Promise.all([reviewPage(path, { role: "host" }), reviewPage(path, { role: "author" })]);
+  const seen = new Set<string>();
+  return [...received, ...written]
+    .filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

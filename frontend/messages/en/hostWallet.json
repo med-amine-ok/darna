@@ -32,7 +32,8 @@
   "filters": {
     "all": "All activity",
     "recharge": "Deposits (+)",
-    "commission": "Commissions (−)"
+    "commission": "Commissions (−)",
+    "adjustment": "Adjustments"
   },
   "table": {
     "caption": "Wallet transactions",
@@ -45,5 +46,22 @@
   "commission": "Commission",
   "bookingRef": "Booking: {id}",
   "noTransactions": "No transactions to show.",
-  "howItWorksShort": "How the balance works"
+  "howItWorksShort": "How the balance works",
+  "adjustment": "Adjustment",
+  "loadFailedTitle": "Your deposit could not be loaded",
+  "loadFailedBody": "The service is not answering right now. Please try again in a moment.",
+  "contactSupportToTopUp": "To top up, contact BLADUS support: a BLADUS admin records your transfer and credits your deposit.",
+  "creditLimitLine": "New bookings pause when the deposit goes below minus {amount}.",
+  "bookingsPausedTitle": "New bookings are paused",
+  "bookingsPausedBody": "Your deposit is below the allowed limit. Top it up to accept new bookings again.",
+  "overviewTitle": "Earnings and invoices",
+  "earningsCompleted": "Completed stays",
+  "earningsUpcoming": "Upcoming stays",
+  "earningsCommission": "Commission paid",
+  "earningsRefundsOwed": "Refunds owed",
+  "invoicesTitle": "Commission invoices",
+  "noInvoices": "No invoices yet.",
+  "invoicePdf": "PDF",
+  "payoutsOffTitle": "Payouts are not used on BLADUS",
+  "payoutsOffBody": "Guests pay you directly, so BLADUS never holds your money and there is nothing to pay out."
 }

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/server/session";
 import { AccountPage } from "@/components/profile/AccountShell";
-import { getReservations } from "@/lib/data/reservations";
+import { loadGuestReservations } from "@/lib/data/reservations";
+import { Banner } from "@/components/ui";
 import TripsClient from "@/components/trips/TripsClient";
 
 export const dynamic = "force-dynamic";
@@ -25,13 +26,19 @@ export default async function TripsPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/trips`);
   }
 
-  const [reservations, t] = await Promise.all([
-    getReservations({ userId: currentUser.id }),
+  const [{ data: reservations, failed }, t, tc] = await Promise.all([
+    loadGuestReservations(currentUser.id),
     getTranslations({ locale, namespace: "trips" }),
+    getTranslations({ locale, namespace: "common" }),
   ]);
 
   return (
     <AccountPage eyebrow={t("eyebrow")} title={t("pageTitle")} subtitle={t("pageSubtitle")}>
+      {failed && (
+        <Banner tone="danger" title={tc("dataLoadFailedTitle")} className="mb-6">
+          {tc("dataLoadFailedBody")}
+        </Banner>
+      )}
       <TripsClient initialReservations={reservations} />
     </AccountPage>
   );

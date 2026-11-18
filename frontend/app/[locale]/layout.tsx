@@ -52,7 +52,8 @@ export default async function LocaleLayout({
   unstable_setRequestLocale(locale);
   const messages = await getMessages();
   const t = await getTranslations({ locale, namespace: "meta" });
-  const currentUser = await getSessionUser();
+  // A backend outage shows the site signed out instead of an error page.
+  const currentUser = await getSessionUser().catch(() => null);
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (

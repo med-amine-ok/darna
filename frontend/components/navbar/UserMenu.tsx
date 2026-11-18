@@ -24,7 +24,7 @@ import { Avatar, DropdownMenu, cn, focusRing, type DropdownItem } from "@/compon
 import { useLoginModal } from "@/hook/useLoginModal";
 import { useRegisterModal } from "@/hook/useRegisterModal";
 import { User } from "@/types";
-import { logoutAndRedirect, readHostDraft } from "@/lib/client/user-storage";
+import { logoutAndRedirect } from "@/lib/client/user-storage";
 
 interface UserMenuProps {
   currentUser?: User | null;
@@ -57,13 +57,8 @@ export default function UserMenu({ currentUser }: UserMenuProps) {
       goHostMode();
       return;
     }
-    let target = "/become-a-host";
-    const draft = readHostDraft(currentUser.id);
-    if (draft) {
-      if (draft.isAgencyFlow) target = "/become-a-host/agency";
-      else if (typeof draft.currentStep === "number" && draft.currentStep > 0) target = `/become-a-host/${draft.currentStep}`;
-    }
-    router.push(target);
+    // /become-a-host reopens the draft saved on the server at the step reached.
+    router.push("/become-a-host");
   };
 
   const icon = (Icon: React.ComponentType<IconProps>, extra?: string) => <Icon size={18} className={extra} />;

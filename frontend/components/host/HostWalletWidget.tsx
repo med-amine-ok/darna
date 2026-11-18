@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useId } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Wallet } from "@/types";
-import { getMyWalletAction } from "@/app/actions/wallet";
+import { getMyMoneyOverviewAction, getMyWalletAction } from "@/app/actions/wallet";
 import { formatAmountNumber, formatDzd } from "@/lib/currency";
 import { formatDate, formatNumber } from "@/lib/i18n/date-locale";
 import {
@@ -41,7 +41,18 @@ interface HostWalletWidgetProps {
   variant?: "full" | "compact";
 }
 
-type LedgerFilter = "all" | "recharge" | "commission_deduction";
+type LedgerFilter = "all" | "recharge" | "commission_deduction" | "adjustment";
+
+interface WalletStatusView {
+  creditLimit: number;
+  canAcceptBookings: boolean;
+}
+
+interface MoneyOverview {
+  invoices: { id: string; number: string; periodStart: string; periodEnd: string; amountTtc: number; status: string; pdfUrl: string | null }[];
+  earnings: { upcoming: number; completed: number; commissionPaid: number; refundsOwed: number } | null;
+  payoutsEnabled: boolean;
+}
 
 /**
  * Shows the current host's prepaid wallet. The wallet owner (user or org) is
@@ -53,6 +64,10 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentRate, setCurrentRate] = useState<number>(0);
+  const [status, setStatus] = useState<WalletStatusView | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [overview, setOverview] = useState<MoneyOverview | null>(null);
+  const [overviewState, setOverviewState] = useState<"idle" | "loading" | "failed">("idle");
   const [isLedgerOpen, setIsLedgerOpen] = useState(false);
   const [ledgerFilter, setLedgerFilter] = useState<LedgerFilter>("all");
   const titleId = useId();
@@ -61,11 +76,18 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
     let isMounted = true;
     getMyWalletAction()
       .then((result) => {
-        if (!isMounted || !result.ok) return;
+        if (!isMounted) return;
+        if (!result.ok) {
+          setLoadFailed(result.code !== "FORBIDDEN" && result.code !== "UNAUTHENTICATED");
+          return;
+        }
         setWallet(result.data.wallet);
         setCurrentRate(result.data.commissionRate);
+        setStatus(result.data.status);
       })
-      .catch(() => {})
+      .catch(() => {
+        if (isMounted) setLoadFailed(true);
+      })
       .finally(() => {
         if (isMounted) setLoading(false);
       });
@@ -74,16 +96,42 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
     };
   }, []);
 
-  // Running balance after each movement, oldest first (real ledger data only).
+  // Running balance after each movement, oldest first, walked back from the current balance
+  // (the statement holds the newest lines only, so it cannot start from zero).
   const balanceTrail = useMemo(() => {
     if (!wallet) return [];
-    const sorted = [...wallet.transactions].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-    let running = 0;
-    return sorted.map((tx) => (running += tx.amount));
+    const newestFirst = [...wallet.transactions].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    let running = wallet.balance;
+    const trail: number[] = [];
+    for (const tx of newestFirst) {
+      trail.push(running);
+      running -= tx.amount;
+    }
+    return trail.reverse();
   }, [wallet]);
 
+  // Invoices, earnings and payouts load with the statement.
+  useEffect(() => {
+    if (!isLedgerOpen || overviewState !== "idle") return;
+    setOverviewState("loading");
+    getMyMoneyOverviewAction()
+      .then((result) => {
+        if (result.ok) {
+          setOverview(result.data);
+          setOverviewState("idle");
+        } else setOverviewState("failed");
+      })
+      .catch(() => setOverviewState("failed"));
+  }, [isLedgerOpen, overviewState]);
+
   if (!wallet) {
-    if (!loading) return null;
+    if (!loading) {
+      return loadFailed ? (
+        <Banner tone="danger" title={t("loadFailedTitle")} className={className}>
+          {t("loadFailedBody")}
+        </Banner>
+      ) : null;
+    }
     return variant === "compact" ? (
       <Skeleton className={cn("h-[4.5rem] w-full rounded-2xl", className)} />
     ) : (
@@ -98,6 +146,7 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
     { value: "all", label: t("filters.all") },
     { value: "recharge", label: t("filters.recharge") },
     { value: "commission_deduction", label: t("filters.commission") },
+    { value: "adjustment", label: t("filters.adjustment") },
   ];
   const visibleTransactions = wallet.transactions.filter((tx) =>
     ledgerFilter === "all" ? true : tx.type === ledgerFilter
@@ -121,23 +170,21 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
         <dd>{t("offlineTransfer")}</dd>
         <dd className="text-primary-600">{t("creditedManually")}</dd>
       </dl>
+      {status && status.creditLimit > 0 && (
+        <p className="text-primary-600">{t("creditLimitLine", { amount: formatDzd(status.creditLimit, locale) })}</p>
+      )}
     </div>
   );
 
   const negativeAlert = isNegative && (
     <Banner tone="danger" title={t("negativeNoticeAmount", { amount: formatDzd(wallet.balance, locale) })}>
       <p className="text-pretty">{t("negativeBody")}</p>
-      <ul className="mt-2 flex flex-wrap gap-2 text-meta">
-        <li className="rounded-lg bg-white/80 px-2.5 py-1">
-          {t("ccpAccount")} <strong dir="ltr" className="tabular-nums">0021445982 Clé 41</strong>
-        </li>
-        <li className="rounded-lg bg-white/80 px-2.5 py-1">
-          {t("baridiMobRip")} <strong dir="ltr" className="tabular-nums">00799999002144598241</strong>
-        </li>
-        <li className="px-1 py-1">
-          {t("adminSupport")} <strong dir="ltr" className="tabular-nums">+213 21 74 12 00</strong>
-        </li>
-      </ul>
+      <p className="mt-2 text-pretty">{t("contactSupportToTopUp")}</p>
+    </Banner>
+  );
+  const blockedAlert = status && !status.canAcceptBookings && (
+    <Banner tone="warning" title={t("bookingsPausedTitle")}>
+      {t("bookingsPausedBody")}
     </Banner>
   );
 
@@ -156,6 +203,7 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
   return (
     <div className={cn("space-y-3", className)}>
       {negativeAlert}
+      {blockedAlert}
 
       {variant === "compact" ? (
         <Card
@@ -328,6 +376,8 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
                             <Badge tone="success" icon={<BrandArrowUpIcon size={12} aria-hidden="true" />}>
                               {t("deposit")}
                             </Badge>
+                          ) : tx.type === "adjustment" ? (
+                            <Badge tone="sand">{t("adjustment")}</Badge>
                           ) : (
                             <Badge tone="terracotta" icon={<BrandArrowDownIcon size={12} aria-hidden="true" />}>
                               {t("commission")}
@@ -342,9 +392,9 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
                         </td>
                         <td className="px-3 py-2.5 text-primary-700">
                           {tx.note && <div>{tx.note}</div>}
-                          {tx.relatedBookingId && (
-                            <span className="text-[0.6875rem] text-primary-500 tabular-nums">
-                              {t("bookingRef", { id: tx.relatedBookingId })}
+                          {tx.relatedBookingId && !tx.note && (
+                            <span className="text-[0.6875rem] text-primary-500 tabular-nums" dir="ltr">
+                              {t("bookingRef", { id: tx.relatedBookingId.slice(0, 8).toUpperCase() })}
                             </span>
                           )}
                         </td>
@@ -356,6 +406,68 @@ export default function HostWalletWidget({ className = "", variant = "full" }: H
             </div>
           )}
         </div>
+        <section className="mt-6 space-y-3" aria-labelledby={`${titleId}-money`}>
+          <h3 id={`${titleId}-money`} className="text-title text-primary-900">
+            {t("overviewTitle")}
+          </h3>
+          {overviewState === "loading" && <Skeleton className="h-24 w-full rounded-2xl" />}
+          {overviewState === "failed" && (
+            <Banner tone="danger" title={t("loadFailedTitle")}>
+              {t("loadFailedBody")}
+            </Banner>
+          )}
+          {overview && (
+            <>
+              {overview.earnings && (
+                <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-darnaBg p-4 text-meta sm:grid-cols-4">
+                  {(
+                    [
+                      ["earningsCompleted", overview.earnings.completed],
+                      ["earningsUpcoming", overview.earnings.upcoming],
+                      ["earningsCommission", overview.earnings.commissionPaid],
+                      ["earningsRefundsOwed", overview.earnings.refundsOwed],
+                    ] as const
+                  ).map(([key, amount]) => (
+                    <div key={key}>
+                      <dt className="text-primary-600">{t(key)}</dt>
+                      <dd className="font-semibold tabular-nums text-primary-900">{formatDzd(amount, locale)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              <div>
+                <p className="mb-2 text-meta font-semibold text-primary-700">{t("invoicesTitle")}</p>
+                {overview.invoices.length === 0 ? (
+                  <p className="text-meta text-primary-600">{t("noInvoices")}</p>
+                ) : (
+                  <ul className="divide-y divide-primary/[0.06] rounded-2xl ring-1 ring-primary/[0.08]">
+                    {overview.invoices.map((inv) => (
+                      <li key={inv.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-meta">
+                        <span className="font-semibold text-primary-900" dir="ltr">
+                          {inv.number}
+                        </span>
+                        <span className="text-primary-600">
+                          {formatDate(inv.periodStart, locale)} - {formatDate(inv.periodEnd, locale)}
+                        </span>
+                        <span className="font-semibold tabular-nums text-primary-900">{formatDzd(inv.amountTtc, locale)}</span>
+                        {inv.pdfUrl && (
+                          <a href={inv.pdfUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent-700 underline">
+                            {t("invoicePdf")}
+                          </a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {!overview.payoutsEnabled && (
+                <Banner tone="info" title={t("payoutsOffTitle")}>
+                  {t("payoutsOffBody")}
+                </Banner>
+              )}
+            </>
+          )}
+        </section>
         <DialogFooter>
           <Button variant="tertiary" onClick={() => setIsLedgerOpen(false)}>
             {t("closeStatement")}

@@ -12,6 +12,7 @@ Views are thin: validate the body with a serializer, call a function of
 limited.
 """
 
+from django.conf import settings
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -23,8 +24,11 @@ from apps.core.pagination import PageNumberPagination
 
 from . import selectors, services
 from .models import CodePurpose, DsrKind, FavoriteTarget, SessionScope, StaffRole, UserStatus
-from .permissions import IsAdmin, IsStaffSession
+from .permissions import IsAdmin, IsStaffSession, staff_session_complete
 from .serializers import (
+    AuthProvidersSerializer,
+    GoogleSignInSerializer,
+    SocialAccountSerializer,
     AdminLoginSerializer,
     AdminUserSerializer,
     AuthenticatorCreatedSerializer,
@@ -64,10 +68,22 @@ from .serializers import (
 
 
 def client_ip(request) -> str | None:
-    """IP address of the caller (first address of X-Forwarded-For when behind the proxy)."""
-    forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded:
-        return forwarded.split(",")[0].strip()[:45]
+    """
+    IP address of the caller, used for rate limits and the audit log (BR-SYS-07).
+
+    ``X-Forwarded-For`` can be written by anyone, so it is read only when
+    ``settings.TRUSTED_PROXY_HOPS`` says how many proxies we run in front of
+    Django (for example the website and admin servers, then Caddy). Each of
+    them appends the address it saw, so the client is the entry that many
+    places from the right; anything further left was sent by the caller and is
+    ignored. With 0 (the default) only the socket address counts.
+    """
+    hops = getattr(settings, "TRUSTED_PROXY_HOPS", 0)
+    forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if hops > 0 and forwarded:
+        parts = [part.strip() for part in forwarded.split(",") if part.strip()]
+        if len(parts) >= hops:
+            return parts[-hops][:45]
     return request.META.get("REMOTE_ADDR")
 
 
@@ -105,7 +121,7 @@ def staff_session_payload(session, token: str | None = None) -> dict:
     body = {
         "user": StaffMemberSerializer(profile).data,
         "permissions": sorted(selectors.staff_permission_codes(profile.user)),
-        "mfa_verified": session.mfa_verified_at is not None and not session.mfa_pending,
+        "mfa_verified": staff_session_complete(session),
         "expires_at": session.expires_at,
     }
     if token:
@@ -311,6 +327,19 @@ class EmailVerifyView(APIView):
         data.is_valid(raise_exception=True)
         user = services.verify_email(data.validated_data["key"])
         return Response(session_payload(user, None))
+
+
+class EmailResendView(APIView):
+    """``POST /auth/email/resend``: email the verification link again to the signed-in user (ACC-01)."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_scope = "otp"
+
+    @extend_schema(request=None, responses={204: None})
+    def post(self, request):
+        """Always 204; nothing is sent when there is no email or it is already verified."""
+        services.send_email_verification(request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PasswordRequestView(APIView):
@@ -579,7 +608,7 @@ class MeFavoriteDetailView(APIView):
 
 
 class PublicUserView(APIView):
-    """``GET /users/{user_id}``: public profile (no email, phone or address)."""
+    """``GET /users/{user_id}``: public profile by id or handle (no email, phone or address)."""
 
     permission_classes = [AllowAny]
     serializer_class = PublicUserSerializer
@@ -961,3 +990,71 @@ class AdminDataRequestCompleteView(APIView):
             actor=request.user, request_id=data_request_id, **data.validated_data, ip=client_ip(request)
         )
         return Response(DataSubjectRequestAdminSerializer(row).data)
+
+
+# ---------------------------------------------------------------------------
+# Continue with Google (ACC-10)
+# ---------------------------------------------------------------------------
+class AuthProvidersView(APIView):
+    """``GET /auth/providers``: which outside sign-ins are on (the Google client id is public by design)."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+
+    @extend_schema(responses={200: AuthProvidersSerializer})
+    def get(self, request):
+        """Google is on when its client id and secret are configured."""
+        from . import google
+
+        enabled = google.is_configured()
+        return Response({"google_enabled": enabled, "google_client_id": settings.GOOGLE_CLIENT_ID if enabled else ""})
+
+
+class GoogleSignInView(APIView):
+    """``POST /auth/google``: finish "Continue with Google" with the one-time code (ACC-10)."""
+
+    permission_classes = [AllowAny]
+    authentication_classes: list = []
+    throttle_scope = "auth"
+    serializer_class = GoogleSignInSerializer
+
+    @extend_schema(request=GoogleSignInSerializer, responses={200: SessionSerializer})
+    def post(self, request):
+        """A session like a password sign-in (waiting for the code when an authenticator is enrolled); ``created`` for new accounts."""
+        data = GoogleSignInSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        values = data.validated_data
+        user, session, token, created = services.google_sign_in(
+            code=values["code"],
+            code_verifier=values["code_verifier"],
+            redirect_uri=values["redirect_uri"],
+            accept_terms_version=values.get("accept_terms_version") or None,
+            locale=values["locale"],
+            ip=client_ip(request),
+            user_agent=user_agent(request),
+        )
+        return Response({**session_payload(user, token, session), "created": created})
+
+
+class SocialAccountListView(APIView):
+    """``GET /me/social-accounts``: the sign-in accounts connected to mine (ACC-10)."""
+
+    @extend_schema(responses={200: SocialAccountSerializer(many=True)})
+    def get(self, request):
+        """Connected accounts, oldest first, plus whether the account has a password (needed to disconnect)."""
+        rows = request.user.social_accounts.order_by("created_at")
+        return Response({
+            "results": SocialAccountSerializer(rows, many=True).data,
+            "has_password": request.user.has_usable_password(),
+        })
+
+
+class SocialAccountDetailView(APIView):
+    """``DELETE /me/social-accounts/{id}``: disconnect it (409 ``last_sign_in_method`` without a password)."""
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, account_id):
+        """Remove the link; the Google account can be connected again later."""
+        services.unlink_social_account(request.user, account_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+

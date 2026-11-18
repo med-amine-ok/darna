@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   Wallet,
@@ -25,7 +25,6 @@ import {
   approvePayout,
   rejectPayout,
   getFinanceSummary,
-  listRefunds,
   exportTransactions,
   exportWallets,
 } from "@/lib/actions/finance";
@@ -38,7 +37,14 @@ import type {
   HostType,
   TransactionType,
 } from "@/lib/types";
-import type { FinanceSummary } from "@/lib/data/finance";
+import type { FinanceSummary, TopupMethod } from "@/lib/data/finance";
+import {
+  AdjustmentsPanel,
+  InvoicesPanel,
+  RefundsPanel,
+  SyncPanel,
+  TopupsPanel,
+} from "@/components/finance/FinanceQueues";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { KpiStrip } from "@/components/ui/KpiStrip";
@@ -54,7 +60,6 @@ import { formatDzd, formatDate, maskAccount } from "@/lib/utils/format";
 import { downloadCsv } from "@/lib/utils/download";
 import { WILAYAS, getWilayaLabel, getWilayaName } from "@/lib/utils/wilayas";
 import {
-  DEFAULT_COMMISSION_RATES,
   MAX_RECHARGE_DZD,
   isValidCommissionRate,
   isValidDzdAmount,
@@ -66,7 +71,11 @@ type TabId =
   | "transactions"
   | "commissions"
   | "payouts"
-  | "refunds";
+  | "refunds"
+  | "topups"
+  | "adjustments"
+  | "invoices"
+  | "sync";
 
 export interface PaymentsClientProps {
   locale: string;
@@ -82,19 +91,18 @@ const TX_TYPES: TransactionType[] = [
   "adjustment",
 ];
 const HOST_TYPES: HostType[] = ["individual", "agency", "hotel", "hostel"];
-const RECHARGE_METHODS = ["ccp", "bank_transfer", "cash_guarantee"] as const;
+const RECHARGE_METHODS: readonly TopupMethod[] = ["ccp_transfer", "bank_transfer", "baridimob", "cash_office"];
+const NO_RATES: Record<HostType, number> = { individual: NaN, agency: NaN, hotel: NaN, hostel: NaN };
 
-type RefundRow = {
-  id: string;
-  reference: string;
-  guestName: string;
-  hostName: string;
-  totalAmountDzd: number;
-  refundedAmountDzd: number;
-  paymentStatus: string;
-  status: string;
-  date: string;
-};
+/** Value of a search box, settled 300 ms after the last keystroke. */
+function useDebounced(value: string, ms = 300): string {
+  const [settled, setSettled] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(value.trim()), ms);
+    return () => clearTimeout(timer);
+  }, [value, ms]);
+  return settled;
+}
 
 /** Account identifier for a payout, masked to its last 4 characters. */
 function payoutAccount(p: PayoutRequest): string {
@@ -117,6 +125,7 @@ export default function PaymentsClient({
   initialTab = "overview",
 }: PaymentsClientProps) {
   const t = useTranslations("payments");
+  const tf = useTranslations("financeApi");
   const tActions = useTranslations("actions");
   const tHostTypes = useTranslations("hostTypes");
   const { success, error, info } = useToast();
@@ -136,6 +145,7 @@ export default function PaymentsClient({
   const [wilayaFilter, setWilayaFilter] = useState("all");
   const [negativeOnly, setNegativeOnly] = useState(false);
   const [walletSearch, setWalletSearch] = useState("");
+  const walletQuery = useDebounced(walletSearch);
 
   // Ledger
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -143,15 +153,17 @@ export default function PaymentsClient({
   const [txPage, setTxPage] = useState(1);
   const [txTypeFilter, setTxTypeFilter] = useState("all");
   const [txSearch, setTxSearch] = useState("");
+  const txQuery = useDebounced(txSearch);
 
   // Commissions
   const [commissionRates, setCommissionRates] = useState<
     Record<HostType, number>
-  >({ ...DEFAULT_COMMISSION_RATES });
+  >({ ...NO_RATES });
   const [commissionSaving, setCommissionSaving] = useState(false);
 
   // Payouts
   const [payouts, setPayouts] = useState<PayoutRequest[]>([]);
+  const [payoutsEnabled, setPayoutsEnabled] = useState(false);
   const [payoutToApprove, setPayoutToApprove] = useState<PayoutRequest | null>(
     null,
   );
@@ -160,28 +172,28 @@ export default function PaymentsClient({
   );
   const [payoutBusy, setPayoutBusy] = useState(false);
 
-  // Refunds
-  const [refunds, setRefunds] = useState<RefundRow[]>([]);
+  // Refunds (rows are loaded by RefundsPanel; the tab shows its total)
   const [refundsTotal, setRefundsTotal] = useState(0);
-  const [refundsPage, setRefundsPage] = useState(1);
 
   // Recharge dialog
   const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<HostWallet | null>(null);
   const [rechargeAmount, setRechargeAmount] = useState<string>("50000");
   const [rechargeMethod, setRechargeMethod] =
-    useState<(typeof RECHARGE_METHODS)[number]>("ccp");
+    useState<TopupMethod>("ccp_transfer");
   const [rechargeReason, setRechargeReason] = useState("");
   const [rechargeReceipt, setRechargeReceipt] = useState("");
   const [rechargeSubmitting, setRechargeSubmitting] = useState(false);
 
   const [exporting, setExporting] = useState(false);
 
-  const fail = useCallback(
-    (err: unknown) =>
-      error(t("loadError"), err instanceof Error ? err.message : String(err)),
-    [error, t],
-  );
+  // Loaders read the latest error handler through a ref, so a new `t` or
+  // toast function after a re-render never re-runs every request (that loop
+  // flooded the API and hit its rate limit).
+  const failRef = useRef<(err: unknown) => void>(() => undefined);
+  failRef.current = (err: unknown) =>
+    error(t("loadError"), err instanceof Error ? err.message : String(err));
+  const fail = useCallback((err: unknown) => failRef.current(err), []);
 
   const loadSummary = useCallback(async () => {
     try {
@@ -198,7 +210,7 @@ export default function PaymentsClient({
           hostType: hostTypeFilter === "all" ? undefined : hostTypeFilter,
           wilayaCode: wilayaFilter === "all" ? undefined : wilayaFilter,
           onlyNegative: negativeOnly || undefined,
-          search: walletSearch || undefined,
+          search: walletQuery || undefined,
           page: walletsPage,
           pageSize: walletsPageSize,
         }),
@@ -212,7 +224,7 @@ export default function PaymentsClient({
     hostTypeFilter,
     wilayaFilter,
     negativeOnly,
-    walletSearch,
+    walletQuery,
     walletsPage,
     walletsPageSize,
     fail,
@@ -223,7 +235,7 @@ export default function PaymentsClient({
       const res = unwrap(
         await listTransactions({
           type: txTypeFilter === "all" ? undefined : txTypeFilter,
-          search: txSearch || undefined,
+          search: txQuery || undefined,
           page: txPage,
           pageSize: 10,
         }),
@@ -233,7 +245,7 @@ export default function PaymentsClient({
     } catch (err) {
       fail(err);
     }
-  }, [txTypeFilter, txSearch, txPage, fail]);
+  }, [txTypeFilter, txQuery, txPage, fail]);
 
   const loadCommissions = useCallback(async () => {
     try {
@@ -245,23 +257,13 @@ export default function PaymentsClient({
 
   const loadPayouts = useCallback(async () => {
     try {
-      setPayouts(unwrap(await listPayouts()));
+      const res = unwrap(await listPayouts());
+      setPayoutsEnabled(res.enabled);
+      setPayouts(res.rows);
     } catch (err) {
       fail(err);
     }
   }, [fail]);
-
-  const loadRefunds = useCallback(async () => {
-    try {
-      const res = unwrap(
-        await listRefunds({ page: refundsPage, pageSize: 10 }),
-      );
-      setRefunds(res.rows);
-      setRefundsTotal(res.total);
-    } catch (err) {
-      fail(err);
-    }
-  }, [refundsPage, fail]);
 
   useEffect(() => {
     loadSummary();
@@ -274,9 +276,6 @@ export default function PaymentsClient({
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
-  useEffect(() => {
-    loadRefunds();
-  }, [loadRefunds]);
 
   // ---- Commissions -------------------------------------------------------
   const ratesValid = HOST_TYPES.every((h) =>
@@ -307,7 +306,7 @@ export default function PaymentsClient({
   const rechargeValid =
     rechargeAmount.trim() !== "" &&
     isValidDzdAmount(parsedRecharge, 1, MAX_RECHARGE_DZD) &&
-    rechargeReceipt.trim().length > 0;
+    rechargeReceipt.trim().length >= 3;
 
   const openRecharge = (w: HostWallet) => {
     setSelectedWallet(w);
@@ -322,7 +321,7 @@ export default function PaymentsClient({
     if (!selectedWallet || !rechargeValid) return;
     setRechargeSubmitting(true);
     try {
-      unwrap(
+      const res = unwrap(
         await rechargeWallet({
           hostId: selectedWallet.hostId,
           amount: parsedRecharge,
@@ -331,7 +330,8 @@ export default function PaymentsClient({
           receiptReference: rechargeReceipt,
         }),
       );
-      success(t("rechargeDone"), formatDzd(parsedRecharge, locale));
+      if (res.pendingApproval) info(tf("topups.pending"), tf("topups.pendingDesc"));
+      else success(t("rechargeDone"), formatDzd(parsedRecharge, locale));
       setRechargeDialogOpen(false);
       loadWallets();
       loadTransactions();
@@ -401,13 +401,13 @@ export default function PaymentsClient({
         kind === "ledger"
           ? await exportTransactions({
               type: txTypeFilter === "all" ? undefined : txTypeFilter,
-              search: txSearch || undefined,
+              search: txQuery || undefined,
             })
           : await exportWallets({
               hostType: hostTypeFilter === "all" ? undefined : hostTypeFilter,
               wilayaCode: wilayaFilter === "all" ? undefined : wilayaFilter,
               onlyNegative: negativeOnly || undefined,
-              search: walletSearch || undefined,
+              search: walletQuery || undefined,
             }),
       );
       downloadCsv(res.filename, res.csv);
@@ -426,7 +426,7 @@ export default function PaymentsClient({
   };
 
   // ---- KPIs ------------------------------------------------------------------
-  const dash = ",";
+  const dash = "-";
   const kpis = [
     {
       id: "wallets",
@@ -438,13 +438,13 @@ export default function PaymentsClient({
       onClick: () => setActiveTab("wallets"),
     },
     {
-      id: "payouts",
-      label: t("kpi.pendingPayouts"),
-      value: summary ? formatDzd(summary.pendingPayoutsDzd, locale) : dash,
+      id: "topups",
+      label: tf("kpiPendingTopups"),
+      value: summary ? String(summary.pendingTopupApprovals) : dash,
       icon: Clock,
       colorVariant: "tertiary" as const,
-      active: activeTab === "payouts",
-      onClick: () => setActiveTab("payouts"),
+      active: activeTab === "topups",
+      onClick: () => setActiveTab("topups"),
     },
     {
       id: "commissions",
@@ -486,21 +486,42 @@ export default function PaymentsClient({
       icon: <FileText className="w-4 h-4" aria-hidden="true" />,
     },
     {
+      id: "topups",
+      label: tf("tabs.topups"),
+      count: summary?.pendingTopupApprovals,
+      icon: <PlusCircle className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "adjustments",
+      label: tf("tabs.adjustments"),
+      icon: <Wallet className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
       id: "commissions",
       label: t("tabs.commissions"),
       icon: <Percent className="w-4 h-4" aria-hidden="true" />,
     },
     {
-      id: "payouts",
-      label: t("tabs.payouts"),
-      count: pendingCount,
-      icon: <ArrowUpRight className="w-4 h-4" aria-hidden="true" />,
+      id: "invoices",
+      label: tf("tabs.invoices"),
+      icon: <FileText className="w-4 h-4" aria-hidden="true" />,
     },
     {
       id: "refunds",
       label: t("tabs.refunds"),
       count: refundsTotal,
       icon: <RotateCcw className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "payouts",
+      label: t("tabs.payouts"),
+      count: payoutsEnabled ? pendingCount : undefined,
+      icon: <ArrowUpRight className="w-4 h-4" aria-hidden="true" />,
+    },
+    {
+      id: "sync",
+      label: tf("tabs.sync"),
+      icon: <CreditCard className="w-4 h-4" aria-hidden="true" />,
     },
   ];
 
@@ -601,7 +622,7 @@ export default function PaymentsClient({
                 className="py-3 px-4 tabular-nums text-end text-neutral-600 whitespace-nowrap"
                 dir="ltr"
               >
-                {formatDzd(tx.balanceAfter, locale)}
+                {Number.isFinite(tx.balanceAfter) ? formatDzd(tx.balanceAfter, locale) : "-"}
               </td>
             )}
           </tr>
@@ -640,28 +661,28 @@ export default function PaymentsClient({
                 </span>
               </div>
               <p className="text-2xl font-serif text-primary">
-                {summary ? formatDzd(summary.escrowDzd, locale) : dash}
+                {!summary ? dash : summary.payoutsEnabled ? formatDzd(summary.escrowDzd, locale) : tf("switchedOff")}
               </p>
               <p className="text-xs text-neutral-500">
-                {t("overview.escrowHint")}
+                {summary && !summary.payoutsEnabled ? tf("escrowOff") : t("overview.escrowHint")}
               </p>
             </div>
 
             <div className="p-5 rounded-2xl bg-white space-y-3 shadow-e1">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-sm text-primary">
-                  {t("overview.monthPayouts")}
+                  {tf("overviewTopups")}
                 </span>
                 <span className="p-2 rounded-xl bg-primary/10 text-primary">
                   <ArrowUpRight className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
               <p className="text-2xl font-serif text-primary">
-                {summary ? formatDzd(summary.monthPayoutsDzd, locale) : dash}
+                {summary ? formatDzd(summary.monthTopupsDzd, locale) : dash}
               </p>
               <p className="text-xs text-neutral-500">
-                {t("overview.monthPayoutsHint", {
-                  count: summary?.monthPayoutsCount ?? 0,
+                {tf("overviewTopupsHint", {
+                  date: summary ? formatDate(summary.monthStart, locale) : dash,
                 })}
               </p>
             </div>
@@ -840,7 +861,7 @@ export default function PaymentsClient({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-neutral-600">
-                      {getWilayaName(w.wilayaCode, locale)}
+                      {w.wilayaCode ? getWilayaName(w.wilayaCode, locale) : "-"}
                     </td>
                     <td
                       className={`py-3 px-4 tabular-nums whitespace-nowrap font-semibold text-end ${w.balance < 0 ? "text-accent-700" : "text-primary"}`}
@@ -1048,7 +1069,13 @@ export default function PaymentsClient({
       )}
 
       {/* Payouts */}
-      {activeTab === "payouts" && (
+      {activeTab === "payouts" && !payoutsEnabled && (
+        <div className="bg-white rounded-2xl shadow-e1">
+          <EmptyState title={tf("payoutsOffTitle")} description={tf("payoutsOffDesc")} />
+        </div>
+      )}
+
+      {activeTab === "payouts" && payoutsEnabled && (
         <div className="relative bg-white rounded-2xl overflow-x-auto shadow-e1">
           <table className="w-full text-xs text-start">
             <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
@@ -1157,92 +1184,41 @@ export default function PaymentsClient({
         </div>
       )}
 
-      {/* Refunds */}
+      {/* Refunds hosts owe guests (review R8) */}
       {activeTab === "refunds" && (
-        <div className="bg-white rounded-2xl p-6 space-y-4 shadow-e1">
-          <h3 className="font-semibold text-primary text-base">
-            {t("refundsTitle")}
-          </h3>
-          <p className="text-xs text-neutral-500">{t("refundsHint")}</p>
-          <div className="relative overflow-x-auto">
-            <table className="w-full text-xs text-start">
-              <thead className="bg-darnaBg-100 text-primary-600 [&_th]:whitespace-nowrap font-semibold border-b border-primary/[0.08]">
-                <tr>
-                  <th scope="col" className="py-2.5 px-3 text-start">
-                    {t("cols.date")}
-                  </th>
-                  <th scope="col" className="py-2.5 px-3 text-start">
-                    {t("cols.booking")}
-                  </th>
-                  <th scope="col" className="py-2.5 px-3 text-start">
-                    {t("cols.guest")}
-                  </th>
-                  <th scope="col" className="py-2.5 px-3 text-start">
-                    {t("cols.host")}
-                  </th>
-                  <th scope="col" className="py-2.5 px-3 text-end">
-                    {t("cols.total")}
-                  </th>
-                  <th scope="col" className="py-2.5 px-3 text-end">
-                    {t("cols.refunded")}
-                  </th>
-                  <th scope="col" className="py-2.5 px-3 text-start">
-                    {t("cols.status")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-primary/[0.06]">
-                {refunds.length === 0 && (
-                  <tr>
-                    <td colSpan={7}>
-                      <EmptyState size="compact" title={t("noRefunds")} />
-                    </td>
-                  </tr>
-                )}
-                {refunds.map((r) => (
-                  <tr key={r.id} className="hover:bg-darnaBg-100">
-                    <td className="py-2.5 px-3 tabular-nums text-neutral-500 whitespace-nowrap">
-                      {formatDate(r.date, locale)}
-                    </td>
-                    <td className="py-2.5 px-3 tabular-nums font-semibold text-primary whitespace-nowrap">
-                      {r.reference}
-                    </td>
-                    <td className="py-2.5 px-3 font-semibold text-primary">
-                      {r.guestName}
-                    </td>
-                    <td className="py-2.5 px-3 text-neutral-600">
-                      {r.hostName}
-                    </td>
-                    <td
-                      className="py-2.5 px-3 tabular-nums text-end text-neutral-600 whitespace-nowrap"
-                      dir="ltr"
-                    >
-                      {formatDzd(r.totalAmountDzd, locale)}
-                    </td>
-                    <td
-                      className="py-2.5 px-3 tabular-nums font-semibold text-end text-accent-700 whitespace-nowrap"
-                      dir="ltr"
-                    >
-                      {formatDzd(r.refundedAmountDzd, locale)}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <StatusPill status={r.paymentStatus} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            currentPage={refundsPage}
-            totalPages={Math.max(1, Math.ceil(refundsTotal / 10))}
-            totalItems={refundsTotal}
-            pageSize={10}
-            itemLabel={t("itemLabels.refunds")}
-            onPageChange={setRefundsPage}
-          />
-        </div>
+        <RefundsPanel locale={locale} title={t("refundsTitle")} onTotal={setRefundsTotal} />
       )}
+
+      {/* Top-ups (four-eyes) */}
+      {activeTab === "topups" && (
+        <TopupsPanel
+          locale={locale}
+          onChanged={() => {
+            loadSummary();
+            loadWallets();
+            loadTransactions();
+          }}
+        />
+      )}
+
+      {/* Manual adjustments (review R6) */}
+      {activeTab === "adjustments" && (
+        <AdjustmentsPanel
+          locale={locale}
+          wallets={wallets}
+          onChanged={() => {
+            loadSummary();
+            loadWallets();
+            loadTransactions();
+          }}
+        />
+      )}
+
+      {/* Commission invoices (R2) */}
+      {activeTab === "invoices" && <InvoicesPanel locale={locale} />}
+
+      {/* Sync health: inventory conflicts and outbox */}
+      {activeTab === "sync" && <SyncPanel locale={locale} />}
 
       {/* Payout approval confirmation (always shows amount, host and account) */}
       <ConfirmDialog
@@ -1390,16 +1366,12 @@ export default function PaymentsClient({
             <select
               id="recharge-method"
               value={rechargeMethod}
-              onChange={(e) =>
-                setRechargeMethod(
-                  e.target.value as (typeof RECHARGE_METHODS)[number],
-                )
-              }
+              onChange={(e) => setRechargeMethod(e.target.value as TopupMethod)}
               className={`${fieldCls} cursor-pointer`}
             >
               {RECHARGE_METHODS.map((m) => (
                 <option key={m} value={m}>
-                  {t(`rechargeMethods.${m}`)}
+                  {tf(`methods.${m}`)}
                 </option>
               ))}
             </select>

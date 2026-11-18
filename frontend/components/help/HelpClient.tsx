@@ -68,7 +68,6 @@ export default function HelpClient() {
   const [supportEmail, setSupportEmail] = useState("");
   const [supportTopic, setSupportTopic] = useState("booking");
   const [supportMessage, setSupportMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<SupportField, string>>>({});
 
@@ -115,14 +114,14 @@ export default function HelpClient() {
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSent(true);
-      toast.success(t("form.sent"));
-      setSupportMessage("");
-      setTimeout(() => setSent(false), 2200);
-    }, 500);
+    // There is no support inbox in the API yet: hand the message to the person's own
+    // email app, addressed to BLADUS support (nothing is sent by the website itself).
+    const subject = `${t(`form.topics.${supportTopic as (typeof TOPICS)[number]}`)} - ${supportName.trim()}`;
+    const body = supportMessage.trim();
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setSent(true);
+    toast.info(t("form.sent"));
+    setTimeout(() => setSent(false), 2200);
   };
 
   const fieldId = (f: string) => `${formId}-${f}`;
@@ -374,11 +373,10 @@ export default function HelpClient() {
             <div className="flex justify-end pt-1">
               <Button
                 type="submit"
-                loading={isSubmitting}
                 success={sent}
                 trailingIcon={<BrandSendIcon size={16} className="rtl:-scale-x-100" aria-hidden="true" />}
               >
-                {isSubmitting ? t("form.sending") : t("form.submit")}
+                {t("form.submit")}
               </Button>
             </div>
           </form>

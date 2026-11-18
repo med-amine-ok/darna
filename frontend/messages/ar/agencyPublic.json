@@ -114,5 +114,7 @@
     "shared_kitchen": "مطبخ مشترك",
     "laundry": "غسيل الملابس",
     "desert_tours": "جولات صحراوية"
-  }
+  },
+  "linkCopied": "تم نسخ رابط الصفحة.",
+  "copyFailed": "تعذر نسخ الرابط."
 }

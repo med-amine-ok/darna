@@ -46,7 +46,8 @@ import {
 } from "@/lib/actions/listings";
 import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
 import { downloadCsv } from "@/lib/utils/download";
-import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { applyDiscount } from "@/lib/pricing";
+import { NOT_SET, bpToPercent, panelSpecs, policyName } from "@/components/features/listings/panelSpecs";
 import { canTransitionListing } from "@/lib/domain/transitions";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
@@ -123,14 +124,15 @@ export default function ListingsClient({
   // Drawers & Modals
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [detailListing, setDetailListing] = useState<Listing | null>(null);
+  const detailPanel = detailListing ? panelSpecs(detailListing) : ({} as ReturnType<typeof panelSpecs>);
 
   // Moderation checklist state for detail review
   const [checklist, setChecklist] = useState<Record<ChecklistKey, boolean>>({
-    photosOk: true,
-    locationAccurate: true,
-    priceReasonable: true,
-    policiesPresent: true,
-    descriptionAppropriate: true,
+    photosOk: false,
+    locationAccurate: false,
+    priceReasonable: false,
+    policiesPresent: false,
+    descriptionAppropriate: false,
   });
 
   const [changesNote, setChangesNote] = useState("");
@@ -889,12 +891,6 @@ export default function ListingsClient({
                   {formatDzd(detailListing.price, locale)}
                 </span>
               </div>
-              <div className="text-end">
-                <span className="text-primary-600 block text-[11px]">{t("detail.medianBenchmark")}</span>
-                <span className="font-semibold text-secondary-700 text-xs">
-                  {t("detail.medianValue", { amount: formatDzd(16500, locale) })}
-                </span>
-              </div>
             </div>
 
             {/* Price & Discounts Section */}
@@ -903,27 +899,29 @@ export default function ListingsClient({
                 {t("detail.pricingTitle")}
               </span>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div className="p-2.5 rounded-xl bg-darnaBg-100">
-                  <span className="text-primary-600 block text-[11px]">{t("detail.commission")}</span>
-                  <span className="font-semibold text-secondary-700">{t("detail.commissionValue", { rate: 12 })}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-darnaBg-100">
-                  <span className="text-primary-600 block text-[11px]">{t("detail.weeklyDiscount")}</span>
-                  <span className="font-semibold text-secondary-700">
-                    {t("detail.weeklyDiscountValue", {
-                      rate: DISCOUNTS.weekly,
-                      amount: formatDzd(applyDiscount(detailListing.price, DISCOUNTS.weekly, 7), locale),
-                    })}
-                  </span>
-                </div>
+                {detailPanel.weeklyDiscountBp ? (
+                  <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                    <span className="text-primary-600 block text-[11px]">{t("detail.weeklyDiscount")}</span>
+                    <span className="font-semibold text-secondary-700">
+                      {t("detail.weeklyDiscountValue", {
+                        rate: bpToPercent(detailPanel.weeklyDiscountBp),
+                        amount: formatDzd(applyDiscount(detailListing.price, bpToPercent(detailPanel.weeklyDiscountBp), 7), locale),
+                      })}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="p-2.5 rounded-xl bg-darnaBg-100">
                   <span className="text-primary-600 block text-[11px]">{t("detail.cleaningFee")}</span>
-                  <span className="font-semibold text-primary">{formatDzd(3500, locale)}</span>
+                  <span className="font-semibold text-primary">
+                    {typeof detailPanel.cleaningFeeDzd === "number" ? formatDzd(detailPanel.cleaningFeeDzd, locale) : NOT_SET}
+                  </span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-darnaBg-100">
-                  <span className="text-primary-600 block text-[11px]">{t("detail.deposit")}</span>
-                  <span className="font-semibold text-primary">{formatDzd(20000, locale)}</span>
-                </div>
+                {detailPanel.security_deposit ? (
+                  <div className="p-2.5 rounded-xl bg-darnaBg-100">
+                    <span className="text-primary-600 block text-[11px]">{t("detail.deposit")}</span>
+                    <span className="font-semibold text-primary">{formatDzd(detailPanel.security_deposit.amount_minor / 100, locale)}</span>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -936,19 +934,23 @@ export default function ListingsClient({
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div className="p-2.5 rounded-xl bg-darnaBg-100">
                   <span className="text-primary-600 block text-[11px]">{t("detail.checkIn")}</span>
-                  <span className="font-medium text-primary">{t("detail.checkInValue", { time: "15:00" })}</span>
+                  <span className="font-medium text-primary">
+                    {detailListing.houseRules?.checkInTime ? t("detail.checkInValue", { time: detailListing.houseRules.checkInTime }) : NOT_SET}
+                  </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-darnaBg-100">
                   <span className="text-primary-600 block text-[11px]">{t("detail.checkOut")}</span>
-                  <span className="font-medium text-primary">{t("detail.checkOutValue", { time: "11:00" })}</span>
+                  <span className="font-medium text-primary">
+                    {detailListing.houseRules?.checkOutTime ? t("detail.checkOutValue", { time: detailListing.houseRules.checkOutTime }) : NOT_SET}
+                  </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-darnaBg-100">
                   <span className="text-primary-600 block text-[11px]">{t("detail.minStay")}</span>
-                  <span className="font-medium text-primary">{t("detail.nights", { count: 2 })}</span>
+                  <span className="font-medium text-primary">{detailPanel.minNights ? t("detail.nights", { count: detailPanel.minNights }) : NOT_SET}</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-darnaBg-100">
                   <span className="text-primary-600 block text-[11px]">{t("detail.cancellation")}</span>
-                  <span className="font-medium text-secondary-700">{t("detail.cancellationValue", { hours: 48 })}</span>
+                  <span className="font-medium text-secondary-700">{policyName(detailPanel.cancellationPolicy, locale)}</span>
                 </div>
               </div>
             </div>

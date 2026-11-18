@@ -1,14 +1,19 @@
 import "server-only";
-// TODO: replace with Supabase query
-import { store } from "@/lib/mock-data/store";
-import { GuestUser, GuestStatus, PaginatedResult, AdminActor } from "@/lib/types";
-import { assertCan } from "@/lib/permissions";
-import { logAudit } from "./audit";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { api, apiOrNull } from "@/lib/api/client";
+import { emptyPage, fetchPage, logReadError, write } from "@/lib/api/mapping";
+import { toDataRequest, toGuestUser, type ApiAdminUser, type ApiDataRequest, type DataRequest } from "@/lib/api/users";
+import type { AdminActor, GuestStatus, GuestUser, PaginatedResult } from "@/lib/types";
+import { DomainError } from "./errors";
+
+/**
+ * Guests and hosts as people, from the Django API (/admin/users,
+ * /admin/data-requests). Filters, ordering and pages are done by the backend;
+ * actions are audited there (ids and statuses only, BR-STF-02).
+ */
 
 export interface UserFilterParams {
-  status?: string; // "all" | GuestStatus
+  status?: string; // "all" | GuestStatus (comma list allowed)
   role?: string; // "all" | "guest" | "host" | "both"
   emailVerified?: boolean;
   idVerified?: boolean;
@@ -23,286 +28,174 @@ export interface UserFilterParams {
   pageSize?: number;
 }
 
-export async function listUsers(
-  params: UserFilterParams = {}
-): Promise<PaginatedResult<GuestUser>> {
-  await delay(180);
+const BACKEND_STATUSES = ["active", "suspended", "banned", "deleted"];
 
+function statusQuery(status?: string): string | undefined {
+  if (!status || status === "all") return undefined;
+  const wanted = status.split(",").map((s) => s.trim()).filter((s) => BACKEND_STATUSES.includes(s));
+  return wanted.length ? wanted.join(",") : undefined;
+}
+
+function roleQuery(role?: string): boolean | undefined {
+  if (role === "host" || role === "both") return true;
+  if (role === "guest") return false;
+  return undefined;
+}
+
+async function statusFacets(): Promise<Record<string, number>> {
+  const statuses = ["active", "suspended", "banned", "deleted"];
+  try {
+    const counts = await Promise.all(
+      statuses.map((s) => api<{ count: number }>("/admin/users", { query: { status: s, page_size: 1 } })),
+    );
+    const out: Record<string, number> = { all: 0 };
+    statuses.forEach((s, i) => {
+      out[s] = counts[i]?.count ?? 0;
+      out.all += out[s];
+    });
+    return out;
+  } catch (error) {
+    logReadError("admin users facets", error);
+    return {};
+  }
+}
+
+export async function listUsers(params: UserFilterParams = {}): Promise<PaginatedResult<GuestUser>> {
   const page = params.page || 1;
   const pageSize = params.pageSize || 12;
-
-  let filtered = [...store.users];
-
-  // 1. Status Filter
-  if (params.status && params.status !== "all") {
-    if (params.status.includes(",")) {
-      const list = params.status.split(",").map((s) => s.trim().toLowerCase());
-      filtered = filtered.filter((u) => list.includes(u.status.toLowerCase()));
-    } else {
-      filtered = filtered.filter((u) => u.status === params.status);
-    }
+  const ordering = `${params.sortOrder === "asc" ? "" : "-"}${params.sortBy || "joined"}`;
+  try {
+    const [result, status] = await Promise.all([
+      fetchPage<ApiAdminUser, GuestUser>("/admin/users", toGuestUser, {
+        page,
+        pageSize,
+        query: {
+          status: statusQuery(params.status),
+          is_host: roleQuery(params.role),
+          email_verified: params.emailVerified,
+          phone_verified: params.idVerified,
+          wilaya: params.wilayaCode && params.wilayaCode !== "all" ? params.wilayaCode : undefined,
+          q: params.search?.trim() || undefined,
+          min_bookings: params.minBookings && params.minBookings > 0 ? params.minBookings : undefined,
+          min_spend_minor: params.minSpend && params.minSpend > 0 ? Math.round(params.minSpend * 100) : undefined,
+          flagged: params.isFlagged,
+          ordering,
+        },
+      }),
+      statusFacets(),
+    ]);
+    return { ...result, facets: { status } };
+  } catch (error) {
+    logReadError("admin users", error);
+    return { ...emptyPage<GuestUser>(page, pageSize), facets: {} };
   }
-
-  // 2. Role Filter
-  if (params.role && params.role !== "all") {
-    filtered = filtered.filter((u) => u.role === params.role);
-  }
-
-  // 3. Verifications
-  if (params.emailVerified !== undefined) {
-    filtered = filtered.filter((u) => u.emailVerified === params.emailVerified);
-  }
-  if (params.idVerified !== undefined) {
-    filtered = filtered.filter((u) => u.idVerified === params.idVerified);
-  }
-
-  // 4. Wilaya
-  if (params.wilayaCode && params.wilayaCode !== "all") {
-    filtered = filtered.filter((u) => u.wilayaCode === params.wilayaCode);
-  }
-
-  // 5. Search
-  if (params.search?.trim()) {
-    const q = params.search.toLowerCase();
-    filtered = filtered.filter((u) => {
-      const matchName = u.name.toLowerCase().includes(q);
-      const matchEmail = u.email.toLowerCase().includes(q);
-      const matchPhone = (u.phone || "").toLowerCase().includes(q);
-      return matchName || matchEmail || matchPhone;
-    });
-  }
-
-  // 6. Metrics
-  if (params.minBookings && params.minBookings > 0) {
-    filtered = filtered.filter((u) => u.bookingsCount >= params.minBookings!);
-  }
-  if (params.minSpend && params.minSpend > 0) {
-    filtered = filtered.filter((u) => u.totalSpentDzd >= params.minSpend!);
-  }
-  if (params.isFlagged !== undefined) {
-    filtered = filtered.filter((u) => u.isFlagged === params.isFlagged);
-  }
-
-  // Facets
-  const facets: Record<string, Record<string, number>> = {
-    status: {
-      all: store.users.length,
-      active: store.users.filter((u) => u.status === "active").length,
-      suspended: store.users.filter((u) => u.status === "suspended").length,
-      banned: store.users.filter((u) => u.status === "banned").length,
-      deleted: store.users.filter((u) => u.status === "deleted").length,
-    },
-    role: {
-      all: store.users.length,
-      guest: store.users.filter((u) => u.role === "guest").length,
-      both: store.users.filter((u) => u.role === "both").length,
-    },
-  };
-
-  // Sorting
-  const sortBy = params.sortBy || "joined";
-  const order = params.sortOrder === "asc" ? 1 : -1;
-
-  filtered.sort((a, b) => {
-    if (sortBy === "bookings") return (a.bookingsCount - b.bookingsCount) * order;
-    if (sortBy === "spend") return (a.totalSpentDzd - b.totalSpentDzd) * order;
-    if (sortBy === "activity") return (new Date(a.lastActiveAt).getTime() - new Date(b.lastActiveAt).getTime()) * order;
-    return (new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()) * order;
-  });
-
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const rows = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  return {
-    rows,
-    total,
-    page,
-    pageSize,
-    totalPages,
-    facets,
-  };
 }
 
 export async function getUserById(id: string): Promise<GuestUser | null> {
-  await delay(150);
-  const user = store.users.find((u) => u.id === id);
-  return user ? { ...user } : null;
+  try {
+    const raw = await apiOrNull<ApiAdminUser>(`/admin/users/${encodeURIComponent(id)}`);
+    return raw ? toGuestUser(raw) : null;
+  } catch (error) {
+    logReadError("admin user", error);
+    return null;
+  }
 }
 
-export async function suspendUser(
-  id: string,
-  reason: string,
-  actor: AdminActor
-): Promise<GuestUser> {
-  assertCan(actor.role, "users.suspend");
-  await delay(200);
+type UserAction = "suspend" | "unsuspend" | "ban" | "restore";
 
-  const idx = store.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
-
-  const prev = { ...store.users[idx] };
-  store.users[idx] = {
-    ...store.users[idx],
-    status: "suspended",
-    adminNotes: [...store.users[idx].adminNotes, `Suspended: ${reason}`],
-  };
-
-  await logAudit(
-    actor,
-    "USER_SUSPEND",
-    "user",
-    id,
-    `Suspended user ${prev.name}: ${reason}`,
-    prev,
-    store.users[idx]
+async function act(id: string, action: UserAction, reason?: string): Promise<GuestUser> {
+  const raw = await write(() =>
+    api<ApiAdminUser>(`/admin/users/${encodeURIComponent(id)}/${action}`, {
+      method: "POST",
+      body: reason ? { reason } : undefined,
+    }),
   );
-
-  return store.users[idx];
+  return toGuestUser(raw);
 }
 
-export async function unsuspendUser(
-  id: string,
-  actor: AdminActor
-): Promise<GuestUser> {
-  assertCan(actor.role, "users.suspend");
-  await delay(200);
-
-  const idx = store.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
-
-  const prev = { ...store.users[idx] };
-  store.users[idx] = {
-    ...store.users[idx],
-    status: "active",
-  };
-
-  await logAudit(
-    actor,
-    "USER_UNSUSPEND",
-    "user",
-    id,
-    `Reactivated user ${prev.name}`,
-    prev,
-    store.users[idx]
-  );
-
-  return store.users[idx];
+/** Suspend with a reason (10 characters or more); every session of the user ends at once. */
+export async function suspendUser(id: string, reason: string, _actor: AdminActor): Promise<GuestUser> {
+  return act(id, "suspend", reason);
 }
 
-export async function banUser(
-  id: string,
-  reason: string,
-  actor: AdminActor
-): Promise<GuestUser> {
-  assertCan(actor.role, "users.ban");
-  await delay(200);
-
-  const idx = store.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
-
-  const prev = { ...store.users[idx] };
-  store.users[idx] = {
-    ...store.users[idx],
-    status: "banned",
-    adminNotes: [...store.users[idx].adminNotes, `Banned: ${reason}`],
-  };
-
-  await logAudit(
-    actor,
-    "USER_BAN",
-    "user",
-    id,
-    `Banned user ${prev.name}: ${reason}`,
-    prev,
-    store.users[idx]
-  );
-
-  return store.users[idx];
+export async function unsuspendUser(id: string, _actor: AdminActor): Promise<GuestUser> {
+  return act(id, "unsuspend");
 }
 
-export async function deleteUser(
-  id: string,
-  actor: AdminActor
-): Promise<GuestUser> {
-  assertCan(actor.role, "users.delete");
-  await delay(200);
-
-  const idx = store.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
-
-  const prev = { ...store.users[idx] };
-  store.users[idx] = {
-    ...store.users[idx],
-    status: "deleted",
-  };
-
-  await logAudit(
-    actor,
-    "USER_DELETE",
-    "user",
-    id,
-    `Soft deleted user ${prev.name}`,
-    prev,
-    store.users[idx]
-  );
-
-  return store.users[idx];
+export async function banUser(id: string, reason: string, _actor: AdminActor): Promise<GuestUser> {
+  return act(id, "ban", reason);
 }
 
-export async function restoreUser(
-  id: string,
-  actor: AdminActor
-): Promise<GuestUser> {
-  assertCan(actor.role, "users.delete");
-  await delay(200);
-
-  const idx = store.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
-
-  const prev = { ...store.users[idx] };
-  store.users[idx] = {
-    ...store.users[idx],
-    status: "active",
-  };
-
-  await logAudit(
-    actor,
-    "USER_RESTORE",
-    "user",
-    id,
-    `Restored soft-deleted user ${prev.name}`,
-    prev,
-    store.users[idx]
-  );
-
-  return store.users[idx];
+/** Soft delete; anonymisation follows (BR-PRV-02). */
+export async function deleteUser(id: string, _actor: AdminActor): Promise<GuestUser> {
+  await write(() => api(`/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" }));
+  const after = await getUserById(id);
+  return after ?? ({ id, status: "deleted" } as GuestUser);
 }
 
+export async function restoreUser(id: string, _actor: AdminActor): Promise<GuestUser> {
+  return act(id, "restore");
+}
+
+/**
+ * Move a user to `status` with the matching backend action. Suspend and ban
+ * need a reason: the screens use suspendUser / banUser for those.
+ */
 export async function updateUserStatus(
   id: string,
   status: GuestStatus,
-  actor: AdminActor
+  actor: AdminActor,
+  reason?: string,
 ): Promise<GuestUser> {
-  await delay(200);
-  const idx = store.users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
+  const current = await getUserById(id);
+  if (!current) throw new DomainError("User not found");
+  if (status === current.status) return current;
+  switch (status) {
+    case "active":
+      return current.status === "deleted" ? restoreUser(id, actor) : unsuspendUser(id, actor);
+    case "suspended":
+      return act(id, "suspend", reason);
+    case "banned":
+      return act(id, "ban", reason);
+    case "deleted":
+      return deleteUser(id, actor);
+    default:
+      throw new DomainError(`Cannot move a user to ${status}`);
+  }
+}
 
-  const prev = { ...store.users[idx] };
-  store.users[idx] = {
-    ...store.users[idx],
-    status,
-  };
+// ---- Data protection requests (BR-PRV-02) ----
 
-  await logAudit(
-    actor,
-    "USER_STATUS_CHANGE",
-    "user",
-    id,
-    `Changed user status from ${prev.status} to ${status}: ${prev.name}`,
-    prev,
-    store.users[idx]
+export async function listDataRequests(
+  params: { status?: string; kind?: string; page?: number; pageSize?: number } = {},
+): Promise<PaginatedResult<DataRequest>> {
+  try {
+    return await fetchPage<ApiDataRequest, DataRequest>("/admin/data-requests", toDataRequest, {
+      page: params.page,
+      pageSize: params.pageSize,
+      query: {
+        status: params.status && params.status !== "all" ? params.status : undefined,
+        kind: params.kind && params.kind !== "all" ? params.kind : undefined,
+      },
+    });
+  } catch (error) {
+    logReadError("admin data requests", error);
+    return emptyPage<DataRequest>(params.page, params.pageSize);
+  }
+}
+
+/** Close a request: completed (a deletion anonymises) or rejected, with notes of 10 characters or more. */
+export async function completeDataRequest(
+  id: string,
+  outcome: "completed" | "rejected",
+  notes: string,
+  _actor: AdminActor,
+): Promise<DataRequest> {
+  const raw = await write(() =>
+    api<ApiDataRequest>(`/admin/data-requests/${encodeURIComponent(id)}/complete`, {
+      method: "POST",
+      body: { outcome, notes },
+    }),
   );
-
-  return store.users[idx];
+  return toDataRequest(raw);
 }

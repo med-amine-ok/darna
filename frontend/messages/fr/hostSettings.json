@@ -3,10 +3,10 @@
   "subtitle": "Configurez vos versements bancaires algériens (CCP / RIB), vos règles de réservation, votre identité d'hôte et vos canaux de communication.",
   "tabs": {
     "ariaLabel": "Sections des paramètres hôte",
-    "payouts": "Comptes de versement et historique",
-    "identity": "Type d'hôte et statut juridique",
+    "payouts": "Versements",
+    "identity": "Compte et vérification",
     "defaults": "Réservations par défaut",
-    "notifications": "Communication avec les voyageurs"
+    "notifications": "Notifications"
   },
   "channels": {
     "CCP": "Algérie Poste CCP",
@@ -104,5 +104,48 @@
     "agencyUpgradeRequested": "Demande de passage en agence envoyée. Notre équipe vérifiera votre Registre du commerce (RC).",
     "communicationSaved": "Préférences de communication enregistrées."
   },
-  "eyebrow": "Paramètres hôte"
+  "eyebrow": "Paramètres hôte",
+  "account": {
+    "loadFailed": "Impossible de charger votre compte hôte. Réessayez dans un instant.",
+    "approvedOn": "Approuvé le {date}",
+    "submittedOn": "Envoyé pour vérification le {date}",
+    "documentsTitle": "Documents de vérification",
+    "documentsHelp": "L'équipe BLADUS vérifie ces documents avant d'approuver votre compte hôte.",
+    "defaultsDescription": "Le mode d'approbation de vos nouvelles annonces.",
+    "perListing": "Le délai de prévenance, les horaires d'arrivée et la politique d'annulation se règlent sur chaque annonce.",
+    "commission": "Commission BLADUS sur vos réservations : {rate} %",
+    "payoutsOff": "Les versements via BLADUS ne sont pas encore disponibles : les voyageurs vous paient directement. La commission est réglée via votre portefeuille hôte.",
+    "unavailable": "Indisponible",
+    "notificationsHelp": "Choisissez les alertes de réservation, de message et d'avis reçues par e-mail, SMS et notification.",
+    "notificationsLink": "Ouvrir les préférences de notification",
+    "status": {
+      "applied": "Demande reçue",
+      "under_review": "En cours de vérification",
+      "changes_requested": "Modifications demandées",
+      "approved": "Approuvé",
+      "rejected": "Refusé",
+      "suspended": "Suspendu",
+      "banned": "Banni"
+    },
+    "docStatus": {
+      "approved": "Approuvé",
+      "pending": "En vérification",
+      "rejected": "Refusé",
+      "missing": "Manquant"
+    },
+    "docs": {
+      "national_id": "Carte d'identité nationale",
+      "passport": "Passeport",
+      "property_proof": "Justificatif de propriété ou bail",
+      "commercial_register": "Registre du commerce (RC)",
+      "tax_card_nif": "Carte fiscale (NIF)",
+      "statistics_nis": "Numéro statistique (NIS)",
+      "tourism_licence": "Licence de tourisme",
+      "hotel_classification": "Classement hôtelier",
+      "operating_authorisation": "Autorisation d'exploitation",
+      "vehicle_registration": "Carte grise",
+      "vehicle_insurance": "Assurance du véhicule",
+      "other": "Autre document"
+    }
+  }
 }

@@ -23,7 +23,8 @@ interface Props {
   locale: string;
 }
 
-const VERTICAL_FILTERS = ["all", "home", "hotel", "trip", "vehicle", "experience"] as const;
+// Trip types are fixed (Trips > Categories), so they are not catalog categories.
+const VERTICAL_FILTERS = ["all", "home", "hotel", "vehicle", "experience"] as const;
 const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(err));
 const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2";
@@ -70,7 +71,7 @@ export default function CategoriesClient({ locale }: Props) {
 
   const handleToggle = async (cat: CategoryItem) => {
     try {
-      const updated = unwrap(await toggleCategoryStatus(cat.id));
+      const updated = unwrap(await toggleCategoryStatus(cat.id, !cat.isActive));
       success(
         t("toast.statusChanged"),
         t(updated.isActive ? "toast.nowActive" : "toast.nowInactive", { name: cat.name.en })
@@ -301,7 +302,6 @@ export default function CategoriesClient({ locale }: Props) {
             >
               <option value="home">{tVerticals("home")}</option>
               <option value="hotel">{tVerticals("hotel")}</option>
-              <option value="trip">{tVerticals("trip")}</option>
               <option value="vehicle">{tVerticals("vehicle")}</option>
               <option value="experience">{tVerticals("experience")}</option>
             </select>

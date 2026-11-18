@@ -1,12 +1,11 @@
 import "server-only";
 import type { Listing, MembershipRole, Trip } from "@/types";
-import { getReservationOwner } from "@/lib/data/reservations";
 import { getHostContext, HostContext } from "./host-context";
 
 /**
- * Authorization helpers shared by server actions. Each returns the verified
- * context or null; callers translate null into a FORBIDDEN/UNAUTHENTICATED
- * action result.
+ * Authorization helpers shared by server actions and pages. They only decide
+ * what the UI offers; the Django API is the authority and refuses (403/404)
+ * anything outside the session's active workspace or the member's permissions.
  */
 
 /** Does the current host own this listing (directly or through their org)? */
@@ -21,17 +20,13 @@ export function hostOwnsTrip(ctx: HostContext, trip: Pick<Trip, "organizationId"
   return Boolean(ctx.isOrgHost && ctx.organization && trip.organizationId === ctx.organization.id);
 }
 
-/** Host context for a user allowed to act on the given reservation as its host. */
-export async function getHostContextForReservation(reservationId: string): Promise<HostContext | null> {
-  const ctx = await getHostContext();
-  if (!ctx) return null;
-  const owner = await getReservationOwner(reservationId);
-  if (!owner) return null;
-
-  if (ctx.isOrgHost) {
-    return ctx.organization && owner.organizationId === ctx.organization.id ? ctx : null;
-  }
-  return !owner.organizationId && owner.hostUserId === ctx.user.id ? ctx : null;
+/**
+ * Host context for acting on a reservation as its host. The backend scopes
+ * /host/bookings/{id} to the active workspace, so a booking of someone else
+ * answers 404 there; here we only require a host session.
+ */
+export async function getHostContextForReservation(_reservationId: string): Promise<HostContext | null> {
+  return getHostContext();
 }
 
 /** Org host context where the member's role passes `check`. */

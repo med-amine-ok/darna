@@ -51,7 +51,12 @@ import {
   deleteHost,
   restoreHost,
   overrideCommission,
+  clearCommissionOverride,
+  getDocumentUrl,
+  approveDocument,
+  rejectDocument,
 } from "@/lib/actions/hosts";
+import { Link } from "@/navigation";
 import { rechargeWallet } from "@/lib/actions/finance";
 import { exportHosts } from "@/lib/actions/hosts";
 import { ReasonDialog } from "@/components/ui/ReasonDialog";
@@ -161,6 +166,8 @@ export default function HostsClient({
   const [overrideRateInput, setOverrideRateInput] = useState<number>(12);
   const [rechargeAmount, setRechargeAmount] = useState<number>(50000);
   const [rechargeRef, setRechargeRef] = useState<string>("");
+  const [overrideReason, setOverrideReason] = useState<string>("");
+  const [docToReject, setDocToReject] = useState<string | null>(null);
 
   const ids = {
     wilaya: `${uid}-wilaya`,
@@ -382,8 +389,9 @@ export default function HostsClient({
     }
     try {
       const updated = unwrap(
-        await overrideCommission(detailHost.id, overrideRateInput),
+        await overrideCommission(detailHost.id, overrideRateInput, overrideReason),
       );
+      setOverrideReason("");
       success(
         t("toasts.commissionUpdated", { rate: formatRate(overrideRateInput) }),
       );
@@ -391,6 +399,51 @@ export default function HostsClient({
       fetchData();
     } catch (e: any) {
       error(t("toasts.commissionFailed"), e.message);
+    }
+  };
+
+  const handleResetCommission = async () => {
+    if (!detailHost) return;
+    try {
+      const updated = unwrap(await clearCommissionOverride(detailHost.id));
+      if (updated) {
+        setDetailHost(updated);
+        setOverrideRateInput(updated.commissionRate);
+      }
+      success(t("toasts.commissionUpdated", { rate: formatRate(updated?.commissionRate ?? 0) }));
+      fetchData();
+    } catch (e: any) {
+      error(t("toasts.commissionFailed"), e.message);
+    }
+  };
+
+  // KYC documents open through a 5-minute signed link (each view is audited by the backend).
+  const openDocument = async (documentId: string) => {
+    const win = window.open("", "_blank", "noopener,noreferrer");
+    try {
+      const res = unwrap(await getDocumentUrl(documentId));
+      if (win) win.location.href = res.url;
+      else window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      win?.close();
+      error(tActions("actionFailed"), e.message);
+    }
+  };
+
+  const reviewDoc = async (documentId: string, approve: boolean, reason?: string) => {
+    if (!detailHost) return;
+    try {
+      const res = unwrap(approve ? await approveDocument(documentId) : await rejectDocument(documentId, reason ?? ""));
+      setDetailHost({
+        ...detailHost,
+        documents: detailHost.documents.map((d) =>
+          d.id === documentId ? { ...d, status: res.status as typeof d.status } : d,
+        ),
+      });
+      setDocToReject(null);
+      success(approve ? tStatus("approved") : tStatus("rejected"));
+    } catch (e: any) {
+      error(tActions("actionFailed"), e.message);
     }
   };
 
@@ -417,7 +470,7 @@ export default function HostsClient({
       success(
         t("toasts.recharged", { amount: formatDzd(rechargeAmount, locale) }),
       );
-      setDetailHost({ ...detailHost, walletBalance: res.newBalance });
+      setDetailHost({ ...detailHost, walletBalance: res.newBalance ?? detailHost.walletBalance });
       fetchData();
     } catch (e: any) {
       error(t("toasts.rechargeFailed"), e.message);
@@ -1275,17 +1328,29 @@ export default function HostsClient({
                       </div>
                     </div>
 
-                    <a
-                      href={doc.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={t("drawer.documents.viewFileLabel", {
-                        title: doc.title,
-                      })}
-                      className="px-3 py-1 rounded-lg border border-primary/[0.08] text-primary font-semibold hover:bg-darnaBg/70 transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-                    >
-                      {t("drawer.documents.viewFile")}
-                    </a>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {doc.status === "pending" && can("hosts.approve") && (
+                        <Button variant="primary" size="sm" onClick={() => reviewDoc(doc.id, true)}>
+                          {tActions("approve")}
+                        </Button>
+                      )}
+                      {doc.status === "pending" && can("hosts.reject") && (
+                        <Button variant="dangerOutline" size="sm" onClick={() => setDocToReject(doc.id)}>
+                          {tActions("reject")}
+                        </Button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openDocument(doc.id)}
+                        disabled={!can("kyc.view_documents")}
+                        aria-label={t("drawer.documents.viewFileLabel", {
+                          title: doc.title,
+                        })}
+                        className="px-3 py-1 rounded-lg border border-primary/[0.08] text-primary font-semibold hover:bg-darnaBg/70 transition shrink-0 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                      >
+                        {t("drawer.documents.viewFile")}
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -1308,49 +1373,12 @@ export default function HostsClient({
                     {tStatus("published")}
                   </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-white space-y-2 shadow-e1">
-                  <span className="font-semibold text-primary-700 block">
-                    {t("drawer.listings.subsections")}
-                  </span>
-                  <dl className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-2.5 rounded-xl bg-darnaBg-100">
-                      <dt className="text-primary-600 block text-[11px]">
-                        {t("drawer.listings.stays")}
-                      </dt>
-                      <dd className="text-primary text-sm font-semibold">
-                        {formatNumber(
-                          Math.ceil(detailHost.listingsCount * 0.6),
-                          locale,
-                        )}
-                      </dd>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-darnaBg-100">
-                      <dt className="text-primary-600 block text-[11px]">
-                        {t("drawer.listings.hotelRooms")}
-                      </dt>
-                      <dd className="text-primary text-sm font-semibold">
-                        {formatNumber(
-                          Math.floor(detailHost.listingsCount * 0.3),
-                          locale,
-                        )}
-                      </dd>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-darnaBg-100">
-                      <dt className="text-primary-600 block text-[11px]">
-                        {t("drawer.listings.trips")}
-                      </dt>
-                      <dd className="text-primary text-sm font-semibold">
-                        {formatNumber(
-                          Math.max(
-                            1,
-                            Math.floor(detailHost.listingsCount * 0.1),
-                          ),
-                          locale,
-                        )}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
+                <Link
+                  href={`/hosts/${detailHost.id}`}
+                  className="inline-flex text-xs font-semibold text-accent-700 underline underline-offset-2"
+                >
+                  {t("drawer.openFullPage")}
+                </Link>
               </div>
             )}
 
@@ -1440,7 +1468,36 @@ export default function HostsClient({
                       {tActions("invalidRate")}
                     </p>
                   )}
+                  <label htmlFor={`${ids.rate}-reason`} className="block text-primary-600 font-semibold">
+                    {tActions("reasonLabel")}
+                  </label>
+                  <textarea
+                    id={`${ids.rate}-reason`}
+                    rows={2}
+                    value={overrideReason}
+                    onChange={(e) => setOverrideReason(e.target.value)}
+                    placeholder={tActions("reasonPlaceholder")}
+                    className="w-full p-2 rounded-xl border border-primary/[0.12] text-xs text-primary focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600"
+                  />
+                  {detailHost.isCommissionOverridden && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResetCommission}
+                      disabled={!can("hosts.commission_override")}
+                    >
+                      {t("drawer.money.resetToDefault")}
+                    </Button>
+                  )}
                 </div>
+                {can("wallets.view") && (
+                  <Link
+                    href={`/payments/wallets?host=${encodeURIComponent(detailHost.id)}`}
+                    className="inline-flex text-xs font-semibold text-accent-700 underline underline-offset-2"
+                  >
+                    {t("drawer.money.openWallet")}
+                  </Link>
+                )}
 
                 {/* Recharge Form */}
                 <div className="p-4 rounded-2xl bg-white space-y-3 shadow-e1">
@@ -1527,29 +1584,21 @@ export default function HostsClient({
                   <ul className="divide-y divide-primary/[0.06] text-[11px]">
                     <li className="py-2 flex justify-between gap-3">
                       <span className="text-primary-700">
-                        {t("drawer.history.verifiedBy", { name: "Nadia" })}
-                      </span>
-                      <span className="text-primary-600">
-                        {format.relativeTime(now - 2 * DAY_MS, now)}
-                      </span>
-                    </li>
-                    <li className="py-2 flex justify-between gap-3">
-                      <span className="text-primary-700">
-                        {t("drawer.history.idApproved")}
-                      </span>
-                      <span className="text-primary-600">
-                        {format.relativeTime(now - 3 * DAY_MS, now)}
-                      </span>
-                    </li>
-                    <li className="py-2 flex justify-between gap-3">
-                      <span className="text-primary-700">
                         {t("drawer.history.applicationSubmitted")}
                       </span>
                       <span className="text-primary-600">
-                        {format.relativeTime(now - 5 * DAY_MS, now)}
+                        {format.relativeTime(new Date(detailHost.joinedAt).getTime(), now)}
                       </span>
                     </li>
                   </ul>
+                  {can("audit.view") && (
+                    <Link
+                      href={`/settings/audit-log?search=${encodeURIComponent(detailHost.id)}`}
+                      className="inline-flex text-xs font-semibold text-accent-700 underline underline-offset-2"
+                    >
+                      {t("drawer.history.openAudit")}
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
@@ -1580,6 +1629,13 @@ export default function HostsClient({
         confirmLabel={tActions("suspend")}
         onCancel={() => setSuspendTarget(null)}
         onConfirm={confirmSuspend}
+      />
+      <ReasonDialog
+        isOpen={!!docToReject}
+        title={tActions("reject")}
+        confirmLabel={tActions("reject")}
+        onCancel={() => setDocToReject(null)}
+        onConfirm={(reason: string) => (docToReject ? reviewDoc(docToReject, false, reason) : undefined)}
       />
     </div>
   );

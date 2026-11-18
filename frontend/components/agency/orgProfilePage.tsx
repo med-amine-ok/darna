@@ -3,18 +3,18 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { getOrganizationById, getOrganizationMembers } from "@/lib/data/organizations";
-import { getHostListings } from "@/lib/data/listings";
+import { getPublicListingsByHost } from "@/lib/data/listings";
 import { getTrips } from "@/lib/data/trips";
-import { toPublicMembers, toPublicOrganization } from "@/lib/server/dto";
+import { getPublicOrganization, toPublicOrganizationFromApi } from "@/lib/api/public-organization";
 import { OG_LOCALE, localeAlternates } from "@/lib/site";
-import { orgProfileHref } from "@/lib/host-profile";
+import { ORG_PROFILE_PATH } from "@/lib/host-profile";
 import type { PublicOrganization } from "@/types";
 import AgencyProfileClient from "./AgencyProfileClient";
 
 /**
- * Shared server side of the organization profile routes: /agencies, /hotels and /hostels.
- * Each route only serves its own category; a mismatched id redirects to the right route.
+ * Shared server side of the organization profile routes: /agencies, /hotels and /hostels,
+ * from the API's public organisation (GET /organizations/{slug}). Each route only serves its
+ * own category; a mismatched or id-based link redirects to the right route and slug.
  */
 type Category = PublicOrganization["businessCategory"];
 
@@ -23,7 +23,12 @@ export interface OrgProfileParams {
 }
 
 // Shared by generateMetadata and the page so the organization is fetched once per request.
-const loadOrganization = cache((id: string) => getOrganizationById(id));
+const loadOrganization = cache(async (key: string) => {
+  const raw = await getPublicOrganization(decodeURIComponent(key));
+  return raw ? toPublicOrganizationFromApi(raw) : null;
+});
+
+const pathOf = (org: PublicOrganization) => `${ORG_PROFILE_PATH[org.businessCategory]}/${encodeURIComponent(org.slug || org.id)}`;
 
 function excerpt(text: string | undefined, max = 160) {
   if (!text) return undefined;
@@ -39,42 +44,39 @@ export async function orgProfileMetadata({ params }: OrgProfileParams, category:
     return { title: t(`metaTitleFallback.${category}`), robots: { index: false } };
   }
 
-  const path = orgProfileHref(organization);
+  const path = pathOf(organization);
   const title = organization.name;
   const description = excerpt(organization.description) || t(`metaDescription.${category}`, { name: organization.name });
-  const images = organization.logo ? [{ url: organization.logo, alt: t("logoAlt", { name: organization.name }) }] : undefined;
 
   return {
     title,
     description,
     alternates: localeAlternates(locale, path),
-    openGraph: { title, description, url: `/${locale}${path}`, locale: OG_LOCALE[locale], type: "profile", images },
-    twitter: { card: "summary", title, description, images: organization.logo ? [organization.logo] : undefined },
+    openGraph: { title, description, url: `/${locale}${path}`, locale: OG_LOCALE[locale], type: "profile" },
+    twitter: { card: "summary", title, description },
   };
 }
 
 export async function OrgProfilePage({ params }: OrgProfileParams, category: Category) {
   const organization = await loadOrganization(params.organizationId);
   if (!organization) notFound();
-  if (organization.businessCategory !== category) {
-    permanentRedirect(`/${params.locale}${orgProfileHref(organization)}`);
+  const canonicalKey = organization.slug || organization.id;
+  if (organization.businessCategory !== category || decodeURIComponent(params.organizationId) !== canonicalKey) {
+    permanentRedirect(`/${params.locale}${pathOf(organization)}`);
   }
 
-  const [members, listings, trips] = await Promise.all([
-    getOrganizationMembers(organization.id),
-    getHostListings({ organizationId: organization.id }),
-    category === "agency" ? getTrips({ organizationId: organization.id }) : Promise.resolve([]),
+  const [listings, trips] = await Promise.all([
+    getPublicListingsByHost({ hostAccountId: organization.hostAccountId }),
+    category === "agency" && organization.hostAccountId
+      ? getTrips({ hostAccountId: organization.hostAccountId, limit: 100 })
+      : Promise.resolve([]),
   ]);
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-6 sm:pt-10">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <AgencyProfileClient
-          organization={toPublicOrganization(organization)}
-          members={toPublicMembers(members)}
-          listings={listings.filter((l) => l.status === "active")}
-          trips={trips}
-        />
+        {/* The API publishes no team list: members stay empty and the team card is hidden. */}
+        <AgencyProfileClient organization={organization} members={[]} listings={listings} trips={trips} />
       </div>
     </div>
   );

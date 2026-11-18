@@ -54,6 +54,8 @@ import {
   updateUserStatus,
 } from "@/lib/actions/users";
 import { unwrap } from "@/lib/actions/result";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { Link } from "@/navigation";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 
 export interface UsersClientProps {
@@ -66,7 +68,6 @@ const SELECT_CLASS =
   "w-full text-xs rounded-xl bg-white shadow-e1 p-2 text-primary focus:outline-none focus:border-primary-600 focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2 cursor-pointer";
 
 // Demo activity timestamp (mock panel content), rendered in the viewer's locale.
-const DEMO_LOGIN_AT = "2024-03-20T08:34:00";
 
 export default function UsersClient({
   initialData,
@@ -214,53 +215,24 @@ export default function UsersClient({
     });
   };
 
-  const handleSuspend = (user: GuestUser) => {
-    setConfirmState({
-      isOpen: true,
-      title: t("confirm.suspendTitle"),
-      description: t("confirm.suspendDescription", { name: user.name }),
-      variant: "danger",
-      confirmLabel: t("confirm.suspendConfirm"),
-      action: async () => {
-        try {
-          // Reason is stored in the audit trail, intentionally not localized.
-          const updated = unwrap(
-            await suspendUser(
-              user.id,
-              "Violation des conditions d'utilisation",
-            ),
-          );
-          info(t("toasts.suspended", { name: user.name }));
-          setDetailUser(updated);
-          fetchData();
-        } catch (e: any) {
-          error(t("toasts.suspendFailed"), e.message);
-        }
-      },
-    });
-  };
+  const [reasonTarget, setReasonTarget] = useState<{ user: GuestUser; kind: "suspend" | "ban" } | null>(null);
 
-  const handleBan = (user: GuestUser) => {
-    setConfirmState({
-      isOpen: true,
-      title: t("confirm.banTitle"),
-      description: t("confirm.banDescription", { name: user.name }),
-      variant: "danger",
-      confirmLabel: t("confirm.banConfirm"),
-      action: async () => {
-        try {
-          // Reason is stored in the audit trail, intentionally not localized.
-          const updated = unwrap(
-            await banUser(user.id, "Manquement grave à la sécurité"),
-          );
-          info(t("toasts.banned", { name: user.name }));
-          setDetailUser(updated);
-          fetchData();
-        } catch (e: any) {
-          error(t("toasts.banFailed"), e.message);
-        }
-      },
-    });
+  const handleSuspend = (user: GuestUser) => setReasonTarget({ user, kind: "suspend" });
+  const handleBan = (user: GuestUser) => setReasonTarget({ user, kind: "ban" });
+
+  const confirmReason = async (reason: string) => {
+    if (!reasonTarget) return;
+    const { user, kind } = reasonTarget;
+    try {
+      const updated = unwrap(kind === "suspend" ? await suspendUser(user.id, reason) : await banUser(user.id, reason));
+      info(kind === "suspend" ? t("toasts.suspended", { name: user.name }) : t("toasts.banned", { name: user.name }));
+      setDetailUser(updated);
+      setReasonTarget(null);
+      fetchData();
+    } catch (e: any) {
+      error(kind === "suspend" ? t("toasts.suspendFailed") : t("toasts.banFailed"), e.message);
+      throw e;
+    }
   };
 
   const handleDelete = (user: GuestUser) => {
@@ -284,18 +256,14 @@ export default function UsersClient({
     });
   };
 
-  const handleResetPassword = (user: GuestUser) => {
-    success(t("toasts.resetSent", { email: user.email }));
-  };
-
   const facets = data.facets || {};
   const statusFacets = facets.status || {};
-  const totalUsers = statusFacets.all || data.total || 1420;
-  const activeUsers = statusFacets.active || 1280;
-  const suspendedUsers = statusFacets.suspended || 32;
-  const bannedUsers = statusFacets.banned || 18;
+  const totalUsers = statusFacets.all ?? data.total ?? 0;
+  const activeUsers = statusFacets.active ?? 0;
+  const suspendedUsers = statusFacets.suspended ?? 0;
+  const bannedUsers = statusFacets.banned ?? 0;
   const roleFacets = facets.role || {};
-  const guestUsers = roleFacets.guest || 980;
+  const guestUsers = roleFacets.guest ?? 0;
 
   const kpis = [
     {
@@ -471,25 +439,6 @@ export default function UsersClient({
                       },
                     },
                     {
-                      label: t("menu.markPending"),
-                      icon: (
-                        <Clock
-                          className="w-3.5 h-3.5 text-amber-700"
-                          aria-hidden="true"
-                        />
-                      ),
-                      disabled: u.status === "pending",
-                      onClick: async () => {
-                        try {
-                          unwrap(await updateUserStatus(u.id, "pending"));
-                          info(t("toasts.markedPending"));
-                          fetchData();
-                        } catch (e: any) {
-                          error(tCommon("error"), e.message);
-                        }
-                      },
-                    },
-                    {
                       label: t("menu.suspendAccount"),
                       icon: (
                         <ShieldAlert
@@ -519,11 +468,6 @@ export default function UsersClient({
                     },
                   ]
                 : []),
-              {
-                label: t("resetPassword"),
-                icon: <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />,
-                onClick: () => handleResetPassword(u),
-              },
               ...(can("users.delete")
                 ? [
                     {
@@ -662,25 +606,12 @@ export default function UsersClient({
               tabs={[
                 { id: "profile", label: t("detail.tabs.profile") },
                 { id: "bookings", label: t("detail.tabs.bookings") },
-                { id: "reviews", label: t("detail.tabs.reviews") },
-                { id: "payments", label: t("detail.tabs.payments") },
-                { id: "activity", label: t("detail.tabs.activity") },
               ]}
               activeTab={panelTab}
               onTabChange={setPanelTab}
               footer={
                 <div className="flex items-center justify-between w-full gap-2">
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleResetPassword(detailUser)}
-                      leftIcon={
-                        <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />
-                      }
-                    >
-                      {t("detail.resetPassword")}
-                    </Button>
                     {can("users.suspend") && (
                       <Button
                         variant="outline"
@@ -742,10 +673,10 @@ export default function UsersClient({
                       </div>
                       <div className="p-2.5 rounded-lg bg-darnaBg-100">
                         <dt className="text-[11px] text-primary-600 block">
-                          {t("detail.walletBalance")}
+                          {t("detail.bookings")}
                         </dt>
-                        <dd className="font-mono font-semibold text-xs text-secondary-700 block mt-0.5">
-                          {formatDzd(detailUser.walletBalanceDzd || 0, locale)}
+                        <dd className="font-mono font-semibold text-xs text-primary block mt-0.5">
+                          {formatNumber(detailUser.bookingsCount, locale)}
                         </dd>
                       </div>
                       <div className="p-2.5 rounded-lg bg-darnaBg-100">
@@ -815,30 +746,11 @@ export default function UsersClient({
                       </div>
                       <div>
                         <dt className="text-[11px] text-primary-600 block">
-                          {t("detail.language")}
-                        </dt>
-                        <dd className="font-semibold text-primary uppercase">
-                          {detailUser.preferredLanguage || "FR"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-[11px] text-primary-600 block">
                           {t("detail.bookings")}
                         </dt>
                         <dd className="font-semibold text-primary">
                           {t("detail.bookingsValue", {
                             count: detailUser.bookingsCount,
-                          })}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-[11px] text-primary-600 block">
-                          {t("detail.reviewsFavs")}
-                        </dt>
-                        <dd className="font-semibold text-primary">
-                          {t("detail.reviewsFavsValue", {
-                            reviews: detailUser.reviewsWrittenCount || 0,
-                            favs: detailUser.favoritesCount || 0,
                           })}
                         </dd>
                       </div>
@@ -859,147 +771,23 @@ export default function UsersClient({
                     </div>
                   </div>
 
-                  {/* Description / Bio Section (Disc) */}
-                  <div className="p-3.5 rounded-xl bg-white shadow-e1 space-y-1.5">
-                    <h5 className="text-xs font-semibold text-primary block">
-                      {t("detail.bioTitle")}
-                    </h5>
-                    <p className="text-xs text-primary-600 leading-relaxed bg-darnaBg-100 p-3 rounded-lg">
-                      {t("detail.bioText")}
-                    </p>
-                  </div>
                 </div>
               )}
 
               {panelTab === "bookings" && (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-white shadow-e1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">
-                        #R1248 · Villa Hydra
-                      </span>
-                      <StatusPill status="confirmed" />
-                    </div>
-                    <p className="text-[11px] text-primary-600 mt-1">
-                      {t("detail.dateRange", {
-                        start: formatDate("2024-03-12", locale),
-                        end: formatDate("2024-03-15", locale),
-                        duration: t("detail.nights", { count: 3 }),
-                      })}
-                    </p>
-                    <p className="font-mono font-semibold text-xs text-primary mt-1">
-                      {formatDzd(75000, locale)}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white shadow-e1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">
-                        #R1092 · Excursion Tassili
-                      </span>
-                      <StatusPill status="completed" />
-                    </div>
-                    <p className="text-[11px] text-primary-600 mt-1">
-                      {t("detail.dateRange", {
-                        start: formatDate("2024-02-10", locale),
-                        end: formatDate("2024-02-14", locale),
-                        duration: t("detail.days", { count: 4 }),
-                      })}
-                    </p>
-                    <p className="font-mono font-semibold text-xs text-primary mt-1">
-                      {formatDzd(120000, locale)}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {panelTab === "reviews" && (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-white shadow-e1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs text-primary">
-                        Villa Hydra
-                      </span>
-                      <div
-                        className="flex items-center text-secondary-700 text-xs"
-                        role="img"
-                        aria-label={t("detail.rating", {
-                          rating: formatNumber(5, locale),
-                        })}
-                      >
-                        <Star
-                          className="w-3.5 h-3.5 fill-current me-1"
-                          aria-hidden="true"
-                        />{" "}
-                        5.0
-                      </div>
-                    </div>
-                    {/* Review body is user-generated content (mock record), shown as written. */}
-                    <p
-                      className="text-xs text-primary-600 mt-1 italic"
-                      lang="fr"
+                <div className="p-3 rounded-xl bg-white shadow-e1 space-y-2 text-xs">
+                  <p className="text-primary-700">
+                    {t("detail.bookingsValue", { count: detailUser.bookingsCount })}
+                  </p>
+                  {can("bookings.view") && (
+                    <Link
+                      href={`/bookings?search=${encodeURIComponent(detailUser.email || detailUser.id)}`}
+                      className="inline-flex font-semibold text-accent-700 underline underline-offset-2"
                     >
-                      &ldquo;Superbe accueil, maison propre et spacieuse. Hôte
-                      très arrangeant !&rdquo;
-                    </p>
-                    <span className="text-[11px] text-primary-600 block mt-1">
-                      {formatDate("2024-03-16", locale)}
-                    </span>
-                  </div>
+                      {t("detail.openBookings")}
+                    </Link>
+                  )}
                 </div>
-              )}
-
-              {panelTab === "payments" && (
-                <div className="space-y-3">
-                  <div className="p-3 rounded-xl bg-white shadow-e1 flex items-center justify-between">
-                    <div>
-                      <span className="font-semibold text-xs text-primary block">
-                        {t("detail.cardPayment")}
-                      </span>
-                      <span className="text-[11px] text-primary-600">
-                        {t("detail.transaction", { ref: "#TX-9012" })}
-                      </span>
-                    </div>
-                    <span className="font-mono font-semibold text-xs text-secondary-700">
-                      {formatDzd(75000, locale)}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {panelTab === "activity" && (
-                <ul className="space-y-2 text-xs">
-                  <li className="flex items-start gap-2 p-2">
-                    <Activity
-                      className="w-4 h-4 text-secondary mt-0.5"
-                      aria-hidden="true"
-                    />
-                    <div>
-                      <p className="font-semibold text-primary">
-                        {t("detail.login")}
-                      </p>
-                      <span className="text-[11px] text-primary-600">
-                        {t("detail.loginMeta", {
-                          time: formatTime(DEMO_LOGIN_AT),
-                          ip: "105.102.x.x",
-                        })}
-                      </span>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-2 p-2">
-                    <Calendar
-                      className="w-4 h-4 text-primary mt-0.5"
-                      aria-hidden="true"
-                    />
-                    <div>
-                      <p className="font-semibold text-primary">
-                        {t("detail.bookingMade", { ref: "#R1248" })}
-                      </p>
-                      <span className="text-[11px] text-primary-600">
-                        {formatDate("2024-03-12", locale)}
-                      </span>
-                    </div>
-                  </li>
-                </ul>
               )}
             </DetailPanel>
           ) : undefined
@@ -1087,6 +875,25 @@ export default function UsersClient({
         variant={confirmState.variant}
         confirmLabel={confirmState.confirmLabel}
         requireTypedConfirmation={confirmState.requireTypedConfirmation}
+      />
+      <ReasonDialog
+        isOpen={!!reasonTarget}
+        title={
+          reasonTarget?.kind === "ban"
+            ? t("confirm.banTitle")
+            : t("confirm.suspendTitle")
+        }
+        description={
+          reasonTarget
+            ? reasonTarget.kind === "ban"
+              ? t("confirm.banDescription", { name: reasonTarget.user.name })
+              : t("confirm.suspendDescription", { name: reasonTarget.user.name })
+            : undefined
+        }
+        confirmLabel={reasonTarget?.kind === "ban" ? t("confirm.banConfirm") : t("confirm.suspendConfirm")}
+        variant="danger"
+        onCancel={() => setReasonTarget(null)}
+        onConfirm={confirmReason}
       />
     </div>
   );

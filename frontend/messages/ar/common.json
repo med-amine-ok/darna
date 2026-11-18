@@ -61,5 +61,7 @@
   "monthPicker": "اختر الشهر",
   "yearPicker": "اختر السنة",
   "dateRange": "{start} – {end}",
-  "listSeparator": "{a} · {b}"
+  "listSeparator": "{a} · {b}",
+  "dataLoadFailedTitle": "تعذّر تحميل بعض المعلومات",
+  "dataLoadFailedBody": "الخدمة لا تستجيب حالياً، لذا قد تكون هذه القائمة غير مكتملة. يرجى المحاولة مرة أخرى بعد قليل."
 }

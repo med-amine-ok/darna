@@ -33,11 +33,15 @@
     "colDate": "Arrivée / invitation",
     "colActions": "Actions",
     "roleFor": "Rôle de {name}",
-    "rolesOwnerOnly": "Seul le propriétaire peut modifier les rôles"
+    "rolesOwnerOnly": "Seul le propriétaire peut modifier les rôles",
+    "empty": "Aucun membre à afficher pour le moment."
   },
   "status": {
     "active": "Actif",
-    "pending": "Invitation en attente"
+    "pending": "Invitation en attente",
+    "accepted": "Acceptée",
+    "expired": "Expirée",
+    "revoked": "Annulée"
   },
   "actions": {
     "resendFor": "Renvoyer l'invitation à {name}",
@@ -75,7 +79,7 @@
     "adminHint": "Annonces, flotte et gestion de l'équipe",
     "sending": "Envoi…",
     "send": "Envoyer l'invitation",
-    "description": "Cette personne reçoit une invitation par e-mail et rejoint votre espace avec le rôle choisi."
+    "description": "Vous recevez un lien d'invitation à lui transmettre. La personne rejoint votre espace avec le rôle choisi."
   },
   "removeDialog": {
     "title": "Retirer l'accès à l'équipe",
@@ -97,7 +101,36 @@
     "memberRemoved": "Accès du membre retiré.",
     "removeFailed": "Impossible de retirer le membre.",
     "resendComingSoon": "L'envoi d'invitations par e-mail arrive bientôt. En attendant, transmettez l'invitation directement à {email}.",
-    "ownershipTransferred": "Propriété transférée."
+    "ownershipTransferred": "Propriété transférée.",
+    "inviteCreated": "Invitation créée pour {email}.",
+    "invitationRevoked": "Invitation annulée."
   },
-  "eyebrow": "Équipe"
+  "eyebrow": "Équipe",
+  "memberFallback": "Membre de l'équipe",
+  "invitations": {
+    "title": "Invitations",
+    "count": "{count, plural, =0 {Aucune invitation en attente} one {# invitation en attente} other {# invitations en attente}}",
+    "empty": "Aucune invitation pour le moment. Invitez un collaborateur à rejoindre l'espace.",
+    "expires": "Expire le {date}",
+    "revoke": "Annuler l'invitation",
+    "revokeFor": "Annuler l'invitation de {email}",
+    "revokeTitle": "Annuler cette invitation ?",
+    "revokeMessage": "Le lien d'invitation envoyé à {email} ne fonctionnera plus."
+  },
+  "linkDialog": {
+    "title": "Partager le lien d'invitation",
+    "description": "Les emails d'invitation ne sont pas encore envoyés. Transmettez ce lien à {email} : la personne se connecte avec cet email et rejoint votre équipe.",
+    "label": "Lien d'invitation",
+    "once": "Ce lien n'est affiché qu'une fois et reste valable 7 jours. Si vous le perdez, annulez l'invitation et créez-en une nouvelle.",
+    "done": "Terminé",
+    "copy": "Copier le lien",
+    "copied": "Lien copié.",
+    "copyFailed": "Impossible de copier le lien. Sélectionnez-le et copiez-le à la main."
+  },
+  "accept": {
+    "metaTitle": "Rejoindre une équipe",
+    "title": "Rejoindre l'équipe",
+    "description": "Vous avez été invité à rejoindre une organisation sur BLADUS. Vous la rejoindrez en tant que {email} et pourrez passer à son espace depuis le menu hôte.",
+    "join": "Rejoindre l'équipe"
+  }
 }

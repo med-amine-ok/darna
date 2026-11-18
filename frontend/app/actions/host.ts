@@ -1,193 +1,183 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { HostType } from "@/types";
 import { ActionResult, actionFail, actionOk } from "@/lib/action-result";
-import { isOrgHostType, OrgHostType } from "@/lib/host-types";
 import { getSessionUser, refreshSession } from "@/lib/server/session";
-import { getHostContext, hostMayPublishListing } from "@/lib/server/host-context";
-import { updateUserHostStatus } from "@/lib/data/auth";
-import { createListing } from "@/lib/data/listings";
-import { ListingInputError, sanitizeListingInput } from "@/lib/data/_sanitize";
-import { createOrganization } from "@/lib/data/organizations";
+import { ApiError, api, newIdempotencyKey } from "@/lib/api/client";
+import { apiAction, failFromError } from "@/lib/api/errors";
+import { toE164 } from "@/lib/api/account";
+import { isHostType, loadFlow, normaliseAnswers } from "@/lib/api/onboarding";
+import type { ApiOrganization } from "@/lib/api/organization";
 
-export interface OrganizationOnboardingInput {
-  name: string;
-  businessRegistrationNumber: string;
-  businessType?: string;
-  businessEmail: string;
-  businessPhone: string;
-  address: string;
+/**
+ * Becoming a host goes only through onboarding drafts (BR-HST-01/02):
+ * PUT /host/onboarding/drafts/{host_type} keeps the answers, POST .../submit
+ * creates the host account (verification starts at "applied"). The answers
+ * are keyed by the field ids of the published flow (GET /onboarding-flows).
+ */
+
+/** Organisation details the flows do not ask, saved on the new organisation after submit. */
+export interface OrganizationExtras {
+  businessEmail?: string;
+  businessPhone?: string;
   description?: string;
   teamSizeEstimate?: "1" | "2-10" | "11-50" | "50+";
-  hotelStarRating?: number;
-  totalRoomCount?: number;
-  checkInTime?: string;
-  checkOutTime?: string;
   hotelAmenities?: string[];
   hostelFacilities?: string[];
-  curfewPolicy?: string;
-  agePolicy?: string;
-  bookingApprovalMode?: "instant" | "request";
-  invitedMembers?: { email: string; role: "admin" | "manager" }[];
+  totalRoomCount?: number;
 }
 
-export type HostOnboardingInput =
-  | { hostType: "individual"; listing: unknown }
-  | { hostType: OrgHostType; organization: OrganizationOnboardingInput; property?: unknown };
+export interface HostOnboardingInput {
+  hostType: HostType;
+  /** Every answer so far, keyed by flow field id (unknown ids are dropped on the server). */
+  answers: Record<string, unknown>;
+  organization?: OrganizationExtras;
+}
 
 export interface HostOnboardingResult {
-  hostType: "individual" | OrgHostType;
+  hostType: HostType;
+  hostAccountId: string;
   organizationId: string | null;
-  listingId: string | null;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function text(v: unknown, max: number): string {
-  return typeof v === "string" ? v.trim().slice(0, max) : "";
+/** Turn a 422 of the drafts API into the most helpful action error. */
+function onboardingFail<T>(error: unknown, where: string): ActionResult<T> {
+  if (error instanceof ApiError && error.status === 422) {
+    if (error.code === "onboarding_incomplete") return actionFail("ONBOARDING_INCOMPLETE");
+    const fields = error.errors ? Object.keys(error.errors) : [];
+    if (fields.some((f) => /phone/i.test(f))) return actionFail("INVALID_PHONE");
+    if (fields.some((f) => /email/i.test(f))) return actionFail("INVALID_EMAIL");
+    return actionFail("HOST_DETAILS_MISSING");
+  }
+  if (error instanceof ApiError && error.code === "flow_not_published") return actionFail("NOT_FOUND");
+  return failFromError<T>(error, where);
 }
 
-function optNumber(v: unknown, min: number, max: number): number | undefined {
-  return typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : undefined;
-}
-
-function optList(v: unknown): string[] | undefined {
-  return Array.isArray(v)
-    ? v.filter((x): x is string => typeof x === "string").map((x) => x.slice(0, 80)).slice(0, 40)
-    : undefined;
-}
-
-/**
- * Completes "become a host". The user is always the session user; ids,
- * verification status and ownership are decided here. New organizations start
- * as `pending` verification.
- */
-export async function completeHostOnboardingAction(
-  input: HostOnboardingInput
-): Promise<ActionResult<HostOnboardingResult>> {
-  const user = await getSessionUser();
-  if (!user) return actionFail("UNAUTHENTICATED");
-  if (!input || typeof input !== "object") return actionFail("INVALID_INPUT");
-
+/** PUT the draft; unknown field ids (flow changed since the draft began) are dropped and the save retried once. */
+async function putDraft(hostType: HostType, currentStep: string, answers: Record<string, unknown>): Promise<void> {
+  const path = `/host/onboarding/drafts/${hostType}`;
   try {
-    // ---- Individual listing -------------------------------------------------
-    if (input.hostType === "individual") {
-      const ctx = await getHostContext();
-
-      // An existing org host adding a listing publishes it under their organization
-      // (host mode uses createMyListingAction; this keeps older links working).
-      if (ctx?.isOrgHost && ctx.organization) {
-        if (!hostMayPublishListing(ctx.hostType, input.listing)) return actionFail("HOST_OFFER_NOT_ALLOWED");
-        const listing = await createListing(
-          {
-            hostUserId: user.id,
-            organizationId: ctx.organization.id,
-            businessCategory: ctx.organization.businessCategory,
-          },
-          input.listing
-        );
-        revalidatePath("/", "layout");
-        return actionOk({ hostType: ctx.hostType as OrgHostType, organizationId: ctx.organization.id, listingId: listing.id });
-      }
-
-      // Individuals publish homes and vehicles only (lib/catalog-types.ts).
-      if (!hostMayPublishListing("individual", input.listing)) return actionFail("HOST_OFFER_NOT_ALLOWED");
-      const listing = await createListing({ hostUserId: user.id }, input.listing);
-      const updated = await updateUserHostStatus(user.id, {
-        hostType: "individual",
-        bookingApprovalMode: listing.bookingApprovalMode || (listing.instantBook === false ? "request" : "instant"),
-      });
-      if (!updated) return actionFail("NOT_FOUND");
-      await refreshSession(updated);
-      revalidatePath("/", "layout");
-      return actionOk({ hostType: "individual", organizationId: null, listingId: listing.id });
+    await api(path, { method: "PUT", body: { current_step: currentStep, answers } });
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "unknown_field" && error.errors) {
+      const unknown = new Set(Object.keys(error.errors));
+      const kept = Object.fromEntries(Object.entries(answers).filter(([key]) => !unknown.has(key)));
+      await api(path, { method: "PUT", body: { current_step: currentStep, answers: kept } });
+      return;
     }
-
-    // ---- Agency / hotel / hostel -------------------------------------------
-    if (!isOrgHostType(input.hostType)) return actionFail("INVALID_INPUT");
-    const hostType = input.hostType;
-    const o = (input.organization || {}) as unknown as Record<string, unknown>;
-
-    const name = text(o.name, 160);
-    const businessRegistrationNumber = text(o.businessRegistrationNumber, 80);
-    const businessEmail = text(o.businessEmail, 160).toLowerCase();
-    const businessPhone = text(o.businessPhone, 40);
-    const address = text(o.address, 240);
-
-    if (!name || !businessRegistrationNumber || !businessPhone || !address) return actionFail("HOST_DETAILS_MISSING");
-    if (!businessEmail || !EMAIL_RE.test(businessEmail)) return actionFail("INVALID_EMAIL");
-
-    const invitedMembers = Array.isArray(o.invitedMembers)
-      ? (o.invitedMembers as unknown[])
-          .map((m) => (m && typeof m === "object" ? (m as Record<string, unknown>) : {}))
-          .map((m) => ({
-            email: text(m.email, 160).toLowerCase(),
-            role: (m.role === "admin" ? "admin" : "manager") as "admin" | "manager",
-          }))
-          .filter((m) => EMAIL_RE.test(m.email) && m.email !== user.email.toLowerCase())
-          .slice(0, 20)
-      : [];
-
-    // Validate the property (vertical, prices) before creating anything.
-    if (input.property) {
-      if ((hostType === "hotel" || hostType === "hostel") && !hostMayPublishListing(hostType, input.property)) {
-        return actionFail("HOST_OFFER_NOT_ALLOWED");
-      }
-      sanitizeListingInput(input.property, "validation");
-    }
-
-    const teamSize = o.teamSizeEstimate;
-    const org = await createOrganization({
-      name,
-      businessCategory: hostType,
-      businessRegistrationNumber,
-      businessType: text(o.businessType, 120) || undefined,
-      businessEmail,
-      businessPhone,
-      address,
-      description: text(o.description, 4000) || undefined,
-      owner: { userId: user.id, name: user.name, email: user.email },
-      teamSizeEstimate:
-        teamSize === "1" || teamSize === "2-10" || teamSize === "11-50" || teamSize === "50+" ? teamSize : undefined,
-      hotelStarRating: optNumber(o.hotelStarRating, 1, 5),
-      totalRoomCount: optNumber(o.totalRoomCount, 0, 100000),
-      checkInTime: text(o.checkInTime, 10) || undefined,
-      checkOutTime: text(o.checkOutTime, 10) || undefined,
-      hotelAmenities: optList(o.hotelAmenities),
-      hostelFacilities: optList(o.hostelFacilities),
-      curfewPolicy: text(o.curfewPolicy, 200) || undefined,
-      agePolicy: text(o.agePolicy, 200) || undefined,
-      bookingApprovalMode: o.bookingApprovalMode === "request" ? "request" : "instant",
-      invitedMembers,
-    });
-
-    let listingId: string | null = null;
-    if (input.property && (hostType === "hotel" || hostType === "hostel")) {
-      const listing = await createListing(
-        { hostUserId: user.id, organizationId: org.id, businessCategory: hostType },
-        input.property
-      );
-      listingId = listing.id;
-    }
-
-    const updated = await updateUserHostStatus(user.id, { hostType, organizationId: org.id });
-    if (!updated) return actionFail("NOT_FOUND");
-    await refreshSession(updated, org.id);
-    revalidatePath("/", "layout");
-    return actionOk({ hostType, organizationId: org.id, listingId });
-  } catch (err) {
-    if (err instanceof ListingInputError) return actionFail(err.code, err.params);
-    console.error("[completeHostOnboardingAction] failed", err);
-    return actionFail("REGISTRATION_FAILED");
+    throw error;
   }
 }
 
-/** Individual host default: instant booking vs request-to-book. */
+/** Save and exit: keep the answers and the step reached on the server (one draft per host type). */
+export async function saveHostDraftAction(
+  hostType: HostType,
+  stepIndex: number,
+  answers: Record<string, unknown>,
+): Promise<ActionResult<null>> {
+  if (!(await getSessionUser())) return actionFail("UNAUTHENTICATED");
+  if (!isHostType(hostType) || !answers || typeof answers !== "object") return actionFail("INVALID_INPUT");
+  const flow = await loadFlow(hostType);
+  if (!flow?.steps.length) return actionFail("SERVER_ERROR");
+  const index = Math.min(Math.max(0, Math.floor(Number(stepIndex) || 0)), flow.steps.length - 1);
+  try {
+    await putDraft(hostType, flow.steps[index].id, normaliseAnswers(flow.steps, answers));
+    return actionOk(null);
+  } catch (error) {
+    return onboardingFail(error, "saveHostDraftAction");
+  }
+}
+
+/** Abandon the draft in progress (nothing to abandon is fine). */
+export async function discardHostDraftAction(hostType: HostType): Promise<ActionResult<null>> {
+  if (!(await getSessionUser())) return actionFail("UNAUTHENTICATED");
+  if (!isHostType(hostType)) return actionFail("INVALID_INPUT");
+  try {
+    await api(`/host/onboarding/drafts/${hostType}`, { method: "DELETE" });
+  } catch (error) {
+    if (!(error instanceof ApiError && error.status === 404)) return failFromError(error, "discardHostDraftAction");
+  }
+  return actionOk(null);
+}
+
+/** Best effort: details of the new organisation the flows do not ask (contacts, amenities). */
+async function saveOrganizationExtras(extras: OrganizationExtras | undefined): Promise<void> {
+  if (!extras) return;
+  try {
+    const org = await api<ApiOrganization>("/host/organization");
+    const patch: Record<string, unknown> = {};
+    const email = extras.businessEmail?.trim().toLowerCase();
+    if (email && EMAIL_RE.test(email) && !org.business_email) patch.business_email = email;
+    const phone = extras.businessPhone ? toE164(extras.businessPhone) : "";
+    if (phone && !org.business_phone_e164) patch.business_phone_e164 = phone;
+    const description = extras.description?.trim();
+    if (description && !org.description) patch.description = description.slice(0, 4000);
+    const policies: Record<string, unknown> = { ...(org.policies ?? {}) };
+    const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").slice(0, 40) : undefined);
+    if (list(extras.hotelAmenities)?.length) policies.hotel_amenities = list(extras.hotelAmenities);
+    if (list(extras.hostelFacilities)?.length) policies.hostel_facilities = list(extras.hostelFacilities);
+    if (typeof extras.totalRoomCount === "number" && extras.totalRoomCount > 0) {
+      policies.total_room_count = Math.round(extras.totalRoomCount);
+    }
+    if (extras.teamSizeEstimate) policies.team_size_estimate = extras.teamSizeEstimate;
+    if (JSON.stringify(policies) !== JSON.stringify(org.policies ?? {})) patch.policies = policies;
+    if (Object.keys(patch).length) await api("/host/organization", { method: "PATCH", body: patch });
+  } catch (error) {
+    console.error("[completeHostOnboardingAction] organisation details not saved", error);
+  }
+}
+
+/**
+ * Finish "become a host": save the final answers in the draft, submit it
+ * (the backend creates the host account, and for agencies, hotels and
+ * hostels the organisation with the caller as owner), switch the session to
+ * the new workspace. The first listing is created afterwards by the screen
+ * with createMyListingAction, in the new workspace.
+ */
+export async function completeHostOnboardingAction(
+  input: HostOnboardingInput,
+): Promise<ActionResult<HostOnboardingResult>> {
+  const user = await getSessionUser();
+  if (!user) return actionFail("UNAUTHENTICATED");
+  if (!input || typeof input !== "object" || !isHostType(input.hostType)) return actionFail("INVALID_INPUT");
+  if (!input.answers || typeof input.answers !== "object") return actionFail("INVALID_INPUT");
+  const hostType = input.hostType;
+
+  const flow = await loadFlow(hostType);
+  if (!flow?.steps.length) return actionFail("SERVER_ERROR");
+
+  let result: { host_account_id: string; organization_id: string | null };
+  try {
+    await putDraft(hostType, flow.steps[flow.steps.length - 1].id, normaliseAnswers(flow.steps, input.answers));
+    result = await api(`/host/onboarding/drafts/${hostType}/submit`, {
+      method: "POST",
+      idempotencyKey: newIdempotencyKey(),
+    });
+  } catch (error) {
+    return onboardingFail(error, "completeHostOnboardingAction");
+  }
+
+  try {
+    await refreshSession(user, result.host_account_id);
+  } catch (error) {
+    console.error("[completeHostOnboardingAction] workspace switch failed", error);
+  }
+  if (hostType !== "individual") await saveOrganizationExtras(input.organization);
+  revalidatePath("/", "layout");
+  return actionOk({ hostType, hostAccountId: result.host_account_id, organizationId: result.organization_id });
+}
+
+/** Default booking approval mode of the active host account (PATCH /host/account, needs org.edit). */
 export async function setBookingApprovalModeAction(mode: "instant" | "request"): Promise<ActionResult<null>> {
   const user = await getSessionUser();
   if (!user) return actionFail("UNAUTHENTICATED");
-  if (!user.hostType) return actionFail("FORBIDDEN");
   if (mode !== "instant" && mode !== "request") return actionFail("INVALID_INPUT");
-  await updateUserHostStatus(user.id, { bookingApprovalMode: mode });
-  return actionOk(null);
+  return apiAction("setBookingApprovalModeAction", async () => {
+    await api("/host/account", { method: "PATCH", body: { default_approval_mode: mode } });
+    revalidatePath("/", "layout");
+    return null;
+  });
 }

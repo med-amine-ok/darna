@@ -1,12 +1,14 @@
 import "server-only";
 
 /**
- * In-memory login throttling, keyed separately per email and per client IP.
- * Kept on globalThis so it survives dev hot reloads (one map per server
- * process, a real deployment would use Redis or the DB).
+ * First-line sign-in throttling in this server process, keyed per email and
+ * per client IP. The authoritative lock lives in the Django API (BR-ACC-05:
+ * 5 failures lock the account and the IP, answered as 429 login_locked); this
+ * one only stops a burst before it reaches the backend.
+ * Kept on globalThis so it survives dev hot reloads.
  */
 
-const MAX_FAILURES = 5;
+const MAX_FAILURES = 10;
 const WINDOW_MS = 15 * 60 * 1000; // failures older than this are forgotten
 const LOCK_MS = 60 * 1000; // lock duration once MAX_FAILURES is reached
 
@@ -17,16 +19,15 @@ interface AttemptRecord {
 }
 
 const globalForLimiter = globalThis as unknown as {
-  __darnaLoginAttempts?: Map<string, AttemptRecord>;
+  __bladusAdminLoginAttempts?: Map<string, AttemptRecord>;
 };
-const attempts = (globalForLimiter.__darnaLoginAttempts ??= new Map());
+const attempts = (globalForLimiter.__bladusAdminLoginAttempts ??= new Map());
 
 function read(key: string, now: number): AttemptRecord | undefined {
   const rec = attempts.get(key);
   if (!rec) return undefined;
   const lockExpired = rec.lockedUntil !== undefined && rec.lockedUntil <= now;
-  const windowExpired =
-    rec.lockedUntil === undefined && now - rec.firstAt > WINDOW_MS;
+  const windowExpired = rec.lockedUntil === undefined && now - rec.firstAt > WINDOW_MS;
   if (lockExpired || windowExpired) {
     attempts.delete(key);
     return undefined;
@@ -38,24 +39,16 @@ export function loginRateLimitKeys(email: string, ip: string): string[] {
   return [`email:${email.trim().toLowerCase()}`, `ip:${ip}`];
 }
 
-export function checkLoginRateLimit(keys: string[]): {
-  allowed: boolean;
-  retryAfterSecs?: number;
-} {
+export function checkLoginRateLimit(keys: string[]): { allowed: boolean; retryAfterSecs?: number } {
   const now = Date.now();
   let retryAfter = 0;
   for (const key of keys) {
     const rec = read(key, now);
     if (rec?.lockedUntil && rec.lockedUntil > now) {
-      retryAfter = Math.max(
-        retryAfter,
-        Math.ceil((rec.lockedUntil - now) / 1000),
-      );
+      retryAfter = Math.max(retryAfter, Math.ceil((rec.lockedUntil - now) / 1000));
     }
   }
-  return retryAfter > 0
-    ? { allowed: false, retryAfterSecs: retryAfter }
-    : { allowed: true };
+  return retryAfter > 0 ? { allowed: false, retryAfterSecs: retryAfter } : { allowed: true };
 }
 
 export function recordFailedLogin(keys: string[]): void {

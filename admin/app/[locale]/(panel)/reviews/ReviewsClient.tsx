@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   Star,
@@ -10,8 +10,6 @@ import {
   RotateCcw,
   Flag,
   CheckCircle,
-  AlertTriangle,
-  Download,
   ShieldAlert,
   Eye,
 } from "lucide-react";
@@ -34,6 +32,8 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { Pagination } from "@/components/ui/Pagination";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { Link } from "@/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { formatDate, intlLocale } from "@/lib/utils/format";
 import { WILAYAS, getWilayaLabel, getWilayaName } from "@/lib/utils/wilayas";
@@ -47,8 +47,7 @@ const errMsg = (err: unknown) => (err instanceof Error ? err.message : String(er
 const SELECT =
   "w-full px-3 py-1.5 text-xs rounded-xl border border-primary/[0.12] bg-white text-primary focus:outline-none focus:border-primary-600 focus:ring-4 focus:ring-primary/[0.08] cursor-pointer shadow-2xs hover:border-primary/25";
 const VERTICAL_OPTIONS = ["home", "hotel", "trip", "vehicle", "experience"] as const;
-// Mock date shown for the provider flag (no flag timestamp in the data yet).
-const MOCK_FLAG_DATE = "2024-03-14";
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function ReviewsClient({
   locale,
@@ -63,6 +62,8 @@ export default function ReviewsClient({
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const requestSeq = useRef(0);
   const [verticalFilter, setVerticalFilter] = useState("all");
   const [ratingFilter, setRatingFilter] = useState<number>(0);
   const [wilayaFilter, setWilayaFilter] = useState("all");
@@ -73,6 +74,7 @@ export default function ReviewsClient({
   // Confirmation dialog state for deletion
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState<ReviewItem | null>(null);
+  const [reviewToHide, setReviewToHide] = useState<ReviewItem | null>(null);
 
   const { success, error } = useToast();
   const can = useCan();
@@ -83,28 +85,52 @@ export default function ReviewsClient({
   });
   const fmtRating = (n: number) => ratingFormatter.format(n);
 
+  // Search as you type: wait for a pause before asking the server.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch((prev) => {
+        const next = search.trim();
+        if (next !== prev) setPage(1);
+        return next;
+      });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Booking disputes are not reviews: that tab points to the bookings screen and loads nothing.
+  const isDisputesTab = activeTab === "disputes";
+
   const loadData = useCallback(async () => {
+    if (isDisputesTab) {
+      setLoading(false);
+      return;
+    }
+    // Only the latest request may update the screen (older answers are dropped).
+    const seq = ++requestSeq.current;
     setLoading(true);
     try {
       const res = unwrap(await listReviews({
-        status: (activeTab === "all" || activeTab === "reports" || activeTab === "disputes") ? undefined : activeTab,
+        status: (activeTab === "all" || activeTab === "reports") ? undefined : activeTab,
+        reported: activeTab === "reports" ? true : undefined,
         vertical: verticalFilter === "all" ? undefined : verticalFilter,
         rating: ratingFilter > 0 ? ratingFilter : undefined,
         wilayaCode: wilayaFilter === "all" ? undefined : wilayaFilter,
-        search,
+        search: debouncedSearch,
         page,
         pageSize,
       }));
+      if (seq !== requestSeq.current) return;
+      if (res.ok === false) error(t("toast.loadFailed"));
 
       setReviews(res.rows);
       setTotal(res.total);
       if (res.facets) setFacets(res.facets);
     } catch (err) {
-      error(t("toast.loadFailed"), errMsg(err));
+      if (seq === requestSeq.current) error(t("toast.loadFailed"), errMsg(err));
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
-  }, [activeTab, verticalFilter, ratingFilter, wilayaFilter, search, page, pageSize, error, t]);
+  }, [isDisputesTab, activeTab, verticalFilter, ratingFilter, wilayaFilter, debouncedSearch, page, pageSize, error, t]);
 
   useEffect(() => {
     loadData();
@@ -121,9 +147,10 @@ export default function ReviewsClient({
     }
   };
 
-  const handleHide = async (r: ReviewItem) => {
+  const handleHide = async (r: ReviewItem, reason: string) => {
     try {
-      unwrap(await hideReview(r.id));
+      unwrap(await hideReview(r.id, reason));
+      setReviewToHide(null);
       success(t("toast.hidden"), t("toast.hiddenDesc"), () => {
         handleRestore(r);
       });
@@ -159,10 +186,9 @@ export default function ReviewsClient({
     }
   };
 
-  const totalReviews = facets.status?.all || total || 342;
-  const flaggedReviews = facets.status?.flagged || 8;
-  const userReports = 14;
-  const activeDisputes = 3;
+  const totalReviews = facets.status?.all ?? 0;
+  const flaggedReviews = facets.status?.flagged ?? 0;
+  const userReports = facets.reported?.open ?? 0;
 
   const kpis = [
     {
@@ -192,15 +218,6 @@ export default function ReviewsClient({
       active: activeTab === "reports",
       onClick: () => { setActiveTab("reports"); setPage(1); },
     },
-    {
-      id: "disputes",
-      label: t("kpi.disputes"),
-      value: activeDisputes,
-      icon: AlertTriangle,
-      colorVariant: "tertiary" as const,
-      active: activeTab === "disputes",
-      onClick: () => { setActiveTab("disputes"); setPage(1); },
-    },
   ];
 
   const onCardKeyDown = (e: React.KeyboardEvent, r: ReviewItem) => {
@@ -215,18 +232,6 @@ export default function ReviewsClient({
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
-        actions={
-          can("reports.export")
-            ? [
-                {
-                  label: t("exportReport"),
-                  icon: <Download className="w-4 h-4" aria-hidden="true" />,
-                  variant: "outline" as const,
-                  onClick: () => success(t("exported")),
-                },
-              ]
-            : []
-        }
       />
 
       <KpiStrip cards={kpis} />
@@ -311,7 +316,22 @@ export default function ReviewsClient({
       <SplitView
         isOpen={!!selectedReview}
         mainContent={
-          loading ? (
+          isDisputesTab ? (
+            <div className="bg-white rounded-2xl shadow-e1">
+              <EmptyState
+                title={t("disputesElsewhere.title")}
+                description={t("disputesElsewhere.desc")}
+                action={
+                  <Link
+                    href="/bookings"
+                    className="inline-flex items-center px-4 py-2 text-xs font-semibold text-white bg-primary-800 rounded-xl hover:bg-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
+                  >
+                    {t("disputesElsewhere.cta")}
+                  </Link>
+                }
+              />
+            </div>
+          ) : loading ? (
             <div className="space-y-4" aria-busy="true">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-28 rounded-2xl skeleton" />
@@ -387,7 +407,7 @@ export default function ReviewsClient({
                             {r.listingTitle}
                           </span>
                           <span>{t("guestLabel", { name: r.guestName })}</span>
-                          <span>{t("hostLabel", { name: r.hostName })}</span>
+                          {r.hostName && <span>{t("hostLabel", { name: r.hostName })}</span>}
                         </div>
                       </div>
 
@@ -436,7 +456,7 @@ export default function ReviewsClient({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleHide(selectedReview)} leftIcon={<EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}>
+                      onClick={() => setReviewToHide(selectedReview)} leftIcon={<EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}>
                       {t("hide")}
                     </Button>
                   ) : (
@@ -481,9 +501,11 @@ export default function ReviewsClient({
                       <Flag className="w-4 h-4" aria-hidden="true" /> {t("flagReasonTitle")}
                     </div>
                     <p className="text-neutral-700">{selectedReview.flagReason}</p>
-                    <span className="text-[11px] text-neutral-500 block mt-1">
-                      {t("flaggedByProvider", { date: formatDate(MOCK_FLAG_DATE, locale) })}
-                    </span>
+                    {selectedReview.flaggedAt && (
+                      <span className="text-[11px] text-neutral-500 block mt-1">
+                        {t("flaggedByProvider", { date: formatDate(selectedReview.flaggedAt, locale) })}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -498,10 +520,18 @@ export default function ReviewsClient({
                       <dt className="text-neutral-500">{t("ctxGuest")}</dt>
                       <dd className="font-semibold text-primary text-end">{selectedReview.guestName}</dd>
                     </div>
-                    <div className="flex items-center justify-between gap-3 py-1 border-b border-primary/[0.08]">
-                      <dt className="text-neutral-500">{t("ctxHost")}</dt>
-                      <dd className="font-semibold text-primary text-end">{selectedReview.hostName}</dd>
-                    </div>
+                    {selectedReview.hostName && (
+                      <div className="flex items-center justify-between gap-3 py-1 border-b border-primary/[0.08]">
+                        <dt className="text-neutral-500">{t("ctxHost")}</dt>
+                        <dd className="font-semibold text-primary text-end">{selectedReview.hostName}</dd>
+                      </div>
+                    )}
+                    {selectedReview.bookingReference && (
+                      <div className="flex items-center justify-between gap-3 py-1 border-b border-primary/[0.08]">
+                        <dt className="text-neutral-500">{t("ctxBooking")}</dt>
+                        <dd className="font-semibold text-primary text-end font-mono" dir="ltr">{selectedReview.bookingReference}</dd>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-3 py-1">
                       <dt className="text-neutral-500">{t("ctxLocation")}</dt>
                       <dd className="font-semibold text-primary text-end">
@@ -521,6 +551,17 @@ export default function ReviewsClient({
             </DetailPanel>
           ) : undefined
         }
+      />
+
+      <ReasonDialog
+        isOpen={!!reviewToHide}
+        title={t("hideTitle")}
+        description={t("hideDesc")}
+        confirmLabel={t("hide")}
+        onCancel={() => setReviewToHide(null)}
+        onConfirm={async (reason) => {
+          if (reviewToHide) await handleHide(reviewToHide, reason);
+        }}
       />
 
       <ConfirmDialog

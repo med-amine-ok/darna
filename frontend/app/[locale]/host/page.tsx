@@ -1,7 +1,7 @@
 import { hostPageMetadata } from "@/components/host/hostMetadata";
 import { redirect } from "next/navigation";
 import { requireHostContext, hostOwnerKey } from "@/lib/server/host-context";
-import { getReservations } from "@/lib/data/reservations";
+import { attachListings, loadHostReservations } from "@/lib/data/reservations";
 import { getHostListings } from "@/lib/data/listings";
 import { getReviewsByUserId } from "@/lib/data/reviews";
 import HostTodayClient from "@/components/host/HostTodayClient";
@@ -23,8 +23,8 @@ export default async function HostTodayPage({ params }: { params: { locale: stri
 
   // Everything is scoped to the host's own organization.
   const owner = hostOwnerKey(ctx);
-  const [reservations, listings, reviews] = await Promise.all([
-    getReservations({ hostId: owner.userId, organizationId: owner.organizationId }),
+  const [{ data: rows, failed }, listings, reviews] = await Promise.all([
+    loadHostReservations(),
     getHostListings(owner),
     getReviewsByUserId(ctx.user.id),
   ]);
@@ -33,7 +33,8 @@ export default async function HostTodayPage({ params }: { params: { locale: stri
     <HostTodayClient
       currentUser={ctx.user}
       organization={ctx.organization}
-      initialReservations={reservations}
+      initialReservations={attachListings(rows, listings)}
+      loadFailed={failed}
       listings={listings}
       reviews={reviews}
     />

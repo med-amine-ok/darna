@@ -11,3 +11,7 @@ export async function getPlatformSettings() {
 export async function updatePlatformSettings(updates: Partial<PlatformSettings>) {
   return runAction("settings.manage", (actor) => settings.updatePlatformSettings(obj(updates, "settings"), actor));
 }
+
+export async function listSettingsVersions(page = 1) {
+  return runAction("settings.manage", () => settings.listSettingsVersions(Math.max(1, Math.floor(Number(page) || 1))));
+}

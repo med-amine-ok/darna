@@ -180,6 +180,19 @@ def test_public_organization_hides_legal_and_contact_fields(api):
         assert field not in res.data
 
 
+def test_public_organization_by_id_or_host_account_id(api):
+    """The public profile is also found by the organisation id or its host account id, approved only."""
+    agency = make_org(name="Sahara Tours")
+    org_id = agency.organization.id
+    assert api.get(f"/api/v1/organizations/{org_id}").status_code == 404  # not approved yet
+
+    approved(agency)
+    for key in (org_id, agency.id):
+        res = api.get(f"/api/v1/organizations/{key}")
+        assert res.status_code == 200 and res.data["slug"] == "sahara-tours"
+    assert api.get("/api/v1/organizations/00000000-0000-0000-0000-000000000000").status_code == 404
+
+
 # ---------------------------------------------------------------------------
 # Team (BR-ORG-04, BR-ORG-05)
 # ---------------------------------------------------------------------------

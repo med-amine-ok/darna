@@ -48,6 +48,8 @@ export function toPublicOrganization(org: Organization): PublicOrganization {
     curfewPolicy: org.curfewPolicy,
     agePolicy: org.agePolicy,
     bookingApprovalMode: org.bookingApprovalMode,
+    slug: org.slug,
+    hostAccountId: org.hostAccountId,
   };
 }
 

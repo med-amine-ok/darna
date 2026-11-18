@@ -143,7 +143,7 @@ Persistence today: <code>lib/data/*</code> over in-memory <code>globalThis</code
 <td>Login</td>
 <td><code>app/[locale]/login/page.tsx</code>, <code>LoginForm.tsx</code>, <code>LoginModal.tsx</code>, <code>app/api/auth/login/route.ts</code></td>
 <td>built</td>
-<td>Demo quick-login buttons with hardcoded password <code>darna-demo-2026</code> (<code>LoginModal.tsx:46-51</code>).</td>
+
 </tr>
 <tr>
 <td>Forgot password, social login, phone login</td>
@@ -704,7 +704,7 @@ Persistence today: <code>lib/data/*</code> over in-memory <code>globalThis</code
 <td>stored static, should be derived</td>
 </tr>
 </tbody></table>
-<p>Seed rows: <code>usr_amina</code> (host individual, also owns 2 hostel orgs), <code>usr_karim</code> (host agency, owns agency + 2 hotels, also has 3 individual listings), <code>usr_yacine</code> (guest), <code>usr_admin</code> (admin), <code>usr_sofiane</code> (guest), <code>usr_leila</code> (guest). Credentials table (<code>auth.ts:39-44</code>, store <code>__darna_credentials__</code>): <code>userId -&gt; &quot;scrypt$salt$hash&quot;</code>, all seeded users share <code>DEMO_PASSWORD = &quot;darna-demo-2026&quot;</code> (<code>auth.ts:14</code>).</p>
+
 <p>PublicUser (<code>types.ts:30-43</code>) = projection without email, phone, address, favoriteIds, organizationId, bookingApprovalMode.</p>
 <h4 id="listing-typests110-196-store-__darna_listings__-seed-libmock-datalistingsts-18-rows">Listing (<code>types.ts:110-196</code>), store <code>__darna_listings__</code>, seed <code>lib/mock-data/listings.ts</code> (18 rows)</h4>
 <table>

@@ -53,5 +53,6 @@
   "declineKeep": "الاحتفاظ بالطلب",
   "eyebrow": "الاستضافة",
   "kpiLabel": "نظرة عامة على الحجوزات",
-  "kpiNotAvailable": "غير متاح"
+  "kpiNotAvailable": "غير متاح",
+  "declineReasonLabel": "سبب الرفض (يُرسل إلى الضيف)"
 }

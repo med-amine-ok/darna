@@ -42,9 +42,12 @@ import { useToast } from "@/components/ui/Toast";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { listListings, approveListing, updateListingStatus } from "@/lib/actions/listings";
+import { listBookings } from "@/lib/actions/bookings";
+import type { Booking } from "@/lib/types";
 import { useListingStatusActions } from "@/components/features/listings/useListingStatusActions";
 import { formatDate, formatDzd } from "@/lib/utils/format";
-import { applyDiscount, DISCOUNTS } from "@/lib/pricing";
+import { applyDiscount } from "@/lib/pricing";
+import { NOT_SET, bpToPercent, panelSpecs, policyName } from "@/components/features/listings/panelSpecs";
 import { unwrap } from "@/lib/actions/result";
 import { useCan } from "@/components/auth/AdminSessionProvider";
 import { Listing } from "@/lib/types";
@@ -117,6 +120,9 @@ export default function StaysListClient() {
   const [selectedStayId, setSelectedStayId] = useState<string | null>(selectedStayIdFromUrl);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [panelTab, setPanelTab] = useState("info");
+  // Real bookings of the selected stay (bookings tab), from GET /admin/bookings?listing=.
+  const [stayBookings, setStayBookings] = useState<Booking[] | null>(null);
+  const [stayBookingsFailed, setStayBookingsFailed] = useState(false);
 
   // Selection & Bulk
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
@@ -173,6 +179,24 @@ export default function StaysListClient() {
 
   const selectedStay = data.find((s) => s.id === selectedStayId) || null;
 
+  useEffect(() => {
+    if (panelTab !== "bookings" || !selectedStayId) return;
+    let cancelled = false;
+    setStayBookings(null);
+    setStayBookingsFailed(false);
+    listBookings({ listingId: selectedStayId, pageSize: 5 })
+      .then((res) => {
+        if (!cancelled) setStayBookings(unwrap(res).rows);
+      })
+      .catch(() => {
+        if (!cancelled) setStayBookingsFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [panelTab, selectedStayId]);
+  const stayPanel = selectedStay ? panelSpecs(selectedStay) : ({} as ReturnType<typeof panelSpecs>);
+
   const handleSelectStay = (stay: Listing) => {
     setSelectedStayId(stay.id);
     updateUrl({ selected: stay.id });
@@ -185,13 +209,13 @@ export default function StaysListClient() {
 
   // KPI Strip definitions from Mockup 05
   const statusFacets = facets["status"] || {};
-  const totalCount = Object.values(statusFacets).reduce((a, b) => a + b, 0) || total;
+  const totalCount = statusFacets.all ?? total;
 
   const kpis: KpiCardItem[] = [
     {
       id: "all",
       label: t("list.kpis.total"),
-      value: totalCount || 1248,
+      value: totalCount,
       icon: <Home className="w-5 h-5" aria-hidden="true" />,
       colorVariant: "neutral",
     },
@@ -695,9 +719,9 @@ export default function StaysListClient() {
                       <div className="grid grid-cols-2 gap-2">
                         <InfoTile label={t("fields.propertyType")} value={selectedStay.propertyType} />
                         <InfoTile label={t("fields.capacity")} value={t("values.guests", { count: selectedStay.guestCapacity })} />
-                        <InfoTile label={t("fields.bedrooms")} value={`${selectedStay.bedroomCount || 1}`} />
-                        <InfoTile label={t("fields.bathrooms")} value={`${selectedStay.bathroomCount || 1}`} />
-                        <InfoTile label={t("fields.surface")} value={t("values.surface", { value: selectedStay.surfaceM2 || 120 })} />
+                        <InfoTile label={t("fields.bedrooms")} value={selectedStay.bedroomCount !== undefined ? `${selectedStay.bedroomCount}` : NOT_SET} />
+                        <InfoTile label={t("fields.bathrooms")} value={selectedStay.bathroomCount !== undefined ? `${selectedStay.bathroomCount}` : NOT_SET} />
+                        <InfoTile label={t("fields.surface")} value={selectedStay.surfaceM2 ? t("values.surface", { value: selectedStay.surfaceM2 }) : NOT_SET} />
                         <InfoTile label={t("fields.wilaya")} value={`${selectedStay.wilayaCode} - ${selectedStay.city}`} />
                       </div>
                     </div>
@@ -716,22 +740,18 @@ export default function StaysListClient() {
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-primary/[0.08]">
                         <div>
                           <span className="text-primary-600 block">{t("pricing.cleaningFee")}</span>
-                          <span className="font-medium text-primary">{formatDzd(3500, locale)}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.commission")}</span>
-                          <span className="font-medium text-secondary-700">{t("pricing.commissionValue", { rate: 12 })}</span>
-                        </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.weeklyDiscount", { rate: DISCOUNTS.weekly })}</span>
-                          <span className="font-medium text-secondary-700">
-                            {t("pricing.weeklyPrice", { amount: formatDzd(applyDiscount(selectedStay.price, DISCOUNTS.weekly, 7), locale) })}
+                          <span className="font-medium text-primary">
+                            {typeof stayPanel.cleaningFeeDzd === "number" ? formatDzd(stayPanel.cleaningFeeDzd, locale) : NOT_SET}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-primary-600 block">{t("pricing.deposit")}</span>
-                          <span className="font-medium text-primary">{formatDzd(20000, locale)}</span>
-                        </div>
+                        {stayPanel.weeklyDiscountBp ? (
+                          <div>
+                            <span className="text-primary-600 block">{t("pricing.weeklyDiscount", { rate: bpToPercent(stayPanel.weeklyDiscountBp) })}</span>
+                            <span className="font-medium text-secondary-700">
+                              {t("pricing.weeklyPrice", { amount: formatDzd(applyDiscount(selectedStay.price, bpToPercent(stayPanel.weeklyDiscountBp), 7), locale) })}
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -744,19 +764,25 @@ export default function StaysListClient() {
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div>
                           <span className="text-primary-600 block">{t("times.checkIn")}</span>
-                          <span className="font-medium text-primary">{t("times.checkInValue", { time: "15:00" })}</span>
+                          <span className="font-medium text-primary">
+                            {selectedStay.houseRules?.checkInTime ? t("times.checkInValue", { time: selectedStay.houseRules.checkInTime }) : NOT_SET}
+                          </span>
                         </div>
                         <div>
                           <span className="text-primary-600 block">{t("times.checkOut")}</span>
-                          <span className="font-medium text-primary">{t("times.checkOutValue", { time: "11:00" })}</span>
+                          <span className="font-medium text-primary">
+                            {selectedStay.houseRules?.checkOutTime ? t("times.checkOutValue", { time: selectedStay.houseRules.checkOutTime }) : NOT_SET}
+                          </span>
                         </div>
                         <div>
                           <span className="text-primary-600 block">{t("times.minStay")}</span>
-                          <span className="font-medium text-primary">{t("times.minStayValue", { count: 2 })}</span>
+                          <span className="font-medium text-primary">
+                            {stayPanel.minNights ? t("times.minStayValue", { count: stayPanel.minNights }) : NOT_SET}
+                          </span>
                         </div>
                         <div>
                           <span className="text-primary-600 block">{t("times.cancellation")}</span>
-                          <span className="font-medium text-secondary-700">{t("times.cancellationValue", { hours: 48 })}</span>
+                          <span className="font-medium text-secondary-700">{policyName(stayPanel.cancellationPolicy, locale)}</span>
                         </div>
                       </div>
                     </div>
@@ -847,17 +873,18 @@ export default function StaysListClient() {
 
                 {panelTab === "bookings" && (
                   <ul className="space-y-2 text-xs">
-                    {[
-                      { ref: "#R1248", guest: "Karim L.", start: "2024-03-12", end: "2024-03-15", status: "confirmed" },
-                      { ref: "#R1190", guest: "Sarah B.", start: "2024-02-02", end: "2024-02-06", status: "completed" },
-                    ].map((b) => (
-                      <li key={b.ref} className="p-3 bg-darnaBg-100 rounded-xl flex justify-between items-center">
+                    {stayBookingsFailed && <li className="p-3 text-primary-600">{t("list.panel.bookingsLoadError")}</li>}
+                    {!stayBookingsFailed && stayBookings?.length === 0 && (
+                      <li className="p-3 text-primary-600">{t("list.panel.noBookings")}</li>
+                    )}
+                    {(stayBookings ?? []).map((b) => (
+                      <li key={b.id} className="p-3 bg-darnaBg-100 rounded-xl flex justify-between items-center">
                         <div>
                           <div className="font-medium text-primary">
-                            <span dir="ltr">{b.ref}</span> • {b.guest}
+                            <span dir="ltr">{b.reference}</span> • {b.guestName}
                           </div>
                           <div className="text-[11px] text-primary-600">
-                            {t("values.dateRange", { start: formatDate(b.start, locale), end: formatDate(b.end, locale) })}
+                            {t("values.dateRange", { start: formatDate(b.checkInDate, locale), end: formatDate(b.checkOutDate, locale) })}
                           </div>
                         </div>
                         <StatusPill status={b.status} />

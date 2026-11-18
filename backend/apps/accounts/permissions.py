@@ -1,5 +1,6 @@
 """Permission classes shared by the API."""
 
+from django.conf import settings
 from rest_framework.permissions import BasePermission
 
 from .models import SessionScope, SessionToken, StaffStatus
@@ -16,7 +17,17 @@ def _staff_session_ok(request) -> bool:
     session = request.auth
     if not isinstance(session, SessionToken):
         return False
-    return session.scope == SessionScope.STAFF and not session.mfa_pending and session.mfa_verified_at is not None
+    return session.scope == SessionScope.STAFF and staff_session_complete(session)
+
+
+def staff_session_complete(session: SessionToken) -> bool:
+    """
+    The staff session passed every sign-in step in force: the password, plus
+    the authenticator code when ``settings.STAFF_MFA_REQUIRED`` is on (BR-ACC-04).
+    """
+    if session.mfa_pending:
+        return False
+    return session.mfa_verified_at is not None or not getattr(settings, "STAFF_MFA_REQUIRED", True)
 
 
 class IsAdmin(BasePermission):

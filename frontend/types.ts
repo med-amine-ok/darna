@@ -3,6 +3,8 @@ export type HostType = "individual" | "agency" | "hotel" | "hostel";
 
 export interface User {
   id: string;
+  /** Public profile link name: /users/<handle>. */
+  handle?: string;
   name: string;
   email: string;
   image?: string | null;
@@ -18,6 +20,12 @@ export interface User {
   address?: string;
   languages?: string[];
   isIdentityVerified?: boolean;
+  /** Full name in Arabic script (optional, PATCH /me full_name_ar). */
+  fullNameAr?: string;
+  /** Phone confirmed by SMS code (needed to book and to become an individual host). */
+  phoneVerified?: boolean;
+  /** An authenticator app protects sign-in (BR-ACC-04). */
+  hasMfa?: boolean;
   yearsHosting?: number;
   responseRate?: number;
   responseTime?: string;
@@ -29,6 +37,8 @@ export interface User {
  */
 export interface PublicUser {
   id: string;
+  /** Public profile link name: /users/<handle>. */
+  handle?: string;
   name: string;
   image?: string | null;
   role: UserRole;
@@ -129,6 +139,18 @@ export interface Listing {
   city: string;
   /** Commune (municipality), see lib/algeria.ts; the wilaya is derived from it. */
   commune?: string;
+  /** Wilaya code (1 to 69) given by the API, when known. */
+  wilayaCode?: number;
+  /** Human reference given by the API (LST-7K2M9Q). */
+  reference?: string;
+  /** Host account that offers the listing (API id). */
+  hostAccountId?: string;
+  /** Public page key (slug) of the organization that offers it, when it is one. */
+  organizationSlug?: string;
+  /** Name of the host or organization that offers it (public card). */
+  hostName?: string;
+  /** Status changes the host may ask for now (host views only). */
+  allowedStatusChanges?: string[];
   country: string;
   latlng: [number, number];
   featured?: boolean;
@@ -249,6 +271,28 @@ export interface Reservation {
   listing?: Listing;
   trip?: Trip;
   user?: User;
+  /** Booking reference shown to people (BLD-...); `id` stays the UUID used in URLs (DEC-031). */
+  reference?: string;
+  /** Title frozen on the booking (listing or trip name at booking time). */
+  title?: string;
+  /** Vertical frozen on the booking (home, hotel, hostel, experience, vehicle, trip). */
+  vertical?: string;
+  /** Length-of-stay discount, DZD. */
+  discount?: number;
+  /** Actions the backend allows the host now (accept, decline, cancel, confirm_stay). */
+  allowedActions?: string[];
+  /** Guest may cancel now (backend flag). */
+  canCancel?: boolean;
+  /** 6-digit code the guest shows the host on arrival (guest view, once confirmed). */
+  checkInCode?: string | null;
+  stayConfirmedAt?: string | null;
+  checkInAt?: string;
+  checkOutAt?: string;
+  cancelReason?: string;
+  /** Guest view: host name and, once confirmed, phone and exact address. */
+  hostName?: string;
+  hostPhone?: string | null;
+  addressLine?: string | null;
 }
 
 export interface TripItineraryDay {
@@ -278,6 +322,10 @@ export interface Trip {
   city: string;
   /** Commune (municipality), see lib/algeria.ts. */
   commune?: string;
+  /** Wilaya code (1 to 69) given by the API, when known. */
+  wilayaCode?: number;
+  /** Agency host account that runs the trip (API id). */
+  hostAccountId?: string;
   locationValue: string;
   latlng?: [number, number];
   cancellationPolicy: CancellationPolicy;
@@ -327,11 +375,19 @@ export interface Organization {
   curfewPolicy?: string;
   agePolicy?: string;
   bookingApprovalMode?: "instant" | "request";
+  /** Public URL key (backend slug); profile links use it when present. */
+  slug?: string;
+  /** Backend host account of this organisation. */
+  hostAccountId?: string;
 }
 
 /** Public projection of an organization (no contact or legal details). */
 export interface PublicOrganization {
   id: string;
+  /** Key of the public page (/agencies/{slug}); falls back to the id when missing. */
+  slug?: string;
+  /** Host account of the organization (API id), used to list its offers. */
+  hostAccountId?: string;
   name: string;
   businessCategory: "agency" | "hotel" | "hostel";
   logo?: string | null;
@@ -379,6 +435,18 @@ export interface Membership {
   avatar?: string | null;
 }
 
+/** A pending (or past) invitation to join an organisation team (GET /host/organization/invitations). */
+export interface OrganizationInvitation {
+  id: string;
+  email: string;
+  phone?: string | null;
+  role: MembershipRole;
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expiresAt: string;
+  createdAt: string;
+  acceptedAt?: string | null;
+}
+
 export interface Conversation {
   id: string;
   participants: string[];
@@ -394,6 +462,14 @@ export interface Conversation {
     image?: string | null;
     role?: string;
   };
+  /** What the thread is about (listing, trip or booking title, from the API). */
+  subjectTitle?: string;
+  tripId?: string | null;
+  bookingId?: string | null;
+  bookingReference?: string | null;
+  /** Side the viewer reads this thread from. */
+  myRole?: "guest" | "host";
+  lastReadMessageId?: string | null;
 }
 
 export interface Message {
@@ -404,6 +480,12 @@ export interface Message {
   text: string;
   createdAt: string;
   read: boolean;
+  /** Contact details were hidden in this message until a booking is confirmed (BR-MSG-01). */
+  isMasked?: boolean;
+  senderRole?: string;
+  senderName?: string;
+  kind?: string;
+  clientMessageId?: string | null;
 }
 
 export interface DateAvailabilityOverride {
@@ -413,6 +495,11 @@ export interface DateAvailabilityOverride {
   isBlocked: boolean;
   customPrice?: number;
   note?: string;
+  /** Hotels and hostels: the room type this night belongs to. */
+  roomTypeId?: string | null;
+  /** Units already booked that day (from the host calendar). */
+  unitsBooked?: number;
+  unitsTotal?: number;
 }
 
 export interface MatchedAvailability {
@@ -506,6 +593,16 @@ export interface Notification {
   read: boolean;
   createdAt: string;
   timestamp?: string;
+  /** Backend notification kind (for example booking.confirmed). */
+  kind?: string;
+}
+
+/** One notification switch: kind x channel; locked ones cannot be turned off (BR-PRV-03). */
+export interface NotificationPreference {
+  kind: string;
+  channel: "email" | "sms" | "push";
+  enabled: boolean;
+  locked: boolean;
 }
 
 export type OnboardingFieldType =
@@ -611,4 +708,20 @@ export interface HostTypeCommissionRates {
   agency: number; // percentage (e.g. 15.0)
   hotel: number; // percentage (e.g. 18.0)
   hostel: number; // percentage (e.g. 10.0)
+}
+
+/** What the host settings screen shows about the active host account. */
+export interface HostAccountSummary {
+  hostAccountId: string;
+  kind: "individual" | "organization";
+  displayName: string;
+  /** Backend status: applied, under_review, changes_requested, approved, rejected, suspended... */
+  verificationStatus: string;
+  defaultApprovalMode: "instant" | "request";
+  /** Commission in percent (basis points / 100). */
+  commissionPercent: number;
+  submittedAt: string | null;
+  approvedAt: string | null;
+  canEdit: boolean;
+  requiredDocuments: { docType: string; status: "approved" | "pending" | "rejected" | "missing" }[];
 }

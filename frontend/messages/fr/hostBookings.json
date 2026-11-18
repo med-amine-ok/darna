@@ -57,7 +57,8 @@
     "refunded": "Remboursée",
     "partial": "Remboursement partiel de {amount}",
     "voided": "Non débitée",
-    "none": "Aucun remboursement"
+    "none": "Aucun remboursement",
+    "owed": "Remboursement dû {amount}"
   },
   "fallbackListingTitle": "Séjour en Algérie",
   "listingImageAlt": "Photo de {title}",
@@ -103,7 +104,10 @@
     "negative": "− {amount}",
     "net": "Votre versement net",
     "download": "Imprimer la facture",
-    "done": "Terminé"
+    "done": "Terminé",
+    "paymentChannelDirect": "Payé directement par le voyageur",
+    "discount": "Réduction longue durée",
+    "stayConfirmed": "Séjour confirmé"
   },
   "declineDialog": {
     "title": "Refuser la demande de réservation",
@@ -127,7 +131,14 @@
     "message": "L'annulation d'une réservation confirmée avertit immédiatement le voyageur et déclenche un remboursement automatique SATIM Edahabia/CIB. Des annulations fréquentes peuvent affecter votre statut de Superhôte sur BLADUS.",
     "callout": "La politique hôte de BLADUS garantit un remboursement intégral au voyageur en cas d'annulation par l'hôte.",
     "confirm": "Annuler la réservation",
-    "keep": "Conserver la réservation"
+    "keep": "Conserver la réservation",
+    "messageDirect": "Annuler une réservation confirmée prévient aussitôt le voyageur. Selon la politique hôte BLADUS, le voyageur est remboursé en totalité, et c'est vous qui le remboursez directement. Des annulations fréquentes peuvent nuire à votre réputation sur BLADUS.",
+    "reasonLabel": "Motif de l'annulation (transmis au voyageur)",
+    "reasonPlaceholder": "Par exemple : le logement n'est plus disponible à ces dates.",
+    "previewRefund": "Remboursement que vous devez au voyageur",
+    "previewCommission": "Commission rendue sur votre dépôt",
+    "previewLoading": "Calcul du remboursement...",
+    "previewUnavailable": "Le remboursement n'a pas pu être calculé. L'annulation suit tout de même la politique hôte BLADUS."
   },
   "toast": {
     "datesBlocked": "Dates bloquées sur votre calendrier ! Aucune nouvelle réservation n'est possible.",
@@ -144,5 +155,14 @@
   "requestHeading": "Demande de réservation, répondez avant l’expiration",
   "noListingsTitle": "Pas encore de réservations",
   "noListingsText": "Les réservations apparaîtront ici dès que vous publierez une annonce. Créez votre première annonce pour commencer.",
-  "createFirstListing": "Créer votre première annonce"
+  "createFirstListing": "Créer votre première annonce",
+  "paymentDirect": "Payé directement à vous",
+  "checkIn": {
+    "button": "Enregistrer l'arrivée",
+    "title": "Confirmer l'arrivée du voyageur",
+    "message": "Demandez au voyageur le code d'arrivée à 6 chiffres affiché dans sa réservation et saisissez-le ici.",
+    "codeLabel": "Code d'arrivée",
+    "confirm": "Confirmer l'arrivée",
+    "success": "Arrivée confirmée."
+  }
 }

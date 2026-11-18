@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { CommandPalette } from "./CommandPalette";
@@ -18,8 +19,44 @@ export interface AdminLayoutClientProps {
   approvalsCount?: number;
 }
 
+/** Staff sessions end after 30 minutes without a request (backend BR-ACC-03). */
+const IDLE_LIMIT_MS = 30 * 60 * 1000;
+
+/**
+ * Shows the login again once the staff session has been idle for 30 minutes
+ * (page views renew it), instead of letting the next click fail. When another
+ * tab kept the session alive, the login page sends the admin straight back.
+ */
+function useIdleSignOut() {
+  const pathname = usePathname();
+  const locale = useLocale();
+  const lastActivity = React.useRef(Date.now());
+
+  useEffect(() => {
+    lastActivity.current = Date.now();
+  }, [pathname]);
+
+  useEffect(() => {
+    const check = () => {
+      if (Date.now() - lastActivity.current < IDLE_LIMIT_MS) return;
+      const here = `${window.location.pathname}${window.location.search}`;
+      window.location.assign(`/${locale}/login?expired=1&returnTo=${encodeURIComponent(here)}`);
+    };
+    const timer = window.setInterval(check, 30_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [locale]);
+}
+
 function AdminLayoutInner({ children, currentAdmin, approvalsCount = 0 }: AdminLayoutClientProps) {
   const t = useTranslations("layout");
+  useIdleSignOut();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);

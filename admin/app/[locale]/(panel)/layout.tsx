@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { getCurrentAdmin } from "@/lib/auth/current-admin";
-import { getApprovalsInbox } from "@/lib/data/approvals";
+import { getAdminSession } from "@/lib/auth/current-admin";
+import { getApprovalsCount } from "@/lib/data/approvals";
 import { locales, defaultLocale, type Locale } from "@/i18n";
 import AdminLayoutClient from "@/components/layout/AdminLayoutClient";
+import { SessionUnavailableView } from "@/components/auth/SessionUnavailableView";
 
 export default async function PanelLayout({
   children,
@@ -11,18 +12,24 @@ export default async function PanelLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Defense in depth: middleware only checks the JWT signature. Here the
-  // session is resolved against the admin store, so revoked, deactivated or
-  // deleted accounts are bounced even with a still-valid token.
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    const locale = locales.includes(params.locale as Locale) ? params.locale : defaultLocale;
-    redirect(`/${locale}/login`);
+  // Middleware only checks that the cookie exists. Here the backend confirms
+  // the staff session (GET /admin/auth/session): expired, idle, revoked or
+  // deactivated sessions go back to the login page.
+  const session = await getAdminSession();
+  if (session.state === "unavailable") {
+    return (
+      <main className="min-h-[100dvh] bg-darnaBg p-4">
+        <SessionUnavailableView />
+      </main>
+    );
   }
+  if (session.state === "signed_out") {
+    const locale = locales.includes(params.locale as Locale) ? params.locale : defaultLocale;
+    redirect(`/${locale}/login?expired=1`);
+  }
+  const admin = session.admin;
 
-  const approvalsCount = admin.permissions.includes("hosts.view")
-    ? (await getApprovalsInbox()).counts.total
-    : 0;
+  const approvalsCount = admin.permissions.includes("hosts.view") ? await getApprovalsCount() : 0;
 
   return (
     <AdminLayoutClient currentAdmin={admin} approvalsCount={approvalsCount}>

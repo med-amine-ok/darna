@@ -10,107 +10,106 @@ import {
   signSession,
   verifySession,
 } from "@/lib/auth/session-token";
-import { getUserById } from "@/lib/data/auth";
-import { globalStore } from "@/lib/data/_store";
-import { resolveActiveOrganization } from "./active-org";
+import { API_TOKEN_COOKIE, api, currentApiToken } from "@/lib/api/client";
+import { activeWorkspace, loadMe, type ApiWorkspace, type MeBundle } from "@/lib/api/me";
 
 /**
- * Revoked session ids (sid -> exp). Logout adds the sid here so a copied
- * cookie stops working on the server even before it expires.
- * TODO: replace with Supabase auth sessions.
+ * Sessions backed by the Django API.
+ *
+ * Two httpOnly cookies:
+ * - API_TOKEN_COOKIE holds the Django session token; every API call adds it
+ *   as a Bearer header (lib/api/client.ts). The backend is the authority:
+ *   a revoked or expired token makes getSessionUser() return null.
+ * - SESSION_COOKIE is the small HMAC-signed claim set the Edge middleware
+ *   can check without calling the API (signed in? host?). It is a hint for
+ *   routing only; pages and actions always ask the API.
  */
-const revokedSessions = globalStore<Map<string, number>>(
-  "__darna_revoked_sessions__",
-  () => new Map(),
-);
 
-function pruneRevoked() {
-  const now = Date.now() / 1000;
-  revokedSessions.forEach((exp, sid) => {
-    if (exp < now) revokedSessions.delete(sid);
-  });
+/** Verified middleware claims of the current request, or null when signed out. */
+export const getSession = cache(async (): Promise<SessionPayload | null> => {
+  if (!currentApiToken()) return null;
+  const token = cookies().get(SESSION_COOKIE)?.value;
+  return verifySession(token);
+});
+
+/** The signed-in user, its profile and its workspaces, loaded once per request from the API. */
+export const getMe = cache(async (): Promise<MeBundle | null> => {
+  if (!currentApiToken()) return null;
+  return loadMe();
+});
+
+/** The signed-in user as the frontend User type, or null. */
+export const getSessionUser = cache(async (): Promise<User | null> => (await getMe())?.user ?? null);
+
+function claimsFor(bundle: MeBundle, sid: string, exp: number): SessionPayload {
+  const active = activeWorkspace(bundle.workspaces);
+  return {
+    sid,
+    userId: bundle.me.id,
+    hostType: active?.host_type ?? null,
+    organizationId: active?.organization_id ?? null,
+    exp,
+  };
 }
 
-/** Verified session payload for the current request, or null. */
-export const getSession = cache(async (): Promise<SessionPayload | null> => {
-  const token = cookies().get(SESSION_COOKIE)?.value;
-  const payload = await verifySession(token);
-  if (!payload || revokedSessions.has(payload.sid)) return null;
-  return payload;
-});
+async function writeCookies(apiToken: string, payload: SessionPayload): Promise<void> {
+  const options = sessionCookieOptions(SESSION_MAX_AGE_SECONDS);
+  cookies().set(API_TOKEN_COOKIE, apiToken, options);
+  cookies().set(SESSION_COOKIE, await signSession(payload), options);
+}
 
 /**
- * The logged-in user, loaded from the server store using the id inside the
- * verified session. Unknown ids yield null (users are never auto-created).
+ * Start a session from a Django session token just issued by /auth/login,
+ * /auth/signup or a second-factor step (route handlers and server actions only).
+ * Returns the user, or null when the token is not usable.
  */
-export const getSessionUser = cache(async (): Promise<User | null> => {
-  const session = await getSession();
-  if (!session) return null;
-  return getUserById(session.userId);
-});
+export async function startSession(apiToken: string): Promise<User | null> {
+  const bundle = await loadMe(apiToken);
+  if (!bundle) return null;
+  await writeCookies(
+    apiToken,
+    claimsFor(bundle, globalThis.crypto.randomUUID(), Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS),
+  );
+  return bundle.user;
+}
 
-async function writeSessionCookie(payload: SessionPayload) {
-  const token = await signSession(payload);
-  cookies().set(
-    SESSION_COOKIE,
-    token,
-    sessionCookieOptions(
-      Math.max(0, payload.exp - Math.floor(Date.now() / 1000)),
+/**
+ * Re-read the user after a change (became a host, switched organisation) and
+ * re-issue the middleware claims. ``preferredOrganizationId`` (an organisation
+ * or host account id) switches the active workspace on the backend first.
+ */
+export async function refreshSession(_user?: User | null, preferredOrganizationId?: string | null): Promise<User | null> {
+  const apiToken = currentApiToken();
+  if (!apiToken) return null;
+  if (preferredOrganizationId) {
+    const list = await api<{ results: ApiWorkspace[] }>("/me/workspaces");
+    const target = list.results.find(
+      (w) => w.organization_id === preferredOrganizationId || w.host_account_id === preferredOrganizationId,
+    );
+    if (target && !target.is_active) {
+      await api("/me/workspaces/active", { method: "PUT", body: { host_account_id: target.host_account_id } });
+    }
+  }
+  const bundle = await loadMe(apiToken);
+  if (!bundle) return null;
+  const current = await getSession();
+  await writeCookies(
+    apiToken,
+    claimsFor(
+      bundle,
+      current?.sid ?? globalThis.crypto.randomUUID(),
+      current?.exp ?? Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS,
     ),
   );
+  return bundle.user;
 }
 
-/**
- * Starts a new session for `user` (route handlers / server actions only ,
- * cookies can't be written during a page render).
- */
-export async function startSession(user: User): Promise<void> {
-  const active = user.hostType
-    ? await resolveActiveOrganization(user, user.organizationId)
-    : null;
-  await writeSessionCookie({
-    sid: globalThis.crypto.randomUUID(),
-    userId: user.id,
-    hostType: user.hostType ?? null,
-    organizationId: active?.organization.id ?? null,
-    exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS,
-  });
-}
-
-/**
- * Re-issues the cookie with fresh claims (e.g. after becoming a host) while
- * keeping the same session id and expiry.
- */
-export async function refreshSession(
-  user: User,
-  preferredOrganizationId?: string | null,
-): Promise<void> {
-  const current = await getSession();
-  if (!current || current.userId !== user.id) {
-    await startSession(user);
-    return;
-  }
-  const active = user.hostType
-    ? await resolveActiveOrganization(
-        user,
-        preferredOrganizationId ??
-          current.organizationId ??
-          user.organizationId,
-      )
-    : null;
-  await writeSessionCookie({
-    ...current,
-    hostType: user.hostType ?? null,
-    organizationId: active?.organization.id ?? null,
-  });
-}
-
-/** Revokes the current session server-side and clears the cookie. */
+/** Revoke the token on the backend (best effort) and clear both cookies. */
 export async function endSession(): Promise<void> {
-  const current = await getSession();
-  if (current) {
-    pruneRevoked();
-    revokedSessions.set(current.sid, current.exp);
+  if (currentApiToken()) {
+    await api("/auth/session", { method: "DELETE" }).catch(() => undefined);
   }
-  cookies().set(SESSION_COOKIE, "", { ...sessionCookieOptions(0), maxAge: 0 });
+  const cleared = { ...sessionCookieOptions(0), maxAge: 0 };
+  cookies().set(API_TOKEN_COOKIE, "", cleared);
+  cookies().set(SESSION_COOKIE, "", cleared);
 }

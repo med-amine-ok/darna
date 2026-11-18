@@ -8,7 +8,7 @@ import { Listing, User } from "@/types";
 import Calendar from "@/components/inputs/Calendar";
 import Counter from "@/components/inputs/Counter";
 import PriceDisplay from "@/components/common/PriceDisplay";
-import { AnimatedNumber, Banner, Button, Sheet, Textarea } from "@/components/ui";
+import { AnimatedNumber, Banner, Button, Select, Sheet, Textarea } from "@/components/ui";
 import BookingSuccessDialog, { type BookingSummaryRow } from "./detail/BookingSuccessDialog";
 import MobileBookingBar from "./detail/MobileBookingBar";
 import NoGuestFees from "./detail/NoGuestFees";
@@ -16,17 +16,20 @@ import { useLoginModal } from "@/hook/useLoginModal";
 import { createBookingAction } from "@/app/actions/bookings";
 import {
   isRequestToBook as computeIsRequestToBook,
-  quoteListingBooking,
+  pricingModelFor,
   unitLabel,
   type PriceOverrides,
 } from "@/lib/booking/pricing";
-import { maxGuestsFor, validateListingRequest, type ListingAvailability } from "@/lib/booking/availability";
+import { maxGuestsFor, slotsOn, validateListingRequest, type ListingAvailability } from "@/lib/booking/availability";
+import { useServerQuote } from "@/hook/useServerQuote";
+import type { BookingSelection } from "@/app/actions/bookings";
 import { getStayRules } from "@/lib/booking/config";
 import {
   addDaysToKey,
   formatDateKey,
   fromDateKey,
   isDateKey,
+  nightsBetween,
   normalizeDateKey,
   toDateKey,
   type DateKey,
@@ -41,6 +44,7 @@ interface ListingReservationProps {
   listing: Listing;
   currentUser?: User | null;
   availability: ListingAvailability;
+  /** @deprecated Prices come from the backend quote; ignored. */
   priceOverrides?: PriceOverrides;
 }
 
@@ -50,7 +54,6 @@ export default function ListingReservation({
   listing,
   currentUser,
   availability,
-  priceOverrides = {},
 }: ListingReservationProps) {
   const openLogin = useLoginModal((s) => s.onOpen);
   const searchParams = useSearchParams();
@@ -87,7 +90,9 @@ export default function ListingReservation({
 
   // Initial selection: search dates (clipped) or the earliest bookable stay.
   const initialRange = useMemo<Range>(() => {
-    let start: DateKey = earliestStart;
+    // Experiences open on their first session with seats left.
+    const firstSession = isExperience ? availability.slots?.find((slot) => slot.seatsLeft > 0 && slot.date >= earliestStart)?.date : undefined;
+    let start: DateKey = firstSession ?? earliestStart;
     let end: DateKey = addDaysToKey(earliestStart, isExperience ? 0 : rules.minNights);
     if (partialAvailabilityInfo) {
       start = partialAvailabilityInfo.overlapStart;
@@ -98,7 +103,7 @@ export default function ListingReservation({
     }
     if (isExperience) end = start;
     return { startDate: fromDateKey(start), endDate: fromDateKey(end), key: "selection" };
-  }, [partialAvailabilityInfo, searchStart, searchEnd, earliestStart, isExperience, rules.minNights]);
+  }, [partialAvailabilityInfo, searchStart, searchEnd, earliestStart, isExperience, rules.minNights, availability.slots]);
 
   const [dateRange, setDateRange] = useState<Range>(initialRange);
 
@@ -108,7 +113,11 @@ export default function ListingReservation({
   const unavailableSet = useMemo(() => new Set(availability.unavailable), [availability.unavailable]);
 
   const maxGuests = maxGuestsFor(listing);
-  const [guestCount, setGuestCount] = useState(1);
+  // Start from the guest count of the search (?guests=), capped to what the listing allows.
+  const [guestCount, setGuestCount] = useState(() => {
+    const fromSearch = Number(searchParams?.get("guests"));
+    return Number.isInteger(fromSearch) && fromSearch >= 1 ? Math.min(fromSearch, Math.max(1, maxGuests)) : 1;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isGuestOpen, setIsGuestOpen] = useState(false);
@@ -117,19 +126,15 @@ export default function ListingReservation({
   const startKey = dateRange.startDate ? toDateKey(dateRange.startDate) : earliestStart;
   const endKey = isExperience ? startKey : dateRange.endDate ? toDateKey(dateRange.endDate) : startKey;
 
-  // Same pure functions the server uses when the booking is created.
-  const quote = useMemo(
-    () =>
-      quoteListingBooking({
-        listing,
-        startDate: startKey,
-        endDate: endKey,
-        guestCount,
-        priceOverrides,
-      }),
-    [listing, startKey, endKey, guestCount, priceOverrides]
+  // Experiences are booked on a session: the sessions of the chosen day with enough seats.
+  const daySlots = useMemo(
+    () => (isExperience && availability.slots ? slotsOn(availability, startKey, guestCount) : []),
+    [isExperience, availability, startKey, guestCount]
   );
-  const validationError = useMemo(
+  const [slotChoice, setSlotChoice] = useState<string>("");
+  const slotId = daySlots.find((s) => s.id === slotChoice)?.id ?? daySlots[0]?.id;
+
+  const rulesError = useMemo(
     () =>
       validateListingRequest({
         listing,
@@ -139,9 +144,36 @@ export default function ListingReservation({
       }),
     [listing, startKey, endKey, guestCount, today, unavailableSet]
   );
+  const noSession = isExperience && availability.slots !== undefined && !slotId;
+
+  // The price shown is the backend's quote for exactly this selection (POST /quotes).
+  const model = pricingModelFor(listing);
+  const selection = useMemo<BookingSelection | null>(() => {
+    if (rulesError || noSession) return null;
+    return isExperience && slotId
+      ? { kind: "listing", listingId: listing.id, startDate: startKey, endDate: startKey, guestCount, slotId, model }
+      : { kind: "listing", listingId: listing.id, startDate: startKey, endDate: endKey, guestCount, model };
+  }, [rulesError, noSession, isExperience, slotId, listing.id, startKey, endKey, guestCount, model]);
+  const { quote: serverQuote, loading: quoteLoading, error: quoteError } = useServerQuote(selection);
+  const validationError = rulesError ?? (noSession ? { code: "DATES_UNAVAILABLE" as const } : null) ?? quoteError;
+  // Counts for the labels come from the selection; every amount comes from the server quote.
+  const quote = serverQuote ?? {
+    model,
+    nights: isExperience ? 1 : Math.max(0, nightsBetween(startKey, endKey)),
+    quantity: isExperience ? guestCount : 1,
+    unitPrice: listing.price,
+    averageUnitPrice: listing.price,
+    hasPriceOverrides: false,
+    subtotal: 0,
+    discount: 0,
+    cleaningFee: 0,
+    taxes: 0,
+    total: 0,
+  };
+  const canReserve = Boolean(serverQuote) && !validationError && !quoteLoading;
 
   const [guestMessage, setGuestMessage] = useState<string>("");
-  const isRequestToBook = computeIsRequestToBook(listing);
+  const isRequestToBook = serverQuote ? serverQuote.approvalMode === "request" : computeIsRequestToBook(listing);
 
   const validationMessage = validationError ? errorText(validationError) : null;
 
@@ -156,6 +188,8 @@ export default function ListingReservation({
     ? t("daysCount", { count: quote.nights })
     : t("nightsCount", { count: quote.nights });
   const money = (amount: number) => formatDzd(amount, locale);
+  // Amounts before the server answered are not shown as numbers.
+  const quoted = (amount: number) => (serverQuote ? money(amount) : quoteLoading ? "…" : "–");
   const fmt = (key: DateKey) => formatDateKey(key, locale);
   const fmtShort = (key: DateKey) => formatDateKey(key, locale, { month: "short", day: "numeric" });
   const datesLabel = isExperience
@@ -172,16 +206,14 @@ export default function ListingReservation({
       toast.error(validationMessage);
       return;
     }
+    if (!serverQuote) return;
 
     setIsLoading(true);
     try {
       // Price, fees, availability and approval mode are decided on the server.
       const result = await createBookingAction({
-        kind: "listing",
-        listingId: listing.id,
-        startDate: startKey,
-        endDate: endKey,
-        guestCount,
+        ...(selection as BookingSelection),
+        quoteId: serverQuote.quoteId,
         guestMessage: guestMessage.trim() || undefined,
       });
 
@@ -198,7 +230,7 @@ export default function ListingReservation({
         rows: [
           { label: t("success.dates"), value: datesLabel },
           { label: isVehicle ? t("passengers") : t("guests"), value: guestsLabel },
-          { label: tCommon("total"), value: money(quote.total) },
+          { label: tCommon("total"), value: money(result.data.totalPrice) },
         ],
       });
     } catch {
@@ -279,13 +311,20 @@ export default function ListingReservation({
             duration: durationLabel,
           })}
         </span>
-        <AnimatedNumber value={quote.subtotal} format={money} className="tabular-nums" />
+        <AnimatedNumber value={quote.subtotal} format={quoted} className="tabular-nums" />
       </div>
+
+      {serverQuote && serverQuote.discount > 0 && (
+        <div className="flex justify-between gap-4">
+          <span>{t("discount")}</span>
+          <span className="tabular-nums">−{money(serverQuote.discount)}</span>
+        </div>
+      )}
 
       {quote.cleaningFee > 0 && (
         <div className="flex justify-between gap-4">
           <span>{t("cleaningFee")}</span>
-          <AnimatedNumber value={quote.cleaningFee} format={money} className="tabular-nums" />
+          <AnimatedNumber value={quote.cleaningFee} format={quoted} className="tabular-nums" />
         </div>
       )}
 
@@ -294,7 +333,7 @@ export default function ListingReservation({
       {quote.taxes > 0 && (
         <div className="flex justify-between gap-4">
           <span>{t("taxes")}</span>
-          <AnimatedNumber value={quote.taxes} format={money} className="tabular-nums" />
+          <AnimatedNumber value={quote.taxes} format={quoted} className="tabular-nums" />
         </div>
       )}
     </>
@@ -412,11 +451,27 @@ export default function ListingReservation({
           </p>
         )}
 
+
+        {isExperience && daySlots.length > 1 && (
+          <Select
+            id={`${baseId}-session-desktop`}
+            label={t("sessionLabel")}
+            value={slotId ?? ""}
+            onChange={(e) => setSlotChoice(e.target.value)}
+            options={daySlots.map((slot) => ({
+              value: slot.id,
+              label: t("sessionOption", {
+                time: new Date(slot.startsAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Algiers" }),
+                seats: slot.seatsLeft,
+              }),
+            }))}
+          />
+        )}
         {modeNotice}
         {noteField("desktop")}
         {validationAlert}
 
-        <Button size="lg" fullWidth variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserve} loading={isLoading} disabled={Boolean(validationError)}>
+        <Button size="lg" fullWidth variant={isRequestToBook ? "primary" : "confirm"} onClick={handleReserve} loading={isLoading} disabled={!canReserve}>
           {isRequestToBook ? t("requestToBook") : t("reserve")}
         </Button>
 
@@ -429,7 +484,7 @@ export default function ListingReservation({
           {priceBreakdown}
           <div className="flex justify-between items-baseline font-semibold text-title text-primary-900 border-t border-primary/10 pt-4 [&>span:first-child]:no-underline">
             <span>{tCommon("total")}</span>
-            <AnimatedNumber value={quote.total} format={money} className="tabular-nums" />
+            <AnimatedNumber value={quote.total} format={quoted} className="tabular-nums" />
           </div>
         </div>
 
@@ -466,12 +521,12 @@ export default function ListingReservation({
         footer={
           <div className="flex items-center justify-between gap-4">
             <p className="min-w-0">
-              <AnimatedNumber value={quote.total} format={money} className="block font-semibold text-title text-primary-900 tabular-nums" />
+              <AnimatedNumber value={quote.total} format={quoted} className="block font-semibold text-title text-primary-900 tabular-nums" />
               <span className="block text-meta text-primary-500 truncate">
                 {datesLabel} · {guestsLabel}
               </span>
             </p>
-            <Button size="lg" onClick={handleReserve} loading={isLoading} disabled={Boolean(validationError)} className="shrink-0">
+            <Button size="lg" onClick={handleReserve} loading={isLoading} disabled={!canReserve} className="shrink-0">
               {isRequestToBook ? t("submitBookingRequest") : t("completeReservation")}
             </Button>
           </div>
@@ -498,13 +553,29 @@ export default function ListingReservation({
           onChange={(v) => setGuestCount(Math.min(v, maxGuests))}
         />
 
+
+        {isExperience && daySlots.length > 1 && (
+          <Select
+            id={`${baseId}-session-sheet`}
+            label={t("sessionLabel")}
+            value={slotId ?? ""}
+            onChange={(e) => setSlotChoice(e.target.value)}
+            options={daySlots.map((slot) => ({
+              value: slot.id,
+              label: t("sessionOption", {
+                time: new Date(slot.startsAt).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Algiers" }),
+                seats: slot.seatsLeft,
+              }),
+            }))}
+          />
+        )}
         {noteField("sheet")}
 
         <div className="border-t border-primary/10 pt-4 space-y-2.5 text-body text-primary-600">
           {priceBreakdown}
           <div className="flex justify-between items-baseline font-semibold text-title text-primary-900 border-t border-primary/10 pt-3">
             <span>{t("totalAmount")}</span>
-            <AnimatedNumber value={quote.total} format={money} className="tabular-nums" />
+            <AnimatedNumber value={quote.total} format={quoted} className="tabular-nums" />
           </div>
         </div>
 

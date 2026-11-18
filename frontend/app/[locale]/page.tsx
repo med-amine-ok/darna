@@ -21,6 +21,7 @@ import TrustBand from "@/components/home/TrustBand";
 import HostCta from "@/components/home/HostCta";
 import { POPULAR_DESTINATIONS } from "@/components/search/destinations";
 import { wilayaImagery } from "@/lib/imagery";
+import { WILAYAS } from "@/lib/algeria";
 
 // Order of the "Explore by wilaya" bento (first = large feature tile); only keys with curated imagery.
 const WILAYA_ORDER = ["djanet", "algiers", "constantine", "ghardaia", "oran", "taghit"];
@@ -99,7 +100,11 @@ export default async function HomePage({ params: { locale }, searchParams }: Hom
   const normalize = (v?: string) => (v || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const wilayaTiles = WILAYA_ORDER.filter((key) => wilayaImagery[key]).map((key) => {
     const dest = POPULAR_DESTINATIONS.find((d) => d.key === key);
-    const count = dest ? allListings.filter((l) => normalize(l.city) === normalize(dest.name)).length : 0;
+    // A wilaya destination counts the whole wilaya (API wilaya code); a town counts its commune.
+    const isWilaya = dest ? WILAYAS.some((w) => w.code === dest.wilaya && [w.name, w.nameEn].some((n) => n && normalize(n) === normalize(dest.name))) : false;
+    const count = dest
+      ? allListings.filter((l) => (isWilaya ? l.wilayaCode === dest.wilaya : normalize(l.city) === normalize(dest.name))).length
+      : 0;
     return { key, count };
   });
 
