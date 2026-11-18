@@ -3,13 +3,13 @@ import { api } from "@/lib/api/client";
 import { safeCallbackUrl } from "@/lib/auth/callback-url";
 import {
   GOOGLE_AUTHORIZE_URL,
-  GOOGLE_CALLBACK_URL,
   GOOGLE_OAUTH_COOKIE,
   GOOGLE_OAUTH_MAX_AGE_SECONDS,
   codeChallenge,
   cookieOptions,
   cookieValue,
   newOAuthState,
+  googleCallbackUrl,
 } from "@/lib/auth/google-oauth";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   const authorize = new URL(GOOGLE_AUTHORIZE_URL);
   authorize.search = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: GOOGLE_CALLBACK_URL,
+    redirect_uri: googleCallbackUrl(request),
     response_type: "code",
     scope: "openid email profile",
     state: flow.state,

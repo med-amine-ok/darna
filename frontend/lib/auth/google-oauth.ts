@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { SITE_URL } from "@/lib/site";
+import type { NextRequest } from "next/server";
 
 /**
  * "Continue with Google" on the website (ACC-10): the pieces kept between the
@@ -18,8 +18,24 @@ export const GOOGLE_OAUTH_COOKIE = "bladus_google_oauth";
 export const GOOGLE_OAUTH_MAX_AGE_SECONDS = 10 * 60;
 export const GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
-/** Must be registered, exactly, in Google Cloud Console and in the backend's GOOGLE_REDIRECT_URIS. */
-export const GOOGLE_CALLBACK_URL = `${SITE_URL}/api/auth/google/callback`;
+/**
+ * The address Google sends the visitor back to. It must be registered,
+ * exactly, in Google Cloud Console and in the backend's GOOGLE_REDIRECT_URIS.
+ *
+ * GOOGLE_CALLBACK_ORIGIN (a server-side variable, read at run time) wins when
+ * set, for example "https://bladus.dz". Otherwise the origin the visitor used
+ * (Vercel's x-forwarded-host / proto), so the live site and a laptop each send
+ * their own address without a rebuild. A forged Host header cannot help an
+ * attacker: Google and the backend both accept registered addresses only, and
+ * the state cookie belongs to the real host.
+ */
+export function googleCallbackUrl(request: NextRequest): string {
+  const configured = (process.env.GOOGLE_CALLBACK_ORIGIN || "").replace(/\/+$/, "");
+  if (configured) return `${configured}/api/auth/google/callback`;
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host;
+  const proto = (request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "")).split(",")[0].trim();
+  return `${proto}://${host}/api/auth/google/callback`;
+}
 
 export interface GoogleOAuthState {
   state: string;

@@ -3,11 +3,11 @@ import { ApiError, api } from "@/lib/api/client";
 import { MFA_PENDING_COOKIE, MFA_PENDING_MAX_AGE_SECONDS } from "@/lib/api/account";
 import { safeCallbackUrl } from "@/lib/auth/callback-url";
 import {
-  GOOGLE_CALLBACK_URL,
   GOOGLE_OAUTH_COOKIE,
   cookieOptions,
   readCookieValue,
   sameState,
+  googleCallbackUrl,
 } from "@/lib/auth/google-oauth";
 import { sessionCookieOptions } from "@/lib/auth/session-token";
 import { startSession } from "@/lib/server/session";
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       body: {
         code,
         code_verifier: flow.verifier,
-        redirect_uri: GOOGLE_CALLBACK_URL,
+        redirect_uri: googleCallbackUrl(request),
         accept_terms_version: TERMS_VERSION,
         locale,
       },
