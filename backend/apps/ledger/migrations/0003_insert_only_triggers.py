@@ -12,6 +12,11 @@ SQLite (developer laptops) has no such triggers: nothing is done there.
 
 from django.db import migrations
 
+
+def _run(schema_editor, sql: str) -> None:
+    """Run raw SQL as written: params=None keeps PostgreSQL's own % placeholders (RAISE EXCEPTION '... %')."""
+    schema_editor.execute(sql, params=None)
+
 TABLES = ("ledger_ledgertransaction", "ledger_ledgerentry")
 
 CREATE_FUNCTION = """
@@ -27,9 +32,9 @@ def create_triggers(apps, schema_editor):
     """Install the insert-only triggers on PostgreSQL; do nothing elsewhere."""
     if schema_editor.connection.vendor != "postgresql":
         return
-    schema_editor.execute(CREATE_FUNCTION)
+    _run(schema_editor, CREATE_FUNCTION)
     for table in TABLES:
-        schema_editor.execute(
+        _run(schema_editor, 
             f"CREATE TRIGGER {table}_insert_only BEFORE UPDATE OR DELETE ON {table} "
             f"FOR EACH ROW EXECUTE FUNCTION bladus_refuse_change();"
         )
@@ -40,7 +45,7 @@ def drop_triggers(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
     for table in TABLES:
-        schema_editor.execute(f"DROP TRIGGER IF EXISTS {table}_insert_only ON {table};")
+        _run(schema_editor, f"DROP TRIGGER IF EXISTS {table}_insert_only ON {table};")
 
 
 class Migration(migrations.Migration):

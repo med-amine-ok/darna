@@ -19,6 +19,11 @@ search uses them. On SQLite this migration does nothing.
 
 from django.db import migrations
 
+
+def _run(schema_editor, sql: str) -> None:
+    """Run raw SQL as written: params=None keeps PostgreSQL's own % placeholders (RAISE EXCEPTION '... %')."""
+    schema_editor.execute(sql, params=None)
+
 # (index name, app label, model name, column)
 INDEXES = [
     ("catalog_listing_title_trgm", "catalog", "Listing", "title"),
@@ -32,9 +37,9 @@ def create_search_support(apps, schema_editor):
     """Create the extensions, ``f_unaccent`` and the trigram indexes (PostgreSQL only)."""
     if schema_editor.connection.vendor != "postgresql":
         return
-    schema_editor.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm;")
-    schema_editor.execute("CREATE EXTENSION IF NOT EXISTS unaccent;")
-    schema_editor.execute(
+    _run(schema_editor, "CREATE EXTENSION IF NOT EXISTS pg_trgm;")
+    _run(schema_editor, "CREATE EXTENSION IF NOT EXISTS unaccent;")
+    _run(schema_editor, 
         """
         CREATE OR REPLACE FUNCTION f_unaccent(text) RETURNS text
         LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
@@ -43,7 +48,7 @@ def create_search_support(apps, schema_editor):
     )
     for index_name, app_label, model_name, column in INDEXES:
         table = apps.get_model(app_label, model_name)._meta.db_table
-        schema_editor.execute(
+        _run(schema_editor, 
             f"CREATE INDEX IF NOT EXISTS {schema_editor.quote_name(index_name)} "
             f"ON {schema_editor.quote_name(table)} USING gin (f_unaccent({schema_editor.quote_name(column)}) gin_trgm_ops);"
         )
@@ -54,8 +59,8 @@ def drop_search_support(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
     for index_name, *_ in INDEXES:
-        schema_editor.execute(f"DROP INDEX IF EXISTS {schema_editor.quote_name(index_name)};")
-    schema_editor.execute("DROP FUNCTION IF EXISTS f_unaccent(text);")
+        _run(schema_editor, f"DROP INDEX IF EXISTS {schema_editor.quote_name(index_name)};")
+    _run(schema_editor, "DROP FUNCTION IF EXISTS f_unaccent(text);")
 
 
 class Migration(migrations.Migration):

@@ -11,6 +11,11 @@ operations, not by migrations (R11).
 
 from django.db import migrations
 
+
+def _run(schema_editor, sql: str) -> None:
+    """Run raw SQL as written: params=None keeps PostgreSQL's own % placeholders (RAISE EXCEPTION '... %')."""
+    schema_editor.execute(sql, params=None)
+
 FUNCTION = "audit_event_refuse_change"
 
 
@@ -24,7 +29,7 @@ def create_trigger(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
     table = schema_editor.quote_name(_table(apps))
-    schema_editor.execute(
+    _run(schema_editor, 
         f"""
         CREATE OR REPLACE FUNCTION {FUNCTION}() RETURNS trigger LANGUAGE plpgsql AS $$
         BEGIN
@@ -34,13 +39,13 @@ def create_trigger(apps, schema_editor):
         $$;
         """
     )
-    schema_editor.execute(f"DROP TRIGGER IF EXISTS audit_event_no_update_delete ON {table};")
-    schema_editor.execute(
+    _run(schema_editor, f"DROP TRIGGER IF EXISTS audit_event_no_update_delete ON {table};")
+    _run(schema_editor, 
         f"CREATE TRIGGER audit_event_no_update_delete BEFORE UPDATE OR DELETE ON {table} "
         f"FOR EACH ROW EXECUTE FUNCTION {FUNCTION}();"
     )
-    schema_editor.execute(f"DROP TRIGGER IF EXISTS audit_event_no_truncate ON {table};")
-    schema_editor.execute(
+    _run(schema_editor, f"DROP TRIGGER IF EXISTS audit_event_no_truncate ON {table};")
+    _run(schema_editor, 
         f"CREATE TRIGGER audit_event_no_truncate BEFORE TRUNCATE ON {table} "
         f"FOR EACH STATEMENT EXECUTE FUNCTION {FUNCTION}();"
     )
@@ -51,9 +56,9 @@ def drop_trigger(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
     table = schema_editor.quote_name(_table(apps))
-    schema_editor.execute(f"DROP TRIGGER IF EXISTS audit_event_no_update_delete ON {table};")
-    schema_editor.execute(f"DROP TRIGGER IF EXISTS audit_event_no_truncate ON {table};")
-    schema_editor.execute(f"DROP FUNCTION IF EXISTS {FUNCTION}();")
+    _run(schema_editor, f"DROP TRIGGER IF EXISTS audit_event_no_update_delete ON {table};")
+    _run(schema_editor, f"DROP TRIGGER IF EXISTS audit_event_no_truncate ON {table};")
+    _run(schema_editor, f"DROP FUNCTION IF EXISTS {FUNCTION}();")
 
 
 class Migration(migrations.Migration):

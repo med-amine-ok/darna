@@ -18,6 +18,11 @@ SQLite (developer laptops) behaves the same; these statements are skipped there.
 
 from django.db import migrations
 
+
+def _run(schema_editor, sql: str) -> None:
+    """Run raw SQL as written: params=None keeps PostgreSQL's own % placeholders (RAISE EXCEPTION '... %')."""
+    schema_editor.execute(sql, params=None)
+
 HOLDING = "('pending', 'confirmed', 'completed')"
 
 FORWARD = [
@@ -82,7 +87,7 @@ def forward(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
     for statement in FORWARD:
-        schema_editor.execute(statement)
+        _run(schema_editor, statement)
 
 
 def backward(apps, schema_editor):
@@ -90,7 +95,7 @@ def backward(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
     for statement in BACKWARD:
-        schema_editor.execute(statement)
+        _run(schema_editor, statement)
 
 
 class Migration(migrations.Migration):

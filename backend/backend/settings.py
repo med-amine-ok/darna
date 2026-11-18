@@ -12,6 +12,7 @@ Design references (docs/backend):
 """
 
 import base64
+import sys
 import hashlib
 from pathlib import Path
 
@@ -156,10 +157,35 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # guarantees (exclusion constraint against double booking) are added by
 # migrations that do nothing on SQLite; the same rules are also checked in
 # the service layer, so behaviour is identical on both.
+# Neon (managed PostgreSQL) gives two connection strings:
+# - DATABASE_URL: the pooled one (host contains "-pooler"), used by the
+#   running app; many short connections share a few real ones.
+# - DATABASE_DIRECT_URL: the direct one, used for migrations, tests and the
+#   demo seed, which need a plain session (Neon's own advice).
+_DIRECT_COMMANDS = {"migrate", "makemigrations", "showmigrations", "sqlmigrate", "test", "flush", "dbshell", "seed_demo"}
+_wants_direct = bool(_DIRECT_COMMANDS.intersection(sys.argv[1:2])) or "pytest" in sys.modules
+_database_url = env.str("DATABASE_URL", default="")
+_direct_url = env.str("DATABASE_DIRECT_URL", default="")
+if _direct_url and (_wants_direct or not _database_url):
+    _database_url = _direct_url
 DATABASES = {
-    "default": env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+    "default": env.db_url_config(_database_url) if _database_url else env.db_url_config(f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
 DATABASES["default"]["ATOMIC_REQUESTS"] = False
+if "postgresql" in DATABASES["default"]["ENGINE"]:
+    _db = DATABASES["default"]
+    _options = _db.setdefault("OPTIONS", {})
+    _local = _db.get("HOST") in ("localhost", "127.0.0.1", "")
+    # Neon only accepts encrypted connections; local PostgreSQL may not have SSL.
+    _options.setdefault("sslmode", env.str("DATABASE_SSLMODE", default="disable" if _local else "require"))
+    _options.setdefault("connect_timeout", 10)
+    # Keep connections for a minute and check them before use (Neon may
+    # suspend an idle database and close them).
+    _db["CONN_MAX_AGE"] = env.int("DATABASE_CONN_MAX_AGE", default=60)
+    _db["CONN_HEALTH_CHECKS"] = True
+    if "-pooler" in (_db.get("HOST") or ""):
+        # The pooler (PgBouncer, transaction mode) cannot keep server-side cursors.
+        _db["DISABLE_SERVER_SIDE_CURSORS"] = True
 
 # R15: trigram search lookups (``trigram_word_similar``) come from
 # django.contrib.postgres. It is added only on PostgreSQL, so SQLite laptops do
