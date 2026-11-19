@@ -8,7 +8,6 @@ import {
   listCommunesAction,
   requestPhoneCodeAction,
   saveProfileDetailsAction,
-  verifyPhoneAction,
   type CommuneOption,
 } from "@/app/actions/account";
 import { useActionError } from "@/hook/useActionError";
@@ -34,16 +33,7 @@ const STEPS: Step[] = ["name", "phone", "birth", "languages", "home"];
 /** Languages people can say they speak (ISO 639-1 codes the API accepts). */
 const SPOKEN = ["ar", "fr", "en", "es", "it", "de", "tr", "zh"] as const;
 
-export default function ProfileSetupWizard({
-  user,
-  callbackUrl,
-  phoneOtpRequired = true,
-}: {
-  user: User;
-  callbackUrl: string;
-  /** False while the backend does not ask for an SMS code (PHONE_OTP_REQUIRED off): the number is saved as given. */
-  phoneOtpRequired?: boolean;
-}) {
+export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; callbackUrl: string }) {
   const t = useTranslations("welcome");
   const locale = useLocale();
   const errorText = useActionError();
@@ -63,11 +53,6 @@ export default function ProfileSetupWizard({
   const [lastName, setLastName] = useState("");
   const [arabicName, setArabicName] = useState(user.fullNameAr ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
-  // With codes switched off, a number already saved on the account is enough.
-  const [phoneVerified, setPhoneVerified] = useState(Boolean(user.phoneVerified || (!phoneOtpRequired && user.phone)));
-  const [codeSent, setCodeSent] = useState(false);
-  const [code, setCode] = useState("");
-  const [resendIn, setResendIn] = useState(0);
   const [birth, setBirth] = useState(user.dateOfBirth ?? "");
   const [siteLocale, setSiteLocale] = useState(locale);
   const [spoken, setSpoken] = useState<string[]>(user.languages?.filter((l) => /^[a-z]{2}$/.test(l)) ?? []);
@@ -82,12 +67,6 @@ export default function ProfileSetupWizard({
     d.setFullYear(d.getFullYear() - 18);
     return d.toISOString().slice(0, 10);
   }, []);
-
-  useEffect(() => {
-    if (resendIn <= 0) return;
-    const timer = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [resendIn]);
 
   useEffect(() => {
     setCommune("");
@@ -162,7 +141,7 @@ export default function ProfileSetupWizard({
       <div className="mt-6 rounded-3xl bg-white p-6 shadow-e2 sm:p-8">
         <h1 className="font-serif text-heading text-primary-900">{stepTitle}</h1>
         <p className="mt-2 text-body text-primary-600">
-          {step === "phone" && !phoneOtpRequired ? t("steps.phone.descriptionNoCode") : t(`steps.${step}.description`)}
+          {step === "phone" ? t("steps.phone.descriptionNoCode") : t(`steps.${step}.description`)}
         </p>
 
         <div className="mt-6 flex flex-col gap-4">
@@ -182,83 +161,30 @@ export default function ProfileSetupWizard({
             </form>
           )}
 
-          {step === "phone" &&
-            (phoneVerified ? (
-              <>
-                <p className="rounded-xl bg-secondary-50 px-4 py-3 text-body text-secondary-800">
-                  {phoneOtpRequired ? t("steps.phone.verified", { phone }) : t("steps.phone.saved", { phone })}
-                </p>
-                <Button type="button" onClick={nextStep}>{t("continue")}</Button>
-              </>
-            ) : !codeSent ? (
-              <form
-                className="flex flex-col gap-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  run(() => requestPhoneCodeAction(phone), () => {
-                    if (!phoneOtpRequired) {
-                      // Codes are switched off for now: the saved number completes this step.
-                      setPhoneVerified(true);
-                      nextStep();
-                      return;
-                    }
-                    setCodeSent(true);
-                    setResendIn(60);
-                  });
-                }}
-              >
-                <Input
-                  label={t("fields.phone")}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  placeholder="0555 12 34 56"
-                  dir="ltr"
-                  required
-                  helper={t("fields.phoneHelper")}
-                />
-                <Button type="submit" loading={busy}>{phoneOtpRequired ? t("sendCode") : t("continue")}</Button>
-              </form>
-            ) : (
-              <form
-                className="flex flex-col gap-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  run(() => verifyPhoneAction(code), () => {
-                    setPhoneVerified(true);
-                    nextStep();
-                  });
-                }}
-              >
-                <p className="text-body text-primary-700">{t("steps.phone.codeSent", { phone })}</p>
-                <Input
-                  label={t("fields.code")}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  dir="ltr"
-                  required
-                />
-                <Button type="submit" loading={busy}>{t("verify")}</Button>
-                <div className="flex flex-wrap justify-between gap-2 text-meta">
-                  <button type="button" className="font-semibold text-primary-700 underline" onClick={() => setCodeSent(false)}>
-                    {t("changeNumber")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={resendIn > 0 || busy}
-                    className="font-semibold text-primary-700 underline disabled:text-primary-400 disabled:no-underline"
-                    onClick={() => run(() => requestPhoneCodeAction(phone), () => setResendIn(60))}
-                  >
-                    {resendIn > 0 ? t("resendIn", { seconds: resendIn }) : t("resend")}
-                  </button>
-                </div>
-              </form>
-            ))}
+          {step === "phone" && (
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // No SMS code for now: the number is saved and the next step opens.
+                run(() => requestPhoneCodeAction(phone), nextStep);
+              }}
+            >
+              <Input
+                label={t("fields.phone")}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="0555 12 34 56"
+                dir="ltr"
+                required
+                helper={t("fields.phoneHelper")}
+              />
+              <Button type="submit" loading={busy}>{t("continue")}</Button>
+            </form>
+          )}
 
           {step === "birth" && (
             <form
