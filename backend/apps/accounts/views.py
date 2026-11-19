@@ -1007,7 +1007,11 @@ class AuthProvidersView(APIView):
         from . import google
 
         enabled = google.is_configured()
-        return Response({"google_enabled": enabled, "google_client_id": settings.GOOGLE_CLIENT_ID if enabled else ""})
+        return Response({
+            "google_enabled": enabled,
+            "google_client_id": settings.GOOGLE_CLIENT_ID if enabled else "",
+            "phone_otp_required": settings.PHONE_OTP_REQUIRED,
+        })
 
 
 class GoogleSignInView(APIView):

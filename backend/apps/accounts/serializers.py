@@ -606,10 +606,11 @@ class GoogleSignInSerializer(serializers.Serializer):
 
 
 class AuthProvidersSerializer(serializers.Serializer):
-    """``GET /auth/providers``: which outside sign-ins are on, with the public Google client id."""
+    """``GET /auth/providers``: which outside sign-ins are on, the public Google client id, and whether phones need an SMS code."""
 
     google_enabled = serializers.BooleanField()
     google_client_id = serializers.CharField(allow_blank=True)
+    phone_otp_required = serializers.BooleanField()
 
 
 class SocialAccountSerializer(serializers.Serializer):

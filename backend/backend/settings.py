@@ -333,6 +333,28 @@ OTP_MAX_SENDS_PER_DAY = env("OTP_MAX_SENDS_PER_DAY")        # R9: per destinatio
 OTP_MAX_SENDS_PER_IP_PER_HOUR = env("OTP_MAX_SENDS_PER_IP_PER_HOUR")  # R9: per client IP
 SMS_DAILY_BUDGET = env("SMS_DAILY_BUDGET")                  # R9: SMS per business day, all users
 SMS_BACKEND = env("SMS_BACKEND")                            # dotted path of the SMS sender
+# Phone check by SMS code (BR-ACC-02, DEC-012). Off for now by decision of the
+# owner (2026-11-19): a phone number given by the person counts as enough to
+# book, host and finish the profile, and no code is sent. Turn it on
+# (PHONE_OTP_REQUIRED=True) once a real SMS provider is set up.
+PHONE_OTP_REQUIRED = env.bool("PHONE_OTP_REQUIRED", default=False)
+
+# SMS providers (apps.accounts.sms). Only the one named in SMS_BACKEND is used.
+TWILIO_ACCOUNT_SID = env.str("TWILIO_ACCOUNT_SID", default="")
+TWILIO_AUTH_TOKEN = env.str("TWILIO_AUTH_TOKEN", default="")
+TWILIO_FROM = env.str("TWILIO_FROM", default="")  # a Twilio number (+1...) or an approved sender name
+TWILIO_MESSAGING_SERVICE_SID = env.str("TWILIO_MESSAGING_SERVICE_SID", default="")
+INFOBIP_BASE_URL = env.str("INFOBIP_BASE_URL", default="")
+INFOBIP_API_KEY = env.str("INFOBIP_API_KEY", default="")
+INFOBIP_SENDER = env.str("INFOBIP_SENDER", default="BLADUS")
+if not DEBUG and SMS_BACKEND.endswith("ConsoleSmsBackend"):
+    # Codes would only reach the server logs: nobody could verify a phone.
+    import logging as _logging
+
+    _logging.getLogger("bladus.sms").critical(
+        "SMS_BACKEND is the console backend in production: phone codes are NOT sent. "
+        "Set SMS_BACKEND to apps.accounts.sms.TwilioSmsBackend or apps.accounts.sms.InfobipSmsBackend."
+    )
 
 # ---------------------------------------------------------------------------
 # Business defaults (used when platform settings have no value yet)

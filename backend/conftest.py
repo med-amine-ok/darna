@@ -18,6 +18,8 @@ def _test_settings(settings):
     from apps.accounts.sms import MemorySmsBackend
 
     settings.SMS_BACKEND = "apps.accounts.sms.MemorySmsBackend"
+    # Tests check the full phone rule (SMS code); tests of the switched-off mode set it to False.
+    settings.PHONE_OTP_REQUIRED = True
     settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
     settings.REST_FRAMEWORK = {**settings.REST_FRAMEWORK, "DEFAULT_THROTTLE_CLASSES": [], "DEFAULT_THROTTLE_RATES": {}}

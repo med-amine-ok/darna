@@ -19,7 +19,9 @@
       "title": "Votre numéro de téléphone",
       "description": "Nous envoyons un code à 6 chiffres par SMS. Les hôtes utilisent ce numéro pour vous joindre une fois la réservation confirmée.",
       "codeSent": "Saisissez le code à 6 chiffres envoyé au {phone}.",
-      "verified": "{phone} est vérifié."
+      "verified": "{phone} est vérifié.",
+      "descriptionNoCode": "Les hôtes utilisent ce numéro pour vous joindre une fois la réservation confirmée.",
+      "saved": "{phone} est enregistré."
     },
     "birth": {
       "title": "Votre date de naissance",

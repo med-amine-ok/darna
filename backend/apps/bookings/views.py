@@ -79,7 +79,7 @@ class GuestBookingListCreateView(generics.ListAPIView):
 
     def permission_denied(self, request, message=None, code=None):
         """Answer ``phone_not_verified`` (instead of a generic 403) when only the phone check failed."""
-        if request.user and request.user.is_authenticated and not request.user.phone_verified:
+        if request.user and request.user.is_authenticated and not request.user.phone_ok:
             raise ForbiddenError("Verify your phone number first.", code="phone_not_verified")
         super().permission_denied(request, message=message, code=code)
 

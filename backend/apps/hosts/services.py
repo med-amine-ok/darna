@@ -142,7 +142,7 @@ def become_individual_host(user) -> HostAccount:
     DEC-012). A person has at most one solo host account (the column is
     one-to-one); a second call answers 409 ``already_host``.
     """
-    if not user.phone_verified:
+    if not user.phone_ok:
         raise ForbiddenError("Verify your phone number first.", code="phone_not_verified")
     if HostAccount.objects.filter(user=user).exists():
         raise ConflictError("You already have a host account.", code="already_host")

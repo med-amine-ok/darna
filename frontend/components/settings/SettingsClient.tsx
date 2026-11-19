@@ -35,6 +35,8 @@ interface SettingsClientProps {
   currentUser?: User | null;
   /** Notification switches loaded by the page; null when the API could not be reached. */
   notificationPreferences?: NotificationPreference[] | null;
+  /** False while the backend asks no SMS code for phones (PHONE_OTP_REQUIRED off). */
+  phoneOtpRequired?: boolean;
 }
 
 type SectionId =
@@ -61,7 +63,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const HOSTING_ITEM: NavItem = { id: "pro_hosting", labelKey: "nav.proHosting", icon: BrandFilterIcon };
 
-export default function SettingsClient({ currentUser, notificationPreferences = null }: SettingsClientProps) {
+export default function SettingsClient({ currentUser, notificationPreferences = null, phoneOtpRequired = true }: SettingsClientProps) {
   const t = useTranslations("settings");
   const errorText = useActionError();
 
@@ -72,7 +74,7 @@ export default function SettingsClient({ currentUser, notificationPreferences = 
 
   // Panels stay mounted (hidden when inactive) so unsaved edits survive switching sections.
   const panels: { id: SectionId; node: React.ReactNode }[] = [
-    { id: "personal", node: <PersonalSection currentUser={currentUser} /> },
+    { id: "personal", node: <PersonalSection currentUser={currentUser} phoneOtpRequired={phoneOtpRequired} /> },
     {
       id: "security",
       node: <SecuritySection email={currentUser?.email ?? ""} hasMfa={Boolean(currentUser?.hasMfa)} onDeactivate={() => setIsDeactivateAccountOpen(true)} />,

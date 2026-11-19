@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/server/session";
 import { safeCallbackUrl } from "@/lib/auth/callback-url";
 import ProfileSetupWizard from "@/components/welcome/ProfileSetupWizard";
+import { getAuthProviders } from "@/lib/api/providers";
 
 export const dynamic = "force-dynamic";
 
@@ -32,9 +33,10 @@ export default async function WelcomePage({
   if (user.profileComplete) {
     redirect(callbackUrl);
   }
+  const { phoneOtpRequired } = await getAuthProviders();
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg px-4 py-8 sm:py-12">
-      <ProfileSetupWizard user={user} callbackUrl={callbackUrl} />
+      <ProfileSetupWizard user={user} callbackUrl={callbackUrl} phoneOtpRequired={phoneOtpRequired} />
     </div>
   );
 }

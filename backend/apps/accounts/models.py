@@ -174,6 +174,20 @@ class User(UUIDModel, SoftDeleteModel, AbstractBaseUser, PermissionsMixin):
         return self.status == UserStatus.ACTIVE and self.deleted_at is None
 
     @property
+    def phone_ok(self) -> bool:
+        """
+        The phone rule in force (DEC-012): a phone confirmed by SMS code, or,
+        while ``settings.PHONE_OTP_REQUIRED`` is off, any phone the person gave.
+        Booking, hosting and the profile steps use this; places that need a
+        truly confirmed number (team invitations by SMS) keep ``phone_verified``.
+        """
+        from django.conf import settings
+
+        if self.phone_verified:
+            return True
+        return not getattr(settings, "PHONE_OTP_REQUIRED", True) and bool(self.phone_e164)
+
+    @property
     def phone_verified(self) -> bool:
         """True when the phone was confirmed with a one-time code."""
         return self.phone_verified_at is not None

@@ -19,7 +19,9 @@
       "title": "Your phone number",
       "description": "We send a 6-digit code by SMS. Hosts use this number to reach you once a booking is confirmed.",
       "codeSent": "Enter the 6-digit code sent to {phone}.",
-      "verified": "{phone} is verified."
+      "verified": "{phone} is verified.",
+      "descriptionNoCode": "Hosts use this number to reach you once a booking is confirmed.",
+      "saved": "{phone} is saved."
     },
     "birth": {
       "title": "Your date of birth",

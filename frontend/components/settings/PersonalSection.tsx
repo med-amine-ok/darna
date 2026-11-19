@@ -124,7 +124,14 @@ function EditableField({
   );
 }
 
-export default function PersonalSection({ currentUser }: { currentUser?: User | null }) {
+export default function PersonalSection({
+  currentUser,
+  phoneOtpRequired = true,
+}: {
+  currentUser?: User | null;
+  /** False while phones need no SMS code: saving the number is enough. */
+  phoneOtpRequired?: boolean;
+}) {
   const t = useTranslations("settings");
   const errorText = useActionError();
   const router = useRouter();
@@ -178,9 +185,14 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
         return;
       }
       setPhone(result.data.phone);
+      setEditingField(null);
+      if (!phoneOtpRequired) {
+        // Codes are switched off for now: the number is saved, no code to type.
+        toast.success(t("personal.phoneSaved"));
+        return;
+      }
       setCodeSentTo(result.data.phone);
       setPhoneCode("");
-      setEditingField(null);
       toast.success(t("personal.phoneCodeSent"));
     } catch {
       toast.error(t("errors.saveFailed"));
@@ -223,7 +235,7 @@ export default function PersonalSection({ currentUser }: { currentUser?: User | 
 
   const notProvided = t("personal.notProvided");
   const phoneShownVerified = phoneVerified && !codeSentTo;
-  const phoneAwaitingCode = Boolean(codeSentTo) || (Boolean(currentUser?.phone) && !phoneVerified);
+  const phoneAwaitingCode = phoneOtpRequired && (Boolean(codeSentTo) || (Boolean(currentUser?.phone) && !phoneVerified));
 
   return (
     <section aria-labelledby="settings-personal-title" className="space-y-6">

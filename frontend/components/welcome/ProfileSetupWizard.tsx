@@ -34,7 +34,16 @@ const STEPS: Step[] = ["name", "phone", "birth", "languages", "home"];
 /** Languages people can say they speak (ISO 639-1 codes the API accepts). */
 const SPOKEN = ["ar", "fr", "en", "es", "it", "de", "tr", "zh"] as const;
 
-export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; callbackUrl: string }) {
+export default function ProfileSetupWizard({
+  user,
+  callbackUrl,
+  phoneOtpRequired = true,
+}: {
+  user: User;
+  callbackUrl: string;
+  /** False while the backend does not ask for an SMS code (PHONE_OTP_REQUIRED off): the number is saved as given. */
+  phoneOtpRequired?: boolean;
+}) {
   const t = useTranslations("welcome");
   const locale = useLocale();
   const errorText = useActionError();
@@ -54,7 +63,8 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
   const [lastName, setLastName] = useState("");
   const [arabicName, setArabicName] = useState(user.fullNameAr ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
-  const [phoneVerified, setPhoneVerified] = useState(Boolean(user.phoneVerified));
+  // With codes switched off, a number already saved on the account is enough.
+  const [phoneVerified, setPhoneVerified] = useState(Boolean(user.phoneVerified || (!phoneOtpRequired && user.phone)));
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
   const [resendIn, setResendIn] = useState(0);
@@ -151,7 +161,9 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
 
       <div className="mt-6 rounded-3xl bg-white p-6 shadow-e2 sm:p-8">
         <h1 className="font-serif text-heading text-primary-900">{stepTitle}</h1>
-        <p className="mt-2 text-body text-primary-600">{t(`steps.${step}.description`)}</p>
+        <p className="mt-2 text-body text-primary-600">
+          {step === "phone" && !phoneOtpRequired ? t("steps.phone.descriptionNoCode") : t(`steps.${step}.description`)}
+        </p>
 
         <div className="mt-6 flex flex-col gap-4">
           {step === "name" && (
@@ -173,7 +185,9 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
           {step === "phone" &&
             (phoneVerified ? (
               <>
-                <p className="rounded-xl bg-secondary-50 px-4 py-3 text-body text-secondary-800">{t("steps.phone.verified", { phone })}</p>
+                <p className="rounded-xl bg-secondary-50 px-4 py-3 text-body text-secondary-800">
+                  {phoneOtpRequired ? t("steps.phone.verified", { phone }) : t("steps.phone.saved", { phone })}
+                </p>
                 <Button type="button" onClick={nextStep}>{t("continue")}</Button>
               </>
             ) : !codeSent ? (
@@ -182,6 +196,12 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
                 onSubmit={(e) => {
                   e.preventDefault();
                   run(() => requestPhoneCodeAction(phone), () => {
+                    if (!phoneOtpRequired) {
+                      // Codes are switched off for now: the saved number completes this step.
+                      setPhoneVerified(true);
+                      nextStep();
+                      return;
+                    }
                     setCodeSent(true);
                     setResendIn(60);
                   });
@@ -199,7 +219,7 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
                   required
                   helper={t("fields.phoneHelper")}
                 />
-                <Button type="submit" loading={busy}>{t("sendCode")}</Button>
+                <Button type="submit" loading={busy}>{phoneOtpRequired ? t("sendCode") : t("continue")}</Button>
               </form>
             ) : (
               <form

@@ -354,7 +354,7 @@ def create_booking(*, guest, quote_id) -> Booking:
     (BR-PAY-06) and, when confirmed, the commission posted (BR-PAY-04).
     Idempotency (BR-SYS-01) is handled by the view.
     """
-    if not guest.phone_verified:
+    if not guest.phone_ok:
         raise ForbiddenError("Verify your phone number first.", code="phone_not_verified")
     _check_guest_limits(guest)
     # Lock the quote: two clicks on the same quote are served one after the other.

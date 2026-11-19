@@ -108,7 +108,8 @@
     "LAST_SIGN_IN_METHOD": "Set a password first (Forgot password), or you could not sign in any more.",
     "UNDERAGE": "You must be at least 18 years old to use BLADUS.",
     "INVALID_BIRTH_DATE": "This date of birth is not possible. Please check it.",
-    "PROFILE_INCOMPLETE": "Some required steps are not done yet."
+    "PROFILE_INCOMPLETE": "Some required steps are not done yet.",
+    "SMS_SEND_FAILED": "We could not send the SMS right now. Check the number and try again in a moment."
   },
   "errorEyebrow": "Unexpected error",
   "errorReference": "Reference:",

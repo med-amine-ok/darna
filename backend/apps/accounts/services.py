@@ -289,7 +289,21 @@ def _check_send_limits(*, destination_hash: str, ip: str | None, channel: str) -
     return None
 
 
-def request_code(*, destination: str, purpose: str, ip: str | None = None) -> None:
+# Text of the code SMS per language (kept short: one SMS part; Arabic costs more per character).
+CODE_MESSAGES = {
+    "fr": "BLADUS : {code} est votre code. Il expire dans {minutes} minutes. Ne le partagez avec personne.",
+    "en": "BLADUS: {code} is your code. It expires in {minutes} minutes. Never share it.",
+    "ar": "BLADUS: رمزك هو {code}. ينتهي خلال {minutes} دقائق. لا تشاركه مع أحد.",
+}
+
+
+def code_message(code: str, locale: str = "fr") -> str:
+    """The SMS or email text carrying a one-time code, in ``locale`` (French when unknown)."""
+    template = CODE_MESSAGES.get(locale, CODE_MESSAGES["fr"])
+    return template.format(code=code, minutes=settings.OTP_TTL_MINUTES)
+
+
+def request_code(*, destination: str, purpose: str, ip: str | None = None, locale: str = "fr") -> None:
     """
     Send a 6-digit code to a phone (SMS) or an email (BR-ACC-02, R9).
 
@@ -321,12 +335,13 @@ def request_code(*, destination: str, purpose: str, ip: str | None = None) -> No
 
     status = "sent"
     try:
-        text = f"BLADUS: {code} est votre code. Il expire dans {settings.OTP_TTL_MINUTES} minutes."
+        text = code_message(code, locale)
         if channel == "sms":
             get_sms_backend().send(destination, text)
         else:
             send_email(destination, "BLADUS code", text)
-    except Exception:  # provider down: log it, the user can ask again
+    except Exception as exc:  # provider down or not set up: log the reason (never the code), the user can ask again
+        logger.error("Sending the %s code failed (%s): %s", channel, purpose, exc)
         status = "failed"
     OtpSendLog.objects.create(destination_hash=destination_hash, ip=ip, purpose=purpose, channel=channel, status=status)
     if status == "failed":
@@ -385,7 +400,9 @@ def set_phone(user: User, phone: str, *, ip: str | None = None) -> None:
     user.phone_e164 = phone
     user.phone_verified_at = None
     user.save(update_fields=["phone_e164", "phone_verified_at"])
-    request_code(destination=phone, purpose=CodePurpose.VERIFY_PHONE, ip=ip)
+    if not settings.PHONE_OTP_REQUIRED:
+        return  # codes are switched off for now: the number is saved, nothing is sent
+    request_code(destination=phone, purpose=CodePurpose.VERIFY_PHONE, ip=ip, locale=user.preferred_locale)
 
 
 def verify_phone(user: User, code: str) -> None:
@@ -466,7 +483,7 @@ def profile_missing_steps(user: User) -> list[str]:
     missing = []
     if not (user.first_name_latin or user.full_name_ar):
         missing.append("name")
-    if not user.phone_verified:
+    if not user.phone_ok:
         missing.append("phone")
     if user.date_of_birth is None:
         missing.append("date_of_birth")

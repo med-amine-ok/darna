@@ -140,7 +140,7 @@ def test_acc_10_google_off_without_keys(settings):
     """Without keys the feature is off: providers says so and sign-in is refused."""
     settings.GOOGLE_CLIENT_ID = ""
     providers = APIClient().get("/api/v1/auth/providers")
-    assert providers.data == {"google_enabled": False, "google_client_id": ""}
+    assert providers.data["google_enabled"] is False and providers.data["google_client_id"] == ""
     assert sign_in().data["code"] == "google_disabled"
 
 

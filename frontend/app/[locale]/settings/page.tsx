@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/server/session";
 import SettingsClient from "@/components/settings/SettingsClient";
 import { getNotificationPreferences } from "@/lib/data/notifications";
+import { getAuthProviders } from "@/lib/api/providers";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,15 @@ export default async function SettingsPage({
     redirect(`/${locale}/login?callbackUrl=/${locale}/settings`);
   }
 
-  const notificationPreferences = await getNotificationPreferences().catch(() => null);
+  const [notificationPreferences, { phoneOtpRequired }] = await Promise.all([
+    getNotificationPreferences().catch(() => null),
+    getAuthProviders(),
+  ]);
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg pb-20 pt-8 sm:pt-12">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <SettingsClient currentUser={currentUser} notificationPreferences={notificationPreferences} />
+        <SettingsClient currentUser={currentUser} notificationPreferences={notificationPreferences} phoneOtpRequired={phoneOtpRequired} />
       </div>
     </div>
   );

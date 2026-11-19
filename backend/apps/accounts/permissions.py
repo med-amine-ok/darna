@@ -86,4 +86,4 @@ class IsPhoneVerified(BasePermission):
     def has_permission(self, request, view) -> bool:
         """True when the caller has a verified phone."""
         user = request.user
-        return bool(user and user.is_authenticated and user.phone_verified)
+        return bool(user and user.is_authenticated and user.phone_ok)

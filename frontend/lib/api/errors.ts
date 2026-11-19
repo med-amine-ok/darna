@@ -22,6 +22,7 @@ const CODE_MAP: Record<string, ActionErrorCode> = {
   invalid_current_password: "WRONG_PASSWORD",
   handle_taken: "HANDLE_TAKEN",
   last_sign_in_method: "LAST_SIGN_IN_METHOD",
+  otp_send_failed: "SMS_SEND_FAILED",
   underage: "UNDERAGE",
   invalid_birth_date: "INVALID_BIRTH_DATE",
   profile_incomplete: "PROFILE_INCOMPLETE",
