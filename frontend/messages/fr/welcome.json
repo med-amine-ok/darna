@@ -1,0 +1,69 @@
+{
+  "metaTitle": "Complétez votre profil",
+  "progress": "Étape {current} sur {total}",
+  "continue": "Continuer",
+  "back": "Retour",
+  "finish": "Terminer",
+  "skipFinish": "Passer cette étape et terminer",
+  "sendCode": "Envoyer le code",
+  "verify": "Vérifier",
+  "resend": "Envoyer un nouveau code",
+  "resendIn": "Nouveau code dans {seconds} s",
+  "changeNumber": "Changer de numéro",
+  "steps": {
+    "name": {
+      "title": "Comment vous appelez-vous ?",
+      "description": "Les hôtes et les voyageurs voient votre prénom et la première lettre de votre nom."
+    },
+    "phone": {
+      "title": "Votre numéro de téléphone",
+      "description": "Nous envoyons un code à 6 chiffres par SMS. Les hôtes utilisent ce numéro pour vous joindre une fois la réservation confirmée.",
+      "codeSent": "Saisissez le code à 6 chiffres envoyé au {phone}.",
+      "verified": "{phone} est vérifié."
+    },
+    "birth": {
+      "title": "Votre date de naissance",
+      "description": "Vous devez avoir au moins 18 ans pour réserver sur BLADUS. Votre date de naissance n'est jamais affichée."
+    },
+    "languages": {
+      "title": "Vos langues",
+      "description": "Choisissez la langue du site et les langues que vous parlez, pour que les hôtes puissent échanger avec vous."
+    },
+    "home": {
+      "title": "Où habitez-vous ?",
+      "description": "Facultatif : cela aide les hôtes à vous connaître un peu. Seule la commune apparaît sur votre profil."
+    }
+  },
+  "fields": {
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "lastNameHelper": "Seule sa première lettre est affichée.",
+    "arabicName": "Nom en arabe",
+    "optional": "Facultatif",
+    "phone": "Numéro de mobile",
+    "phoneHelper": "Numéro algérien, par exemple 0555 12 34 56.",
+    "code": "Code à 6 chiffres",
+    "birth": "Date de naissance",
+    "birthHelper": "Privée, jamais affichée.",
+    "siteLanguage": "Langue du site",
+    "spoken": "Langues parlées",
+    "wilaya": "Wilaya",
+    "commune": "Commune",
+    "choose": "Choisir",
+    "bio": "Quelques mots sur vous",
+    "bioPlaceholder": "Par exemple : j'aime le Sahara et les maisons traditionnelles."
+  },
+  "languages": {
+    "ar": "Arabe",
+    "fr": "Français",
+    "en": "Anglais",
+    "es": "Espagnol",
+    "it": "Italien",
+    "de": "Allemand",
+    "tr": "Turc",
+    "zh": "Chinois"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Veuillez réessayer."
+  }
+}

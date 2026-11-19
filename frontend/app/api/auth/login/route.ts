@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      user: { id: user.id, name: user.name, hostType: user.hostType ?? null },
+      user: { id: user.id, name: user.name, hostType: user.hostType ?? null, profileComplete: Boolean(user.profileComplete) },
     });
     // UI preference only (not identity): which workspace to show by default.
     res.cookies.set("darna_mode", user.hostType ? "host" : "traveler", {

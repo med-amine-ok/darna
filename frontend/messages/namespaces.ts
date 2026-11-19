@@ -2,6 +2,7 @@
 // Add a namespace here when you create a new file.
 export const namespaces = [
   "common",
+  "welcome",
   "homeHero",
   "nav",
   "search",

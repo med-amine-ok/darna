@@ -40,7 +40,9 @@ def test_br_sec_hash_03_dev_pepper_refused_in_production():
 
     from django.conf import settings as django_settings
 
-    env = {"DJANGO_DEBUG": "False", "DJANGO_SECRET_KEY": "x" * 50, "SYSTEMROOT": __import__("os").environ.get("SYSTEMROOT", "")}
+    # Empty values hide anything a local backend/.env would add (read_env never overrides).
+    env = {"DJANGO_DEBUG": "False", "DJANGO_SECRET_KEY": "x" * 50, "INTEGRATION_KEYS": "", "MEDIA_UPLOADS_ENABLED": "True",
+           "MEDIA_STORAGE_BACKEND": "local", "MEDIA_SCANNER": "", "SYSTEMROOT": __import__("os").environ.get("SYSTEMROOT", "")}
     code = "import backend.settings"
     run = lambda extra: subprocess.run(  # noqa: E731
         [sys.executable, "-c", code], cwd=django_settings.BASE_DIR, env={**env, **extra}, capture_output=True, text=True
@@ -52,6 +54,9 @@ def test_br_sec_hash_03_dev_pepper_refused_in_production():
     assert "MEDIA_SCANNER" in run({**keys, "MEDIA_STORAGE_BACKEND": "s3"}).stderr
     ok = run({**keys, "MEDIA_STORAGE_BACKEND": "s3", "MEDIA_SCANNER": "apps.media.scanning.StubScanner"})
     assert ok.returncode == 0, ok.stderr
+    # First release: uploads switched off, so no storage or scanner is needed to start.
+    uploads_off = run({**keys, "MEDIA_UPLOADS_ENABLED": "False"})
+    assert uploads_off.returncode == 0, uploads_off.stderr
 
 
 def request(destination: str, ip: str | None = "198.51.100.7"):

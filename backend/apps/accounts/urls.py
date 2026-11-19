@@ -16,6 +16,7 @@ urlpatterns = [
     path("auth/providers", views.AuthProvidersView.as_view(), name="auth-providers"),
     path("auth/google", views.GoogleSignInView.as_view(), name="auth-google"),
     path("me/social-accounts", views.SocialAccountListView.as_view(), name="me-social-accounts"),
+    path("me/profile/complete", views.ProfileCompleteView.as_view(), name="me-profile-complete"),
     path("me/social-accounts/<uuid:account_id>", views.SocialAccountDetailView.as_view(), name="me-social-account"),
     path("auth/code/request", views.CodeRequestView.as_view(), name="auth-code-request"),
     path("auth/code/confirm", views.CodeConfirmView.as_view(), name="auth-code-confirm"),

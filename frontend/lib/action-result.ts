@@ -25,6 +25,9 @@ export const ERROR_CODES = [
   "NAME_EMPTY",
   "HANDLE_TAKEN",
   "LAST_SIGN_IN_METHOD",
+  "UNDERAGE",
+  "INVALID_BIRTH_DATE",
+  "PROFILE_INCOMPLETE",
   "INVALID_HANDLE",
   // Booking requests (lib/booking/availability.ts)
   "INVALID_DATES",

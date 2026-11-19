@@ -63,7 +63,7 @@ async function postAuth(path: string, payload: Record<string, string>) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new AuthError(data);
-  return data as { user?: { name?: string }; mfaRequired?: boolean };
+  return data as { user?: { name?: string; profileComplete?: boolean }; mfaRequired?: boolean };
 }
 
 type FieldErrors = { name?: string; email?: string; password?: string };
@@ -165,7 +165,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
       const data = await postAuth("/api/auth/2fa", { code });
       const userName = typeof data.user?.name === "string" ? data.user.name : "";
       setIsLoading(false);
-      finish(userName ? t("welcomeBackName", { name: userName }) : t("welcomeToast"));
+      finish(userName ? t("welcomeBackName", { name: userName }) : t("welcomeToast"), data.user?.profileComplete !== false);
     } catch (err) {
       setIsLoading(false);
       const body = err instanceof AuthError ? err.body : null;
@@ -179,10 +179,24 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
     }
   };
 
-  const finish = (message: string) => {
+  /**
+   * After a successful sign-in or sign-up. New accounts (and accounts with
+   * required profile steps left) go to /welcome first (ACC-11), then on to
+   * where the visitor was heading.
+   */
+  const finish = (message: string, profileComplete = true) => {
     setSuccess(true);
     toast.success(message);
-    doneTimer.current = setTimeout(onAuthenticated, SUCCESS_HOLD_MS);
+    doneTimer.current = setTimeout(() => {
+      if (profileComplete) {
+        onAuthenticated();
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      const back = params.get("callbackUrl") || `${window.location.pathname}${window.location.search}`;
+      const target = back.startsWith(`/${locale}/login`) ? `/${locale}` : back;
+      window.location.assign(`/${locale}/welcome?${new URLSearchParams({ callbackUrl: target }).toString()}`);
+    }, SUCCESS_HOLD_MS);
   };
 
   const validate = (): FieldErrors => {
@@ -210,7 +224,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         const data = await postAuth("/api/auth/register", { name: name.trim(), email: email.trim(), password });
         const userName = typeof data.user?.name === "string" ? data.user.name : name.trim();
         setIsLoading(false);
-        finish(t("welcomeName", { name: userName }));
+        finish(t("welcomeName", { name: userName }), false);
       } else {
         const data = await postAuth("/api/auth/login", { email: email.trim(), password });
         if (data.mfaRequired) {
@@ -220,7 +234,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         }
         const userName = typeof data.user?.name === "string" ? data.user.name : "";
         setIsLoading(false);
-        finish(userName ? t("welcomeBackName", { name: userName }) : t("welcomeToast"));
+        finish(userName ? t("welcomeBackName", { name: userName }) : t("welcomeToast"), data.user?.profileComplete !== false);
       }
     } catch (err) {
       setIsLoading(false);
@@ -422,22 +436,26 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         <Button
           type="button"
           variant="tertiary"
+          leadingIcon={<BrandGoogleIcon size={18} aria-hidden="true" />}
           aria-label={t("signInWith", { provider: "Google" })}
           title={t("signInWith", { provider: "Google" })}
           onClick={continueWithGoogle}
           disabled={busy}
+          fullWidth
         >
-          <BrandGoogleIcon size={20} aria-hidden="true" />
-          <span className="ms-2 text-sm font-semibold">Google</span>
+          Google
         </Button>
         <Button
           type="button"
           variant="tertiary"
+          leadingIcon={<BrandPhoneIcon size={18} className="text-secondary-700" aria-hidden="true" />}
           aria-label={t("signInWithPhone")}
           title={t("signInWithPhone")}
           onClick={() => toast.info(t("phoneSimulated"))}
+          disabled={busy}
+          fullWidth
         >
-          <BrandPhoneIcon size={20} className="text-secondary-700" aria-hidden="true" />
+          {t("phone")}
         </Button>
       </div>
       <p className="mt-3 text-center text-[11px] leading-relaxed text-primary-500">{t("google.terms")}</p>

@@ -5,6 +5,12 @@ export interface User {
   id: string;
   /** Public profile link name: /users/<handle>. */
   handle?: string;
+  /** Private; asked once after sign-up (YYYY-MM-DD). */
+  dateOfBirth?: string | null;
+  /** True once 'complete your profile' was finished after sign-up. */
+  profileComplete?: boolean;
+  /** Required steps still to do: "name", "phone", "date_of_birth". */
+  profileMissing?: string[];
   name: string;
   email: string;
   image?: string | null;

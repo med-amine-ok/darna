@@ -105,7 +105,10 @@
     "DATES_BOOKED": "Some of these dates are already booked and cannot be blocked.",
     "HANDLE_TAKEN": "This profile link is already taken. Try another one.",
     "INVALID_HANDLE": "Use 3 to 30 letters, digits or hyphens (no spaces).",
-    "LAST_SIGN_IN_METHOD": "Set a password first (Forgot password), or you could not sign in any more."
+    "LAST_SIGN_IN_METHOD": "Set a password first (Forgot password), or you could not sign in any more.",
+    "UNDERAGE": "You must be at least 18 years old to use BLADUS.",
+    "INVALID_BIRTH_DATE": "This date of birth is not possible. Please check it.",
+    "PROFILE_INCOMPLETE": "Some required steps are not done yet."
   },
   "errorEyebrow": "Unexpected error",
   "errorReference": "Reference:",

@@ -240,3 +240,83 @@ export async function disconnectAccountAction(accountId: string): Promise<Action
   });
 }
 
+
+// ---------------------------------------------------------------------------
+// 'Complete your profile' after sign-up (ACC-11)
+// ---------------------------------------------------------------------------
+const SPOKEN_LANGUAGE_RE = /^[a-z]{2}$/;
+
+/** PATCH /me with the details of the profile steps; only the fields given are changed. */
+export async function saveProfileDetailsAction(patch: {
+  firstName?: string;
+  lastName?: string;
+  arabicName?: string;
+  dateOfBirth?: string;
+  preferredLocale?: string;
+  spokenLanguages?: string[];
+  homeCommuneId?: number | null;
+  bio?: string;
+}): Promise<ActionResult<User>> {
+  if (!(await getSessionUser())) return actionFail("UNAUTHENTICATED");
+  if (!patch || typeof patch !== "object") return actionFail("INVALID_INPUT");
+  const body: Record<string, unknown> = {};
+  if (typeof patch.firstName === "string") {
+    if (!patch.firstName.trim()) return actionFail("NAME_EMPTY");
+    body.first_name_latin = patch.firstName.trim().slice(0, 80);
+  }
+  if (typeof patch.lastName === "string") body.last_name_latin = patch.lastName.trim().slice(0, 80);
+  if (typeof patch.arabicName === "string") body.full_name_ar = patch.arabicName.trim().slice(0, 160);
+  if (typeof patch.dateOfBirth === "string") {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(patch.dateOfBirth)) return actionFail("INVALID_BIRTH_DATE");
+    body.date_of_birth = patch.dateOfBirth;
+  }
+  if (typeof patch.preferredLocale === "string" && ["en", "fr", "ar"].includes(patch.preferredLocale)) {
+    body.preferred_locale = patch.preferredLocale;
+  }
+  if (Array.isArray(patch.spokenLanguages)) {
+    body.spoken_languages = patch.spokenLanguages.filter((code) => SPOKEN_LANGUAGE_RE.test(code)).slice(0, 10);
+  }
+  if (patch.homeCommuneId === null || (typeof patch.homeCommuneId === "number" && Number.isInteger(patch.homeCommuneId))) {
+    body.home_commune = patch.homeCommuneId;
+  }
+  if (typeof patch.bio === "string") body.bio = patch.bio.slice(0, 500);
+  if (Object.keys(body).length === 0) return actionFail("INVALID_INPUT");
+  try {
+    const updated = await updateMyProfile(body);
+    if (!updated) return actionFail("UNAUTHENTICATED");
+    return actionOk(updated);
+  } catch (error) {
+    return failFromError(error, "saveProfileDetailsAction");
+  }
+}
+
+/** One commune of a wilaya, named in the visitor's language. */
+export interface CommuneOption {
+  id: number;
+  name: string;
+}
+
+/** GET /geo/wilayas/{code}/communes for the 'where do you live' step. */
+export async function listCommunesAction(wilayaCode: number, locale: string): Promise<ActionResult<CommuneOption[]>> {
+  if (!Number.isInteger(wilayaCode) || wilayaCode < 1 || wilayaCode > 69) return actionFail("INVALID_INPUT");
+  return apiAction("listCommunesAction", async () => {
+    const answer = await api<{ results: { id: number; name: string; name_fr: string; name_ar: string; name_en: string }[] }>(
+      `/geo/wilayas/${wilayaCode}/communes`,
+      { anonymous: true },
+    );
+    const pick = (row: { name: string; name_fr: string; name_ar: string; name_en: string }) =>
+      (locale === "ar" ? row.name_ar : locale === "en" ? row.name_en : row.name_fr) || row.name;
+    return answer.results.map((row) => ({ id: row.id, name: pick(row) })).sort((a, b) => a.name.localeCompare(b.name, locale));
+  });
+}
+
+/** POST /me/profile/complete: PROFILE_INCOMPLETE until name, verified phone and birthday are done. */
+export async function completeProfileAction(): Promise<ActionResult<null>> {
+  if (!(await getSessionUser())) return actionFail("UNAUTHENTICATED");
+  return apiAction("completeProfileAction", async () => {
+    await api("/me/profile/complete", { method: "POST" });
+    revalidatePath("/", "layout");
+    return null;
+  });
+}
+

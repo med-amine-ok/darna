@@ -24,6 +24,10 @@ export interface ApiMe {
   has_mfa: boolean;
   date_joined: string;
   handle?: string | null;
+  date_of_birth?: string | null;
+  profile_completed_at?: string | null;
+  /** Required steps of 'complete your profile' still to do: name, phone, date_of_birth (ACC-11). */
+  profile_missing?: string[];
   avatar_url?: string | null;
 }
 
@@ -66,6 +70,9 @@ export function toUser(me: ApiMe, workspaces: ApiWorkspace[], favoriteIds: strin
     organizationId: active?.organization_id ?? null,
     createdAt: me.date_joined,
     handle: me.handle ?? undefined,
+    dateOfBirth: me.date_of_birth ?? null,
+    profileComplete: Boolean(me.profile_completed_at),
+    profileMissing: me.profile_missing ?? [],
     emailVerified: me.email_verified ? me.date_joined : null,
     favoriteIds,
     bio: me.bio || undefined,

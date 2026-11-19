@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      user: { id: user.id, name: user.name, hostType: user.hostType ?? null },
+      user: { id: user.id, name: user.name, hostType: user.hostType ?? null, profileComplete: Boolean(user.profileComplete) },
     });
     res.cookies.set(MFA_PENDING_COOKIE, "", { ...sessionCookieOptions(0), maxAge: 0 });
     res.cookies.set("darna_mode", user.hostType ? "host" : "traveler", { path: "/", maxAge: 31536000, sameSite: "lax" });

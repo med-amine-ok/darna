@@ -1058,3 +1058,13 @@ class SocialAccountDetailView(APIView):
         services.unlink_social_account(request.user, account_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class ProfileCompleteView(APIView):
+    """``POST /me/profile/complete``: finish 'complete your profile' after sign-up (ACC-11)."""
+
+    @extend_schema(request=None, responses={200: MeSerializer})
+    def post(self, request):
+        """422 ``profile_incomplete`` (``errors.missing``: name, phone, date_of_birth) until the required steps are done."""
+        user = services.complete_profile(request.user)
+        return Response(MeSerializer(user).data)
+

@@ -1,0 +1,69 @@
+{
+  "metaTitle": "Complete your profile",
+  "progress": "Step {current} of {total}",
+  "continue": "Continue",
+  "back": "Back",
+  "finish": "Finish",
+  "skipFinish": "Skip this step and finish",
+  "sendCode": "Send the code",
+  "verify": "Verify",
+  "resend": "Send a new code",
+  "resendIn": "New code in {seconds}s",
+  "changeNumber": "Change the number",
+  "steps": {
+    "name": {
+      "title": "What's your name?",
+      "description": "Hosts and guests see your first name and the first letter of your last name."
+    },
+    "phone": {
+      "title": "Your phone number",
+      "description": "We send a 6-digit code by SMS. Hosts use this number to reach you once a booking is confirmed.",
+      "codeSent": "Enter the 6-digit code sent to {phone}.",
+      "verified": "{phone} is verified."
+    },
+    "birth": {
+      "title": "Your date of birth",
+      "description": "You must be at least 18 to book on BLADUS. Your birthday is never shown to anyone."
+    },
+    "languages": {
+      "title": "Your languages",
+      "description": "Choose the language of the site, and the languages you speak so hosts can talk with you."
+    },
+    "home": {
+      "title": "Where do you live?",
+      "description": "Optional: it helps hosts know you a little. Only the commune is shown on your profile."
+    }
+  },
+  "fields": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "lastNameHelper": "Only its first letter is shown.",
+    "arabicName": "Name in Arabic",
+    "optional": "Optional",
+    "phone": "Mobile number",
+    "phoneHelper": "Algerian number, for example 0555 12 34 56.",
+    "code": "6-digit code",
+    "birth": "Date of birth",
+    "birthHelper": "Private, never shown.",
+    "siteLanguage": "Language of the site",
+    "spoken": "Languages you speak",
+    "wilaya": "Wilaya",
+    "commune": "Commune",
+    "choose": "Choose",
+    "bio": "A few words about you",
+    "bioPlaceholder": "For example: I love the Sahara and traditional houses."
+  },
+  "languages": {
+    "ar": "Arabic",
+    "fr": "French",
+    "en": "English",
+    "es": "Spanish",
+    "it": "Italian",
+    "de": "German",
+    "tr": "Turkish",
+    "zh": "Chinese"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again."
+  }
+}

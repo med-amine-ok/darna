@@ -24,6 +24,7 @@ const PROTECTED_USER_PREFIXES = [
   "/properties",
   "/messages",
   "/notifications",
+  "/welcome",
 ];
 
 function redirectTo(

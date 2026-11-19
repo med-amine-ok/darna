@@ -83,6 +83,7 @@ class MeSerializer(serializers.ModelSerializer):
     is_admin = serializers.BooleanField(read_only=True)
     is_host = serializers.SerializerMethodField()
     has_mfa = serializers.SerializerMethodField()
+    profile_missing = serializers.SerializerMethodField()
 
     class Meta:
         """Model and fields this serializer reads or writes."""
@@ -92,6 +93,7 @@ class MeSerializer(serializers.ModelSerializer):
             "first_name_latin", "last_name_latin", "full_name_ar", "display_name",
             "bio", "spoken_languages", "home_commune", "address_line",
             "preferred_locale", "status", "is_admin", "is_host", "has_mfa", "date_joined", "handle",
+            "date_of_birth", "profile_completed_at", "profile_missing",
         ]
         read_only_fields = fields
 
@@ -104,6 +106,12 @@ class MeSerializer(serializers.ModelSerializer):
         from apps.hosts.selectors import user_is_host  # local import: hosts is a higher layer
 
         return user_is_host(user)
+
+    def get_profile_missing(self, user: User) -> list[str]:
+        """Required steps of 'complete your profile' still to do: ``name``, ``phone``, ``date_of_birth`` (ACC-11)."""
+        from .services import profile_missing_steps
+
+        return profile_missing_steps(user)
 
     def get_has_mfa(self, user: User) -> bool:
         """True when an authenticator app is enrolled (BR-ACC-04)."""
@@ -121,6 +129,7 @@ class MeUpdateSerializer(serializers.Serializer):
     home_commune = serializers.PrimaryKeyRelatedField(queryset=Commune.objects.all(), required=False, allow_null=True)
     address_line = serializers.CharField(required=False, allow_blank=True, max_length=255)
     preferred_locale = serializers.ChoiceField(choices=["en", "fr", "ar"], required=False)
+    date_of_birth = serializers.DateField(required=False, help_text="Must make the person an adult (ACC-11).")
     handle = serializers.CharField(
         required=False, max_length=30,
         help_text="Public profile link name: 3 to 30 lower-case letters, digits or hyphens (ACC-06).",

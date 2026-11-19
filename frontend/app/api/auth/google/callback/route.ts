@@ -83,7 +83,11 @@ export async function GET(request: NextRequest) {
   const user = answer.session_token ? await startSession(answer.session_token) : null;
   if (!user) return toLogin({ error: "google_failed" });
 
-  const res = finish(NextResponse.redirect(new URL(callbackUrl, request.url)));
+  // New accounts (and ones with required steps left) complete their profile first (ACC-11).
+  const destination = user.profileComplete
+    ? callbackUrl
+    : `/${locale}/welcome?${new URLSearchParams({ callbackUrl }).toString()}`;
+  const res = finish(NextResponse.redirect(new URL(destination, request.url)));
   // UI preference only (not identity): which workspace to show by default.
   res.cookies.set("darna_mode", user.hostType ? "host" : "traveler", { path: "/", maxAge: 31536000, sameSite: "lax" });
   return res;

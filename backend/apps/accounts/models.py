@@ -101,6 +101,13 @@ class User(UUIDModel, SoftDeleteModel, AbstractBaseUser, PermissionsMixin):
     home_commune = models.ForeignKey("geo.Commune", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     address_line = models.CharField(max_length=255, blank=True, help_text="Private; never shown publicly.")
     preferred_locale = models.CharField(max_length=2, default="fr", choices=[("en", "English"), ("fr", "French"), ("ar", "Arabic")])
+    date_of_birth = models.DateField(
+        null=True, blank=True, help_text="Private. Asked once after sign-up; bookings need an adult (ACC-11)."
+    )
+    profile_completed_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When the person finished the 'complete your profile' steps after sign-up (ACC-11).",
+    )
     handle = models.CharField(
         max_length=30, unique=True, null=True, blank=True,
         help_text="Public profile link name (/users/<handle>), made from the display name; see accounts.handles.",

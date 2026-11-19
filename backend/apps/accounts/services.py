@@ -433,6 +433,61 @@ def _checked_handle(user: User, value) -> str:
     return handle
 
 
+# 'Complete your profile' after sign-up (ACC-11).
+MIN_AGE_YEARS = 18  # bookings are contracts: the person must be an adult
+MAX_AGE_YEARS = 120
+
+
+def _age_on(birth, today) -> int:
+    """Full years between ``birth`` and ``today``."""
+    return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+
+
+def _checked_birth_date(value):
+    """A birth date that makes the person an adult, else 422 ``underage`` / ``invalid_birth_date``."""
+    if value is None:
+        raise DomainError("Give your date of birth.", code="invalid_birth_date")
+    age = _age_on(value, business_today())
+    if age < 0 or age > MAX_AGE_YEARS:
+        raise DomainError("This date of birth is not possible.", code="invalid_birth_date",
+                          errors={"date_of_birth": ["Check the date."]})
+    if age < MIN_AGE_YEARS:
+        raise DomainError(f"You must be at least {MIN_AGE_YEARS} to use BLADUS.", code="underage",
+                          errors={"date_of_birth": [f"At least {MIN_AGE_YEARS} years old."]})
+    return value
+
+
+def profile_missing_steps(user: User) -> list[str]:
+    """
+    Required steps still to do before the profile counts as complete (ACC-11):
+    ``name`` (first name), ``phone`` (verified by SMS code) and ``date_of_birth``.
+    Languages, home commune and bio are optional.
+    """
+    missing = []
+    if not (user.first_name_latin or user.full_name_ar):
+        missing.append("name")
+    if not user.phone_verified:
+        missing.append("phone")
+    if user.date_of_birth is None:
+        missing.append("date_of_birth")
+    return missing
+
+
+def complete_profile(user: User) -> User:
+    """
+    Finish 'complete your profile' (ACC-11): 422 ``profile_incomplete`` with the
+    missing steps, else stamp ``profile_completed_at`` (running it again is harmless).
+    """
+    missing = profile_missing_steps(user)
+    if missing:
+        raise DomainError("Some required steps are not done yet.", code="profile_incomplete",
+                          status_code=422, errors={"missing": missing})
+    if user.profile_completed_at is None:
+        user.profile_completed_at = timezone.now()
+        user.save(update_fields=["profile_completed_at"])
+    return user
+
+
 def update_profile(user: User, **fields) -> User:
     """
     Update the editable profile fields (ACC-06).
@@ -443,8 +498,10 @@ def update_profile(user: User, **fields) -> User:
     """
     allowed = {
         "first_name_latin", "last_name_latin", "full_name_ar", "bio",
-        "spoken_languages", "home_commune", "address_line", "preferred_locale", "handle",
+        "spoken_languages", "home_commune", "address_line", "preferred_locale", "handle", "date_of_birth",
     }
+    if "date_of_birth" in fields:
+        fields = {**fields, "date_of_birth": _checked_birth_date(fields["date_of_birth"])}
     if "handle" in fields:
         fields = {**fields, "handle": _checked_handle(user, fields["handle"])}
     changed = []

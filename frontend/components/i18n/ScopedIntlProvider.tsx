@@ -28,6 +28,7 @@ export const SCOPES = {
   favorites: ["favorites"],
   notifications: ["notifications"],
   tripDetail: ["tripDetail"],
+  welcome: ["welcome"],
 } as const satisfies Record<string, readonly Namespace[]>;
 
 export type Scope = keyof typeof SCOPES;
