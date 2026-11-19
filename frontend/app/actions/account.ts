@@ -310,13 +310,24 @@ export async function listCommunesAction(wilayaCode: number, locale: string): Pr
   });
 }
 
-/** POST /me/profile/complete: PROFILE_INCOMPLETE until name, verified phone and birthday are done. */
+/**
+ * POST /me/profile/complete. Refused with PROFILE_INCOMPLETE until the name,
+ * phone and birthday are done; ``params.missing`` then lists the steps still
+ * missing ("name", "phone", "date_of_birth", comma separated).
+ */
 export async function completeProfileAction(): Promise<ActionResult<null>> {
   if (!(await getSessionUser())) return actionFail("UNAUTHENTICATED");
-  return apiAction("completeProfileAction", async () => {
+  try {
     await api("/me/profile/complete", { method: "POST" });
     revalidatePath("/", "layout");
-    return null;
-  });
+    return actionOk(null);
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "profile_incomplete") {
+      const raw = (error.errors as { missing?: unknown } | null)?.missing;
+      const missing = Array.isArray(raw) ? raw.filter((s): s is string => typeof s === "string") : [];
+      return actionFail("PROFILE_INCOMPLETE", { missing: missing.join(",") });
+    }
+    return failFromError(error, "completeProfileAction");
+  }
 }
 

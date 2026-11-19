@@ -93,6 +93,15 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
     try {
       const result = await work();
       if (!result.ok) {
+        if (result.code === "PROFILE_INCOMPLETE") {
+          // Open the first required step the server still misses, and say what it needs.
+          const missing = String(result.params?.missing ?? "").split(",").filter(Boolean);
+          const first = missing[0];
+          const target: Step | null = first === "name" ? "name" : first === "phone" ? "phone" : first === "date_of_birth" ? "birth" : null;
+          if (target) setStep(target);
+          setError(first ? t(`missing.${first === "date_of_birth" ? "birth" : first}`) : errorText(result));
+          return;
+        }
         setError(errorText(result));
         return;
       }
@@ -292,7 +301,7 @@ export default function ProfileSetupWizard({ user, callbackUrl }: { user: User; 
           )}
 
           {error && (
-            <p role="alert" className="text-meta font-medium text-accent-700">
+            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-meta font-semibold text-status-error">
               {error}
             </p>
           )}

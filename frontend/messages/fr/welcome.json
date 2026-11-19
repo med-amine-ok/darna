@@ -67,5 +67,10 @@
   },
   "errors": {
     "generic": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "missing": {
+    "name": "Votre prénom manque. Saisissez-le ici.",
+    "phone": "Votre numéro n'est pas encore enregistré sur le serveur. Saisissez-le à nouveau et continuez.",
+    "birth": "Votre date de naissance manque. Saisissez-la ici."
   }
 }

@@ -67,5 +67,10 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again."
+  },
+  "missing": {
+    "name": "Your first name is missing. Please enter it here.",
+    "phone": "Your phone number is not saved on the server yet. Enter it again and continue.",
+    "birth": "Your date of birth is missing. Please enter it here."
   }
 }

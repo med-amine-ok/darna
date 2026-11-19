@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/server/session";
 import { safeCallbackUrl } from "@/lib/auth/callback-url";
 import ProfileSetupWizard from "@/components/welcome/ProfileSetupWizard";
+import Logo from "@/components/navbar/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default async function WelcomePage({
     redirect(callbackUrl);
   }
   return (
-    <div className="min-h-[calc(100dvh-5rem)] bg-darnaBg px-4 py-8 sm:py-12">
+    <div className="min-h-[100dvh] bg-darnaBg px-4 py-8 sm:py-12">
+      <div className="mx-auto mb-8 flex w-full max-w-xl justify-center">
+        <Logo variant="horizontal" interactive={false} />
+      </div>
       <ProfileSetupWizard user={user} callbackUrl={callbackUrl} />
     </div>
   );

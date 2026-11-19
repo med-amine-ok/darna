@@ -21,6 +21,7 @@ export default function AppLayoutShell({
 
   const isHost = normalizedPath.startsWith("/host");
   const isBecomeHost = normalizedPath.startsWith("/become-a-host");
+  const isWelcome = normalizedPath === "/welcome" || normalizedPath.startsWith("/welcome/");
   const isMessages = normalizedPath === "/messages" || normalizedPath.startsWith("/messages/");
   const isHome = normalizedPath === "/" || normalizedPath === "";
 
@@ -35,6 +36,11 @@ export default function AppLayoutShell({
   // 3. General Host mode handles its own layout (HostNavbar + HostBottomNav)
   if (isHost) {
     return <div id="main-content" className="min-h-[100dvh] flex flex-col">{children}</div>;
+  }
+
+  // 3. 'Complete your profile' after sign-up: one task, no navigation around it
+  if (isWelcome) {
+    return <main id="main-content" className="min-h-[100dvh] flex flex-col bg-darnaBg">{children}</main>;
   }
 
   // 3. Become a Host onboarding flow handles its own sticky header and progress bar
