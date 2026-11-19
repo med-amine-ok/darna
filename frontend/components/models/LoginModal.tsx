@@ -70,6 +70,9 @@ type FieldErrors = { name?: string; email?: string; password?: string };
 
 /** Reasons the Google callback can send back (texts in auth.google.errors.*). */
 const GOOGLE_ERRORS = new Set([
+  "google_expired",
+  "invalid_redirect_uri",
+  "google_client_rejected",
   "google_cancelled",
   "google_failed",
   "google_unavailable",

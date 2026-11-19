@@ -208,3 +208,52 @@ def test_acc_10_token_signed_by_another_key_is_refused(signing_key):
     with pytest.raises(Exception) as caught:
         google.verify_id_token(make_token(other))
     assert getattr(caught.value, "code", "") == "google_failed"
+
+
+# ---- Profile picture from Google ------------------------------------------------------
+def fake_google_with_picture(monkeypatch, picture, **claims):
+    """Like fake_google, with Google's photo link."""
+    identity = google.GoogleIdentity(
+        subject=claims.get("sub", "google-sub-1"), email=claims.get("email", "nadia@gmail.com"), email_verified=True,
+        given_name="Nadia", family_name="Benali", locale="fr", picture=picture,
+    )
+    monkeypatch.setattr(google, "exchange_code", lambda **kwargs: "id-token")
+    monkeypatch.setattr(google, "verify_id_token", lambda token: identity)
+
+
+def test_acc_10_google_photo_becomes_the_profile_picture(monkeypatch):
+    """A new Google account gets its photo, at 256 px, on /me and on the public profile."""
+    fake_google_with_picture(monkeypatch, "https://lh3.googleusercontent.com/a/ABC123=s96-c")
+    res = sign_in()
+    assert res.data["user"]["avatar_url"] == "https://lh3.googleusercontent.com/a/ABC123=s256-c"
+    user = User.objects.get(email="nadia@gmail.com")
+    assert APIClient().get(f"/api/v1/users/{user.handle}").data["avatar_url"].endswith("=s256-c")
+
+
+def test_acc_10_new_google_photo_replaces_the_old_google_photo_only(monkeypatch):
+    """A changed Google photo follows at the next sign-in; a picture set another way is kept."""
+    fake_google_with_picture(monkeypatch, "https://lh3.googleusercontent.com/a/OLD=s96-c")
+    sign_in()
+    fake_google_with_picture(monkeypatch, "https://lh3.googleusercontent.com/a/NEW=s96-c")
+    sign_in()
+    user = User.objects.get(email="nadia@gmail.com")
+    assert user.avatar_url.endswith("/NEW=s256-c")
+    User.objects.filter(pk=user.pk).update(avatar_url="https://cdn.bladus.dz/me.jpg", avatar_source="")
+    fake_google_with_picture(monkeypatch, "https://lh3.googleusercontent.com/a/OTHER=s96-c")
+    sign_in()
+    user.refresh_from_db()
+    assert user.avatar_url == "https://cdn.bladus.dz/me.jpg"
+
+
+def test_acc_10_wrong_client_secret_has_its_own_code(monkeypatch):
+    """Google's invalid_client becomes google_client_rejected (a server setting to fix), not a generic failure."""
+
+    class Answer:
+        status_code = 401
+
+        def json(self):
+            return {"error": "invalid_client"}
+
+    monkeypatch.setattr(google.requests, "post", lambda *a, **k: Answer())
+    res = sign_in()
+    assert res.status_code == 400 and res.data["code"] == "google_client_rejected"

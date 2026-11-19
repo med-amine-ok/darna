@@ -1357,6 +1357,7 @@ def google_sign_in(
     if not google.is_configured():
         raise DomainError("Sign in with Google is not available.", code="google_disabled")
     if redirect_uri not in settings.GOOGLE_REDIRECT_URIS:
+        logger.warning("Google sign-in refused: %s is not in GOOGLE_REDIRECT_URIS", redirect_uri)
         raise DomainError("This sign-in address is not allowed.", code="invalid_redirect_uri")
     if not code or not code_verifier:
         raise DomainError("The Google sign-in is incomplete.", code="invalid")
@@ -1413,11 +1414,38 @@ def google_sign_in(
 
     if not user.is_active:
         raise ForbiddenError("This account cannot sign in.", code="account_disabled")
+    _take_google_picture(user, identity.picture)
     link.email = identity.email or link.email
     link.last_login_at = now
     link.save(update_fields=["email", "last_login_at"])
     session, raw = open_login_session(user, ip=ip, user_agent=user_agent)
     return user, session, raw, created
+
+
+def _google_picture_url(picture: str) -> str:
+    """
+    Google's photo link at 256 px instead of the default 96 px (sharper on
+    profile pages). Google links end with a size option such as ``=s96-c``.
+    """
+    if not picture.startswith("https://"):
+        return ""
+    base = re.sub(r"=s\d+(-c)?$", "", picture)
+    return f"{base}=s256-c" if "googleusercontent.com" in base else picture
+
+
+def _take_google_picture(user: User, picture: str) -> None:
+    """
+    Use the Google account photo as the profile picture (ACC-10): when the
+    person has none, or when the current one already came from Google (so a
+    new Google photo shows up at the next sign-in). A picture set another way
+    is never replaced.
+    """
+    url = _google_picture_url(picture or "")
+    if not url or (user.avatar_url and user.avatar_source != "google") or user.avatar_url == url:
+        return
+    user.avatar_url = url
+    user.avatar_source = "google"
+    user.save(update_fields=["avatar_url", "avatar_source"])
 
 
 @transaction.atomic

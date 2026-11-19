@@ -101,6 +101,14 @@ class User(UUIDModel, SoftDeleteModel, AbstractBaseUser, PermissionsMixin):
     home_commune = models.ForeignKey("geo.Commune", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     address_line = models.CharField(max_length=255, blank=True, help_text="Private; never shown publicly.")
     preferred_locale = models.CharField(max_length=2, default="fr", choices=[("en", "English"), ("fr", "French"), ("ar", "Arabic")])
+    avatar_url = models.URLField(
+        max_length=500, blank=True,
+        help_text="Profile picture link (for now the Google account photo; uploads come later).",
+    )
+    avatar_source = models.CharField(
+        max_length=16, blank=True,
+        help_text="Where avatar_url came from: 'google' (refreshed at each Google sign-in) or empty.",
+    )
     date_of_birth = models.DateField(
         null=True, blank=True, help_text="Private. Asked once after sign-up; bookings need an adult (ACC-11)."
     )

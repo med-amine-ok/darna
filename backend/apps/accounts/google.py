@@ -11,6 +11,7 @@ Network calls are isolated in ``exchange_code`` and ``verify_id_token`` so
 tests can replace them; nothing here touches the database.
 """
 
+import logging
 from dataclasses import dataclass
 
 import jwt
@@ -23,6 +24,8 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 ISSUERS = ("accounts.google.com", "https://accounts.google.com")
 TIMEOUT_SECONDS = 10
+
+logger = logging.getLogger("bladus.google")
 
 # Google's signing keys, cached by PyJWT between requests.
 _jwks_client = jwt.PyJWKClient(CERTS_URL, cache_keys=True, lifespan=3600)
@@ -38,6 +41,7 @@ class GoogleIdentity:
     given_name: str
     family_name: str
     locale: str
+    picture: str = ""
 
 
 def is_configured() -> bool:
@@ -68,7 +72,19 @@ def exchange_code(*, code: str, code_verifier: str, redirect_uri: str) -> str:
     except requests.RequestException as exc:
         raise _fail("Google cannot be reached right now.", "google_unavailable") from exc
     if response.status_code != 200:
-        # invalid_grant: code already used, expired, or verifier mismatch.
+        # Google's own reason (never contains a secret): invalid_client = wrong
+        # client id or secret on this server; redirect_uri_mismatch = the
+        # address is not registered; invalid_grant = code expired or reused.
+        try:
+            reason = (response.json() or {}).get("error", "")
+        except ValueError:
+            reason = ""
+        logger.warning("Google token exchange refused: status=%s error=%s redirect_uri=%s",
+                       response.status_code, reason or "?", redirect_uri)
+        if reason in ("invalid_client", "unauthorized_client"):
+            raise _fail("Google sign-in is not set up correctly on the server.", "google_client_rejected")
+        if reason == "redirect_uri_mismatch":
+            raise _fail("This sign-in address is not registered with Google.", "invalid_redirect_uri")
         raise _fail("Google did not accept this sign-in. Please try again.")
     id_token = (response.json() or {}).get("id_token")
     if not id_token:
@@ -100,4 +116,5 @@ def verify_id_token(id_token: str) -> GoogleIdentity:
         given_name=str(claims.get("given_name") or "")[:80],
         family_name=str(claims.get("family_name") or "")[:80],
         locale=str(claims.get("locale") or "")[:2].lower(),
+        picture=str(claims.get("picture") or "")[:500],
     )

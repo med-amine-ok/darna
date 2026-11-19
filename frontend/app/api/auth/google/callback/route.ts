@@ -19,6 +19,9 @@ const TERMS_VERSION = "2026-11";
 
 /** Backend error codes the login page explains; anything else is a generic Google failure. */
 const KNOWN_ERRORS = new Set([
+  "google_failed",
+  "invalid_redirect_uri",
+  "google_client_rejected",
   "google_email_unverified",
   "google_staff_account",
   "account_disabled",
@@ -51,7 +54,12 @@ export async function GET(request: NextRequest) {
   // The person closed or refused Google's page.
   if (params.get("error")) return toLogin({ error: "google_cancelled" });
   const code = params.get("code");
-  if (!flow || !code || !sameState(params.get("state"), flow.state)) return toLogin({ error: "google_failed" });
+  if (!flow || !code || !sameState(params.get("state"), flow.state)) {
+    // The short-lived cookie from the start step is missing or does not match:
+    // too slow, another browser or tab, or a forged return.
+    console.warn("[auth/google/callback] state check failed", { hasCookie: Boolean(flow), hasCode: Boolean(code) });
+    return toLogin({ error: "google_expired" });
+  }
 
   let answer: { status: string; session_token?: string };
   try {
@@ -68,6 +76,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof ApiError && error.status < 500) {
+      // Visible in the website's logs (Vercel > Logs): which check refused the sign-in.
+      console.warn("[auth/google/callback] backend refused", { code: error.code, status: error.status, redirectUri: googleCallbackUrl(request) });
       return toLogin({ error: KNOWN_ERRORS.has(error.code) ? error.code : "google_failed" });
     }
     console.error("[auth/google/callback]", error);
@@ -81,7 +91,10 @@ export async function GET(request: NextRequest) {
     return res;
   }
   const user = answer.session_token ? await startSession(answer.session_token) : null;
-  if (!user) return toLogin({ error: "google_failed" });
+  if (!user) {
+    console.warn("[auth/google/callback] the new session could not be read back");
+    return toLogin({ error: "google_failed" });
+  }
 
   // New accounts (and ones with required steps left) complete their profile first (ACC-11).
   const destination = user.profileComplete

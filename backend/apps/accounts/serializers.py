@@ -93,7 +93,7 @@ class MeSerializer(serializers.ModelSerializer):
             "first_name_latin", "last_name_latin", "full_name_ar", "display_name",
             "bio", "spoken_languages", "home_commune", "address_line",
             "preferred_locale", "status", "is_admin", "is_host", "has_mfa", "date_joined", "handle",
-            "date_of_birth", "profile_completed_at", "profile_missing",
+            "date_of_birth", "profile_completed_at", "profile_missing", "avatar_url",
         ]
         read_only_fields = fields
 
@@ -181,8 +181,8 @@ class PublicUserSerializer(serializers.ModelSerializer):
         return user.date_joined.year
 
     def get_avatar_url(self, user: User) -> str | None:
-        """Avatar link (media app); ``None`` until a provider registers one."""
-        return self._facts(user).get("avatar_url")
+        """The profile picture: the user's own (Google photo for now), else one a provider registered."""
+        return user.avatar_url or self._facts(user).get("avatar_url")
 
     def get_is_host(self, user: User) -> bool:
         """True when the user hosts alone or belongs to an organisation."""
@@ -532,8 +532,8 @@ class DsrUserRefSerializer(serializers.Serializer):
     avatar_url = serializers.SerializerMethodField()
 
     def get_avatar_url(self, user) -> str | None:
-        """No avatar storage on the user yet."""
-        return None
+        """The person's profile picture, when they have one."""
+        return getattr(user, "avatar_url", "") or None
 
 
 class DataSubjectRequestAdminSerializer(DataSubjectRequestSerializer):
