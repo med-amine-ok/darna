@@ -19,7 +19,7 @@ BLADUS has a website (guests and hosts) and an admin app, but no real backend: d
 | Double booking | Refused by the database: an exclusion rule for homes and vehicles, counters for rooms, beds and seats, triggers for blocked days; hotel syncs never go below what is sold |
 | Languages | English, French, Arabic (right-to-left), Latin digits |
 | Geography | 69 wilayas, 1,541 communes |
-| Size | 83 tables, 286 API operations (8 of them switched off until online payment exists) |
+| Size | 83 tables, 287 API operations (8 of them switched off until online payment exists) |
 
 ## 2. Technical choices, with short comparisons
 
@@ -631,7 +631,7 @@ Idempotency-Key: 6f1c2a9e-...
 
 ### Endpoint list
 
-The contract has 286 operations (computed from `openapi.yaml`). 8 of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is `openapi.yaml`.
+The contract has 287 operations (computed from `openapi.yaml`). 8 of them (card payments, payouts, gateway) are switched off until online payment exists and are not listed here. The full machine-readable contract is `openapi.yaml`.
 
 #### Sign-up and sign-in (15)
 

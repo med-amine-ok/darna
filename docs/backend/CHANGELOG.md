@@ -2,6 +2,10 @@
 
 All notable changes to the backend documentation package. Newest first.
 
+## 2026-11-19
+
+- **Sign-up by email waits for an emailed code (ACC-01).** `POST /auth/signup` with an email sends a 6-digit code (10 minutes, 5 tries, BR-ACC-02 limits) and answers `pending_flow` / `verify_email` without a session. `POST /auth/email/verify` takes `email` + `code`, confirms the email and returns the session; `key` still confirms an email change. New `POST /auth/email/resend` (email + password when not signed in, so only the person who chose the password can confirm the account). Password sign-in on an unconfirmed email gives 403 `email_not_verified`. A reset by emailed link also confirms the email. Google and phone sign-ups are unchanged. 287 operations on 239 paths.
+
 ## 2026-11-13
 
 External review of the plan. All decisions are in `_work/review-2026-11-13-decisions.md` (R1 to R16) and recorded as DEC-018 (revised) and DEC-020 to DEC-031 in `03-requirements.md` section 2 and `13-decisions-needed.md` section 1.

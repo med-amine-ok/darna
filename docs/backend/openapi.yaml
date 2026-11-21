@@ -170,8 +170,9 @@ paths:
       summary: Sign up with email or Algerian phone
       tags:
       - auth
-      description: allauth headless signup. Creates the user and the consent records, then starts the `verify_email` or `verify_phone` flow. 409
-        `email_taken` or `phone_taken`.
+      description: Creates the user and the consent records. With an email, a 6-digit code is emailed (valid 10 minutes, 5 tries, BR-ACC-02
+        limits) and the answer is `pending_flow` with `verify_email` and no session; the sign-up finishes with POST /auth/email/verify. A
+        phone-only sign-up answers with a session (the phone has its own SMS check). 409 `email_taken` or `phone_taken`.
       security: []
       parameters:
       - $ref: '#/components/parameters/AcceptLanguage'
@@ -213,7 +214,8 @@ paths:
       tags:
       - auth
       description: Returns the session token to the BFF. Every failure returns the same 400 `invalid_credentials`. 5 failures in 15 minutes lock
-        for 60 s per account and per IP (429 `login_locked`).
+        for 60 s per account and per IP (429 `login_locked`). A right password on an account whose email is not confirmed yet gives 403 `email_not_verified`
+        (ACC-01); the client then asks for the emailed code (POST /auth/email/resend sends a new one).
       security: []
       parameters:
       - $ref: '#/components/parameters/AcceptLanguage'
@@ -430,12 +432,56 @@ paths:
       - BR-ACC-01
       - BR-ACC-02
       x-release: MVP
+  /api/v1/auth/email/resend:
+    post:
+      operationId: authResendEmailCode
+      summary: Send the email confirmation again
+      tags:
+      - auth
+      description: 'Signed in: emails the link of an email change again. Not signed in (sign-up code step): `email` + `password` get a new
+        6-digit code; the password is required so that only the person who chose it can confirm the account. 204 also when the email is
+        already confirmed (nothing is sent). 401 `invalid_credentials` for a wrong email or password; 429 over the code limits (BR-ACC-02).'
+      security:
+      - {}
+      - sessionToken: []
+      parameters:
+      - $ref: '#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '204':
+          description: Sent, or nothing to send
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      x-requirements:
+      - ACC-01
+      x-rules:
+      - BR-ACC-01
+      - BR-ACC-02
+      x-release: MVP
   /api/v1/auth/email/verify:
     post:
       operationId: authVerifyEmail
-      summary: Verify an email address with the emailed key
+      summary: Confirm an email with the emailed code (sign-up) or key (email change)
       tags:
       - auth
+      description: '`email` + `code`: the 6-digit sign-up code; confirms the email, finishes the sign-up and returns a session (401 `invalid_code`
+        for a wrong, expired or used code or an unknown email, same answer for all). `key`: the link sent after an email change; confirms
+        the email without opening a session (400 `invalid_key`).'
       security: []
       parameters:
       - $ref: '#/components/parameters/AcceptLanguage'
@@ -445,9 +491,13 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-              - key
               properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  pattern: ^[0-9]{6}$
                 key:
                   type: string
       responses:

@@ -2,7 +2,7 @@
 
 > **In plain words**
 > This page explains the contract between the two Next.js apps (website and admin) and the Django backend.
-> The exact contract is the file [openapi.yaml](openapi.yaml): 286 operations, each one linked to the requirements and rules it serves.
+> The exact contract is the file [openapi.yaml](openapi.yaml): 287 operations, each one linked to the requirements and rules it serves.
 > The browser never calls Django. The Next.js server calls Django for it, with a session token the browser never sees.
 > Every function the apps use today in `lib/data` and their server actions gets an endpoint (table in section 8), or the table says why it goes away.
 > Money is always in centimes, errors always have a stable code and a message in English, French or Arabic.
@@ -28,7 +28,7 @@
 | Item | Value |
 |---|---|
 | File | [openapi.yaml](openapi.yaml), OpenAPI 3.1.0 |
-| Size | 286 operations on 238 paths, 38 tags in 7 groups (counted from `openapi.yaml` by `_tools/check_contract_refs.py`; the generator writes the same numbers to `_tools/openapi_gen/stats.json`) |
+| Size | 287 operations on 239 paths, 38 tags in 7 groups (counted from `openapi.yaml` by `_tools/check_contract_refs.py`; the generator writes the same numbers to `_tools/openapi_gen/stats.json`) |
 | Groups | auth 15, public 23, me (guest) 30, shared (messaging 7, media 4), host 79, admin 127, webhooks 1 |
 | Dormant (money models M2 to M4) | 8 (part of the 286): `createGuestPayment`, `listHostPayouts`, `requestHostPayout`, `receiveGatewayWebhook`, `adminListPayouts`, `adminApprovePayout`, `adminRejectPayout`, `adminMarkPayoutSent` |
 | Lint | `npx @redocly/cli lint openapi.yaml` (recommended rules). Last full lint: 2026-11-09 (0 errors, 0 warnings); on 2026-11-13 the file was rebuilt and every `$ref` checked, the Redocly lint is to be re-run |

@@ -22,7 +22,7 @@ Prepared 2026-11-04 to 2026-11-09, updated 2026-11-11 and 2026-11-13 (external r
 5. **Types (DEC-015)**: 8 experience types and 8 trip types, one shared list.
 6. **Moderation (DEC-003)**: new listings and trips are reviewed by staff before going live.
 7. **Algeria**: hosting in Algeria and a `.com.dz` domain are likely required; personal data should not leave the country without authorisation (VERIFY WITH A PROFESSIONAL).
-8. **Size**: 157 requirements (136 in the first release), 83 tables, 286 API operations (computed from `openapi.yaml` by `_tools/check_contract_refs.py`).
+8. **Size**: 157 requirements (136 in the first release), 83 tables, 287 API operations (computed from `openapi.yaml` by `_tools/check_contract_refs.py`).
 9. **Plan**: 8 milestones (M0 to M7, about 29 weeks plus a 2-week buffer) for a team of 2 backend developers and 1 part-time frontend developer, then R2 ([11-roadmap.md](11-roadmap.md)).
 10. **Open**: 47 decisions remain, most of them for the lawyer and accountant ([13-decisions-needed.md](13-decisions-needed.md)). Before M0, the operations page [09b-operations.md](09b-operations.md) must be agreed (DEC-027).
 

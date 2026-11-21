@@ -16,12 +16,15 @@ PASSWORD = "Str0ng-pass-123"
 NEW_PASSWORD = "An0ther-pass-456"
 
 
-def test_signup_emails_a_verification_key_that_verifies(api, django_capture_on_commit_callbacks):
-    """The emailed key marks the email verified; an altered key is refused."""
-    with django_capture_on_commit_callbacks(execute=True):
-        api.post("/api/v1/auth/signup", {"email": "new@x.dz", "password": PASSWORD, "accept_terms_version": "1"})
+def test_email_change_link_still_verifies(api):
+    """The link sent to a signed-in user (email change) marks the email verified; an altered key is refused."""
+    user = make_user(email="change@x.dz", password=PASSWORD)
+    user.email_verified_at = None
+    user.save(update_fields=["email_verified_at"])
+    mail.outbox.clear()
+    assert client_for(user).post("/api/v1/auth/email/resend").status_code == 204
     key = last_mail_token(r"key=(\S+)")
-    assert "new@x.dz" not in key  # no personal data in the link
+    assert "change@x.dz" not in key  # no personal data in the link
     bad = api.post("/api/v1/auth/email/verify", {"key": key + "x"})
     assert bad.status_code == 400 and bad.data["code"] == "invalid_key"
     res = api.post("/api/v1/auth/email/verify", {"key": key})
@@ -92,4 +95,5 @@ def test_email_resend_sends_the_link_again_to_an_unverified_user():
     mail.outbox.clear()
     assert client_for(user).post("/api/v1/auth/email/resend").status_code == 204
     assert len(mail.outbox) == 0
-    assert APIClient().post("/api/v1/auth/email/resend").status_code == 401
+    # Not signed in: the sign-up code step needs the email and password (400 without them).
+    assert APIClient().post("/api/v1/auth/email/resend").status_code == 400

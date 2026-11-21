@@ -13,7 +13,7 @@ limited.
 """
 
 from django.conf import settings
-from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from drf_spectacular.utils import OpenApiParameter, PolymorphicProxySerializer, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -41,6 +41,7 @@ from .serializers import (
     DataSubjectRequestCompleteSerializer,
     DataSubjectRequestCreateSerializer,
     DataSubjectRequestSerializer,
+    EmailResendSerializer,
     EmailVerifySerializer,
     FavoritePageSerializer,
     LoginSerializer,
@@ -55,6 +56,7 @@ from .serializers import (
     PublicUserSerializer,
     UserActionReasonSerializer,
     SessionSerializer,
+    SignupPendingSerializer,
     SignupSerializer,
     StaffInviteAcceptSerializer,
     StaffInviteSerializer,
@@ -212,13 +214,32 @@ class SignupView(APIView):
     throttle_scope = "auth"
     serializer_class = SignupSerializer
 
-    @extend_schema(request=SignupSerializer, responses={201: SessionSerializer})
+    @extend_schema(
+        request=SignupSerializer,
+        responses={201: PolymorphicProxySerializer(
+            component_name="SignupResult", serializers=[SignupPendingSerializer, SessionSerializer], resource_type_field_name=None
+        )},
+    )
     def post(self, request):
-        """Create the user, record consent, email the verification link, return a session token."""
+        """
+        Create the user and record consent (ACC-01).
+
+        With an email: send a 6-digit code and answer ``pending_flow`` with
+        ``verify_email`` and no session; ``POST /auth/email/verify`` with the
+        code finishes the sign-up. Phone only: answer with a session as before.
+        """
         data = SignupSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         ip, agent = client_ip(request), user_agent(request)
         user = services.signup(**data.validated_data, ip=ip, user_agent=agent)
+        if user.email:
+            body = {
+                "status": "pending_flow",
+                "user": None,
+                "pending_flows": [{"id": "verify_email", "is_pending": True}],
+                "email": user.email,
+            }
+            return Response(body, status=status.HTTP_201_CREATED)
         token = services.start_session(user, ip=ip, user_agent=agent)
         return Response(session_payload(user, token), status=status.HTTP_201_CREATED)
 
@@ -322,23 +343,48 @@ class EmailVerifyView(APIView):
 
     @extend_schema(request=EmailVerifySerializer, responses={200: SessionSerializer})
     def post(self, request):
-        """Mark the email verified; 400 ``invalid_key`` for a wrong or expired key. No session is opened."""
+        """
+        Confirm the email (ACC-01).
+
+        ``email`` + ``code``: the sign-up code; the sign-up is finished and a
+        session is returned (401 ``invalid_code`` when wrong or expired).
+        ``key``: the link sent after an email change; no session is opened
+        (400 ``invalid_key``).
+        """
         data = EmailVerifySerializer(data=request.data)
         data.is_valid(raise_exception=True)
-        user = services.verify_email(data.validated_data["key"])
-        return Response(session_payload(user, None))
+        values = data.validated_data
+        if values.get("key"):
+            user = services.verify_email(values["key"])
+            return Response(session_payload(user, None))
+        user, session, token = services.confirm_email_code(
+            email=values["email"], code=values["code"], ip=client_ip(request), user_agent=user_agent(request)
+        )
+        return Response(session_payload(user, token, session))
 
 
 class EmailResendView(APIView):
-    """``POST /auth/email/resend``: email the verification link again to the signed-in user (ACC-01)."""
+    """
+    ``POST /auth/email/resend``: send the email confirmation again (ACC-01).
 
-    permission_classes = [IsAuthenticated]
+    Signed in: the link of an email change, as before. Not signed in (the
+    sign-up code step): ``{email, password}`` gets a new 6-digit code; the
+    password stops a stranger from having the real owner confirm an account
+    whose password the stranger chose.
+    """
+
+    permission_classes = [AllowAny]
     throttle_scope = "otp"
 
-    @extend_schema(request=None, responses={204: None})
+    @extend_schema(request=EmailResendSerializer, responses={204: None})
     def post(self, request):
-        """Always 204; nothing is sent when there is no email or it is already verified."""
-        services.send_email_verification(request.user)
+        """204 when sent (or nothing to send); 401 for a wrong email or password; 429 over the code limits."""
+        if request.user and request.user.is_authenticated:
+            services.send_email_verification(request.user)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        data = EmailResendSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        services.resend_email_code(**data.validated_data, ip=client_ip(request))
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

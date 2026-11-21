@@ -86,6 +86,8 @@ def test_acc_10_existing_verified_account_is_linked_and_keeps_its_password(monke
 def test_acc_10_unverified_squatter_account_is_reclaimed(monkeypatch):
     """An account made with someone else's email (never verified) loses its password and sessions."""
     squatter = make_user(email="nadia@gmail.com")
+    squatter.email_verified_at = None  # never confirmed: the code was never entered
+    squatter.save(update_fields=["email_verified_at"])
     SessionToken.issue(squatter)
     fake_google(monkeypatch)
     res = sign_in()

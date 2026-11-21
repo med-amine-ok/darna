@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { api, ApiError } from "@/lib/api/client";
+import type { ApiSession } from "@/lib/api/account";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-rules";
 import { actionFail } from "@/lib/action-result";
 import { startSession } from "@/lib/server/session";
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(actionFail("PASSWORD_TOO_SHORT", { min: MIN_PASSWORD_LENGTH }), { status: 400 });
     }
     const [firstName, ...rest] = (name || email.split("@")[0] || "").trim().split(/\s+/);
-    let answer: { session_token?: string };
+    let answer: ApiSession;
     try {
       answer = await api("/auth/signup", {
         method: "POST",
@@ -48,6 +49,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(actionFail(taken ? "EMAIL_TAKEN" : "INVALID_REGISTRATION"), { status: taken ? 409 : 400 });
       }
       throw error;
+    }
+    // Email sign-up (ACC-01): the account waits for the 6-digit code emailed by the
+    // backend; the browser shows the code step and posts it to /api/auth/email-code.
+    if (answer.status === "pending_flow" && answer.pending_flows?.some((flow) => flow.id === "verify_email")) {
+      return NextResponse.json({ success: true, verifyEmail: true });
     }
     const user = answer.session_token ? await startSession(answer.session_token) : null;
     if (!user) {

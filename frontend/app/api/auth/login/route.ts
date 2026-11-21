@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
  * When the account has an authenticator app the backend answers
  * ``pending_flow``: the step-1 token is kept in a short-lived httpOnly
  * cookie and the browser is asked for the code (``{ mfaRequired: true }``),
- * which it sends to /api/auth/2fa.
+ * which it sends to /api/auth/2fa. An account whose email is not confirmed
+ * yet answers ``{ verifyEmail: true }``: the browser asks for the emailed code.
  */
 export async function POST(request: NextRequest) {
   if (!isTrustedJsonRequest(request)) {
@@ -36,6 +37,10 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       if (error instanceof ApiError && error.status === 429) {
         return NextResponse.json(actionFail("TOO_MANY_ATTEMPTS"), { status: 429 });
+      }
+      if (error instanceof ApiError && error.code === "email_not_verified") {
+        // Right password, email not confirmed yet (ACC-01): ask for the emailed code.
+        return NextResponse.json({ success: false, verifyEmail: true });
       }
       if (error instanceof ApiError && error.status < 500) {
         return NextResponse.json(actionFail("INVALID_CREDENTIALS"), { status: 401 });

@@ -40,9 +40,44 @@ def make_user(email="guest@example.dz", password="Str0ng-pass-123", phone=None, 
         phone = f"+2135{_phone_counter['n']:08d}"
     user = User.objects.create_user(email=email, password=password, phone_e164=phone, **extra)
     if verified:
+        # A ready-to-use account: phone checked and, when it has one, email confirmed (ACC-01).
         user.phone_verified_at = timezone.now()
-        user.save(update_fields=["phone_verified_at"])
+        user.email_verified_at = timezone.now() if email else None
+        user.save(update_fields=["phone_verified_at", "email_verified_at"])
     return user
+
+
+def last_email_code(to: str) -> str:
+    """The 6-digit code of the last email sent to ``to`` (the test mailbox)."""
+    import re
+
+    from django.core import mail
+
+    for message in reversed(mail.outbox):
+        if to.lower() in [address.lower() for address in message.to]:
+            found = re.search(r"\b(\d{6})\b", message.body)
+            if found:
+                return found.group(1)
+    raise AssertionError(f"No code emailed to {to}.")
+
+
+def signup_and_confirm(client: APIClient, payload: dict) -> dict:
+    """
+    Sign up with an email the way the website does, enter the emailed code,
+    and sign ``client`` in. Returns the session answer of the code step.
+    """
+    from django.test import TestCase
+
+    # The code is emailed after the sign-up commits; run that step inside the test transaction.
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        res = client.post("/api/v1/auth/signup", payload, format="json")
+    assert res.status_code == 201, res.data
+    done = client.post(
+        "/api/v1/auth/email/verify", {"email": payload["email"], "code": last_email_code(payload["email"])}, format="json"
+    )
+    assert done.status_code == 200, done.data
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {done.data['session_token']}")
+    return done.data
 
 
 def client_for(user: User, host_account=None) -> APIClient:
