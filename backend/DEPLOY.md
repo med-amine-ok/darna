@@ -112,8 +112,16 @@ services or Vercel with:
 
 | App | Variables |
 |---|---|
-| Website (`frontend/`) | `BACKEND_API_URL=https://api.bladus.dz/api/v1`, `NEXT_PUBLIC_SITE_URL=https://bladus.dz`, `DARNA_SESSION_SECRET` (32+ random characters) |
-| Admin (`admin/`) | `BACKEND_API_URL=https://api.bladus.dz/api/v1`, `NEXT_PUBLIC_FRONTEND_URL=https://bladus.dz` (links to the website) |
+| Website (`frontend/`) | `BACKEND_API_URL=https://api.bladus.dz/api/v1`, `NEXT_PUBLIC_SITE_URL=https://bladus.dz`, `DARNA_SESSION_SECRET` (32+ random characters), `BFF_PROXY_SECRET` |
+| Admin (`admin/`) | `BACKEND_API_URL=https://api.bladus.dz/api/v1`, `NEXT_PUBLIC_FRONTEND_URL=https://bladus.dz` (links to the website), `BFF_PROXY_SECRET` |
+
+**`BFF_PROXY_SECRET`: the same random value on the backend (Render), the
+website and the admin (Vercel).** Visitors never call the backend directly,
+so without it every visitor looks like the Vercel server and the per IP limits
+(10 code emails per hour, sign-in lockouts) apply to the whole site at once.
+With it, the website passes each visitor's address and the backend believes it
+only when the secret matches. Make one with
+`python -c "import secrets; print(secrets.token_urlsafe(32))"`.
 
 ## Turned off for the first release
 

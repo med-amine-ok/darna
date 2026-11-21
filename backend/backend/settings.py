@@ -118,6 +118,8 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    # First: the visitor's real address when the website or admin server vouches for it (BR-SYS-07).
+    "apps.core.client_ip.TrustedClientIpMiddleware",
     "django.middleware.security.SecurityMiddleware",
     # Serves the Django admin and Swagger static files from gunicorn (no separate file server).
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -415,6 +417,10 @@ STAFF_MFA_REQUIRED = env.bool("STAFF_MFA_REQUIRED", default=False)
 # example Caddy, then the website or admin server). 0 = trust no header and
 # use the socket address (accounts.views.client_ip, BR-SYS-07).
 TRUSTED_PROXY_HOPS = env.int("TRUSTED_PROXY_HOPS", default=0)
+# Shared with the website and admin servers (same value there): lets them pass
+# the visitor's address, so per IP limits apply per visitor and not to the
+# whole site (apps.core.client_ip). Empty: the forwarded address is ignored.
+BFF_PROXY_SECRET = env.str("BFF_PROXY_SECRET", default="")
 
 # CSV exports (apps.audit.exports) and uploads (apps.media.storage). Local
 # folders are for development; production uses S3-compatible storage.

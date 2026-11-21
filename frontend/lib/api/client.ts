@@ -85,6 +85,27 @@ export function currentApiToken(): string | null {
   }
 }
 
+/**
+ * The visitor's address for Django's per IP limits (BR-SYS-07): one-time codes,
+ * sign-in lockouts and request rates. Django only calls us, so without this
+ * every visitor would look like this server. Sent only with BFF_PROXY_SECRET
+ * (server-only, the same value as on the backend), which proves to Django that
+ * the address comes from us. On Vercel, x-real-ip and x-forwarded-for are set
+ * by Vercel itself, not by the browser.
+ */
+function visitorHeaders(): Record<string, string> {
+  const secret = process.env.BFF_PROXY_SECRET;
+  if (!secret) return {};
+  try {
+    const incoming = headers();
+    const ip = incoming.get("x-real-ip") || incoming.get("x-forwarded-for")?.split(",")[0]?.trim();
+    return ip ? { "X-Bladus-Client-IP": ip, "X-Bladus-Proxy-Secret": secret } : {};
+  } catch (error) {
+    rethrowNextSignal(error);
+    return {}; // outside a request (build, scripts)
+  }
+}
+
 /** Locale for Accept-Language: the next-intl cookie, then the request's own header, else French. */
 function currentLocale(): string {
   try {
@@ -123,6 +144,7 @@ async function once<T>(path: string, options: ApiOptions): Promise<T> {
   const requestHeaders: Record<string, string> = {
     Accept: "application/json",
     "Accept-Language": currentLocale(),
+    ...visitorHeaders(),
     ...options.headers,
   };
   if (token) requestHeaders.Authorization = `Bearer ${token}`;
