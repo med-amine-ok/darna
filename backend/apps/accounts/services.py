@@ -267,8 +267,19 @@ def is_algerian_mobile(phone: str) -> bool:
     return bool(re.match(ALGERIAN_MOBILE_RE, phone))
 
 
-# Send log statuses that count against the limits: the code left (or the provider was paid to try).
+# Send log statuses that count against the limits: the code left (or the SMS provider was paid to try).
 _COUNTED_STATUSES = ("sent", "failed")
+
+
+def _counted_sends():
+    """
+    Send log rows that count against the limits (BR-ACC-02, R9).
+
+    A failed SMS counts (the provider may still charge, and it is an abuse
+    target). A failed email does not: it costs nothing, and when our mailbox
+    is down the visitor must not lose their tries for the hour.
+    """
+    return OtpSendLog.objects.filter(status__in=_COUNTED_STATUSES).exclude(channel="email", status="failed")
 
 
 def _too_many(message: str) -> DomainError:
@@ -287,7 +298,7 @@ def _check_send_limits(*, destination_hash: str, ip: str | None, channel: str) -
     ``(log_status, error)`` for the first limit reached, else ``None``.
     """
     now = timezone.now()
-    counted = OtpSendLog.objects.filter(status__in=_COUNTED_STATUSES)
+    counted = _counted_sends()
     per_destination = counted.filter(destination_hash=destination_hash)
     if per_destination.filter(created_at__gte=now - timedelta(hours=1)).count() >= settings.OTP_MAX_SENDS_PER_HOUR:
         return "blocked_rate_limit", _too_many("Too many codes requested. Try again later.")

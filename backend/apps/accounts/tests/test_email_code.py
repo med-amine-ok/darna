@@ -154,3 +154,23 @@ def test_send_test_email_command_reports_failure(monkeypatch):
     monkeypatch.setattr(mailer, "send_mail", broken)
     with pytest.raises(CommandError, match="OSError: timed out"):
         call_command("send_test_email", "guest@bladus.test")
+
+
+def test_br_acc_02_failed_code_emails_do_not_use_up_the_limit(api, monkeypatch, settings):
+    """While the mailbox is down, failed sends do not count: the visitor can still get a code afterwards."""
+    from apps.accounts import mailer
+
+    settings.OTP_MAX_SENDS_PER_HOUR = 2
+    real_send_mail = mailer.send_mail
+
+    def broken(*args, **kwargs):
+        raise OSError("Network is unreachable")
+
+    monkeypatch.setattr(mailer, "send_mail", broken)
+    assert sign_up(api).data["code_sent"] is False
+    for _ in range(3):
+        res = api.post("/api/v1/auth/email/resend", {"email": EMAIL, "password": PASSWORD}, format="json")
+        assert res.status_code == 503 and res.data["code"] == "otp_send_failed"
+    monkeypatch.setattr(mailer, "send_mail", real_send_mail)
+    ok = api.post("/api/v1/auth/email/resend", {"email": EMAIL, "password": PASSWORD}, format="json")
+    assert ok.status_code == 204 and len(last_email_code(EMAIL)) == 6
