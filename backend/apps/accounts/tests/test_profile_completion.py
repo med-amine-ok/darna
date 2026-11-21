@@ -14,11 +14,10 @@ pytestmark = pytest.mark.django_db
 
 def signed_up_client():
     """A brand new account as the website creates it (email and password only)."""
-    from conftest import signup_and_confirm
-
     api = APIClient()
-    signup_and_confirm(api, {"email": "new@bladus.dz", "password": "Str0ng-pass-123",
-                             "first_name": "Nour", "accept_terms_version": "2026-11"})
+    res = api.post("/api/v1/auth/signup", {"email": "new@bladus.dz", "password": "Str0ng-pass-123",
+                                            "first_name": "Nour", "accept_terms_version": "2026-11"}, format="json")
+    api.credentials(HTTP_AUTHORIZATION=f"Bearer {res.data['session_token']}")
     return api
 
 

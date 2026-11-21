@@ -48,8 +48,6 @@ export type AuthMode = "login" | "signup";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Time the success check stays on screen before we navigate away. */
 const SUCCESS_HOLD_MS = 650;
-/** Wait before "Send a new code" works again (the backend allows 3 codes per hour). */
-const RESEND_COOLDOWN_S = 60;
 
 class AuthError extends Error {
   constructor(public readonly body: ActionErrorLike) {
@@ -68,10 +66,6 @@ async function postAuth(path: string, payload: Record<string, string>) {
   return data as {
     user?: { name?: string; profileComplete?: boolean };
     mfaRequired?: boolean;
-    /** The account waits for the 6-digit code emailed at sign-up (ACC-01). */
-    verifyEmail?: boolean;
-    /** False when the server could not send that email. */
-    codeSent?: boolean;
   };
 }
 
@@ -122,20 +116,10 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
   /** Second step of a sign-in protected by an authenticator app (BR-ACC-04). */
   const [mfaStep, setMfaStep] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
-  /** Code step of an email sign-up (ACC-01): no session until the emailed code is entered. */
-  const [emailStep, setEmailStep] = useState(false);
-  const [emailCode, setEmailCode] = useState("");
-  const [cooldown, setCooldown] = useState(0);
-  const [resent, setResent] = useState(false);
   const doneTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => () => clearTimeout(doneTimer.current), []);
 
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
 
   // Switching tabs clears messages from the other form.
   useEffect(() => {
@@ -143,8 +127,6 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
     setError(null);
     setMfaStep(false);
     setMfaCode("");
-    setEmailStep(false);
-    setEmailCode("");
   }, [mode]);
 
   const askSecondFactor = () => {
@@ -152,58 +134,6 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
     setMfaCode("");
     setError(null);
     setMfaStep(true);
-  };
-
-  /** Show the email code step. The password stays in memory only to ask for a new code. */
-  const askEmailCode = (justSent: boolean) => {
-    setEmailCode("");
-    setError(null);
-    setResent(false);
-    setEmailStep(true);
-    setCooldown(justSent ? RESEND_COOLDOWN_S : 0);
-  };
-
-  const resendEmailCode = async () => {
-    setError(null);
-    setResent(false);
-    try {
-      await postAuth("/api/auth/email-code/resend", { email: email.trim(), password });
-      setResent(true);
-      setCooldown(RESEND_COOLDOWN_S);
-    } catch (err) {
-      setError(errorText(err instanceof AuthError ? err.body : null, t("emailCode.resendFailed")));
-    }
-  };
-
-  const handleEmailCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoading || success) return;
-    const code = emailCode.replace(/\s/g, "");
-    if (!/^[0-9]{6}$/.test(code)) {
-      setError(t("emailCode.codeRequired"));
-      return;
-    }
-    setError(null);
-    setIsLoading(true);
-    try {
-      const data = await postAuth("/api/auth/email-code", { email: email.trim(), code });
-      setIsLoading(false);
-      if (data.mfaRequired) {
-        setEmailStep(false);
-        askSecondFactor();
-        return;
-      }
-      setPassword("");
-      const userName = typeof data.user?.name === "string" ? data.user.name : name.trim();
-      finish(
-        userName ? t(isSignup ? "welcomeName" : "welcomeBackName", { name: userName }) : t("welcomeToast"),
-        data.user?.profileComplete !== false,
-        isSignup,
-      );
-    } catch (err) {
-      setIsLoading(false);
-      setError(errorText(err instanceof AuthError ? err.body : null, t("emailCode.failed")));
-    }
   };
 
   // Back from "Continue with Google" (/api/auth/google/callback): ?mfa=1 asks for the
@@ -304,24 +234,11 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
     try {
       if (isSignup) {
         const data = await postAuth("/api/auth/register", { name: name.trim(), email: email.trim(), password });
-        if (data.verifyEmail) {
-          setIsLoading(false);
-          askEmailCode(data.codeSent !== false);
-          if (data.codeSent === false) setError(t("emailCode.notSent"));
-          return;
-        }
         const userName = typeof data.user?.name === "string" ? data.user.name : name.trim();
         setIsLoading(false);
         finish(t("welcomeName", { name: userName }), false, true);
       } else {
         const data = await postAuth("/api/auth/login", { email: email.trim(), password });
-        if (data.verifyEmail) {
-          // The earlier code may have expired: send a fresh one, then ask for it.
-          setIsLoading(false);
-          askEmailCode(false);
-          await resendEmailCode();
-          return;
-        }
         if (data.mfaRequired) {
           setIsLoading(false);
           askSecondFactor();
@@ -394,57 +311,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         )}
       </AnimatePresence>
 
-      {emailStep ? (
-        <form onSubmit={handleEmailCodeSubmit} noValidate className="mt-5 flex flex-col gap-4" aria-busy={isLoading}>
-          <div>
-            <p className="text-title font-semibold text-primary-900">{t("emailCode.title")}</p>
-            <p className="mt-1 text-meta text-primary-600">{t("emailCode.subtitle", { email: email.trim() })}</p>
-          </div>
-          <Input
-            id={`${formId}-email-code`}
-            label={t("emailCode.codeLabel")}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            autoFocus
-            value={emailCode}
-            disabled={busy}
-            onChange={(e) => {
-              setEmailCode(e.target.value.replace(/[^0-9]/g, "").slice(0, 6));
-              setError(null);
-            }}
-          />
-          <p className="text-meta text-primary-600" aria-live="polite">
-            {resent ? t("emailCode.resent") : t("emailCode.hint")}
-          </p>
-          <Button type="submit" size="lg" fullWidth loading={isLoading} success={success}>
-            {success ? t("successButton") : t("emailCode.submit")}
-          </Button>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <button
-              type="button"
-              disabled={busy || cooldown > 0}
-              onClick={resendEmailCode}
-              className="rounded text-meta font-semibold text-primary-800 disabled:cursor-not-allowed disabled:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-            >
-              <span className="link-underline pb-0.5">
-                {cooldown > 0 ? t("emailCode.resendIn", { seconds: cooldown }) : t("emailCode.resend")}
-              </span>
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setEmailStep(false);
-                setError(null);
-              }}
-              className="rounded text-meta font-semibold text-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-600 focus-visible:ring-offset-2"
-            >
-              <span className="link-underline pb-0.5">{t("emailCode.back")}</span>
-            </button>
-          </div>
-        </form>
-      ) : mfaStep ? (
+      {mfaStep ? (
         <form onSubmit={handleMfaSubmit} noValidate className="mt-5 flex flex-col gap-4" aria-busy={isLoading}>
           <div>
             <p className="text-title font-semibold text-primary-900">{t("mfa.title")}</p>

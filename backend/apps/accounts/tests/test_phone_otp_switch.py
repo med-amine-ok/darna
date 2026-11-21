@@ -17,11 +17,10 @@ def _codes_off(settings):
 
 def new_client():
     """A fresh sign-up, as the website creates it."""
-    from conftest import signup_and_confirm
-
     api = APIClient()
-    signup_and_confirm(api, {"email": "nocode@bladus.dz", "password": "Str0ng-pass-123",
-                             "first_name": "Rania", "accept_terms_version": "2026-11"})
+    res = api.post("/api/v1/auth/signup", {"email": "nocode@bladus.dz", "password": "Str0ng-pass-123",
+                                            "first_name": "Rania", "accept_terms_version": "2026-11"}, format="json")
+    api.credentials(HTTP_AUTHORIZATION=f"Bearer {res.data['session_token']}")
     return api
 
 

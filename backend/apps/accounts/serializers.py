@@ -243,40 +243,9 @@ class SessionSerializer(serializers.Serializer):
 # Email verification, password reset (ACC-01, ACC-04)
 # ---------------------------------------------------------------------------
 class EmailVerifySerializer(serializers.Serializer):
-    """
-    Body of ``POST /auth/email/verify``: ``email`` + ``code`` (the 6-digit
-    sign-up code, ACC-01), or ``key`` (the link sent after an email change).
-    """
+    """Body of ``POST /auth/email/verify``."""
 
-    email = serializers.EmailField(required=False)
-    code = serializers.RegexField(r"^\s*[0-9]{6}\s*$", required=False)
-    key = serializers.CharField(max_length=512, required=False)
-
-    def validate(self, attrs):
-        """Exactly one way: email and code together, or a key."""
-        has_code = bool(attrs.get("email")) and bool(attrs.get("code"))
-        if has_code == bool(attrs.get("key")):
-            raise serializers.ValidationError("Send email and code, or key.", code="invalid")
-        if has_code:
-            attrs["code"] = attrs["code"].strip()
-        return attrs
-
-
-class EmailResendSerializer(serializers.Serializer):
-    """Body of ``POST /auth/email/resend`` when not signed in: the sign-up email and password (ACC-01)."""
-
-    email = serializers.EmailField()
-    password = serializers.CharField(max_length=128, trim_whitespace=False)
-
-
-class SignupPendingSerializer(serializers.Serializer):
-    """Answer of an email sign-up: no session until the emailed code is confirmed (ACC-01)."""
-
-    status = serializers.CharField(default="pending_flow")
-    user = serializers.JSONField(allow_null=True, default=None)
-    pending_flows = serializers.ListField(child=serializers.DictField())
-    email = serializers.EmailField()
-    code_sent = serializers.BooleanField(help_text="False when the code email could not be sent; ask for a new one.")
+    key = serializers.CharField(max_length=512)
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):

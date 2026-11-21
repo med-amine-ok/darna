@@ -121,24 +121,10 @@ def signup(
             ConsentRecord.objects.create(
                 user=user, document=document, version=accept_terms_version, accepted=True, ip=ip, user_agent=user_agent
             )
-    # With an email, the caller sends the code once this transaction is committed
-    # (send_signup_code), so a rolled back sign-up sends nothing (ACC-01).
+    # No email is sent at sign-up: the person goes straight on to complete
+    # their profile. The email can be confirmed later from the settings
+    # (POST /auth/email/resend sends the link).
     return user
-
-
-def send_signup_code(user: User, *, ip: str | None = None) -> bool:
-    """
-    Email the sign-up code (ACC-01). Returns ``False`` when it could not be
-    sent (send limit, or the email provider refused or is not set up): the
-    account exists and the person can ask for a new code. The provider's
-    error is in the log (``bladus.accounts``), never shown to the visitor.
-    """
-    try:
-        send_email_code(user, ip=ip)
-    except DomainError as exc:
-        logger.error("Sign-up code for user %s not sent: %s", user.pk, exc.code)
-        return False
-    return True
 
 
 # ---------------------------------------------------------------------------
@@ -196,9 +182,6 @@ def login_with_password(
         raise InvalidCredentials("Wrong email or password.")
 
     _clear_failures(email)
-    if user.email_verified_at is None:
-        # Only said after a correct password, so it reveals nothing to a stranger (ACC-01).
-        raise ForbiddenError("Confirm your email with the code we sent you.", code="email_not_verified")
     session, raw = open_login_session(user, ip=ip, user_agent=user_agent)
     return user, session, raw
 
@@ -583,60 +566,6 @@ def send_email_verification(user: User) -> None:
         return
     link = frontend_url(f"verify-email?key={email_verification_key(user)}")
     _send_quietly(user.email, "BLADUS: confirm your email", f"Confirm your email address: {link}")
-
-
-def send_email_code(user: User, *, ip: str | None = None) -> None:
-    """
-    Email a 6-digit code that confirms the address (ACC-01, BR-ACC-02).
-
-    Same code rules as SMS codes: valid ``OTP_TTL_MINUTES`` (10), at most
-    ``OTP_MAX_ATTEMPTS`` (5) tries, a new code replaces the old one, and the
-    per address and per IP send limits apply (429 ``otp_rate_limited``).
-    Nothing is sent when the email is already confirmed.
-    """
-    if not user.email or user.email_verified_at is not None:
-        return
-    request_code(destination=user.email.lower(), purpose=CodePurpose.VERIFY_EMAIL, ip=ip, locale=user.preferred_locale)
-
-
-def resend_email_code(*, email: str, password: str, ip: str | None = None) -> None:
-    """
-    Send a new sign-up code to an account that is not confirmed yet (ACC-01).
-
-    The password is required on purpose: without it, a person who signed up
-    with someone else's address could have the real owner confirm it, and
-    then sign in with the password they chose. Wrong email or password gives
-    the usual ``invalid_credentials`` and counts towards the sign-in lock
-    (BR-ACC-05).
-    """
-    _check_not_locked(email, ip)
-    user = User.objects.filter(email__iexact=email).first()
-    if user is None or not user.check_password(password) or not user.is_active:
-        _record_failure(email, ip)
-        raise InvalidCredentials("Wrong email or password.")
-    _clear_failures(email)
-    send_email_code(user, ip=ip)
-
-
-def confirm_email_code(
-    *, email: str, code: str, ip: str | None = None, user_agent: str = ""
-) -> tuple[User, SessionToken, str]:
-    """
-    Confirm the email with the emailed code and finish the sign-up by signing in (ACC-01).
-
-    Returns ``(user, session, raw_token)``. A wrong, expired or used code,
-    or an unknown email, all give the same 401 ``invalid_code``; each code
-    allows ``OTP_MAX_ATTEMPTS`` tries.
-    """
-    user = User.objects.filter(email__iexact=email).first()
-    if user is None or not user.is_active or not user.email:
-        raise InvalidCredentials("Wrong or expired code.", code="invalid_code")
-    confirm_code(destination=user.email.lower(), purpose=CodePurpose.VERIFY_EMAIL, code=code)
-    if user.email_verified_at is None:
-        user.email_verified_at = timezone.now()
-        user.save(update_fields=["email_verified_at"])
-    session, raw = open_login_session(user, ip=ip, user_agent=user_agent)
-    return user, session, raw
 
 
 def verify_email(key: str) -> User:

@@ -95,5 +95,4 @@ def test_email_resend_sends_the_link_again_to_an_unverified_user():
     mail.outbox.clear()
     assert client_for(user).post("/api/v1/auth/email/resend").status_code == 204
     assert len(mail.outbox) == 0
-    # Not signed in: the sign-up code step needs the email and password (400 without them).
-    assert APIClient().post("/api/v1/auth/email/resend").status_code == 400
+    assert APIClient().post("/api/v1/auth/email/resend").status_code == 401

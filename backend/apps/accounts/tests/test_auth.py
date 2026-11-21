@@ -6,7 +6,7 @@ import pytest
 
 from apps.accounts.models import ConsentRecord, User
 from apps.accounts.sms import MemorySmsBackend
-from conftest import client_for, make_user, signup_and_confirm
+from conftest import client_for, make_user
 
 pytestmark = pytest.mark.django_db
 PASSWORD = "Str0ng-pass-123"
@@ -17,14 +17,13 @@ def last_code() -> str:
     return re.search(r"\b(\d{6})\b", MemorySmsBackend.outbox[-1][1]).group(1)
 
 
-def test_signup_waits_for_the_email_code_then_signs_in(api):
-    """Sign-up records the accepted terms, gives no session until the emailed code is entered (ACC-01)."""
-    payload = {"email": "New@Example.dz", "password": PASSWORD, "accept_terms_version": "2026-11"}
-    done = signup_and_confirm(api, payload)
-    assert done["status"] == "authenticated" and done["user"]["email"] == "new@example.dz"
-    assert done["user"]["email_verified"] is True
+def test_signup_creates_user_session_and_consents(api):
+    """Sign-up returns a session at once (no code step) and records the accepted terms (ACC-01)."""
+    res = api.post("/api/v1/auth/signup", {"email": "New@Example.dz", "password": PASSWORD, "accept_terms_version": "2026-11"})
+    assert res.status_code == 201, res.data
+    assert res.data["status"] == "authenticated" and res.data["session_token"]
+    assert res.data["user"]["email"] == "new@example.dz"
     assert ConsentRecord.objects.filter(user__email="new@example.dz").count() == 2
-    assert api.get("/api/v1/me").status_code == 200
 
 
 def test_br_acc_01_email_is_unique_case_insensitive(api):

@@ -377,7 +377,7 @@ DEFAULT_CURRENCY = "DZD"
 # Production sends through your own mailbox over SMTP (EMAIL_HOST and friends,
 # see DEPLOY.md). Development prints emails in the console, unless EMAIL_HOST is
 # set: then the mailbox is used even with DEBUG on, so a server left in debug
-# mode does not silently print sign-up codes in its log instead of sending them.
+# mode does not silently print emails (password reset links) in its log instead of sending them.
 _email_host_set = bool(env.str("EMAIL_HOST", default=""))
 EMAIL_BACKEND = env.str(
     "EMAIL_BACKEND",
@@ -385,7 +385,7 @@ EMAIL_BACKEND = env.str(
     if (_email_host_set or not DEBUG)
     else "django.core.mail.backends.console.EmailBackend",
 )
-# An SMTP server that does not answer must not hold the request (sign-up waits on the code email).
+# An SMTP server that does not answer must not hold the request (for example a password reset).
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="BLADUS <no-reply@bladus.dz>")
 EMAIL_HOST = env.str("EMAIL_HOST", default="localhost")

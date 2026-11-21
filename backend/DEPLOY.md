@@ -31,8 +31,8 @@ stops the deploy and the old version keeps running.
    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
    ```
 
-4. Choose the mailbox that sends the emails. Without it, nobody can finish
-   signing up: the sign-up code is sent by email.
+4. Choose the mailbox that sends the emails (password reset links, email
+   confirmation links, team invitations). Sign-up itself sends no email.
 
    **Your own mailbox over SMTP.** Any mailbox you own can send the
    codes: the `bladus.dz` mailbox from your domain host, or a Gmail account.
@@ -92,11 +92,10 @@ stops the deploy and the old version keeps running.
 
 ## 4. After the first deploy
 
-- **Check email** (sign-up codes depend on it): `bladus-backend` > Shell >
+- **Check email** (password reset depends on it): `bladus-backend` > Shell >
   `python manage.py send_test_email you@example.com`. It prints the backend and
   sender in use, then "Sent" or the exact error (wrong password, sender address not
-  verified, SMTP port blocked). Sign-up failures are also in the logs as
-  `Sign-up code for user ... not sent` and `Sending the email code failed`.
+  verified, SMTP port blocked).
 
 - **Demo data** (staging only, never on a database with real users):
   `bladus-backend` > Shell > `python manage.py seed_demo --force`.
@@ -118,7 +117,7 @@ services or Vercel with:
 **`BFF_PROXY_SECRET`: the same random value on the backend (Render), the
 website and the admin (Vercel).** Visitors never call the backend directly,
 so without it every visitor looks like the Vercel server and the per IP limits
-(10 code emails per hour, sign-in lockouts) apply to the whole site at once.
+(one-time codes, sign-in lockouts, request rates) apply to the whole site at once.
 With it, the website passes each visitor's address and the backend believes it
 only when the secret matches. Make one with
 `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
