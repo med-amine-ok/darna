@@ -70,6 +70,8 @@ async function postAuth(path: string, payload: Record<string, string>) {
     mfaRequired?: boolean;
     /** The account waits for the 6-digit code emailed at sign-up (ACC-01). */
     verifyEmail?: boolean;
+    /** False when the server could not send that email. */
+    codeSent?: boolean;
   };
 }
 
@@ -304,7 +306,8 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         const data = await postAuth("/api/auth/register", { name: name.trim(), email: email.trim(), password });
         if (data.verifyEmail) {
           setIsLoading(false);
-          askEmailCode(true);
+          askEmailCode(data.codeSent !== false);
+          if (data.codeSent === false) setError(t("emailCode.notSent"));
           return;
         }
         const userName = typeof data.user?.name === "string" ? data.user.name : name.trim();

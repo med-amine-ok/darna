@@ -109,7 +109,8 @@
     "UNDERAGE": "Vous devez avoir au moins 18 ans pour utiliser BLADUS.",
     "INVALID_BIRTH_DATE": "Cette date de naissance n'est pas possible. Vérifiez-la.",
     "PROFILE_INCOMPLETE": "Certaines étapes obligatoires ne sont pas encore faites.",
-    "SMS_SEND_FAILED": "Nous n'avons pas pu envoyer le SMS pour le moment. Vérifiez le numéro et réessayez dans un instant."
+    "SMS_SEND_FAILED": "Nous n'avons pas pu envoyer le SMS pour le moment. Vérifiez le numéro et réessayez dans un instant.",
+    "EMAIL_SEND_FAILED": "Nous n'avons pas pu envoyer l'e-mail pour le moment. Réessayez dans quelques minutes."
   },
   "errorEyebrow": "Erreur inattendue",
   "errorReference": "Référence :",

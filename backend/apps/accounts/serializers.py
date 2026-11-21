@@ -276,6 +276,7 @@ class SignupPendingSerializer(serializers.Serializer):
     user = serializers.JSONField(allow_null=True, default=None)
     pending_flows = serializers.ListField(child=serializers.DictField())
     email = serializers.EmailField()
+    code_sent = serializers.BooleanField(help_text="False when the code email could not be sent; ask for a new one.")
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):

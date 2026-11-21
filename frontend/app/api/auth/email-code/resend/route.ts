@@ -28,6 +28,10 @@ export async function POST(request: NextRequest) {
       if (error instanceof ApiError && error.status === 429) {
         return NextResponse.json(actionFail("TOO_MANY_ATTEMPTS"), { status: 429 });
       }
+      if (error instanceof ApiError && error.code === "otp_send_failed") {
+        // The email provider is down or not set up on the server.
+        return NextResponse.json(actionFail("EMAIL_SEND_FAILED"), { status: 503 });
+      }
       if (error instanceof ApiError && error.status < 500) {
         return NextResponse.json(actionFail("INVALID_CREDENTIALS"), { status: 401 });
       }

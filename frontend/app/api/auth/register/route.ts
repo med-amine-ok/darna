@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
     // Email sign-up (ACC-01): the account waits for the 6-digit code emailed by the
     // backend; the browser shows the code step and posts it to /api/auth/email-code.
     if (answer.status === "pending_flow" && answer.pending_flows?.some((flow) => flow.id === "verify_email")) {
-      return NextResponse.json({ success: true, verifyEmail: true });
+      // codeSent false: the account exists but the email provider did not send the code.
+      const codeSent = (answer as ApiSession & { code_sent?: boolean }).code_sent !== false;
+      return NextResponse.json({ success: true, verifyEmail: true, codeSent });
     }
     const user = answer.session_token ? await startSession(answer.session_token) : null;
     if (!user) {

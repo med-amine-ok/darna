@@ -238,6 +238,8 @@ class SignupView(APIView):
                 "user": None,
                 "pending_flows": [{"id": "verify_email", "is_pending": True}],
                 "email": user.email,
+                # False: the account exists but the email could not be sent; the website says so.
+                "code_sent": services.send_signup_code(user, ip=ip),
             }
             return Response(body, status=status.HTTP_201_CREATED)
         token = services.start_session(user, ip=ip, user_agent=agent)

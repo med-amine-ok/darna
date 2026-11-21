@@ -120,3 +120,37 @@ def test_acc_01_phone_signup_is_unchanged(api):
         "/api/v1/auth/signup", {"phone": "+213555123456", "accept_terms_version": "2026-11"}, format="json"
     )
     assert res.status_code == 201 and res.data["status"] == "authenticated" and res.data["session_token"]
+
+
+
+def test_acc_01_signup_says_when_the_code_email_failed(api, monkeypatch):
+    """A mailbox failure keeps the account and answers code_sent false, so the website can say so."""
+    from apps.accounts import mailer
+
+    def broken(*args, **kwargs):
+        raise OSError("SMTP server did not answer")
+
+    monkeypatch.setattr(mailer, "send_mail", broken)
+    res = sign_up(api)
+    assert res.status_code == 201 and res.data["code_sent"] is False
+    assert User.objects.filter(email=EMAIL).exists()
+
+
+def test_acc_01_signup_reports_code_sent(api):
+    """With a working mailbox the answer says the code was sent."""
+    res = sign_up(api)
+    assert res.data["code_sent"] is True
+
+
+def test_send_test_email_command_reports_failure(monkeypatch):
+    """The Render check command exits with the exact error when sending fails."""
+    from django.core.management import CommandError, call_command
+
+    from apps.accounts import mailer
+
+    def broken(*args, **kwargs):
+        raise OSError("timed out")
+
+    monkeypatch.setattr(mailer, "send_mail", broken)
+    with pytest.raises(CommandError, match="OSError: timed out"):
+        call_command("send_test_email", "guest@bladus.test")

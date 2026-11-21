@@ -31,8 +31,26 @@ stops the deploy and the old version keeps running.
    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
    ```
 
-4. Choose an SMTP email provider (Brevo, Resend, Mailgun...) and get its host,
-   user and password. Verify the `bladus.dz` sending domain there.
+4. Choose the mailbox that sends the emails. Without it, nobody can finish
+   signing up: the sign-up code is sent by email.
+
+   **Your own mailbox over SMTP.** Any mailbox you own can send the
+   codes: the `bladus.dz` mailbox from your domain host, or a Gmail account.
+   Render blocks SMTP ports on **free** web services (since 2025-09-26); a paid
+   instance (Starter) can use ports 587 and 465. Port 25 is always blocked.
+
+   | Variable | Gmail | Mailbox of your domain host |
+   |---|---|---|
+   | `EMAIL_HOST` | `smtp.gmail.com` | the SMTP server your host gives (for example `mail.bladus.dz`) |
+   | `EMAIL_PORT` | `587` | `587` (or `465`, SSL is then switched on by itself) |
+   | `EMAIL_HOST_USER` | the Gmail address | the full mailbox address |
+   | `EMAIL_HOST_PASSWORD` | an app password (Google account > Security > 2-Step Verification > App passwords) | the mailbox password |
+   | `DEFAULT_FROM_EMAIL` | `BLADUS <the same Gmail address>` | `BLADUS <no-reply@bladus.dz>` (the same mailbox) |
+
+   Gmail sends at most about 500 emails a day and may mark mail from a new
+   sender as spam; a mailbox on your own domain with SPF and DKIM records set
+   at your domain host is delivered better. Then check with `send_test_email`
+   (section 4).
 
 ## 2. Create the services
 
@@ -49,7 +67,8 @@ stops the deploy and the old version keeps running.
 | `DATABASE_URL` | Neon **pooled** connection string (host has `-pooler`) |
 | `DATABASE_DIRECT_URL` | Neon **direct** connection string (same host without `-pooler`) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud Console > Clients |
-| `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Your SMTP provider |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | Your mailbox (step 1.4) |
+| `DEFAULT_FROM_EMAIL` | An address the mailbox may send from, for example `BLADUS <no-reply@bladus.dz>` |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | Twilio Console > Account info (phone codes by SMS) |
 | `TWILIO_MESSAGING_SERVICE_SID` or `TWILIO_FROM` | Twilio Messaging Service (MG...), or a Twilio number / approved sender name |
 
@@ -72,6 +91,12 @@ stops the deploy and the old version keeps running.
    in the authorised redirect URIs (the website hosts the callback).
 
 ## 4. After the first deploy
+
+- **Check email** (sign-up codes depend on it): `bladus-backend` > Shell >
+  `python manage.py send_test_email you@example.com`. It prints the backend and
+  sender in use, then "Sent" or the exact error (wrong password, sender address not
+  verified, SMTP port blocked). Sign-up failures are also in the logs as
+  `Sign-up code for user ... not sent` and `Sending the email code failed`.
 
 - **Demo data** (staging only, never on a database with real users):
   `bladus-backend` > Shell > `python manage.py seed_demo --force`.

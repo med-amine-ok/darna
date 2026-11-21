@@ -121,19 +121,24 @@ def signup(
             ConsentRecord.objects.create(
                 user=user, document=document, version=accept_terms_version, accepted=True, ip=ip, user_agent=user_agent
             )
-    if email:
-        # Starts the verify_email flow (ACC-01): a 6-digit code, sent after commit so a
-        # rolled back sign-up sends nothing. The account cannot sign in until the code is entered.
-        transaction.on_commit(lambda: _send_signup_code_quietly(user, ip))
+    # With an email, the caller sends the code once this transaction is committed
+    # (send_signup_code), so a rolled back sign-up sends nothing (ACC-01).
     return user
 
 
-def _send_signup_code_quietly(user: User, ip: str | None) -> None:
-    """Send the sign-up code; a limit or provider failure is logged only, the person can ask again."""
+def send_signup_code(user: User, *, ip: str | None = None) -> bool:
+    """
+    Email the sign-up code (ACC-01). Returns ``False`` when it could not be
+    sent (send limit, or the email provider refused or is not set up): the
+    account exists and the person can ask for a new code. The provider's
+    error is in the log (``bladus.accounts``), never shown to the visitor.
+    """
     try:
         send_email_code(user, ip=ip)
     except DomainError as exc:
-        logger.warning("Sign-up code for user %s not sent: %s", user.pk, exc.code)
+        logger.error("Sign-up code for user %s not sent: %s", user.pk, exc.code)
+        return False
+    return True
 
 
 # ---------------------------------------------------------------------------

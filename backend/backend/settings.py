@@ -372,16 +372,23 @@ DEFAULT_CURRENCY = "DZD"
 # ---------------------------------------------------------------------------
 # Email: console in development; SMTP (EMAIL_HOST and friends from the
 # environment) when DEBUG is False. Links in emails point to the website.
+# Production sends through your own mailbox over SMTP (EMAIL_HOST and friends,
+# see DEPLOY.md); development prints emails in the console.
 EMAIL_BACKEND = env.str(
     "EMAIL_BACKEND",
     default="django.core.mail.backends.console.EmailBackend" if DEBUG else "django.core.mail.backends.smtp.EmailBackend",
 )
+# An SMTP server that does not answer must not hold the request (sign-up waits on the code email).
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=10)
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", default="BLADUS <no-reply@bladus.dz>")
 EMAIL_HOST = env.str("EMAIL_HOST", default="localhost")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", default="")
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+# Port 587 uses STARTTLS (EMAIL_USE_TLS); port 465 uses SSL from the start
+# (EMAIL_USE_SSL). Django refuses both at once, so SSL switches TLS off.
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=EMAIL_PORT == 465)
+EMAIL_USE_TLS = False if EMAIL_USE_SSL else env.bool("EMAIL_USE_TLS", default=True)
 FRONTEND_URL = env.str("FRONTEND_URL", default="http://localhost:3000")
 
 # Sign in with Google (ACC-10). The client secret stays on the backend; the
