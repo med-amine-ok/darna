@@ -49,6 +49,26 @@
         "cd /d ../backend && python manage.py runserver 8000"
       ],
       "port": 8000
+    },
+    {
+      "name": "bladus-backend-local-sqlite-8002",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "cd /d ../backend && set DATABASE_URL=sqlite:///db.sqlite3&& set DATABASE_DIRECT_URL=sqlite:///db.sqlite3&& python manage.py runserver 8002 --noreload"
+      ],
+      "port": 8002,
+      "autoPort": false
+    },
+    {
+      "name": "bladus-frontend-local-3014",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "set BACKEND_API_URL=http://localhost:8002/api/v1&& npx next dev -p 3014"
+      ],
+      "port": 3014,
+      "autoPort": false
     }
   ]
 }

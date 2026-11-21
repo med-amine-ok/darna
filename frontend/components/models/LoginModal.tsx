@@ -196,6 +196,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
       finish(
         userName ? t(isSignup ? "welcomeName" : "welcomeBackName", { name: userName }) : t("welcomeToast"),
         data.user?.profileComplete !== false,
+        isSignup,
       );
     } catch (err) {
       setIsLoading(false);
@@ -258,17 +259,22 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
    * required profile steps left) go to /welcome first (ACC-11), then on to
    * where the visitor was heading.
    */
-  const finish = (message: string, profileComplete = true) => {
+  const finish = (message: string, profileComplete = true, newAccount = false) => {
     setSuccess(true);
     toast.success(message);
     doneTimer.current = setTimeout(() => {
+      // A new account: email code, then "complete your profile", then the home page.
+      if (newAccount && profileComplete) {
+        window.location.assign(`/${locale}`);
+        return;
+      }
       if (profileComplete) {
         onAuthenticated();
         return;
       }
       const params = new URLSearchParams(window.location.search);
       const back = params.get("callbackUrl") || `${window.location.pathname}${window.location.search}`;
-      const target = back.startsWith(`/${locale}/login`) ? `/${locale}` : back;
+      const target = newAccount || back.startsWith(`/${locale}/login`) ? `/${locale}` : back;
       window.location.assign(`/${locale}/welcome?${new URLSearchParams({ callbackUrl: target }).toString()}`);
     }, SUCCESS_HOLD_MS);
   };
@@ -303,7 +309,7 @@ export function AuthPanel({ mode, onModeChange, onAuthenticated, showDemo, title
         }
         const userName = typeof data.user?.name === "string" ? data.user.name : name.trim();
         setIsLoading(false);
-        finish(t("welcomeName", { name: userName }), false);
+        finish(t("welcomeName", { name: userName }), false, true);
       } else {
         const data = await postAuth("/api/auth/login", { email: email.trim(), password });
         if (data.verifyEmail) {
